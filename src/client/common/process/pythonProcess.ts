@@ -12,9 +12,9 @@ import {
 } from './types';
 
 interface IPythonEnvironment {
-    pythonPath: string;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
 }
 
 interface IPythonProcessDependencies {
@@ -31,10 +31,8 @@ class PythonProcessService {
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        // Cannot use this.env.getExecutionInfo() until 'conda run' can
-        // be run without buffering output.
-        // See https://github.com/microsoft/vscode-python/issues/8473
-        return this.deps.execObservable(this.env.pythonPath, args, opts);
+        const executable = this.env.getExecutionObservableInfo(args);
+        return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
     public execModuleObservable(
@@ -43,10 +41,8 @@ class PythonProcessService {
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        // Cannot use this.env.getExecutionInfo() until 'conda run' can
-        // be run without buffering output.
-        // See https://github.com/microsoft/vscode-python/issues/8473
-        return this.deps.execObservable(this.env.pythonPath, ['-m', moduleName, ...args], opts);
+        const executable = this.env.getExecutionObservableInfo(['-m', moduleName, ...args]);
+        return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {

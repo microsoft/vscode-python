@@ -39,11 +39,8 @@ export class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO(gh-8473): "pythonPath" should be made protected.  It is
-        // public only for the sake of the workaround we have in place
-        // for conda in pythonProcess.ts.
-        public readonly pythonPath: string,
+        // For now we do not have an use for making pythonPath public.
+        protected readonly pythonPath: string,
         protected readonly deps: IPythonEnvironmentDependencies
     ) {}
 
@@ -52,6 +49,9 @@ export class PythonEnvironment {
         const args = python.slice(1);
         args.push(...pythonArgs);
         return { command: python[0], args, python };
+    }
+    public getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        return this.getExecutionInfo(pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
@@ -152,6 +152,13 @@ class CondaEnvironment extends PythonEnvironment {
             this.envArgs = ['-n', condaInfo.name];
         }
         this.runArgs = ['run', ...this.envArgs];
+    }
+
+    public getExecObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+        // Cannot use this.env.getExecutionInfo() until 'conda run' can
+        // be run without buffering output.
+        // See https://github.com/microsoft/vscode-python/issues/8473
+        return { command: this.pythonPath, args: pythonArgs, python: [this.pythonPath] };
     }
 
     protected getPythonArgv(): string[] {
