@@ -22,9 +22,9 @@ import {
 } from './types';
 
 export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
-const PYTHON_PATH = getPythonPath();
+const CI_PYTHON_PATH = getCIPythonPath();
 
-export function getPythonPath(): string {
+export function getCIPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
@@ -76,8 +76,7 @@ export class InterpreterPathService implements IInterpreterPathService {
             settings.workspaceFolderValue ||
             settings.workspaceValue ||
             settings.globalValue ||
-            // This is to make sure we use `CI_PYTHON_PATH` when executing tests
-            (isTestExecution() ? PYTHON_PATH : 'python')
+            (isTestExecution() ? CI_PYTHON_PATH : 'python')
         );
     }
 
