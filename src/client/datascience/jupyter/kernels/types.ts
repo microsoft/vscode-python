@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import { CancellationToken, QuickPickItem } from 'vscode';
 import { Resource } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';

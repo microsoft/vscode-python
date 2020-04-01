@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Deferred } from '../../client/common/utils/async';
 import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 
 export function restoreBuffers(buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined) {
     if (!buffers || !Array.isArray(buffers) || buffers.length === 0) {

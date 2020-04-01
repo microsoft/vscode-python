@@ -94,7 +94,8 @@ export class WidgetManager extends jupyterlab.WidgetManager {
                 }
                 throw x;
             } catch (ex) {
-                this.loadErrorHandler(className, moduleName, moduleVersion, ex);
+                this.loadErrorHandler(className, moduleName, moduleVersion, x);
+                throw x;
             }
         });
 

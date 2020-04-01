@@ -5,8 +5,8 @@
 
 import '@jupyter-widgets/controls/css/labvariables.css';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { IDisposable } from '../../client/common/types';

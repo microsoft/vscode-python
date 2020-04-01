@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject, JSONValue } from '@phosphor/coreutils';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';

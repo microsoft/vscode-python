@@ -73,7 +73,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
 
     // tslint:disable-next-line: no-any
     private async handleLoadError(className: string, moduleName: string, moduleVersion: string, error: any) {
-        const isOnline = await isonline.default({ timeout: 250 });
+        const isOnline = await isonline.default({ timeout: 1000 });
         this.props.store.dispatch(this.createLoadErrorAction(className, moduleName, moduleVersion, isOnline, error));
     }
 }

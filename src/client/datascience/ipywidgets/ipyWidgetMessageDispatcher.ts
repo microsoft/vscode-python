@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -164,7 +164,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private async waitForCommMessage(msg: KernelMessage.ICommMsgMsg) {
         const promise = createDeferred<void>();
-        if (KernelMessage.isCommMsgMsg(msg)) {
+        // tslint:disable-next-line: no-require-imports no-var-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
             this.pendingReplies.set(msg.header.msg_id, promise);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_comm_msg, msg);
         } else {

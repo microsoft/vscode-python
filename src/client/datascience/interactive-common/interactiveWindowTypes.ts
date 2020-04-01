@@ -5,7 +5,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
-import { KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import { CommonActionType, IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { LiveKernelModel } from '../jupyter/kernels/types';

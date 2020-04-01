@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
