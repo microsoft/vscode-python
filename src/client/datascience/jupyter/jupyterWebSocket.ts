@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceError } from '../../common/logger';
 
 export const JupyterWebSockets = new Map<string, WebSocketWS>();
 
@@ -35,13 +35,14 @@ export function createJupyterWebSocket(log?: boolean, cookieString?: string, all
             if (parsed && parsed.length > 1) {
                 this.kernelId = parsed[1];
             }
-            if (!this.kernelId) {
-                throw new Error('KernelId not extraacted from Kernel WebSocket URL');
+            if (this.kernelId) {
+                JupyterWebSockets.set(this.kernelId, this);
+                this.on('close', () => {
+                    JupyterWebSockets.delete(this.kernelId!);
+                });
+            } else {
+                traceError('KernelId not extraacted from Kernel WebSocket URL');
             }
-            JupyterWebSockets.set(this.kernelId, this);
-            this.on('close', () => {
-                JupyterWebSockets.delete(this.kernelId!);
-            });
         }
 
         // tslint:disable-next-line: no-any

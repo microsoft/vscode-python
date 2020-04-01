@@ -5,7 +5,7 @@
 
 import * as util from 'util';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
@@ -43,11 +43,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
         // been reigstered, in which case kaboom. As we know this is always required, pre-register this.
         this.pendingTargetNames.add('jupyter.widget');
-        notebookProvider.onNotebookCreated((e) => {
-            if (e.identity.toString() === notebookIdentity.toString()) {
-                this.initialize().ignoreErrors();
-            }
-        });
+        notebookProvider.onNotebookCreated(
+            (e) => {
+                if (e.identity.toString() === notebookIdentity.toString()) {
+                    this.initialize().ignoreErrors();
+                }
+            },
+            this,
+            this.disposables
+        );
     }
     public dispose() {
         this.disposed = true;
@@ -176,6 +180,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.kernelSocketInfo.socket?.send(this.pendingMessages[0]);
                 this.pendingMessages.shift();
             } catch (ex) {
+                traceError('Failed to send message to Kernel', ex);
                 return;
             }
         }

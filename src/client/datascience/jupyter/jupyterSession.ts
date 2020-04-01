@@ -66,8 +66,10 @@ export class JupyterSession implements IJupyterSession {
         return this._session;
     }
     private set session(session: ISession | undefined) {
+        const oldSession = this._session;
         this._session = session;
-        if (session) {
+        // If we have a new session, then emit the new kernel connection information.
+        if (session && oldSession !== session) {
             const socket = JupyterWebSockets.get(session.kernel.id);
             if (!socket) {
                 traceError(`Unable to find WebSocket connetion assocated with kerne ${session.kernel.id}`);

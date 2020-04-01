@@ -177,7 +177,7 @@ export class JupyterNotebookBase implements INotebook {
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
-        public session: IJupyterSession,
+        private session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,

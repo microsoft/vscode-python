@@ -942,9 +942,21 @@ export interface IKernelSocket {
 }
 
 export type KernelSocketOptions = {
+    /**
+     * Kernel Id.
+     */
     readonly id: string;
+    /**
+     * Kernel ClientId.
+     */
     readonly clientId: string;
+    /**
+     * Kernel UserName.
+     */
     readonly userName: string;
+    /**
+     * Kernel model.
+     */
     readonly model: {
         /**
          * Unique identifier of the kernel server session.
@@ -957,6 +969,13 @@ export type KernelSocketOptions = {
     };
 };
 export type KernelSocketInformation = {
+    /**
+     * Underlying socket used by jupyterlab/services to communicate with kernel.
+     * See jupyterlab/services/kernel/default.ts
+     */
     readonly socket?: IKernelSocket;
+    /**
+     * Options used to clone a kernel.
+     */
     readonly options: KernelSocketOptions;
 };
