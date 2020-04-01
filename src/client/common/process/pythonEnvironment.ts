@@ -40,7 +40,9 @@ export class PythonEnvironment {
 
     constructor(
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO: "pythonPath" should be made protected.
+        // TODO(gh-8473): "pythonPath" should be made protected.  It is
+        // public only for the sake of the workaround we have in place
+        // for conda in pythonProcess.ts.
         public readonly pythonPath: string,
         protected readonly deps: IPythonEnvironmentDependencies
     ) {}
