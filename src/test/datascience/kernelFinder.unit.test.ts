@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
 
-import { CancellationTokenSource, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
@@ -23,7 +23,6 @@ suite('Kernel Finder', () => {
     let pathUtils: IPathUtils;
     let context: IExtensionContext;
     let kernelFinder: IKernelFinder;
-    let cancelSource: CancellationTokenSource;
     let activeInterpreter: PythonInterpreter;
     const interpreters: PythonInterpreter[] = [];
     let resource: Resource;
@@ -71,7 +70,6 @@ suite('Kernel Finder', () => {
         }
         interpreters.push(activeInterpreter);
         resource = Uri.file(context.globalStoragePath);
-        cancelSource = new CancellationTokenSource();
 
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
