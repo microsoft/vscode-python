@@ -149,7 +149,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
 
         // Start the server as soon as we open
-        this.ensureServerAndNotebook().ignoreErrors();
+        this.ensureConnectionAndNotebook().ignoreErrors();
     }
 
     public dispose() {
@@ -171,7 +171,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
 
         // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
-        await this.ensureServerAndNotebook();
+        await this.ensureConnectionAndNotebook();
 
         // Make sure we have at least the initial sys info
         await this.addSysInfo(SysInfoReason.Start);
@@ -341,7 +341,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-    protected ensureServerAndNotebook(): Promise<void> {
+    protected ensureConnectionAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
         if (!this.trackedJupyterStart) {
@@ -349,7 +349,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
         }
-        return super.ensureServerAndNotebook();
+        return super.ensureConnectionAndNotebook();
     }
 
     private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
