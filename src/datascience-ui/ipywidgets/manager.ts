@@ -5,29 +5,33 @@
 
 import '@jupyter-widgets/controls/css/labvariables.css';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { deserialize } from '@jupyterlab/services/lib/kernel/serialize';
 import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
+    InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
+import { AllowedIPyWidgetMessages } from '../interactive-common/redux/postOffice';
 import { PostOffice } from '../react-common/postOffice';
-import { create as createKernel, IKernelSocket } from './kernelFactory';
-import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, IMessageSender } from './types';
+import { create as createKernel, IKernelSocket } from './kernel';
+import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor } from './types';
 
-export class WidgetManager implements IIPyWidgetManager, IMessageSender {
-    public static get instance(): Promise<WidgetManager> {
-        return WidgetManager._instance.promise;
+// tslint:disable: no-any
+
+export class WidgetManager implements IIPyWidgetManager {
+    public static get instance(): Observable<WidgetManager | undefined> {
+        return WidgetManager._instance;
     }
-    private static _instance = createDeferred<WidgetManager>();
+    private static _instance = new ReplaySubject<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
     private options?: KernelSocketOptions;
@@ -42,43 +46,48 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
      * @memberof WidgetManager
      */
     private modelIdsToBeDisplayed = new Map<string, Deferred<void>>();
-    private registered = false;
-    constructor(
-        private readonly widgetContainer: HTMLElement,
+    /**
+     * Create an observable to ensure we have messages stored until ready to be processed and ensure they are processed in sync,
+     * event with async code.
+     */
+    private readonly messages: ReplaySubject<{ type: string; payload?: any }>;
+    private startedProcessingMessages = false;
+    constructor(private readonly widgetContainer: HTMLElement, private readonly postOffice: PostOffice) {
+        // Create an observable with list of messages to be processed by the kernel in ipywidgets.
+        // Use an observable so that messages are buffered until it is ready to process them.
         // tslint:disable-next-line: no-any
-        private readonly messages: Observable<{ type: string; payload?: any }>,
-        // tslint:disable-next-line: no-any
-        private readonly dispatcher: <M extends IInteractiveWindowMapping, T extends keyof M>(
-            type: T,
-            payload?: M[T]
-        ) => void,
-        private readonly postOffice: PostOffice
-    ) {
+        this.messages = new ReplaySubject<{ type: string; payload?: any }>();
+        this.postOffice.addHandler({
+            handleMessage: (message: string, payload?: any) => {
+                if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                    this.initializeKernelAndWidgetManager(payload).ignoreErrors();
+                } else if (message === InteractiveWindowMessages.ClearAllOutputs) {
+                    this.clear().ignoreErrors();
+                } else if (AllowedIPyWidgetMessages.find((k) => k === message)) {
+                    this.messages.next({ type: message, payload });
+                }
+                return true;
+            }
+        });
+
         // Dummy socket.
         this.kernelSocket = {
             onMessage: noop,
             postMessage: (data: string) => {
                 if (typeof data === 'string') {
-                    dispatcher(IPyWidgetMessages.IPyWidgets_msg, data);
+                    this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg, data);
                 } else {
-                    // Binary data.
-                    dispatcher(IPyWidgetMessages.IPyWidgets_binary_msg, serializeDataViews([data]));
+                    // Serialize binary data properly before sending to extension.
+                    this.postOffice.sendMessage<IInteractiveWindowMapping>(
+                        IPyWidgetMessages.IPyWidgets_binary_msg,
+                        serializeDataViews([data])
+                    );
                 }
             }
         };
-        this.postOffice.addHandler({
-            // tslint:disable-next-line: no-any
-            handleMessage: (messageType: any, payload: any) => {
-                if (messageType === IPyWidgetMessages.IPyWidgets_kernelOptions) {
-                    this.initializeKernelAndWidgetManager(payload);
-                }
-                return true;
-            },
-            dispose: noop
-        });
 
         // Handshake.
-        dispatcher(IPyWidgetMessages.IPyWidgets_Ready, '');
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready, '');
     }
     public dispose(): void {
         this.proxyKernel?.dispose();
@@ -140,10 +149,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         // tslint:disable-next-line: no-any
         return this.manager.display_view(data, view, { node: ele });
     }
-    public sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        this.dispatcher(type, payload);
-    }
-    private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
+    private async initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
@@ -156,10 +162,17 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             targetName: string,
             callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
         ) => {
-            this.dispatcher(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName);
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(
+                IPyWidgetMessages.IPyWidgets_registerCommTarget,
+                targetName
+            );
             return originalRegisterCommTarget(targetName, callback);
         };
 
+        // Clear and dispose any existing managers.
+        if (this.manager) {
+            await this.clear().catch(noop);
+        }
         this.manager?.dispose();
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
@@ -172,36 +185,25 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer);
-            if (WidgetManager._instance.completed) {
-                WidgetManager._instance = createDeferred<WidgetManager>();
-            }
-            WidgetManager._instance.resolve(this);
+            WidgetManager._instance.next(this);
         } catch (ex) {
             // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);
         }
-        // Start listening only after we have registered the comm target, else messages might get ignored (cuz incoming comm messages would not belong to any registered targets).
-        // Remember, on the extension side we have registered the comm target.
-        // this.registerPostOffice();
-
-        this.registerPostOffice();
+        this.startProcessingMessages();
     }
-    private registerPostOffice(): void {
-        if (this.registered) {
+    private startProcessingMessages(): void {
+        if (this.startedProcessingMessages) {
             return;
         }
-        this.registered = true;
+        this.startedProcessingMessages = true;
         // Process all messages sequentially.
         this.messages
             .concatMap(async (msg) => {
                 try {
-                    // if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
-                    //     this.initializeKernelAndWidgetManager(msg.payload);
-                    // }
                     if (!this.kernelSocket.onMessage) {
                         return;
                     }
-
                     if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
                         return;
                     } else if (msg.type === IPyWidgetMessages.IPyWidgets_msg) {
@@ -210,29 +212,23 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
                         const payload = deserializeDataViews(msg.payload)![0];
                         this.kernelSocket.onMessage(new MessageEvent('', { data: payload }));
                     }
-                    // const message = deserialize(msg.payload);
-                    // tslint:disable-next-line: no-any
-                    // await this.handleDisplayDataMessage(undefined, message as any);
                 } catch (ex) {
                     // tslint:disable-next-line: no-console
                     console.error('Failed to handle Widget message', ex);
-                    // tslint:disable-next-line: no-console
-                    console.log(this.handleDisplayDataMessage.length);
-                    // tslint:disable-next-line: no-console
-                    console.log(deserialize.length);
                 }
             })
             .subscribe();
     }
-    // tslint:disable-next-line: no-any
+    /**
+     * Ensure we create the model for the display data.
+     */
     private async handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage): Promise<void> {
         if (!KernelMessage.isDisplayDataMsg(payload)) {
             return;
         }
         // tslint:disable-next-line: no-any
         let msgChain = (this.proxyKernel as any)._msgChain as Promise<void>;
-        msgChain = msgChain.then(async () => {
-            // General IOPub message
+        const handleDisplayData = async () => {
             const displayMsg = payload as KernelMessage.IDisplayDataMsg;
 
             if (
@@ -257,9 +253,14 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
                 // Mark it as completed (i.e. ready to display).
                 this.modelIdsToBeDisplayed.get(modelId)!.resolve();
             }
-        });
+        };
 
-        // tslint:disable-next-line: no-any
-        (this.proxyKernel as any)._msgChain = msgChain;
+        if (msgChain) {
+            msgChain = msgChain.then(handleDisplayData);
+            // tslint:disable-next-line: no-any
+            (this.proxyKernel as any)._msgChain = msgChain;
+        } else {
+            await handleDisplayData();
+        }
     }
 }

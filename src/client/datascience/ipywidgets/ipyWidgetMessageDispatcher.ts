@@ -34,6 +34,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private disposed = false;
     private queuedMessages: string[] = [];
     private readonly uiIsReady = createDeferred();
+    private subscribedToKernelSocket: boolean = false;
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -95,7 +96,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If we have any pending targets, register them now
         const notebook = await this.getNotebook();
         if (notebook) {
-            this.initilizeKernelSocket(notebook);
+            this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
         }
     }
@@ -105,24 +106,26 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     ) {
         this._postMessageEmitter.fire({ message, payload });
     }
+    private subscribeToKernelSocket(notebook: INotebook) {
+        if (this.subscribedToKernelSocket) {
+            return;
+        }
+        this.subscribedToKernelSocket = true;
+        // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
+        notebook.kernelSocket.subscribe((info) => {
+            if (info.socket === this.kernelSocketInfo?.socket) {
+                return;
+            }
+            // Remove old handlers.
+            this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this));
+            this.kernelSocketInfo = info;
+            this.kernelSocketInfo.socket.addListener('message', this.onKernelSocketMessage.bind(this));
 
-    private initilizeKernelSocket(notebook: INotebook) {
-        notebook.kernelSocket
-            .then((info) => {
-                if (info.socket === this.kernelSocketInfo?.socket) {
-                    return;
-                }
-                // Remove old handlers.
-                this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this));
-                this.kernelSocketInfo = info;
-                this.kernelSocketInfo.socket.addListener('message', this.onKernelSocketMessage.bind(this));
-
-                this.sendKernelOptions();
-                // Since we have connected to a kernel, send any pending messages.
-                this.registerCommTargets(notebook);
-                this.sendPendingMessages();
-            })
-            .ignoreErrors();
+            this.sendKernelOptions();
+            // Since we have connected to a kernel, send any pending messages.
+            this.registerCommTargets(notebook);
+            this.sendPendingMessages();
+        });
     }
     /**
      * Pass this information to UI layer so it can create a dummy kernel with same information.
@@ -200,7 +203,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.pendingTargetNames.add(targetName);
         });
 
-        this.initilizeKernelSocket(this.notebook);
+        this.subscribeToKernelSocket(this.notebook);
         this.registerCommTargets(this.notebook);
     }
 }

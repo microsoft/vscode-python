@@ -106,27 +106,11 @@ export enum InteractiveWindowMessages {
 }
 
 export enum IPyWidgetMessages {
-    IPyWidgets_display_data_msg = 'IPyWidgets_display_data_msg',
-    IPyWidgets_comm_msg = 'IPyWidgets_comm_msg',
-    IPyWidgets_comm_msg_reply = 'IPyWidgets_comm_msg_reply',
-    IPyWidgets_comm_open = 'IPyWidgets_comm_open',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
-    IPyWidgets_ShellSend = 'IPyWidgets_ShellSend',
-    IPyWidgets_ShellCommOpen = 'IPyWidgets_ShellCommOpen',
-    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
-    IPyWidgets_ShellSend_onIOPub = 'IPyWidgets_ShellSend_onIOPub',
-    IPyWidgets_ShellSend_reply = 'IPyWidgets_ShellSend_reply',
-    IPyWidgets_ShellSend_resolve = 'IPyWidgets_ShellSend_resolve',
-    IPyWidgets_ShellSend_reject = 'IPyWidgets_ShellSend_reject',
-    IPyWidgets_RequestCommInfo_request = 'IPyWidgets_RequestCommInfo_request',
-    IPyWidgets_RequestCommInfo_reply = 'IPyWidgets_ReplyCommInfo_reply',
-    IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
-    IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
-    IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
-    IPyWidgets_MessageHookResponse = 'IPyWidgets_MessageHookResponse'
+    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget'
 }
 export enum NativeCommandType {
     AddToEnd = 0,
@@ -475,57 +459,12 @@ export type NotebookModelChange =
 
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
-    // tslint:disable-next-line: no-any
-    public [IPyWidgetMessages.IPyWidgets_ShellSend]: {
-        // tslint:disable-next-line: no-any
-        data: any;
-        // tslint:disable-next-line: no-any
-        metadata: any;
-        commId: string;
-        requestId: string;
-        // tslint:disable-next-line: no-any
-        buffers?: any[];
-        disposeOnDone?: boolean;
-        targetName?: string;
-        msgType: string;
-    };
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
     public [IPyWidgetMessages.IPyWidgets_Ready]: string;
-    // tslint:disable-next-line: no-any
-    public [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: { requestId: string; msg: KernelMessage.IIOPubMessage };
-    public [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: { requestId: string; msg: KernelMessage.IShellMessage };
-    public [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: { requestId: string; msg?: KernelMessage.IShellMessage };
-    // tslint:disable-next-line: no-any
-    public [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: { requestId: string; msg?: any };
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
-    public [IPyWidgetMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;
     public [IPyWidgetMessages.IPyWidgets_msg]: string;
-    public [IPyWidgetMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
-    public [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: string;
-    public [IPyWidgetMessages.IPyWidgets_display_data_msg]: KernelMessage.IDisplayDataMsg;
-    public [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: {
-        requestId: string;
-        msg: KernelMessage.ICommInfoRequestMsg['content'];
-    };
-    public [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: {
-        requestId: string;
-        msg: KernelMessage.ICommInfoReplyMsg;
-    };
-    public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
-    public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: string;
-    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
-        requestId: string;
-        parentId: string;
-        msg: KernelMessage.IIOPubMessage;
-    };
-    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: {
-        requestId: string;
-        parentId: string;
-        msgType: string;
-        result: boolean;
-    };
 
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;

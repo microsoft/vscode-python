@@ -5,7 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { createDeferred } from '../../client/common/utils/async';
+import { Observable } from 'rxjs/Observable';
 import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
@@ -20,7 +20,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
-    public readonly kernelSocket = createDeferred<KernelSocketInformation>().promise;
+    public readonly kernelSocket = new Observable<KernelSocketInformation>();
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();

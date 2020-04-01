@@ -54,7 +54,7 @@ export class GuestJupyterNotebook
     public get server(): INotebookServer {
         return this._owner;
     }
-    public kernelSocket = createDeferred<KernelSocketInformation>().promise;
+    public kernelSocket = new Observable<KernelSocketInformation>();
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {

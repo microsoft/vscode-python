@@ -181,24 +181,9 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     // [IPyWidgetMessages.IPyWidgets_ShellCommOpen]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_kernelOptions]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_Ready]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_open]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_display_data_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: MessageType.noIdea
+    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea
 };
 
 /**

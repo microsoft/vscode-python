@@ -12,6 +12,8 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+import { Observable } from 'rxjs/Observable';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -20,7 +22,7 @@ import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
-import { createDeferred, sleep, waitForPromise } from '../../common/utils/async';
+import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -62,9 +64,9 @@ export class JupyterSession implements IJupyterSession {
     public session: ISession | undefined;
     private restartSessionPromise: Promise<ISession | undefined> | undefined;
     private notebookFiles: Contents.IModel[] = [];
-    private _kernelSocket = createDeferred<KernelSocketInformation>();
-    public get kernelSocket(): Promise<KernelSocketInformation> {
-        return this._kernelSocket.promise;
+    private _kernelSocket = new ReplaySubject<KernelSocketInformation>();
+    public get kernelSocket(): Observable<KernelSocketInformation> {
+        return this._kernelSocket;
     }
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
@@ -520,10 +522,6 @@ export class JupyterSession implements IJupyterSession {
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };
-        // Always create a new promise, when creating a new session.
-        if (this._kernelSocket.completed) {
-            this._kernelSocket = createDeferred<KernelSocketInformation>();
-        }
         // tslint:disable-next-line: no-any
         const instancePromise: Promise<IKernelSocket> = (serverSettings.WebSocket as any)?.instance;
         // This should never happen, if it does then don't allow code to run.
@@ -552,7 +550,7 @@ export class JupyterSession implements IJupyterSession {
                 information.options.userName = session.kernel.username;
             }
             if (information.socket && information.options.id) {
-                this._kernelSocket.resolve(information);
+                this._kernelSocket.next(information);
             }
         };
         instancePromise

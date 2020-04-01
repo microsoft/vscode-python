@@ -171,7 +171,7 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
-    public get kernelSocket(): Promise<KernelSocketInformation> {
+    public get kernelSocket(): Observable<KernelSocketInformation> {
         return this.session.kernelSocket;
     }
 

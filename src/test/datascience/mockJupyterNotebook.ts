@@ -6,7 +6,6 @@ import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Resource } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import {
@@ -33,7 +32,7 @@ export class MockJupyterNotebook implements INotebook {
     public get identity(): Uri {
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
     }
-    public kernelSocket = createDeferred<KernelSocketInformation>().promise;
+    public kernelSocket = new Observable<KernelSocketInformation>();
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();

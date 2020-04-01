@@ -109,7 +109,7 @@ export interface INotebookServer extends IAsyncDisposable {
 
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
-    kernelSocket: Promise<KernelSocketInformation>;
+    kernelSocket: Observable<KernelSocketInformation>;
     readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;
@@ -244,7 +244,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
-    readonly kernelSocket: Promise<KernelSocketInformation>;
+    readonly kernelSocket: Observable<KernelSocketInformation>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
