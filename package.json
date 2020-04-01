@@ -85,7 +85,8 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        "onCustomEditor:NativeEditorProvider.ipynb"
+        "onCustomEditor:NativeEditorProvider.ipynb",
+        "workspaceContains:**/mspythonconfig.json"
     ],
     "main": "./out/client/extension",
     "contributes": {
