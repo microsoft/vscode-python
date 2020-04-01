@@ -197,7 +197,7 @@ export function createCondaEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
-): PythonEnvironment {
+): CondaEnvironment {
     const deps = createPythonEnvDeps(procs, fs);
     return new CondaEnvironment(condaFile, condaInfo, pythonPath, deps);
 }
@@ -207,7 +207,7 @@ export function createWindowsStoreEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
-): PythonEnvironment {
+): WindowsStoreEnvironment {
     const deps = createPythonEnvDeps(procs, fs);
     return new WindowsStoreEnvironment(pythonPath, deps);
 }
