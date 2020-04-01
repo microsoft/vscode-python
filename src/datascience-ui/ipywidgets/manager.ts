@@ -41,6 +41,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
      * @memberof WidgetManager
      */
     private modelIdsToBeDisplayed = new Map<string, Deferred<void>>();
+    private registered = false;
     constructor(
         private readonly widgetContainer: HTMLElement,
         // tslint:disable-next-line: no-any
@@ -171,9 +172,17 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);
         }
+        // Start listening only after we have registered the comm target, else messages might get ignored (cuz incoming comm messages would not belong to any registered targets).
+        // Remember, on the extension side we have registered the comm target.
+        // this.registerPostOffice();
+
         this.registerPostOffice();
     }
     private registerPostOffice(): void {
+        if (this.registered) {
+            return;
+        }
+        this.registered = true;
         // Process all messages sequentially.
         this.messages
             .concatMap(async (msg) => {

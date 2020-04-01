@@ -12,6 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
+import { createDeferred } from '../../common/utils/async';
 
 // tslint:disable: no-any
 /**
@@ -34,7 +35,18 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private kernelSocketInfo?: KernelSocketInformation;
     private disposed = false;
     private queuedMessages: string[] = [];
-    constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {}
+    private readonly uiIsReady = createDeferred();
+    constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
+        // Always register this comm target.
+        // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
+        // been reigstered, in which case kaboom. As we know this is always required, pre-register this.
+        this.pendingTargetNames.add('jupyter.widget');
+        notebookProvider.onNotebookCreated((e) => {
+            if (e.identity.toString() === notebookIdentity.toString()) {
+                this.initialize().ignoreErrors();
+            }
+        });
+    }
     public dispose() {
         this.disposed = true;
         while (this.disposables.length) {
@@ -48,12 +60,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
+                this.initialize().ignoreErrors();
                 break;
             case IPyWidgetMessages.IPyWidgets_msg:
                 this.sendRawPayloadToKernelSocket(message.payload);
                 break;
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
+                this.uiIsReady.resolve();
                 this.registerCommTarget(message.payload).ignoreErrors();
+
                 break;
 
             default:
@@ -124,12 +139,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 if (info.socket === this.kernelSocketInfo?.socket) {
                     return;
                 }
-                this.sendKernelOptions();
                 // Remove old handlers.
                 this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this));
                 this.kernelSocketInfo = info;
                 this.kernelSocketInfo.socket.addListener('message', this.onKernelSocketMessage.bind(this));
+
+                this.sendKernelOptions();
                 // Since we have connected to a kernel, send any pending messages.
+                this.registerCommTargets(notebook);
                 this.sendPendingMessages();
             })
             .ignoreErrors();
