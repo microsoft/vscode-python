@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceInfo, traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 
 export const JupyterWebSockets = new Map<string, WebSocketWS>();
 
