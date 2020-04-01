@@ -200,8 +200,7 @@ interface IPythonProcessService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
-// PythonExecutionService is only exported for the sake of testing.
-export class PythonExecutionService {
+class PythonExecutionService {
     constructor(
         // These are composed by the caller.
         private readonly env: IPythonEnvironment,
@@ -245,8 +244,7 @@ export class PythonExecutionService {
     }
 }
 
-// createPythonService is only exported for the sake of testing.
-export function createPythonService(
+function createPythonService(
     pythonPath: string,
     procService: IProcessService,
     fs: IFileSystem,
@@ -262,4 +260,22 @@ export function createPythonService(
     }
     const procs = createPythonProcessService(procService, env);
     return new PythonExecutionService(env, procs);
+}
+
+export namespace _forTestingUseOnly {
+    export function expectPythonExecutionService(service: unknown) {
+        // tslint:disable-next-line:no-require-imports
+        const chai = require('chai');
+        chai.expect(service).instanceOf(PythonExecutionService);
+    }
+
+    export function createPyService(
+        python: string,
+        procs: IProcessService,
+        fs: IFileSystem,
+        conda?: [string, CondaEnvironmentInfo],
+        isWinStore?: boolean
+    ) {
+        return createPythonService(python, procs, fs, conda, isWinStore);
+    }
 }

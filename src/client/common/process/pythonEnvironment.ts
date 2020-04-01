@@ -34,8 +34,7 @@ function createPythonEnvDeps(
     };
 }
 
-// PythonEnvironment is only exported for the sake of testing.
-export class PythonEnvironment {
+class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(
@@ -210,4 +209,12 @@ export function createWindowsStoreEnv(
 ): WindowsStoreEnvironment {
     const deps = createPythonEnvDeps(procs, fs);
     return new WindowsStoreEnvironment(pythonPath, deps);
+}
+
+export namespace _forTestingUseOnly {
+    export function stubBaseGetExecutablePath() {
+        // tslint:disable-next-line:no-require-imports
+        const sinon = require('sinon');
+        return sinon.stub(PythonEnvironment.prototype, 'getExecutablePath');
+    }
 }

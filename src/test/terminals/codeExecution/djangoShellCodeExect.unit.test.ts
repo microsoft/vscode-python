@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { createPythonService } from '../../../client/common/process/pythonExecutionFactory';
+import { _forTestingUseOnly as _pyExec } from '../../../client/common/process/pythonExecutionFactory';
 import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
@@ -206,7 +206,7 @@ suite('Terminal - Django Shell Code Execution', () => {
 
         const condaFile = 'conda';
         const processService = TypeMoq.Mock.ofType<IProcessService>();
-        const condaExecutionService = createPythonService(
+        const condaExecutionService = _pyExec.createPyService(
             pythonPath,
             processService.object,
             fileSystem.object,

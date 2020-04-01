@@ -10,10 +10,10 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
+    _forTestingUseOnly,
     createCondaEnv,
     createPythonEnv,
-    createWindowsStoreEnv,
-    PythonEnvironment
+    createWindowsStoreEnv
 } from '../../../client/common/process/pythonEnvironment';
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -284,7 +284,8 @@ suite('WindowsStoreEnvironment', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
 
-        superExecutablePathStub = sinon.stub(PythonEnvironment.prototype, 'getExecutablePath');
+        //superExecutablePathStub = sinon.stub(_forTestingUseOnly.BaseEnvironment.prototype, 'getExecutablePath');
+        superExecutablePathStub = _forTestingUseOnly.stubBaseGetExecutablePath();
         superExecutablePathStub.resolves(superPythonPath);
     });
     teardown(() => {
