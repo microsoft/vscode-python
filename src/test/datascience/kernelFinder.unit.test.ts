@@ -5,7 +5,6 @@
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
 
-import { performance } from 'perf_hooks';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
