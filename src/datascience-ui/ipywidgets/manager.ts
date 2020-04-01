@@ -42,7 +42,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         private readonly dispatcher: <M extends IInteractiveWindowMapping, T extends keyof M>(
             type: T,
             payload?: M[T]
-        ) => void
+        ) => void,
+        // tslint:disable-next-line: no-any
+        loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
     ) {
         this.proxyKernel = new ProxyKernel(this);
         try {
@@ -54,7 +56,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             }
             // tslint:disable-next-line: no-any
             const kernel = (this.proxyKernel as any) as Kernel.IKernel;
-            this.manager = new JupyterLabWidgetManager(kernel, widgetContainer);
+            this.manager = new JupyterLabWidgetManager(kernel, widgetContainer, loadErrorHandler);
             WidgetManager.instance = this;
             this.registerPostOffice();
         } catch (ex) {

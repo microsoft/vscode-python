@@ -85,6 +85,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.PostOutgoingMessage]: MessageType.other,
     [CommonActionType.REFRESH_VARIABLES]: MessageType.other,
     [CommonActionType.FOCUS_INPUT]: MessageType.other,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
 
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
