@@ -236,6 +236,10 @@ export namespace CommonEffects {
                 }
             });
             newVMs[index] = newVM;
+
+            // Make sure to tell the extension so it can log telemetry.
+            postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadFailure, arg.payload.data);
+
             return {
                 ...arg.prevState,
                 cellVMs: newVMs

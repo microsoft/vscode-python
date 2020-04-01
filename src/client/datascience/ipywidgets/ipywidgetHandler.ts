@@ -5,8 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { ILoadIPyWidgetClassFailureAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import {
     INotebookIdentity,
     InteractiveWindowMessages,
@@ -36,6 +39,9 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+    // tslint:disable-next-line: no-require-imports
+    private hashFn = require('hash.js').sha256;
+
     constructor(
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -63,9 +69,22 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
             // tslint:disable-next-line: no-any
             ipywidgetMulticaster!.receiveMessage({ message: message as any, payload });
+        } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
+            this.sendLoadFailureTelemetry(payload);
         }
     }
 
+    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
+                isOnline: payload.isOnline,
+                moduleHash: this.hashFn(payload.moduleName),
+                moduleVersion: payload.moduleVersion
+            });
+        } catch {
+            // do nothing on failure
+        }
+    }
     private getIPyWidgetMulticaster() {
         if (!this.notebookIdentity) {
             return;

@@ -111,6 +111,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Interrupt]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,
