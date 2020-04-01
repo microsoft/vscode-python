@@ -186,23 +186,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 }
 
-function getPythonEnv(
-    pythonPath: string,
-    procs: IProcessService,
-    fs: IFileSystem,
-    conda?: [string, CondaEnvironmentInfo],
-    isWindowsStore?: boolean
-) {
-    if (conda) {
-        const [condaPath, condaInfo] = conda;
-        return createCondaEnv(condaPath, condaInfo, pythonPath, procs, fs);
-    } else if (isWindowsStore) {
-        return createWindowsStoreEnv(pythonPath, procs, fs);
-    } else {
-        return createPythonEnv(pythonPath, procs, fs);
-    }
-}
-
 interface IPythonEnvironment {
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
@@ -270,7 +253,13 @@ export function createPythonService(
     conda?: [string, CondaEnvironmentInfo],
     isWindowsStore?: boolean
 ): PythonExecutionService {
-    const env = getPythonEnv(pythonPath, procService, fs, conda, isWindowsStore);
+    let env = createPythonEnv(pythonPath, procService, fs);
+    if (conda) {
+        const [condaPath, condaInfo] = conda;
+        env = createCondaEnv(condaPath, condaInfo, pythonPath, procService, fs);
+    } else if (isWindowsStore) {
+        env = createWindowsStoreEnv(pythonPath, procService, fs);
+    }
     const procs = createPythonProcessService(procService, env);
     return new PythonExecutionService(env, procs);
 }
