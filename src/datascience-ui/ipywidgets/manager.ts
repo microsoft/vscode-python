@@ -16,7 +16,6 @@ import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
@@ -60,9 +59,14 @@ export class WidgetManager implements IIPyWidgetManager {
         this.postOffice.addHandler({
             handleMessage: (message: string, payload?: any) => {
                 if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
-                    this.initializeKernelAndWidgetManager(payload).ignoreErrors();
-                } else if (message === InteractiveWindowMessages.ClearAllOutputs) {
-                    this.clear().ignoreErrors();
+                    this.initializeKernelAndWidgetManager(payload);
+                    // } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
+                    //     // Kernel was restarted.
+                    //     this.manager?.dispose();
+                    //     this.manager = undefined;
+                    //     this.proxyKernel?.dispose();
+                    //     this.proxyKernel = undefined;
+                    //     WidgetManager._instance.next(undefined);
                 } else if (AllowedIPyWidgetMessages.find((k) => k === message)) {
                     this.messages.next({ type: message, payload });
                 }
@@ -74,6 +78,11 @@ export class WidgetManager implements IIPyWidgetManager {
         this.kernelSocket = {
             onMessage: noop,
             postMessage: (data: string) => {
+                // Do this only if we have a valid kernel & manager.
+                // E.g. if they have been disposed, then ignore all messages from then on.
+                if (!this.manager || !this.proxyKernel) {
+                    return;
+                }
                 if (typeof data === 'string') {
                     this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg, data);
                 } else {
@@ -87,7 +96,7 @@ export class WidgetManager implements IIPyWidgetManager {
         };
 
         // Handshake.
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready, '');
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
     }
     public dispose(): void {
         this.proxyKernel?.dispose();
@@ -149,10 +158,11 @@ export class WidgetManager implements IIPyWidgetManager {
         // tslint:disable-next-line: no-any
         return this.manager.display_view(data, view, { node: ele });
     }
-    private async initializeKernelAndWidgetManager(options: KernelSocketOptions) {
+    private initializeKernelAndWidgetManager(options: KernelSocketOptions) {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
+        this.proxyKernel?.dispose();
         this.proxyKernel = createKernel(this.kernelSocket, options);
 
         // When a comm target has been regisered, we need to register this in the real kernel in extension side.
@@ -169,10 +179,7 @@ export class WidgetManager implements IIPyWidgetManager {
             return originalRegisterCommTarget(targetName, callback);
         };
 
-        // Clear and dispose any existing managers.
-        if (this.manager) {
-            await this.clear().catch(noop);
-        }
+        // Dispose any existing managers.
         this.manager?.dispose();
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).

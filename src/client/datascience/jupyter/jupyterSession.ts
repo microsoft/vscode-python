@@ -29,9 +29,10 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IConnection, IJupyterKernelSpec, IJupyterSession, IKernelSocket, KernelSocketInformation } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterWebSockets } from './jupyterWebSocket';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
@@ -61,11 +62,34 @@ export class JupyterSessionStartError extends Error {
 }
 
 export class JupyterSession implements IJupyterSession {
-    public session: ISession | undefined;
+    private get session(): ISession | undefined {
+        return this._session;
+    }
+    private set session(session: ISession | undefined) {
+        this._session = session;
+        if (session) {
+            const socket = JupyterWebSockets.get(session.kernel.id);
+            if (!socket) {
+                traceError(`Unable to find WebSocket connetion assocated with kerne ${session.kernel.id}`);
+                this._kernelSocket.next(undefined);
+                return;
+            }
+            this._kernelSocket.next({
+                options: {
+                    clientId: session.kernel.clientId,
+                    id: session.kernel.id,
+                    model: { ...session.kernel.model },
+                    userName: session.kernel.username
+                },
+                socket: socket
+            });
+        }
+    }
+    private _session: ISession | undefined;
     private restartSessionPromise: Promise<ISession | undefined> | undefined;
     private notebookFiles: Contents.IModel[] = [];
-    private _kernelSocket = new ReplaySubject<KernelSocketInformation>();
-    public get kernelSocket(): Observable<KernelSocketInformation> {
+    private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
+    public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
@@ -176,11 +200,11 @@ export class JupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            // this.restartSessionPromise = this.createRestartSession(
-            //     oldSession.serverSettings,
-            //     this.kernelSpec,
-            //     this.contentsManager
-            // );
+            this.restartSessionPromise = this.createRestartSession(
+                oldSession.serverSettings,
+                this.kernelSpec,
+                this.contentsManager
+            );
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -258,7 +282,7 @@ export class JupyterSession implements IJupyterSession {
         );
 
         // Listen for session status changes
-        this.session.statusChanged.connect(this.statusHandler);
+        this.session?.statusChanged.connect(this.statusHandler);
 
         // Made it this far, we're connected now
         this.connected = true;
@@ -306,10 +330,10 @@ export class JupyterSession implements IJupyterSession {
         this.session = newSession;
 
         // Listen for session status changes
-        this.session.statusChanged.connect(this.statusHandler);
+        this.session?.statusChanged.connect(this.statusHandler);
 
         // Start the restart session promise too.
-        // this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
+        this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
     }
 
     public registerCommTarget(
@@ -440,12 +464,17 @@ export class JupyterSession implements IJupyterSession {
                 }
             };
 
-            const kernelStatusChangedPromise = new Promise((resolve, reject) =>
-                session.statusChanged.connect((_, e) => statusHandler(resolve, reject, e))
-            );
-            const statusChangedPromise = new Promise((resolve, reject) =>
-                session.kernelChanged.connect((_, e) => statusHandler(resolve, reject, e.newValue?.status))
-            );
+            let statusChangeHandler: Slot<ISession, Kernel.Status> | undefined;
+            const kernelStatusChangedPromise = new Promise((resolve, reject) => {
+                statusChangeHandler = (_: ISession, e: Kernel.Status) => statusHandler(resolve, reject, e);
+                session.statusChanged.connect(statusChangeHandler);
+            });
+            let kernelChangedHandler: Slot<ISession, Session.IKernelChangedArgs> | undefined;
+            const statusChangedPromise = new Promise((resolve, reject) => {
+                kernelChangedHandler = (_: ISession, e: Session.IKernelChangedArgs) =>
+                    statusHandler(resolve, reject, e.newValue?.status);
+                session.kernelChanged.connect(kernelChangedHandler);
+            });
             const checkStatusPromise = new Promise(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
@@ -464,6 +493,13 @@ export class JupyterSession implements IJupyterSession {
             await Promise.race([kernelStatusChangedPromise, statusChangedPromise, checkStatusPromise]);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
+            if (statusChangeHandler) {
+                session.statusChanged.disconnect(statusChangeHandler);
+            }
+            if (kernelChangedHandler) {
+                session.kernelChanged.disconnect(kernelChangedHandler);
+            }
+
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {
                 return;
@@ -476,34 +512,32 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private async createRestartSession(
-        _serverSettings: ServerConnection.ISettings,
-        _kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        _contentsManager: ContentsManager,
-        _cancelToken?: CancellationToken
+        serverSettings: ServerConnection.ISettings,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        contentsManager: ContentsManager,
+        cancelToken?: CancellationToken
     ): Promise<ISession> {
-        // let result: ISession | undefined;
-        // let tryCount = 0;
-        // // tslint:disable-next-line: no-any
-        // let exception: any;
-        // while (tryCount < 3) {
-        //     try {
-        //         result = await this.createSession(serverSettings, kernelSpec, contentsManager, cancelToken);
-        //         await this.waitForIdleOnSession(result, 30000);
-        //         this.kernelSelector.addKernelToIgnoreList(result.kernel);
-        //         return result;
-        //     } catch (exc) {
-        //         traceInfo(`Error waiting for restart session: ${exc}`);
-        //         tryCount += 1;
-        //         if (result) {
-        //             this.shutdownSession(result, undefined).ignoreErrors();
-        //         }
-        //         result = undefined;
-        //         exception = exc;
-        //     }
-        // }
-        // throw exception;
+        let result: ISession | undefined;
+        let tryCount = 0;
         // tslint:disable-next-line: no-any
-        return Promise.resolve(undefined as any);
+        let exception: any;
+        while (tryCount < 3) {
+            try {
+                result = await this.createSession(serverSettings, kernelSpec, contentsManager, cancelToken);
+                await this.waitForIdleOnSession(result, 30000);
+                this.kernelSelector.addKernelToIgnoreList(result.kernel);
+                return result;
+            } catch (exc) {
+                traceInfo(`Error waiting for restart session: ${exc}`);
+                tryCount += 1;
+                if (result) {
+                    this.shutdownSession(result, undefined).ignoreErrors();
+                }
+                result = undefined;
+                exception = exc;
+            }
+        }
+        throw exception;
     }
 
     private async createSession(
@@ -522,49 +556,15 @@ export class JupyterSession implements IJupyterSession {
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };
-        // tslint:disable-next-line: no-any
-        const instancePromise: Promise<IKernelSocket> = (serverSettings.WebSocket as any)?.instance;
-        // This should never happen, if it does then don't allow code to run.
-        if (!serverSettings.WebSocket || !instancePromise) {
-            throw new Error(`Static property 'instance' not found in WebSocket`);
-        }
 
-        const information = {
-            options: {
-                clientId: '',
-                id: '',
-                model: { name: '', id: '' },
-                userName: ''
-            },
-            // tslint:disable-next-line: no-any
-            socket: {} as any
-        };
-        const initializeKernelInformation = (socket?: IKernelSocket, session?: Session.ISession) => {
-            if (socket) {
-                information.socket = socket;
-            }
-            if (session) {
-                information.options.id = session.kernel.id;
-                information.options.clientId = session.kernel.clientId;
-                information.options.model = { ...session.kernel.model };
-                information.options.userName = session.kernel.username;
-            }
-            if (information.socket && information.options.id) {
-                this._kernelSocket.next(information);
-            }
-        };
-        instancePromise
-            .then(initializeKernelInformation)
-            .catch((ex) => traceError('Failed to initialize WebSocket.instance', ex));
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)
-                    .then((s) => {
+                    .then(async (session) => {
                         this.logRemoteOutput(
-                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s.kernel.id)
+                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
                         );
-                        initializeKernelInformation(undefined, s);
-                        return s;
+                        return session;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
             cancelToken

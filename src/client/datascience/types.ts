@@ -109,7 +109,7 @@ export interface INotebookServer extends IAsyncDisposable {
 
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
-    kernelSocket: Observable<KernelSocketInformation>;
+    kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;
@@ -244,7 +244,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
-    readonly kernelSocket: Observable<KernelSocketInformation>;
+    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -937,7 +937,6 @@ export interface INotebookProvider {
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
     send(data: any, cb?: (err?: Error) => void): void;
-    on(event: 'message', listener: (this: IKernelSocket, data: WebSocketData) => void): this;
     addListener(event: 'message', listener: (data: WebSocketData) => void): this;
     removeListener(event: 'message', listener: (data: WebSocketData) => void): this;
 }
@@ -958,6 +957,6 @@ export type KernelSocketOptions = {
     };
 };
 export type KernelSocketInformation = {
-    readonly socket: IKernelSocket;
+    readonly socket?: IKernelSocket;
     readonly options: KernelSocketOptions;
 };

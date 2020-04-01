@@ -3,14 +3,13 @@
 'use strict';
 import * as WebSocketWS from 'ws';
 import { traceInfo } from '../../common/logger';
-import { createDeferred } from '../../common/utils/async';
+
+export const JupyterWebSockets = new Map<string, WebSocketWS>();
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to
 export function createJupyterWebSocket(log?: boolean, cookieString?: string, allowUnauthorized?: boolean) {
-    const instancePromise = createDeferred<WebSocketWS>();
     class JupyterWebSocket extends WebSocketWS {
-        public static instance = instancePromise.promise;
         private kernelId: string | undefined;
 
         constructor(url: string, protocols?: string | string[] | undefined) {
@@ -36,7 +35,13 @@ export function createJupyterWebSocket(log?: boolean, cookieString?: string, all
             if (parsed && parsed.length > 1) {
                 this.kernelId = parsed[1];
             }
-            instancePromise.resolve(this);
+            if (!this.kernelId) {
+                throw new Error('KernelId not extraacted from Kernel WebSocket URL');
+            }
+            JupyterWebSockets.set(this.kernelId, this);
+            this.on('close', () => {
+                JupyterWebSockets.delete(this.kernelId!);
+            });
         }
 
         // tslint:disable-next-line: no-any

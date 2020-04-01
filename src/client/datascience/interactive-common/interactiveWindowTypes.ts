@@ -107,6 +107,7 @@ export enum InteractiveWindowMessages {
 
 export enum IPyWidgetMessages {
     IPyWidgets_Ready = 'IPyWidgets_Ready',
+    IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
@@ -460,7 +461,8 @@ export type NotebookModelChange =
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
-    public [IPyWidgetMessages.IPyWidgets_Ready]: string;
+    public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;

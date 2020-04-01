@@ -7,10 +7,13 @@ import * as util from 'util';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
-import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -29,11 +32,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
 
     private readonly disposables: IDisposable[] = [];
-    private kernelRestartHandlerAttached = false;
+    private kernelRestartHandlerAttached?: boolean;
     private kernelSocketInfo?: KernelSocketInformation;
+    private kernelWasConnectedAtleastOnce?: boolean;
     private disposed = false;
-    private queuedMessages: string[] = [];
-    private readonly uiIsReady = createDeferred();
+    private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
@@ -54,7 +57,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    public receiveMessage(message: IPyWidgetMessage): void {
+    public receiveMessage(message: IPyWidgetMessage | { message: InteractiveWindowMessages.RestartKernel }): void {
         traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
@@ -67,10 +70,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             case IPyWidgetMessages.IPyWidgets_binary_msg:
                 this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
                 break;
+            // case InteractiveWindowMessages.RestartKernel:
+            // Bug in code, we send this same message from extension side when already restarting.
+            //     // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
+            //     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+            //     this.kernelSocketInfo = undefined;
+            //     while (this.pendingMessages.length) {
+            //         this.pendingMessages.shift();
+            //     }
+            //     break;
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
-                this.uiIsReady.resolve();
                 this.registerCommTarget(message.payload).ignoreErrors();
-
                 break;
 
             default:
@@ -78,7 +88,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
     public sendRawPayloadToKernelSocket(payload?: any) {
-        this.queuedMessages.push(payload);
+        this.pendingMessages.push(payload);
         this.sendPendingMessages();
     }
     public async registerCommTarget(targetName: string) {
@@ -113,14 +123,27 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.subscribedToKernelSocket = true;
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
-            if (info.socket === this.kernelSocketInfo?.socket) {
-                return;
-            }
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this));
-            this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket.addListener('message', this.onKernelSocketMessage.bind(this));
 
+            if (this.kernelWasConnectedAtleastOnce) {
+                // this means we restarted the kernel and we now have new information.
+                // Discard all of the messages upto this point.
+                while (this.pendingMessages.length) {
+                    this.pendingMessages.shift();
+                }
+                // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
+                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+            }
+            if (!info || !info.socket) {
+                // No kernel socket information, hence nothing much we can do.
+                this.kernelSocketInfo = undefined;
+                return;
+            }
+
+            this.kernelWasConnectedAtleastOnce = true;
+            this.kernelSocketInfo = info;
+            this.kernelSocketInfo.socket?.addListener('message', this.onKernelSocketMessage.bind(this));
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
@@ -148,10 +171,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (!this.notebook || !this.kernelSocketInfo) {
             return;
         }
-        while (this.queuedMessages.length) {
+        while (this.pendingMessages.length) {
             try {
-                this.kernelSocketInfo.socket.send(this.queuedMessages[0]);
-                this.queuedMessages.shift();
+                this.kernelSocketInfo.socket?.send(this.pendingMessages[0]);
+                this.pendingMessages.shift();
             } catch (ex) {
                 return;
             }

@@ -178,9 +178,9 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [SharedMessages.Started]: MessageType.other,
     [SharedMessages.UpdateSettings]: MessageType.other,
     // IpyWidgets
-    // [IPyWidgetMessages.IPyWidgets_ShellCommOpen]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_kernelOptions]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_Ready]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea
