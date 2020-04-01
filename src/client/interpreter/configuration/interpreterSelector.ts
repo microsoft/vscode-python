@@ -163,7 +163,7 @@ export class InterpreterSelector implements IInterpreterSelector {
                 configTarget: ConfigurationTarget.Global
             };
         }
-        if (this.workspaceService.workspaceFolders.length === 1) {
+        if (!this.workspaceService.workspaceFile && this.workspaceService.workspaceFolders.length === 1) {
             return {
                 folderUri: this.workspaceService.workspaceFolders[0].uri,
                 configTarget: ConfigurationTarget.WorkspaceFolder
@@ -174,13 +174,11 @@ export class InterpreterSelector implements IInterpreterSelector {
 
         type WorkspaceSelectionQuickPickItem = QuickPickItem & { uri: Uri };
         const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
-            ...this.workspaceService.workspaceFolders.map(w => {
-                ({
-                    label: w.name,
-                    description: path.dirname(w.uri.fsPath),
-                    uri: w.uri
-                })
-            }),
+            ...this.workspaceService.workspaceFolders.map(w => ({
+                label: w.name,
+                description: path.dirname(w.uri.fsPath),
+                uri: w.uri
+            })),
             {
                 label: Interpreters.entireWorkspace(),
                 uri: this.workspaceService.workspaceFolders[0].uri

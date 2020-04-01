@@ -91,7 +91,8 @@ suite('Multiroot Environment Variables Provider', () => {
             new PlatformService(),
             workspaceService,
             cfgService,
-            mockProcess
+            mockProcess,
+            ioc.serviceContainer
         );
     }
 

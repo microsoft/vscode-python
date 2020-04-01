@@ -222,8 +222,9 @@ suite('Interpreters - selector', () => {
             workspace.verifyAll();
             pythonPathUpdater.verifyAll();
         });
-        test('Update workspace folder settings when there is one workspace folder', async () => {
+        test('Update workspace folder settings when there is one workspace folder and no workspace file', async () => {
             pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
+            workspace.setup(w => w.workspaceFile).returns(() => undefined);
             const selectedItem: IInterpreterQuickPickItem = {
                 description: '',
                 detail: '',
@@ -459,9 +460,10 @@ suite('Interpreters - selector', () => {
             workspace.verifyAll();
             pythonPathUpdater.verifyAll();
         });
-        test('Update workspace folder settings when there is one workspace folder', async () => {
+        test('Update workspace folder settings when there is one workspace folder and no workspace file', async () => {
             const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
             workspace.setup(w => w.workspaceFolders).returns(() => [folder]);
+            workspace.setup(w => w.workspaceFile).returns(() => undefined);
 
             selector.getSuggestions = () => Promise.resolve([]);
             pythonPathUpdater

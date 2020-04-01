@@ -11,7 +11,10 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
+import { DeprecatePythonPath } from '../../../client/common/experimentGroups';
+import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -30,10 +33,17 @@ suite('Python Settings - pythonPath', () => {
         }
     }
     let configSettings: CustomPythonSettings;
+    let workspaceService: typemoq.IMock<IWorkspaceService>;
+    let experimentsManager: typemoq.IMock<IExperimentsManager>;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let pythonSettings: typemoq.IMock<WorkspaceConfiguration>;
     setup(() => {
         pythonSettings = typemoq.Mock.ofType<WorkspaceConfiguration>();
         sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        experimentsManager = typemoq.Mock.ofType<IExperimentsManager>();
+        workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+        pythonSettings.setup(p => p.get(typemoq.It.isValue('defaultInterpreterPath'))).returns(() => 'python');
     });
     teardown(() => {
         if (configSettings) {
@@ -46,7 +56,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         const pythonPath = 'This is the python Path';
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -57,7 +67,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         const pythonPath = `~${path.sep}This is the python Path`;
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -69,7 +79,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(workspaceFolderUri, new MockAutoSelectionService());
         const pythonPath = `.${path.sep}This is the python Path`;
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
 
@@ -83,7 +93,7 @@ suite('Python Settings - pythonPath', () => {
         const workspaceFolderToken = '${workspaceFolder}';
         const pythonPath = `${workspaceFolderToken}${path.sep}This is the python Path`;
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -96,7 +106,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
         const pythonPath = 'python';
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -112,12 +122,72 @@ suite('Python Settings - pythonPath', () => {
         when(selectionService.setWorkspaceInterpreter(workspaceFolderUri, anything())).thenResolve();
         configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
         pythonSettings
-            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => 'python')
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
 
         expect(configSettings.pythonPath).to.be.equal(pythonPath);
         verify(selectionService.getAutoSelectedInterpreter(workspaceFolderUri)).once();
+    });
+    test('If user is in Deprecate Python Path experiment, use the new API to fetch Python Path', () => {
+        const resource = Uri.parse('a');
+        configSettings = new CustomPythonSettings(
+            resource,
+            new MockAutoSelectionService(),
+            workspaceService.object,
+            experimentsManager.object,
+            interpreterPathService.object
+        );
+        const pythonPath = 'This is the new API python Path';
+        pythonSettings.setup(p => p.get(typemoq.It.isValue('pythonPath'))).verifiable(typemoq.Times.never());
+        experimentsManager
+            .setup(e => e.inExperiment(DeprecatePythonPath.experiment))
+            .returns(() => true)
+            .verifiable(typemoq.Times.once());
+        experimentsManager
+            .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.once());
+        interpreterPathService
+            .setup(i => i.get(resource))
+            .returns(() => pythonPath)
+            .verifiable(typemoq.Times.once());
+        configSettings.update(pythonSettings.object);
+
+        expect(configSettings.pythonPath).to.be.equal(pythonPath);
+        experimentsManager.verifyAll();
+        interpreterPathService.verifyAll();
+        pythonSettings.verifyAll();
+    });
+    test('If user is not in Deprecate Python Path experiment, use the settings to fetch Python Path', () => {
+        const resource = Uri.parse('a');
+        configSettings = new CustomPythonSettings(
+            resource,
+            new MockAutoSelectionService(),
+            workspaceService.object,
+            experimentsManager.object,
+            interpreterPathService.object
+        );
+        const pythonPath = 'This is the settings python Path';
+        pythonSettings
+            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .returns(() => pythonPath)
+            .verifiable(typemoq.Times.atLeastOnce());
+        experimentsManager
+            .setup(e => e.inExperiment(DeprecatePythonPath.experiment))
+            .returns(() => false)
+            .verifiable(typemoq.Times.once());
+        experimentsManager
+            .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.once());
+        interpreterPathService.setup(i => i.get(resource)).verifiable(typemoq.Times.never());
+        configSettings.update(pythonSettings.object);
+
+        expect(configSettings.pythonPath).to.be.equal(pythonPath);
+        experimentsManager.verifyAll();
+        interpreterPathService.verifyAll();
+        pythonSettings.verifyAll();
     });
 });

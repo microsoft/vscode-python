@@ -191,6 +191,7 @@ export interface IPythonSettings {
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
+    readonly defaultInterpreterPath: string;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -613,4 +614,22 @@ export interface IExperimentsManager {
      * @param experimentName Name of the experiment
      */
     sendTelemetryIfInExperiment(experimentName: string): void;
+}
+
+export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };
+export type InspectInterpreterSettingType = {
+    globalValue?: string;
+    workspaceValue?: string;
+    workspaceFolderValue?: string;
+};
+
+/**
+ * Interface used to access current Interpreter Path
+ */
+export const IInterpreterPathService = Symbol('IInterpreterPathService');
+export interface IInterpreterPathService {
+    onDidChange: Event<InterpreterConfigurationScope>;
+    get(resource: Resource): string;
+    inspect(resource: Resource): InspectInterpreterSettingType;
+    update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
 }

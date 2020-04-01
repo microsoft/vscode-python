@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IFileDownloader, IHttpClient } from '../common/types';
+import { IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
+import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { ClipboardService } from './application/clipboard';
@@ -20,6 +21,7 @@ import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
 import { TerminalManager } from './application/terminalManager';
 import {
+    IActiveResourceService,
     IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
@@ -54,6 +56,7 @@ import {
     IInsiderExtensionPrompt
 } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
+import { InterpreterPathService } from './interpreterPathService';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
@@ -110,6 +113,8 @@ import { Random } from './utils/random';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
+    serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
+    serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
