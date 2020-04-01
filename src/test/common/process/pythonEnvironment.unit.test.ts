@@ -237,6 +237,8 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', function () {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO(gh-10909) This test can probably be un-skipped.
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
 
@@ -253,6 +255,8 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function () {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO(gh-10909) This test can probably be un-skipped.
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
 
