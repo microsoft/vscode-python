@@ -70,7 +70,6 @@ import {
     CellState,
     ICell,
     ICodeCssGenerator,
-    IConnection,
     IDataScienceErrorHandler,
     IDataViewerProvider,
     IInteractiveBase,
@@ -1052,13 +1051,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (serverConnection.localLaunch) {
                 localizedUri = localize.DataScience.localJupyterServer();
             } else {
-                // In remote case we are always a jupyter connection
-                const jupyterServerConnection = serverConnection as IConnection;
-                if (jupyterServerConnection.token) {
-                    localizedUri = `${jupyterServerConnection.baseUrl}?token=${jupyterServerConnection.token}`;
-                } else {
-                    localizedUri = jupyterServerConnection.baseUrl;
-                }
+                localizedUri = serverConnection.displayName;
 
                 // Log this remote URI into our MRU list
                 addToUriList(this.globalStorage, localizedUri, Date.now());
@@ -1077,7 +1070,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: status,
-                    // IANHU: Remove bang when we fix server property
                     localizedUri: this.getServerUri(notebook.connection),
                     displayName: name
                 });
@@ -1114,7 +1106,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    // IANHU: Rename?
     private async checkForServerStart(): Promise<void> {
         // Check to see if we are already connected to our provider
         const providerConnection = await this.notebookProvider.connect({ getOnly: true });

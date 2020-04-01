@@ -53,7 +53,6 @@ export class MockJupyterNotebook implements INotebook {
     public onKernelRestarted = new EventEmitter<void>().event;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
-    //constructor(private owner: INotebookServer) {
     constructor(private providerConnection: INotebookProviderConnection | undefined) {
         noop();
     }

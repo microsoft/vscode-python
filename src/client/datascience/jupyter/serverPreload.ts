@@ -49,7 +49,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
         }
     }
 
-    // IANHU: Rename?
     private async createServerIfNecessary() {
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
