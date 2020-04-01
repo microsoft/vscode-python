@@ -161,12 +161,12 @@ class CondaEnvironment extends PythonEnvironment {
 
 class WindowsStoreEnvironment extends PythonEnvironment {
     /**
-     * With windows store python apps, we have generally use the symlinked python executable.
-     * The actual file is not accessible by the user due to permission issues (& rest of exension fails when using that executable).
-     * Hence lets not resolve the executable using sys.executable for windows store python interpreters.
-     *
-     * @returns {Promise<string>}
-     * @memberof WindowsStorePythonProcess
+     * With windows store python apps, we have generally use the
+     * symlinked python executable.  The actual file is not accessible
+     * by the user due to permission issues (& rest of exension fails
+     * when using that executable).  Hence lets not resolve the
+     * executable using sys.executable for windows store python
+     * interpreters.
      */
     public async getExecutablePath(): Promise<string> {
         return this.pythonPath;
