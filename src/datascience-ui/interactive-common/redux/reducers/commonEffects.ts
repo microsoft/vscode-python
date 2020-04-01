@@ -206,8 +206,15 @@ export namespace CommonEffects {
         arg: CommonReducerArg<CommonActionType, ILoadIPyWidgetClassFailureAction>
     ): IMainState {
         // Find the first currently executing cell and add an error to its output
-        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.state === CellState.executing);
-        if (index && arg.prevState.cellVMs[index].cell.data.cell_type === 'code') {
+        let index = arg.prevState.cellVMs.findIndex((c) => c.cell.state === CellState.executing);
+
+        // If there isn't one, then find the latest that matches the current execution count.
+        if (index < 0) {
+            index = arg.prevState.cellVMs.findIndex(
+                (c) => c.cell.data.execution_count === arg.prevState.currentExecutionCount
+            );
+        }
+        if (index >= 0 && arg.prevState.cellVMs[index].cell.data.cell_type === 'code') {
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
 
