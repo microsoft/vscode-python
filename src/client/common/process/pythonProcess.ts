@@ -65,10 +65,10 @@ class PythonProcessService {
         const result = await this.deps.exec(executable.command, executable.args, opts);
 
         // If a module is not installed we'll have something in stderr.
-        if (moduleName && ErrorUtils.outputHasModuleNotInstalledError(moduleName!, result.stderr)) {
-            const isInstalled = await this.env.isModuleInstalled(moduleName!);
+        if (moduleName && ErrorUtils.outputHasModuleNotInstalledError(moduleName, result.stderr)) {
+            const isInstalled = await this.env.isModuleInstalled(moduleName);
             if (!isInstalled) {
-                throw new ModuleNotInstalledError(moduleName!);
+                throw new ModuleNotInstalledError(moduleName);
             }
         }
 
