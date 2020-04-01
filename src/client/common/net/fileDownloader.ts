@@ -42,11 +42,11 @@ export class FileDownloader implements IFileDownloader {
         tmpFilePath: string
     ): Promise<void> {
         const statusBarProgress = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
-        const req = await this.httpClient.downloadFile(uri);
-        const fileStream = this.fs.createWriteStream(tmpFilePath);
-        const progressMessageWithIcon = `${Octicons.Downloading} ${progressMessage}`;
-        statusBarProgress.show();
         try {
+            const req = await this.httpClient.downloadFile(uri);
+            const fileStream = this.fs.createWriteStream(tmpFilePath);
+            const progressMessageWithIcon = `${Octicons.Downloading} ${progressMessage}`;
+            statusBarProgress.show();
             await this.displayDownloadProgress(uri, statusBarProgress, req, fileStream, progressMessageWithIcon);
         } finally {
             statusBarProgress.dispose();
