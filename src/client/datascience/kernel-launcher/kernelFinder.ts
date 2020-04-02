@@ -157,10 +157,11 @@ export class KernelFinder implements IKernelFinder {
         let paths = [];
 
         if (this.platformService.isWindows) {
-            paths = [
-                path.join(process.env.ALLUSERSPROFILE!, 'jupyter', 'kernels'),
-                path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)
-            ];
+            paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
+
+            if (process.env.ALLUSERSPROFILE) {
+                paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
+            }
         } else {
             // Unix based
             const secondPart = this.platformService.isMac
