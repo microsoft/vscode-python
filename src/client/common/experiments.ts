@@ -318,6 +318,10 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
+    public _activated(): boolean {
+        return this.activatedOnce;
+    }
+
     /**
      * You can only opt in or out of experiment groups, not control groups. So remove requests for control groups.
      */
@@ -334,9 +338,5 @@ export class ExperimentsManager implements IExperimentsManager {
         }
         this._experimentsOptedInto = this._experimentsOptedInto.filter((exp) => exp !== '');
         this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter((exp) => exp !== '');
-    }
-
-    public _activated(): boolean {
-        return this.activatedOnce;
     }
 }
