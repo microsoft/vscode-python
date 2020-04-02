@@ -85,7 +85,6 @@ suite('A/B experiments', () => {
         ).thenReturn(downloadedExperimentsStorage.object);
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -112,7 +111,7 @@ suite('A/B experiments', () => {
         try {
             await expManager.initializeInBackground();
             // tslint:disable-next-line:no-empty
-        } catch {}
+        } catch { }
 
         isDownloadedStorageValid.verifyAll();
     }
@@ -231,7 +230,6 @@ suite('A/B experiments', () => {
 
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -263,7 +261,6 @@ suite('A/B experiments', () => {
 
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -295,7 +292,6 @@ suite('A/B experiments', () => {
         initializeInBackground.callsFake(() => Promise.resolve());
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -338,7 +334,6 @@ suite('A/B experiments', () => {
         initializeInBackground.callsFake(() => experimentsDeferred.promise);
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -396,7 +391,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -438,7 +432,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(true));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -476,7 +469,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -528,7 +520,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -583,7 +574,6 @@ suite('A/B experiments', () => {
                 doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
                 expManager = new ExperimentsManager(
                     instance(persistentStateFactory),
-                    instance(workspaceService),
                     instance(httpClient),
                     instance(crypto),
                     instance(appEnvironment),
@@ -1022,7 +1012,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => downloadExperimentsDeferred.promise);
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
@@ -1047,7 +1036,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => downloadExperimentsDeferred.promise);
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
@@ -1070,7 +1058,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => Promise.reject('Kaboom'));
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
