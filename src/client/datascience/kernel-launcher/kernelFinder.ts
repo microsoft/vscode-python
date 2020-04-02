@@ -227,8 +227,9 @@ export class KernelFinder implements IKernelFinder {
 
     private async readCache(): Promise<IJupyterKernelSpec[]> {
         try {
-            const x = await this.file.readFile(path.join(this.context.globalStoragePath, 'kernelSpecCache.json'));
-            return JSON.parse(x) as IJupyterKernelSpec[];
+            return JSON.parse(
+                await this.file.readFile(path.join(this.context.globalStoragePath, 'kernelSpecCache.json'))
+            ) as IJupyterKernelSpec[];
         } catch {
             traceInfo('No kernelSpec cache found.');
             return [];
