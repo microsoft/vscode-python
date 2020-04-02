@@ -5,8 +5,7 @@
 
 // Register the azureaml widget with requirejs.
 // This way the Azure ML file will be loaded dynamically when requested.
-const requirejs = window.requirejs;
-if (requirejs === undefined) {
+if (window.requirejs === undefined) {
     throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
 }
 
@@ -17,4 +16,4 @@ const conf = {
         azureml_widgets: (window.__PVSC_Public_Path || '') + 'azuremlindex'
     }
 };
-requirejs.config(conf);
+window.requirejs.config(conf);

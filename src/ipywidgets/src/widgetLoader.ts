@@ -42,9 +42,14 @@ async function requirePromise(pkg: string | string[]): Promise<any> {
         }
     });
 }
-
+const widgetsToLoadFromRequire = [
+    'azureml_widgets',
+    '@jupyter-widgets/controls',
+    '@jupyter-widgets/base',
+    '@jupyter-widgets/output'
+];
 export function requireLoader(moduleName: string, moduleVersion: string) {
-    if (moduleName !== 'azureml_widgets') {
+    if (!widgetsToLoadFromRequire.includes(moduleName)) {
         // tslint:disable-next-line: no-any
         const requirejs = (window as any).requirejs;
         if (requirejs === undefined) {
