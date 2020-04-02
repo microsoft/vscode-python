@@ -40,6 +40,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly disposables: IDisposable[] = [];
     private kernelRestartHandlerAttached?: boolean;
     private kernelSocketInfo?: KernelSocketInformation;
+    private sentKernelOptions = false;
     private kernelWasConnectedAtleastOnce?: boolean;
     private disposed = false;
     private pendingMessages: string[] = [];
@@ -197,7 +198,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (!this.kernelSocketInfo) {
             return;
         }
-        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
+        if (!this.sentKernelOptions) {
+            this.sentKernelOptions = true;
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
+        }
     }
     private async mirrorSend(
         originalSend: (data: any, cb?: (err?: Error) => void) => void,

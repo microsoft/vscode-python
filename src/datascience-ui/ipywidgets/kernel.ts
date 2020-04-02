@@ -74,6 +74,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private realKernel: Kernel.IKernel;
     private hookResults = new Map<string, boolean | PromiseLike<boolean>>();
     private websocket: WebSocketWS & { sendEnabled: boolean };
+    private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
+    private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -120,6 +122,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         );
         postOffice.addHandler(this);
         this.websocket = proxySocketInstance;
+        this.messageHook = this.messageHookInterceptor.bind(this);
+        this.messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
         this.fakeOpenSocket();
     }
 
@@ -282,17 +286,23 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // Tell the other side about this.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
 
+        // Save the real hook so we can call it
+        this.messageHooks.set(msgId, hook);
+
         // Wrap the hook and send it to the real kernel
-        this.realKernel.registerMessageHook(msgId, this.messageHookInterceptor.bind(this, hook));
+        this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
     public removeMessageHook(
         msgId: string,
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, msgId);
 
+        // Remove our mapping
+        this.messageHooks.delete(msgId);
+
         // Remove from the real kernel
-        this.realKernel.removeMessageHook(msgId, this.messageHookInterceptor.bind(this, hook));
+        this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
     private fakeOpenSocket() {
@@ -309,18 +319,23 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         this.realKernel.requestKernelInfo = originalRequestKernelInfo;
     }
-    private messageHookInterceptor(
-        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>,
-        msg: KernelMessage.IIOPubMessage
-    ): boolean | PromiseLike<boolean> {
-        window.console.log(
-            `Message hook callback for ${(msg as any).msg_type} and ${(msg.parent_header as any).msg_id}`
-        );
+    private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
+        try {
+            window.console.log(
+                `Message hook callback for ${(msg as any).msg_type} and ${(msg.parent_header as any).msg_id}`
+            );
 
-        // When the kernel calls the hook, save the result for this message. The other side will ask for it
-        const result = hook(msg);
-        this.hookResults.set(msg.header.msg_id, result);
-        return result;
+            const hook = this.messageHooks.get((msg.parent_header as any).msg_id);
+            if (hook) {
+                // When the kernel calls the hook, save the result for this message. The other side will ask for it
+                const result = hook(msg);
+                this.hookResults.set(msg.header.msg_id, result);
+                return result;
+            }
+        } catch (ex) {
+            // Swallow exceptions so processing continues
+        }
+        return false;
     }
 
     private sendHookResult(args: { requestId: string; parentId: string; msg: KernelMessage.IIOPubMessage }) {
