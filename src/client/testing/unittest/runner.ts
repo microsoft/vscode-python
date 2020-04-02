@@ -142,9 +142,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
-                // Npte that we ignore the returned "parse" value.
-                // prettier-ignore
-                const [args,] = internalScripts.visualstudio_py_testlauncher(testArgs);
+                const args = internalScripts.visualstudio_py_testlauncher(testArgs);
 
                 const runOptions: Options = {
                     args: args,

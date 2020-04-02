@@ -275,13 +275,11 @@ export namespace scripts {
     //============================
     // shell_exec.py
 
-    export function shell_exec(
-        command: string,
-        lockfile: string,
-        shellArgs: string[]
-    ): [string[], (out: string) => string] {
+    export function shell_exec(command: string, lockfile: string, shellArgs: string[]): string[] {
         const script = path.join(SCRIPTS_DIR, 'shell_exec.py');
-        const args = [
+        // We don't bother with a "parse" function since the output
+        // could be anything.
+        return [
             script,
             command.fileToCommandArgument(),
             // The shell args must come after the command
@@ -289,42 +287,23 @@ export namespace scripts {
             ...shellArgs,
             lockfile.fileToCommandArgument()
         ];
-
-        function parse(out: string): string {
-            // The output is ignored.
-            return out;
-        }
-
-        return [args, parse];
     }
 
     //============================
     // testlauncher.py
 
-    export function testlauncher(testArgs: string[]): [string[], (out: string) => string] {
+    export function testlauncher(testArgs: string[]): string[] {
         const script = path.join(SCRIPTS_DIR, 'testlauncher.py');
-        const args = [script, ...testArgs];
-
-        function parse(out: string): string {
-            // We don't worry about the output.
-            return out;
-        }
-
-        return [args, parse];
+        // There is no output to parse, so we do not return a function.
+        return [script, ...testArgs];
     }
 
     //============================
     // visualstudio_py_testlauncher.py
 
-    export function visualstudio_py_testlauncher(testArgs: string[]): [string[], (out: string) => string] {
+    export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
         const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
-        const args = [script, ...testArgs];
-
-        function parse(out: string): string {
-            // We don't worry about the output.
-            return out;
-        }
-
-        return [args, parse];
+        // There is no output to parse, so we do not return a function.
+        return [script, ...testArgs];
     }
 }

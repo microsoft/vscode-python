@@ -137,9 +137,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         const state = new ExecutionState(lockFile.filePath, this.fs, [command, ...args]);
         try {
             const pythonExec = this.pythonInterpreter || (await this.interpreter.getActiveInterpreter(undefined));
-            // Npte that we ignore the returned "parse" value.
-            // prettier-ignore
-            const [sendArgs,] = internalScripts.shell_exec(command, lockFile.filePath, args);
+            const sendArgs = internalScripts.shell_exec(command, lockFile.filePath, args);
             await this.terminalService.sendCommand(pythonExec?.path || 'python', sendArgs);
             const promise = swallowExceptions ? state.completed : state.completed.catch(noop);
             await Cancellation.race(() => promise, cancel);
