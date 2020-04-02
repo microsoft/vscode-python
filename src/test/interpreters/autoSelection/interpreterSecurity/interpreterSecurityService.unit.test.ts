@@ -8,15 +8,18 @@ import * as Typemoq from 'typemoq';
 import { EventEmitter, Uri } from 'vscode';
 import { IPersistentState, IPersistentStateFactory } from '../../../../client/common/types';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
-import { safeInterpretersKey, unsafeInterpretersKey } from '../../../../client/interpreter/autoSelection/constants';
 import { InterpreterSecurityService } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { IInterpreterEvaluation } from '../../../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterEvaluation,
+    IInterpreterSecurityStorage
+} from '../../../../client/interpreter/autoSelection/types';
 
 suite('Interpreter Security service', () => {
     const safeInterpretersList = ['safe1', 'safe2'];
     const unsafeInterpretersList = ['unsafe1', 'unsafe2'];
     const resource = Uri.parse('a');
     let persistentStateFactory: Typemoq.IMock<IPersistentStateFactory>;
+    let interpreterSecurityStorage: Typemoq.IMock<IInterpreterSecurityStorage>;
     let interpreterEvaluation: Typemoq.IMock<IInterpreterEvaluation>;
     let unsafeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let safeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
@@ -26,16 +29,13 @@ suite('Interpreter Security service', () => {
         interpreterEvaluation = Typemoq.Mock.ofType<IInterpreterEvaluation>();
         unsafeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
         safeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
+        interpreterSecurityStorage = Typemoq.Mock.ofType<IInterpreterSecurityStorage>();
         safeInterpreters.setup(s => s.value).returns(() => safeInterpretersList);
         unsafeInterpreters.setup(s => s.value).returns(() => unsafeInterpretersList);
-        persistentStateFactory
-            .setup(p => p.createGlobalPersistentState<string[]>(unsafeInterpretersKey, []))
-            .returns(() => unsafeInterpreters.object);
-        persistentStateFactory
-            .setup(p => p.createGlobalPersistentState<string[]>(safeInterpretersKey, []))
-            .returns(() => safeInterpreters.object);
+        interpreterSecurityStorage.setup(p => p.unsafeInterpreters).returns(() => unsafeInterpreters.object);
+        interpreterSecurityStorage.setup(p => p.safeInterpreters).returns(() => safeInterpreters.object);
         interpreterSecurityService = new InterpreterSecurityService(
-            persistentStateFactory.object,
+            interpreterSecurityStorage.object,
             interpreterEvaluation.object
         );
     });

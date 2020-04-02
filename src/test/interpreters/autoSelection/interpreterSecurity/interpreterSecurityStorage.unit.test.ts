@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as Typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -17,12 +17,14 @@ import {
 import { InterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 
 suite('Interpreter Security commands', () => {
+    const resource = Uri.parse('a');
     let persistentStateFactory: Typemoq.IMock<IPersistentStateFactory>;
-    let interpreterSecurityCommands: InterpreterSecurityStorage;
+    let interpreterSecurityStorage: InterpreterSecurityStorage;
     let unsafeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let safeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let commandManager: Typemoq.IMock<ICommandManager>;
     let workspaceService: Typemoq.IMock<IWorkspaceService>;
+    let areInterpretersInWorkspaceSafe: Typemoq.IMock<IPersistentState<boolean | undefined>>;
     let unsafeInterpreterPromptEnabled: Typemoq.IMock<IPersistentState<boolean>>;
     setup(() => {
         persistentStateFactory = Typemoq.Mock.ofType<IPersistentStateFactory>();
@@ -31,6 +33,7 @@ suite('Interpreter Security commands', () => {
         unsafeInterpreterPromptEnabled = Typemoq.Mock.ofType<IPersistentState<boolean>>();
         commandManager = Typemoq.Mock.ofType<ICommandManager>();
         workspaceService = Typemoq.Mock.ofType<IWorkspaceService>();
+        areInterpretersInWorkspaceSafe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         persistentStateFactory
             .setup(p => p.createGlobalPersistentState<string[]>(unsafeInterpretersKey, []))
             .returns(() => unsafeInterpreters.object);
@@ -40,7 +43,7 @@ suite('Interpreter Security commands', () => {
         persistentStateFactory
             .setup(p => p.createGlobalPersistentState(unsafeInterpreterPromptKey, true))
             .returns(() => unsafeInterpreterPromptEnabled.object);
-        interpreterSecurityCommands = new InterpreterSecurityStorage(
+        interpreterSecurityStorage = new InterpreterSecurityStorage(
             persistentStateFactory.object,
             workspaceService.object,
             commandManager.object,
@@ -54,7 +57,7 @@ suite('Interpreter Security commands', () => {
             .returns(() => Typemoq.Mock.ofType<IDisposable>().object)
             .verifiable(Typemoq.Times.once());
 
-        await interpreterSecurityCommands.activate();
+        await interpreterSecurityStorage.activate();
 
         commandManager.verifyAll();
     });
@@ -64,14 +67,14 @@ suite('Interpreter Security commands', () => {
         const workspace1 = Uri.parse('1');
         const areInterpretersInWorkspace1Safe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         workspaceService.setup(w => w.getWorkspaceFolderIdentifier(workspace1)).returns(() => workspace1.fsPath);
-        const workspace1Key = interpreterSecurityCommands.getKeyForWorkspace(workspace1);
+        const workspace1Key = interpreterSecurityStorage._getKeyForWorkspace(workspace1);
         expect(workspace1Key).to.equal(`ARE_INTERPRETERS_SAFE_FOR_WS_${workspace1.fsPath}`);
 
         // Initialize storage for workspace2
         const workspace2 = Uri.parse('2');
         const areInterpretersInWorkspace2Safe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         workspaceService.setup(w => w.getWorkspaceFolderIdentifier(workspace2)).returns(() => workspace2.fsPath);
-        const workspace2Key = interpreterSecurityCommands.getKeyForWorkspace(workspace2);
+        const workspace2Key = interpreterSecurityStorage._getKeyForWorkspace(workspace2);
         expect(workspace2Key).to.equal(`ARE_INTERPRETERS_SAFE_FOR_WS_${workspace2.fsPath}`);
 
         // Now verify that all storages are cleared
@@ -102,12 +105,41 @@ suite('Interpreter Security commands', () => {
             .returns(() => Promise.resolve())
             .verifiable(Typemoq.Times.once());
 
-        await interpreterSecurityCommands.resetInterpreterSecurityStorage();
+        await interpreterSecurityStorage.resetInterpreterSecurityStorage();
 
         areInterpretersInWorkspace1Safe.verifyAll();
         areInterpretersInWorkspace2Safe.verifyAll();
         safeInterpreters.verifyAll();
         unsafeInterpreterPromptEnabled.verifyAll();
         unsafeInterpreters.verifyAll();
+    });
+
+    test('Method areInterpretersInWorkspaceSafe() returns the areInterpretersInWorkspaceSafe storage', () => {
+        workspaceService.setup(w => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
+        persistentStateFactory
+            .setup(p =>
+                p.createGlobalPersistentState<boolean | undefined>(
+                    `ARE_INTERPRETERS_SAFE_FOR_WS_${resource.fsPath}`,
+                    undefined
+                )
+            )
+            .returns(() => areInterpretersInWorkspaceSafe.object);
+        const result = interpreterSecurityStorage.areInterpretersInWorkspaceSafe(resource);
+        assert(areInterpretersInWorkspaceSafe.object === result);
+    });
+
+    test('Get unsafeInterpreterPromptEnabled() returns the unsafeInterpreterPromptEnabled storage', () => {
+        const result = interpreterSecurityStorage.unsafeInterpreterPromptEnabled;
+        assert(unsafeInterpreterPromptEnabled.object === result);
+    });
+
+    test('Get unsafeInterpreters() returns the unsafeInterpreters storage', () => {
+        const result = interpreterSecurityStorage.unsafeInterpreters;
+        assert(unsafeInterpreters.object === result);
+    });
+
+    test('Get safeInterpreters() returns the safeInterpreters storage', () => {
+        const result = interpreterSecurityStorage.safeInterpreters;
+        assert(safeInterpreters.object === result);
     });
 });

@@ -7,9 +7,8 @@ import { expect } from 'chai';
 import * as Typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../../client/common/application/types';
-import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../../client/common/types';
+import { IBrowserService, IPersistentState } from '../../../../client/common/types';
 import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../../client/common/utils/localize';
-import { unsafeInterpreterPromptKey } from '../../../../client/interpreter/autoSelection/constants';
 import { InterpreterEvaluation } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
 import { IInterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
@@ -23,7 +22,6 @@ const prompts = [
 
 suite('Interpreter Evaluation', () => {
     const resource = Uri.parse('a');
-    let persistentStateFactory: Typemoq.IMock<IPersistentStateFactory>;
     let applicationShell: Typemoq.IMock<IApplicationShell>;
     let browserService: Typemoq.IMock<IBrowserService>;
     let interpreterHelper: Typemoq.IMock<IInterpreterHelper>;
@@ -32,22 +30,19 @@ suite('Interpreter Evaluation', () => {
     let areInterpretersInWorkspaceSafe: Typemoq.IMock<IPersistentState<boolean | undefined>>;
     let interpreterEvaluation: InterpreterEvaluation;
     setup(() => {
-        persistentStateFactory = Typemoq.Mock.ofType<IPersistentStateFactory>();
         applicationShell = Typemoq.Mock.ofType<IApplicationShell>();
         browserService = Typemoq.Mock.ofType<IBrowserService>();
         interpreterHelper = Typemoq.Mock.ofType<IInterpreterHelper>();
         interpreterSecurityStorage = Typemoq.Mock.ofType<IInterpreterSecurityStorage>();
         unsafeInterpreterPromptEnabled = Typemoq.Mock.ofType<IPersistentState<boolean>>();
         areInterpretersInWorkspaceSafe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
-        interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
-        persistentStateFactory
-            .setup(i => i.createGlobalPersistentState<boolean | undefined>(resource.fsPath, undefined))
+        interpreterSecurityStorage
+            .setup(i => i.areInterpretersInWorkspaceSafe(resource))
             .returns(() => areInterpretersInWorkspaceSafe.object);
-        persistentStateFactory
-            .setup(p => p.createGlobalPersistentState(unsafeInterpreterPromptKey, true))
+        interpreterSecurityStorage
+            .setup(i => i.unsafeInterpreterPromptEnabled)
             .returns(() => unsafeInterpreterPromptEnabled.object);
         interpreterEvaluation = new InterpreterEvaluation(
-            persistentStateFactory.object,
             applicationShell.object,
             browserService.object,
             interpreterHelper.object,
@@ -139,8 +134,10 @@ suite('Interpreter Evaluation', () => {
                             // tslint:disable-next-line: no-any
                         } as any)
                 );
-            // tslint:disable-next-line: no-any
-            interpreterEvaluation._areInterpretersInWorkspaceSafe = () => 'areInterpretersInWorkspaceSafeValue' as any;
+            areInterpretersInWorkspaceSafe
+                .setup(i => i.value)
+                // tslint:disable-next-line: no-any
+                .returns(() => 'areInterpretersInWorkspaceSafeValue' as any);
             const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
             expect(isSafe).to.equal('areInterpretersInWorkspaceSafeValue');
         });
@@ -157,8 +154,8 @@ suite('Interpreter Evaluation', () => {
                             // tslint:disable-next-line: no-any
                         } as any)
                 );
+            areInterpretersInWorkspaceSafe.setup(i => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup(s => s.value).returns(() => false);
-            interpreterEvaluation._areInterpretersInWorkspaceSafe = () => undefined;
             const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
         });
@@ -175,28 +172,9 @@ suite('Interpreter Evaluation', () => {
                             // tslint:disable-next-line: no-any
                         } as any)
                 );
-            unsafeInterpreterPromptEnabled.setup(s => s.value).returns(() => true);
-            interpreterEvaluation._areInterpretersInWorkspaceSafe = () => undefined;
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
-            expect(isSafe).to.equal(undefined, 'Should be undefined');
-        });
-    });
-
-    suite('Method _areInterpretersInWorkspaceSafe()', () => {
-        test('If areInterpretersInWorkspaceSafe storage carries a defined value, return it', () => {
-            interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
-            areInterpretersInWorkspaceSafe
-                .setup(i => i.value)
-                // tslint:disable-next-line: no-any
-                .returns(() => 'areInterpretersInWorkspaceSafeValue' as any);
-            const isSafe = interpreterEvaluation._areInterpretersInWorkspaceSafe(resource);
-            expect(isSafe).to.equal('areInterpretersInWorkspaceSafeValue');
-        });
-
-        test('If areInterpretersInWorkspaceSafe storage is set to `undefined`, return `undefined`', () => {
-            interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
             areInterpretersInWorkspaceSafe.setup(i => i.value).returns(() => undefined);
-            const isSafe = interpreterEvaluation._areInterpretersInWorkspaceSafe(resource);
+            unsafeInterpreterPromptEnabled.setup(s => s.value).returns(() => true);
+            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
             expect(isSafe).to.equal(undefined, 'Should be undefined');
         });
     });

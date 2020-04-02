@@ -49,7 +49,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
 
     public areInterpretersInWorkspaceSafe(resource: Uri): IPersistentState<boolean | undefined> {
         return this.persistentStateFactory.createGlobalPersistentState<boolean | undefined>(
-            this.getKeyForWorkspace(resource),
+            this._getKeyForWorkspace(resource),
             undefined
         );
     }
@@ -75,7 +75,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
         await this._unsafeInterpreterPromptEnabled.updateValue(true);
     }
 
-    private getKeyForWorkspace(resource: Uri): string {
+    public _getKeyForWorkspace(resource: Uri): string {
         const key = `ARE_INTERPRETERS_SAFE_FOR_WS_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
         if (!this.activatedWorkspacesKeys.has(key)) {
             this.activatedWorkspacesKeys.add(key);

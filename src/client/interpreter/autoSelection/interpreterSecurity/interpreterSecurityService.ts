@@ -13,8 +13,8 @@ import { IInterpreterEvaluation, IInterpreterSecurityService, IInterpreterSecuri
 export class InterpreterSecurityService implements IInterpreterSecurityService {
     public _didSafeInterpretersChange = new EventEmitter<void>();
     constructor(
-        @inject(IInterpreterEvaluation) private readonly interpreterEvaluation: IInterpreterEvaluation,
-        @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage
+        @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage,
+        @inject(IInterpreterEvaluation) private readonly interpreterEvaluation: IInterpreterEvaluation
     ) {}
 
     public isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined {
