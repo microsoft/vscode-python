@@ -10,7 +10,6 @@ import { IStore } from '../interactive-common/redux/store';
 import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
 
-import 'bootstrap/dist/css/bootstrap.css';
 import {
     CommonAction,
     CommonActionType,
