@@ -159,9 +159,9 @@ export class DebugLauncher implements ITestDebugLauncher {
 
         const testArgs = this.fixArgs(options.args, options.testProvider);
         const script = this.getTestLauncherScript(options.testProvider);
-        const [args, _parse] = script(testArgs);
-        // tslint:disable-next-line:no-unused-expression
-        _parse; // Silence the compiler.
+        // Npte that we ignore the returned "parse" value.
+        // prettier-ignore
+        const [args,] = script(testArgs);
         configArgs.program = args[0];
         configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.

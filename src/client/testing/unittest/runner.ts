@@ -142,9 +142,9 @@ export class TestManagerRunner implements ITestManagerRunner {
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
-                const [args, _parse] = internalScripts.visualstudio_py_testlauncher(testArgs);
-                // tslint:disable-next-line:no-unused-expression
-                _parse; // Silence the compiler.
+                // Npte that we ignore the returned "parse" value.
+                // prettier-ignore
+                const [args,] = internalScripts.visualstudio_py_testlauncher(testArgs);
 
                 const runOptions: Options = {
                     args: args,
