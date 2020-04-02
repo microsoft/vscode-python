@@ -437,7 +437,7 @@ suite('xLanguage Server Activation - activate()', () => {
     });
 });
 
-suite('Language Server Activation - evaluateIfAutoSelectedInterpreterIsSafe()', () => {
+suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', () => {
     let workspaceService: IWorkspaceService;
     let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;

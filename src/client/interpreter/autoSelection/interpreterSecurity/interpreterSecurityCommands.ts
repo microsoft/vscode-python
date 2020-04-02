@@ -56,7 +56,7 @@ export class InterpreterSecurityCommands implements IInterpreterSecurityCommands
     }
 
     public getKeyForWorkspace(resource: Uri): string {
-        const key = `ARE_INTERPRETERS_SAFE_FOR_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
+        const key = `ARE_INTERPRETERS_SAFE_FOR_WS_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
         if (!this.activatedWorkspacesKeys.has(key)) {
             this.activatedWorkspacesKeys.add(key);
         }
