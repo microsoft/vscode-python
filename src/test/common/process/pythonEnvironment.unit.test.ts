@@ -284,7 +284,6 @@ suite('WindowsStoreEnvironment', () => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
 
-        //superExecutablePathStub = sinon.stub(_forTestingUseOnly.BaseEnvironment.prototype, 'getExecutablePath');
         superExecutablePathStub = _forTestingUseOnly.stubBaseGetExecutablePath();
         superExecutablePathStub.resolves(superPythonPath);
     });
