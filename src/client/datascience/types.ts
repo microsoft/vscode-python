@@ -141,6 +141,8 @@ export interface INotebookServer extends IAsyncDisposable {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
+    // IANU: Needs async for wrapper level?
+    connect(): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
         resource: Resource,

@@ -13,7 +13,7 @@ import {
     LiveShareParticipantGuest
 } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { ILiveShareParticipant } from '../../jupyter/liveshare/types';
-import { INotebook, IRawNotebookProvider } from '../../types';
+import { INotebook, IRawConnection, IRawNotebookProvider } from '../../types';
 
 export class GuestRawNotebookProvider
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.RawNotebookProviderService)
@@ -39,6 +39,10 @@ export class GuestRawNotebookProvider
         _notebookMetadata: nbformat.INotebookMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook | undefined> {
+        throw new Error('Not implemented');
+    }
+
+    public connect(): Promise<IRawConnection> {
         throw new Error('Not implemented');
     }
 

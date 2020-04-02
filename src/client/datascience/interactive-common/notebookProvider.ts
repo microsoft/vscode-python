@@ -54,6 +54,10 @@ export class NotebookProvider implements INotebookProvider {
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
+        // IANHU: just for testing
+        const zmqSupported = await this.rawNotebookProvider.supported();
+        const zmqConnection = await this.rawNotebookProvider.connect();
+
         const server = await this.serverProvider.getOrCreateServer(options);
 
         return server?.getConnectionInfo();

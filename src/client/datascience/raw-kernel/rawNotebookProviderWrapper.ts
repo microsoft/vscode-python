@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
-import { INotebook, IRawNotebookProvider } from '../types';
+import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -60,6 +60,11 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
     public async supported(): Promise<boolean> {
         const notebookProvider = await this.serverFactory.get();
         return notebookProvider.supported();
+    }
+
+    public async connect(): Promise<IRawConnection> {
+        const notebookProvider = await this.serverFactory.get();
+        return notebookProvider.connect();
     }
 
     public async createNotebook(
