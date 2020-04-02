@@ -13,15 +13,13 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Kernel Finder', () => {
-    let ioc: DataScienceIocContainer;
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let fileSystem: typemoq.IMock<IFileSystem>;
-    let platformService: IPlatformService;
-    let pathUtils: IPathUtils;
-    let context: IExtensionContext;
+    let platformService: typemoq.IMock<IPlatformService>;
+    let pathUtils: typemoq.IMock<IPathUtils>;
+    let context: typemoq.IMock<IExtensionContext>;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonInterpreter;
     const interpreters: PythonInterpreter[] = [];
@@ -44,33 +42,6 @@ suite('Kernel Finder', () => {
     }
 
     setup(() => {
-        ioc = new DataScienceIocContainer();
-        ioc.registerDataScienceTypes();
-        platformService = ioc.serviceContainer.get<IPlatformService>(IPlatformService);
-        pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
-        context = ioc.serviceContainer.get<IExtensionContext>(IExtensionContext);
-
-        activeInterpreter = {
-            path: context.globalStoragePath,
-            sysPrefix: '1',
-            envName: '1',
-            sysVersion: '3.1.1.1',
-            architecture: Architecture.x64,
-            type: InterpreterType.Unknown
-        };
-        for (let i = 0; i < 10; i += 1) {
-            interpreters.push({
-                path: `${context.globalStoragePath}_${i}`,
-                sysPrefix: '1',
-                envName: '1',
-                sysVersion: '3.1.1.1',
-                architecture: Architecture.x64,
-                type: InterpreterType.Unknown
-            });
-        }
-        interpreters.push(activeInterpreter);
-        resource = Uri.file(context.globalStoragePath);
-
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup((is) => is.getInterpreters(typemoq.It.isAny()))
@@ -80,13 +51,43 @@ suite('Kernel Finder', () => {
             .returns(() => Promise.resolve(activeInterpreter));
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
+        platformService = typemoq.Mock.ofType<IPlatformService>();
+        platformService.setup((ps) => ps.isWindows).returns(() => true);
+        platformService.setup((ps) => ps.isMac).returns(() => true);
+
+        pathUtils = typemoq.Mock.ofType<IPathUtils>();
+        pathUtils.setup((pu) => pu.home).returns(() => './');
+
+        context = typemoq.Mock.ofType<IExtensionContext>();
+        context.setup((c) => c.globalStoragePath).returns(() => './');
+
+        activeInterpreter = {
+            path: context.object.globalStoragePath,
+            sysPrefix: '1',
+            envName: '1',
+            sysVersion: '3.1.1.1',
+            architecture: Architecture.x64,
+            type: InterpreterType.Unknown
+        };
+        for (let i = 0; i < 10; i += 1) {
+            interpreters.push({
+                path: `${context.object.globalStoragePath}_${i}`,
+                sysPrefix: '1',
+                envName: '1',
+                sysVersion: '3.1.1.1',
+                architecture: Architecture.x64,
+                type: InterpreterType.Unknown
+            });
+        }
+        interpreters.push(activeInterpreter);
+        resource = Uri.file(context.object.globalStoragePath);
 
         kernelFinder = new KernelFinder(
             interpreterService.object,
-            platformService,
+            platformService.object,
             fileSystem.object,
-            pathUtils,
-            context
+            pathUtils.object,
+            context.object
         );
     });
 
