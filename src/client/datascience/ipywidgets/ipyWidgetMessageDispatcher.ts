@@ -3,16 +3,18 @@
 
 'use strict';
 
-import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as util from 'util';
-import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebook, INotebookProvider } from '../types';
-import { restoreBuffers, serializeDataViews } from './serialization';
+import { noop } from '../../common/utils/misc';
+import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IPyWidgetMessages
+} from '../interactive-common/interactiveWindowTypes';
+import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
 // tslint:disable: no-any
@@ -23,21 +25,34 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public get postMessage(): Event<IPyWidgetMessage> {
         return this._postMessageEmitter.event;
     }
-    private readonly commTargetsRegistered = new Map<string, KernelMessage.ICommOpenMsg | undefined>();
-    private ioPubCallbackRegistered: boolean = false;
+    private readonly commTargetsRegistered = new Set<string>();
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
     private notebook?: INotebook;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
-    private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
-    private messageHookRequests = new Map<string, Deferred<boolean>>();
-    private pendingReplies = new Map<string, Deferred<void>>();
-    private pendingShellMessages = new Set<string>();
 
     private readonly disposables: IDisposable[] = [];
-    private kernelRestartHandlerAttached = false;
+    private kernelRestartHandlerAttached?: boolean;
+    private kernelSocketInfo?: KernelSocketInformation;
+    private kernelWasConnectedAtleastOnce?: boolean;
     private disposed = false;
-    constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {}
+    private pendingMessages: string[] = [];
+    private subscribedToKernelSocket: boolean = false;
+    constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
+        // Always register this comm target.
+        // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
+        // been reigstered, in which case kaboom. As we know this is always required, pre-register this.
+        this.pendingTargetNames.add('jupyter.widget');
+        notebookProvider.onNotebookCreated(
+            (e) => {
+                if (e.identity.toString() === notebookIdentity.toString()) {
+                    this.initialize().ignoreErrors();
+                }
+            },
+            this,
+            this.disposables
+        );
+    }
     public dispose() {
         this.disposed = true;
         while (this.disposables.length) {
@@ -46,80 +61,39 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    public receiveMessage(message: IPyWidgetMessage): void {
+    public receiveMessage(message: IPyWidgetMessage | { message: InteractiveWindowMessages.RestartKernel }): void {
         traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         switch (message.message) {
-            case IPyWidgetMessages.IPyWidgets_ShellSend:
-                this.sendIPythonShellMsg(message.payload);
+            case IPyWidgetMessages.IPyWidgets_Ready:
+                this.sendKernelOptions();
+                this.initialize().ignoreErrors();
                 break;
-
+            case IPyWidgetMessages.IPyWidgets_msg:
+                this.sendRawPayloadToKernelSocket(message.payload);
+                break;
+            case IPyWidgetMessages.IPyWidgets_binary_msg:
+                this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
+                break;
+            // case InteractiveWindowMessages.RestartKernel:
+            // Bug in code, we send this same message from extension side when already restarting.
+            //     // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
+            //     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+            //     this.kernelSocketInfo = undefined;
+            //     while (this.pendingMessages.length) {
+            //         this.pendingMessages.shift();
+            //     }
+            //     break;
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
                 this.registerCommTarget(message.payload).ignoreErrors();
-                break;
-
-            case IPyWidgetMessages.IPyWidgets_RequestCommInfo_request:
-                this.requestCommInfo(message.payload).ignoreErrors();
-                break;
-
-            case IPyWidgetMessages.IPyWidgets_RegisterMessageHook:
-                this.registerMessageHook(message.payload);
-                break;
-
-            case IPyWidgetMessages.IPyWidgets_RemoveMessageHook:
-                this.removeMessageHook(message.payload);
-                break;
-
-            case IPyWidgetMessages.IPyWidgets_MessageHookResponse:
-                this.handleMessageHookResponse(message.payload);
-                break;
-
-            case IPyWidgetMessages.IPyWidgets_comm_msg_reply:
-                this.handlePendingReply(message.payload);
                 break;
 
             default:
                 break;
         }
     }
-    public sendIPythonShellMsg(payload: {
-        // tslint:disable: no-any
-        data: any;
-        metadata: any;
-        commId: string;
-        requestId: string;
-        buffers?: any;
-        msgType: string;
-        targetName?: string;
-    }) {
-        if (this.notebook) {
-            this.pendingShellMessages.add(payload.requestId);
-            const future = this.notebook.sendCommMessage(
-                restoreBuffers(payload.buffers),
-                { data: payload.data, comm_id: payload.commId, target_name: payload.targetName },
-                payload.metadata,
-                payload.requestId
-            );
-            const requestId = payload.requestId;
-            future.done
-                .then((reply) => {
-                    this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_resolve, {
-                        requestId,
-                        msg: reply
-                    });
-                    this.pendingShellMessages.delete(requestId);
-                    future.dispose();
-                })
-                .catch((ex) => {
-                    this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex });
-                });
-            future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg });
-                return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg); // NOSONAR
-            };
-            future.onReply = (reply: KernelMessage.IShellMessage) => {
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply });
-            };
-        }
+    public sendRawPayloadToKernelSocket(payload?: any) {
+        this.pendingMessages.push(payload);
+        this.sendPendingMessages();
     }
     public async registerCommTarget(targetName: string) {
         this.pendingTargetNames.add(targetName);
@@ -128,6 +102,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     public async initialize() {
         if (!this.jupyterLab) {
+            // Lazy load jupyter lab for faster extension loading.
             // tslint:disable-next-line:no-require-imports
             this.jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
@@ -135,66 +110,97 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If we have any pending targets, register them now
         const notebook = await this.getNotebook();
         if (notebook) {
+            this.subscribeToKernelSocket(notebook);
             this.registerCommTargets(notebook);
-
-            // If we haven't registered for a comm target, then do not handle messages.
-            if (!this.commTargetsRegistered.size) {
-                return;
-            }
-
-            // Sign up for io pub messages (could probably do a better job here. Do we want all display data messages?)
-            if (!this.ioPubCallbackRegistered) {
-                this.ioPubCallbackRegistered = true;
-                notebook.registerIOPubListener(this.handleOnIOPub.bind(this));
-            }
         }
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
         message: IPyWidgetMessages,
         payload: M[T]
     ) {
-        // Only serialize the message portion
-        // tslint:disable-next-line: no-any
-        const oldPayload = payload as any;
-        const newPayload = oldPayload.msg
-            ? { ...oldPayload, msg: serializeDataViews(oldPayload.msg) }
-            : serializeDataViews(oldPayload);
-        this._postMessageEmitter.fire({ message, payload: newPayload });
+        this._postMessageEmitter.fire({ message, payload });
     }
-
-    private async waitForCommMessage(msg: KernelMessage.ICommMsgMsg) {
-        const promise = createDeferred<void>();
-        if (KernelMessage.isCommMsgMsg(msg)) {
-            this.pendingReplies.set(msg.header.msg_id, promise);
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_comm_msg, msg);
-        } else {
-            promise.resolve();
+    private subscribeToKernelSocket(notebook: INotebook) {
+        if (this.subscribedToKernelSocket) {
+            return;
         }
-        return promise.promise;
+        this.subscribedToKernelSocket = true;
+        // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
+        notebook.kernelSocket.subscribe((info) => {
+            // Remove old handlers.
+            this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
+
+            if (this.kernelWasConnectedAtleastOnce) {
+                // this means we restarted the kernel and we now have new information.
+                // Discard all of the messages upto this point.
+                while (this.pendingMessages.length) {
+                    this.pendingMessages.shift();
+                }
+                // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
+                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+            }
+            if (!info || !info.socket) {
+                // No kernel socket information, hence nothing much we can do.
+                this.kernelSocketInfo = undefined;
+                return;
+            }
+
+            this.kernelWasConnectedAtleastOnce = true;
+            this.kernelSocketInfo = info;
+            this.kernelSocketInfo.socket?.addListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
+            this.sendKernelOptions();
+            // Since we have connected to a kernel, send any pending messages.
+            this.registerCommTargets(notebook);
+            this.sendPendingMessages();
+        });
+    }
+    /**
+     * Pass this information to UI layer so it can create a dummy kernel with same information.
+     * Information includes kernel connection info (client id, user name, model, etc).
+     */
+    private sendKernelOptions() {
+        if (!this.kernelSocketInfo) {
+            return;
+        }
+        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
+    }
+    private onKernelSocketMessage(message: any) {
+        if (typeof message === 'string') {
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, message);
+        } else {
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, serializeDataViews([message]));
+        }
+    }
+    private sendPendingMessages() {
+        if (!this.notebook || !this.kernelSocketInfo) {
+            return;
+        }
+        while (this.pendingMessages.length) {
+            try {
+                this.kernelSocketInfo.socket?.send(this.pendingMessages[0]); // NOSONAR
+                this.pendingMessages.shift();
+            } catch (ex) {
+                traceError('Failed to send message to Kernel', ex);
+                return;
+            }
+        }
     }
 
     private registerCommTargets(notebook: INotebook) {
-        const registerHandler = async (targetName: string, _comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => {
-            // Keep track of this so we can re-broadcast this to other ipywidgets from other views.
-            this.commTargetsRegistered.set(targetName, msg);
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg);
-        };
         while (this.pendingTargetNames.size > 0) {
             const targetNames = Array.from([...this.pendingTargetNames.values()]);
             const targetName = targetNames.shift();
             if (!targetName) {
                 continue;
             }
-            if (this.commTargetsRegistered.get(targetName)) {
+            if (this.commTargetsRegistered.has(targetName)) {
                 // Already registered.
-                const msg = this.commTargetsRegistered.get(targetName)!;
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg);
                 return;
             }
 
-            this.commTargetsRegistered.set(targetName, undefined);
+            this.commTargetsRegistered.add(targetName);
             this.pendingTargetNames.delete(targetName);
-            notebook.registerCommTarget(targetName, registerHandler.bind(this, targetName));
+            notebook.registerCommTarget(targetName, noop);
         }
     }
 
@@ -224,82 +230,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.commTargetsRegistered.delete(targetName);
             this.pendingTargetNames.add(targetName);
         });
+
+        this.subscribeToKernelSocket(this.notebook);
         this.registerCommTargets(this.notebook);
-    }
-    private async requestCommInfo(args: { requestId: string; msg: KernelMessage.ICommInfoRequestMsg['content'] }) {
-        const notebook = await this.getNotebook();
-        if (notebook) {
-            const result = await notebook.requestCommInfo(args.msg);
-            if (result) {
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply, {
-                    requestId: args.requestId,
-                    msg: result
-                });
-            }
-        }
-    }
-
-    private registerMessageHook(msgId: string) {
-        // This has to be synchronous or we don't register the hook fast enough
-        // Meaning DO NOT wait for anything here.
-        if (this.notebook && !this.messageHooks.has(msgId)) {
-            const callback = this.messageHookCallback.bind(this);
-            this.messageHooks.set(msgId, callback);
-            this.notebook.registerMessageHook(msgId, callback);
-        }
-    }
-
-    private removeMessageHook(msgId: string) {
-        if (this.notebook && this.messageHooks.has(msgId)) {
-            const callback = this.messageHooks.get(msgId);
-            this.messageHooks.delete(msgId);
-            this.notebook.removeMessageHook(msgId, callback!);
-        }
-    }
-
-    private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
-        const promise = createDeferred<boolean>();
-        const requestId = uuid();
-        // tslint:disable-next-line: no-any
-        const parentId = (msg.parent_header as any).msg_id;
-        if (this.messageHooks.has(parentId)) {
-            this.messageHookRequests.set(requestId, promise);
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, parentId, msg });
-        } else {
-            promise.resolve(true);
-        }
-        return promise.promise;
-    }
-
-    private handleMessageHookResponse(args: { requestId: string; parentId: string; msgType: string; result: boolean }) {
-        const promise = this.messageHookRequests.get(args.requestId);
-        if (promise) {
-            this.messageHookRequests.delete(args.requestId);
-
-            // During a shell message, make sure all messages come out.
-            promise.resolve(
-                this.pendingShellMessages.has(args.parentId) || args.msgType.includes('comm') ? true : args.result
-            );
-        }
-    }
-
-    private handlePendingReply(msgId: string) {
-        if (this.pendingReplies.has(msgId)) {
-            const promise = this.pendingReplies.get(msgId);
-            promise!.resolve();
-            this.pendingReplies.delete(msgId);
-        }
-    }
-
-    private async handleOnIOPub(msg: KernelMessage.IIOPubMessage) {
-        if (this.jupyterLab?.KernelMessage.isDisplayDataMsg(msg)) {
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_display_data_msg, msg);
-        } else if (this.jupyterLab?.KernelMessage.isStatusMsg(msg)) {
-            // Do nothing.
-        } else if (this.jupyterLab?.KernelMessage.isCommOpenMsg(msg)) {
-            // Do nothing, handled in the place we have registered for a target.
-        } else if (this.jupyterLab?.KernelMessage.isCommMsgMsg(msg)) {
-            return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg); // NOSONAR
-        }
     }
 }

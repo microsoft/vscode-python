@@ -42,16 +42,22 @@ async function requirePromise(pkg: string | string[]): Promise<any> {
         }
     });
 }
-
+const widgetsToLoadFromRequire = [
+    'azureml_widgets',
+    '@jupyter-widgets/controls',
+    '@jupyter-widgets/base',
+    '@jupyter-widgets/output'
+];
 export function requireLoader(moduleName: string, moduleVersion: string) {
-    // tslint:disable-next-line: no-any
-    const requirejs = (window as any).requirejs;
-    if (requirejs === undefined) {
-        throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
+    if (!widgetsToLoadFromRequire.includes(moduleName)) {
+        // tslint:disable-next-line: no-any
+        const requirejs = (window as any).requirejs;
+        if (requirejs === undefined) {
+            throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
+        }
+        const conf: { paths: { [key: string]: string } } = { paths: {} };
+        conf.paths[moduleName] = moduleNameToCDNUrl(moduleName, moduleVersion);
+        requirejs.config(conf);
     }
-    const conf: { paths: { [key: string]: string } } = { paths: {} };
-    conf.paths[moduleName] = moduleNameToCDNUrl(moduleName, moduleVersion);
-    requirejs.config(conf);
-
     return requirePromise([`${moduleName}`]);
 }

@@ -38,7 +38,7 @@ const ConnectedNativeEditor = getConnectedNativeEditor();
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedNativeEditor />
-        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} />
+        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
     </Provider>,
     document.getElementById('root') as HTMLElement
 );

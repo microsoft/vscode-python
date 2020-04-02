@@ -97,7 +97,7 @@ steps:
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
-    
+
   # Install the requirements for functional tests.
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
@@ -111,7 +111,7 @@ steps:
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
       python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))    
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
   # Add CONDA to the path so anaconda works
   #

@@ -93,7 +93,30 @@ function getPlugins(isNotebook) {
 function buildConfiguration(isNotebook) {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = isNotebook ? 'notebook' : 'viewers';
-
+    const filesToCopy = [];
+    if (isNotebook) {
+        // Include files only for notebooks.
+        filesToCopy.push(
+            ...[
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'common', 'node_modules')
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/azureml/azuremlindex.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/azureml/azuremlregistration.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                }
+            ]
+        );
+    }
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(isNotebook),
@@ -189,10 +212,7 @@ function buildConfiguration(isNotebook) {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
                         to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
                     },
-                    {
-                        from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-                    }
+                    ...filesToCopy
                 ],
                 { context: 'src' }
             ),
@@ -249,7 +269,15 @@ function buildConfiguration(isNotebook) {
                         }
                     ]
                 },
-                { test: /\.(png|woff|woff2|eot|gif|ttf)$/, loader: 'url-loader?limit=100000' },
+                {
+                    test: /\.(png|woff|woff2|eot|gif|ttf)$/,
+                    use: [
+                        {
+                            loader: 'url-loader?limit=100000',
+                            options: { esModule: false }
+                        }
+                    ]
+                },
                 {
                     test: /\.less$/,
                     use: ['style-loader', 'css-loader', 'less-loader']

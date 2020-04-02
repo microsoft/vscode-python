@@ -1,14 +1,14 @@
 # Compiles the source
 
 steps:
-    - template: initialization.yml
-      parameters:
-        PythonVersion: $(PythonVersion)
-        workingDirectory: $(Build.SourcesDirectory)
-        compile: 'false'
-        installVSCEorNPX: 'false'
+  - template: initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
+      installVSCEorNPX: 'false'
 
-    - task: Gulp@0
-      displayName: "Compile and check for errors"
-      inputs:
-          targets: "prePublishNonBundle"
+  - task: Gulp@0
+    displayName: 'Compile and check for errors'
+    inputs:
+      targets: 'prePublishNonBundle'

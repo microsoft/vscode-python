@@ -20,7 +20,11 @@ export class WidgetManager extends jupyterlab.WidgetManager {
     public kernel: Kernel.IKernelConnection;
     public el: HTMLElement;
 
-    constructor(kernel: Kernel.IKernelConnection, el: HTMLElement) {
+    constructor(
+        kernel: Kernel.IKernelConnection,
+        el: HTMLElement,
+        private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+    ) {
         super(
             new DocumentContext(kernel),
             new RenderMimeRegistry({
@@ -78,16 +82,25 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         }
         return widget;
     }
+    public async restoreWidgets(): Promise<void> {
+        // Disabled for now.
+        // This throws errors if enabled, can be added later.
+    }
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
         const result = await super.loadClass(className, moduleName, moduleVersion).catch(async (x) => {
-            const m = await requireLoader(moduleName, moduleVersion);
-            if (m && m[className]) {
-                return m[className];
+            try {
+                const m = await requireLoader(moduleName, moduleVersion);
+                if (m && m[className]) {
+                    return m[className];
+                }
+                throw x;
+            } catch (ex) {
+                this.loadErrorHandler(className, moduleName, moduleVersion, x);
+                throw x;
             }
-            throw x;
         });
 
         return result;
