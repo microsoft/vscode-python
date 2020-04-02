@@ -7,7 +7,7 @@ import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_LANGUAGE } from '../common/constants';
+import { DEFAULT_INTERPRETER_SETTING, PYTHON_LANGUAGE } from '../common/constants';
 import { DeprecatePythonPath } from '../common/experimentGroups';
 import { traceDecorators } from '../common/logger';
 import { IDisposable, IExperimentsManager, IInterpreterPathService, Resource } from '../common/types';
@@ -95,7 +95,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             const workspaceKey = this.getWorkspaceKey(resource);
             const interpreterSettingValue = this.interpreterPathService.get(resource);
-            if (interpreterSettingValue.length === 0 || interpreterSettingValue === 'python') {
+            if (interpreterSettingValue.length === 0 || interpreterSettingValue === DEFAULT_INTERPRETER_SETTING) {
                 // Setting is not set, extension will use the autoselected value. Make sure it's safe.
                 const interpreter = this.autoSelection.getAutoSelectedInterpreter(resource);
                 if (interpreter) {
