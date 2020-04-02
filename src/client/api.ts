@@ -45,7 +45,7 @@ export function buildApi(
     const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
-        ready: ready.catch(ex => {
+        ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
