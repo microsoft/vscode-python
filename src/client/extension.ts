@@ -110,7 +110,7 @@ async function activateUnsafe(
     startupDurations.endActivateTime = startupStopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationPromise, serviceManager, serviceContainer);
+    const api = buildApi(activationPromise, serviceContainer);
     return [api, activationPromise, serviceContainer];
 }
 

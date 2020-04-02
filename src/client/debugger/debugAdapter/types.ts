@@ -10,7 +10,6 @@ import { Logger } from 'vscode-debugadapter';
 import { Message } from 'vscode-debugadapter/lib/messages';
 
 export type LocalDebugOptions = { port: number; host: string; customDebugger?: boolean };
-export type RemoteDebugOptions = LocalDebugOptions & { waitUntilDebuggerAttaches: boolean };
 
 export interface IDebugLauncherScriptProvider<T> {
     getLauncherArgs(options: T): string[];
@@ -19,8 +18,6 @@ export interface IDebugLauncherScriptProvider<T> {
 export interface ILocalDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<LocalDebugOptions> {
     getLauncherArgs(options: LocalDebugOptions): string[];
 }
-
-export interface IRemoteDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<RemoteDebugOptions> {}
 
 export const IProtocolParser = Symbol('IProtocolParser');
 export interface IProtocolParser extends Disposable {
