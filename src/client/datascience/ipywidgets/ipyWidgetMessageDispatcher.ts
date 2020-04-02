@@ -3,10 +3,13 @@
 
 'use strict';
 
+import type { KernelMessage } from '@jupyterlab/services';
 import * as util from 'util';
+import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
 import {
@@ -30,6 +33,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private pendingTargetNames = new Set<string>();
     private notebook?: INotebook;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
+    private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
+    private messageHookRequests = new Map<string, Deferred<boolean>>();
 
     private readonly disposables: IDisposable[] = [];
     private kernelRestartHandlerAttached?: boolean;
@@ -62,7 +67,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public receiveMessage(message: IPyWidgetMessage | { message: InteractiveWindowMessages.RestartKernel }): void {
-        traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
+        if (message.message.includes('IPyWidgets_')) {
+            traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
+        }
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
@@ -85,6 +92,18 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             //     break;
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
                 this.registerCommTarget(message.payload).ignoreErrors();
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_RegisterMessageHook:
+                this.registerMessageHook(message.payload);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_RemoveMessageHook:
+                this.removeMessageHook(message.payload);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_MessageHookResponse:
+                this.handleMessageHookResponse(message.payload);
                 break;
 
             default:
@@ -233,5 +252,47 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
         this.subscribeToKernelSocket(this.notebook);
         this.registerCommTargets(this.notebook);
+    }
+
+    private registerMessageHook(msgId: string) {
+        // This has to be synchronous or we don't register the hook fast enough
+        // Meaning DO NOT wait for anything here.
+        if (this.notebook && !this.messageHooks.has(msgId)) {
+            const callback = this.messageHookCallback.bind(this);
+            this.messageHooks.set(msgId, callback);
+            this.notebook.registerMessageHook(msgId, callback);
+        }
+    }
+
+    private removeMessageHook(msgId: string) {
+        if (this.notebook && this.messageHooks.has(msgId)) {
+            const callback = this.messageHooks.get(msgId);
+            this.messageHooks.delete(msgId);
+            this.notebook.removeMessageHook(msgId, callback!);
+        }
+    }
+
+    private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
+        const promise = createDeferred<boolean>();
+        const requestId = uuid();
+        // tslint:disable-next-line: no-any
+        const parentId = (msg.parent_header as any).msg_id;
+        if (this.messageHooks.has(parentId)) {
+            this.messageHookRequests.set(requestId, promise);
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, parentId, msg });
+        } else {
+            promise.resolve(true);
+        }
+        return promise.promise;
+    }
+
+    private handleMessageHookResponse(args: { requestId: string; parentId: string; msgType: string; result: boolean }) {
+        const promise = this.messageHookRequests.get(args.requestId);
+        if (promise) {
+            this.messageHookRequests.delete(args.requestId);
+
+            // During a comm message, make sure all messages come out.
+            promise.resolve(args.msgType.includes('comm') ? true : args.result);
+        }
     }
 }

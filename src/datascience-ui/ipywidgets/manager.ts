@@ -163,7 +163,7 @@ export class WidgetManager implements IIPyWidgetManager {
             return;
         }
         this.proxyKernel?.dispose(); // NOSONAR
-        this.proxyKernel = createKernel(this.kernelSocket, options);
+        this.proxyKernel = createKernel(this.kernelSocket, options, this.postOffice);
 
         // When a comm target has been regisered, we need to register this in the real kernel in extension side.
         // Hence send that message to extension.

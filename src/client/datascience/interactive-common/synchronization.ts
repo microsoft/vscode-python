@@ -183,7 +183,11 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea
+    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea
 };
 
 /**

@@ -111,7 +111,11 @@ export enum IPyWidgetMessages {
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
-    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget'
+    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
+    IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
+    IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
+    IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
+    IPyWidgets_MessageHookResponse = 'IPyWidgets_MessageHookResponse'
 }
 export enum NativeCommandType {
     AddToEnd = 0,
@@ -467,7 +471,19 @@ export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;
     public [IPyWidgetMessages.IPyWidgets_msg]: string;
-
+    public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
+        requestId: string;
+        parentId: string;
+        msg: KernelMessage.IIOPubMessage;
+    };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: {
+        requestId: string;
+        parentId: string;
+        msgType: string;
+        result: boolean;
+    };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;
     public [InteractiveWindowMessages.UpdateCell]: ICell;
