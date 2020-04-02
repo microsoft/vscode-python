@@ -11,7 +11,7 @@ import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../.
 import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../../client/common/utils/localize';
 import { unsafeInterpreterPromptKey } from '../../../../client/interpreter/autoSelection/constants';
 import { InterpreterEvaluation } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
-import { IInterpreterSecurityCommands } from '../../../../client/interpreter/autoSelection/types';
+import { IInterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 
 const prompts = [
@@ -27,7 +27,7 @@ suite('Interpreter Evaluation', () => {
     let applicationShell: Typemoq.IMock<IApplicationShell>;
     let browserService: Typemoq.IMock<IBrowserService>;
     let interpreterHelper: Typemoq.IMock<IInterpreterHelper>;
-    let interpreterSecurityCommands: Typemoq.IMock<IInterpreterSecurityCommands>;
+    let interpreterSecurityStorage: Typemoq.IMock<IInterpreterSecurityStorage>;
     let unsafeInterpreterPromptEnabled: Typemoq.IMock<IPersistentState<boolean>>;
     let areInterpretersInWorkspaceSafe: Typemoq.IMock<IPersistentState<boolean | undefined>>;
     let interpreterEvaluation: InterpreterEvaluation;
@@ -36,10 +36,10 @@ suite('Interpreter Evaluation', () => {
         applicationShell = Typemoq.Mock.ofType<IApplicationShell>();
         browserService = Typemoq.Mock.ofType<IBrowserService>();
         interpreterHelper = Typemoq.Mock.ofType<IInterpreterHelper>();
-        interpreterSecurityCommands = Typemoq.Mock.ofType<IInterpreterSecurityCommands>();
+        interpreterSecurityStorage = Typemoq.Mock.ofType<IInterpreterSecurityStorage>();
         unsafeInterpreterPromptEnabled = Typemoq.Mock.ofType<IPersistentState<boolean>>();
         areInterpretersInWorkspaceSafe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
-        interpreterSecurityCommands.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
+        interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
         persistentStateFactory
             .setup(i => i.createGlobalPersistentState<boolean | undefined>(resource.fsPath, undefined))
             .returns(() => areInterpretersInWorkspaceSafe.object);
@@ -51,7 +51,7 @@ suite('Interpreter Evaluation', () => {
             applicationShell.object,
             browserService.object,
             interpreterHelper.object,
-            interpreterSecurityCommands.object
+            interpreterSecurityStorage.object
         );
     });
 
@@ -184,7 +184,7 @@ suite('Interpreter Evaluation', () => {
 
     suite('Method _areInterpretersInWorkspaceSafe()', () => {
         test('If areInterpretersInWorkspaceSafe storage carries a defined value, return it', () => {
-            interpreterSecurityCommands.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
+            interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
             areInterpretersInWorkspaceSafe
                 .setup(i => i.value)
                 // tslint:disable-next-line: no-any
@@ -194,7 +194,7 @@ suite('Interpreter Evaluation', () => {
         });
 
         test('If areInterpretersInWorkspaceSafe storage is set to `undefined`, return `undefined`', () => {
-            interpreterSecurityCommands.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
+            interpreterSecurityStorage.setup(i => i.getKeyForWorkspace(resource)).returns(() => resource.fsPath);
             areInterpretersInWorkspaceSafe.setup(i => i.value).returns(() => undefined);
             const isSafe = interpreterEvaluation._areInterpretersInWorkspaceSafe(resource);
             expect(isSafe).to.equal(undefined, 'Should be undefined');

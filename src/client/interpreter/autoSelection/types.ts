@@ -5,7 +5,7 @@
 
 import { Event, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { Resource } from '../../common/types';
+import { IPersistentState, Resource } from '../../common/types';
 import { PythonInterpreter } from '../contracts';
 
 export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
@@ -58,9 +58,12 @@ export interface IInterpreterSecurityService {
     isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined;
 }
 
-export const IInterpreterSecurityCommands = Symbol('IInterpreterSecurityCommands');
-export interface IInterpreterSecurityCommands extends IExtensionSingleActivationService {
-    getKeyForWorkspace(resource: Uri): string;
+export const IInterpreterSecurityStorage = Symbol('IInterpreterSecurityStorage');
+export interface IInterpreterSecurityStorage extends IExtensionSingleActivationService {
+    readonly unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
+    readonly unsafeInterpreters: IPersistentState<string[]>;
+    readonly safeInterpreters: IPersistentState<string[]>;
+    areInterpretersInWorkspaceSafe(resource: Uri): IPersistentState<boolean | undefined>;
 }
 
 export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');

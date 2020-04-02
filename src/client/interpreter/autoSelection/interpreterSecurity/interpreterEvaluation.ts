@@ -6,14 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { IBrowserService, IPersistentState, IPersistentStateFactory, Resource } from '../../../common/types';
+import { IBrowserService, Resource } from '../../../common/types';
 import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterHelper, PythonInterpreter } from '../../contracts';
 import { isInterpreterStoredInWorkspace } from '../../helpers';
-import { unsafeInterpreterPromptKey } from '../constants';
-import { IInterpreterEvaluation, IInterpreterSecurityCommands } from '../types';
+import { IInterpreterEvaluation, IInterpreterSecurityStorage } from '../types';
 
 const prompts = [
     InteractiveShiftEnterBanner.bannerLabelYes(),
@@ -24,19 +23,12 @@ const prompts = [
 
 @injectable()
 export class InterpreterEvaluation implements IInterpreterEvaluation {
-    private unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
     constructor(
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
-        @inject(IInterpreterSecurityCommands) private readonly interpreterSecurityCommands: IInterpreterSecurityCommands
-    ) {
-        this.unsafeInterpreterPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
-            unsafeInterpreterPromptKey,
-            true
-        );
-    }
+        @inject(IInterpreterSecurityStorage) private readonly interpreterSecurityStorage: IInterpreterSecurityStorage
+    ) {}
 
     public async evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean> {
         const activeWorkspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource)?.folderUri;
@@ -55,29 +47,20 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         if (!isInterpreterStoredInWorkspace(interpreter, activeWorkspaceUri)) {
             return true;
         }
-        const isSafe = this._areInterpretersInWorkspaceSafe(activeWorkspaceUri);
+        const isSafe = this.interpreterSecurityStorage.areInterpretersInWorkspaceSafe(activeWorkspaceUri).value;
         if (isSafe !== undefined) {
             return isSafe;
         }
-        if (!this.unsafeInterpreterPromptEnabled.value) {
+        if (!this.interpreterSecurityStorage.unsafeInterpreterPromptEnabled.value) {
             // If the prompt is disabled, assume all environments are safe from now on.
             return true;
         }
     }
 
-    public _areInterpretersInWorkspaceSafe(resource: Uri): boolean | undefined {
-        const areInterpretersInWorkspaceSafe = this.persistentStateFactory.createGlobalPersistentState<
-            boolean | undefined
-        >(this.interpreterSecurityCommands.getKeyForWorkspace(resource), undefined);
-        if (areInterpretersInWorkspaceSafe.value !== undefined) {
-            return areInterpretersInWorkspaceSafe.value;
-        }
-    }
-
     public async _inferValueUsingPrompt(activeWorkspaceUri: Uri): Promise<boolean> {
-        const areInterpretersInWorkspaceSafe = this.persistentStateFactory.createGlobalPersistentState<
-            boolean | undefined
-        >(this.interpreterSecurityCommands.getKeyForWorkspace(activeWorkspaceUri), undefined);
+        const areInterpretersInWorkspaceSafe = this.interpreterSecurityStorage.areInterpretersInWorkspaceSafe(
+            activeWorkspaceUri
+        );
         let selection = await this.showPromptAndGetSelection();
         while (selection === Common.learnMore()) {
             this.browserService.launch('https://aka.ms/AA7jfor');
@@ -87,7 +70,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
             await areInterpretersInWorkspaceSafe.updateValue(false);
             return false;
         } else if (selection === Common.doNotShowAgain()) {
-            await this.unsafeInterpreterPromptEnabled.updateValue(false);
+            await this.interpreterSecurityStorage.unsafeInterpreterPromptEnabled.updateValue(false);
         }
         await areInterpretersInWorkspaceSafe.updateValue(true);
         return true;

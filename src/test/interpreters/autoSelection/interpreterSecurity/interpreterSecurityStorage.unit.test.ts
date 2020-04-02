@@ -14,11 +14,11 @@ import {
     unsafeInterpreterPromptKey,
     unsafeInterpretersKey
 } from '../../../../client/interpreter/autoSelection/constants';
-import { InterpreterSecurityCommands } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityCommands';
+import { InterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 
 suite('Interpreter Security commands', () => {
     let persistentStateFactory: Typemoq.IMock<IPersistentStateFactory>;
-    let interpreterSecurityCommands: InterpreterSecurityCommands;
+    let interpreterSecurityCommands: InterpreterSecurityStorage;
     let unsafeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let safeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let commandManager: Typemoq.IMock<ICommandManager>;
@@ -40,7 +40,7 @@ suite('Interpreter Security commands', () => {
         persistentStateFactory
             .setup(p => p.createGlobalPersistentState(unsafeInterpreterPromptKey, true))
             .returns(() => unsafeInterpreterPromptEnabled.object);
-        interpreterSecurityCommands = new InterpreterSecurityCommands(
+        interpreterSecurityCommands = new InterpreterSecurityStorage(
             persistentStateFactory.object,
             workspaceService.object,
             commandManager.object,
@@ -102,7 +102,7 @@ suite('Interpreter Security commands', () => {
             .returns(() => Promise.resolve())
             .verifiable(Typemoq.Times.once());
 
-        await interpreterSecurityCommands.resetUnsafeInterpreters();
+        await interpreterSecurityCommands.resetInterpreterSecurityStorage();
 
         areInterpretersInWorkspace1Safe.verifyAll();
         areInterpretersInWorkspace2Safe.verifyAll();

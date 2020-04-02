@@ -9,31 +9,48 @@ import { ICommandManager, IWorkspaceService } from '../../../common/application/
 import { Commands } from '../../../common/constants';
 import { IDisposable, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../../../common/types';
 import { safeInterpretersKey, unsafeInterpreterPromptKey, unsafeInterpretersKey } from '../constants';
-import { IInterpreterSecurityCommands } from '../types';
+import { IInterpreterSecurityStorage } from '../types';
 
 @injectable()
-export class InterpreterSecurityCommands implements IInterpreterSecurityCommands {
-    private unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
-    private unsafeInterpreters: IPersistentState<string[]>;
-    private safeInterpreters: IPersistentState<string[]>;
+export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
+    public get unsafeInterpreterPromptEnabled(): IPersistentState<boolean> {
+        return this._unsafeInterpreterPromptEnabled;
+    }
+    public get unsafeInterpreters(): IPersistentState<string[]> {
+        return this._unsafeInterpreters;
+    }
+    public get safeInterpreters(): IPersistentState<string[]> {
+        return this._safeInterpreters;
+    }
+    private _unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
+    private _unsafeInterpreters: IPersistentState<string[]>;
+    private _safeInterpreters: IPersistentState<string[]>;
     private readonly activatedWorkspacesKeys = new Set<string>();
+
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
-        this.unsafeInterpreterPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
+        this._unsafeInterpreterPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             unsafeInterpreterPromptKey,
             true
         );
-        this.unsafeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
+        this._unsafeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             unsafeInterpretersKey,
             []
         );
-        this.safeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
+        this._safeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             safeInterpretersKey,
             []
+        );
+    }
+
+    public areInterpretersInWorkspaceSafe(resource: Uri): IPersistentState<boolean | undefined> {
+        return this.persistentStateFactory.createGlobalPersistentState<boolean | undefined>(
+            this.getKeyForWorkspace(resource),
+            undefined
         );
     }
 
@@ -41,24 +58,24 @@ export class InterpreterSecurityCommands implements IInterpreterSecurityCommands
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.ResetUnsafePythonInterpretersList,
-                this.resetUnsafeInterpreters.bind(this)
+                this.resetInterpreterSecurityStorage.bind(this)
             )
         );
     }
 
-    public async resetUnsafeInterpreters(): Promise<void> {
+    public async resetInterpreterSecurityStorage(): Promise<void> {
         this.activatedWorkspacesKeys.forEach(async key => {
             const areInterpretersInWorkspaceSafe = this.persistentStateFactory.createGlobalPersistentState<
                 boolean | undefined
             >(key, undefined);
             await areInterpretersInWorkspaceSafe.updateValue(undefined);
         });
-        await this.safeInterpreters.updateValue([]);
-        await this.unsafeInterpreters.updateValue([]);
-        await this.unsafeInterpreterPromptEnabled.updateValue(true);
+        await this._safeInterpreters.updateValue([]);
+        await this._unsafeInterpreters.updateValue([]);
+        await this._unsafeInterpreterPromptEnabled.updateValue(true);
     }
 
-    public getKeyForWorkspace(resource: Uri): string {
+    private getKeyForWorkspace(resource: Uri): string {
         const key = `ARE_INTERPRETERS_SAFE_FOR_WS_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
         if (!this.activatedWorkspacesKeys.has(key)) {
             this.activatedWorkspacesKeys.add(key);

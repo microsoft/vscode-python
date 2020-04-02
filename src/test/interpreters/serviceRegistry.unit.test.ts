@@ -12,8 +12,8 @@ import { TerminalEnvironmentActivationService } from '../../client/interpreter/a
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
-import { InterpreterSecurityCommands } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityCommands';
 import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
@@ -27,8 +27,8 @@ import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService,
     IInterpreterEvaluation,
-    IInterpreterSecurityCommands,
-    IInterpreterSecurityService
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -117,9 +117,9 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
-            [IExtensionSingleActivationService, InterpreterSecurityCommands],
+            [IExtensionSingleActivationService, InterpreterSecurityStorage],
             [IInterpreterEvaluation, InterpreterEvaluation],
-            [IInterpreterSecurityCommands, InterpreterSecurityCommands],
+            [IInterpreterSecurityStorage, InterpreterSecurityStorage],
             [IInterpreterSecurityService, InterpreterSecurityService],
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],
             [IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global'],
