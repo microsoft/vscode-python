@@ -1,10 +1,16 @@
 # Changelog
 
-## 2020.3.1 (30 March 2020)
+## 2020.3.2 (2 April 2020)
 
 ### Fixes
 
-1. Update `debugpy` to latest. Fixes issue with locale.
+1. Update `debugpy` to latest (v1.0.0b5). Fixes issue with connections with multi-process.
+
+## 2020.3.1 (31 March 2020)
+
+### Fixes
+
+1. Update `debugpy` to latest (v1.0.0b4). Fixes issue with locale.
 
 ## 2020.3.0 (19 March 2020)
 
