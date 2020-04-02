@@ -39,6 +39,7 @@ export class KernelFinder implements IKernelFinder {
 
     public async findKernelSpec(interpreterUri: InterpreterUri, kernelName?: string): Promise<IJupyterKernelSpec> {
         this.cache = await this.readCache();
+        let foundKernel: IJupyterKernelSpec | undefined;
         const resource = isResource(interpreterUri) ? interpreterUri : undefined;
         const notebookInterpreter = isResource(interpreterUri) ? undefined : interpreterUri;
 
@@ -67,11 +68,14 @@ export class KernelFinder implements IKernelFinder {
 
             const result = await Promise.all(kernelSearches);
             const spec = result.find((sp) => sp?.name === kernelName);
-            await this.writeCache(this.cache);
-            return spec ? spec : this.getDefaultKernelSpec(resource);
+            foundKernel = spec ? spec : await this.getDefaultKernelSpec(resource);
+        } else {
+            foundKernel = await this.getDefaultKernelSpec(resource);
         }
 
-        return this.getDefaultKernelSpec(resource);
+        // tslint:disable-next-line: no-floating-promises
+        this.writeCache(this.cache);
+        return foundKernel;
     }
 
     private async getKernelSpecFromActiveInterpreter(
@@ -211,7 +215,6 @@ export class KernelFinder implements IKernelFinder {
         };
 
         this.cache.push(defaultSpec);
-        await this.writeCache(this.cache);
         return defaultSpec;
     }
 
