@@ -3,6 +3,7 @@ name: Bug report for Notebook Editor, Interactive Window, Python Editor cells
 about: Create a report to help us improve
 labels: type-bug, data science
 ---
+
 # Bug: Notebook Editor, Interactive Window, Editor cells
 
 <!-----------------------------------------------------------------------------------------------
@@ -13,6 +14,7 @@ bug template instead of this one. ***Thank you!***
 ------------------------------------------------------------------------------------------------->
 
 ## Steps to cause the bug to occur
+
 1.
 
 ## Actual behavior
@@ -25,22 +27,23 @@ https://github.com/phw/peek or https://www.screentogif.com/ to create one.
 ------------------------------------------------------------------------------------------------->
 
 ### Your Jupyter and/or Python environment
-*Please provide as much info as you readily know*
-- **Jupyter server running:**                       Local | Remote | N/A
-- **Extension version:**                               20YY.MM.#####-xxx
-- **VS Code version:**                                #.##
-- **Setting python.jediEnabled:**               true | false
-- **Python and/or Anaconda version:**     #.#.#
-- **OS:**                                                     Windows | Mac | Linux (distro):
-- **Virtual environment:**                          conda | venv | virtualenv | N/A | ...
+
+_Please provide as much info as you readily know_
+
+-   **Jupyter server running:** Local | Remote | N/A
+-   **Extension version:** 20YY.MM.#####-xxx
+-   **VS Code version:** #.##
+-   **Setting python.jediEnabled:** true | false
+-   **Python and/or Anaconda version:** #.#.#
+-   **OS:** Windows | Mac | Linux (distro):
+-   **Virtual environment:** conda | venv | virtualenv | N/A | ...
 
 ## Developer Tools Console Output
+
 <!-----------------------------------------------------------------------------------------------
 Copy/paste the output in the "Console" tab in the "Developer Tools" panel (Help >
 Toggle Developer Tools). For better details, run the "Enable source map support for
 extension debugging" command in VS Code at least once beforehand.
 ------------------------------------------------------------------------------------------------->
+
 Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
-
-
-

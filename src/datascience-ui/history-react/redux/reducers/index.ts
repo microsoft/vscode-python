@@ -39,6 +39,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.Undo]: Execution.undo,
@@ -62,5 +63,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
     [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
-    [SharedMessages.LocInit]: CommonEffects.handleLocInit
+    [SharedMessages.LocInit]: CommonEffects.handleLocInit,
+    [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData
 };

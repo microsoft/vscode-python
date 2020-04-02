@@ -6,16 +6,15 @@
 #
 
 steps:
-    - template: initialization.yml
-      parameters:
-        PythonVersion: $(PythonVersion)
-        workingDirectory: $(Build.SourcesDirectory)
-        compile: 'false'
+  - template: initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
 
-    - bash: npm run clean
-      displayName: "Clean"
+  - bash: npm run clean
+    displayName: 'Clean'
 
-    # This is a slow process, hence do this as a separate step
-    - bash: npm run checkDependencies
-      displayName: "Check Dependencies"
-
+  # This is a slow process, hence do this as a separate step
+  - bash: npm run checkDependencies
+    displayName: 'Check Dependencies'

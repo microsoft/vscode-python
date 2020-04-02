@@ -85,6 +85,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.PostOutgoingMessage]: MessageType.other,
     [CommonActionType.REFRESH_VARIABLES]: MessageType.other,
     [CommonActionType.FOCUS_INPUT]: MessageType.other,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
 
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
@@ -110,6 +111,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Interrupt]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,
@@ -165,6 +167,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UpdateCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateModel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateKernel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
     [InteractiveWindowMessages.VariablesComplete]: MessageType.other,
     // Types from CssMessages
@@ -177,23 +180,12 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [SharedMessages.Started]: MessageType.other,
     [SharedMessages.UpdateSettings]: MessageType.other,
     // IpyWidgets
-    // [IPyWidgetMessages.IPyWidgets_ShellCommOpen]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_comm_open]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_display_data_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: MessageType.noIdea
+    [IPyWidgetMessages.IPyWidgets_kernelOptions]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_Ready]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea
 };
 
 /**

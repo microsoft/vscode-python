@@ -5,10 +5,9 @@ import { isTestExecution } from '../../client/common/constants';
 
 const enableLogger = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE;
 
+// Might want to post this back to the other side too. This was
 export function logMessage(message: string) {
-    // Might want to post this back to the other side too. This was
     // put here to prevent having to disable the console log warning
-
     if (enableLogger) {
         // tslint:disable-next-line: no-console
         console.log(message);

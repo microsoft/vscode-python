@@ -39,7 +39,7 @@ const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedInteractiveEditor />
-        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} />
+        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} store={store} />
     </Provider>,
     document.getElementById('root') as HTMLElement
 );

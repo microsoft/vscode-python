@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
@@ -34,7 +34,8 @@ import {
     INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
-    InterruptResult
+    InterruptResult,
+    KernelSocketInformation
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
@@ -170,6 +171,9 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
+        return this.session.kernelSocket;
+    }
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -830,7 +834,7 @@ export class JupyterNotebookBase implements INotebook {
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                           store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                       },
-                      true
+                      silent // Dispose only silent futures. Otherwise update_display_data doesn't finda future for a previous cell.
                   )
                 : undefined;
         } catch (exc) {
@@ -944,6 +948,12 @@ export class JupyterNotebookBase implements INotebook {
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
+                // Ignore this
+            } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
+                // Ignore this
+            } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
+                // Ignore this
             } else {
                 traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
             }
@@ -1183,6 +1193,8 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
+                // tslint:disable-next-line: no-any
+                transient: msg.content.transient as any, // NOSONAR
                 execution_count: msg.content.execution_count
             },
             clearState
@@ -1284,19 +1296,15 @@ export class JupyterNotebookBase implements INotebook {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
-            metadata: msg.content.metadata
+            metadata: msg.content.metadata,
+            // tslint:disable-next-line: no-any
+            transient: msg.content.transient as any // NOSONAR
         };
         this.addToCellData(cell, output, clearState);
     }
 
-    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, cell: ICell) {
-        // Should already have a display data output in our cell.
-        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        const output = data.outputs.find((o) => o.output_type === 'display_data');
-        if (output) {
-            output.data = msg.content.data;
-            output.metadata = msg.content.metadata;
-        }
+    private handleUpdateDisplayData(_msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, _cell: ICell) {
+        // Updates should be handled outside.
     }
 
     private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool, cell: ICell) {

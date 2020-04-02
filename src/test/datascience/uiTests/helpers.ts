@@ -30,7 +30,7 @@ export type WaitForMessageOptions = {
     numberOfTimes?: number;
 };
 
-const maxWaitTimeForMessage = 15_000;
+const maxWaitTimeForMessage = 75_000;
 /**
  * UI could take a while to update, could be slower on CI server.
  * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).

@@ -8,15 +8,15 @@ labels: classify, type-bug
 
 ## Environment data
 
-- VS Code version: XXX
-- Extension version (available under the Extensions sidebar): XXX
-- OS and version: XXX
-- Python version (& distribution if applicable, e.g. Anaconda): XXX
-- Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX
-- Relevant/affected Python packages and their versions: XXX
-- Relevant/affected Python-related VS Code extensions and their versions: XXX
-- Jedi or Language Server? (i.e. what is `"python.jediEnabled"` set to; more info #3977): XXX
-- Value of the `python.languageServer` setting: XXX
+-   VS Code version: XXX
+-   Extension version (available under the Extensions sidebar): XXX
+-   OS and version: XXX
+-   Python version (& distribution if applicable, e.g. Anaconda): XXX
+-   Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX
+-   Relevant/affected Python packages and their versions: XXX
+-   Relevant/affected Python-related VS Code extensions and their versions: XXX
+-   Jedi or Language Server? (i.e. what is `"python.jediEnabled"` set to; more info #3977): XXX
+-   Value of the `python.languageServer` setting: XXX
 
 ## Expected behaviour
 
@@ -27,6 +27,7 @@ XXX
 XXX
 
 ## Steps to reproduce:
+
 [**NOTE**: Self-contained, minimal reproducing code samples are **extremely** helpful and will expedite addressing your issue]
 
 1. XXX
@@ -36,6 +37,7 @@ Note: If you think a GIF of what is happening would be helpful, consider tools l
 -->
 
 ## Logs
+
 Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-down the upper-right of the `Output` panel to `Python`)
 
 ```

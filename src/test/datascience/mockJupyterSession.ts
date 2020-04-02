@@ -5,12 +5,13 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { Observable } from 'rxjs/Observable';
 import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
+import { ICell, IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -19,6 +20,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
+    public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();

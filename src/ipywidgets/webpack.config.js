@@ -6,6 +6,8 @@
 // Copied from https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/html-manager/webpack.config.js
 
 const postcss = require('postcss');
+const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
+const common = require('../../build/webpack/common');
 const path = require('path');
 const constants = require('../../build/constants');
 const outDir = path.join(__dirname, '..', '..', 'out', 'ipywidgets');
@@ -81,6 +83,7 @@ module.exports = [
             library: 'vscIPyWidgets',
             libraryTarget: 'window'
         },
+        plugins: [...common.getDefaultPlugins('ipywidgets')],
         module: {
             rules: [
                 {
@@ -92,15 +95,15 @@ module.exports = [
                             loader: 'postcss-loader',
                             options: {
                                 plugins: [
-                                    postcss.plugin('delete-tilde', function() {
-                                        return function(css) {
-                                            css.walkAtRules('import', function(rule) {
+                                    postcss.plugin('delete-tilde', function () {
+                                        return function (css) {
+                                            css.walkAtRules('import', function (rule) {
                                                 rule.params = rule.params.replace('~', '');
                                             });
                                         };
                                     }),
-                                    postcss.plugin('prepend', function() {
-                                        return function(css) {
+                                    postcss.plugin('prepend', function () {
+                                        return function (css) {
                                             css.prepend("@import '@jupyter-widgets/controls/css/labvariables.css';");
                                         };
                                     }),

@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
+
+export const JupyterWebSockets = new Map<string, WebSocketWS>();
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to
@@ -32,6 +34,14 @@ export function createJupyterWebSocket(log?: boolean, cookieString?: string, all
             const parsed = /.*\/kernels\/(.*)\/.*/.exec(this.url);
             if (parsed && parsed.length > 1) {
                 this.kernelId = parsed[1];
+            }
+            if (this.kernelId) {
+                JupyterWebSockets.set(this.kernelId, this);
+                this.on('close', () => {
+                    JupyterWebSockets.delete(this.kernelId!);
+                });
+            } else {
+                traceError('KernelId not extraacted from Kernel WebSocket URL');
             }
         }
 

@@ -3,7 +3,7 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import { noop } from '../../../common/utils/misc';
 import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
 import { LiveKernelModel } from '../kernels/types';

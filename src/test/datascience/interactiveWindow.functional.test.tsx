@@ -1077,4 +1077,23 @@ Type:      builtin_function_or_method`,
             return ioc;
         }
     );
+    runMountedTest(
+        'Update display data',
+        async (wrapper, context) => {
+            if (ioc.mockJupyter) {
+                context.skip();
+            } else {
+                // Create 3 cells. Last cell should update the second
+                await addCode(ioc, wrapper, 'dh = display(display_id=True)');
+                await addCode(ioc, wrapper, 'dh.display("Hello")');
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', 'Hello', CellPosition.Last);
+                await addCode(ioc, wrapper, 'dh.update("Goodbye")');
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div></div>', CellPosition.Last);
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', 'Goodbye', 1);
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
 });

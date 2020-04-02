@@ -190,6 +190,21 @@ export namespace Transfer {
         });
     }
 
+    export function postModelCellUpdate<T>(
+        arg: CommonReducerArg<CommonActionType, T>,
+        newCells: ICell[],
+        oldCells: ICell[]
+    ) {
+        postModelUpdate(arg, {
+            source: 'user',
+            kind: 'modify',
+            newCells,
+            oldCells,
+            oldDirty: arg.prevState.dirty,
+            newDirty: true
+        });
+    }
+
     export function postModelRemoveAll<T>(arg: CommonReducerArg<CommonActionType, T>, newCellId: string) {
         postModelUpdate(arg, {
             source: 'user',

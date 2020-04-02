@@ -24,7 +24,8 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
+    KernelSocketInformation
 } from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -53,6 +54,7 @@ export class GuestJupyterNotebook
     public get server(): INotebookServer {
         return this._owner;
     }
+    public kernelSocket = new Observable<KernelSocketInformation | undefined>();
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {

@@ -17,7 +17,8 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
+    KernelSocketInformation
 } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
@@ -31,7 +32,7 @@ export class MockJupyterNotebook implements INotebook {
     public get identity(): Uri {
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
     }
-
+    public kernelSocket = new Observable<KernelSocketInformation | undefined>();
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
