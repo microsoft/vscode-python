@@ -41,7 +41,6 @@
     "base64-js",
     "bintrees",
     "bn.js",
-    "bootstrap",
     "bootstrap-less",
     "brorand",
     "browserify-aes",
