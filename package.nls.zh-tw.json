@@ -116,7 +116,7 @@
     "debug.attachRemoteHostPrompt": "輸入主機名稱",
     "debug.attachRemoteHostValidationError": "請輸入有效的主機名稱或 IP 位址",
     "debug.attachRemotePortTitle": "遠端偵錯",
-    "debug.attachRemotePortPrompt": "輸入 debugpy 伺服器正在監聽的連線埠號。",
+    "debug.attachRemotePortPrompt": "輸入偵錯伺服器正在監聽的連線埠號。",
     "debug.attachRemotePortValidationError": "請輸入有效的連線埠號。",
     "debug.attachPidConfigurationLabel": "使用處理程序 ID 連結",
     "debug.attachPidConfigurationDescription": "連結至本機處理程序",
