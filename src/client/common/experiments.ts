@@ -9,7 +9,7 @@ import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IConfigurationService, IHttpClient } from '../common/types';
-import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
@@ -116,7 +116,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
+        if (this.activatedOnce) {
             return;
         }
         this.activatedOnce = true;
