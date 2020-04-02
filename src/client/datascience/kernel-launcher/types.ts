@@ -25,8 +25,6 @@ export interface IKernelConnection {
     transport: 'tcp' | 'ipc';
 }
 
-export const IKernelProcess = Symbol('IKernelProcess');
-
 export interface IKernelProcess extends IDisposable {
     process: ChildProcess | undefined;
     connection: IKernelConnection | undefined;

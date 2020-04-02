@@ -27,6 +27,7 @@ const kernelPaths = new Map([
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private activeInterpreter: PythonInterpreter | undefined;
+    private cache: IJupyterKernelSpec[] = [];
 
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -37,11 +38,12 @@ export class KernelFinder implements IKernelFinder {
     ) {}
 
     public async findKernelSpec(interpreterUri: InterpreterUri, kernelName?: string): Promise<IJupyterKernelSpec> {
+        this.cache = await this.readCache();
         const resource = isResource(interpreterUri) ? interpreterUri : undefined;
         const notebookInterpreter = isResource(interpreterUri) ? undefined : interpreterUri;
 
         if (kernelName) {
-            let kernelSpec = await this.findCachePath(kernelName);
+            let kernelSpec = this.cache.find((ks) => ks.name === kernelName);
 
             if (kernelSpec) {
                 return kernelSpec;
@@ -65,6 +67,7 @@ export class KernelFinder implements IKernelFinder {
 
             const result = await Promise.all(kernelSearches);
             const spec = result.find((sp) => sp?.name === kernelName);
+            await this.writeCache(this.cache);
             return spec ? spec : this.getDefaultKernelSpec(resource);
         }
 
@@ -86,8 +89,6 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getKernelSpec(kernelPath: string, kernelName?: string): Promise<IJupyterKernelSpec | undefined> {
-        const cache = await this.readCache();
-
         try {
             const kernels = await this.file.getSubDirectories(kernelPath);
 
@@ -101,8 +102,7 @@ export class KernelFinder implements IKernelFinder {
                     const kernelSpec: IJupyterKernelSpec = JSON.parse(
                         await this.file.readFile(path.join(kernels[0], 'kernel.json'))
                     );
-                    cache.push(kernelSpec);
-                    await this.writeCache(cache);
+                    this.cache.push(kernelSpec);
                     return kernelSpec;
                 } catch (e) {
                     traceError('Invalid kernel.json', e);
@@ -116,7 +116,7 @@ export class KernelFinder implements IKernelFinder {
                     const kernelSpec: IJupyterKernelSpec = JSON.parse(
                         await this.file.readFile(path.join(kernel, 'kernel.json'))
                     );
-                    cache.push(kernelSpec);
+                    this.cache.push(kernelSpec);
                     if (kernelSpec.name === kernelName) {
                         spec = kernelSpec;
                     }
@@ -128,17 +128,11 @@ export class KernelFinder implements IKernelFinder {
             });
 
             await Promise.all(promises);
-            await this.writeCache(cache);
             return spec;
         } catch {
             traceInfo(`The path ${kernelPath} does not exist.`);
             return undefined;
         }
-    }
-
-    private async findCachePath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const cache = await this.readCache();
-        return cache.find((ks) => ks.name === kernelName);
     }
 
     private async findInterpreterPath(
@@ -182,7 +176,6 @@ export class KernelFinder implements IKernelFinder {
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const promises = paths.map((kernelPath) => this.file.search(kernelName, kernelPath));
         const searchResults = await Promise.all(promises);
-        const cache = await this.readCache();
 
         // tslint:disable-next-line: prefer-for-of
         for (let i = 0; i < searchResults.length; i += 1) {
@@ -192,8 +185,7 @@ export class KernelFinder implements IKernelFinder {
                         await this.file.readFile(path.join(paths[i], searchResults[i][0], 'kernel.json'))
                     );
                     kernelSpec.name = searchResults[i][0];
-                    cache.push(kernelSpec);
-                    await this.writeCache(cache);
+                    this.cache.push(kernelSpec);
                     return kernelSpec;
                 } catch (e) {
                     traceError('Invalid kernel.json', e);
@@ -205,8 +197,6 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
-        const cache = await this.readCache();
-
         if (!this.activeInterpreter) {
             this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         }
@@ -220,8 +210,8 @@ export class KernelFinder implements IKernelFinder {
             argv: [this.activeInterpreter?.path || 'python', '-m', 'ipykernel_launcher', '-f', '<connection_file>']
         };
 
-        cache.push(defaultSpec);
-        await this.writeCache(cache);
+        this.cache.push(defaultSpec);
+        await this.writeCache(this.cache);
         return defaultSpec;
     }
 
