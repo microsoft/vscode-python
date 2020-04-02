@@ -429,6 +429,7 @@ export namespace LiveShare {
     export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
     export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
+    export const RawNotebookProviderService = 'rawNotebookProviderSharedService';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
     export const InterruptDefaultTimeout = 10000;

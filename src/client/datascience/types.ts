@@ -136,6 +136,20 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
+// Provides notebooks that talk directly to kernels as opposed to a jupyter server
+// IANHU: Not sure if need the disposable here or not
+export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
+export interface IRawNotebookProvider extends IAsyncDisposable {
+    supported(): Promise<boolean>;
+    createNotebook(
+        identity: Uri,
+        resource: Resource,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+}
+
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
     readonly identity: Uri;

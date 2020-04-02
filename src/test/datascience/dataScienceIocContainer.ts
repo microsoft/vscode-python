@@ -219,6 +219,7 @@ import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
 import { EnchannelJMPConnection } from '../../client/datascience/raw-kernel/enchannelJMPConnection';
+import { RawNotebookProviderWrapper } from '../../client/datascience/raw-kernel/rawNotebookProviderWrapper';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -260,6 +261,7 @@ import {
     INotebookStorage,
     IPlotViewer,
     IPlotViewerProvider,
+    IRawNotebookProvider,
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
@@ -542,6 +544,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
         this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
+        this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
         this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);

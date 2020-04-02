@@ -79,6 +79,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
 import { EnchannelJMPConnection } from './raw-kernel/enchannelJMPConnection';
+import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -120,6 +121,7 @@ import {
     INotebookStorage,
     IPlotViewer,
     IPlotViewerProvider,
+    IRawNotebookProvider,
     IStatusProvider,
     IThemeFinder
 } from './types';
@@ -150,6 +152,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
     serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
+    serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);

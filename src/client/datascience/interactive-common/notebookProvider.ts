@@ -17,7 +17,8 @@ import {
     INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
-    INotebookServerProvider
+    INotebookServerProvider,
+    IRawNotebookProvider
 } from '../types';
 
 @injectable()
@@ -32,7 +33,8 @@ export class NotebookProvider implements INotebookProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookServerProvider) private readonly serverProvider: INotebookServerProvider
+        @inject(INotebookServerProvider) private readonly serverProvider: INotebookServerProvider,
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(

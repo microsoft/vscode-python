@@ -12,7 +12,8 @@ import {
     INotebook,
     INotebookEditorProvider,
     INotebookServer,
-    INotebookServerProvider
+    INotebookServerProvider,
+    IRawNotebookProvider
 } from '../../../client/datascience/types';
 
 function Uri(filename: string): vscode.Uri {
@@ -37,6 +38,7 @@ suite('Data Science - NotebookProvider', () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposableRegistry: IDisposableRegistry;
     let notebookServerProvider: INotebookServerProvider;
+    let rawNotebookProvider: IRawNotebookProvider;
 
     setup(() => {
         fileSystem = mock<IFileSystem>();
@@ -44,12 +46,14 @@ suite('Data Science - NotebookProvider', () => {
         interactiveWindowProvider = mock<IInteractiveWindowProvider>();
         disposableRegistry = mock<IDisposableRegistry>();
         notebookServerProvider = mock<INotebookServerProvider>();
+        rawNotebookProvider = mock<IRawNotebookProvider>();
         notebookProvider = new NotebookProvider(
             instance(fileSystem),
             instance(notebookEditorProvider),
             instance(interactiveWindowProvider),
             instance(disposableRegistry),
-            instance(notebookServerProvider)
+            instance(notebookServerProvider),
+            instance(rawNotebookProvider)
         );
     });
 
