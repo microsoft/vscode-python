@@ -275,7 +275,7 @@
     "debug.attachRemoteHostPrompt": "Enter the host name",
     "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address",
     "debug.attachRemotePortTitle": "Remote Debugging",
-    "debug.attachRemotePortPrompt": "Enter the port number that the debugpy server is listening on",
+    "debug.attachRemotePortPrompt": "Enter the port number that the debug server is listening on",
     "debug.attachRemotePortValidationError": "Enter a valid port number",
     "debug.attachPidConfigurationLabel": "Attach using Process ID",
     "debug.attachPidConfigurationDescription": "Attach to a local process",
