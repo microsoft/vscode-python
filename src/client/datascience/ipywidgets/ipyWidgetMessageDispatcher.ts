@@ -7,6 +7,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
+import type { Data as WebSocketData } from 'ws';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -43,6 +44,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private disposed = false;
     private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
+    private waitingMessageIds = new Map<string, Deferred<void>>();
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -81,6 +83,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             case IPyWidgetMessages.IPyWidgets_binary_msg:
                 this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
                 break;
+
+            case IPyWidgetMessages.IPyWidgets_msg_handled:
+                this.onKernelSocketResponse(message.payload);
+                break;
+
             // case InteractiveWindowMessages.RestartKernel:
             // Bug in code, we send this same message from extension side when already restarting.
             //     // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
@@ -102,7 +109,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.removeMessageHook(message.payload);
                 break;
 
-            case IPyWidgetMessages.IPyWidgets_MessageHookResponse:
+            case IPyWidgetMessages.IPyWidgets_MessageHookResult:
                 this.handleMessageHookResponse(message.payload);
                 break;
 
@@ -147,7 +154,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeMessageListener(this.onKernelSocketMessage.bind(this)); // NOSONAR
 
             if (this.kernelWasConnectedAtleastOnce) {
                 // this means we restarted the kernel and we now have new information.
@@ -166,11 +173,20 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtleastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
+            this.kernelSocketInfo.socket?.addMessageListener(this.onKernelSocketMessage.bind(this)); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
             this.sendPendingMessages();
+
+            // Once the kernel is ready, remap the send function so we can mirror certain messages to the other side
+            if (this.kernelSocketInfo.socket) {
+                const originalSend = this.kernelSocketInfo.socket.send;
+                this.kernelSocketInfo.socket.send = this.mirrorSend.bind(
+                    this,
+                    originalSend.bind(this.kernelSocketInfo.socket)
+                );
+            }
         });
     }
     /**
@@ -183,11 +199,55 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
     }
-    private onKernelSocketMessage(message: any) {
-        if (typeof message === 'string') {
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, message);
+    private async mirrorSend(
+        originalSend: (data: any, cb?: (err?: Error) => void) => void,
+        data: any,
+        cb?: (err?: Error) => void
+    ) {
+        // If this is shell control message, mirror to the other side. This is how
+        // we get the kernel in the UI to have the same set of futures we have on this side
+        if (typeof data === 'string') {
+            const msg = JSON.parse(data) as KernelMessage.IMessage<KernelMessage.MessageType>;
+            if (msg.channel === 'shell') {
+                switch (msg.header.msg_type) {
+                    case 'execute_request':
+                        await this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+        originalSend(data, cb);
+    }
+
+    private mirrorExecuteRequest(msg: KernelMessage.IExecuteRequestMsg) {
+        const promise = createDeferred<void>();
+        this.waitingMessageIds.set(msg.header.msg_id, promise);
+        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_mirror_execute, { id: msg.header.msg_id, msg });
+        return promise.promise;
+    }
+
+    private onKernelSocketMessage(data: WebSocketData) {
+        const msgUuid = uuid();
+        const promise = createDeferred<void>();
+        this.waitingMessageIds.set(msgUuid, promise);
+        if (typeof data === 'string') {
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
         } else {
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, serializeDataViews([message]));
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, {
+                id: msgUuid,
+                data: serializeDataViews([data as any])
+            });
+        }
+        return promise.promise;
+    }
+    private onKernelSocketResponse(payload: { id: string }) {
+        const promise = this.waitingMessageIds.get(payload.id);
+        if (promise) {
+            this.waitingMessageIds.delete(payload.id);
+            promise.resolve();
         }
     }
     private sendPendingMessages() {
@@ -255,8 +315,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private registerMessageHook(msgId: string) {
-        // This has to be synchronous or we don't register the hook fast enough
-        // Meaning DO NOT wait for anything here.
         if (this.notebook && !this.messageHooks.has(msgId)) {
             const callback = this.messageHookCallback.bind(this);
             this.messageHooks.set(msgId, callback);

@@ -937,8 +937,8 @@ export interface INotebookProvider {
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
     send(data: any, cb?: (err?: Error) => void): void;
-    addListener(event: 'message', listener: (data: WebSocketData) => void): this;
-    removeListener(event: 'message', listener: (data: WebSocketData) => void): this;
+    addMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
+    removeMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
 }
 
 export type KernelSocketOptions = {

@@ -110,12 +110,14 @@ export enum IPyWidgetMessages {
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
+    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
     IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
-    IPyWidgets_MessageHookResponse = 'IPyWidgets_MessageHookResponse'
+    IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
+    IPyWidgets_mirror_execute = 'IPyWidgets_mirror_execute'
 }
 export enum NativeCommandType {
     AddToEnd = 0,
@@ -469,8 +471,9 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     // tslint:disable-next-line: no-any
-    public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;
-    public [IPyWidgetMessages.IPyWidgets_msg]: string;
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
+    public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: string;
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
@@ -478,12 +481,13 @@ export class IInteractiveWindowMapping {
         parentId: string;
         msg: KernelMessage.IIOPubMessage;
     };
-    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: {
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResult]: {
         requestId: string;
         parentId: string;
         msgType: string;
         result: boolean;
     };
+    public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;
     public [InteractiveWindowMessages.UpdateCell]: ICell;
