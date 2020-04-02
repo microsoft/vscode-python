@@ -4,7 +4,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
@@ -12,9 +11,9 @@ import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import { scripts as internalScripts } from '../../common/process/internal';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
 import {
     ICell,
@@ -94,20 +93,12 @@ export class JupyterVariables implements IJupyterVariables {
     // Private methods
     // Load our python files for fetching variables
     private async loadVariableFiles(): Promise<void> {
-        let file = path.join(
-            EXTENSION_ROOT_DIR,
-            'pythonFiles',
-            'vscode_datascience_helpers',
-            'getJupyterVariableDataFrameInfo.py'
-        );
+        let args = internalScripts.vscode_datascience_helpers.getJupyterVariableDataFrameInfo();
+        let file = args[0];
         this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
 
-        file = path.join(
-            EXTENSION_ROOT_DIR,
-            'pythonFiles',
-            'vscode_datascience_helpers',
-            'getJupyterVariableDataFrameRows.py'
-        );
+        args = internalScripts.vscode_datascience_helpers.getJupyterVariableDataFrameInfo();
+        file = args[0];
         this.fetchDataFrameRowsScript = await this.fileSystem.readFile(file);
 
         this.filesLoaded = true;

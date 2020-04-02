@@ -4,16 +4,15 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
+import { scripts as internalScripts } from '../../../common/process/internal';
 import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
 import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, PythonDaemonModule, Telemetry } from '../../constants';
@@ -126,13 +125,13 @@ export class JupyterInterpreterSubCommandExecutionService
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
-        const serverInfoString = await daemon.exec([file], newOptions);
+        const [args, parse] = internalScripts.vscode_datascience_helpers.getServerInfo();
+        const serverInfoProc = await daemon.exec(args, newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {
             // Parse out our results, return undefined if we can't suss it out
-            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
+            serverInfos = parse(serverInfoProc.stdout) as JupyterServerInfo[];
         } catch (err) {
             traceWarning('Failed to parse JSON when getting server info out from getServerInfo.py', err);
             return;
@@ -197,18 +196,9 @@ export class JupyterInterpreterSubCommandExecutionService
                     return '';
                 });
             // Possible we cannot import ipykernel for some reason. (use as backup option).
+            const args = internalScripts.vscode_datascience_helpers.getJupyterKernels();
             const stdoutFromFileExecPromise = daemon
-                .exec(
-                    [
-                        path.join(
-                            EXTENSION_ROOT_DIR,
-                            'pythonFiles',
-                            'vscode_datascience_helpers',
-                            'getJupyterKernels.py'
-                        )
-                    ],
-                    spawnOptions
-                )
+                .exec(args, spawnOptions)
                 .then((output) => output.stdout)
                 .catch((fileEx) => {
                     traceError('Failed to list kernels from getJupyterKernels.py', fileEx);
