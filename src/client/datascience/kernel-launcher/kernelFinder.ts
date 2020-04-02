@@ -182,11 +182,11 @@ export class KernelFinder implements IKernelFinder {
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const promises = paths.map((kernelPath) => this.file.search(kernelName, kernelPath));
         const searchResults = await Promise.all(promises);
+        const cache = await this.readCache();
 
         // tslint:disable-next-line: prefer-for-of
         for (let i = 0; i < searchResults.length; i += 1) {
             if (searchResults[i].length > 0) {
-                const cache = await this.readCache();
                 try {
                     const kernelSpec: IJupyterKernelSpec = JSON.parse(
                         await this.file.readFile(path.join(paths[i], searchResults[i][0], 'kernel.json'))
