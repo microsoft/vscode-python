@@ -4,6 +4,7 @@
 'use strict';
 
 import { Event, Uri } from 'vscode';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../contracts';
 
@@ -58,7 +59,7 @@ export interface IInterpreterSecurityService {
 }
 
 export const IInterpreterSecurityCommands = Symbol('IInterpreterSecurityCommands');
-export interface IInterpreterSecurityCommands {
+export interface IInterpreterSecurityCommands extends IExtensionSingleActivationService {
     getKeyForWorkspace(resource: Uri): string;
 }
 

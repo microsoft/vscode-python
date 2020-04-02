@@ -40,35 +40,26 @@ suite('Interpreter Security commands', () => {
         persistentStateFactory
             .setup(p => p.createGlobalPersistentState(unsafeInterpreterPromptKey, true))
             .returns(() => unsafeInterpreterPromptEnabled.object);
-        commandManager
-            .setup(c => c.registerCommand(Commands.ResetUnsafePythonInterpretersList, Typemoq.It.isAny()))
-            .returns(() => Typemoq.Mock.ofType<IDisposable>().object);
+        interpreterSecurityCommands = new InterpreterSecurityCommands(
+            persistentStateFactory.object,
+            workspaceService.object,
+            commandManager.object,
+            []
+        );
     });
 
-    test('Command is registered in the constructor', async () => {
-        commandManager.reset();
+    test('Command is registered in the activate() method', async () => {
         commandManager
             .setup(c => c.registerCommand(Commands.ResetUnsafePythonInterpretersList, Typemoq.It.isAny()))
             .returns(() => Typemoq.Mock.ofType<IDisposable>().object)
             .verifiable(Typemoq.Times.once());
 
-        interpreterSecurityCommands = new InterpreterSecurityCommands(
-            persistentStateFactory.object,
-            workspaceService.object,
-            commandManager.object,
-            []
-        );
+        await interpreterSecurityCommands.activate();
 
         commandManager.verifyAll();
     });
 
     test('Activated workspace keys are captured & all kinds of storages are cleared upon invoking the command', async () => {
-        interpreterSecurityCommands = new InterpreterSecurityCommands(
-            persistentStateFactory.object,
-            workspaceService.object,
-            commandManager.object,
-            []
-        );
         // Initialize storage for workspace1
         const workspace1 = Uri.parse('1');
         const areInterpretersInWorkspace1Safe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();

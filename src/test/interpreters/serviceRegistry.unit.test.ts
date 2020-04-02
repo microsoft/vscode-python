@@ -117,6 +117,7 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
+            [IExtensionSingleActivationService, InterpreterSecurityCommands],
             [IInterpreterEvaluation, InterpreterEvaluation],
             [IInterpreterSecurityCommands, InterpreterSecurityCommands],
             [IInterpreterSecurityService, InterpreterSecurityService],

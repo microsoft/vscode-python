@@ -111,6 +111,10 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  */
 // tslint:disable-next-line: max-func-body-length
 export function registerInterpreterTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterSecurityCommands
+    );
     serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
     serviceManager.addSingleton<IInterpreterSecurityCommands>(
         IInterpreterSecurityCommands,

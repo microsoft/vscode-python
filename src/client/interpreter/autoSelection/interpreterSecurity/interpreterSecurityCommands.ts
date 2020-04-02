@@ -35,6 +35,9 @@ export class InterpreterSecurityCommands implements IInterpreterSecurityCommands
             safeInterpretersKey,
             []
         );
+    }
+
+    public async activate(): Promise<void> {
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.ResetUnsafePythonInterpretersList,
