@@ -13,7 +13,8 @@ import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 import { ExperimentsManager } from '../client/common/experiments';
 import { IExperimentsManager } from '../client/common/types';
 import { ServiceContainer } from '../client/ioc/container';
-import { IServiceContainer } from '../client/ioc/types';
+import { ServiceManager } from '../client/ioc/serviceManager';
+import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 
 suite('Extension API - Debugger', () => {
     const expectedLauncherPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
@@ -22,10 +23,12 @@ suite('Extension API - Debugger', () => {
     const ptvsdPort = 12345;
 
     let serviceContainer: IServiceContainer;
+    let serviceManager: IServiceManager;
     let experimentsManager: IExperimentsManager;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
+        serviceManager = mock(ServiceManager);
         experimentsManager = mock(ExperimentsManager);
 
         when(serviceContainer.get<IExperimentsManager>(IExperimentsManager)).thenReturn(instance(experimentsManager));
@@ -35,11 +38,11 @@ suite('Extension API - Debugger', () => {
         const waitForAttach = false;
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
 
-        const args = await buildApi(Promise.resolve(), instance(serviceContainer)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [expectedLauncherPath, '--default', '--host', ptvsdHost, '--port', ptvsdPort.toString()];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -49,11 +52,11 @@ suite('Extension API - Debugger', () => {
         const waitForAttach = false;
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
 
-        const args = await buildApi(Promise.resolve(), instance(serviceContainer)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [ptvsdPath.fileToCommandArgument(), '--listen', `${ptvsdHost}:${ptvsdPort}`];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -63,11 +66,11 @@ suite('Extension API - Debugger', () => {
         const waitForAttach = true;
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
 
-        const args = await buildApi(Promise.resolve(), instance(serviceContainer)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [
             expectedLauncherPath,
             '--default',
@@ -85,11 +88,11 @@ suite('Extension API - Debugger', () => {
         const waitForAttach = true;
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
 
-        const args = await buildApi(Promise.resolve(), instance(serviceContainer)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [
             ptvsdPath.fileToCommandArgument(),
             '--listen',

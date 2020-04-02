@@ -3,11 +3,12 @@
 
 'use strict';
 
+import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IExperimentsManager } from './common/types';
 import { getDebugpyLauncherArgs, getPtvsdLauncherScriptArgs } from './debugger/extension/adapter/remoteLaunchers';
-import { IServiceContainer } from './ioc/types';
+import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -38,12 +39,13 @@ export interface IExtensionApi {
 export function buildApi(
     // tslint:disable-next-line:no-any
     ready: Promise<any>,
+    serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
     const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    return {
+    const api = {
         // 'ready' will propagate the exception, but we must log it here first.
-        ready: ready.catch((ex) => {
+        ready: ready.catch(ex => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
@@ -71,4 +73,13 @@ export function buildApi(
             }
         }
     };
+
+    // In test environment return the DI Container.
+    if (isTestExecution()) {
+        // tslint:disable:no-any
+        (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceManager = serviceManager;
+        // tslint:enable:no-any
+    }
+    return api;
 }
