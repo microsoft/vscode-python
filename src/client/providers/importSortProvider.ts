@@ -154,7 +154,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     }
 }
 
-function getIsortArgs(filename:string, extraArgs?: string[]): string[] {
+function getIsortArgs(filename: string, extraArgs?: string[]): string[] {
     // We could just adapt internalScripts.sortImports().  However,
     // the following is simpler and the alternative doesn't offer
     // any signficant benefit.
