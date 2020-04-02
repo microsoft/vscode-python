@@ -4,42 +4,15 @@
 'use strict';
 
 import { Uri } from 'vscode';
+import { scripts as internalScripts } from '../../../common/process/internal';
 import { Tests } from '../types';
 
-export type TestNode = {
-    id: string;
-    name: string;
-    parentid: string;
-};
-export type TestParent = TestNode & {
-    kind: 'folder' | 'file' | 'suite' | 'function';
-};
-export type TestFSNode = TestParent & {
-    kind: 'folder' | 'file';
-    relpath: string;
-};
-export type TestFolder = TestFSNode & {
-    kind: 'folder';
-};
-export type TestFile = TestFSNode & {
-    kind: 'file';
-};
-export type TestSuite = TestParent & {
-    kind: 'suite';
-};
-// function-as-a-container is for parameterized ("sub") tests.
-export type TestFunction = TestParent & {
-    kind: 'function';
-};
-export type Test = TestNode & {
-    source: string;
-};
-export type DiscoveredTests = {
-    rootid: string;
-    root: string;
-    parents: TestParent[];
-    tests: Test[];
-};
+export type DiscoveredTests = internalScripts.testing_tools.DiscoveredTests;
+export type Test = internalScripts.testing_tools.Test;
+export type TestFolder = internalScripts.testing_tools.TestFolder;
+export type TestFile = internalScripts.testing_tools.TestFile;
+export type TestSuite = internalScripts.testing_tools.TestSuite;
+export type TestFunction = internalScripts.testing_tools.TestFunction;
 
 export const ITestDiscoveredTestParser = Symbol('ITestDiscoveredTestParser');
 export interface ITestDiscoveredTestParser {

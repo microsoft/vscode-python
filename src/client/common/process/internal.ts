@@ -306,4 +306,61 @@ export namespace scripts {
         // There is no output to parse, so we do not return a function.
         return [script, ...testArgs];
     }
+
+    //============================
+    // testing_tools/
+
+    export namespace testing_tools {
+        const _SCRIPTS_DIR = path.join(SCRIPTS_DIR, 'testing_tools');
+
+        type TestNode = {
+            id: string;
+            name: string;
+            parentid: string;
+        };
+        type TestParent = TestNode & {
+            kind: 'folder' | 'file' | 'suite' | 'function';
+        };
+        type TestFSNode = TestParent & {
+            kind: 'folder' | 'file';
+            relpath: string;
+        };
+
+        export type TestFolder = TestFSNode & {
+            kind: 'folder';
+        };
+        export type TestFile = TestFSNode & {
+            kind: 'file';
+        };
+        export type TestSuite = TestParent & {
+            kind: 'suite';
+        };
+        // function-as-a-container is for parameterized ("sub") tests.
+        export type TestFunction = TestParent & {
+            kind: 'function';
+        };
+        export type Test = TestNode & {
+            source: string;
+        };
+        export type DiscoveredTests = {
+            rootid: string;
+            root: string;
+            parents: TestParent[];
+            tests: Test[];
+        };
+
+        //============================
+        // run_adapter.py
+
+        export function run_adapter(adapterArgs: string[]): [string[], (out: string) => DiscoveredTests[]] {
+            const script = path.join(_SCRIPTS_DIR, 'run_adapter.py');
+            const args = [script, ...adapterArgs];
+
+            function parse(out: string): DiscoveredTests[] {
+                return JSON.parse(out);
+            }
+
+            return [args, parse];
+        }
+    }
 }

@@ -46,8 +46,7 @@ suite('Unit Tests - Common Discovery', () => {
         };
         const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
         const parsedResult = ({ done: true } as any) as Tests;
-        const json = JSON.stringify(discoveredTests);
-        discovery.exec = () => Promise.resolve({ stdout: json });
+        discovery.exec = () => Promise.resolve(discoveredTests);
         when(parser.parse(options.workspaceFolder, deepEqual(discoveredTests))).thenResolve(parsedResult as any);
 
         const tests = await discovery.discoverTests(options);
