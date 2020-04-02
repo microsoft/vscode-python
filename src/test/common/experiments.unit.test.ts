@@ -7,12 +7,10 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { WorkspaceConfiguration } from 'vscode';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
-import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
-import { WorkspaceService } from '../../client/common/application/workspace';
+import { IApplicationEnvironment } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
@@ -43,7 +41,6 @@ import { noop } from '../core';
 // tslint:disable: max-func-body-length
 
 suite('A/B experiments', () => {
-    let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
     let appEnvironment: IApplicationEnvironment;
@@ -57,7 +54,6 @@ suite('A/B experiments', () => {
     let configurationService: ConfigurationService;
     let experiments: TypeMoq.IMock<IExperiments>;
     setup(() => {
-        workspaceService = mock(WorkspaceService);
         httpClient = mock(HttpClient);
         crypto = mock(CryptoUtils);
         appEnvironment = mock(ApplicationEnvironment);
@@ -111,7 +107,7 @@ suite('A/B experiments', () => {
         try {
             await expManager.initializeInBackground();
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
 
         isDownloadedStorageValid.verifyAll();
     }
@@ -187,27 +183,6 @@ suite('A/B experiments', () => {
         verify(httpClient.getJSON(configUri, false)).once();
     });
 
-    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = { globalValue: false };
-
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup((c) => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-        downloadedExperimentsStorage
-            .setup((n) => n.value)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
-
-        await expManager.activate();
-
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
-    });
-
     async function testEnablingExperiments(enabled: boolean) {
         const updateExperimentStorage = sinon.stub(ExperimentsManager.prototype, 'updateExperimentStorage');
         updateExperimentStorage.callsFake(() => Promise.resolve());
@@ -215,18 +190,10 @@ suite('A/B experiments', () => {
         populateUserExperiments.callsFake(() => Promise.resolve());
         const initializeInBackground = sinon.stub(ExperimentsManager.prototype, 'initializeInBackground');
         initializeInBackground.callsFake(() => Promise.resolve());
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
         experiments
             .setup((e) => e.enabled)
             .returns(() => enabled)
             .verifiable(TypeMoq.Times.atLeastOnce());
-
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup((c) => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
 
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
@@ -244,7 +211,6 @@ suite('A/B experiments', () => {
         assert.equal(populateUserExperiments.callCount, enabled ? 1 : 0);
         assert.equal(initializeInBackground.callCount, enabled ? 1 : 0);
 
-        workspaceConfig.verifyAll();
         experiments.verifyAll();
     }
     test('Ensure experiments are not initialized when it is disabled', async () => testEnablingExperiments(false));
@@ -299,33 +265,16 @@ suite('A/B experiments', () => {
             instance(fs),
             instance(configurationService)
         );
-        // Activate it twice and check
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
 
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup((c) => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-
-        // First activation
+        assert.isFalse(expManager._activated());
         await expManager.activate();
 
-        resetCalls(workspaceService);
-
-        // Second activation
-        await expManager.activate();
-
-        verify(workspaceService.getConfiguration(anything())).never();
-
-        workspaceConfig.verifyAll();
+        // Ensure activated flag is set
+        assert.isTrue(expManager._activated());
     });
 
     test('Ensure experiments are reliably downloaded in the background', async () => {
         const experimentsDeferred = createDeferred<void>();
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
         const updateExperimentStorage = sinon.stub(ExperimentsManager.prototype, 'updateExperimentStorage');
         updateExperimentStorage.callsFake(() => Promise.resolve());
         const populateUserExperiments = sinon.stub(ExperimentsManager.prototype, 'populateUserExperiments');
@@ -342,12 +291,6 @@ suite('A/B experiments', () => {
             instance(configurationService)
         );
 
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup((c) => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-
         const promise = expManager.activate();
         const deferred = createDeferredFromPromise(promise);
         await sleep(1);
@@ -358,8 +301,6 @@ suite('A/B experiments', () => {
         experimentsDeferred.resolve();
         await sleep(1);
 
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
         assert.ok(initializeInBackground.calledOnce);
     });
 

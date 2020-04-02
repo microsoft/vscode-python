@@ -335,4 +335,8 @@ export class ExperimentsManager implements IExperimentsManager {
         this._experimentsOptedInto = this._experimentsOptedInto.filter((exp) => exp !== '');
         this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter((exp) => exp !== '');
     }
+
+    public _activated(): boolean {
+        return this.activatedOnce;
+    }
 }
