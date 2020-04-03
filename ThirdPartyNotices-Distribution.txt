@@ -511,11 +511,11 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 504. vscode-debugadapter 1.35.0 (https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.35.0.tgz)
 505. vscode-debugprotocol 1.35.0 (https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.35.0.tgz)
 506. vscode-extension-telemetry 0.1.0 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.1.0.tgz)
-507. vscode-jsonrpc 4.0.0 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-4.0.0.tgz)
-508. vscode-languageclient 5.2.1 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-5.2.1.tgz)
-509. vscode-languageserver 5.2.1 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-5.2.1.tgz)
-510. vscode-languageserver-protocol 3.14.1 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.14.1.tgz)
-511. vscode-languageserver-types 3.14.0 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.14.0.tgz)
+507. vscode-jsonrpc 5.0.1 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-5.0.1.tgz)
+508. vscode-languageclient 6.1.3 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-6.1.3.tgz)
+509. vscode-languageserver 6.1.1 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-6.1.1.tgz)
+510. vscode-languageserver-protocol 3.15.3 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.15.3.tgz)
+511. vscode-languageserver-types 3.15.1 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.15.1.tgz)
 512. vsls 0.3.1291 (https://registry.npmjs.org/vsls/-/vsls-0.3.1291.tgz)
 513. warning 4.0.3 (https://registry.npmjs.org/warning/-/warning-4.0.3.tgz)
 514. webpack (for lodash 4) (https://webpack.js.org/)
@@ -7441,7 +7441,7 @@ END OF hoist-non-react-statics NOTICES AND INFORMATION
 =========================================
 (The MIT License)
 
-Copyright (c) 2014 
+Copyright (c) 2014
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -15227,7 +15227,7 @@ modification, are permitted provided that the following conditions are met:
   and/or other materials provided with the distribution.
 
 * Neither the name of the University of Washington Interactive Data Lab
-  nor the names of its contributors may be used to endorse or promote products 
+  nor the names of its contributors may be used to endorse or promote products
   derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
@@ -16018,7 +16018,7 @@ SOFTWARE.
 =========================================
 END OF vscode-extension-telemetry NOTICES AND INFORMATION
 
-%% vscode-jsonrpc 4.0.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-4.0.0.tgz)
+%% vscode-jsonrpc 5.0.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-5.0.1.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -16035,7 +16035,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-jsonrpc NOTICES AND INFORMATION
 
-%% vscode-languageclient 5.2.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-5.2.1.tgz)
+%% vscode-languageclient 6.1.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-6.1.3.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -16052,7 +16052,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageclient NOTICES AND INFORMATION
 
-%% vscode-languageserver 5.2.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-5.2.1.tgz)
+%% vscode-languageserver 6.1.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-6.1.1.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -16069,7 +16069,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageserver NOTICES AND INFORMATION
 
-%% vscode-languageserver-protocol 3.14.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.14.1.tgz)
+%% vscode-languageserver-protocol 3.15.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.15.3.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
@@ -16086,7 +16086,7 @@ THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF vscode-languageserver-protocol NOTICES AND INFORMATION
 
-%% vscode-languageserver-types 3.14.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.14.0.tgz)
+%% vscode-languageserver-types 3.15.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.15.1.tgz)
 =========================================
 Copyright (c) Microsoft Corporation
 
