@@ -380,6 +380,8 @@ export interface IApplicationShell {
      * At the moment, progress can only be displayed in the status bar when using this method. If you want to
      * display it elsewhere, use `withProgress`.
      *
+     * @param icon A valid Octicon.
+     *
      * @param task A callback returning a promise. Progress state can be reported with
      * the provided [progress](#Progress)-object.
      *
