@@ -70,7 +70,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public receiveMessage(message: IPyWidgetMessage | { message: InteractiveWindowMessages.RestartKernel }): void {
-        if (message.message.includes('IPyWidgets_')) {
+        if (process.env.VSC_PYTHON_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
             traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
         switch (message.message) {
