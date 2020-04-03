@@ -10,6 +10,8 @@ import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/cor
 import { Widget } from '@phosphor/widgets';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
+import { Observable } from 'rxjs/Observable';
+import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import {
     IInteractiveWindowMapping,
@@ -23,10 +25,10 @@ import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCt
 // tslint:disable: no-any
 
 export class WidgetManager implements IIPyWidgetManager {
-    public static get instance(): Promise<WidgetManager | undefined> {
-        return WidgetManager._instance.promise;
+    public static get instance(): Observable<WidgetManager | undefined> {
+        return WidgetManager._instance;
     }
-    private static _instance = createDeferred<WidgetManager | undefined>();
+    private static _instance = new ReplaySubject<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
     private options?: KernelSocketOptions;
@@ -50,13 +52,13 @@ export class WidgetManager implements IIPyWidgetManager {
             handleMessage: (message: string, payload?: any) => {
                 if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
                     this.initializeKernelAndWidgetManager(payload);
-                    // } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
-                    //     // Kernel was restarted.
-                    //     this.manager?.dispose();
-                    //     this.manager = undefined;
-                    //     this.proxyKernel?.dispose();
-                    //     this.proxyKernel = undefined;
-                    //     WidgetManager._instance.next(undefined);
+                } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
+                    // Kernel was restarted.
+                    this.manager?.dispose();
+                    this.manager = undefined;
+                    this.proxyKernel?.dispose();
+                    this.proxyKernel = undefined;
+                    WidgetManager._instance.next(undefined);
                 }
                 return true;
             }
@@ -148,7 +150,7 @@ export class WidgetManager implements IIPyWidgetManager {
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             // Resolve the promise for getting this manager
-            WidgetManager._instance.resolve(this);
+            WidgetManager._instance.next(this);
         } catch (ex) {
             // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);

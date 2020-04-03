@@ -97,7 +97,8 @@ suite('JupyterVariables', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
+            enableIPyWidgets: true
         };
 
         // Create our fake notebook

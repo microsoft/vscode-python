@@ -1356,6 +1356,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
+            enableIPyWidgets: true,
             jupyterCommandLineArguments: [],
             disableJupyterAutoStart: true
         };

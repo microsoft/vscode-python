@@ -70,7 +70,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    public receiveMessage(message: IPyWidgetMessage | { message: InteractiveWindowMessages.RestartKernel }): void {
+    public receiveMessage(
+        message: IPyWidgetMessage | { message: InteractiveWindowMessages.FinishedRestartKernel }
+    ): void {
         if (process.env.VSC_PYTHON_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
             traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
@@ -90,15 +92,16 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.onKernelSocketResponse(message.payload);
                 break;
 
-            // case InteractiveWindowMessages.RestartKernel:
-            // Bug in code, we send this same message from extension side when already restarting.
-            //     // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
-            //     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
-            //     this.kernelSocketInfo = undefined;
-            //     while (this.pendingMessages.length) {
-            //         this.pendingMessages.shift();
-            //     }
-            //     break;
+            case InteractiveWindowMessages.FinishedRestartKernel:
+                // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
+                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+                this.sentKernelOptions = false;
+                this.kernelSocketInfo = undefined;
+                while (this.pendingMessages.length) {
+                    this.pendingMessages.shift();
+                }
+                break;
+
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
                 this.registerCommTarget(message.payload).ignoreErrors();
                 break;
@@ -212,7 +215,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string') {
-            const msg = JSON.parse(data) as KernelMessage.IMessage<KernelMessage.MessageType>;
+            // tslint:disable-next-line: no-require-imports
+            const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+            const msg = jupyterLabSerialize.deserialize(data);
             if (msg.channel === 'shell') {
                 switch (msg.header.msg_type) {
                     case 'execute_request':

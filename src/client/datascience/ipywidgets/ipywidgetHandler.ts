@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { ILoadIPyWidgetClassFailureAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -39,7 +39,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     constructor(
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory
+        @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
         disposables.push(
             notebookProvider.onNotebookCreated(async (e) => {
@@ -77,7 +78,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         }
     }
     private getIPyWidgetMessageDispatcher() {
-        if (!this.notebookIdentity) {
+        if (!this.notebookIdentity || !this.configService.getSettings().datascience.enableIPyWidgets) {
             return;
         }
         this.ipyWidgetMessageDispatcher = this.factory.create(this.notebookIdentity);

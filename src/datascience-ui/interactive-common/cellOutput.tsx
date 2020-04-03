@@ -540,7 +540,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     }
 
     private async createWidgetView(widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number }) {
-        const wm = await WidgetManager.instance;
+        const wm: WidgetManager | undefined = await new Promise((resolve) => WidgetManager.instance.subscribe(resolve));
         const element = this.ipyWidgetRef.current!;
         return wm?.renderWidget(widgetData, element);
     }

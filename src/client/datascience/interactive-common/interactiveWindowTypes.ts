@@ -34,6 +34,7 @@ export enum InteractiveWindowMessages {
     CopyCodeCell = 'copycell_code',
     NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
+    FinishedRestartKernel = 'finished_restart_kernel',
     Export = 'export_to_ipynb',
     GetAllCells = 'get_all_cells',
     ReturnAllCells = 'return_all_cells',
@@ -500,6 +501,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
     public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
+    public [InteractiveWindowMessages.FinishedRestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;

@@ -953,6 +953,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // Before we run any cells, update the dark setting
                 await this._notebook.setMatplotLibStyle(knownDark);
+
+                // Tell our listeners about the restart
+                this.postMessageToListeners(InteractiveWindowMessages.FinishedRestartKernel, undefined);
             }
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
