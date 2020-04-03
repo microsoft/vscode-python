@@ -327,10 +327,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private possiblyRemoveMessageHook(args: { hookMsgId: string; activeMsgId: string | undefined }) {
+    private possiblyRemoveMessageHook(args: { hookMsgId: string; lastHookedMsgId: string | undefined }) {
         // Message hooks might need to be removed after a certain message is processed.
-        if (args.activeMsgId) {
-            this.pendingHookRemovals.set(args.activeMsgId, args.hookMsgId);
+        if (args.lastHookedMsgId) {
+            this.pendingHookRemovals.set(args.lastHookedMsgId, args.hookMsgId);
         } else {
             this.removeMessageHook(args.hookMsgId);
         }

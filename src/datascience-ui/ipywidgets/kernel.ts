@@ -76,7 +76,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private websocket: WebSocketWS & { sendEnabled: boolean };
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
-    private activeMessageId: string | undefined;
+    private lastHookedMessageId: string | undefined;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -293,11 +293,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     ): void {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
             hookMsgId: msgId,
-            activeMsgId: this.activeMessageId
+            lastHookedMsgId: this.lastHookedMessageId
         });
 
         // Remove our mapping
         this.messageHooks.delete(msgId);
+        this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
         window.console.log(`Removing hook for ${msgId}`);
@@ -331,7 +332,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             );
             // Save the active message that is currently being hooked. The Extension
             // side needs this information during removeMessageHook so it can delay removal until after a message is called
-            this.activeMessageId = msg.header.msg_id;
+            this.lastHookedMessageId = msg.header.msg_id;
 
             const hook = this.messageHooks.get((msg.parent_header as any).msg_id);
             if (hook) {
@@ -340,13 +341,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 this.hookResults.set(msg.header.msg_id, result);
                 if ((result as any).then) {
                     return (result as any).then((r: boolean) => {
-                        this.activeMessageId = undefined;
                         return r;
                     });
                 }
 
                 // When not a promise reset right after
-                this.activeMessageId = undefined;
                 return result;
             }
         } catch (ex) {
