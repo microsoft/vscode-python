@@ -51,34 +51,20 @@
                         }
                     },
                     {
+                        "id": "NotebookImport#1",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
                         "data": {
                             "cell_type": "code",
-                            "execution_count": 1,
+                            "execution_count": null,
                             "metadata": {},
-                            "outputs": [
-                                {
-                                    "output_type": "display_data",
-                                    "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
-                                        "application/vnd.jupyter.widget-view+json": {
-                                            "version_major": 2,
-                                            "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                        }
-                                    },
-                                    "metadata": {},
-                                    "transient": {}
-                                }
-                            ],
+                            "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
                                 "widgets.Text(value='Hello World!', disabled=True)"
                             ]
-                        },
-                        "id": "NotebookImport#1",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2
+                        }
                     },
                     {
                         "id": "NotebookImport#2",
@@ -102,15 +88,25 @@
                         }
                     },
                     {
-                        "id": "NotebookImport#3",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2,
                         "data": {
                             "cell_type": "code",
-                            "execution_count": null,
+                            "execution_count": 1,
                             "metadata": {},
-                            "outputs": [],
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "bf220733e1bf483682a72d7a7743d007"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
                             "source": [
                                 "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
@@ -125,22 +121,40 @@
                                 "\n",
                                 "button.on_click(on_button_clicked)"
                             ]
-                        }
-                    },
-                    {
-                        "id": "NotebookImport#4",
+                        },
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
-                        "state": 2,
+                        "state": 2
+                    },
+                    {
                         "data": {
                             "cell_type": "code",
-                            "execution_count": null,
+                            "execution_count": 2,
                             "metadata": {},
-                            "outputs": [],
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
                             "source": [
                                 "caption"
                             ]
-                        }
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2
                     },
                     {
                         "id": "NotebookImport#5",
@@ -253,34 +267,20 @@
                         }
                     },
                     {
+                        "id": "NotebookImport#1",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
                         "data": {
                             "cell_type": "code",
-                            "execution_count": 1,
+                            "execution_count": null,
                             "metadata": {},
-                            "outputs": [
-                                {
-                                    "output_type": "display_data",
-                                    "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
-                                        "application/vnd.jupyter.widget-view+json": {
-                                            "version_major": 2,
-                                            "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                        }
-                                    },
-                                    "metadata": {},
-                                    "transient": {}
-                                }
-                            ],
+                            "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
                                 "widgets.Text(value='Hello World!', disabled=True)"
                             ]
-                        },
-                        "id": "NotebookImport#1",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2
+                        }
                     },
                     {
                         "id": "NotebookImport#2",
@@ -304,15 +304,25 @@
                         }
                     },
                     {
-                        "id": "NotebookImport#3",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2,
                         "data": {
                             "cell_type": "code",
-                            "execution_count": null,
+                            "execution_count": 1,
                             "metadata": {},
-                            "outputs": [],
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "bf220733e1bf483682a72d7a7743d007"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
                             "source": [
                                 "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
@@ -327,22 +337,40 @@
                                 "\n",
                                 "button.on_click(on_button_clicked)"
                             ]
-                        }
-                    },
-                    {
-                        "id": "NotebookImport#4",
+                        },
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
-                        "state": 2,
+                        "state": 2
+                    },
+                    {
                         "data": {
                             "cell_type": "code",
-                            "execution_count": null,
+                            "execution_count": 2,
                             "metadata": {},
-                            "outputs": [],
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
                             "source": [
                                 "caption"
                             ]
-                        }
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2
                     },
                     {
                         "id": "NotebookImport#5",
@@ -1178,7 +1206,7 @@
                 "cellCount": 7,
                 "undoCount": 0,
                 "redoCount": 0,
-                "selectedCell": "NotebookImport#2"
+                "selectedCell": "NotebookImport#4"
             }
         },
         "type": "fromUI"
@@ -1188,7 +1216,7 @@
             "type": "reexecute_cells",
             "payload": {
                 "cellIds": [
-                    "NotebookImport#1"
+                    "NotebookImport#3"
                 ]
             }
         },
@@ -1239,7 +1267,7 @@
     {
         "payload": {
             "type": "notebook_execution_activated",
-            "payload": "file:///c%3A/Users/RCHIOD~1.RED/AppData/Local/Temp/tmp-34308UmxThDTgvm6w.ipynb"
+            "payload": "file:///c%3A/Users/RCHIOD~1.RED/AppData/Local/Temp/tmp-343082wKfGLjt3b4p.ipynb"
         },
         "type": "forUI"
     },
@@ -1258,11 +1286,11 @@
         "payload": {
             "type": "IPyWidgets_kernelOptions",
             "payload": {
-                "clientId": "152fb93c-ca26-4c88-87ea-40991be64b31",
-                "id": "e516ecaf-81eb-49cf-a9c6-1e5c713c7aa8",
+                "clientId": "5abc13a2-f430-4549-b0dd-a2a157041d39",
+                "id": "10217991-3687-481b-94cc-0d9c33a34e8d",
                 "model": {
                     "name": "python3",
-                    "id": "e516ecaf-81eb-49cf-a9c6-1e5c713c7aa8"
+                    "id": "10217991-3687-481b-94cc-0d9c33a34e8d"
                 },
                 "userName": ""
             }
@@ -1273,7 +1301,7 @@
         "payload": {
             "type": "IPyWidgets_mirror_execute",
             "payload": {
-                "id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd",
+                "id": "35df73b8-595d-4950-8d08-099bfe052eb3",
                 "msg": {
                     "buffers": [],
                     "channel": "shell",
@@ -1286,10 +1314,10 @@
                         "code": "import os\nimport sys\n%cd \"c:\\Users\\RCHIOD~1.RED\\AppData\\Local\\Temp\"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())"
                     },
                     "header": {
-                        "date": "2020-04-03T17:27:23.497Z",
-                        "msg_id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd",
+                        "date": "2020-04-03T17:30:43.187Z",
+                        "msg_id": "35df73b8-595d-4950-8d08-099bfe052eb3",
                         "msg_type": "execute_request",
-                        "session": "152fb93c-ca26-4c88-87ea-40991be64b31",
+                        "session": "5abc13a2-f430-4549-b0dd-a2a157041d39",
                         "username": "",
                         "version": "5.2"
                     },
@@ -1343,7 +1371,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd"
+                "id": "35df73b8-595d-4950-8d08-099bfe052eb3"
             }
         },
         "type": "fromUI"
@@ -1384,8 +1412,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "55b6b1e9-595b-46d4-80f9-433d8dcf519c",
-                "data": "{\"header\": {\"msg_id\": \"de8de113-965d2c20123a51074c7c8093\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.024933Z\", \"version\": \"5.3\"}, \"msg_id\": \"de8de113-965d2c20123a51074c7c8093\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "c16248ef-fc81-41fa-b05e-8ca4ac2c455b",
+                "data": "{\"header\": {\"msg_id\": \"e38767b2-baae062eb9c6a401cec1a787\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:43.721701Z\", \"version\": \"5.3\"}, \"msg_id\": \"e38767b2-baae062eb9c6a401cec1a787\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:43.187000Z\", \"msg_id\": \"35df73b8-595d-4950-8d08-099bfe052eb3\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1394,7 +1422,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "55b6b1e9-595b-46d4-80f9-433d8dcf519c"
+                "id": "c16248ef-fc81-41fa-b05e-8ca4ac2c455b"
             }
         },
         "type": "fromUI"
@@ -1403,8 +1431,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "f040b5af-3b38-4bc4-8320-d7c5aa14beae",
-                "data": "{\"header\": {\"msg_id\": \"d0938780-443a157dbff4734a2f25692a\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.024933Z\", \"version\": \"5.3\"}, \"msg_id\": \"d0938780-443a157dbff4734a2f25692a\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import os\\nimport sys\\n%cd \\\"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\\"\\nif os.getcwd() not in sys.path:\\n    sys.path.insert(0, os.getcwd())\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "dd7c41fe-8117-4fa6-abe2-50c43966bb74",
+                "data": "{\"header\": {\"msg_id\": \"f6bd81d2-1b8cd8a424b2720818a4e95d\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:43.722700Z\", \"version\": \"5.3\"}, \"msg_id\": \"f6bd81d2-1b8cd8a424b2720818a4e95d\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:43.187000Z\", \"msg_id\": \"35df73b8-595d-4950-8d08-099bfe052eb3\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import os\\nimport sys\\n%cd \\\"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\\"\\nif os.getcwd() not in sys.path:\\n    sys.path.insert(0, os.getcwd())\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1424,7 +1452,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "f040b5af-3b38-4bc4-8320-d7c5aa14beae"
+                "id": "dd7c41fe-8117-4fa6-abe2-50c43966bb74"
             }
         },
         "type": "fromUI"
@@ -1433,8 +1461,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "63ff5721-e126-46eb-9606-9bcfbc397eff",
-                "data": "{\"header\": {\"msg_id\": \"d657289b-a78406ae4b4ce2857e5e900a\", \"msg_type\": \"stream\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.029933Z\", \"version\": \"5.3\"}, \"msg_id\": \"d657289b-a78406ae4b4ce2857e5e900a\", \"msg_type\": \"stream\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"name\": \"stdout\", \"text\": \"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\n\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "fcbd4616-3bf9-417b-a46c-a3e2893feaf0",
+                "data": "{\"header\": {\"msg_id\": \"0e956fbd-44b6d09d85ecddf6d91e1092\", \"msg_type\": \"stream\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:43.725701Z\", \"version\": \"5.3\"}, \"msg_id\": \"0e956fbd-44b6d09d85ecddf6d91e1092\", \"msg_type\": \"stream\", \"parent_header\": {\"date\": \"2020-04-03T17:30:43.187000Z\", \"msg_id\": \"35df73b8-595d-4950-8d08-099bfe052eb3\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"name\": \"stdout\", \"text\": \"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\n\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1468,7 +1496,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "63ff5721-e126-46eb-9606-9bcfbc397eff"
+                "id": "fcbd4616-3bf9-417b-a46c-a3e2893feaf0"
             }
         },
         "type": "fromUI"
@@ -1477,8 +1505,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "fb8d6915-b48d-481e-8352-34fc9f0bc5cb",
-                "data": "{\"header\": {\"msg_id\": \"74a3a54e-b00676a25295862eb1eb11a4\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.034932Z\", \"version\": \"5.3\"}, \"msg_id\": \"74a3a54e-b00676a25295862eb1eb11a4\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "c7a37bdf-6739-4650-85b0-9ab5edc1b683",
+                "data": "{\"header\": {\"msg_id\": \"bb01fba9-25f4c32933790ecc49d7f980\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:43.729701Z\", \"version\": \"5.3\"}, \"msg_id\": \"bb01fba9-25f4c32933790ecc49d7f980\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:43.187000Z\", \"msg_id\": \"35df73b8-595d-4950-8d08-099bfe052eb3\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1487,7 +1515,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "fb8d6915-b48d-481e-8352-34fc9f0bc5cb"
+                "id": "c7a37bdf-6739-4650-85b0-9ab5edc1b683"
             }
         },
         "type": "fromUI"
@@ -1496,8 +1524,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "aac4e677-3e35-424d-b686-b4defcd6d347",
-                "data": "{\"header\": {\"msg_id\": \"01f22efe-aa8a51279cdc061ea7899290\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.034932Z\", \"version\": \"5.3\"}, \"msg_id\": \"01f22efe-aa8a51279cdc061ea7899290\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:27:24.024933Z\", \"dependencies_met\": true, \"engine\": \"ef88302d-dc8f-4b64-8dfa-08d662dda892\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 0, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+                "id": "a6b7202b-6c44-457f-83fa-2bd2b0d5d504",
+                "data": "{\"header\": {\"msg_id\": \"dd46db31-1f9746233492d0d97eea51da\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:43.729701Z\", \"version\": \"5.3\"}, \"msg_id\": \"dd46db31-1f9746233492d0d97eea51da\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:43.187000Z\", \"msg_id\": \"35df73b8-595d-4950-8d08-099bfe052eb3\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:43.722700Z\", \"dependencies_met\": true, \"engine\": \"eba744df-6aa3-4679-aabf-69daf5f695f0\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 0, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
             }
         },
         "type": "forUI"
@@ -1517,7 +1545,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "aac4e677-3e35-424d-b686-b4defcd6d347"
+                "id": "a6b7202b-6c44-457f-83fa-2bd2b0d5d504"
             }
         },
         "type": "fromUI"
@@ -1544,11 +1572,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 0
@@ -1560,7 +1598,7 @@
         "payload": {
             "type": "IPyWidgets_mirror_execute",
             "payload": {
-                "id": "3fb0e463-3422-4f21-94dc-532bc778f4b9",
+                "id": "9ab0585a-372f-4f0b-bdbf-3f25478c0c05",
                 "msg": {
                     "buffers": [],
                     "channel": "shell",
@@ -1570,13 +1608,13 @@
                         "user_expressions": {},
                         "allow_stdin": true,
                         "stop_on_error": false,
-                        "code": "import ipywidgets as widgets\nwidgets.Text(value='Hello World!', disabled=True)"
+                        "code": "from IPython.display import display\nimport ipywidgets as widgets\nbutton = widgets.Button(description=\"Click Me!\")\ncaption = widgets.Label(value='Not Clicked')\n\n\ndisplay(button)\n\ndef on_button_clicked(b):\n    caption.value = 'Button Clicked'\n\nbutton.on_click(on_button_clicked)"
                     },
                     "header": {
-                        "date": "2020-04-03T17:27:26.547Z",
-                        "msg_id": "3fb0e463-3422-4f21-94dc-532bc778f4b9",
+                        "date": "2020-04-03T17:30:46.241Z",
+                        "msg_id": "9ab0585a-372f-4f0b-bdbf-3f25478c0c05",
                         "msg_type": "execute_request",
-                        "session": "152fb93c-ca26-4c88-87ea-40991be64b31",
+                        "session": "5abc13a2-f430-4549-b0dd-a2a157041d39",
                         "username": "",
                         "version": "5.2"
                     },
@@ -1616,7 +1654,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "3fb0e463-3422-4f21-94dc-532bc778f4b9"
+                "id": "9ab0585a-372f-4f0b-bdbf-3f25478c0c05"
             }
         },
         "type": "fromUI"
@@ -1625,8 +1663,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "fdcd549f-ddba-4021-a4f4-1b5d43370888",
-                "data": "{\"header\": {\"msg_id\": \"9cee7305-9c7be5c598da31cd99af164b\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.064759Z\", \"version\": \"5.3\"}, \"msg_id\": \"9cee7305-9c7be5c598da31cd99af164b\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "fea393eb-82d7-49d4-9d50-85ca4eff6ca6",
+                "data": "{\"header\": {\"msg_id\": \"f60921b6-b4d99d86fb5921c47713f280\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.758567Z\", \"version\": \"5.3\"}, \"msg_id\": \"f60921b6-b4d99d86fb5921c47713f280\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1664,11 +1702,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 0
@@ -1691,7 +1739,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "fdcd549f-ddba-4021-a4f4-1b5d43370888"
+                "id": "fea393eb-82d7-49d4-9d50-85ca4eff6ca6"
             }
         },
         "type": "fromUI"
@@ -1700,8 +1748,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "59fa723d-02e3-4424-b1b0-8ce3eab78984",
-                "data": "{\"header\": {\"msg_id\": \"6344f1e5-b4c3e00cb114cb586e6ceaa7\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.064759Z\", \"version\": \"5.3\"}, \"msg_id\": \"6344f1e5-b4c3e00cb114cb586e6ceaa7\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import ipywidgets as widgets\\nwidgets.Text(value='Hello World!', disabled=True)\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "d3e07a0f-2a1d-4ec8-b8b0-37f9e3926415",
+                "data": "{\"header\": {\"msg_id\": \"779d4a53-e8eeedf79db07eebc7762b3a\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.759563Z\", \"version\": \"5.3\"}, \"msg_id\": \"779d4a53-e8eeedf79db07eebc7762b3a\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"from IPython.display import display\\nimport ipywidgets as widgets\\nbutton = widgets.Button(description=\\\"Click Me!\\\")\\ncaption = widgets.Label(value='Not Clicked')\\n\\n\\ndisplay(button)\\n\\ndef on_button_clicked(b):\\n    caption.value = 'Button Clicked'\\n\\nbutton.on_click(on_button_clicked)\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1716,11 +1764,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1743,7 +1801,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "59fa723d-02e3-4424-b1b0-8ce3eab78984"
+                "id": "d3e07a0f-2a1d-4ec8-b8b0-37f9e3926415"
             }
         },
         "type": "fromUI"
@@ -1752,8 +1810,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "d19ecdf7-937e-45f1-825b-3607e0ec9117",
-                "data": "{\"header\": {\"msg_id\": \"2cddf543-8af218b065fde2b1e5e0cdc8\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.115810Z\", \"version\": \"5.3\"}, \"msg_id\": \"2cddf543-8af218b065fde2b1e5e0cdc8\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"dae7cc7d27414bbe8e5899e60ad4273c\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "41f88498-4bf7-4c00-8520-d52eee294140",
+                "data": "{\"header\": {\"msg_id\": \"2b21400c-7bd82fe3fc7954940ad1536a\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.796612Z\", \"version\": \"5.3\"}, \"msg_id\": \"2b21400c-7bd82fe3fc7954940ad1536a\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"e5d03738d76e40db86036f3f1110fd0b\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1768,11 +1826,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1793,11 +1861,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1845,7 +1923,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "d19ecdf7-937e-45f1-825b-3607e0ec9117"
+                "id": "41f88498-4bf7-4c00-8520-d52eee294140"
             }
         },
         "type": "fromUI"
@@ -1854,8 +1932,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "bd40c3e6-edb8-4dde-92d0-9c00bcbb2ab7",
-                "data": "{\"header\": {\"msg_id\": \"ec6524f9-e60a9593f269af2a4505dc07\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.116809Z\", \"version\": \"5.3\"}, \"msg_id\": \"ec6524f9-e60a9593f269af2a4505dc07\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"DescriptionStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"description_width\": \"\"}, \"buffer_paths\": []}, \"comm_id\": \"8bc79ed9270b44e49533479ac94e1c90\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "08ab122d-37a1-42f7-8350-941b5eee05f9",
+                "data": "{\"header\": {\"msg_id\": \"acf4161f-eee7e3d5b0866f6fc6d6bd8f\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.797643Z\", \"version\": \"5.3\"}, \"msg_id\": \"acf4161f-eee7e3d5b0866f6fc6d6bd8f\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"ButtonStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"button_color\": null, \"font_weight\": \"\"}, \"buffer_paths\": []}, \"comm_id\": \"0cca1824e9044020b4323e0f30f908e0\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1870,11 +1948,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1895,11 +1983,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1922,7 +2020,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "bd40c3e6-edb8-4dde-92d0-9c00bcbb2ab7"
+                "id": "08ab122d-37a1-42f7-8350-941b5eee05f9"
             }
         },
         "type": "fromUI"
@@ -1931,8 +2029,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "6f550756-262b-470a-bf7a-fd6cd53e9265",
-                "data": "{\"header\": {\"msg_id\": \"5b016f96-5a8f403cca54ee9cd08005a2\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.117810Z\", \"version\": \"5.3\"}, \"msg_id\": \"5b016f96-5a8f403cca54ee9cd08005a2\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"TextModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"TextView\", \"continuous_update\": true, \"description\": \"\", \"description_tooltip\": null, \"disabled\": true, \"layout\": \"IPY_MODEL_dae7cc7d27414bbe8e5899e60ad4273c\", \"placeholder\": \"\\u200b\", \"style\": \"IPY_MODEL_8bc79ed9270b44e49533479ac94e1c90\", \"value\": \"Hello World!\"}, \"buffer_paths\": []}, \"comm_id\": \"e8bc4a39b4cf48439db3e431824f06d8\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "92525b4a-035a-4034-86a7-7c69386836de",
+                "data": "{\"header\": {\"msg_id\": \"c090a505-c592fa247837080ddebfc593\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.798640Z\", \"version\": \"5.3\"}, \"msg_id\": \"c090a505-c592fa247837080ddebfc593\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"ButtonModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"ButtonView\", \"button_style\": \"\", \"description\": \"Click Me!\", \"disabled\": false, \"icon\": \"\", \"layout\": \"IPY_MODEL_e5d03738d76e40db86036f3f1110fd0b\", \"style\": \"IPY_MODEL_0cca1824e9044020b4323e0f30f908e0\", \"tooltip\": \"\"}, \"buffer_paths\": []}, \"comm_id\": \"bf220733e1bf483682a72d7a7743d007\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1947,11 +2045,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1972,11 +2080,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1999,7 +2117,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "6f550756-262b-470a-bf7a-fd6cd53e9265"
+                "id": "92525b4a-035a-4034-86a7-7c69386836de"
             }
         },
         "type": "fromUI"
@@ -2008,8 +2126,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "c1e5b250-614b-4678-8141-6271a40f9940",
-                "data": "{\"header\": {\"msg_id\": \"8d295d47-146e46ce1088357037d93829\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.119810Z\", \"version\": \"5.3\"}, \"msg_id\": \"8d295d47-146e46ce1088357037d93829\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"Text(value='Hello World!', disabled=True)\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"e8bc4a39b4cf48439db3e431824f06d8\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "7563bdd3-048f-4a8e-9922-5cba874a53ee",
+                "data": "{\"header\": {\"msg_id\": \"0bebb3b8-5f145a7f95656efb7315899c\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.799647Z\", \"version\": \"5.3\"}, \"msg_id\": \"0bebb3b8-5f145a7f95656efb7315899c\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"582a3fd3b71443fda91054e25c365798\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -2024,11 +2142,21 @@
                     "metadata": {},
                     "outputs": [],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -2049,11 +2177,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2076,7 +2214,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "c1e5b250-614b-4678-8141-6271a40f9940"
+                "id": "7563bdd3-048f-4a8e-9922-5cba874a53ee"
             }
         },
         "type": "fromUI"
@@ -2085,8 +2223,396 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "3f5263b2-b241-486e-a430-2260ccaea82a",
-                "data": "{\"header\": {\"msg_id\": \"cbf37f30-cf73d83647bd22f183a70b44\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.122809Z\", \"version\": \"5.3\"}, \"msg_id\": \"cbf37f30-cf73d83647bd22f183a70b44\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:27:27.064759Z\", \"dependencies_met\": true, \"engine\": \"ef88302d-dc8f-4b64-8dfa-08d662dda892\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 1, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+                "id": "1f724b6c-aff7-4358-b39e-ee899a9f5949",
+                "data": "{\"header\": {\"msg_id\": \"8a4e5f85-86017e65d01fbe4be4039a6f\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.800639Z\", \"version\": \"5.3\"}, \"msg_id\": \"8a4e5f85-86017e65d01fbe4be4039a6f\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"DescriptionStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"description_width\": \"\"}, \"buffer_paths\": []}, \"comm_id\": \"ba00144e12e241f9aa40384693b9567c\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "from IPython.display import display\n",
+                        "import ipywidgets as widgets\n",
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
+                    ]
+                },
+                "id": "NotebookImport#3",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
+                            ]
+                        },
+                        "id": "NotebookImport#3",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "1f724b6c-aff7-4358-b39e-ee899a9f5949"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "ff31a759-9f7a-40fd-bf42-5a6b80b6ee59",
+                "data": "{\"header\": {\"msg_id\": \"70fd9cbd-d20b97dd34855494763a6b76\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.805614Z\", \"version\": \"5.3\"}, \"msg_id\": \"70fd9cbd-d20b97dd34855494763a6b76\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:46.759563Z\", \"dependencies_met\": true, \"engine\": \"eba744df-6aa3-4679-aabf-69daf5f695f0\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 1, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "from IPython.display import display\n",
+                        "import ipywidgets as widgets\n",
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
+                    ]
+                },
+                "id": "NotebookImport#3",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
+                            ]
+                        },
+                        "id": "NotebookImport#3",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "ff31a759-9f7a-40fd-bf42-5a6b80b6ee59"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "from IPython.display import display\n",
+                        "import ipywidgets as widgets\n",
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
+                    ]
+                },
+                "id": "NotebookImport#3",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "ad5ebc41-a186-4ce7-be79-f3c9012967b4",
+                "data": "{\"header\": {\"msg_id\": \"dd563af7-bfab65c90d4d1cfbe0750f05\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.801640Z\", \"version\": \"5.3\"}, \"msg_id\": \"dd563af7-bfab65c90d4d1cfbe0750f05\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"LabelModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"LabelView\", \"description\": \"\", \"description_tooltip\": null, \"layout\": \"IPY_MODEL_582a3fd3b71443fda91054e25c365798\", \"placeholder\": \"\\u200b\", \"style\": \"IPY_MODEL_ba00144e12e241f9aa40384693b9567c\", \"value\": \"Not Clicked\"}, \"buffer_paths\": []}, \"comm_id\": \"99dca914251e431e9ef0854f31305cf5\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
+                            ]
+                        },
+                        "id": "NotebookImport#3",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "ad5ebc41-a186-4ce7-be79-f3c9012967b4"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "4c80faeb-e9c2-4b38-93e1-c2f305f1736b",
+                "data": "{\"header\": {\"msg_id\": \"a89f821f-fbd4cb1f59d0931781d75f25\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.802640Z\", \"version\": \"5.3\"}, \"msg_id\": \"a89f821f-fbd4cb1f59d0931781d75f25\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"Button(description='Click Me!', style=ButtonStyle())\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"bf220733e1bf483682a72d7a7743d007\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "from IPython.display import display\n",
+                        "import ipywidgets as widgets\n",
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
+                    ]
+                },
+                "id": "NotebookImport#3",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
+                            ]
+                        },
+                        "id": "NotebookImport#3",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "4c80faeb-e9c2-4b38-93e1-c2f305f1736b"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "6d0660c6-cbac-4071-ae6c-96c8098029ee",
+                "data": "{\"header\": {\"msg_id\": \"b24fe4a6-4a83bc54db0ed90b1936896d\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:46.805614Z\", \"version\": \"5.3\"}, \"msg_id\": \"b24fe4a6-4a83bc54db0ed90b1936896d\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:46.241000Z\", \"msg_id\": \"9ab0585a-372f-4f0b-bdbf-3f25478c0c05\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -2103,11 +2629,11 @@
                         {
                             "output_type": "display_data",
                             "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
+                                "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                 "application/vnd.jupyter.widget-view+json": {
                                     "version_major": 2,
                                     "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                    "model_id": "bf220733e1bf483682a72d7a7743d007"
                                 }
                             },
                             "metadata": {},
@@ -2115,11 +2641,21 @@
                         }
                     ],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -2140,11 +2676,21 @@
                             "metadata": {},
                             "outputs": [],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2167,7 +2713,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "3f5263b2-b241-486e-a430-2260ccaea82a"
+                "id": "6d0660c6-cbac-4071-ae6c-96c8098029ee"
             }
         },
         "type": "fromUI"
@@ -2184,11 +2730,11 @@
                         {
                             "output_type": "display_data",
                             "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
+                                "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                 "application/vnd.jupyter.widget-view+json": {
                                     "version_major": 2,
                                     "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                    "model_id": "bf220733e1bf483682a72d7a7743d007"
                                 }
                             },
                             "metadata": {},
@@ -2196,116 +2742,21 @@
                         }
                     ],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
-                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                "line": 0,
-                "state": 1
-            }
-        },
-        "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "IPyWidgets_msg",
-            "payload": {
-                "id": "c1c794ee-0c80-4443-ae88-40945616115f",
-                "data": "{\"header\": {\"msg_id\": \"ad4c5a4c-7eca22e1b1332f1dd22ba348\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.122809Z\", \"version\": \"5.3\"}, \"msg_id\": \"ad4c5a4c-7eca22e1b1332f1dd22ba348\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
-            }
-        },
-        "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "sync_message_used_to_broadcast_and_sync_editors",
-            "payload": {
-                "type": "update_cell",
-                "payload": {
-                    "data": {
-                        "data": {
-                            "cell_type": "code",
-                            "execution_count": 1,
-                            "metadata": {},
-                            "outputs": [
-                                {
-                                    "output_type": "display_data",
-                                    "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
-                                        "application/vnd.jupyter.widget-view+json": {
-                                            "version_major": 2,
-                                            "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                        }
-                                    },
-                                    "metadata": {},
-                                    "transient": {}
-                                }
-                            ],
-                            "source": [
-                                "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
-                            ]
-                        },
-                        "id": "NotebookImport#1",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 1
-                    },
-                    "messageType": 3,
-                    "messageDirection": "incoming"
-                }
-            }
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "DISPATCHED_ACTION_update_cell",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "IPyWidgets_msg_handled",
-            "payload": {
-                "id": "c1c794ee-0c80-4443-ae88-40945616115f"
-            }
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "update_cell",
-            "payload": {
-                "data": {
-                    "cell_type": "code",
-                    "execution_count": 1,
-                    "metadata": {},
-                    "outputs": [
-                        {
-                            "output_type": "display_data",
-                            "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
-                                "application/vnd.jupyter.widget-view+json": {
-                                    "version_major": 2,
-                                    "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                }
-                            },
-                            "metadata": {},
-                            "transient": {}
-                        }
-                    ],
-                    "source": [
-                        "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
-                    ]
-                },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -2331,11 +2782,11 @@
                         {
                             "output_type": "display_data",
                             "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
+                                "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                 "application/vnd.jupyter.widget-view+json": {
                                     "version_major": 2,
                                     "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                    "model_id": "bf220733e1bf483682a72d7a7743d007"
                                 }
                             },
                             "metadata": {},
@@ -2343,11 +2794,21 @@
                         }
                     ],
                     "source": [
+                        "from IPython.display import display\n",
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "button = widgets.Button(description=\"Click Me!\")\n",
+                        "caption = widgets.Label(value='Not Clicked')\n",
+                        "\n",
+                        "\n",
+                        "display(button)\n",
+                        "\n",
+                        "def on_button_clicked(b):\n",
+                        "    caption.value = 'Button Clicked'\n",
+                        "\n",
+                        "button.on_click(on_button_clicked)"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#3",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 2
@@ -2387,11 +2848,11 @@
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "bf220733e1bf483682a72d7a7743d007"
                                         }
                                     },
                                     "metadata": {},
@@ -2399,11 +2860,21 @@
                                 }
                             ],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2437,11 +2908,11 @@
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "bf220733e1bf483682a72d7a7743d007"
                                         }
                                     },
                                     "metadata": {},
@@ -2449,11 +2920,21 @@
                                 }
                             ],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2494,11 +2975,11 @@
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "Button(description='Click Me!', style=ButtonStyle())",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "bf220733e1bf483682a72d7a7743d007"
                                         }
                                     },
                                     "metadata": {},
@@ -2506,11 +2987,21 @@
                                 }
                             ],
                             "source": [
+                                "from IPython.display import display\n",
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#3",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 2
@@ -2527,7 +3018,7 @@
             "type": "rendered_execution",
             "payload": {
                 "ids": [
-                    "NotebookImport#1"
+                    "NotebookImport#3"
                 ]
             }
         },
@@ -2555,6 +3046,899 @@
                 "payload": {
                     "data": {
                         "jupyterServerStatus": "Idle",
+                        "localizedUri": "local",
+                        "displayName": "Python 3"
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_kernel",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "send_info",
+            "payload": {
+                "cellCount": 7,
+                "undoCount": 0,
+                "redoCount": 0,
+                "selectedCell": "NotebookImport#5"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "reexecute_cells",
+            "payload": {
+                "cellIds": [
+                    "NotebookImport#4"
+                ]
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "start_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 0
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_mirror_execute",
+            "payload": {
+                "id": "77badb35-e6db-484c-a199-d53b049530b7",
+                "msg": {
+                    "buffers": [],
+                    "channel": "shell",
+                    "content": {
+                        "silent": false,
+                        "store_history": true,
+                        "user_expressions": {},
+                        "allow_stdin": true,
+                        "stop_on_error": false,
+                        "code": "caption"
+                    },
+                    "header": {
+                        "date": "2020-04-03T17:30:52.892Z",
+                        "msg_id": "77badb35-e6db-484c-a199-d53b049530b7",
+                        "msg_type": "execute_request",
+                        "session": "5abc13a2-f430-4549-b0dd-a2a157041d39",
+                        "username": "",
+                        "version": "5.2"
+                    },
+                    "metadata": {},
+                    "parent_header": {}
+                }
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "native_command",
+            "payload": {
+                "command": 14,
+                "source": "mouse"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.execute_cell_and_advance",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.execute_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.send_command",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "77badb35-e6db-484c-a199-d53b049530b7"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "ccbf57ec-7a1d-4e76-96d6-e6dbd42254e7",
+                "data": "{\"header\": {\"msg_id\": \"3af6752c-ee54e6a5df7e6585339504ba\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:53.400948Z\", \"version\": \"5.3\"}, \"msg_id\": \"3af6752c-ee54e6a5df7e6585339504ba\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:52.892000Z\", \"msg_id\": \"77badb35-e6db-484c-a199-d53b049530b7\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "start_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 0
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_start_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "ccbf57ec-7a1d-4e76-96d6-e6dbd42254e7"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "3fb77c46-dedf-42e8-8d3d-d20b038db5b8",
+                "data": "{\"header\": {\"msg_id\": \"53789b6f-59016c93362dac5ab07fe725\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:53.400948Z\", \"version\": \"5.3\"}, \"msg_id\": \"53789b6f-59016c93362dac5ab07fe725\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:52.892000Z\", \"msg_id\": \"77badb35-e6db-484c-a199-d53b049530b7\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"caption\", \"execution_count\": 2}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_kernel",
+            "payload": {
+                "jupyterServerStatus": "Busy",
+                "localizedUri": "local",
+                "displayName": "Python 3"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "3fb77c46-dedf-42e8-8d3d-d20b038db5b8"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "000d1814-104a-439f-ba44-ee7360ca3eab",
+                "data": "{\"header\": {\"msg_id\": \"70fcafbf-8249972f2ea50adf681becfd\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:53.402946Z\", \"version\": \"5.3\"}, \"msg_id\": \"70fcafbf-8249972f2ea50adf681becfd\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:30:52.892000Z\", \"msg_id\": \"77badb35-e6db-484c-a199-d53b049530b7\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"Label(value='Not Clicked')\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"99dca914251e431e9ef0854f31305cf5\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_kernel",
+                "payload": {
+                    "data": {
+                        "jupyterServerStatus": "Busy",
+                        "localizedUri": "local",
+                        "displayName": "Python 3"
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_kernel",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "000d1814-104a-439f-ba44-ee7360ca3eab"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "ab47ea4f-8b20-4571-8092-1f4bdf7deb60",
+                "data": "{\"header\": {\"msg_id\": \"9f166ec5-48904d767eca99fee8971406\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:53.405947Z\", \"version\": \"5.3\"}, \"msg_id\": \"9f166ec5-48904d767eca99fee8971406\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:52.892000Z\", \"msg_id\": \"77badb35-e6db-484c-a199-d53b049530b7\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {},
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "Label(value='Not Clicked')",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "ab47ea4f-8b20-4571-8092-1f4bdf7deb60"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "829786e8-c400-4553-9985-c8b1b74cc886",
+                "data": "{\"header\": {\"msg_id\": \"8c024ef8-b24f4b8f776edfb8daeb1012\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:53.405947Z\", \"version\": \"5.3\"}, \"msg_id\": \"8c024ef8-b24f4b8f776edfb8daeb1012\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:52.892000Z\", \"msg_id\": \"77badb35-e6db-484c-a199-d53b049530b7\", \"msg_type\": \"execute_request\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:53.400948Z\", \"dependencies_met\": true, \"engine\": \"eba744df-6aa3-4679-aabf-69daf5f695f0\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 2, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {},
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "Label(value='Not Clicked')",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_kernel",
+            "payload": {
+                "jupyterServerStatus": "Idle",
+                "localizedUri": "local",
+                "displayName": "Python 3"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {},
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "829786e8-c400-4553-9985-c8b1b74cc886"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {},
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "Label(value='Not Clicked')",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "dirty"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "finish_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {},
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "Label(value='Not Clicked')",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "caption"
+                    ]
+                },
+                "id": "NotebookImport#4",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 2
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "stop_progress"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {},
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_kernel",
+                "payload": {
+                    "data": {
+                        "jupyterServerStatus": "Idle",
+                        "localizedUri": "local",
+                        "displayName": "Python 3"
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_kernel",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {},
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_dirty",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "finish_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {},
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "Label(value='Not Clicked')",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "99dca914251e431e9ef0854f31305cf5"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "caption"
+                            ]
+                        },
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "rendered_execution",
+            "payload": {
+                "ids": [
+                    "NotebookImport#4"
+                ]
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_finish_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_stop_progress",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": "{\"buffers\":[],\"channel\":\"shell\",\"content\":{\"comm_id\":\"bf220733e1bf483682a72d7a7743d007\",\"data\":{\"method\":\"custom\",\"content\":{\"event\":\"click\"}}},\"header\":{\"date\":\"2020-04-03T17:30:56.504Z\",\"msg_id\":\"7b708125-1b6d-4adb-9f81-a844818af134\",\"msg_type\":\"comm_msg\",\"session\":\"5abc13a2-f430-4549-b0dd-a2a157041d39\",\"username\":\"\",\"version\":\"5.2\"},\"metadata\":{},\"parent_header\":{}}"
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "a9413d12-dd2a-49d4-84d6-267cda3e08b8",
+                "data": "{\"header\": {\"msg_id\": \"fd55a066-544957465db101ce5fa10b2a\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:56.507240Z\", \"version\": \"5.3\"}, \"msg_id\": \"fd55a066-544957465db101ce5fa10b2a\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:56.504000Z\", \"msg_id\": \"7b708125-1b6d-4adb-9f81-a844818af134\", \"msg_type\": \"comm_msg\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "a9413d12-dd2a-49d4-84d6-267cda3e08b8"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_kernel",
+            "payload": {
+                "jupyterServerStatus": "Busy",
+                "localizedUri": "local",
+                "displayName": "Python 3"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "1a864455-de0a-4772-83ba-547a57b8190d",
+                "data": "{\"header\": {\"msg_id\": \"5dd9ac99-fe71d62a8299b26d3be2ba06\", \"msg_type\": \"comm_msg\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:56.507240Z\", \"version\": \"5.3\"}, \"msg_id\": \"5dd9ac99-fe71d62a8299b26d3be2ba06\", \"msg_type\": \"comm_msg\", \"parent_header\": {\"date\": \"2020-04-03T17:30:56.504000Z\", \"msg_id\": \"7b708125-1b6d-4adb-9f81-a844818af134\", \"msg_type\": \"comm_msg\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"method\": \"update\", \"state\": {\"value\": \"Button Clicked\"}, \"buffer_paths\": []}, \"comm_id\": \"99dca914251e431e9ef0854f31305cf5\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "1a864455-de0a-4772-83ba-547a57b8190d"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "9340c5ee-2a40-4a0b-bd9d-821c0d8217e8",
+                "data": "{\"header\": {\"msg_id\": \"1e430b7c-4234a6da62960cb172b58132\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"02ef172c-5d3bad35f54d181d516839a9\", \"date\": \"2020-04-03T17:30:56.508242Z\", \"version\": \"5.3\"}, \"msg_id\": \"1e430b7c-4234a6da62960cb172b58132\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:56.504000Z\", \"msg_id\": \"7b708125-1b6d-4adb-9f81-a844818af134\", \"msg_type\": \"comm_msg\", \"session\": \"5abc13a2-f430-4549-b0dd-a2a157041d39\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_kernel",
+                "payload": {
+                    "data": {
+                        "jupyterServerStatus": "Busy",
                         "localizedUri": "local",
                         "displayName": "Python 3"
                     },

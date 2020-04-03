@@ -33,37 +33,21 @@
             "payload": {
                 "cells": [
                     {
-                        "id": "NotebookImport#0",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2,
-                        "data": {
-                            "cell_type": "code",
-                            "execution_count": null,
-                            "metadata": {
-                                "scrolled": true
-                            },
-                            "outputs": [],
-                            "source": [
-                                "import ipywidgets as widgets\n",
-                                "widgets.IntSlider()"
-                            ]
-                        }
-                    },
-                    {
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "IntSlider(value=0)",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
                                         }
                                     },
                                     "metadata": {},
@@ -72,13 +56,29 @@
                             ],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 2
+                    },
+                    {
+                        "id": "NotebookImport#1",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.Text(value='Hello World!', disabled=True)"
+                            ]
+                        }
                     },
                     {
                         "id": "NotebookImport#2",
@@ -235,37 +235,21 @@
             "payload": {
                 "cells": [
                     {
-                        "id": "NotebookImport#0",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 2,
-                        "data": {
-                            "cell_type": "code",
-                            "execution_count": null,
-                            "metadata": {
-                                "scrolled": true
-                            },
-                            "outputs": [],
-                            "source": [
-                                "import ipywidgets as widgets\n",
-                                "widgets.IntSlider()"
-                            ]
-                        }
-                    },
-                    {
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "IntSlider(value=0)",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
                                         }
                                     },
                                     "metadata": {},
@@ -274,13 +258,29 @@
                             ],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 2
+                    },
+                    {
+                        "id": "NotebookImport#1",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.Text(value='Hello World!', disabled=True)"
+                            ]
+                        }
                     },
                     {
                         "id": "NotebookImport#2",
@@ -1145,40 +1145,12 @@
     },
     {
         "payload": {
-            "type": "DISPATCHED_ACTION_get_css_response",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "DISPATCHED_ACTION_get_monaco_theme_response",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "DISPATCHED_ACTION_get_css_response",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "DISPATCHED_ACTION_get_monaco_theme_response",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
             "type": "send_info",
             "payload": {
                 "cellCount": 7,
                 "undoCount": 0,
                 "redoCount": 0,
-                "selectedCell": "NotebookImport#2"
+                "selectedCell": "NotebookImport#1"
             }
         },
         "type": "fromUI"
@@ -1188,7 +1160,7 @@
             "type": "reexecute_cells",
             "payload": {
                 "cellIds": [
-                    "NotebookImport#1"
+                    "NotebookImport#0"
                 ]
             }
         },
@@ -1201,6 +1173,20 @@
                 "command": 14,
                 "source": "mouse"
             }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_get_css_response",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_get_monaco_theme_response",
+            "payload": {}
         },
         "type": "fromUI"
     },
@@ -1227,6 +1213,20 @@
     },
     {
         "payload": {
+            "type": "DISPATCHED_ACTION_get_css_response",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_get_monaco_theme_response",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
             "type": "update_kernel",
             "payload": {
                 "jupyterServerStatus": "Busy",
@@ -1239,7 +1239,7 @@
     {
         "payload": {
             "type": "notebook_execution_activated",
-            "payload": "file:///c%3A/Users/RCHIOD~1.RED/AppData/Local/Temp/tmp-34308UmxThDTgvm6w.ipynb"
+            "payload": "file:///c%3A/Users/RCHIOD~1.RED/AppData/Local/Temp/tmp-34308qwx4FoDjqaNd.ipynb"
         },
         "type": "forUI"
     },
@@ -1258,11 +1258,11 @@
         "payload": {
             "type": "IPyWidgets_kernelOptions",
             "payload": {
-                "clientId": "152fb93c-ca26-4c88-87ea-40991be64b31",
-                "id": "e516ecaf-81eb-49cf-a9c6-1e5c713c7aa8",
+                "clientId": "d508ca84-28fd-49d0-ac88-25ce1c4138a7",
+                "id": "bb3961ff-c94a-404c-baea-6144200fec2e",
                 "model": {
                     "name": "python3",
-                    "id": "e516ecaf-81eb-49cf-a9c6-1e5c713c7aa8"
+                    "id": "bb3961ff-c94a-404c-baea-6144200fec2e"
                 },
                 "userName": ""
             }
@@ -1273,7 +1273,7 @@
         "payload": {
             "type": "IPyWidgets_mirror_execute",
             "payload": {
-                "id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd",
+                "id": "c952028e-d486-4722-ae14-782b28b7b8c1",
                 "msg": {
                     "buffers": [],
                     "channel": "shell",
@@ -1286,10 +1286,10 @@
                         "code": "import os\nimport sys\n%cd \"c:\\Users\\RCHIOD~1.RED\\AppData\\Local\\Temp\"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())"
                     },
                     "header": {
-                        "date": "2020-04-03T17:27:23.497Z",
-                        "msg_id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd",
+                        "date": "2020-04-03T17:30:21.555Z",
+                        "msg_id": "c952028e-d486-4722-ae14-782b28b7b8c1",
                         "msg_type": "execute_request",
-                        "session": "152fb93c-ca26-4c88-87ea-40991be64b31",
+                        "session": "d508ca84-28fd-49d0-ac88-25ce1c4138a7",
                         "username": "",
                         "version": "5.2"
                     },
@@ -1343,7 +1343,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "5414fef9-996a-4ad7-bc60-5c6abf2a6bdd"
+                "id": "c952028e-d486-4722-ae14-782b28b7b8c1"
             }
         },
         "type": "fromUI"
@@ -1384,8 +1384,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "55b6b1e9-595b-46d4-80f9-433d8dcf519c",
-                "data": "{\"header\": {\"msg_id\": \"de8de113-965d2c20123a51074c7c8093\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.024933Z\", \"version\": \"5.3\"}, \"msg_id\": \"de8de113-965d2c20123a51074c7c8093\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "92e1538f-4ecf-4356-ba63-53a90a87bdba",
+                "data": "{\"header\": {\"msg_id\": \"4cd750f2-20e58cb9362d9f521e43e31e\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:22.087932Z\", \"version\": \"5.3\"}, \"msg_id\": \"4cd750f2-20e58cb9362d9f521e43e31e\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:21.555000Z\", \"msg_id\": \"c952028e-d486-4722-ae14-782b28b7b8c1\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1394,7 +1394,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "55b6b1e9-595b-46d4-80f9-433d8dcf519c"
+                "id": "92e1538f-4ecf-4356-ba63-53a90a87bdba"
             }
         },
         "type": "fromUI"
@@ -1403,8 +1403,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "f040b5af-3b38-4bc4-8320-d7c5aa14beae",
-                "data": "{\"header\": {\"msg_id\": \"d0938780-443a157dbff4734a2f25692a\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.024933Z\", \"version\": \"5.3\"}, \"msg_id\": \"d0938780-443a157dbff4734a2f25692a\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import os\\nimport sys\\n%cd \\\"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\\"\\nif os.getcwd() not in sys.path:\\n    sys.path.insert(0, os.getcwd())\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "1f5e721b-50bc-4798-b070-f10c00a05a0a",
+                "data": "{\"header\": {\"msg_id\": \"fc238432-017a81f946c37a468899dd82\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:22.087932Z\", \"version\": \"5.3\"}, \"msg_id\": \"fc238432-017a81f946c37a468899dd82\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:21.555000Z\", \"msg_id\": \"c952028e-d486-4722-ae14-782b28b7b8c1\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import os\\nimport sys\\n%cd \\\"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\\"\\nif os.getcwd() not in sys.path:\\n    sys.path.insert(0, os.getcwd())\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1424,7 +1424,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "f040b5af-3b38-4bc4-8320-d7c5aa14beae"
+                "id": "1f5e721b-50bc-4798-b070-f10c00a05a0a"
             }
         },
         "type": "fromUI"
@@ -1433,8 +1433,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "63ff5721-e126-46eb-9606-9bcfbc397eff",
-                "data": "{\"header\": {\"msg_id\": \"d657289b-a78406ae4b4ce2857e5e900a\", \"msg_type\": \"stream\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.029933Z\", \"version\": \"5.3\"}, \"msg_id\": \"d657289b-a78406ae4b4ce2857e5e900a\", \"msg_type\": \"stream\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"name\": \"stdout\", \"text\": \"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\n\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "d000423c-b67d-4ce4-8421-e95fcd994ada",
+                "data": "{\"header\": {\"msg_id\": \"b04e75ae-75ef50475e382b5007d1727d\", \"msg_type\": \"stream\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:22.092931Z\", \"version\": \"5.3\"}, \"msg_id\": \"b04e75ae-75ef50475e382b5007d1727d\", \"msg_type\": \"stream\", \"parent_header\": {\"date\": \"2020-04-03T17:30:21.555000Z\", \"msg_id\": \"c952028e-d486-4722-ae14-782b28b7b8c1\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"name\": \"stdout\", \"text\": \"c:\\\\Users\\\\RCHIOD~1.RED\\\\AppData\\\\Local\\\\Temp\\n\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1468,7 +1468,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "63ff5721-e126-46eb-9606-9bcfbc397eff"
+                "id": "d000423c-b67d-4ce4-8421-e95fcd994ada"
             }
         },
         "type": "fromUI"
@@ -1477,8 +1477,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "fb8d6915-b48d-481e-8352-34fc9f0bc5cb",
-                "data": "{\"header\": {\"msg_id\": \"74a3a54e-b00676a25295862eb1eb11a4\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.034932Z\", \"version\": \"5.3\"}, \"msg_id\": \"74a3a54e-b00676a25295862eb1eb11a4\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "3a064791-5b1a-4c16-bc49-35c23dcd537f",
+                "data": "{\"header\": {\"msg_id\": \"587a396a-8dc5251abbfc27c55eac74e4\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:22.097933Z\", \"version\": \"5.3\"}, \"msg_id\": \"587a396a-8dc5251abbfc27c55eac74e4\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:21.555000Z\", \"msg_id\": \"c952028e-d486-4722-ae14-782b28b7b8c1\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1487,7 +1487,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "fb8d6915-b48d-481e-8352-34fc9f0bc5cb"
+                "id": "3a064791-5b1a-4c16-bc49-35c23dcd537f"
             }
         },
         "type": "fromUI"
@@ -1496,8 +1496,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "aac4e677-3e35-424d-b686-b4defcd6d347",
-                "data": "{\"header\": {\"msg_id\": \"01f22efe-aa8a51279cdc061ea7899290\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:24.034932Z\", \"version\": \"5.3\"}, \"msg_id\": \"01f22efe-aa8a51279cdc061ea7899290\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:27:23.497000Z\", \"msg_id\": \"5414fef9-996a-4ad7-bc60-5c6abf2a6bdd\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:27:24.024933Z\", \"dependencies_met\": true, \"engine\": \"ef88302d-dc8f-4b64-8dfa-08d662dda892\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 0, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+                "id": "3e384f6b-70c1-4c8f-90b3-89fecf033012",
+                "data": "{\"header\": {\"msg_id\": \"b0b48308-9ebf7c6cef995f768abe77e7\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:22.097933Z\", \"version\": \"5.3\"}, \"msg_id\": \"b0b48308-9ebf7c6cef995f768abe77e7\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:21.555000Z\", \"msg_id\": \"c952028e-d486-4722-ae14-782b28b7b8c1\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:22.087932Z\", \"dependencies_met\": true, \"engine\": \"be474a92-3f8f-4cea-9ce6-ab863beaf640\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 0, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
             }
         },
         "type": "forUI"
@@ -1517,7 +1517,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "aac4e677-3e35-424d-b686-b4defcd6d347"
+                "id": "3e384f6b-70c1-4c8f-90b3-89fecf033012"
             }
         },
         "type": "fromUI"
@@ -1541,14 +1541,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": null,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 0
@@ -1560,7 +1562,7 @@
         "payload": {
             "type": "IPyWidgets_mirror_execute",
             "payload": {
-                "id": "3fb0e463-3422-4f21-94dc-532bc778f4b9",
+                "id": "2560440b-a251-424e-b717-8ed2735f633f",
                 "msg": {
                     "buffers": [],
                     "channel": "shell",
@@ -1570,13 +1572,13 @@
                         "user_expressions": {},
                         "allow_stdin": true,
                         "stop_on_error": false,
-                        "code": "import ipywidgets as widgets\nwidgets.Text(value='Hello World!', disabled=True)"
+                        "code": "import ipywidgets as widgets\nwidgets.IntSlider()"
                     },
                     "header": {
-                        "date": "2020-04-03T17:27:26.547Z",
-                        "msg_id": "3fb0e463-3422-4f21-94dc-532bc778f4b9",
+                        "date": "2020-04-03T17:30:24.616Z",
+                        "msg_id": "2560440b-a251-424e-b717-8ed2735f633f",
                         "msg_type": "execute_request",
-                        "session": "152fb93c-ca26-4c88-87ea-40991be64b31",
+                        "session": "d508ca84-28fd-49d0-ac88-25ce1c4138a7",
                         "username": "",
                         "version": "5.2"
                     },
@@ -1616,7 +1618,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "3fb0e463-3422-4f21-94dc-532bc778f4b9"
+                "id": "2560440b-a251-424e-b717-8ed2735f633f"
             }
         },
         "type": "fromUI"
@@ -1625,8 +1627,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "fdcd549f-ddba-4021-a4f4-1b5d43370888",
-                "data": "{\"header\": {\"msg_id\": \"9cee7305-9c7be5c598da31cd99af164b\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.064759Z\", \"version\": \"5.3\"}, \"msg_id\": \"9cee7305-9c7be5c598da31cd99af164b\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "deeb0be1-2fc1-485a-b60e-1248dd7be5c8",
+                "data": "{\"header\": {\"msg_id\": \"7719d9ab-49cd399ee88d24896d74148e\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.135222Z\", \"version\": \"5.3\"}, \"msg_id\": \"7719d9ab-49cd399ee88d24896d74148e\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1661,14 +1663,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": null,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 0
@@ -1691,7 +1695,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "fdcd549f-ddba-4021-a4f4-1b5d43370888"
+                "id": "deeb0be1-2fc1-485a-b60e-1248dd7be5c8"
             }
         },
         "type": "fromUI"
@@ -1700,8 +1704,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "59fa723d-02e3-4424-b1b0-8ce3eab78984",
-                "data": "{\"header\": {\"msg_id\": \"6344f1e5-b4c3e00cb114cb586e6ceaa7\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.064759Z\", \"version\": \"5.3\"}, \"msg_id\": \"6344f1e5-b4c3e00cb114cb586e6ceaa7\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import ipywidgets as widgets\\nwidgets.Text(value='Hello World!', disabled=True)\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "8a57b54f-4a5f-4a45-b687-ddd16a55fd7f",
+                "data": "{\"header\": {\"msg_id\": \"c594b113-7a59c10b36d8a9150a1ae164\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.135222Z\", \"version\": \"5.3\"}, \"msg_id\": \"c594b113-7a59c10b36d8a9150a1ae164\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import ipywidgets as widgets\\nwidgets.IntSlider()\", \"execution_count\": 1}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1713,14 +1717,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": null,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1743,7 +1749,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "59fa723d-02e3-4424-b1b0-8ce3eab78984"
+                "id": "8a57b54f-4a5f-4a45-b687-ddd16a55fd7f"
             }
         },
         "type": "fromUI"
@@ -1752,8 +1758,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "d19ecdf7-937e-45f1-825b-3607e0ec9117",
-                "data": "{\"header\": {\"msg_id\": \"2cddf543-8af218b065fde2b1e5e0cdc8\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.115810Z\", \"version\": \"5.3\"}, \"msg_id\": \"2cddf543-8af218b065fde2b1e5e0cdc8\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"dae7cc7d27414bbe8e5899e60ad4273c\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "dfbc625d-0142-4ed2-97ad-c988c98c9bc9",
+                "data": "{\"header\": {\"msg_id\": \"38d8bed9-c474444fac1673ded8056616\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.181221Z\", \"version\": \"5.3\"}, \"msg_id\": \"38d8bed9-c474444fac1673ded8056616\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"42bbcb8e1a594c6688e310b7f20b5d79\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1765,14 +1771,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1790,14 +1798,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": null,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1845,7 +1855,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "d19ecdf7-937e-45f1-825b-3607e0ec9117"
+                "id": "dfbc625d-0142-4ed2-97ad-c988c98c9bc9"
             }
         },
         "type": "fromUI"
@@ -1854,8 +1864,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "bd40c3e6-edb8-4dde-92d0-9c00bcbb2ab7",
-                "data": "{\"header\": {\"msg_id\": \"ec6524f9-e60a9593f269af2a4505dc07\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.116809Z\", \"version\": \"5.3\"}, \"msg_id\": \"ec6524f9-e60a9593f269af2a4505dc07\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"DescriptionStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"description_width\": \"\"}, \"buffer_paths\": []}, \"comm_id\": \"8bc79ed9270b44e49533479ac94e1c90\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "b6487b4e-2070-4a2d-8160-1085d9bd35bd",
+                "data": "{\"header\": {\"msg_id\": \"fd504b88-6780e393e6e3e49229759b4e\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.183221Z\", \"version\": \"5.3\"}, \"msg_id\": \"fd504b88-6780e393e6e3e49229759b4e\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"SliderStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"description_width\": \"\", \"handle_color\": null}, \"buffer_paths\": []}, \"comm_id\": \"c967d701be974d589e77c0953d9b9597\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1867,14 +1877,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1892,14 +1904,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1922,7 +1936,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "bd40c3e6-edb8-4dde-92d0-9c00bcbb2ab7"
+                "id": "b6487b4e-2070-4a2d-8160-1085d9bd35bd"
             }
         },
         "type": "fromUI"
@@ -1931,8 +1945,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "6f550756-262b-470a-bf7a-fd6cd53e9265",
-                "data": "{\"header\": {\"msg_id\": \"5b016f96-5a8f403cca54ee9cd08005a2\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.117810Z\", \"version\": \"5.3\"}, \"msg_id\": \"5b016f96-5a8f403cca54ee9cd08005a2\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"TextModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"TextView\", \"continuous_update\": true, \"description\": \"\", \"description_tooltip\": null, \"disabled\": true, \"layout\": \"IPY_MODEL_dae7cc7d27414bbe8e5899e60ad4273c\", \"placeholder\": \"\\u200b\", \"style\": \"IPY_MODEL_8bc79ed9270b44e49533479ac94e1c90\", \"value\": \"Hello World!\"}, \"buffer_paths\": []}, \"comm_id\": \"e8bc4a39b4cf48439db3e431824f06d8\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "af40be13-e45a-4e13-8f49-d3a426d28a1d",
+                "data": "{\"header\": {\"msg_id\": \"b8509685-b929e7b64db284d8d949796b\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.184221Z\", \"version\": \"5.3\"}, \"msg_id\": \"b8509685-b929e7b64db284d8d949796b\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"IntSliderModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"IntSliderView\", \"continuous_update\": true, \"description\": \"\", \"description_tooltip\": null, \"disabled\": false, \"layout\": \"IPY_MODEL_42bbcb8e1a594c6688e310b7f20b5d79\", \"max\": 100, \"min\": 0, \"orientation\": \"horizontal\", \"readout\": true, \"readout_format\": \"d\", \"step\": 1, \"style\": \"IPY_MODEL_c967d701be974d589e77c0953d9b9597\", \"value\": 0}, \"buffer_paths\": []}, \"comm_id\": \"77f34682b8a942ff9a061580de4772bc\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -1944,14 +1958,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -1969,14 +1985,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -1999,7 +2017,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "6f550756-262b-470a-bf7a-fd6cd53e9265"
+                "id": "af40be13-e45a-4e13-8f49-d3a426d28a1d"
             }
         },
         "type": "fromUI"
@@ -2008,8 +2026,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "c1e5b250-614b-4678-8141-6271a40f9940",
-                "data": "{\"header\": {\"msg_id\": \"8d295d47-146e46ce1088357037d93829\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.119810Z\", \"version\": \"5.3\"}, \"msg_id\": \"8d295d47-146e46ce1088357037d93829\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"Text(value='Hello World!', disabled=True)\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"e8bc4a39b4cf48439db3e431824f06d8\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "95770585-1e8f-4f86-8f17-e53646be261d",
+                "data": "{\"header\": {\"msg_id\": \"a5400f38-3496ef2fd99e7ae1cf06899b\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.186221Z\", \"version\": \"5.3\"}, \"msg_id\": \"a5400f38-3496ef2fd99e7ae1cf06899b\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"IntSlider(value=0)\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"77f34682b8a942ff9a061580de4772bc\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -2021,14 +2039,16 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -2046,14 +2066,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2076,7 +2098,7 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "c1e5b250-614b-4678-8141-6271a40f9940"
+                "id": "95770585-1e8f-4f86-8f17-e53646be261d"
             }
         },
         "type": "fromUI"
@@ -2085,8 +2107,8 @@
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "3f5263b2-b241-486e-a430-2260ccaea82a",
-                "data": "{\"header\": {\"msg_id\": \"cbf37f30-cf73d83647bd22f183a70b44\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.122809Z\", \"version\": \"5.3\"}, \"msg_id\": \"cbf37f30-cf73d83647bd22f183a70b44\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:27:27.064759Z\", \"dependencies_met\": true, \"engine\": \"ef88302d-dc8f-4b64-8dfa-08d662dda892\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 1, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+                "id": "2b5a7a30-f4da-456a-9381-26aef0229210",
+                "data": "{\"header\": {\"msg_id\": \"cd2c82c3-36e7022208d58ab3795c58ee\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.188222Z\", \"version\": \"5.3\"}, \"msg_id\": \"cd2c82c3-36e7022208d58ab3795c58ee\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
             }
         },
         "type": "forUI"
@@ -2098,16 +2120,18 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [
                         {
                             "output_type": "display_data",
                             "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
+                                "text/plain": "IntSlider(value=0)",
                                 "application/vnd.jupyter.widget-view+json": {
                                     "version_major": 2,
                                     "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                    "model_id": "77f34682b8a942ff9a061580de4772bc"
                                 }
                             },
                             "metadata": {},
@@ -2116,10 +2140,10 @@
                     ],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
@@ -2137,14 +2161,16 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2167,115 +2193,20 @@
         "payload": {
             "type": "IPyWidgets_msg_handled",
             "payload": {
-                "id": "3f5263b2-b241-486e-a430-2260ccaea82a"
+                "id": "2b5a7a30-f4da-456a-9381-26aef0229210"
             }
         },
         "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "update_cell",
-            "payload": {
-                "data": {
-                    "cell_type": "code",
-                    "execution_count": 1,
-                    "metadata": {},
-                    "outputs": [
-                        {
-                            "output_type": "display_data",
-                            "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
-                                "application/vnd.jupyter.widget-view+json": {
-                                    "version_major": 2,
-                                    "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                }
-                            },
-                            "metadata": {},
-                            "transient": {}
-                        }
-                    ],
-                    "source": [
-                        "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
-                    ]
-                },
-                "id": "NotebookImport#1",
-                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                "line": 0,
-                "state": 1
-            }
-        },
-        "type": "forUI"
     },
     {
         "payload": {
             "type": "IPyWidgets_msg",
             "payload": {
-                "id": "c1c794ee-0c80-4443-ae88-40945616115f",
-                "data": "{\"header\": {\"msg_id\": \"ad4c5a4c-7eca22e1b1332f1dd22ba348\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"7b864d4a-d362fe0212796087583f4216\", \"date\": \"2020-04-03T17:27:27.122809Z\", \"version\": \"5.3\"}, \"msg_id\": \"ad4c5a4c-7eca22e1b1332f1dd22ba348\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:27:26.547000Z\", \"msg_id\": \"3fb0e463-3422-4f21-94dc-532bc778f4b9\", \"msg_type\": \"execute_request\", \"session\": \"152fb93c-ca26-4c88-87ea-40991be64b31\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+                "id": "7b468571-8d54-4c22-8b47-5bf8c1cca891",
+                "data": "{\"header\": {\"msg_id\": \"42aad6d1-fb91836ea540225cbadc719c\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:25.188222Z\", \"version\": \"5.3\"}, \"msg_id\": \"42aad6d1-fb91836ea540225cbadc719c\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:24.616000Z\", \"msg_id\": \"2560440b-a251-424e-b717-8ed2735f633f\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:25.135222Z\", \"dependencies_met\": true, \"engine\": \"be474a92-3f8f-4cea-9ce6-ab863beaf640\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 1, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
             }
         },
         "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "sync_message_used_to_broadcast_and_sync_editors",
-            "payload": {
-                "type": "update_cell",
-                "payload": {
-                    "data": {
-                        "data": {
-                            "cell_type": "code",
-                            "execution_count": 1,
-                            "metadata": {},
-                            "outputs": [
-                                {
-                                    "output_type": "display_data",
-                                    "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
-                                        "application/vnd.jupyter.widget-view+json": {
-                                            "version_major": 2,
-                                            "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                        }
-                                    },
-                                    "metadata": {},
-                                    "transient": {}
-                                }
-                            ],
-                            "source": [
-                                "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
-                            ]
-                        },
-                        "id": "NotebookImport#1",
-                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                        "line": 0,
-                        "state": 1
-                    },
-                    "messageType": 3,
-                    "messageDirection": "incoming"
-                }
-            }
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "DISPATCHED_ACTION_update_cell",
-            "payload": {}
-        },
-        "type": "fromUI"
-    },
-    {
-        "payload": {
-            "type": "IPyWidgets_msg_handled",
-            "payload": {
-                "id": "c1c794ee-0c80-4443-ae88-40945616115f"
-            }
-        },
-        "type": "fromUI"
     },
     {
         "payload": {
@@ -2284,16 +2215,18 @@
                 "data": {
                     "cell_type": "code",
                     "execution_count": 1,
-                    "metadata": {},
+                    "metadata": {
+                        "scrolled": true
+                    },
                     "outputs": [
                         {
                             "output_type": "display_data",
                             "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
+                                "text/plain": "IntSlider(value=0)",
                                 "application/vnd.jupyter.widget-view+json": {
                                     "version_major": 2,
                                     "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                    "model_id": "77f34682b8a942ff9a061580de4772bc"
                                 }
                             },
                             "metadata": {},
@@ -2302,62 +2235,14 @@
                     ],
                     "source": [
                         "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
+                        "widgets.IntSlider()"
                     ]
                 },
-                "id": "NotebookImport#1",
+                "id": "NotebookImport#0",
                 "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                 "line": 0,
                 "state": 1
             }
-        },
-        "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "dirty"
-        },
-        "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "finish_cell",
-            "payload": {
-                "data": {
-                    "cell_type": "code",
-                    "execution_count": 1,
-                    "metadata": {},
-                    "outputs": [
-                        {
-                            "output_type": "display_data",
-                            "data": {
-                                "text/plain": "Text(value='Hello World!', disabled=True)",
-                                "application/vnd.jupyter.widget-view+json": {
-                                    "version_major": 2,
-                                    "version_minor": 0,
-                                    "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
-                                }
-                            },
-                            "metadata": {},
-                            "transient": {}
-                        }
-                    ],
-                    "source": [
-                        "import ipywidgets as widgets\n",
-                        "widgets.Text(value='Hello World!', disabled=True)"
-                    ]
-                },
-                "id": "NotebookImport#1",
-                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
-                "line": 0,
-                "state": 2
-            }
-        },
-        "type": "forUI"
-    },
-    {
-        "payload": {
-            "type": "stop_progress"
         },
         "type": "forUI"
     },
@@ -2382,16 +2267,18 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "IntSlider(value=0)",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
                                         }
                                     },
                                     "metadata": {},
@@ -2400,10 +2287,159 @@
                             ],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "7b468571-8d54-4c22-8b47-5bf8c1cca891"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "IntSlider(value=0)",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "77f34682b8a942ff9a061580de4772bc"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "dirty"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "finish_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 1,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "IntSlider(value=0)",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "77f34682b8a942ff9a061580de4772bc"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 2
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "stop_progress"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "IntSlider(value=0)",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2426,22 +2462,49 @@
         "payload": {
             "type": "sync_message_used_to_broadcast_and_sync_editors",
             "payload": {
+                "type": "update_kernel",
+                "payload": {
+                    "data": {
+                        "jupyterServerStatus": "Idle",
+                        "localizedUri": "local",
+                        "displayName": "Python 3"
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_kernel",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
                 "type": "update_cell",
                 "payload": {
                     "data": {
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "IntSlider(value=0)",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
                                         }
                                     },
                                     "metadata": {},
@@ -2450,10 +2513,10 @@
                             ],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 1
@@ -2489,16 +2552,18 @@
                         "data": {
                             "cell_type": "code",
                             "execution_count": 1,
-                            "metadata": {},
+                            "metadata": {
+                                "scrolled": true
+                            },
                             "outputs": [
                                 {
                                     "output_type": "display_data",
                                     "data": {
-                                        "text/plain": "Text(value='Hello World!', disabled=True)",
+                                        "text/plain": "IntSlider(value=0)",
                                         "application/vnd.jupyter.widget-view+json": {
                                             "version_major": 2,
                                             "version_minor": 0,
-                                            "model_id": "e8bc4a39b4cf48439db3e431824f06d8"
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
                                         }
                                     },
                                     "metadata": {},
@@ -2507,10 +2572,10 @@
                             ],
                             "source": [
                                 "import ipywidgets as widgets\n",
-                                "widgets.Text(value='Hello World!', disabled=True)"
+                                "widgets.IntSlider()"
                             ]
                         },
-                        "id": "NotebookImport#1",
+                        "id": "NotebookImport#0",
                         "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
                         "line": 0,
                         "state": 2
@@ -2527,7 +2592,1254 @@
             "type": "rendered_execution",
             "payload": {
                 "ids": [
-                    "NotebookImport#1"
+                    "NotebookImport#0"
+                ]
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_finish_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_stop_progress",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_model",
+            "payload": {
+                "source": "user",
+                "kind": "clear",
+                "oldDirty": true,
+                "newDirty": true,
+                "oldCells": [
+                    {
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 1,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "IntSlider(value=0)",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "77f34682b8a942ff9a061580de4772bc"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#1",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.Text(value='Hello World!', disabled=True)"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#2",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.Checkbox(\n",
+                                "    value=False,\n",
+                                "    description='Check me',\n",
+                                "    disabled=False,\n",
+                                "    indent=False\n",
+                                ")"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#3",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "button = widgets.Button(description=\"Click Me!\")\n",
+                                "caption = widgets.Label(value='Not Clicked')\n",
+                                "\n",
+                                "\n",
+                                "display(button)\n",
+                                "\n",
+                                "def on_button_clicked(b):\n",
+                                "    caption.value = 'Button Clicked'\n",
+                                "\n",
+                                "button.on_click(on_button_clicked)"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#4",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "caption"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#5",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 14,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": [
+                                "import threading\n",
+                                "from IPython.display import display\n",
+                                "import ipywidgets as widgets\n",
+                                "import time\n",
+                                "progress = widgets.FloatProgress(value=0.0, min=0.0, max=1.0)\n",
+                                "\n",
+                                "def work(progress):\n",
+                                "    total = 100\n",
+                                "    for i in range(total):\n",
+                                "        time.sleep(0.2)\n",
+                                "        progress.value = float(i+1)/total\n",
+                                "\n",
+                                "thread = threading.Thread(target=work, args=(progress,))\n",
+                                "display(progress)\n",
+                                "thread.start()"
+                            ]
+                        }
+                    },
+                    {
+                        "id": "NotebookImport#6",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2,
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {},
+                            "outputs": [],
+                            "source": []
+                        }
+                    }
+                ]
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "dirty"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "clear_all_outputs",
+                "payload": {
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_clear_all_outputs",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "start_progress"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "stop_progress"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "reexecute_cells",
+            "payload": {
+                "cellIds": [
+                    "NotebookImport#0"
+                ]
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "start_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 0
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_mirror_execute",
+            "payload": {
+                "id": "5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf",
+                "msg": {
+                    "buffers": [],
+                    "channel": "shell",
+                    "content": {
+                        "silent": false,
+                        "store_history": true,
+                        "user_expressions": {},
+                        "allow_stdin": true,
+                        "stop_on_error": false,
+                        "code": "import ipywidgets as widgets\nwidgets.IntSlider()"
+                    },
+                    "header": {
+                        "date": "2020-04-03T17:30:29.776Z",
+                        "msg_id": "5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf",
+                        "msg_type": "execute_request",
+                        "session": "d508ca84-28fd-49d0-ac88-25ce1c4138a7",
+                        "username": "",
+                        "version": "5.2"
+                    },
+                    "metadata": {},
+                    "parent_header": {}
+                }
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "native_command",
+            "payload": {
+                "command": 14,
+                "source": "mouse"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.execute_cell_and_advance",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.execute_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_action.send_command",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_dirty",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "b8b9cf89-c02a-4a78-822b-d1b081e76e3f",
+                "data": "{\"header\": {\"msg_id\": \"a77c84be-7993c4970223d35655bb3900\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.311008Z\", \"version\": \"5.3\"}, \"msg_id\": \"a77c84be-7993c4970223d35655bb3900\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"busy\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_start_progress",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_stop_progress",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "start_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 0
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_start_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "b8b9cf89-c02a-4a78-822b-d1b081e76e3f"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "0c7f34ef-31df-460d-92fd-f5593da619fd",
+                "data": "{\"header\": {\"msg_id\": \"737a549a-3a375997ee6f056bac3fc5b0\", \"msg_type\": \"execute_input\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.311008Z\", \"version\": \"5.3\"}, \"msg_id\": \"737a549a-3a375997ee6f056bac3fc5b0\", \"msg_type\": \"execute_input\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"code\": \"import ipywidgets as widgets\\nwidgets.IntSlider()\", \"execution_count\": 2}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": null,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_kernel",
+            "payload": {
+                "jupyterServerStatus": "Busy",
+                "localizedUri": "local",
+                "displayName": "Python 3"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "0c7f34ef-31df-460d-92fd-f5593da619fd"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "f5e11e2f-b031-4f33-887e-bb61f0040526",
+                "data": "{\"header\": {\"msg_id\": \"b8e0476a-ddc3c0b6705ced727b3d48a0\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.314010Z\", \"version\": \"5.3\"}, \"msg_id\": \"b8e0476a-ddc3c0b6705ced727b3d48a0\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/base\", \"_model_module_version\": \"1.2.0\", \"_model_name\": \"LayoutModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"LayoutView\", \"align_content\": null, \"align_items\": null, \"align_self\": null, \"border\": null, \"bottom\": null, \"display\": null, \"flex\": null, \"flex_flow\": null, \"grid_area\": null, \"grid_auto_columns\": null, \"grid_auto_flow\": null, \"grid_auto_rows\": null, \"grid_column\": null, \"grid_gap\": null, \"grid_row\": null, \"grid_template_areas\": null, \"grid_template_columns\": null, \"grid_template_rows\": null, \"height\": null, \"justify_content\": null, \"justify_items\": null, \"left\": null, \"margin\": null, \"max_height\": null, \"max_width\": null, \"min_height\": null, \"min_width\": null, \"object_fit\": null, \"object_position\": null, \"order\": null, \"overflow\": null, \"overflow_x\": null, \"overflow_y\": null, \"padding\": null, \"right\": null, \"top\": null, \"visibility\": null, \"width\": null}, \"buffer_paths\": []}, \"comm_id\": \"f8fba8c7a4294db5852b970bea6f1817\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": null,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_kernel",
+                "payload": {
+                    "data": {
+                        "jupyterServerStatus": "Busy",
+                        "localizedUri": "local",
+                        "displayName": "Python 3"
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_kernel",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "f5e11e2f-b031-4f33-887e-bb61f0040526"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "0978d99a-6069-49f1-a717-124af2f67f87",
+                "data": "{\"header\": {\"msg_id\": \"5bf8f74f-0bb6db35601941c2e184bf6d\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.316010Z\", \"version\": \"5.3\"}, \"msg_id\": \"5bf8f74f-0bb6db35601941c2e184bf6d\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"SliderStyleModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/base\", \"_view_module_version\": \"1.2.0\", \"_view_name\": \"StyleView\", \"description_width\": \"\", \"handle_color\": null}, \"buffer_paths\": []}, \"comm_id\": \"d405dc7088f64e3e91147e371e2b4651\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "0978d99a-6069-49f1-a717-124af2f67f87"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "a0099763-ae95-4986-819e-69f94557587f",
+                "data": "{\"header\": {\"msg_id\": \"b76adfbf-6a051a2411303d1863369794\", \"msg_type\": \"comm_open\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.317010Z\", \"version\": \"5.3\"}, \"msg_id\": \"b76adfbf-6a051a2411303d1863369794\", \"msg_type\": \"comm_open\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"version\": \"2.0.0\"}, \"content\": {\"data\": {\"state\": {\"_dom_classes\": [], \"_model_module\": \"@jupyter-widgets/controls\", \"_model_module_version\": \"1.5.0\", \"_model_name\": \"IntSliderModel\", \"_view_count\": null, \"_view_module\": \"@jupyter-widgets/controls\", \"_view_module_version\": \"1.5.0\", \"_view_name\": \"IntSliderView\", \"continuous_update\": true, \"description\": \"\", \"description_tooltip\": null, \"disabled\": false, \"layout\": \"IPY_MODEL_f8fba8c7a4294db5852b970bea6f1817\", \"max\": 100, \"min\": 0, \"orientation\": \"horizontal\", \"readout\": true, \"readout_format\": \"d\", \"step\": 1, \"style\": \"IPY_MODEL_d405dc7088f64e3e91147e371e2b4651\", \"value\": 0}, \"buffer_paths\": []}, \"comm_id\": \"8fdaed323462469e8d7b8d76e320d265\", \"target_name\": \"jupyter.widget\", \"target_module\": null}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "a0099763-ae95-4986-819e-69f94557587f"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "8a12cddd-c8eb-47de-bdca-fa04d495a136",
+                "data": "{\"header\": {\"msg_id\": \"dbc394e1-b1197fa92303b2c625c894df\", \"msg_type\": \"execute_reply\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.322010Z\", \"version\": \"5.3\"}, \"msg_id\": \"dbc394e1-b1197fa92303b2c625c894df\", \"msg_type\": \"execute_reply\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {\"started\": \"2020-04-03T17:30:30.311008Z\", \"dependencies_met\": true, \"engine\": \"be474a92-3f8f-4cea-9ce6-ab863beaf640\", \"status\": \"ok\"}, \"content\": {\"status\": \"ok\", \"execution_count\": 2, \"user_expressions\": {}, \"payload\": []}, \"buffers\": [], \"channel\": \"shell\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "8a12cddd-c8eb-47de-bdca-fa04d495a136"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "635ffa8f-c189-4686-8c43-9a5e4d3b6de5",
+                "data": "{\"header\": {\"msg_id\": \"973e27de-5e3cf8a91db2f5c457313716\", \"msg_type\": \"display_data\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.318012Z\", \"version\": \"5.3\"}, \"msg_id\": \"973e27de-5e3cf8a91db2f5c457313716\", \"msg_type\": \"display_data\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"data\": {\"text/plain\": \"IntSlider(value=0)\", \"application/vnd.jupyter.widget-view+json\": {\"version_major\": 2, \"version_minor\": 0, \"model_id\": \"8fdaed323462469e8d7b8d76e320d265\"}}, \"metadata\": {}, \"transient\": {}}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "635ffa8f-c189-4686-8c43-9a5e4d3b6de5"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg",
+            "payload": {
+                "id": "52725a58-1d7e-4a44-9c80-b207259ca221",
+                "data": "{\"header\": {\"msg_id\": \"fe095d16-2742b832efcce1afb807d1b8\", \"msg_type\": \"status\", \"username\": \"username\", \"session\": \"73405aca-148286c6993a8dbb637885b1\", \"date\": \"2020-04-03T17:30:30.322010Z\", \"version\": \"5.3\"}, \"msg_id\": \"fe095d16-2742b832efcce1afb807d1b8\", \"msg_type\": \"status\", \"parent_header\": {\"date\": \"2020-04-03T17:30:29.776000Z\", \"msg_id\": \"5d9e1e24-a5a8-429a-90e2-79f0cb57dfcf\", \"msg_type\": \"execute_request\", \"session\": \"d508ca84-28fd-49d0-ac88-25ce1c4138a7\", \"username\": \"\", \"version\": \"5.2\"}, \"metadata\": {}, \"content\": {\"execution_state\": \"idle\"}, \"buffers\": [], \"channel\": \"iopub\"}"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "IntSlider(value=0)",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "IPyWidgets_msg_handled",
+            "payload": {
+                "id": "52725a58-1d7e-4a44-9c80-b207259ca221"
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "update_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "IntSlider(value=0)",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 1
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "dirty"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "finish_cell",
+            "payload": {
+                "data": {
+                    "cell_type": "code",
+                    "execution_count": 2,
+                    "metadata": {
+                        "scrolled": true
+                    },
+                    "outputs": [
+                        {
+                            "output_type": "display_data",
+                            "data": {
+                                "text/plain": "IntSlider(value=0)",
+                                "application/vnd.jupyter.widget-view+json": {
+                                    "version_major": 2,
+                                    "version_minor": 0,
+                                    "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                }
+                            },
+                            "metadata": {},
+                            "transient": {}
+                        }
+                    ],
+                    "source": [
+                        "import ipywidgets as widgets\n",
+                        "widgets.IntSlider()"
+                    ]
+                },
+                "id": "NotebookImport#0",
+                "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                "line": 0,
+                "state": 2
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "stop_progress"
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "update_kernel",
+            "payload": {
+                "jupyterServerStatus": "Idle",
+                "localizedUri": "local",
+                "displayName": "Python 3"
+            }
+        },
+        "type": "forUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "IntSlider(value=0)",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "update_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "IntSlider(value=0)",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 1
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_update_cell",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "DISPATCHED_ACTION_dirty",
+            "payload": {}
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "sync_message_used_to_broadcast_and_sync_editors",
+            "payload": {
+                "type": "finish_cell",
+                "payload": {
+                    "data": {
+                        "data": {
+                            "cell_type": "code",
+                            "execution_count": 2,
+                            "metadata": {
+                                "scrolled": true
+                            },
+                            "outputs": [
+                                {
+                                    "output_type": "display_data",
+                                    "data": {
+                                        "text/plain": "IntSlider(value=0)",
+                                        "application/vnd.jupyter.widget-view+json": {
+                                            "version_major": 2,
+                                            "version_minor": 0,
+                                            "model_id": "8fdaed323462469e8d7b8d76e320d265"
+                                        }
+                                    },
+                                    "metadata": {},
+                                    "transient": {}
+                                }
+                            ],
+                            "source": [
+                                "import ipywidgets as widgets\n",
+                                "widgets.IntSlider()"
+                            ]
+                        },
+                        "id": "NotebookImport#0",
+                        "file": "2DB9B899-6519-4E1B-88B0-FA728A274115",
+                        "line": 0,
+                        "state": 2
+                    },
+                    "messageType": 3,
+                    "messageDirection": "incoming"
+                }
+            }
+        },
+        "type": "fromUI"
+    },
+    {
+        "payload": {
+            "type": "rendered_execution",
+            "payload": {
+                "ids": [
+                    "NotebookImport#0"
                 ]
             }
         },
