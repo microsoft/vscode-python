@@ -11,7 +11,8 @@ import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../comm
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterHelper, PythonInterpreter } from '../../contracts';
-import { isInterpreterStoredInWorkspace } from '../../helpers';
+import { isInterpreterLocatedInWorkspace } from '../../helpers';
+import { learnMoreOnInterpreterSecurityURI } from '../constants';
 import { IInterpreterEvaluation, IInterpreterSecurityStorage } from '../types';
 
 const prompts = [
@@ -35,19 +36,19 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         if (!activeWorkspaceUri) {
             return true;
         }
-        const isSafe = this.inferValueUsingStorage(interpreter, resource);
+        const isSafe = this.inferValueUsingCurrentState(interpreter, resource);
         return isSafe !== undefined ? isSafe : this._inferValueUsingPrompt(activeWorkspaceUri);
     }
 
-    public inferValueUsingStorage(interpreter: PythonInterpreter, resource: Resource) {
+    public inferValueUsingCurrentState(interpreter: PythonInterpreter, resource: Resource) {
         const activeWorkspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource)?.folderUri;
         if (!activeWorkspaceUri) {
             return true;
         }
-        if (!isInterpreterStoredInWorkspace(interpreter, activeWorkspaceUri)) {
+        if (!isInterpreterLocatedInWorkspace(interpreter, activeWorkspaceUri)) {
             return true;
         }
-        const isSafe = this.interpreterSecurityStorage.areInterpretersInWorkspaceSafe(activeWorkspaceUri).value;
+        const isSafe = this.interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(activeWorkspaceUri).value;
         if (isSafe !== undefined) {
             return isSafe;
         }
@@ -58,12 +59,12 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
     }
 
     public async _inferValueUsingPrompt(activeWorkspaceUri: Uri): Promise<boolean> {
-        const areInterpretersInWorkspaceSafe = this.interpreterSecurityStorage.areInterpretersInWorkspaceSafe(
+        const areInterpretersInWorkspaceSafe = this.interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(
             activeWorkspaceUri
         );
         let selection = await this.showPromptAndGetSelection();
         while (selection === Common.learnMore()) {
-            this.browserService.launch('https://aka.ms/AA7jfor');
+            this.browserService.launch(learnMoreOnInterpreterSecurityURI);
             selection = await this.showPromptAndGetSelection();
         }
         if (!selection || selection === InteractiveShiftEnterBanner.bannerLabelNo()) {

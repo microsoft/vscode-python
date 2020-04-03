@@ -25,7 +25,7 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     return lines.length > 0 ? lines[0] : '';
 }
 
-export function isInterpreterStoredInWorkspace(interpreter: PythonInterpreter, activeWorkspaceUri: Uri) {
+export function isInterpreterLocatedInWorkspace(interpreter: PythonInterpreter, activeWorkspaceUri: Uri) {
     const fileSystemPaths = FileSystemPaths.withDefaults();
     const interpreterPath = fileSystemPaths.normCase(interpreter.path);
     const resourcePath = fileSystemPaths.normCase(activeWorkspaceUri.fsPath);

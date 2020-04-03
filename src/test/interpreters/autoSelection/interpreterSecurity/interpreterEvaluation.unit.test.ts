@@ -12,6 +12,7 @@ import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../../c
 import { InterpreterEvaluation } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
 import { IInterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
+import { learnMoreOnInterpreterSecurityURI } from '../../../../client/interpreter/autoSelection/constants';
 
 const prompts = [
     InteractiveShiftEnterBanner.bannerLabelYes(),
@@ -37,7 +38,7 @@ suite('Interpreter Evaluation', () => {
         unsafeInterpreterPromptEnabled = Typemoq.Mock.ofType<IPersistentState<boolean>>();
         areInterpretersInWorkspaceSafe = Typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         interpreterSecurityStorage
-            .setup(i => i.areInterpretersInWorkspaceSafe(resource))
+            .setup(i => i.hasUserApprovedWorkspaceInterpreters(resource))
             .returns(() => areInterpretersInWorkspaceSafe.object);
         interpreterSecurityStorage
             .setup(i => i.unsafeInterpreterPromptEnabled)
@@ -72,7 +73,7 @@ suite('Interpreter Evaluation', () => {
                         } as any)
                 );
             // tslint:disable-next-line: no-any
-            interpreterEvaluation.inferValueUsingStorage = () => 'storageValue' as any;
+            interpreterEvaluation.inferValueUsingCurrentState = () => 'storageValue' as any;
             const isSafe = await interpreterEvaluation.evaluateIfInterpreterIsSafe(interpreter, resource);
             expect(isSafe).to.equal('storageValue');
         });
@@ -89,7 +90,7 @@ suite('Interpreter Evaluation', () => {
                             // tslint:disable-next-line: no-any
                         } as any)
                 );
-            interpreterEvaluation.inferValueUsingStorage = () => undefined;
+            interpreterEvaluation.inferValueUsingCurrentState = () => undefined;
             // tslint:disable-next-line: no-any
             interpreterEvaluation._inferValueUsingPrompt = () => 'promptValue' as any;
             const isSafe = await interpreterEvaluation.evaluateIfInterpreterIsSafe(interpreter, resource);
@@ -102,7 +103,7 @@ suite('Interpreter Evaluation', () => {
             // tslint:disable-next-line: no-any
             const interpreter = { path: 'interpreterPath' } as any;
             interpreterHelper.setup(i => i.getActiveWorkspaceUri(resource)).returns(() => undefined);
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+            const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
         });
 
@@ -118,7 +119,7 @@ suite('Interpreter Evaluation', () => {
                             // tslint:disable-next-line: no-any
                         } as any)
                 );
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+            const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
         });
 
@@ -138,7 +139,7 @@ suite('Interpreter Evaluation', () => {
                 .setup(i => i.value)
                 // tslint:disable-next-line: no-any
                 .returns(() => 'areInterpretersInWorkspaceSafeValue' as any);
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+            const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal('areInterpretersInWorkspaceSafeValue');
         });
 
@@ -156,7 +157,7 @@ suite('Interpreter Evaluation', () => {
                 );
             areInterpretersInWorkspaceSafe.setup(i => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup(s => s.value).returns(() => false);
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+            const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(true, 'Should be true');
         });
 
@@ -174,7 +175,7 @@ suite('Interpreter Evaluation', () => {
                 );
             areInterpretersInWorkspaceSafe.setup(i => i.value).returns(() => undefined);
             unsafeInterpreterPromptEnabled.setup(s => s.value).returns(() => true);
-            const isSafe = interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+            const isSafe = interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
             expect(isSafe).to.equal(undefined, 'Should be undefined');
         });
     });
@@ -192,7 +193,7 @@ suite('Interpreter Evaluation', () => {
                 .returns(showInformationMessage)
                 .verifiable(Typemoq.Times.exactly(3));
             browserService
-                .setup(b => b.launch('https://aka.ms/AA7jfor'))
+                .setup(b => b.launch(learnMoreOnInterpreterSecurityURI))
                 .returns(() => undefined)
                 .verifiable(Typemoq.Times.exactly(2));
 

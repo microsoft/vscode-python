@@ -103,10 +103,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
                     this.isInterpreterSetForWorkspacePromises.set(workspaceKey, isInterpreterSetForWorkspace);
                     await Promise.race([
                         isInterpreterSetForWorkspace.promise,
-                        this.interpreterSecurityService.evaluateInterpreterSafety(interpreter, resource)
+                        this.interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter, resource)
                     ]);
                 }
             } else {
+                // Resolve any concurrent calls waiting on the promise
                 if (this.isInterpreterSetForWorkspacePromises.has(workspaceKey)) {
                     this.isInterpreterSetForWorkspacePromises.get(workspaceKey)!.resolve();
                     this.isInterpreterSetForWorkspacePromises.delete(workspaceKey);

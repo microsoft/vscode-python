@@ -26,10 +26,10 @@ export class InterpreterSecurityService implements IInterpreterSecurityService {
         if (safeInterpreters.includes(interpreter.path)) {
             return true;
         }
-        return this.interpreterEvaluation.inferValueUsingStorage(interpreter, resource);
+        return this.interpreterEvaluation.inferValueUsingCurrentState(interpreter, resource);
     }
 
-    public async evaluateInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void> {
+    public async evaluateAndRecordInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void> {
         const unsafeInterpreters = this.interpreterSecurityStorage.unsafeInterpreters.value;
         const safeInterpreters = this.interpreterSecurityStorage.safeInterpreters.value;
         if (unsafeInterpreters.includes(interpreter.path) || safeInterpreters.includes(interpreter.path)) {

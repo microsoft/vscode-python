@@ -47,7 +47,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
         );
     }
 
-    public areInterpretersInWorkspaceSafe(resource: Uri): IPersistentState<boolean | undefined> {
+    public hasUserApprovedWorkspaceInterpreters(resource: Uri): IPersistentState<boolean | undefined> {
         return this.persistentStateFactory.createGlobalPersistentState<boolean | undefined>(
             this._getKeyForWorkspace(resource),
             undefined

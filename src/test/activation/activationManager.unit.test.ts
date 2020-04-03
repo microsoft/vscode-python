@@ -488,10 +488,10 @@ suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', 
             .returns(() => interpreter as any)
             .verifiable(typemoq.Times.once());
         when(interpreterPathService.get(resource)).thenReturn('python');
-        when(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).thenResolve();
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
         await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
         autoSelection.verifyAll();
-        verify(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).never();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
     });
 
     ['', 'python'].forEach(setting => {
@@ -504,10 +504,12 @@ suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', 
                 .returns(() => interpreter as any)
                 .verifiable(typemoq.Times.once());
             when(interpreterPathService.get(resource)).thenReturn('python');
-            when(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).thenResolve();
+            when(
+                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+            ).thenResolve();
             await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
             autoSelection.verifyAll();
-            verify(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).once();
+            verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).once();
         });
     });
 
@@ -520,10 +522,10 @@ suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', 
             .returns(() => interpreter as any)
             .verifiable(typemoq.Times.once());
         when(interpreterPathService.get(resource)).thenReturn('python');
-        when(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).thenResolve();
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
         await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
         autoSelection.verifyAll();
-        verify(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).never();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
     });
 
     test(`If in Deprecate PythonPath experiment, and setting is set, simply return`, async () => {
@@ -535,10 +537,10 @@ suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', 
             .returns(() => interpreter as any)
             .verifiable(typemoq.Times.never());
         when(interpreterPathService.get(resource)).thenReturn('settingSetToSomePath');
-        when(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).thenResolve();
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
         await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
         autoSelection.verifyAll();
-        verify(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).never();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
     });
 
     test(`If in Deprecate PythonPath experiment, if setting is set during evaluation, don't wait for the evaluation to finish to resolve method promise`, async () => {
@@ -548,7 +550,7 @@ suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', 
         when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
         autoSelection.setup(a => a.getAutoSelectedInterpreter(resource)).returns(() => interpreter as any);
         when(interpreterPathService.get(resource)).thenReturn('python');
-        when(interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource)).thenReturn(
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenReturn(
             evaluateIfInterpreterIsSafeDeferred.promise
         );
         const deferredPromise = createDeferredFromPromise(managerTest.evaluateAutoSelectedInterpreterSafety(resource));

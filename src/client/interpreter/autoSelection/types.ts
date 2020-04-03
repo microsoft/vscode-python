@@ -54,7 +54,7 @@ export interface IInterpreterAutoSelectionRule {
 export const IInterpreterSecurityService = Symbol('IInterpreterSecurityService');
 export interface IInterpreterSecurityService {
     readonly onDidChangeSafeInterpreters: Event<void>;
-    evaluateInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void>;
+    evaluateAndRecordInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void>;
     isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined;
 }
 
@@ -63,11 +63,11 @@ export interface IInterpreterSecurityStorage extends IExtensionSingleActivationS
     readonly unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
     readonly unsafeInterpreters: IPersistentState<string[]>;
     readonly safeInterpreters: IPersistentState<string[]>;
-    areInterpretersInWorkspaceSafe(resource: Uri): IPersistentState<boolean | undefined>;
+    hasUserApprovedWorkspaceInterpreters(resource: Uri): IPersistentState<boolean | undefined>;
 }
 
 export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');
 export interface IInterpreterEvaluation {
     evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean>;
-    inferValueUsingStorage(interpreter: PythonInterpreter, resource: Resource): boolean | undefined;
+    inferValueUsingCurrentState(interpreter: PythonInterpreter, resource: Resource): boolean | undefined;
 }

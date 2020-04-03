@@ -124,7 +124,7 @@ suite('Interpreter Security commands', () => {
                 )
             )
             .returns(() => areInterpretersInWorkspaceSafe.object);
-        const result = interpreterSecurityStorage.areInterpretersInWorkspaceSafe(resource);
+        const result = interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(resource);
         assert(areInterpretersInWorkspaceSafe.object === result);
     });
 

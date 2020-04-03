@@ -63,7 +63,7 @@ suite('Interpreter Security service', () => {
             // tslint:disable-next-line: no-any
             const interpreter = { path: 'random' } as any;
             interpreterEvaluation
-                .setup(i => i.inferValueUsingStorage(interpreter, resource))
+                .setup(i => i.inferValueUsingCurrentState(interpreter, resource))
                 // tslint:disable-next-line: no-any
                 .returns(() => 'value' as any)
                 .verifiable(Typemoq.Times.once());
@@ -80,7 +80,7 @@ suite('Interpreter Security service', () => {
                 .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.never());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
         });
 
@@ -90,7 +90,7 @@ suite('Interpreter Security service', () => {
                 .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.never());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
         });
 
@@ -100,7 +100,7 @@ suite('Interpreter Security service', () => {
                 .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
         });
 
@@ -115,7 +115,7 @@ suite('Interpreter Security service', () => {
                 .returns(() => Promise.resolve())
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
             safeInterpreters.verifyAll();
         });
@@ -131,7 +131,7 @@ suite('Interpreter Security service', () => {
                 .returns(() => Promise.resolve())
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
             unsafeInterpreters.verifyAll();
         });
@@ -151,7 +151,7 @@ suite('Interpreter Security service', () => {
                 .returns(() => undefined)
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
-            await interpreterSecurityService.evaluateInterpreterSafety(interpreter as any, resource);
+            await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
             interpreterEvaluation.verifyAll();
             unsafeInterpreters.verifyAll();
             _didSafeInterpretersChange.verifyAll();
