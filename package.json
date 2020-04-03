@@ -1971,7 +1971,7 @@
                 },
                 "python.dataScience.enableIPyWidgets": {
                     "type": "boolean",
-                    "description": "Enables IPyWidgets support. This may cause some performance issues even when not using IPyWidgets",
+                    "description": "Enables IPyWidgets support. Enabling IPyWidgets may cause performance issues even when not using any IPyWidgets",
                     "default": true,
                     "scope": "resource"
                 },
