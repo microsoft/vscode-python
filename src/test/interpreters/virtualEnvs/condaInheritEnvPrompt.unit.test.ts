@@ -13,7 +13,7 @@ import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../client/common/utils/localize';
+import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
 import {
     CondaInheritEnvPrompt,
@@ -348,11 +348,7 @@ suite('Conda Inherit Env Prompt', async () => {
     });
 
     suite('Method promptAndUpdate()', () => {
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.moreInfo()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.moreInfo()];
         setup(() => {
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -429,7 +425,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .verifiable(TypeMoq.Times.once());
             appShell
                 .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelYes()))
+                .returns(() => Promise.resolve(Common.bannerLabelYes()))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
                 .setup(ws => ws.getConfiguration('terminal'))
@@ -462,7 +458,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .verifiable(TypeMoq.Times.once());
             appShell
                 .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelNo()))
+                .returns(() => Promise.resolve(Common.bannerLabelNo()))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
                 .setup(ws => ws.getConfiguration('terminal'))

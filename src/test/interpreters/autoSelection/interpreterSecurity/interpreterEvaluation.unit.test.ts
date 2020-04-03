@@ -8,18 +8,13 @@ import * as Typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { IBrowserService, IPersistentState } from '../../../../client/common/types';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../../client/common/utils/localize';
+import { Common, Interpreters } from '../../../../client/common/utils/localize';
+import { learnMoreOnInterpreterSecurityURI } from '../../../../client/interpreter/autoSelection/constants';
 import { InterpreterEvaluation } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
 import { IInterpreterSecurityStorage } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
-import { learnMoreOnInterpreterSecurityURI } from '../../../../client/interpreter/autoSelection/constants';
 
-const prompts = [
-    InteractiveShiftEnterBanner.bannerLabelYes(),
-    InteractiveShiftEnterBanner.bannerLabelNo(),
-    Common.learnMore(),
-    Common.doNotShowAgain()
-];
+const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.learnMore(), Common.doNotShowAgain()];
 
 suite('Interpreter Evaluation', () => {
     const resource = Uri.parse('a');
@@ -206,7 +201,7 @@ suite('Interpreter Evaluation', () => {
         test('If `No` is selected, update the areInterpretersInWorkspaceSafe storage to unsafe and return false', async () => {
             applicationShell
                 .setup(a => a.showInformationMessage(Interpreters.unsafeInterpreterMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelNo()))
+                .returns(() => Promise.resolve(Common.bannerLabelNo()))
                 .verifiable(Typemoq.Times.once());
             areInterpretersInWorkspaceSafe
                 .setup(i => i.updateValue(false))
@@ -223,7 +218,7 @@ suite('Interpreter Evaluation', () => {
         test('If `Yes` is selected, update the areInterpretersInWorkspaceSafe storage to safe and return true', async () => {
             applicationShell
                 .setup(a => a.showInformationMessage(Interpreters.unsafeInterpreterMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelYes()))
+                .returns(() => Promise.resolve(Common.bannerLabelYes()))
                 .verifiable(Typemoq.Times.once());
             areInterpretersInWorkspaceSafe
                 .setup(i => i.updateValue(true))

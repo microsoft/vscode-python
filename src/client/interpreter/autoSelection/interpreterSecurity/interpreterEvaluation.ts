@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { IBrowserService, Resource } from '../../../common/types';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../common/utils/localize';
+import { Common, Interpreters } from '../../../common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterHelper, PythonInterpreter } from '../../contracts';
@@ -15,12 +15,7 @@ import { isInterpreterLocatedInWorkspace } from '../../helpers';
 import { learnMoreOnInterpreterSecurityURI } from '../constants';
 import { IInterpreterEvaluation, IInterpreterSecurityStorage } from '../types';
 
-const prompts = [
-    InteractiveShiftEnterBanner.bannerLabelYes(),
-    InteractiveShiftEnterBanner.bannerLabelNo(),
-    Common.learnMore(),
-    Common.doNotShowAgain()
-];
+const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.learnMore(), Common.doNotShowAgain()];
 
 @injectable()
 export class InterpreterEvaluation implements IInterpreterEvaluation {
@@ -67,7 +62,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
             this.browserService.launch(learnMoreOnInterpreterSecurityURI);
             selection = await this.showPromptAndGetSelection();
         }
-        if (!selection || selection === InteractiveShiftEnterBanner.bannerLabelNo()) {
+        if (!selection || selection === Common.bannerLabelNo()) {
             await areInterpretersInWorkspaceSafe.updateValue(false);
             return false;
         } else if (selection === Common.doNotShowAgain()) {

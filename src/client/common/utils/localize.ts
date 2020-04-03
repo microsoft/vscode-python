@@ -59,6 +59,8 @@ export namespace Diagnostics {
 }
 
 export namespace Common {
+    export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
+    export const bannerLabelNo = localize('Common.bannerLabelNo', 'No');
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const gotIt = localize('Common.gotIt', 'Got it!');
@@ -213,8 +215,6 @@ export namespace InteractiveShiftEnterBanner {
         'InteractiveShiftEnterBanner.bannerMessage',
         'Would you like shift-enter to send code to the new Interactive Window experience?'
     );
-    export const bannerLabelYes = localize('InteractiveShiftEnterBanner.bannerLabelYes', 'Yes');
-    export const bannerLabelNo = localize('InteractiveShiftEnterBanner.bannerLabelNo', 'No');
 }
 
 export namespace DataScienceSurveyBanner {
