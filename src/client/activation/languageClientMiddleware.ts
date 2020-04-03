@@ -23,6 +23,7 @@ import {
     ProviderResult,
     Range,
     SignatureHelp,
+    SignatureHelpContext,
     SymbolInformation,
     TextDocument,
     TextEdit,
@@ -167,11 +168,12 @@ export class LanguageClientMiddleware implements Middleware {
     public provideSignatureHelp(
         document: TextDocument,
         position: Position,
+        context: SignatureHelpContext,
         token: CancellationToken,
         next: ProvideSignatureHelpSignature
     ): ProviderResult<SignatureHelp> {
         if (this.connected) {
-            return next(document, position, token);
+            return next(document, position, context, token);
         }
     }
 
