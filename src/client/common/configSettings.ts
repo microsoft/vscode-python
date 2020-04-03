@@ -205,9 +205,7 @@ export class PythonSettings implements IPythonSettings {
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
-        if (EnvFileTelemetry.shouldSendSettingTelemetry(this.workspace, envFileSetting)) {
-            EnvFileTelemetry.sendTelemetry(true);
-        }
+        EnvFileTelemetry.sendSettingTelemetry(this.workspace, envFileSetting);
 
         // tslint:disable-next-line:no-any
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any

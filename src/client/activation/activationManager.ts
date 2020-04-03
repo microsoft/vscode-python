@@ -63,14 +63,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Get latest interpreter list in the background.
         this.interpreterService.getInterpreters(resource).ignoreErrors();
 
-        const envFileExists = await EnvFileTelemetry.defaultPathEnvFileExists(
-            this.fileSystem,
-            this.workspaceService,
-            resource
-        );
-        if (envFileExists && EnvFileTelemetry.shouldSendTelemetry()) {
-            EnvFileTelemetry.sendTelemetry();
-        }
+        await EnvFileTelemetry.sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await this.autoSelection.autoSelectInterpreter(resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));

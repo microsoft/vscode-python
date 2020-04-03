@@ -97,9 +97,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
 
     private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
         this.onEnvironmentFileChanged(workspaceFolderUri);
-        if (EnvFileTelemetry.shouldSendTelemetry()) {
-            EnvFileTelemetry.sendTelemetry();
-        }
+        EnvFileTelemetry.sendFileCreationTelemetry();
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {

@@ -4,17 +4,29 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anyString, instance, mock, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../client/common/platform/types';
+import * as Telemetry from '../../client/telemetry';
+import { EventName } from '../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
 
 suite('Env file telemetry', () => {
     const defaultEnvFileValue = 'someDefaultValue';
+    const resource = Uri.parse('foo');
+
+    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
+    let sendTelemetryStub: sinon.SinonStub;
     let workspaceService: IWorkspaceService;
+    let fileSystem: IFileSystem;
 
     setup(() => {
+        fileSystem = mock(FileSystem);
         workspaceService = mock(WorkspaceService);
+
         const mockWorkspaceConfig = {
             inspect: () => ({
                 defaultValue: defaultEnvFileValue
@@ -23,61 +35,92 @@ suite('Env file telemetry', () => {
 
         // tslint:disable-next-line: no-any
         when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
+
+        const mockSendTelemetryEvent = (
+            eventName: EventName,
+            _: number | undefined,
+            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+        ) => {
+            telemetryEvent = {
+                eventName,
+                hasCustomEnvPath
+            };
+        };
+
+        sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
     });
 
     teardown(() => {
+        telemetryEvent = undefined;
         sinon.restore();
         EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
-    test('shouldSendEnvTelemetry should return true if no telemetry event has been sent', () => {
-        const result = EnvFileTelemetry.shouldSendTelemetry();
+    test('Setting telemetry should be sent with hasCustomEnvPath at true if the python.envFile setting is different from the default value', () => {
+        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), 'bar');
 
-        assert.equal(result, true);
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
     });
 
-    test('shouldSendEnvTelemetry should return false if a telemetry event is sent', () => {
-        const firstCall = EnvFileTelemetry.shouldSendTelemetry();
+    test('Setting telemetry should not be sent if a telemetry event has already been sent', () => {
+        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
 
-        EnvFileTelemetry.sendTelemetry();
+        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), 'bar');
 
-        const secondCall = EnvFileTelemetry.shouldSendTelemetry();
-
-        assert.equal(firstCall, true);
-        assert.equal(secondCall, false);
+        sinon.assert.notCalled(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, undefined);
     });
 
-    test('shouldSendSettingTelemetry should return true if the env file setting is different from the default value, and no telemetry event has been sent', () => {
-        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(true);
-        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+    test('Setting telemetry should not be sent if the python.envFile setting is the same as the default value', () => {
+        EnvFileTelemetry.EnvFileTelemetryTests.setState({ defaultSetting: defaultEnvFileValue });
 
-        const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), 'envFile');
+        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), defaultEnvFileValue);
 
-        assert.equal(result, true);
+        sinon.assert.notCalled(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, undefined);
     });
 
-    test('shouldSendSettingTelemetry should return false if the env file setting is different from the default value, and a telemetry event has already been sent', () => {
-        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(false);
-        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+    test('File creation telemetry should be sent if no telemetry event has been sent before', () => {
+        EnvFileTelemetry.sendFileCreationTelemetry();
 
-        const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), 'envFile');
-
-        assert.equal(result, false);
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
     });
 
-    test('shouldSendSettingTelemetry should return false if the env file setting is the same as the default value', () => {
-        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+    test('File creation telemetry should not be sent if a telemetry event has already been sent', () => {
+        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
 
-        const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), defaultEnvFileValue);
+        EnvFileTelemetry.sendFileCreationTelemetry();
 
-        assert.equal(result, false);
+        sinon.assert.notCalled(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, undefined);
     });
 
-    test("defaultEnvFileSetting should retrieve its value from the settings the first time it's called, and use its cached value on subsequent calls", () => {
-        const firstResult = EnvFileTelemetry.defaultEnvFileSetting(instance(workspaceService));
-        const secondResult = EnvFileTelemetry.defaultEnvFileSetting(instance(workspaceService));
+    test('Activation telemetry should be sent if no telemetry event has been sent before, and a .env file exists', async () => {
+        when(fileSystem.fileExists(anyString())).thenResolve(true);
 
-        verify(workspaceService.getConfiguration('python')).once();
-        assert.equal(firstResult, secondResult);
+        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+
+        sinon.assert.calledOnce(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
+    });
+
+    test('Activation telemetry should not be sent if a telemetry event has already been sent', async () => {
+        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
+
+        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+
+        sinon.assert.notCalled(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, undefined);
+    });
+
+    test('Activation telemetry should not be sent if no .env file exists', async () => {
+        when(fileSystem.fileExists(anyString())).thenResolve(false);
+
+        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+
+        sinon.assert.notCalled(sendTelemetryStub);
+        assert.deepEqual(telemetryEvent, undefined);
     });
 });

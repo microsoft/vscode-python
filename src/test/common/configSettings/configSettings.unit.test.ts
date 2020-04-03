@@ -13,7 +13,6 @@ import * as TypeMoq from 'typemoq';
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
-import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
@@ -28,8 +27,6 @@ import {
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import * as Telemetry from '../../../client/telemetry';
-import { EventName } from '../../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
@@ -47,17 +44,15 @@ suite('Python Settings', async () => {
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let expected: CustomPythonSettings;
     let settings: CustomPythonSettings;
-    let envFileTelemetryStub: sinon.SinonStub<[IWorkspaceService, (string | undefined)?], boolean>;
     setup(() => {
-        envFileTelemetryStub = sinon.stub(EnvFileTelemetry, 'shouldSendSettingTelemetry');
-        envFileTelemetryStub.returns(false);
+        sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
     });
 
     teardown(() => {
-        envFileTelemetryStub.restore();
+        sinon.restore();
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {
@@ -276,72 +271,6 @@ suite('Python Settings', async () => {
             expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
-    });
-
-    suite('Config settings - Env file telemetry', async () => {
-        const defaultEnvFileSettingValue = 'defaultValue';
-        let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
-
-        setup(() => {
-            const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-            const mockSendTelemetryEvent = (
-                eventName: EventName,
-                _: number | undefined,
-                { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
-            ) => {
-                telemetryEvent = {
-                    eventName,
-                    hasCustomEnvPath
-                };
-            };
-            const mockWorkspaceConfig = {
-                inspect: () => ({
-                    defaultValue: defaultEnvFileSettingValue
-                })
-            };
-
-            // Undo the stub we've set up for the other tests.
-            envFileTelemetryStub.restore();
-            const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
-            telemetryStub.callsFake(mockSendTelemetryEvent);
-
-            workspaceService.setup((w) => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
-
-            settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
-
-            // If you don't add this line the unit tests will time out.
-            expected.pythonPath = 'python3';
-        });
-
-        teardown(() => {
-            telemetryEvent = undefined;
-            sinon.restore();
-            EnvFileTelemetry.EnvFileTelemetryTests.resetState();
-        });
-
-        test('Send telemetry if the envFile setting is different from the default value', async () => {
-            expected.envFile = 'foo';
-
-            initializeConfig(expected);
-
-            config.setup((c) => c.get<string>('envFile')).returns(() => expected.envFile);
-
-            settings.update(config.object);
-
-            assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
-        });
-
-        test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
-            expected.envFile = defaultEnvFileSettingValue;
-
-            initializeConfig(expected);
-
-            config.setup((c) => c.get<string>('envFile')).returns(() => expected.envFile);
-
-            settings.update(config.object);
-
-            assert.deepEqual(telemetryEvent, undefined);
-        });
     });
 
     test('File env variables remain in settings', () => {

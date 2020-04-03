@@ -21,8 +21,6 @@ import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import * as Telemetry from '../../../client/telemetry';
-import { EventName } from '../../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
@@ -55,7 +53,7 @@ suite('Multiroot Environment Variables Provider', () => {
             instance(currentProcess)
         );
 
-        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(false);
+        sinon.stub(EnvFileTelemetry, 'sendFileCreationTelemetry').returns();
 
         clearCache();
     });
@@ -266,77 +264,5 @@ suite('Multiroot Environment Variables Provider', () => {
             verify(platform.pathVariableName).atLeast(1);
             assert.deepEqual(vars, envFileVars);
         });
-    });
-});
-
-suite('Environment Variables Provider - Env file telemetry', () => {
-    const workspaceUri = Uri.file('workspace');
-
-    let provider: EnvironmentVariablesProvider;
-    let envVarsService: IEnvironmentVariablesService;
-    let platform: IPlatformService;
-    let workspace: IWorkspaceService;
-    let configuration: IConfigurationService;
-    let currentProcess: ICurrentProcess;
-    let settings: IPythonSettings;
-    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
-
-    setup(() => {
-        const mockSendTelemetryEvent = (
-            eventName: EventName,
-            _: number | undefined,
-            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
-        ) => {
-            telemetryEvent = {
-                eventName,
-                hasCustomEnvPath
-            };
-        };
-
-        const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
-
-        envVarsService = mock(EnvironmentVariablesService);
-        platform = mock(PlatformService);
-        workspace = mock(WorkspaceService);
-        configuration = mock(ConfigurationService);
-        currentProcess = mock(CurrentProcess);
-        settings = mock(PythonSettings);
-
-        when(configuration.getSettings(anything())).thenReturn(instance(settings));
-        when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
-
-        provider = new EnvironmentVariablesProvider(
-            instance(envVarsService),
-            [],
-            instance(platform),
-            instance(workspace),
-            instance(configuration),
-            instance(currentProcess)
-        );
-
-        telemetryStub.callsFake(mockSendTelemetryEvent);
-
-        clearCache();
-    });
-
-    teardown(() => {
-        telemetryEvent = undefined;
-        sinon.restore();
-        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
-    });
-
-    test('Env file telemetry is sent when an environment file is created', () => {
-        const envFile = path.join('a', 'b', 'env.file');
-        const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
-
-        let onCreated: undefined | ((resource?: Uri) => Function);
-
-        fileSystemWatcher.setup((fs) => fs.onDidCreate(typemoq.It.isAny())).callback((cb) => (onCreated = cb));
-        when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-
-        provider.createFileWatcher(envFile, workspaceUri);
-        onCreated!();
-
-        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
     });
 });

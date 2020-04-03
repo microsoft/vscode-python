@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
@@ -22,8 +22,6 @@ import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import * as Telemetry from '../../client/telemetry';
-import { EventName } from '../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
@@ -75,15 +73,13 @@ suite('Language Server Activation - ActivationManager', () => {
             instance(activeResourceService)
         );
 
-        const mockWorkspaceConfig = {
-            inspect: () => ({
-                defaultValue: 'defaultValue'
-            })
-        };
-
-        when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
-        when(fileSystem.fileExists(anyString())).thenResolve(false);
+        sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
     });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable = typemoq.Mock.ofType<IDisposable>();
         const disposable2 = typemoq.Mock.ofType<IDisposable>();
@@ -346,102 +342,6 @@ suite('Language Server Activation - ActivationManager', () => {
         disposable2.verifyAll();
 
         assert.deepEqual(Array.from(managerTest.activatedWorkspaces.keys()), ['one']);
-    });
-});
-
-suite('Language Server Activation - Env file telemetry', () => {
-    const resource = Uri.parse('a');
-    let workspaceService: IWorkspaceService;
-    let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
-    let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
-    let interpreterService: IInterpreterService;
-    let activeResourceService: IActiveResourceService;
-    let documentManager: typemoq.IMock<IDocumentManager>;
-    let activationService1: IExtensionActivationService;
-    let fileSystem: IFileSystem;
-    let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
-    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
-    let managerTest: ExtensionActivationManager;
-
-    setup(() => {
-        const mockSendTelemetryEvent = (
-            eventName: EventName,
-            _: number | undefined,
-            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
-        ) => {
-            telemetryEvent = {
-                eventName,
-                hasCustomEnvPath
-            };
-        };
-        const mockWorkspaceConfig = {
-            inspect: () => ({
-                defaultValue: 'defaultValue'
-            })
-        };
-
-        const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
-        const initializeStub = sinon.stub(ExtensionActivationManager.prototype, 'initialize');
-
-        workspaceService = mock(WorkspaceService);
-        activeResourceService = mock(ActiveResourceService);
-        appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
-        autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
-        interpreterService = mock(InterpreterService);
-        documentManager = typemoq.Mock.ofType<IDocumentManager>();
-        activationService1 = mock(LanguageServerExtensionActivationService);
-        fileSystem = mock(FileSystem);
-        singleActivationService = typemoq.Mock.ofType<IExtensionSingleActivationService>();
-
-        managerTest = new ExtensionActivationManager(
-            [instance(activationService1)],
-            [singleActivationService.object],
-            documentManager.object,
-            instance(interpreterService),
-            autoSelection.object,
-            appDiagnostics.object,
-            instance(workspaceService),
-            instance(fileSystem),
-            instance(activeResourceService)
-        );
-
-        telemetryStub.callsFake(mockSendTelemetryEvent);
-        initializeStub.resolves();
-
-        when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
-        when(activationService1.activate(anything())).thenResolve();
-        when(interpreterService.getInterpreters(resource)).thenResolve();
-        when(activeResourceService.getActiveResource()).thenReturn(resource);
-
-        autoSelection.setup((a) => a.autoSelectInterpreter(resource)).returns(() => Promise.resolve());
-        appDiagnostics.setup((a) => a.performPreStartupHealthCheck(resource)).returns(() => Promise.resolve());
-        singleActivationService.setup((s) => s.activate()).returns(() => Promise.resolve());
-    });
-
-    teardown(() => {
-        telemetryEvent = undefined;
-        sinon.restore();
-        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
-    });
-
-    test('Should send env file telemetry on activation if an env file exists at the default workspace location', async () => {
-        when(fileSystem.fileExists(anyString())).thenResolve(true);
-
-        await managerTest.activateWorkspace(resource);
-
-        verify(fileSystem.fileExists(anyString())).once();
-
-        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
-    });
-
-    test('Should not send env file telemetry on activation if no env file exists at the default workspace location', async () => {
-        when(fileSystem.fileExists(anyString())).thenResolve(false);
-
-        await managerTest.activateWorkspace(resource);
-
-        verify(fileSystem.fileExists(anyString())).once();
-
-        assert.deepEqual(telemetryEvent, undefined);
     });
 });
 
