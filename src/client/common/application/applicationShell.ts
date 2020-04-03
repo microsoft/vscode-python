@@ -135,12 +135,11 @@ export class ApplicationShell implements IApplicationShell {
                 statusBarProgress.text = `${icon} ${value.message}`;
             }
         };
-        try {
-            statusBarProgress.show();
-            return task(progress, token);
-        } finally {
+        statusBarProgress.show();
+        return task(progress, token).then((result) => {
             statusBarProgress.dispose();
-        }
+            return result;
+        });
     }
     public createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
         return window.createQuickPick<T>();
