@@ -239,6 +239,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
     public dispose(): void {
+        this.postOffice.removeHandler(this);
         return this.realKernel.dispose();
     }
     public handleMessage(type: string, payload?: any): boolean {

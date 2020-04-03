@@ -70,6 +70,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
     private ipyWidgetRef: React.RefObject<HTMLDivElement>;
     private renderedViews = new Map<string, Promise<Widget | undefined>>();
+    private widgetManager: WidgetManager | undefined;
     // tslint:disable-next-line: no-any
     constructor(prop: ICellOutputProps) {
         super(prop);
@@ -539,8 +540,26 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
+    private async getWidgetManager() {
+        if (!this.widgetManager) {
+            const wm: WidgetManager | undefined = await new Promise((resolve) =>
+                WidgetManager.instance.subscribe(resolve)
+            );
+            this.widgetManager = wm;
+            if (wm) {
+                const oldDispose = wm.dispose.bind(wm);
+                wm.dispose = () => {
+                    this.renderedViews.clear();
+                    this.widgetManager = undefined;
+                    return oldDispose();
+                };
+            }
+        }
+        return this.widgetManager;
+    }
+
     private async createWidgetView(widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number }) {
-        const wm: WidgetManager | undefined = await new Promise((resolve) => WidgetManager.instance.subscribe(resolve));
+        const wm = await this.getWidgetManager();
         const element = this.ipyWidgetRef.current!;
         return wm?.renderWidget(widgetData, element);
     }

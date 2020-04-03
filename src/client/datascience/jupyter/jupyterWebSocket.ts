@@ -14,7 +14,9 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
     class JupyterWebSocket extends WebSocketWS {
         private kernelId: string | undefined;
         private preListeners: ((data: WebSocketWS.Data) => Promise<void>)[];
+        private sendPatches: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
         private msgChain: Promise<any>;
+        private sendChain: Promise<any>;
 
         constructor(url: string, protocols?: string | string[] | undefined) {
             let co: WebSocketWS.ClientOptions = {};
@@ -36,6 +38,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
 
             // Make sure the message chain is initialized
             this.msgChain = Promise.resolve();
+            this.sendChain = Promise.resolve();
 
             // Parse the url for the kernel id
             const parsed = /.*\/kernels\/(.*)\/.*/.exec(this.url);
@@ -51,10 +54,21 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
                 traceError('KernelId not extracted from Kernel WebSocket URL');
             }
             this.preListeners = [];
+            this.sendPatches = [];
+        }
+
+        public send(data: any, a2: any): void {
+            if (this.sendPatches) {
+                this.sendChain = this.sendChain
+                    .then(() => Promise.all(this.sendPatches.map((s) => s(data, a2))))
+                    .then(() => super.send(data, a2));
+            } else {
+                super.send(data, a2);
+            }
         }
 
         public emit(event: string | symbol, ...args: any[]): boolean {
-            if (event === 'message') {
+            if (event === 'message' && this.preListeners.length) {
                 // Stick the prelisteners into the message chain. We use chain
                 // to ensure that:
                 // a) Prelisteners finish before we fire the event for real
@@ -75,6 +89,16 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
         }
         public removeMessageListener(listener: (data: WebSocketWS.Data) => Promise<void>) {
             this.preListeners = this.preListeners.filter((l) => l !== listener);
+        }
+
+        // tslint:disable-next-line: no-any
+        public addSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
+            this.sendPatches.push(patch);
+        }
+
+        // tslint:disable-next-line: no-any
+        public removeSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
+            this.sendPatches = this.sendPatches.filter((p) => p !== patch);
         }
     }
     return JupyterWebSocket;

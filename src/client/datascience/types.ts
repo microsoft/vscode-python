@@ -939,6 +939,10 @@ export interface IKernelSocket {
     send(data: any, cb?: (err?: Error) => void): void;
     addMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
     removeMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
+    // tslint:disable-next-line: no-any
+    addSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+    // tslint:disable-next-line: no-any
+    removeSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
 export type KernelSocketOptions = {

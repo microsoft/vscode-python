@@ -13,11 +13,7 @@ import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -47,6 +43,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
     private waitingMessageIds = new Map<string, Deferred<void>>();
+    private socketMessageListener = this.onKernelSocketMessage.bind(this);
+    private sendPatch = this.mirrorSend.bind(this);
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -70,9 +68,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    public receiveMessage(
-        message: IPyWidgetMessage | { message: InteractiveWindowMessages.FinishedRestartKernel }
-    ): void {
+    public receiveMessage(message: IPyWidgetMessage): void {
         if (process.env.VSC_PYTHON_LOG_IPYWIDGETS && message.message.includes('IPyWidgets_')) {
             traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         }
@@ -90,16 +86,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             case IPyWidgetMessages.IPyWidgets_msg_handled:
                 this.onKernelSocketResponse(message.payload);
-                break;
-
-            case InteractiveWindowMessages.FinishedRestartKernel:
-                // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
-                this.sentKernelOptions = false;
-                this.kernelSocketInfo = undefined;
-                while (this.pendingMessages.length) {
-                    this.pendingMessages.shift();
-                }
                 break;
 
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
@@ -159,7 +145,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeMessageListener(this.onKernelSocketMessage.bind(this)); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeMessageListener(this.socketMessageListener); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeSendPatch(this.sendPatch);
 
             if (this.kernelWasConnectedAtleastOnce) {
                 // this means we restarted the kernel and we now have new information.
@@ -167,8 +154,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 while (this.pendingMessages.length) {
                     this.pendingMessages.shift();
                 }
-                // When restarting a kernel do not send anything to kernel, as it doesn't exist anymore.
-                this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
+                this.sentKernelOptions = false;
+                this.waitingMessageIds.forEach((d) => d.resolve());
+                this.waitingMessageIds.clear();
+                this.messageHookRequests.forEach((m) => m.resolve(false));
+                this.messageHookRequests.clear();
+                this.messageHooks.clear();
+                this.sendRestartKernel();
             }
             if (!info || !info.socket) {
                 // No kernel socket information, hence nothing much we can do.
@@ -178,20 +170,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtleastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addMessageListener(this.onKernelSocketMessage.bind(this)); // NOSONAR
+            this.kernelSocketInfo.socket?.addMessageListener(this.socketMessageListener); // NOSONAR
+            this.kernelSocketInfo.socket?.addSendPatch(this.sendPatch); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
             this.sendPendingMessages();
-
-            // Once the kernel is ready, remap the send function so we can mirror certain messages to the other side
-            if (this.kernelSocketInfo.socket) {
-                const originalSend = this.kernelSocketInfo.socket.send;
-                this.kernelSocketInfo.socket.send = this.mirrorSend.bind(
-                    this,
-                    originalSend.bind(this.kernelSocketInfo.socket)
-                );
-            }
         });
     }
     /**
@@ -207,11 +191,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
         }
     }
-    private async mirrorSend(
-        originalSend: (data: any, cb?: (err?: Error) => void) => void,
-        data: any,
-        cb?: (err?: Error) => void
-    ) {
+    private async mirrorSend(data: any, _cb?: (err?: Error) => void) {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string') {
@@ -229,7 +209,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 }
             }
         }
-        originalSend(data, cb);
+    }
+
+    private sendRestartKernel() {
+        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_onRestartKernel, undefined);
     }
 
     private mirrorExecuteRequest(msg: KernelMessage.IExecuteRequestMsg) {

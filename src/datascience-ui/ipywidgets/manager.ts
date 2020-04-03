@@ -18,13 +18,13 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
-import { PostOffice } from '../react-common/postOffice';
+import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { create as createKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor } from './types';
 
 // tslint:disable: no-any
 
-export class WidgetManager implements IIPyWidgetManager {
+export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     public static get instance(): Observable<WidgetManager | undefined> {
         return WidgetManager._instance;
     }
@@ -48,31 +48,33 @@ export class WidgetManager implements IIPyWidgetManager {
         private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
     ) {
         // tslint:disable-next-line: no-any
-        this.postOffice.addHandler({
-            handleMessage: (message: string, payload?: any) => {
-                if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
-                    this.initializeKernelAndWidgetManager(payload);
-                } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
-                    // Kernel was restarted.
-                    this.manager?.dispose();
-                    this.manager = undefined;
-                    this.proxyKernel?.dispose();
-                    this.proxyKernel = undefined;
-                    WidgetManager._instance.next(undefined);
-                }
-                return true;
-            }
-        });
+        this.postOffice.addHandler(this);
 
         // Handshake.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
     }
     public dispose(): void {
         this.proxyKernel?.dispose(); // NOSONAR
+        this.postOffice.removeHandler(this);
+        this.clear().ignoreErrors();
     }
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
     }
+    public handleMessage(message: string, payload?: any) {
+        if (message === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+            this.initializeKernelAndWidgetManager(payload);
+        } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
+            // Kernel was restarted.
+            this.manager?.dispose();
+            this.manager = undefined;
+            this.proxyKernel?.dispose();
+            this.proxyKernel = undefined;
+            WidgetManager._instance.next(undefined);
+        }
+        return true;
+    }
+
     /**
      * Renders a widget and returns a disposable (to remove the widget).
      *
