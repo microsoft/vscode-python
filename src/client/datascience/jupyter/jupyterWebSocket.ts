@@ -6,7 +6,7 @@ import { traceError } from '../../common/logger';
 import { IKernelSocket } from '../types';
 
 // tslint:disable: no-any
-export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>();
+export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to

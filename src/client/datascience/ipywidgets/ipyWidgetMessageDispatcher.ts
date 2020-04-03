@@ -146,7 +146,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
             this.kernelSocketInfo?.socket?.removeMessageListener(this.socketMessageListener); // NOSONAR
-            this.kernelSocketInfo?.socket?.removeSendPatch(this.sendPatch);
+            this.kernelSocketInfo?.socket?.removeSendPatch(this.sendPatch); // NOSONAR
 
             if (this.kernelWasConnectedAtleastOnce) {
                 // this means we restarted the kernel and we now have new information.
@@ -198,15 +198,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // tslint:disable-next-line: no-require-imports
             const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
             const msg = jupyterLabSerialize.deserialize(data);
-            if (msg.channel === 'shell') {
-                switch (msg.header.msg_type) {
-                    case 'execute_request':
-                        await this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg);
-                        break;
-
-                    default:
-                        break;
-                }
+            if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
+                await this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
             }
         }
     }

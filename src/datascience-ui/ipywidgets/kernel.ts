@@ -136,8 +136,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         msg: KernelMessage.IShellMessage<T>,
-        expectReply?: boolean | undefined,
-        disposeOnDone?: boolean | undefined
+        expectReply?: boolean,
+        disposeOnDone?: boolean
     ): Kernel.IShellFuture<
         KernelMessage.IShellMessage<T>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
@@ -146,8 +146,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
     public sendControlMessage<T extends KernelMessage.ControlMessageType>(
         msg: KernelMessage.IControlMessage<T>,
-        expectReply?: boolean | undefined,
-        disposeOnDone?: boolean | undefined
+        expectReply?: boolean,
+        disposeOnDone?: boolean
     ): Kernel.IControlFuture<
         KernelMessage.IControlMessage<T>,
         KernelMessage.IControlMessage<KernelMessage.ControlMessageType>
@@ -187,21 +187,21 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public requestExecute(
         content: {
             code: string;
-            silent?: boolean | undefined;
-            store_history?: boolean | undefined;
-            user_expressions?: import('@phosphor/coreutils').JSONObject | undefined;
-            allow_stdin?: boolean | undefined;
-            stop_on_error?: boolean | undefined;
+            silent?: boolean;
+            store_history?: boolean;
+            user_expressions?: import('@phosphor/coreutils').JSONObject;
+            allow_stdin?: boolean;
+            stop_on_error?: boolean;
         },
-        disposeOnDone?: boolean | undefined,
-        metadata?: import('@phosphor/coreutils').JSONObject | undefined
+        disposeOnDone?: boolean,
+        metadata?: import('@phosphor/coreutils').JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
         // tslint:disable-next-line: no-banned-terms
         content: { seq: number; type: 'request'; command: string; arguments?: any },
-        disposeOnDone?: boolean | undefined
+        disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
         return this.realKernel.requestDebug(content, disposeOnDone);
     }
@@ -209,15 +209,15 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         return this.realKernel.requestIsComplete(content);
     }
     public requestCommInfo(content: {
-        target_name?: string | undefined;
-        target?: string | undefined;
+        target_name?: string;
+        target?: string;
     }): Promise<KernelMessage.ICommInfoReplyMsg> {
         return this.realKernel.requestCommInfo(content);
     }
     public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
         return this.realKernel.sendInputReply(content);
     }
-    public connectToComm(targetName: string, commId?: string | undefined): Kernel.IComm {
+    public connectToComm(targetName: string, commId?: string): Kernel.IComm {
         return this.realKernel.connectToComm(targetName, commId);
     }
     public registerCommTarget(

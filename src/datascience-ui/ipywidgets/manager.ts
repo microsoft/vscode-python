@@ -66,9 +66,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.initializeKernelAndWidgetManager(payload);
         } else if (message === IPyWidgetMessages.IPyWidgets_onRestartKernel) {
             // Kernel was restarted.
-            this.manager?.dispose();
+            this.manager?.dispose(); // NOSONAR
             this.manager = undefined;
-            this.proxyKernel?.dispose();
+            this.proxyKernel?.dispose(); // NOSONAR
             this.proxyKernel = undefined;
             WidgetManager._instance.next(undefined);
         }
