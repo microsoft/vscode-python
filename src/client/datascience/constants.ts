@@ -287,7 +287,8 @@ export enum Telemetry {
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
-    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
+    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING',
+    IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE'
 }
 
 export enum NativeKeyboardCommandTelemetry {

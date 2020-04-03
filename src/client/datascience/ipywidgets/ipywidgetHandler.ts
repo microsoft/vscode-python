@@ -5,8 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { ILoadIPyWidgetClassFailureAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -30,6 +33,9 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+    // tslint:disable-next-line: no-require-imports
+    private hashFn = require('hash.js').sha256;
+
     constructor(
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -52,11 +58,24 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
+        } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
+            this.sendLoadFailureTelemetry(payload);
         }
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
     }
 
+    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
+                isOnline: payload.isOnline,
+                moduleHash: this.hashFn(payload.moduleName),
+                moduleVersion: payload.moduleVersion
+            });
+        } catch {
+            // do nothing on failure
+        }
+    }
     private getIPyWidgetMessageDispatcher() {
         if (!this.notebookIdentity) {
             return;

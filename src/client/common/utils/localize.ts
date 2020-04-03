@@ -824,6 +824,11 @@ export namespace DataScience {
         'DataScience.jupyterSelectURIRemoteDetail',
         'Specify the URI of an existing server'
     );
+
+    export const loadClassFailedWithNoInternet = localize(
+        'DataScience.loadClassFailedWithNoInternet',
+        'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
+    );
 }
 
 export namespace DebugConfigStrings {

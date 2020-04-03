@@ -4,8 +4,9 @@
 'use strict';
 
 import '@jupyter-widgets/controls/css/labvariables.css';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
@@ -42,7 +43,11 @@ export class WidgetManager implements IIPyWidgetManager {
      * @memberof WidgetManager
      */
     private modelIdsToBeDisplayed = new Map<string, Deferred<void>>();
-    constructor(private readonly widgetContainer: HTMLElement, private readonly postOffice: PostOffice) {
+    constructor(
+        private readonly widgetContainer: HTMLElement,
+        private readonly postOffice: PostOffice,
+        private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+    ) {
         // tslint:disable-next-line: no-any
         this.postOffice.addHandler({
             handleMessage: (message: string, payload?: any) => {
@@ -140,7 +145,7 @@ export class WidgetManager implements IIPyWidgetManager {
                 throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
             }
             // Create the real manager and point it at our proxy kernel.
-            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer);
+            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.loadErrorHandler);
 
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
@@ -155,7 +160,10 @@ export class WidgetManager implements IIPyWidgetManager {
      * Ensure we create the model for the display data.
      */
     private handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage) {
-        if (!KernelMessage.isDisplayDataMsg(payload)) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+
+        if (!jupyterLab.KernelMessage.isDisplayDataMsg(payload)) {
             return;
         }
         const displayMsg = payload as KernelMessage.IDisplayDataMsg;
