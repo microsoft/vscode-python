@@ -35,6 +35,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private notebook?: INotebook;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
+    private pendingHookRemovals = new Map<string, string>();
     private messageHookRequests = new Map<string, Deferred<boolean>>();
 
     private readonly disposables: IDisposable[] = [];
@@ -107,7 +108,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 break;
 
             case IPyWidgetMessages.IPyWidgets_RemoveMessageHook:
-                this.removeMessageHook(message.payload);
+                this.possiblyRemoveMessageHook(message.payload);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_MessageHookResult:
@@ -326,6 +327,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
+    private possiblyRemoveMessageHook(args: { hookMsgId: string; activeMsgId: string | undefined }) {
+        // Message hooks might need to be removed after a certain message is processed.
+        if (args.activeMsgId) {
+            this.pendingHookRemovals.set(args.activeMsgId, args.hookMsgId);
+        } else {
+            this.removeMessageHook(args.hookMsgId);
+        }
+    }
+
     private removeMessageHook(msgId: string) {
         if (this.notebook && this.messageHooks.has(msgId)) {
             const callback = this.messageHooks.get(msgId);
@@ -345,6 +355,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         } else {
             promise.resolve(true);
         }
+
+        // Might have a pending removal. We may have delayed removing a message hook until a message was actually
+        // processed.
+        if (this.pendingHookRemovals.has(msg.header.msg_id)) {
+            const hookId = this.pendingHookRemovals.get(msg.header.msg_id);
+            this.pendingHookRemovals.delete(msg.header.msg_id);
+            this.removeMessageHook(hookId!);
+        }
+
         return promise.promise;
     }
 

@@ -76,6 +76,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private websocket: WebSocketWS & { sendEnabled: boolean };
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
+    private activeMessageId: string | undefined;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -252,9 +253,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 if (this.websocket && this.websocket.onmessage) {
                     this.websocket.onmessage({ target: this.websocket, data: payload.data, type: '' });
                 }
-                this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
-                    id: payload.id
-                });
+                this.sendResponse(payload.id);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_binary_msg:
@@ -262,16 +261,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                     const deserialized = deserializeDataViews(payload.data)![0];
                     this.websocket.onmessage({ target: this.websocket, data: deserialized as any, type: '' });
                 }
-                this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
-                    id: payload.id
-                });
+                this.sendResponse(payload.id);
                 break;
 
             case IPyWidgetMessages.IPyWidgets_mirror_execute:
                 this.handleMirrorExecute(payload);
-                this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
-                    id: payload.id
-                });
                 break;
 
             default:
@@ -290,19 +284,30 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
+        window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
     public removeMessageHook(
         msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, msgId);
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
+            hookMsgId: msgId,
+            activeMsgId: this.activeMessageId
+        });
 
         // Remove our mapping
         this.messageHooks.delete(msgId);
 
         // Remove from the real kernel
+        window.console.log(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
+    }
+
+    private sendResponse(id: string) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
+            id
+        });
     }
 
     private fakeOpenSocket() {
@@ -314,7 +319,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             this.realKernel.requestKernelInfo = originalRequestKernelInfo;
             return Promise.resolve() as any;
         };
-        if (this.websocket?.onopen) {
+        if (this.websocket) {
             this.websocket.onopen({ target: this.websocket });
         }
         this.realKernel.requestKernelInfo = originalRequestKernelInfo;
@@ -324,12 +329,24 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             window.console.log(
                 `Message hook callback for ${(msg as any).msg_type} and ${(msg.parent_header as any).msg_id}`
             );
+            // Save the active message that is currently being hooked. The Extension
+            // side needs this information during removeMessageHook so it can delay removal until after a message is called
+            this.activeMessageId = msg.header.msg_id;
 
             const hook = this.messageHooks.get((msg.parent_header as any).msg_id);
             if (hook) {
                 // When the kernel calls the hook, save the result for this message. The other side will ask for it
                 const result = hook(msg);
                 this.hookResults.set(msg.header.msg_id, result);
+                if ((result as any).then) {
+                    return (result as any).then((r: boolean) => {
+                        this.activeMessageId = undefined;
+                        return r;
+                    });
+                }
+
+                // When not a promise reset right after
+                this.activeMessageId = undefined;
                 return result;
             }
         } catch (ex) {
@@ -386,6 +403,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         } finally {
             this.websocket.sendEnabled = true;
         }
+        this.sendResponse(payload.id);
     }
 }
 
