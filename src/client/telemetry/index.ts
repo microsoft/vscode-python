@@ -648,7 +648,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_WORKSPACE]: {
         /**
-         * If there's a custom path speficied in the python.envFile workspace settings.
+         * If there's a custom path specified in the python.envFile workspace settings.
          */
         hasCustomEnvPath: boolean;
     };
