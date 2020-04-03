@@ -7,13 +7,10 @@ import '@jupyter-widgets/controls/css/labvariables.css';
 
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import { Widget } from '@phosphor/widgets';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
 import {
     IInteractiveWindowMapping,
     IPyWidgetMessages
@@ -26,10 +23,10 @@ import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCt
 // tslint:disable: no-any
 
 export class WidgetManager implements IIPyWidgetManager {
-    public static get instance(): Observable<WidgetManager | undefined> {
-        return WidgetManager._instance;
+    public static get instance(): Promise<WidgetManager | undefined> {
+        return WidgetManager._instance.promise;
     }
-    private static _instance = new ReplaySubject<WidgetManager | undefined>();
+    private static _instance = createDeferred<WidgetManager | undefined>();
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
     private options?: KernelSocketOptions;
@@ -85,7 +82,7 @@ export class WidgetManager implements IIPyWidgetManager {
     public async renderWidget(
         data: nbformat.IMimeBundle & { model_id: string; version_major: number },
         ele: HTMLElement
-    ): Promise<IDisposable> {
+    ): Promise<Widget | undefined> {
         if (!data) {
             throw new Error(
                 "application/vnd.jupyter.widget-view+json not in msg.content.data, as msg.content.data is 'undefined'."
@@ -97,7 +94,7 @@ export class WidgetManager implements IIPyWidgetManager {
 
         if (!data || data.version_major !== 2) {
             console.warn('Widget data not avaialble to render an ipywidget');
-            return { dispose: noop };
+            return undefined;
         }
 
         const modelId = data.model_id as string;
@@ -116,7 +113,7 @@ export class WidgetManager implements IIPyWidgetManager {
         const modelPromise = this.manager.get_model(data.model_id);
         if (!modelPromise) {
             console.warn('Widget model not avaialble to render an ipywidget');
-            return { dispose: noop };
+            return undefined;
         }
 
         // ipywdigets may not have completed creating the model.
@@ -150,7 +147,8 @@ export class WidgetManager implements IIPyWidgetManager {
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
-            WidgetManager._instance.next(this);
+            // Resolve the promise for getting this manager
+            WidgetManager._instance.resolve(this);
         } catch (ex) {
             // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);
