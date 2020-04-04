@@ -9,6 +9,15 @@ const constants = require('../../constants');
 const xmlFile = path.join(constants.ExtensionRootDir, 'xunit-test-results.xml');
 let performanceData = [];
 
+function getTime(testcase) {
+    if (testcase.failure) {
+        return -10;
+    } else if (testcase.skipped === '') {
+        return -1;
+    }
+    return parseFloat(testcase.time);
+}
+
 fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
     if (xmlReadError) {
         throw xmlReadError;
@@ -24,7 +33,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         jsonObj.testsuite.testcase.forEach((testcase) => {
             const test = {
                 name: testcase.classname + ' ' + testcase.name,
-                time: testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)
+                time: getTime(testcase)
             };
 
             performanceData.push(test);

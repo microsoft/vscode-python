@@ -13,7 +13,7 @@ const performanceResultsFile = path.join(
     'performance',
     'performance-results.json'
 );
-const errorMargin = 0.01;
+const errorMargin = 1.1;
 let failedTests = '';
 
 fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
@@ -25,15 +25,22 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
     const performanceJson = JSON.parse(performanceData);
 
     performanceJson.forEach((result) => {
-        const cleanTimes = result.times.filter((x) => x !== -1);
+        const cleanTimes = result.times.filter((x) => x !== -1 && x !== -10);
         const avg =
             cleanTimes.length === 0
-                ? 999
+                ? 0
                 : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
         const testcase = benchmarkJson.find((x) => x.name === result.name);
 
-        // compare the average result to the base JSON
-        if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) + errorMargin) {
+        if (cleanTimes.length === 0) {
+            if (result.times.every((t) => t === -1)) {
+                // Test was skipped every time
+                failedTests += 'Skipped every time: ' + testcase.name + '\n';
+            } else if (result.times.every((t) => t === -10)) {
+                // Test failed every time
+                failedTests += 'Failed every time: ' + testcase.name + '\n';
+            }
+        } else if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) * errorMargin) {
             failedTests +=
                 'Performance is slow in: ' +
                 testcase.name +
@@ -41,6 +48,10 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 testcase.time +
                 '\n\tAverage test time: ' +
                 avg +
+                '\n\tTimes it was skipped: ' +
+                skippedTimes +
+                '\n\tTimes it failed: ' +
+                failedTimes +
                 '\n';
         }
     });
