@@ -32,30 +32,32 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
         const testcase = benchmarkJson.find((x) => x.name === result.name);
 
-        if (cleanTimes.length === 0) {
-            if (result.times.every((t) => t === -1)) {
-                // Test was skipped every time
-                failedTests += 'Skipped every time: ' + testcase.name + '\n';
-            } else if (result.times.every((t) => t === -10)) {
-                // Test failed every time
-                failedTests += 'Failed every time: ' + testcase.name + '\n';
-            }
-        } else if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) * errorMargin) {
-            const skippedTimes = result.times.filter((t) => t === -1);
-            const failedTimes = result.times.filter((t) => t === -10);
+        if (testcase && testcase.time !== -1) {
+            if (cleanTimes.length === 0) {
+                if (result.times.every((t) => t === -1)) {
+                    // Test was skipped every time
+                    failedTests += 'Skipped every time: ' + testcase.name + '\n';
+                } else if (result.times.every((t) => t === -10)) {
+                    // Test failed every time
+                    failedTests += 'Failed every time: ' + testcase.name + '\n';
+                }
+            } else if (avg > parseFloat(testcase.time) * errorMargin) {
+                const skippedTimes = result.times.filter((t) => t === -1);
+                const failedTimes = result.times.filter((t) => t === -10);
 
-            failedTests +=
-                'Performance is slow in: ' +
-                testcase.name +
-                '.\n\tBenchmark time: ' +
-                testcase.time +
-                '\n\tAverage test time: ' +
-                avg +
-                '\n\tTimes it was skipped: ' +
-                skippedTimes.length +
-                '\n\tTimes it failed: ' +
-                failedTimes.length +
-                '\n';
+                failedTests +=
+                    'Performance is slow in: ' +
+                    testcase.name +
+                    '.\n\tBenchmark time: ' +
+                    testcase.time +
+                    '\n\tAverage test time: ' +
+                    avg +
+                    '\n\tTimes it was skipped: ' +
+                    skippedTimes.length +
+                    '\n\tTimes it failed: ' +
+                    failedTimes.length +
+                    '\n';
+            }
         }
     });
 
