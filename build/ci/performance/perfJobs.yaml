@@ -7,10 +7,12 @@ jobs:
           PythonVersion: '3.7'
     pool: DSPerf
     steps:
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
       - task: Gulp@0
-        displayName: 'gulp prePublishBundle'
+        displayName: 'Compile and check for errors'
         inputs:
-          targets: 'prePublishBundle'
+          targets: 'prePublishNonBundle'
       - powershell: |
           mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
           node ./build/ci/performance/savePerformanceResults.js
