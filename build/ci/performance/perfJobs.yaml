@@ -7,8 +7,13 @@ jobs:
           PythonVersion: '3.7'
     pool: DSPerf
     steps:
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+      - task: Npm@1
+        displayName: 'npm ci'
+        inputs:
+          workingDir: ${{ parameters.workingDirectory }}
+          command: custom
+          verbose: true
+          customCommand: ci
       - task: Gulp@0
         displayName: 'Compile and check for errors'
         inputs:
