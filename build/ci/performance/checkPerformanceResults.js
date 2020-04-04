@@ -41,6 +41,9 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 failedTests += 'Failed every time: ' + testcase.name + '\n';
             }
         } else if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) * errorMargin) {
+            const skippedTimes = result.times.filter((t) => t === -1);
+            const failedTimes = result.times.filter((t) => t === -10);
+
             failedTests +=
                 'Performance is slow in: ' +
                 testcase.name +
@@ -49,9 +52,9 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 '\n\tAverage test time: ' +
                 avg +
                 '\n\tTimes it was skipped: ' +
-                skippedTimes +
+                skippedTimes.length +
                 '\n\tTimes it failed: ' +
-                failedTimes +
+                failedTimes.length +
                 '\n';
         }
     });

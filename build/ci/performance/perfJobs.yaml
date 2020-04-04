@@ -7,10 +7,10 @@ jobs:
           PythonVersion: '3.7'
     pool: DSPerf
     steps:
-    #   - task: Gulp@0
-    #     displayName: 'gulp prePublishNonBundle'
-    #     inputs:
-    #       targets: 'prePublishNonBundle'
+      - task: Gulp@0
+        displayName: 'gulp prePublishBundle'
+        inputs:
+          targets: 'prePublishBundle'
       - powershell: |
           mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
           node ./build/ci/performance/savePerformanceResults.js
