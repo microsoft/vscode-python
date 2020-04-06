@@ -200,7 +200,7 @@ interface IPythonProcessService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
-class PythonExecutionService {
+class PythonExecutionService implements IPythonExecutionService {
     constructor(
         // These are composed by the caller.
         private readonly env: IPythonEnvironment,
