@@ -78,11 +78,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
         } else {
             const displayName = this.props.kernel.displayName ?? getLocString('DataScience.noKernel', 'No Kernel');
             return (
-                <div
-                    className="kernel-status-section kernel-status-section-hoverable kernel-status-status"
-                    style={displayNameTextWidth}
-                    role="button"
-                >
+                <div className="kernel-status-section kernel-status-status" style={displayNameTextWidth} role="button">
                     {displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             );
