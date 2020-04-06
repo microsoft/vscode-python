@@ -236,12 +236,7 @@ suite('CondaEnvironment', () => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
-    test('getExecutionInfo with a named environment should return execution info using the environment name', function () {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO(gh-10909) This test can probably be un-skipped.
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-
+    test('getExecutionInfo with a named environment should return execution info using the environment name', () => {
         const condaInfo = { name: 'foo', path: 'bar' };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
@@ -254,12 +249,7 @@ suite('CondaEnvironment', () => {
         });
     });
 
-    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function () {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO(gh-10909) This test can probably be un-skipped.
-        // tslint:disable-next-line:no-invalid-this
-        return this.skip();
-
+    test('getExecutionInfo with a non-named environment should return execution info using the environment path', () => {
         const condaInfo = { name: '', path: 'bar' };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
@@ -270,6 +260,26 @@ suite('CondaEnvironment', () => {
             args: ['run', '-p', condaInfo.path, 'python', ...args],
             python: [condaFile, 'run', '-p', condaInfo.path, 'python']
         });
+    });
+
+    test('getExecutionObservableInfo with a named environment should return execution info using pythonPath only', () => {
+        const expected = { command: pythonPath, args, python: [pythonPath] };
+        const condaInfo = { name: 'foo', path: 'bar' };
+        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+
+        const result = env.getExecutionObservableInfo(args);
+
+        expect(result).to.deep.equal(expected);
+    });
+
+    test('getExecutionObservableInfo with a non-named environment should return execution info using pythonPath only', () => {
+        const expected = { command: pythonPath, args, python: [pythonPath] };
+        const condaInfo = { name: '', path: 'bar' };
+        const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
+
+        const result = env.getExecutionObservableInfo(args);
+
+        expect(result).to.deep.equal(expected);
     });
 });
 

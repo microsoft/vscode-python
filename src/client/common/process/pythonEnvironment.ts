@@ -16,14 +16,21 @@ import {
     PythonVersionInfo
 } from './types';
 
+function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecutionInfo {
+    const args = python.slice(1);
+    args.push(...pythonArgs);
+    return { command: python[0], args, python };
+}
+
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(
         protected readonly pythonPath: string,
-        // This is the externally defined functionality used by the class.
+        // "deps" is the externally defined functionality used by the class.
         protected readonly deps: {
             getPythonArgv(python: string): string[];
+            getObservablePythonArgv(python: string): string[];
             // from FileSystem:
             fileExists(filename: string): Promise<boolean>;
             // from ProcessService:
@@ -34,12 +41,11 @@ class PythonEnvironment {
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        const args = python.slice(1);
-        args.push(...pythonArgs);
-        return { command: python[0], args, python };
+        return getExecutionInfo(python, pythonArgs);
     }
-    public getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo {
-        return this.getExecutionInfo(pythonArgs);
+    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+        const python = this.deps.getObservablePythonArgv(this.pythonPath);
+        return getExecutionInfo(python, pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
@@ -120,15 +126,6 @@ class PythonEnvironment {
     }
 }
 
-class CondaEnvironment extends PythonEnvironment {
-    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
-        // Cannot use this.env.getExecutionInfo() until 'conda run' can
-        // be run without buffering output.
-        // See https://github.com/microsoft/vscode-python/issues/8473
-        return { command: this.pythonPath, args: pythonArgs, python: [this.pythonPath] };
-    }
-}
-
 class WindowsStoreEnvironment extends PythonEnvironment {
     /**
      * With windows store python apps, we have generally use the
@@ -147,10 +144,12 @@ function createDeps(
     // These are very lightly wrapped.
     procs: IProcessService,
     fs: IFileSystem,
-    pythonArgv?: string[]
+    pythonArgv?: string[],
+    observablePythonArgv?: string[]
 ) {
     return {
         getPythonArgv: (python: string) => pythonArgv || [python],
+        getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
         fileExists: (filename: string) => fs.fileExists(filename),
         exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
@@ -174,15 +173,19 @@ export function createCondaEnv(
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
-): CondaEnvironment {
+): PythonEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {
         runArgs.push('-p', condaInfo.path);
     } else {
         runArgs.push('-n', condaInfo.name);
     }
-    const deps = createDeps(procs, fs, [condaFile, ...runArgs, 'python']);
-    return new CondaEnvironment(pythonPath, deps);
+    const pythonArgv = [condaFile, ...runArgs, 'python'];
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO(gh-8473): We cannot use pythonArgv for observablePythonArgv
+    // until 'conda run' can be run without buffering output.
+    const deps = createDeps(procs, fs, pythonArgv, undefined);
+    return new PythonEnvironment(pythonPath, deps);
 }
 
 export function createWindowsStoreEnv(
