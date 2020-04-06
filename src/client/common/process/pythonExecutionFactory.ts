@@ -22,18 +22,13 @@ import {
     DaemonExecutionFactoryCreationOptions,
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
-    ExecutionResult,
     IBufferDecoder,
-    InterpreterInfomation,
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    PythonExecutionInfo,
-    SpawnOptions
+    IPythonExecutionService
 } from './types';
 
 // Minimum version number of conda required to be able to use 'conda run'
@@ -155,7 +150,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         pythonPath: string,
         processService?: IProcessService,
         resource?: Uri
-    ): Promise<PythonExecutionService | undefined> {
+    ): Promise<IPythonExecutionService | undefined> {
         const processServicePromise = processService
             ? Promise.resolve(processService)
             : this.processServiceFactory.create(resource);
@@ -186,67 +181,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 }
 
-class PythonExecutionService implements IPythonExecutionService {
-    constructor(
-        // These are composed by the caller.
-        private readonly env: {
-            getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
-            getExecutablePath(): Promise<string>;
-            isModuleInstalled(name: string): Promise<boolean>;
-            getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-        },
-        private readonly procs: {
-            execObservable(args: string[], opts: SpawnOptions): ObservableExecutionResult<string>;
-            execModuleObservable(name: string, args: string[], opts: SpawnOptions): ObservableExecutionResult<string>;
-            exec(args: string[], opts: SpawnOptions): Promise<ExecutionResult<string>>;
-            execModule(name: string, args: string[], opts: SpawnOptions): Promise<ExecutionResult<string>>;
-        }
-    ) {}
-
-    // env info wrappers
-    public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
-        return this.env.getInterpreterInformation();
-    }
-    public async getExecutablePath(): Promise<string> {
-        return this.env.getExecutablePath();
-    }
-    public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        return this.env.isModuleInstalled(moduleName);
-    }
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
-        return this.env.getExecutionInfo(pythonArgs);
-    }
-
-    // proc wrappers
-    public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        return this.procs.execObservable(args, options);
-    }
-    public execModuleObservable(
-        moduleName: string,
-        args: string[],
-        options: SpawnOptions
-    ): ObservableExecutionResult<string> {
-        return this.procs.execModuleObservable(moduleName, args, options);
-    }
-    public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        return this.procs.exec(args, options);
-    }
-    public async execModule(
-        moduleName: string,
-        args: string[],
-        options: SpawnOptions
-    ): Promise<ExecutionResult<string>> {
-        return this.procs.execModule(moduleName, args, options);
-    }
-}
-
 function createPythonService(
     pythonPath: string,
     procService: IProcessService,
     fs: IFileSystem,
     conda?: [string, CondaEnvironmentInfo],
     isWindowsStore?: boolean
-): PythonExecutionService {
+): IPythonExecutionService {
     let env = createPythonEnv(pythonPath, procService, fs);
     if (conda) {
         const [condaPath, condaInfo] = conda;
@@ -255,17 +196,14 @@ function createPythonService(
         env = createWindowsStoreEnv(pythonPath, procService);
     }
     const procs = createPythonProcessService(procService, env);
-    return new PythonExecutionService(env, procs);
-}
-
-export namespace _forTestingUseOnly {
-    export function createPyService(
-        python: string,
-        procs: IProcessService,
-        fs: IFileSystem,
-        conda?: [string, CondaEnvironmentInfo],
-        isWinStore?: boolean
-    ) {
-        return createPythonService(python, procs, fs, conda, isWinStore);
-    }
+    return {
+        getInterpreterInformation: env.getInterpreterInformation,
+        getExecutablePath: env.getExecutablePath,
+        isModuleInstalled: env.isModuleInstalled,
+        getExecutionInfo: env.getExecutionInfo,
+        execObservable: procs.execObservable,
+        execModuleObservable: procs.execModuleObservable,
+        exec: procs.exec,
+        execModule: procs.execModule
+    };
 }

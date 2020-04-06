@@ -9,10 +9,9 @@ import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
-import {
-    _forTestingUseOnly as _pyExec,
-    PythonExecutionFactory
-} from '../../../client/common/process/pythonExecutionFactory';
+import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
+import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
+import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IBufferDecoder,
@@ -417,11 +416,19 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             const procService = (await ioc.serviceContainer
                 .get<IProcessServiceFactory>(IProcessServiceFactory)
                 .create()) as MockProcessService;
-            return _pyExec.createPyService(
-                pythonPath,
-                procService,
-                this._serviceContainer.get<IFileSystem>(IFileSystem)
-            );
+            const fileSystem = this._serviceContainer.get<IFileSystem>(IFileSystem);
+            const env = createPythonEnv(pythonPath, procService, fileSystem);
+            const procs = createPythonProcessService(procService, env);
+            return {
+                getInterpreterInformation: env.getInterpreterInformation,
+                getExecutablePath: env.getExecutablePath,
+                isModuleInstalled: env.isModuleInstalled,
+                getExecutionInfo: env.getExecutionInfo,
+                execObservable: procs.execObservable,
+                execModuleObservable: procs.execModuleObservable,
+                exec: procs.exec,
+                execModule: procs.execModule
+            };
         }
     }
     suiteSetup(async () => {
