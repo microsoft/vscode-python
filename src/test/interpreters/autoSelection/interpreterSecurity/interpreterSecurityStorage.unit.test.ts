@@ -53,7 +53,7 @@ suite('Interpreter Security commands', () => {
 
     test('Command is registered in the activate() method', async () => {
         commandManager
-            .setup(c => c.registerCommand(Commands.ResetUnsafePythonInterpretersList, Typemoq.It.isAny()))
+            .setup(c => c.registerCommand(Commands.ResetInterpreterSecurityStorage, Typemoq.It.isAny()))
             .returns(() => Typemoq.Mock.ofType<IDisposable>().object)
             .verifiable(Typemoq.Times.once());
 

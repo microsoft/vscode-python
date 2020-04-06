@@ -75,7 +75,7 @@
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
         "onCommand:python.resetPythonInterpreter",
-        "onCommand:python.resetUnsafePythonInterpretersList",
+        "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
@@ -232,8 +232,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.resetUnsafePythonInterpretersList",
-                "title": "%python.command.python.resetUnsafePythonInterpretersList.title%",
+                "command": "python.resetInterpreterSecurityStorage",
+                "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                 "category": "Python"
             },
             {
@@ -771,8 +771,8 @@
                     "category": "Python"
                 },
                 {
-                    "command": "python.resetUnsafePythonInterpretersList",
-                    "title": "%python.command.python.resetUnsafePythonInterpretersList.title%",
+                    "command": "python.resetInterpreterSecurityStorage",
+                    "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                     "category": "Python"
                 },
                 {

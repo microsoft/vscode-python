@@ -57,7 +57,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
     public async activate(): Promise<void> {
         this.disposables.push(
             this.commandManager.registerCommand(
-                Commands.ResetUnsafePythonInterpretersList,
+                Commands.ResetInterpreterSecurityStorage,
                 this.resetInterpreterSecurityStorage.bind(this)
             )
         );
