@@ -23,14 +23,17 @@ class PythonEnvironment {
         protected readonly pythonPath: string,
         // This is the externally defined functionality used by the class.
         protected readonly deps: {
+            getPythonArgv(python: string): string[];
+            // from FileSystem:
             fileExists(filename: string): Promise<boolean>;
+            // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
-        const python = this.getPythonArgv();
+        const python = this.deps.getPythonArgv(this.pythonPath);
         const args = python.slice(1);
         args.push(...pythonArgs);
         return { command: python[0], args, python };
@@ -66,10 +69,6 @@ class PythonEnvironment {
             return false;
         }
         return true;
-    }
-
-    protected getPythonArgv(): string[] {
-        return [this.pythonPath];
     }
 
     private async getInterpreterInformationImpl(): Promise<InterpreterInfomation | undefined> {
@@ -122,36 +121,11 @@ class PythonEnvironment {
 }
 
 class CondaEnvironment extends PythonEnvironment {
-    private readonly envArgs: string[];
-    private readonly runArgs: string[];
-    constructor(
-        private readonly condaFile: string,
-        condaInfo: CondaEnvironmentInfo,
-        pythonPath: string,
-        deps: {
-            fileExists(filename: string): Promise<boolean>;
-            exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
-            shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
-        }
-    ) {
-        super(pythonPath, deps);
-        if (condaInfo.name === '') {
-            this.envArgs = ['-p', condaInfo.path];
-        } else {
-            this.envArgs = ['-n', condaInfo.name];
-        }
-        this.runArgs = ['run', ...this.envArgs];
-    }
-
-    public getExecObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
         // Cannot use this.env.getExecutionInfo() until 'conda run' can
         // be run without buffering output.
         // See https://github.com/microsoft/vscode-python/issues/8473
         return { command: this.pythonPath, args: pythonArgs, python: [this.pythonPath] };
-    }
-
-    protected getPythonArgv(): string[] {
-        return [this.condaFile, ...this.runArgs, 'python'];
     }
 }
 
@@ -172,9 +146,11 @@ class WindowsStoreEnvironment extends PythonEnvironment {
 function createDeps(
     // These are very lightly wrapped.
     procs: IProcessService,
-    fs: IFileSystem
+    fs: IFileSystem,
+    pythonArgv?: string[]
 ) {
     return {
+        getPythonArgv: (python: string) => pythonArgv || [python],
         fileExists: (filename: string) => fs.fileExists(filename),
         exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
@@ -187,7 +163,7 @@ export function createPythonEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): PythonEnvironment {
-    const deps = createDeps(procs, fs);
+    const deps = createDeps(procs, fs, undefined);
     return new PythonEnvironment(pythonPath, deps);
 }
 
@@ -199,8 +175,14 @@ export function createCondaEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): CondaEnvironment {
-    const deps = createDeps(procs, fs);
-    return new CondaEnvironment(condaFile, condaInfo, pythonPath, deps);
+    const runArgs = ['run'];
+    if (condaInfo.name === '') {
+        runArgs.push('-p', condaInfo.path);
+    } else {
+        runArgs.push('-n', condaInfo.name);
+    }
+    const deps = createDeps(procs, fs, [condaFile, ...runArgs, 'python']);
+    return new CondaEnvironment(pythonPath, deps);
 }
 
 export function createWindowsStoreEnv(
@@ -209,7 +191,7 @@ export function createWindowsStoreEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): WindowsStoreEnvironment {
-    const deps = createDeps(procs, fs);
+    const deps = createDeps(procs, fs, undefined);
     return new WindowsStoreEnvironment(pythonPath, deps);
 }
 
