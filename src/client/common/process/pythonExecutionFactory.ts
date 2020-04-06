@@ -259,12 +259,6 @@ function createPythonService(
 }
 
 export namespace _forTestingUseOnly {
-    export function expectPythonExecutionService(service: unknown) {
-        // tslint:disable-next-line:no-require-imports
-        const chai = require('chai');
-        chai.expect(service).instanceOf(PythonExecutionService);
-    }
-
     export function createPyService(
         python: string,
         procs: IProcessService,
