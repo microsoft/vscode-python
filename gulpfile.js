@@ -120,7 +120,7 @@ async function buildIPyWidgets() {
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
 async function buildDataScienceUI(forceBundleAnalyzer = false) {
-    if (forceStats) {
+    if (forceBundleAnalyzer) {
         process.env.VSC_PYTHON_FORCE_ANALYZER = 1;
     }
     await buildIPyWidgets();
@@ -150,7 +150,7 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
         ],
         webpackEnv
     );
-    if (forceStats) {
+    if (forceBundleAnalyzer) {
         delete process.env.VSC_PYTHON_FORCE_ANALYZER;
     }
 }
