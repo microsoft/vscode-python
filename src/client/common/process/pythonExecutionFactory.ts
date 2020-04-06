@@ -186,25 +186,21 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 }
 
-interface IPythonEnvironment {
-    getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
-    getExecutablePath(): Promise<string>;
-    isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-}
-
-interface IPythonProcessService {
-    execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-    execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-    exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
-    execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
-}
-
 class PythonExecutionService implements IPythonExecutionService {
     constructor(
         // These are composed by the caller.
-        private readonly env: IPythonEnvironment,
-        private readonly procs: IPythonProcessService
+        private readonly env: {
+            getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
+            getExecutablePath(): Promise<string>;
+            isModuleInstalled(name: string): Promise<boolean>;
+            getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+        },
+        private readonly procs: {
+            execObservable(args: string[], opts: SpawnOptions): ObservableExecutionResult<string>;
+            execModuleObservable(name: string, args: string[], opts: SpawnOptions): ObservableExecutionResult<string>;
+            exec(args: string[], opts: SpawnOptions): Promise<ExecutionResult<string>>;
+            execModule(name: string, args: string[], opts: SpawnOptions): Promise<ExecutionResult<string>>;
+        }
     ) {}
 
     // env info wrappers
