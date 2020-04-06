@@ -108,6 +108,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.registerTestsHelper();
         ioc.registerTestStorage();
         ioc.registerTestVisitors();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.add<IArgumentsService>(IArgumentsService, ArgumentsService, UNITTEST_PROVIDER);
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, TestManagerRunner, UNITTEST_PROVIDER);

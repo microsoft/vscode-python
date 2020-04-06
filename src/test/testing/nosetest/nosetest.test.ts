@@ -66,6 +66,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 

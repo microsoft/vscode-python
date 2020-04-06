@@ -45,6 +45,7 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 

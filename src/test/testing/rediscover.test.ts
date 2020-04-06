@@ -53,6 +53,7 @@ suite('Unit Tests re-discovery', () => {
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,

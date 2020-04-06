@@ -90,6 +90,7 @@ suite('Unit Tests - debugging', () => {
         ioc.registerTestsHelper();
         ioc.registerTestManagers();
         ioc.registerMockUnitTestSocketServer();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
         ioc.serviceManager.add<IXUnitParser>(IXUnitParser, XUnitParser);

@@ -429,6 +429,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.registerVariableTypes();
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,

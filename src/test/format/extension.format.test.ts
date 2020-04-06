@@ -99,6 +99,7 @@ suite('Formatting - General', () => {
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
         ioc.registerFormatterTypes();
+        ioc.registerInterpreterStorageTypes();
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
@@ -112,6 +113,7 @@ suite('Formatting - General', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
     }
 
     async function injectFormatOutput(outputFileName: string) {

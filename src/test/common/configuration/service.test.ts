@@ -14,6 +14,7 @@ suite('Configuration Service', () => {
     setup(() => {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
+        ioc.registerInterpreterStorageTypes();
     });
     teardown(() => ioc.dispose());
 
