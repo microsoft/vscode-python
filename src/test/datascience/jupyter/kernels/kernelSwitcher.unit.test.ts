@@ -324,7 +324,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 assert.deepEqual(selection?.kernelModel, selectedKernelSecondTime);
                                 assert.deepEqual(selection?.interpreter, selectedInterpreter);
                                 assert.deepEqual(selection?.kernelSpec, undefined);
-                                verify(notebook.setKernelSpec(anything(), anything(), anything())).twice();
+                                verify(notebook.setKernelSpec(anything(), anything(), anything())).once();
                                 verify(
                                     appShell.showErrorMessage(
                                         anything(),
