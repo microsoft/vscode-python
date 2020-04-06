@@ -303,7 +303,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
             if (kernelInfoToUse) {
                 launchInfo.kernelSpec = kernelInfoToUse;
-                launchInfo.interpreter = resourceInterpreter;
+
+                // For the interpreter, make sure to select the one matching the kernel.
+                launchInfo.interpreter = kernelInfoToUse.metadata?.interpreter?.path
+                    ? await this.interpreterService.getInterpreterDetails(kernelInfoToUse.metadata.interpreter.path)
+                    : resourceInterpreter;
                 changedKernel = true;
             }
         }

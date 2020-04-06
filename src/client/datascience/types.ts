@@ -141,8 +141,11 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonInterpreter | undefined;
     getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
-    setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
-    setInterpreter(interpeter: PythonInterpreter): void;
+    setKernelSpec(
+        spec: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
     registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>): void;
     registerCommTarget(
