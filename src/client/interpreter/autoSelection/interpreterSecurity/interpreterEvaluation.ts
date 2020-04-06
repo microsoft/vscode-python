@@ -16,6 +16,12 @@ import { learnMoreOnInterpreterSecurityURI } from '../constants';
 import { IInterpreterEvaluation, IInterpreterSecurityStorage } from '../types';
 
 const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.learnMore(), Common.doNotShowAgain()];
+const telemetrySelections: ['Yes', 'No', 'Learn more', 'Do not show again'] = [
+    'Yes',
+    'No',
+    'Learn more',
+    'Do not show again'
+];
 
 @injectable()
 export class InterpreterEvaluation implements IInterpreterEvaluation {
@@ -73,12 +79,6 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
     }
 
     private async showPromptAndGetSelection(): Promise<string | undefined> {
-        const telemetrySelections: ['Yes', 'No', 'Learn more', 'Do not show again'] = [
-            'Yes',
-            'No',
-            'Learn more',
-            'Do not show again'
-        ];
         const selection = await this.appShell.showInformationMessage(
             Interpreters.unsafeInterpreterMessage(),
             ...prompts
