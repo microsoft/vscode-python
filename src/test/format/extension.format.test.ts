@@ -113,7 +113,6 @@ suite('Formatting - General', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.registerMockInterpreterTypes();
-        ioc.registerInterpreterStorageTypes();
     }
 
     async function injectFormatOutput(outputFileName: string) {

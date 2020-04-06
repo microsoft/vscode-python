@@ -60,6 +60,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
 
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
