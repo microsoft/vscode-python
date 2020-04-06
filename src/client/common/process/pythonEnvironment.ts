@@ -16,31 +16,19 @@ import {
     PythonVersionInfo
 } from './types';
 
-interface IPythonEnvironmentDependencies {
+interface IDependencies {
     fileExists(filename: string): Promise<boolean>;
     exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
     shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
-}
-
-function createPythonEnvDeps(
-    // These are very lightly wrapped.
-    procs: IProcessService,
-    fs: IFileSystem
-): IPythonEnvironmentDependencies {
-    return {
-        fileExists: (filename: string) => fs.fileExists(filename),
-        exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
-        shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
-    };
 }
 
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(
-        // For now we do not have an use for making pythonPath public.
         protected readonly pythonPath: string,
-        protected readonly deps: IPythonEnvironmentDependencies
+        // This is the externally defined functionality used by the class.
+        protected readonly deps: IDependencies
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
@@ -142,7 +130,7 @@ class CondaEnvironment extends PythonEnvironment {
         private readonly condaFile: string,
         condaInfo: CondaEnvironmentInfo,
         pythonPath: string,
-        deps: IPythonEnvironmentDependencies
+        deps: IDependencies
     ) {
         super(pythonPath, deps);
         if (condaInfo.name === '') {
@@ -179,13 +167,25 @@ class WindowsStoreEnvironment extends PythonEnvironment {
     }
 }
 
+function createDeps(
+    // These are very lightly wrapped.
+    procs: IProcessService,
+    fs: IFileSystem
+) {
+    return {
+        fileExists: (filename: string) => fs.fileExists(filename),
+        exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
+        shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
+    };
+}
+
 export function createPythonEnv(
     pythonPath: string,
     // These are used to generate the deps.
     procs: IProcessService,
     fs: IFileSystem
 ): PythonEnvironment {
-    const deps = createPythonEnvDeps(procs, fs);
+    const deps = createDeps(procs, fs);
     return new PythonEnvironment(pythonPath, deps);
 }
 
@@ -197,7 +197,7 @@ export function createCondaEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): CondaEnvironment {
-    const deps = createPythonEnvDeps(procs, fs);
+    const deps = createDeps(procs, fs);
     return new CondaEnvironment(condaFile, condaInfo, pythonPath, deps);
 }
 
@@ -207,7 +207,7 @@ export function createWindowsStoreEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): WindowsStoreEnvironment {
-    const deps = createPythonEnvDeps(procs, fs);
+    const deps = createDeps(procs, fs);
     return new WindowsStoreEnvironment(pythonPath, deps);
 }
 
