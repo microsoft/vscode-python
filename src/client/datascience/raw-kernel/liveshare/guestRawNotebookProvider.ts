@@ -5,8 +5,16 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { ILiveShareApi } from '../../../common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../../common/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IFileSystem } from '../../../common/platform/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    Resource
+} from '../../../common/types';
+import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare } from '../../constants';
 import {
     LiveShareParticipantDefault,
@@ -20,10 +28,16 @@ export class GuestRawNotebookProvider
     implements IRawNotebookProvider, ILiveShareParticipant {
     //private notebooks = new Map<string, Promise<INotebook>>();
 
+    // IANHU: Clean up constructor ordering to not have unused types here?
     constructor(
         liveShare: ILiveShareApi,
+        _disposableRegistry: IDisposableRegistry,
         _asyncRegistry: IAsyncDisposableRegistry,
         _configService: IConfigurationService,
+        _workspaceService: IWorkspaceService,
+        _appShell: IApplicationShell,
+        _fs: IFileSystem,
+        _serviceContainer: IServiceContainer,
         _experimentsManager: IExperimentsManager
     ) {
         super(liveShare);

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
@@ -15,10 +16,14 @@ import { Settings, Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
 export class RawNotebookProviderBase implements IRawNotebookProvider {
+    public get id(): string {
+        return this._id;
+    }
     // Keep track of the notebooks that we have provided
     private notebooks = new Map<string, Promise<INotebook>>();
     private _zmqSupported: boolean | undefined;
     private rawConnection = new RawConnection();
+    private _id = uuid();
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -42,20 +47,61 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
 
     public async createNotebook(
-        _identity: Uri,
-        _resource: Resource,
-        _notebookMetadata: nbformat.INotebookMetadata,
-        _cancelToken: CancellationToken
+        identity: Uri,
+        resource: Resource,
+        notebookMetadata: nbformat.INotebookMetadata,
+        cancelToken: CancellationToken
     ): Promise<INotebook | undefined> {
-        throw new Error('Not implemented');
+        return this.createNotebookInstance(resource, identity, notebookMetadata, cancelToken);
     }
 
-    public async getNotebook(_identity: Uri): Promise<INotebook | undefined> {
-        throw new Error('Not implemented');
+    public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
+        return this.notebooks.get(identity.toString());
     }
 
     public dispose(): Promise<void> {
         throw new Error('Not implemented');
+    }
+
+    // IANHU: Jupyter notebook needs this, but kinda a no-op for raw case
+    // For jupyter case it looks for a server crash error and returns that
+    public getDisposedError(): Error {
+        // IANHU: Error message
+        return new Error('Raw Notebook Provider Disposed');
+    }
+
+    protected getConnection(): IRawConnection {
+        return this.rawConnection;
+    }
+
+    protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+        const removeNotebook = () => {
+            if (this.notebooks.get(identity.toString()) === notebook) {
+                this.notebooks.delete(identity.toString());
+            }
+        };
+
+        notebook
+            .then(nb => {
+                const oldDispose = nb.dispose;
+                nb.dispose = () => {
+                    this.notebooks.delete(identity.toString());
+                    return oldDispose();
+                };
+            })
+            .catch(removeNotebook);
+
+        // Save the notebook
+        this.notebooks.set(identity.toString(), notebook);
+    }
+
+    protected createNotebookInstance(
+        _resource: Resource,
+        _identity: Uri,
+        _notebookMetadata?: nbformat.INotebookMetadata,
+        _cancelToken?: CancellationToken
+    ): Promise<INotebook> {
+        throw new Error('You forgot to override createNotebookInstance');
     }
 
     private localLaunch(): boolean {
@@ -70,7 +116,10 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
 
     private inExperiment(): boolean {
-        return this.experimentsManager.inExperiment(LocalZMQKernel.experiment);
+        return true;
+        // Current experiements are loading from a local cache which doesn't include
+        // my new experiment value, so I can't even opt into it
+        //return this.experimentsManager.inExperiment(LocalZMQKernel.experiment);
     }
 
     private async zmqSupported(): Promise<boolean> {
@@ -90,20 +139,6 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
         return this._zmqSupported;
     }
-
-    //protected createNotebookInstance(
-    //_resource: Resource,
-    //_identity: Uri,
-    //_sessionManager: IJupyterSessionManager,
-    //_savedSession: IJupyterSession | undefined,
-    //_disposableRegistry: IDisposableRegistry,
-    //_configService: IConfigurationService,
-    //_serviceContainer: IServiceContainer,
-    //_notebookMetadata?: nbformat.INotebookMetadata,
-    //_cancelToken?: CancellationToken
-    //): Promise<INotebook> {
-    //throw new Error('You forgot to override createNotebookInstance');
-    //}
 }
 
 class RawConnection implements IRawConnection {

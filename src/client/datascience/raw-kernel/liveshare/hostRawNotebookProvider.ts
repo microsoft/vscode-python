@@ -3,14 +3,30 @@
 'use strict';
 import '../../../common/extensions';
 
+import * as vscode from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../../common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager } from '../../../common/types';
+import { nbformat } from '@jupyterlab/coreutils';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    Resource
+} from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
+import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare } from '../../constants';
+import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IRawNotebookProvider } from '../../types';
+import { INotebook, INotebookExecutionInfo, INotebookExecutionLogger, IRawNotebookProvider } from '../../types';
+import { EnchannelJMPConnection } from '../enchannelJMPConnection';
+import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
 // tslint:disable-next-line: no-require-imports
@@ -23,9 +39,14 @@ export class HostRawNotebookProvider
     //private portToForward = 0;
     //private sharedPort: vscode.Disposable | undefined;
     constructor(
-        liveShare: ILiveShareApi,
+        private liveShare: ILiveShareApi,
+        private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
-        configService: IConfigurationService,
+        private configService: IConfigurationService,
+        private workspaceService: IWorkspaceService,
+        private appShell: IApplicationShell,
+        private fs: IFileSystem,
+        private serviceContainer: IServiceContainer,
         experimentsManager: IExperimentsManager
     ) {
         super(liveShare, asyncRegistry, configService, experimentsManager);
@@ -120,6 +141,97 @@ export class HostRawNotebookProvider
         //}
         //// tslint:disable-next-line:no-suspicious-comment
         //return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
+    }
+
+    protected async createNotebookInstance(
+        resource: Resource,
+        identity: vscode.Uri,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook> {
+        // IANHU: Hack to create session
+        const ci = {
+            version: 0,
+            transport: 'tcp',
+            ip: '127.0.0.1',
+            shell_port: 51065,
+            iopub_port: 51066,
+            stdin_port: 51067,
+            hb_port: 51069,
+            control_port: 51068,
+            signature_scheme: 'hmac-sha256',
+            key: '9a4f68cd-b5e4887e4b237ea4c91c265c'
+        };
+        const rawSession = new RawJupyterSession(new EnchannelJMPConnection());
+        try {
+            await rawSession.connect(ci);
+        } finally {
+            if (!rawSession.isConnected) {
+                await rawSession.dispose();
+            }
+        }
+
+        const notebookPromise = createDeferred<INotebook>();
+        this.setNotebook(identity, notebookPromise.promise);
+
+        try {
+            // Get the execution info for our notebook
+            const info = this.getExecutionInfo(resource, notebookMetadata);
+
+            if (rawSession.isConnected) {
+                // Create our notebook
+                const notebook = new HostJupyterNotebook(
+                    this.liveShare,
+                    rawSession,
+                    this.configService,
+                    this.disposableRegistry,
+                    info,
+                    this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
+                    resource,
+                    identity,
+                    this.getDisposedError.bind(this),
+                    this.workspaceService,
+                    this.appShell,
+                    this.fs
+                );
+
+                // Wait for it to be ready
+                traceInfo(`Waiting for idle (session) ${this.id}`);
+                const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
+                await notebook.waitForIdle(idleTimeout);
+
+                // Run initial setup
+                await notebook.initialize(cancelToken);
+
+                traceInfo(`Finished connecting ${this.id}`);
+
+                notebookPromise.resolve(notebook);
+            } else {
+                // IANHU: Error message type
+                notebookPromise.reject(this.getDisposedError());
+            }
+        } catch (ex) {
+            // If there's an error, then reject the promise that is returned.
+            // This original promise must be rejected as it is cached (check `setNotebook`).
+            notebookPromise.reject(ex);
+        }
+
+        return notebookPromise.promise;
+    }
+
+    // IANHU: Not the real execution info, just stub it out for now
+    private getExecutionInfo(
+        resource: Resource,
+        notebookMetadata?: nbformat.INotebookMetadata
+    ): INotebookExecutionInfo {
+        return {
+            connectionInfo: this.getConnection(),
+            uri: undefined,
+            interpreter: undefined,
+            kernelSpec: undefined,
+            workingDir: undefined,
+            purpose: undefined
+        };
     }
 
     //private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number): Promise<void> {

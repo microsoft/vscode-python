@@ -6,9 +6,17 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { ILiveShareApi } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
+import { IFileSystem } from '../../common/platform/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    Resource
+} from '../../common/types';
+import { IServiceContainer } from '../../ioc/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
@@ -21,8 +29,13 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
+        disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
+        workspaceService: IWorkspaceService,
+        appShell: IApplicationShell,
+        fs: IFileSystem,
+        serviceContainer: IServiceContainer,
         experimentsManager: IExperimentsManager
     ): IRawNotebookProviderInterface;
 };
@@ -36,8 +49,13 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
@@ -47,8 +65,13 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             HostRawNotebookProvider,
             GuestRawNotebookProvider,
             liveShare,
+            disposableRegistry,
             asyncRegistry,
             configService,
+            workspaceService,
+            appShell,
+            fs,
+            serviceContainer,
             experimentsManager
         );
     }

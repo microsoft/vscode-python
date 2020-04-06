@@ -55,54 +55,75 @@ export class NotebookProvider implements INotebookProvider {
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // IANHU: just for testing
-        const zmqSupported = await this.rawNotebookProvider.supported();
-        const zmqConnection = await this.rawNotebookProvider.connect();
+        //const zmqSupported = await this.rawNotebookProvider.supported();
+        //const zmqConnection = await this.rawNotebookProvider.connect();
 
-        const server = await this.serverProvider.getOrCreateServer(options);
+        //const server = await this.serverProvider.getOrCreateServer(options);
 
-        return server?.getConnectionInfo();
+        //return server?.getConnectionInfo();
+        if (await this.rawNotebookProvider.supported()) {
+            return this.rawNotebookProvider.connect();
+        } else {
+            const server = await this.serverProvider.getOrCreateServer(options);
+            return server?.getConnectionInfo();
+        }
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        // Make sure we have a server
-        const server = await this.serverProvider.getOrCreateServer({
-            getOnly: options.getOnly,
-            disableUI: options.disableUI
-        });
-        if (server) {
-            // We could have multiple native editors opened for the same file/model.
-            const notebook = await server.getNotebook(options.identity);
-            if (notebook) {
-                return notebook;
+        // IANHU: Just for testing
+        if (await this.rawNotebookProvider.supported()) {
+            const rawNotebook = await this.rawNotebookProvider.getNotebook(options.identity);
+            if (rawNotebook) {
+                return rawNotebook;
             }
+            const rawNotebookPromise = this.rawNotebookProvider.createNotebook(
+                options.identity,
+                options.identity,
+                options.metadata
+            );
 
-            if (this.notebooks.get(options.identity.fsPath)) {
-                return this.notebooks.get(options.identity.fsPath)!!;
-            }
-
-            const promise = server.createNotebook(options.identity, options.identity, options.metadata);
-            this.notebooks.set(options.identity.fsPath, promise);
-
-            // Remove promise from cache if the same promise still exists.
-            const removeFromCache = () => {
-                const cachedPromise = this.notebooks.get(options.identity.fsPath);
-                if (cachedPromise === promise) {
-                    this.notebooks.delete(options.identity.fsPath);
+            return rawNotebookPromise;
+        } else {
+            // Make sure we have a server
+            const server = await this.serverProvider.getOrCreateServer({
+                getOnly: options.getOnly,
+                disableUI: options.disableUI
+            });
+            if (server) {
+                // We could have multiple native editors opened for the same file/model.
+                const notebook = await server.getNotebook(options.identity);
+                if (notebook) {
+                    return notebook;
                 }
-            };
 
-            promise
-                .then(nb => {
-                    // If the notebook is disposed, remove from cache.
-                    nb.onDisposed(removeFromCache);
-                    this._notebookCreated.fire({ identity: options.identity, notebook: nb });
-                })
-                .catch(noop);
+                if (this.notebooks.get(options.identity.fsPath)) {
+                    return this.notebooks.get(options.identity.fsPath)!!;
+                }
 
-            // If promise fails, then remove the promise from cache.
-            promise.catch(removeFromCache);
+                const promise = server.createNotebook(options.identity, options.identity, options.metadata);
+                this.notebooks.set(options.identity.fsPath, promise);
 
-            return promise;
+                // Remove promise from cache if the same promise still exists.
+                const removeFromCache = () => {
+                    const cachedPromise = this.notebooks.get(options.identity.fsPath);
+                    if (cachedPromise === promise) {
+                        this.notebooks.delete(options.identity.fsPath);
+                    }
+                };
+
+                promise
+                    .then(nb => {
+                        // If the notebook is disposed, remove from cache.
+                        nb.onDisposed(removeFromCache);
+                        this._notebookCreated.fire({ identity: options.identity, notebook: nb });
+                    })
+                    .catch(noop);
+
+                // If promise fails, then remove the promise from cache.
+                promise.catch(removeFromCache);
+
+                return promise;
+            }
         }
     }
 
