@@ -164,7 +164,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.Sync]: MessageType.other,
     [InteractiveWindowMessages.Undo]: MessageType.other,
     [InteractiveWindowMessages.UnfocusedCellEditor]: MessageType.syncWithLiveShare,
-    [InteractiveWindowMessages.UpdateCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]:
+        MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateModel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateKernel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,

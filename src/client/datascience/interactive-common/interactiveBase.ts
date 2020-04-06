@@ -671,7 +671,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 case CellState.executing:
                     // Tell the react controls we have an update
-                    this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.UpdateCellWithExecutionResults, cell).ignoreErrors();
                     break;
 
                 case CellState.error:

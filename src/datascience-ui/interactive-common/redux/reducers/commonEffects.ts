@@ -232,16 +232,17 @@ export namespace CommonEffects {
                 traceback: []
             };
 
-            const newVM = Helpers.asCellViewModel({
+            const newVM: ICellViewModel = {
                 ...current,
                 cell: {
                     ...current.cell,
                     data: {
                         ...current.cell.data,
-                        outputs: [...outputs, error]
+                        outputs: [...outputs, error],
+                        source: newVMs[index].cell.data.source
                     }
                 }
-            });
+            };
             newVMs[index] = newVM;
 
             // Make sure to tell the extension so it can log telemetry.

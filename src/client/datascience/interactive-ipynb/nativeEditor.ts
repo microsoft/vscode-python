@@ -449,6 +449,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const modified = filtered.filter((c) => c.state === CellState.finished || c.state === CellState.error);
         const unmodified = this.model?.cells.filter((c) => modified.find((m) => m.id === c.id));
         if (modified.length > 0 && unmodified && this.model) {
+            // As this point, we're updating the model because of changes to the cell as a result of execution.
+            // The output and execution count change, however we're just going to update everything.
+            // But, we should not update the `source`. The only time source can change is when a request comes from the UI.
+            // Perhaps we need a finer grained update (update only output and execution count along with `source=execution`).
+            // For now retain source from previous model.
+            // E.g. user executes a cell, in the mean time they update the text. Now model contains new value.
+            // However once execution has completed, this code will update the model with results from previous execution (prior to edit).
+            // We now need to give preference to the text in the model, over the old one that was executed.
+            modified.forEach((modifiedCell) => {
+                const originalCell = unmodified.find((unmodifiedCell) => unmodifiedCell.id === modifiedCell.id);
+                if (originalCell) {
+                    modifiedCell.data.source = originalCell.data.source;
+                }
+            });
             this.model.update({
                 source: 'user',
                 kind: 'modify',
