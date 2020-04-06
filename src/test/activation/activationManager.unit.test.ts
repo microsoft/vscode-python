@@ -54,14 +54,14 @@ suite('Language Server Activation - ActivationManager', () => {
     let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
     let interpreterSecurityService: IInterpreterSecurityService;
-    let interpreterPathService: IInterpreterPathService;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let experiments: IExperimentsManager;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
         interpreterSecurityService = mock(InterpreterSecurityService);
         experiments = mock(ExperimentsManager);
-        interpreterPathService = mock(InterpreterPathService);
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
@@ -70,6 +70,9 @@ suite('Language Server Activation - ActivationManager', () => {
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
+        interpreterPathService
+            .setup(i => i.onDidChange(typemoq.It.isAny()))
+            .returns(() => typemoq.Mock.ofType<IDisposable>().object);
         managerTest = new ExtensionActivationManagerTest(
             [instance(activationService1), instance(activationService2)],
             [],
@@ -80,7 +83,7 @@ suite('Language Server Activation - ActivationManager', () => {
             instance(workspaceService),
             instance(activeResourceService),
             instance(experiments),
-            instance(interpreterPathService),
+            interpreterPathService.object,
             instance(interpreterSecurityService)
         );
         managerTest.evaluateAutoSelectedInterpreterSafety = () => Promise.resolve();
@@ -350,13 +353,14 @@ suite('Language Server Activation - ActivationManager', () => {
     });
 });
 
-suite('xLanguage Server Activation - activate()', () => {
+suite('Language Server Activation - activate()', () => {
     let workspaceService: IWorkspaceService;
     let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
     let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
+    let interpreterSecurityService: IInterpreterSecurityService;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
@@ -364,18 +368,17 @@ suite('xLanguage Server Activation - activate()', () => {
     let activateWorkspace: sinon.SinonStub<any>;
     let managerTest: ExtensionActivationManager;
     const resource = Uri.parse('a');
-    let interpreterSecurityService: IInterpreterSecurityService;
-    let interpreterPathService: IInterpreterPathService;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
     let experiments: IExperimentsManager;
 
     setup(() => {
         interpreterSecurityService = mock(InterpreterSecurityService);
         experiments = mock(ExperimentsManager);
-        interpreterPathService = mock(InterpreterPathService);
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         interpreterService = mock(InterpreterService);
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
@@ -385,9 +388,12 @@ suite('xLanguage Server Activation - activate()', () => {
         initialize.resolves();
         activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
         activateWorkspace.resolves();
+        interpreterPathService
+            .setup(i => i.onDidChange(typemoq.It.isAny()))
+            .returns(() => typemoq.Mock.ofType<IDisposable>().object);
         managerTest = new ExtensionActivationManager(
             [instance(activationService1), instance(activationService2)],
-            [],
+            [singleActivationService.object],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
@@ -395,7 +401,7 @@ suite('xLanguage Server Activation - activate()', () => {
             instance(workspaceService),
             instance(activeResourceService),
             instance(experiments),
-            instance(interpreterPathService),
+            interpreterPathService.object,
             instance(interpreterSecurityService)
         );
         managerTest.evaluateAutoSelectedInterpreterSafety = () => Promise.resolve();

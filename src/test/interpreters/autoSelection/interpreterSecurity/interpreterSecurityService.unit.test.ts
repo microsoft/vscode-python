@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as Typemoq from 'typemoq';
 import { EventEmitter, Uri } from 'vscode';
-import { IPersistentState, IPersistentStateFactory } from '../../../../client/common/types';
+import { IPersistentState } from '../../../../client/common/types';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { InterpreterSecurityService } from '../../../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import {
@@ -18,14 +18,12 @@ suite('Interpreter Security service', () => {
     const safeInterpretersList = ['safe1', 'safe2'];
     const unsafeInterpretersList = ['unsafe1', 'unsafe2'];
     const resource = Uri.parse('a');
-    let persistentStateFactory: Typemoq.IMock<IPersistentStateFactory>;
     let interpreterSecurityStorage: Typemoq.IMock<IInterpreterSecurityStorage>;
     let interpreterEvaluation: Typemoq.IMock<IInterpreterEvaluation>;
     let unsafeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let safeInterpreters: Typemoq.IMock<IPersistentState<string[]>>;
     let interpreterSecurityService: InterpreterSecurityService;
     setup(() => {
-        persistentStateFactory = Typemoq.Mock.ofType<IPersistentStateFactory>();
         interpreterEvaluation = Typemoq.Mock.ofType<IInterpreterEvaluation>();
         unsafeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
         safeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
