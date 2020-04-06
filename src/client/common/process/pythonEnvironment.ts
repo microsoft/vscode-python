@@ -129,8 +129,8 @@ function createDeps(
     // These are very lightly wrapped.
     procs: IProcessService,
     isValidExecutable: (filename: string) => Promise<boolean>,
-    pythonArgv?: string[],
-    observablePythonArgv?: string[]
+    pythonArgv: string[] | undefined,
+    observablePythonArgv: string[] | undefined
 ) {
     return {
         getPythonArgv: (python: string) => pythonArgv || [python],
