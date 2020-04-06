@@ -145,7 +145,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeMessageListener(this.onKernelSocketMessage); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
 
             if (this.kernelWasConnectedAtleastOnce) {
@@ -170,7 +170,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtleastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addMessageListener(this.onKernelSocketMessage); // NOSONAR
+            this.kernelSocketInfo.socket?.addReceiveHook(this.onKernelSocketMessage); // NOSONAR
             this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
