@@ -942,12 +942,12 @@ export interface IKernelSocket {
      * allows waiting for a callback before processing messages
      * @param listener
      */
-    addMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
+    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
     /**
      * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
      * @param listener
      */
-    removeMessageListener(listener: (data: WebSocketData) => Promise<void>): void;
+    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
     /**
      * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
      * @param patch

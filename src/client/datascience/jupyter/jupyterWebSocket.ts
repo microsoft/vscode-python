@@ -13,7 +13,7 @@ export const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>();
 export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean) {
     class JupyterWebSocket extends WebSocketWS {
         private kernelId: string | undefined;
-        private preListeners: ((data: WebSocketWS.Data) => Promise<void>)[];
+        private receiveHooks: ((data: WebSocketWS.Data) => Promise<void>)[];
         private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
         private msgChain: Promise<any>;
         private sendChain: Promise<any>;
@@ -53,12 +53,17 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             } else {
                 traceError('KernelId not extracted from Kernel WebSocket URL');
             }
-            this.preListeners = [];
+            this.receiveHooks = [];
             this.sendHooks = [];
         }
 
         public send(data: any, a2: any): void {
             if (this.sendHooks) {
+                // Stick the send hooks into the send chain. We use chain
+                // to ensure that:
+                // a) Hooks finish before we fire the event for real
+                // b) Event fires
+                // c) Next message happens after this one (so the UI can handle the message before another event goes through)
                 this.sendChain = this.sendChain
                     .then(() => Promise.all(this.sendHooks.map((s) => s(data, a2))))
                     .then(() => super.send(data, a2));
@@ -68,14 +73,14 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
         }
 
         public emit(event: string | symbol, ...args: any[]): boolean {
-            if (event === 'message' && this.preListeners.length) {
-                // Stick the prelisteners into the message chain. We use chain
+            if (event === 'message' && this.receiveHooks.length) {
+                // Stick the receive hooks into the message chain. We use chain
                 // to ensure that:
-                // a) Prelisteners finish before we fire the event for real
+                // a) Hooks finish before we fire the event for real
                 // b) Event fires
                 // c) Next message happens after this one (so this side can handle the message before another event goes through)
                 this.msgChain = this.msgChain
-                    .then(() => Promise.all(this.preListeners.map((p) => p(args[0]))))
+                    .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
                     .then(() => super.emit(event, ...args));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
                 return true;
@@ -84,11 +89,11 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             }
         }
 
-        public addMessageListener(listener: (data: WebSocketWS.Data) => Promise<void>) {
-            this.preListeners.push(listener);
+        public addReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
+            this.receiveHooks.push(hook);
         }
-        public removeMessageListener(listener: (data: WebSocketWS.Data) => Promise<void>) {
-            this.preListeners = this.preListeners.filter((l) => l !== listener);
+        public removeReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
+            this.receiveHooks = this.receiveHooks.filter((l) => l !== hook);
         }
 
         // tslint:disable-next-line: no-any
