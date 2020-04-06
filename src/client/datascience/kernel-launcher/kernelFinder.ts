@@ -44,7 +44,7 @@ export class KernelFinder implements IKernelFinder {
         const notebookInterpreter = isResource(interpreterUri) ? undefined : interpreterUri;
 
         if (kernelName) {
-            let kernelSpec = this.cache.find((ks) => ks.name === kernelName);
+            let kernelSpec = this.cache.find(ks => ks.name === kernelName);
 
             if (kernelSpec) {
                 return kernelSpec;
@@ -59,15 +59,15 @@ export class KernelFinder implements IKernelFinder {
             }
 
             const kernelSearches = [
-                this.interpreterService.getInterpreters(resource).then((interpreters) => {
-                    const interpreterPaths = interpreters.map((interp) => interp.path);
+                this.interpreterService.getInterpreters(resource).then(interpreters => {
+                    const interpreterPaths = interpreters.map(interp => interp.path);
                     return this.findInterpreterPath(interpreterPaths, kernelName);
                 }),
                 this.findDiskPath(kernelName)
             ];
 
             const result = await Promise.all(kernelSearches);
-            const spec = result.find((sp) => sp?.name === kernelName);
+            const spec = result.find(sp => sp?.name === kernelName);
             foundKernel = spec ? spec : await this.getDefaultKernelSpec(resource);
         } else {
             foundKernel = await this.getDefaultKernelSpec(resource);
@@ -115,7 +115,7 @@ export class KernelFinder implements IKernelFinder {
             }
 
             let spec: IJupyterKernelSpec | undefined;
-            const promises = kernels.map(async (kernel) => {
+            const promises = kernels.map(async kernel => {
                 try {
                     const kernelSpec: IJupyterKernelSpec = JSON.parse(
                         await this.file.readFile(path.join(kernel, 'kernel.json'))
@@ -143,12 +143,12 @@ export class KernelFinder implements IKernelFinder {
         interpreterPaths: string[],
         kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
-        const promises = interpreterPaths.map((intPath) =>
+        const promises = interpreterPaths.map(intPath =>
             this.getKernelSpec(path.join(intPath, kernelPaths.get('kernel')!), kernelName)
         );
 
         const specs = await Promise.all(promises);
-        return specs.find((sp) => sp !== undefined);
+        return specs.find(sp => sp !== undefined);
     }
 
     // Jupyter looks for kernels in these paths:
@@ -179,7 +179,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const promises = paths.map((kernelPath) => this.file.search(kernelName, kernelPath));
+        const promises = paths.map(kernelPath => this.file.search(kernelName, kernelPath));
         const searchResults = await Promise.all(promises);
 
         // tslint:disable-next-line: prefer-for-of
