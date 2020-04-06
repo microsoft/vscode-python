@@ -344,7 +344,14 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput) {
             const trim = this.props.cellVM.cell.data.metadata.tags ? this.props.cellVM.cell.data.metadata.tags[0] : '';
             // Render the outputs
-            return this.renderOutputs(this.getCodeCell().outputs, trim);
+            const outputs = this.renderOutputs(this.getCodeCell().outputs, trim);
+
+            // Render any UI side errors
+            if (this.props.cellVM.uiSideError) {
+                outputs.push(<div className="cell-output-uiSideError">{this.props.cellVM.uiSideError}</div>);
+            }
+
+            return outputs;
         }
         return [];
     };
