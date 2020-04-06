@@ -74,7 +74,7 @@
         "onCommand:python.switchOffInsidersChannel",
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
-        "onCommand:python.resetPythonInterpreter",
+        "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.datascience.showhistorypane",
@@ -227,8 +227,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.resetPythonInterpreter",
-                "title": "%python.command.python.resetPythonInterpreter.title%",
+                "command": "python.clearWorkspaceInterpreter",
+                "title": "%python.command.python.clearWorkspaceInterpreter.title%",
                 "category": "Python"
             },
             {
@@ -766,8 +766,8 @@
                     "when": "config.python.insidersChannel != 'weekly'"
                 },
                 {
-                    "command": "python.resetPythonInterpreter",
-                    "title": "%python.command.python.resetPythonInterpreter.title%",
+                    "command": "python.clearWorkspaceInterpreter",
+                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
                     "category": "Python"
                 },
                 {

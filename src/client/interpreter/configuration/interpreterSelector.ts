@@ -44,7 +44,7 @@ export class InterpreterSelector implements IInterpreterSelector {
             this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this))
         );
         this.disposables.push(
-            this.commandManager.registerCommand(Commands.ResetPythonInterpreter, this.resetInterpreter.bind(this))
+            this.commandManager.registerCommand(Commands.ClearWorkspaceInterpreter, this.resetInterpreter.bind(this))
         );
         this.disposables.push(
             this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this))
