@@ -32,6 +32,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     private manager?: IJupyterLabWidgetManager;
     private proxyKernel?: Kernel.IKernel;
     private options?: KernelSocketOptions;
+    private pendingMessages: { message: string; payload: any }[] = [];
     /**
      * Contains promises related to model_ids that need to be displayed.
      * When we receive a message from the kernel of type = `display_data` for a widget (`application/vnd.jupyter.widget-view+json`),
@@ -71,6 +72,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.proxyKernel?.dispose(); // NOSONAR
             this.proxyKernel = undefined;
             WidgetManager._instance.next(undefined);
+        } else if (!this.proxyKernel) {
+            this.pendingMessages.push({ message, payload });
         }
         return true;
     }
@@ -134,7 +137,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             return;
         }
         this.proxyKernel?.dispose(); // NOSONAR
-        this.proxyKernel = createKernel(options, this.postOffice);
+        this.proxyKernel = createKernel(options, this.postOffice, this.pendingMessages);
+        this.pendingMessages = [];
 
         // Dispose any existing managers.
         this.manager?.dispose(); // NOSONAR
@@ -151,7 +155,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
-            // Resolve the promise for getting this manager
+            // Tell the observable about our new manager
             WidgetManager._instance.next(this);
         } catch (ex) {
             // tslint:disable-next-line: no-console

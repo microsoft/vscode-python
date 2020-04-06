@@ -14,7 +14,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
     class JupyterWebSocket extends WebSocketWS {
         private kernelId: string | undefined;
         private preListeners: ((data: WebSocketWS.Data) => Promise<void>)[];
-        private sendPatches: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
+        private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
         private msgChain: Promise<any>;
         private sendChain: Promise<any>;
 
@@ -54,13 +54,13 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
                 traceError('KernelId not extracted from Kernel WebSocket URL');
             }
             this.preListeners = [];
-            this.sendPatches = [];
+            this.sendHooks = [];
         }
 
         public send(data: any, a2: any): void {
-            if (this.sendPatches) {
+            if (this.sendHooks) {
                 this.sendChain = this.sendChain
-                    .then(() => Promise.all(this.sendPatches.map((s) => s(data, a2))))
+                    .then(() => Promise.all(this.sendHooks.map((s) => s(data, a2))))
                     .then(() => super.send(data, a2));
             } else {
                 super.send(data, a2);
@@ -92,13 +92,13 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
         }
 
         // tslint:disable-next-line: no-any
-        public addSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
-            this.sendPatches.push(patch);
+        public addSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
+            this.sendHooks.push(patch);
         }
 
         // tslint:disable-next-line: no-any
-        public removeSendPatch(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
-            this.sendPatches = this.sendPatches.filter((p) => p !== patch);
+        public removeSendHook(patch: (data: any, cb?: (err?: Error) => void) => Promise<void>): void {
+            this.sendHooks = this.sendHooks.filter((p) => p !== patch);
         }
     }
     return JupyterWebSocket;

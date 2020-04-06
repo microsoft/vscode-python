@@ -413,6 +413,13 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
  * The `_createSocket` method basically connects to a websocket and listens to messages.
  * Hence to create a kernel, all we need is a socket connection (class with onMessage and postMessage methods).
  */
-export function create(options: KernelSocketOptions, postOffice: PostOffice): Kernel.IKernel {
-    return new ProxyKernel(options, postOffice);
+export function create(
+    options: KernelSocketOptions,
+    postOffice: PostOffice,
+    pendingMessages: { message: string; payload: any }[]
+): Kernel.IKernel {
+    const result = new ProxyKernel(options, postOffice);
+    // Make sure to handle all the missed messages
+    pendingMessages.forEach((m) => result.handleMessage(m.message, m.payload));
+    return result;
 }

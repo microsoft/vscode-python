@@ -43,8 +43,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
     private waitingMessageIds = new Map<string, Deferred<void>>();
-    private socketMessageListener = this.onKernelSocketMessage.bind(this);
-    private sendPatch = this.mirrorSend.bind(this);
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -59,6 +57,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this,
             this.disposables
         );
+        this.mirrorSend = this.mirrorSend.bind(this);
+        this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
     }
     public dispose() {
         this.disposed = true;
@@ -145,8 +145,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeMessageListener(this.socketMessageListener); // NOSONAR
-            this.kernelSocketInfo?.socket?.removeSendPatch(this.sendPatch); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeMessageListener(this.onKernelSocketMessage); // NOSONAR
+            this.kernelSocketInfo?.socket?.removeSendHook(this.mirrorSend); // NOSONAR
 
             if (this.kernelWasConnectedAtleastOnce) {
                 // this means we restarted the kernel and we now have new information.
@@ -170,8 +170,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtleastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addMessageListener(this.socketMessageListener); // NOSONAR
-            this.kernelSocketInfo.socket?.addSendPatch(this.sendPatch); // NOSONAR
+            this.kernelSocketInfo.socket?.addMessageListener(this.onKernelSocketMessage); // NOSONAR
+            this.kernelSocketInfo.socket?.addSendHook(this.mirrorSend); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
