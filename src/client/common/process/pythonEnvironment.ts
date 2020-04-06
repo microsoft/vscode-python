@@ -31,8 +31,7 @@ class PythonEnvironment {
         protected readonly deps: {
             getPythonArgv(python: string): string[];
             getObservablePythonArgv(python: string): string[];
-            // from FileSystem:
-            fileExists(filename: string): Promise<boolean>;
+            isValidExecutable(python: string): Promise<boolean>;
             // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
@@ -58,7 +57,7 @@ class PythonEnvironment {
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.deps.fileExists(this.pythonPath)) {
+        if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
 
@@ -126,31 +125,17 @@ class PythonEnvironment {
     }
 }
 
-class WindowsStoreEnvironment extends PythonEnvironment {
-    /**
-     * With windows store python apps, we have generally use the
-     * symlinked python executable.  The actual file is not accessible
-     * by the user due to permission issues (& rest of exension fails
-     * when using that executable).  Hence lets not resolve the
-     * executable using sys.executable for windows store python
-     * interpreters.
-     */
-    public async getExecutablePath(): Promise<string> {
-        return this.pythonPath;
-    }
-}
-
 function createDeps(
     // These are very lightly wrapped.
     procs: IProcessService,
-    fs: IFileSystem,
+    isValidExecutable: (filename: string) => Promise<boolean>,
     pythonArgv?: string[],
     observablePythonArgv?: string[]
 ) {
     return {
         getPythonArgv: (python: string) => pythonArgv || [python],
         getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
-        fileExists: (filename: string) => fs.fileExists(filename),
+        isValidExecutable,
         exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
     };
@@ -162,7 +147,13 @@ export function createPythonEnv(
     procs: IProcessService,
     fs: IFileSystem
 ): PythonEnvironment {
-    const deps = createDeps(procs, fs, undefined);
+    const deps = createDeps(
+        procs,
+        async (filename) => fs.fileExists(filename),
+        // We use the default: [pythonPath].
+        undefined,
+        undefined
+    );
     return new PythonEnvironment(pythonPath, deps);
 }
 
@@ -181,27 +172,37 @@ export function createCondaEnv(
         runArgs.push('-n', condaInfo.name);
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO(gh-8473): We cannot use pythonArgv for observablePythonArgv
-    // until 'conda run' can be run without buffering output.
-    const deps = createDeps(procs, fs, pythonArgv, undefined);
+    const deps = createDeps(
+        procs,
+        async (filename) => fs.fileExists(filename),
+        pythonArgv,
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO(gh-8473): Use pythonArgv here once 'conda run' can be
+        // run without buffering output.
+        undefined
+    );
     return new PythonEnvironment(pythonPath, deps);
 }
 
 export function createWindowsStoreEnv(
     pythonPath: string,
     // These are used to generate the deps.
-    procs: IProcessService,
-    fs: IFileSystem
-): WindowsStoreEnvironment {
-    const deps = createDeps(procs, fs, undefined);
-    return new WindowsStoreEnvironment(pythonPath, deps);
-}
-
-export namespace _forTestingUseOnly {
-    export function stubBaseGetExecutablePath() {
-        // tslint:disable-next-line:no-require-imports
-        const sinon = require('sinon');
-        return sinon.stub(PythonEnvironment.prototype, 'getExecutablePath');
-    }
+    procs: IProcessService
+): PythonEnvironment {
+    const deps = createDeps(
+        procs,
+        /**
+         * With windows store python apps, we have generally use the
+         * symlinked python executable.  The actual file is not accessible
+         * by the user due to permission issues (& rest of exension fails
+         * when using that executable).  Hence lets not resolve the
+         * executable using sys.executable for windows store python
+         * interpreters.
+         */
+        async (_f: string) => true,
+        // We use the default: [pythonPath].
+        undefined,
+        undefined
+    );
+    return new PythonEnvironment(pythonPath, deps);
 }

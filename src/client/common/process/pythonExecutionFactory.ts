@@ -256,7 +256,7 @@ function createPythonService(
         const [condaPath, condaInfo] = conda;
         env = createCondaEnv(condaPath, condaInfo, pythonPath, procService, fs);
     } else if (isWindowsStore) {
-        env = createWindowsStoreEnv(pythonPath, procService, fs);
+        env = createWindowsStoreEnv(pythonPath, procService);
     }
     const procs = createPythonProcessService(procService, env);
     return new PythonExecutionService(env, procs);

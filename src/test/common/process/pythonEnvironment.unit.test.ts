@@ -6,11 +6,9 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
-import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
-    _forTestingUseOnly,
     createCondaEnv,
     createPythonEnv,
     createWindowsStoreEnv
@@ -285,28 +283,18 @@ suite('CondaEnvironment', () => {
 
 suite('WindowsStoreEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let superExecutablePathStub: sinon.SinonStub<[], Promise<string>>;
     const pythonPath = 'foo';
-    const superPythonPath = 'bar';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-
-        superExecutablePathStub = _forTestingUseOnly.stubBaseGetExecutablePath();
-        superExecutablePathStub.resolves(superPythonPath);
-    });
-    teardown(() => {
-        sinon.restore();
     });
 
     test('Should return pythonPath if it is the path to the windows store interpreter', async () => {
-        const env = createWindowsStoreEnv(pythonPath, processService.object, fileSystem.object);
+        const env = createWindowsStoreEnv(pythonPath, processService.object);
 
         const executablePath = await env.getExecutablePath();
 
-        expect(executablePath).to.deep.equal(pythonPath);
-        sinon.assert.notCalled(superExecutablePathStub);
+        expect(executablePath).to.equal(pythonPath);
+        processService.verifyAll();
     });
 });
