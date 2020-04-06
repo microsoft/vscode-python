@@ -294,6 +294,18 @@ suite('Data Science - Kernel Switcher', () => {
                             });
                             test('Prompt to select a local kernel if user opts to select a different kernel', async () => {
                                 let firstTimeSelectingAKernel = true;
+                                let firstTimeSettingAKernel = true;
+                                const ex = new JupyterSessionStartError(new Error('Kaboom'));
+                                when(notebook.setKernelSpec(anything(), anything(), anything())).thenCall(() => {
+                                    // If we're setting it the first time, then throw an error.
+                                    if (firstTimeSettingAKernel) {
+                                        firstTimeSettingAKernel = false;
+                                        throw ex;
+                                    } else {
+                                        // This is the second time, it should succeed without errors.
+                                        return;
+                                    }
+                                });
                                 when(
                                     kernelSelector.selectLocalKernel(
                                         anything(),
@@ -324,7 +336,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 assert.deepEqual(selection?.kernelModel, selectedKernelSecondTime);
                                 assert.deepEqual(selection?.interpreter, selectedInterpreter);
                                 assert.deepEqual(selection?.kernelSpec, undefined);
-                                verify(notebook.setKernelSpec(anything(), anything(), anything())).once();
+                                verify(notebook.setKernelSpec(anything(), anything(), anything())).twice();
                                 verify(
                                     appShell.showErrorMessage(
                                         anything(),
