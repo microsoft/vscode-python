@@ -11,27 +11,25 @@ import {
     SpawnOptions
 } from './types';
 
-interface IPythonEnvironment {
+interface IDependencies {
+    // from PythonEnvironment:
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
     getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
-}
-
-interface IPythonProcessDependencies {
+    // from ProcessService:
     exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
 }
 
 class PythonProcessService {
     constructor(
-        // These are composed by the caller.
-        private readonly env: IPythonEnvironment,
-        private readonly deps: IPythonProcessDependencies
+        // This is the externally defined functionality used by the class.
+        private readonly deps: IDependencies
     ) {}
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.env.getExecutionObservableInfo(args);
+        const executable = this.deps.getExecutionObservableInfo(args);
         return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
@@ -41,13 +39,13 @@ class PythonProcessService {
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.env.getExecutionObservableInfo(['-m', moduleName, ...args]);
+        const executable = this.deps.getExecutionObservableInfo(['-m', moduleName, ...args]);
         return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.env.getExecutionInfo(args);
+        const executable = this.deps.getExecutionInfo(args);
         return this.deps.exec(executable.command, executable.args, opts);
     }
 
@@ -57,12 +55,12 @@ class PythonProcessService {
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.env.getExecutionInfo(['-m', moduleName, ...args]);
+        const executable = this.deps.getExecutionInfo(['-m', moduleName, ...args]);
         const result = await this.deps.exec(executable.command, executable.args, opts);
 
         // If a module is not installed we'll have something in stderr.
         if (moduleName && ErrorUtils.outputHasModuleNotInstalledError(moduleName, result.stderr)) {
-            const isInstalled = await this.env.isModuleInstalled(moduleName);
+            const isInstalled = await this.deps.isModuleInstalled(moduleName);
             if (!isInstalled) {
                 throw new ModuleNotInstalledError(moduleName);
             }
@@ -72,14 +70,25 @@ class PythonProcessService {
     }
 }
 
+interface IPythonEnvironment {
+    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
+    isModuleInstalled(moduleName: string): Promise<boolean>;
+}
+
 export function createPythonProcessService(
     procs: IProcessService,
     // This is composed by the caller.
     env: IPythonEnvironment
 ) {
     const deps = {
+        // from PythonService:
+        isModuleInstalled: async (moduleName: string) => env.isModuleInstalled(moduleName),
+        getExecutionInfo: (pythonArgs?: string[]) => env.getExecutionInfo(pythonArgs),
+        getExecutionObservableInfo: (pythonArgs?: string[]) => env.getExecutionObservableInfo(pythonArgs),
+        // from ProcessService:
         exec: async (f: string, a: string[], o: SpawnOptions) => procs.exec(f, a, o),
         execObservable: (f: string, a: string[], o: SpawnOptions) => procs.execObservable(f, a, o)
     };
-    return new PythonProcessService(env, deps);
+    return new PythonProcessService(deps);
 }

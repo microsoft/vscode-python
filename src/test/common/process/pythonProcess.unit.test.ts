@@ -13,7 +13,7 @@ import { noop } from '../../core';
 use(chaiAsPromised);
 
 // tslint:disable-next-line: max-func-body-length
-suite('PythonExecutionService', () => {
+suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     const pythonPath = 'path/to/python';
