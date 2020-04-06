@@ -1614,6 +1614,7 @@
                             "UseTerminalToGetActivatedEnvVars - experiment",
                             "CollectLSRequestTiming - experiment",
                             "CollectNodeLSRequestTiming - experiment",
+                            "DeprecatePythonPath - experiment",
                             "All"
                         ]
                     },
