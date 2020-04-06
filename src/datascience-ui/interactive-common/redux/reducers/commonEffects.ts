@@ -13,7 +13,13 @@ import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { getLocString, storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
 import { Transfer } from './transfer';
-import { CommonActionType, CommonReducerArg, ILoadIPyWidgetClassFailureAction, IOpenSettingsAction } from './types';
+import {
+    CommonActionType,
+    CommonReducerArg,
+    ILoadIPyWidgetClassFailureAction,
+    IOpenSettingsAction,
+    LoadIPyWidgetClassDisabledAction
+} from './types';
 
 export namespace CommonEffects {
     export function notebookDirty(arg: CommonReducerArg): IMainState {
@@ -254,5 +260,12 @@ export namespace CommonEffects {
         } else {
             return arg.prevState;
         }
+    }
+    export function handleLoadIPyWidgetClassDisabled(
+        arg: CommonReducerArg<CommonActionType, LoadIPyWidgetClassDisabledAction>
+    ): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadDisabled, arg.payload.data);
+        return arg.prevState;
     }
 }

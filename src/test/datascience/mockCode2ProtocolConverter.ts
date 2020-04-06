@@ -7,9 +7,6 @@ import * as proto from 'vscode-languageserver-protocol';
 
 // tslint:disable:no-any unified-signatures
 export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
-    public asUri(_uri: code.Uri): string {
-        throw new Error('Method not implemented.');
-    }
     public asTextDocumentIdentifier(textDocument: code.TextDocument): proto.TextDocumentIdentifier {
         return { uri: textDocument.uri.toString() };
     }
@@ -170,6 +167,38 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
         throw new Error('Method not implemented.');
     }
     public asDocumentLinkParams(_textDocument: code.TextDocument): proto.DocumentLinkParams {
+        throw new Error('Method not implemented.');
+    }
+    public asSignatureHelpParams(
+        _textDocument: code.TextDocument,
+        _position: code.Position,
+        _context: code.SignatureHelpContext
+    ): proto.SignatureHelpParams {
+        throw new Error('Method not implemented.');
+    }
+    public asPositions(_value: code.Position[]): proto.Position[] {
+        throw new Error('Method not implemented.');
+    }
+    public asLocation(value: code.Location): proto.Location;
+    public asLocation(value: undefined): undefined;
+    public asLocation(value: null): null;
+    public asLocation(value: code.Location | undefined | null): proto.Location | undefined | null;
+    public asLocation(_value: any): any {
+        throw new Error('Method not implemented.');
+    }
+    public asDiagnosticTag(_value: code.DiagnosticTag): number | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolKind(_item: code.SymbolKind): proto.SymbolKind {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolTag(_item: code.SymbolTag): 1 {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolTags(_items: readonly code.SymbolTag[]): 1[] {
+        throw new Error('Method not implemented.');
+    }
+    public asUri(_uri: code.Uri): string {
         throw new Error('Method not implemented.');
     }
     private isTextDocumentChangeEvent(value: any): value is code.TextDocumentChangeEvent {

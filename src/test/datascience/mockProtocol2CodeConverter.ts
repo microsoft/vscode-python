@@ -300,7 +300,38 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asFoldingRanges(_foldingRanges: any): any {
         throw new Error('Method not implemented.');
     }
-
+    public asRanges(_values: proto.Range[]): code.Range[] {
+        throw new Error('Method not implemented.');
+    }
+    public asDiagnosticTag(_tag: proto.InsertTextFormat): code.DiagnosticTag | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolKind(_item: proto.SymbolKind): code.SymbolKind {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolTag(_item: 1): code.SymbolTag {
+        throw new Error('Method not implemented.');
+    }
+    public asSymbolTags(items: null | undefined): undefined;
+    public asSymbolTags(items: readonly 1[]): code.SymbolTag[];
+    public asSymbolTags(items: readonly 1[] | null | undefined): code.SymbolTag[] | undefined;
+    public asSymbolTags(_items: any): any {
+        throw new Error('Method not implemented.');
+    }
+    public asSelectionRange(_selectionRange: proto.SelectionRange): code.SelectionRange {
+        throw new Error('Method not implemented.');
+    }
+    public asSelectionRanges(selectionRanges: proto.SelectionRange[]): code.SelectionRange[];
+    public asSelectionRanges(selectionRanges: null | undefined): undefined;
+    public asSelectionRanges(
+        selectionRanges: proto.SelectionRange[] | null | undefined
+    ): code.SelectionRange[] | undefined;
+    public asSelectionRanges(
+        selectionRanges: proto.SelectionRange[] | null | undefined
+    ): code.SelectionRange[] | undefined;
+    public asSelectionRanges(_selectionRanges: any): any {
+        throw new Error('Method not implemented.');
+    }
     private asCompletionItemKind(
         value: proto.CompletionItemKind
     ): [code.CompletionItemKind, proto.CompletionItemKind | undefined] {
@@ -322,11 +353,15 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
             if (item.insertTextFormat === proto.InsertTextFormat.Snippet) {
                 return {
                     text: new code.SnippetString(item.textEdit.newText),
-                    range: this.asRange(item.textEdit.range),
+                    range: this.asRange((item.textEdit as code.TextEdit).range),
                     fromEdit: true
                 };
             } else {
-                return { text: item.textEdit.newText, range: this.asRange(item.textEdit.range), fromEdit: true };
+                return {
+                    text: item.textEdit.newText,
+                    range: this.asRange((item.textEdit as code.TextEdit).range),
+                    fromEdit: true
+                };
             }
         } else if (item.insertText) {
             if (item.insertTextFormat === proto.InsertTextFormat.Snippet) {

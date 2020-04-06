@@ -59,6 +59,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE]: CommonEffects.handleLoadIPyWidgetClassDisabled,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,

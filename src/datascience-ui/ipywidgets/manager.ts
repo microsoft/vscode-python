@@ -46,7 +46,11 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
     constructor(
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
-        private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+        private readonly scriptLoader: {
+            loadWidgetScriptsFromThirdPartySource: boolean;
+            // tslint:disable-next-line: no-any
+            errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+        }
     ) {
         // tslint:disable-next-line: no-any
         this.postOffice.addHandler(this);
@@ -150,7 +154,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                 throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
             }
             // Create the real manager and point it at our proxy kernel.
-            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.loadErrorHandler);
+            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.scriptLoader);
 
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));

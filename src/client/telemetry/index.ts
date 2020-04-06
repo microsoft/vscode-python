@@ -644,6 +644,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
+     * Telemetry event sent when an environment file is detected in the workspace.
+     */
+    [EventName.ENVFILE_WORKSPACE]: {
+        /**
+         * If there's a custom path specified in the python.envFile workspace settings.
+         */
+        hasCustomEnvPath: boolean;
+    };
+    /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
@@ -1921,4 +1930,8 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
+     */
+    [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
 }

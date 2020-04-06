@@ -393,6 +393,7 @@ export interface IDataScienceSettings {
     disableJupyterAutoStart?: boolean;
     jupyterCommandLineArguments: string[];
     enableIPyWidgets: boolean;
+    loadWidgetScriptsFromThirdPartySource?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

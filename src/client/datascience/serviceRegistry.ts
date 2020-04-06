@@ -73,6 +73,9 @@ import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from './jupyter/notebookStarter';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
+import { KernelFinder } from './kernel-launcher/kernelFinder';
+import { KernelLauncher } from './kernel-launcher/kernelLauncher';
+import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
@@ -147,6 +150,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
     serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+    serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
+    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);

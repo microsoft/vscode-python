@@ -10,7 +10,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
@@ -49,7 +48,6 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
     };
 
     setup(() => {
-        const workspaceService = mock(WorkspaceService);
         const httpClient = mock(HttpClient);
         const crypto = mock(CryptoUtils);
         const appEnvironment = mock(ApplicationEnvironment);
@@ -63,7 +61,6 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),

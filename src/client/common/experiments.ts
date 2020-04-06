@@ -9,9 +9,9 @@ import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IConfigurationService, IHttpClient } from '../common/types';
-import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IApplicationEnvironment, IWorkspaceService } from './application/types';
+import { IApplicationEnvironment } from './application/types';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
@@ -87,7 +87,6 @@ export class ExperimentsManager implements IExperimentsManager {
     private activatedOnce: boolean = false;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
@@ -116,7 +115,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
+        if (this.activatedOnce) {
             return;
         }
         this.activatedOnce = true;
@@ -317,6 +316,10 @@ export class ExperimentsManager implements IExperimentsManager {
             traceError('Effort to download experiments within timeout failed with error', ex);
             return false;
         }
+    }
+
+    public _activated(): boolean {
+        return this.activatedOnce;
     }
 
     /**

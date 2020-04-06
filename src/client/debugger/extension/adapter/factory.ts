@@ -20,7 +20,6 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 
@@ -113,27 +112,13 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @returns {Promise<boolean>} Whether the user should and can use the new Debugger wheels or not.
      * @memberof DebugAdapterDescriptorFactory
      */
-    public async useNewDebugger(pythonPath: string): Promise<boolean> {
+    private async useNewDebugger(pythonPath: string): Promise<boolean> {
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
             return false;
         }
 
         return true;
-    }
-
-    public getDebuggerPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels', 'debugpy');
-    }
-
-    public getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
-        const useNewDADebugger = this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
-        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches
-            ? [useNewDADebugger ? '--wait-for-client' : '--wait']
-            : [];
-        return useNewDADebugger
-            ? ['--listen', `${remoteDebugOptions.host}:${remoteDebugOptions.port}`, ...waitArgs]
-            : ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
     }
 
     /**

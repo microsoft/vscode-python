@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, FileSystemWatcher, Uri } from 'vscode';
@@ -20,6 +21,7 @@ import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
 // tslint:disable:no-any max-func-body-length
@@ -51,7 +53,13 @@ suite('Multiroot Environment Variables Provider', () => {
             instance(currentProcess)
         );
 
+        sinon.stub(EnvFileTelemetry, 'sendFileCreationTelemetry').returns();
+
         clearCache();
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Event is fired when there are changes to settings', () => {

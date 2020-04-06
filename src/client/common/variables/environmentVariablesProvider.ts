@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { EnvFileTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
@@ -82,7 +83,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         this.fileWatchers.set(envFile, envFileWatcher);
         if (envFileWatcher) {
             this.disposables.push(envFileWatcher.onDidChange(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
-            this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
+            this.disposables.push(envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri)));
             this.disposables.push(envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri)));
         }
     }
@@ -93,6 +94,12 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource!);
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
+
+    private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
+        this.onEnvironmentFileChanged(workspaceFolderUri);
+        EnvFileTelemetry.sendFileCreationTelemetry();
+    }
+
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
         clearCachedResourceSpecificIngterpreterData('getEnvironmentVariables', workspaceFolderUri);
         clearCachedResourceSpecificIngterpreterData('CustomEnvironmentVariables', workspaceFolderUri);

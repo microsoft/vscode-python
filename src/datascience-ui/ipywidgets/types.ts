@@ -18,8 +18,11 @@ export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOp
 export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
-    // tslint:disable-next-line: no-any
-    loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+    scriptLoader: {
+        loadWidgetScriptsFromThirdPartySource: boolean;
+        // tslint:disable-next-line: no-any
+        errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+    }
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {

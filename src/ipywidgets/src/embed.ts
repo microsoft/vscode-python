@@ -99,7 +99,10 @@ export function requireLoader(moduleName: string, moduleVersion: string): Promis
  */
 export function renderWidgets(element = document.documentElement): void {
     const managerFactory = (): any => {
-        return new wm.WidgetManager(undefined, element, () => 'Error loading widget.');
+        return new wm.WidgetManager(undefined, element, {
+            loadWidgetScriptsFromThirdPartySource: false,
+            errorHandler: () => 'Error loading widget.'
+        });
     };
     libembed.renderWidgets(managerFactory, element).catch((x) => {
         window.console.error(x);

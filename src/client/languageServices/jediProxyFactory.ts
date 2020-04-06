@@ -32,18 +32,18 @@ export class JediFactory implements Disposable {
             }
         }
 
-        if (!this.jediProxyHandlers.has(workspacePath)) {
+        if (!this.jediProxyHandlers.has(workspacePath!)) {
             const jediProxy = new JediProxy(
                 this.extensionRootPath,
-                workspacePath,
+                workspacePath!,
                 this.interpreter,
                 this.serviceContainer
             );
             const jediProxyHandler = new JediProxyHandler(jediProxy);
             this.disposables.push(jediProxy, jediProxyHandler);
-            this.jediProxyHandlers.set(workspacePath, jediProxyHandler);
+            this.jediProxyHandlers.set(workspacePath!, jediProxyHandler);
         }
         // tslint:disable-next-line:no-non-null-assertion
-        return this.jediProxyHandlers.get(workspacePath)! as JediProxyHandler<T>;
+        return this.jediProxyHandlers.get(workspacePath!)! as JediProxyHandler<T>;
     }
 }

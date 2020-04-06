@@ -51,6 +51,7 @@ interface INativeCellBaseProps {
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
     busy: boolean;
+    loadWidgetScriptsFromThirdPartySource: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -676,6 +677,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = this.props.themeMatplotlibPlots ? true : false;
         const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
+        const loadWidgetScriptsFromThirdPartySource = this.props.loadWidgetScriptsFromThirdPartySource === true;
         if (this.shouldRenderOutput()) {
             return (
                 <div className={CssConstants.CellOutputWrapper}>
@@ -686,6 +688,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         expandImage={this.props.showPlot}
                         maxTextSize={this.props.maxTextSize}
                         themeMatplotlibPlots={themeMatplotlibPlots}
+                        loadWidgetScriptsFromThirdPartySource={loadWidgetScriptsFromThirdPartySource}
                     />
                 </div>
             );
