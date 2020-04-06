@@ -203,7 +203,7 @@ export class JupyterNotebookBase implements INotebook {
         this._resource = resource;
 
         // Make a copy of the launch info so we can update it in this class
-        this.launchInfo = { ..._launchInfo };
+        this.launchInfo = cloneDeep(_launchInfo);
     }
     public get server(): INotebookServer {
         return this.owner;
