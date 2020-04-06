@@ -16,19 +16,17 @@ import {
     PythonVersionInfo
 } from './types';
 
-interface IDependencies {
-    fileExists(filename: string): Promise<boolean>;
-    exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
-    shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
-}
-
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(
         protected readonly pythonPath: string,
         // This is the externally defined functionality used by the class.
-        protected readonly deps: IDependencies
+        protected readonly deps: {
+            fileExists(filename: string): Promise<boolean>;
+            exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
+            shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
+        }
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
@@ -130,7 +128,11 @@ class CondaEnvironment extends PythonEnvironment {
         private readonly condaFile: string,
         condaInfo: CondaEnvironmentInfo,
         pythonPath: string,
-        deps: IDependencies
+        deps: {
+            fileExists(filename: string): Promise<boolean>;
+            exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
+            shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
+        }
     ) {
         super(pythonPath, deps);
         if (condaInfo.name === '') {

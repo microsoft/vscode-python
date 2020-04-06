@@ -11,20 +11,18 @@ import {
     SpawnOptions
 } from './types';
 
-interface IDependencies {
-    // from PythonEnvironment:
-    isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
-    // from ProcessService:
-    exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
-    execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
-}
-
 class PythonProcessService {
     constructor(
         // This is the externally defined functionality used by the class.
-        private readonly deps: IDependencies
+        private readonly deps: {
+            // from PythonEnvironment:
+            isModuleInstalled(moduleName: string): Promise<boolean>;
+            getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+            getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
+            // from ProcessService:
+            exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+            execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
+        }
     ) {}
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
