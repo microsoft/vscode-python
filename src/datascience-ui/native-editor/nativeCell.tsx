@@ -101,7 +101,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
-            if (this.wrapperRef.current.scrollIntoView) {
+            // tslint:disable-next-line: no-any
+            if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }
@@ -180,10 +181,20 @@ export class NativeCell extends React.Component<INativeCellProps> {
         );
     }
 
+    private allowClickPropagation(elem: HTMLElement): boolean {
+        if (this.isMarkdownCell()) {
+            return true;
+        }
+        if (!elem.closest(CssConstants.ImageButtonClass) && !elem.closest(CssConstants.CellOutputWrapperClass)) {
+            return true;
+        }
+        return false;
+    }
+
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         if (ev.nativeEvent.target) {
             const elem = ev.nativeEvent.target as HTMLElement;
-            if (!elem.closest(CssConstants.ImageButtonClass) && !elem.closest(CssConstants.CellOutputWrapperClass)) {
+            if (this.allowClickPropagation(elem)) {
                 // Not a click on an button in a toolbar or in output, select the cell.
                 ev.stopPropagation();
                 this.lastKeyPressed = undefined;
@@ -194,7 +205,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         const elem = ev.nativeEvent.target as HTMLElement;
-        if (!elem.closest(CssConstants.ImageButtonClass) && !elem.closest(CssConstants.CellOutputWrapperClass)) {
+        if (this.allowClickPropagation(elem)) {
             // When we receive double click, propagate upwards. Might change our state
             ev.stopPropagation();
             this.props.focusCell(this.cellId, CursorPos.Current);

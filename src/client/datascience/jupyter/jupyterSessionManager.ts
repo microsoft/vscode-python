@@ -32,7 +32,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
-        private config: IConfigurationService,
+        _config: IConfigurationService,
         private failOnPassword: boolean | undefined,
         private kernelSelector: KernelSelector,
         private outputChannel: IOutputChannel
@@ -240,7 +240,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             ...serverSettings,
             init: requestInit,
             WebSocket: createJupyterWebSocket(
-                this.config.getSettings().datascience.verboseLogging,
                 cookieString,
                 allowUnauthorized
                 // tslint:disable-next-line:no-any

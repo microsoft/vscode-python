@@ -19,7 +19,13 @@
             "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
-            ]
+            ],
+            "env": {
+                // Enable this to turn on redux logging during debugging
+                "XVSC_PYTHON_FORCE_LOGGING": "1",
+                // Enable this to try out new experiments locally
+                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE" : "1"
+            }
         },
         {
             "name": "Extension (DS UI in Browser)",

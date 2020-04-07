@@ -73,11 +73,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             throw new Error('Jedi already started');
         }
         const context = this.context;
-        const jediFactory = (this.jediFactory = new JediFactory(
-            context.asAbsolutePath('.'),
-            interpreter,
-            this.serviceManager
-        ));
+        const jediFactory = (this.jediFactory = new JediFactory(interpreter, this.serviceManager));
         context.subscriptions.push(jediFactory);
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
 

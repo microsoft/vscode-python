@@ -111,7 +111,7 @@ suite('File Downloader', () => {
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             const tmpFilePath = await fs.createTemporaryFile('.json');
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
 
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
             await fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', tmpFilePath.filePath);
@@ -125,7 +125,7 @@ suite('File Downloader', () => {
             nock('https://python.extension').get('/package.json').reply(500);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             const tmpFilePath = await fs.createTemporaryFile('.json');
 
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
@@ -142,7 +142,7 @@ suite('File Downloader', () => {
                 .reply(200, () => fsExtra.createReadStream(packageJsonFile));
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
 
             // Use bogus files that cannot be created (on windows, invalid drives, on mac & linux use invalid home directories).
             const invalidFileName = new PlatformService().isWindows
@@ -161,7 +161,7 @@ suite('File Downloader', () => {
                 .reply(200, () => fsExtra.createReadStream(packageJsonFile));
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             // Create a file stream that will throw an error when written to (use ErroringMemoryStream).
             const tmpFilePath = 'bogus file';
             const fileSystem = mock(FileSystem);
@@ -188,7 +188,7 @@ suite('File Downloader', () => {
                 ]);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             const tmpFilePath = await fs.createTemporaryFile('.json');
             // Mock request-progress to throttle 1ms, so we can get progress messages.
             // I.e. report progress every 1ms. (however since download is delayed to 10ms,

@@ -47,7 +47,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]: Creation.updateCell,
     [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,

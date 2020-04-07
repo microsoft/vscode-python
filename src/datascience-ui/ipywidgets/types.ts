@@ -77,5 +77,5 @@ export interface IIPyWidgetManager {
      * @returns {Promise<{ dispose: Function }>}
      * @memberof IIPyWidgetManager
      */
-    renderWidget(data: nbformat.IMimeBundle, ele: HTMLElement): Promise<{ dispose: Function }>;
+    renderWidget(data: nbformat.IMimeBundle, ele: HTMLElement): Promise<Widget | undefined>;
 }

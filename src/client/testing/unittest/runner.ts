@@ -1,9 +1,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -73,7 +72,6 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.passed = 0;
         options.tests.summary.skipped = 0;
         let failFast = false;
-        const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
         this.server.on('error', (message: string, ...data: string[]) => traceError(`${message} ${data.join(' ')}`));
         this.server.on('log', noop);
         this.server.on('connect', noop);
@@ -144,8 +142,10 @@ export class TestManagerRunner implements ITestManagerRunner {
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
+                const args = internalScripts.visualstudio_py_testlauncher(testArgs);
+
                 const runOptions: Options = {
-                    args: [testLauncherFile].concat(testArgs),
+                    args: args,
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,

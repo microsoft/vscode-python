@@ -88,6 +88,8 @@ import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { isTestExecution } from '../../common/constants';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -449,6 +451,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const modified = filtered.filter((c) => c.state === CellState.finished || c.state === CellState.error);
         const unmodified = this.model?.cells.filter((c) => modified.find((m) => m.id === c.id));
         if (modified.length > 0 && unmodified && this.model) {
+            // As this point, we're updating the model because of changes to the cell as a result of execution.
+            // The output and execution count change, however we're just going to update everything.
+            // But, we should not update the `source`. The only time source can change is when a request comes from the UI.
+            // Perhaps we need a finer grained update (update only output and execution count along with `source=execution`).
+            // For now retain source from previous model.
+            // E.g. user executes a cell, in the mean time they update the text. Now model contains new value.
+            // However once execution has completed, this code will update the model with results from previous execution (prior to edit).
+            // We now need to give preference to the text in the model, over the old one that was executed.
+            modified.forEach((modifiedCell) => {
+                const originalCell = unmodified.find((unmodifiedCell) => unmodifiedCell.id === modifiedCell.id);
+                if (originalCell) {
+                    modifiedCell.data.source = originalCell.data.source;
+                }
+            });
             this.model.update({
                 source: 'user',
                 kind: 'modify',
@@ -657,10 +673,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         sendTelemetryEvent(telemetryEvent);
     }
 
-    private loadCellsComplete() {
+    private async loadCellsComplete() {
         if (!this.loadedAllCells) {
             this.loadedAllCells = true;
             sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        }
+
+        // If we don't have a server right now, at least show our kernel name (this seems to slow down tests
+        // too much though)
+        if (!isTestExecution()) {
+            const metadata = await this.getNotebookMetadata();
+            if (!this.notebook && metadata?.kernelspec) {
+                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: ServerStatus.NotStarted,
+                    localizedUri: '',
+                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name
+                }).ignoreErrors();
+            }
         }
     }
 }

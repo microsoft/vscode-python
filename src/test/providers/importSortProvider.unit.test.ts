@@ -277,7 +277,7 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure temporary file is created for sorting when document is dirty', async () => {
+    test('Ensure temporary file is created for sorting when document is dirty (with custom isort path)', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         let tmpFileDisposed = false;
@@ -352,13 +352,11 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure temporary file is created for sorting when document is dirty (with custom isort path)', async () => {
+    test('Ensure temporary file is created for sorting when document is dirty', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         let tmpFileDisposed = false;
         const tmpFile: TemporaryFile = { filePath: 'TmpFile', dispose: () => (tmpFileDisposed = true) };
-        const processService = TypeMoq.Mock.ofType<ProcessService>();
-        processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
             .setup((d) => d.lineCount)

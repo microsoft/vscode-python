@@ -1,19 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import { CondaEnvironmentInfo } from '../../interpreter/contracts';
-import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
+import * as internalScripts from './internal/scripts';
 import {
     ExecutionResult,
     InterpreterInfomation,
     IProcessService,
     PythonExecutionInfo,
-    PythonVersionInfo,
     ShellOptions,
     SpawnOptions
 } from './types';
@@ -80,9 +78,9 @@ class PythonEnvironment {
 
     private async getInterpreterInformationImpl(): Promise<InterpreterInfomation | undefined> {
         try {
-            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
-            const { command, args } = this.getExecutionInfo([file]);
-            const argv = [command, ...args];
+            const execInfo = this.getExecutionInfo();
+            const [args, parse] = internalScripts.interpreterInfo();
+            const argv = [...execInfo.python, ...args];
 
             // Concat these together to make a set of quoted strings
             const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
@@ -98,17 +96,7 @@ class PythonEnvironment {
                 traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
                 return;
             }
-            let json: {
-                versionInfo: PythonVersionInfo;
-                sysPrefix: string;
-                sysVersion: string;
-                is64Bit: boolean;
-            };
-            try {
-                json = JSON.parse(result.stdout);
-            } catch (ex) {
-                throw Error(`${argv} returned bad JSON (${result.stdout}) (${ex})`);
-            }
+            const json = parse(result.stdout);
             traceInfo(`Found interpreter for ${argv}`);
             const versionValue =
                 json.versionInfo.length === 4

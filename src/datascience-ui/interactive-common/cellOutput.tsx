@@ -23,6 +23,7 @@ const ansiToHtml = require('ansi-to-html');
 
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
+import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
 import { TrimmedOutputMessage } from './trimmedOutputLink';
@@ -69,10 +70,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     // tslint:disable-next-line: no-any
     private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
     private ipyWidgetRef: React.RefObject<HTMLDivElement>;
-    private ipyWidgetRenderCount: number = 0;
-    private renderedView: { dispose: Function }[] = [];
+    private renderedViews = new Map<string, Promise<Widget | undefined>>();
+    private widgetManager: WidgetManager | undefined;
     // tslint:disable-next-line: no-any
-    private ipyWidgetRenderTimeout?: any;
     constructor(prop: ICellOutputProps) {
         super(prop);
         this.ipyWidgetRef = React.createRef<HTMLDivElement>();
@@ -144,7 +144,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
             return;
         }
-        this.renderIPyWidgets(true);
     }
     // tslint:disable-next-line: max-func-body-length
     public componentDidUpdate(prevProps: ICellOutputProps) {
@@ -163,7 +162,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         ) {
             return;
         }
-        this.renderIPyWidgets();
     }
 
     public shouldComponentUpdate(
@@ -216,87 +214,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
     private destroyIPyWidgets() {
-        this.renderedView.forEach((view) => {
-            try {
-                view.dispose();
-            } catch {
-                //
-            }
+        this.renderedViews.forEach((viewPromise) => {
+            viewPromise.then((v) => v?.dispose()).ignoreErrors();
         });
-        this.renderedView = [];
-        if (this.ipyWidgetRenderTimeout) {
-            clearTimeout(this.ipyWidgetRenderTimeout);
-        }
-    }
-    /**
-     * Renders ipywidgets
-     */
-    private renderIPyWidgets(calledFromComponentDidMount: boolean = true) {
-        this.destroyIPyWidgets();
-        // Keep track of current render counter.
-        // If this number changes, then it means this method was invoked again, and we need to cancel current rendering.
-        // I.e. we use this as a simplecancellation token.
-        const renderId = (this.ipyWidgetRenderCount += 1);
-        const outputs = this.getCodeCell().outputs;
-
-        // If we're rendering ipywidgets in the componentDidMount event, then
-        // this means we most likely have all of the data we need to render this output.
-        // Hence, there's no need to throttle the rendering, as we're not waiting for any new output.
-        // If on the other hand this method is called from componentDidUpdate, then output was updated
-        // after control was rendered. However its possible we haven't received all of the output, and it can keep coming through via multiple updates
-        // This happens today because we send output in waves. In such cases we should throttle rendering.
-        // Else, we'll end up rendering some part, then destroying it and rendering again due to updates.
-        // Long story short, if called form compnentDidMount, then just render without any delays, else throttle, (wait for more potential updates).
-
-        const delay = 100;
-        const immediateExecution = (cb: Function, _time: number) => {
-            cb();
-            return undefined;
-        };
-        const delayedRenderCallback = calledFromComponentDidMount ? immediateExecution : setTimeout;
-
-        this.ipyWidgetRenderTimeout = delayedRenderCallback(async () => {
-            // Render the output in order.
-            const itemsToRender = [...outputs];
-            // Render each ipywidget output, one at a time.
-            const renderOutput = async () => {
-                if (itemsToRender.length === 0) {
-                    return;
-                }
-                const output = itemsToRender.shift();
-                // tslint:disable-next-line: no-any
-                const outputData = output && output.data ? (output.data as any) : undefined; // NOSONAR
-                if (!outputData || !outputData['application/vnd.jupyter.widget-view+json']) {
-                    return;
-                }
-                // tslint:disable-next-line: no-any
-                const widgetData: any = outputData['application/vnd.jupyter.widget-view+json'];
-                const element = this.ipyWidgetRef.current!;
-                const widgetInstance: WidgetManager | undefined = await new Promise((resolve) =>
-                    WidgetManager.instance.subscribe(resolve)
-                );
-                // Check if we received a new update request (simplem cancellation mechanism).
-                if (renderId !== this.ipyWidgetRenderCount || !widgetInstance) {
-                    return;
-                }
-                const view = await widgetInstance.renderWidget(widgetData, element);
-                // Check if we received a new update request (simplem cancellation mechanism).
-                if (renderId !== this.ipyWidgetRenderCount) {
-                    view.dispose();
-                    return;
-                }
-                // No support for theming of ipywidgets, hence white bg for ipywidgets.
-                if (
-                    this.ipyWidgetRef.current &&
-                    !this.ipyWidgetRef.current?.className.includes('cell-output-ipywidget-background')
-                ) {
-                    this.ipyWidgetRef.current.className += ' cell-output-ipywidget-background';
-                }
-                this.renderedView.push(view);
-                delayedRenderCallback(renderOutput, delay);
-            };
-            delayedRenderCallback(renderOutput, delay);
-        }, delay);
+        this.renderedViews.clear();
     }
 
     private getCell = () => {
@@ -556,22 +477,24 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const mimetype = transformed.output.mimeType;
             if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
                 if (this.props.loadWidgetScriptsFromThirdPartySource) {
-                    return;
-                }
-                // If loading of widget source is not allowed, display a message.
-                const errorMessage = getLocString(
-                    'DataScience.loadThirdPartyWidgetScriptsDisabled',
-                    "Loading of Widgets is disabled by default. Click <a href='https://command:python.datascience.loadWidgetScriptsFromThirdPartySource'>here</a> to enable the setting 'python.dataScience.loadWidgetScriptsFromThirdPartySource'. Once enabled you will need to restart the Kernel"
-                );
+                    // Create a view for this output if not already there.
+                    this.renderWidget(transformed.output);
+                } else {
+                    // If loading of widget source is not allowed, display a message.
+                    const errorMessage = getLocString(
+                        'DataScience.loadThirdPartyWidgetScriptsDisabled',
+                        "Loading of Widgets is disabled by default. Click <a href='https://command:python.datascience.loadWidgetScriptsFromThirdPartySource'>here</a> to enable the setting 'python.dataScience.loadWidgetScriptsFromThirdPartySource'. Once enabled you will need to restart the Kernel"
+                    );
 
-                // tslint:disable: react-no-dangerous-html
-                buffer.push(
-                    <div role="group" key={index}>
-                        <span className={'cell-output-html cell-output-error'}>
-                            <div dangerouslySetInnerHTML={{ __html: errorMessage }} />
-                        </span>
-                    </div>
-                );
+                    // tslint:disable: react-no-dangerous-html
+                    buffer.push(
+                        <div role="group" key={index}>
+                            <span className={'cell-output-html cell-output-error'}>
+                                <div dangerouslySetInnerHTML={{ __html: errorMessage }} />
+                            </span>
+                        </div>
+                    );
+                }
             } else if (mimetype && isMimeTypeSupported(mimetype)) {
                 // If that worked, use the transform
                 // Get the matching React.Component for that mimetype
@@ -608,7 +531,11 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         );
                     }
                 }
-            } else if (!mimetype || mimetype.startsWith('application/scrapbook.scrap.')) {
+            } else if (
+                !mimetype ||
+                mimetype.startsWith('application/scrapbook.scrap.') ||
+                mimetype.startsWith('application/aml')
+            ) {
                 // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
                 buffer.push(<div key={index}></div>);
             } else {
@@ -632,4 +559,39 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             </div>
         );
     };
+
+    private renderWidget(widgetOutput: ICellOutputData) {
+        // Create a view for this widget if we haven't already
+        // tslint:disable-next-line: no-any
+        const widgetData: any = widgetOutput.mimeBundle['application/vnd.jupyter.widget-view+json'];
+        if (widgetData.model_id) {
+            if (!this.renderedViews.has(widgetData.model_id)) {
+                this.renderedViews.set(widgetData.model_id, this.createWidgetView(widgetData));
+            }
+        }
+    }
+
+    private async getWidgetManager() {
+        if (!this.widgetManager) {
+            const wm: WidgetManager | undefined = await new Promise((resolve) =>
+                WidgetManager.instance.subscribe(resolve)
+            );
+            this.widgetManager = wm;
+            if (wm) {
+                const oldDispose = wm.dispose.bind(wm);
+                wm.dispose = () => {
+                    this.renderedViews.clear();
+                    this.widgetManager = undefined;
+                    return oldDispose();
+                };
+            }
+        }
+        return this.widgetManager;
+    }
+
+    private async createWidgetView(widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number }) {
+        const wm = await this.getWidgetManager();
+        const element = this.ipyWidgetRef.current!;
+        return wm?.renderWidget(widgetData, element);
+    }
 }

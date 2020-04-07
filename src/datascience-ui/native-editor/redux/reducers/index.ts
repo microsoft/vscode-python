@@ -64,7 +64,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]: Creation.updateCell,
     [InteractiveWindowMessages.NotebookDirty]: CommonEffects.notebookDirty,
     [InteractiveWindowMessages.NotebookClean]: CommonEffects.notebookClean,
     [InteractiveWindowMessages.LoadAllCells]: Creation.loadAllCells,
