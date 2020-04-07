@@ -9,8 +9,9 @@ import {
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassDisabledAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { EnableIPyWidgets } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -38,12 +39,13 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }>();
     // tslint:disable-next-line: no-require-imports
     private hashFn = require('hash.js').sha256;
+    private enabled = false;
 
     constructor(
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IExperimentsManager) readonly experimentsManager: IExperimentsManager
     ) {
         disposables.push(
             notebookProvider.onNotebookCreated(async (e) => {
@@ -52,6 +54,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
                 }
             })
         );
+
+        this.enabled = experimentsManager.inExperiment(EnableIPyWidgets.experiment);
     }
 
     public dispose() {
@@ -93,7 +97,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         }
     }
     private getIPyWidgetMessageDispatcher() {
-        if (!this.notebookIdentity || !this.configService.getSettings().datascience.enableIPyWidgets) {
+        if (!this.notebookIdentity || !this.enabled) {
             return;
         }
         this.ipyWidgetMessageDispatcher = this.factory.create(this.notebookIdentity);

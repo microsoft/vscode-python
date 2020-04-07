@@ -392,7 +392,6 @@ export interface IDataScienceSettings {
     variableQueries: IVariableQuery[];
     disableJupyterAutoStart?: boolean;
     jupyterCommandLineArguments: string[];
-    enableIPyWidgets: boolean;
     loadWidgetScriptsFromThirdPartySource?: boolean;
 }
 

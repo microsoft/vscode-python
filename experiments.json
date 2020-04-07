@@ -136,5 +136,17 @@
         "salt": "CollectNodeLSRequestTiming",
         "min": 0,
         "max": 0
+    },
+    {
+        "name": "EnableIPyWidgets - experiment",
+        "salt": "EnableIPyWidgets",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "EnableIPyWidgets - control",
+        "salt": "EnableIPyWidgets",
+        "min": 0,
+        "max": 0
     }
 ]
