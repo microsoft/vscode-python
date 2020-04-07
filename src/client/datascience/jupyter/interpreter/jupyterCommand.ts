@@ -3,8 +3,8 @@
 'use strict';
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { traceError } from '../../../common/logger';
-import { scripts as internalScripts } from '../../../common/process/internal';
 import {
     ExecutionResult,
     IProcessService,
@@ -13,6 +13,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult
 } from '../../../common/process/types';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { JupyterCommands, PythonDaemonModule } from '../../constants';
@@ -97,10 +98,19 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                         args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
                     (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))
                 ) {
-                    const [scriptArgs, parse] = internalScripts.vscode_datascience_helpers.jupyter_nbInstalled();
                     try {
-                        const proc = await svc.exec(scriptArgs, {});
-                        if (parse(proc.stdout)) {
+                        const output = await svc.exec(
+                            [
+                                path.join(
+                                    EXTENSION_ROOT_DIR,
+                                    'pythonFiles',
+                                    'vscode_datascience_helpers',
+                                    'jupyter_nbInstalled.py'
+                                )
+                            ],
+                            {}
+                        );
+                        if (output.stdout.toLowerCase().includes('available')) {
                             return svc;
                         }
                     } catch (ex) {
@@ -253,8 +263,10 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             interpreter,
             bypassCondaExecution: true
         });
-        const args = internalScripts.vscode_datascience_helpers.getJupyterKernels();
-        return activatedEnv.exec(args, { ...options, throwOnStdErr: true });
+        return activatedEnv.exec(
+            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterKernels.py')],
+            { ...options, throwOnStdErr: true }
+        );
     }
     private async getKernelSpecVersion(interpreter: PythonInterpreter, options: SpawnOptions) {
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
@@ -262,8 +274,17 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             interpreter,
             bypassCondaExecution: true
         });
-        const args = internalScripts.vscode_datascience_helpers.getJupyterKernelspecVersion();
-        return activatedEnv.exec(args, { ...options, throwOnStdErr: true });
+        return activatedEnv.exec(
+            [
+                path.join(
+                    EXTENSION_ROOT_DIR,
+                    'pythonFiles',
+                    'vscode_datascience_helpers',
+                    'getJupyterKernelspecVersion.py'
+                )
+            ],
+            { ...options, throwOnStdErr: true }
+        );
     }
 }
 

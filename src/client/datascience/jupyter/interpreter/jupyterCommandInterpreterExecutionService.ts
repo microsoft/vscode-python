@@ -4,14 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { scripts as internalScripts } from '../../../common/process/internal';
 import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { JupyterCommands, PythonDaemonModule } from '../../constants';
 import { IJupyterSubCommandExecutionService } from '../../types';
@@ -101,13 +102,13 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
-        const [args, parse] = internalScripts.vscode_datascience_helpers.getServerInfo();
-        const serverInfoProc = await daemon.exec(args, newOptions);
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
+        const serverInfoString = await daemon.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
         try {
             // Parse out our results, return undefined if we can't suss it out
-            serverInfos = parse(serverInfoProc.stdout) as JupyterServerInfo[];
+            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
         } catch (err) {
             traceWarning('Failed to parse JSON when getting server info out from getServerInfo.py', err);
             return;
