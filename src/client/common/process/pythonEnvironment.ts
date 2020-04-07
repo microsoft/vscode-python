@@ -13,7 +13,9 @@ import {
     InterpreterInfomation,
     IProcessService,
     PythonExecutionInfo,
-    PythonVersionInfo
+    PythonVersionInfo,
+    ShellOptions,
+    SpawnOptions
 } from './types';
 
 function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecutionInfo {
@@ -126,18 +128,19 @@ class PythonEnvironment {
 }
 
 function createDeps(
-    // These are very lightly wrapped.
-    procs: IProcessService,
     isValidExecutable: (filename: string) => Promise<boolean>,
     pythonArgv: string[] | undefined,
-    observablePythonArgv: string[] | undefined
+    observablePythonArgv: string[] | undefined,
+    // from ProcessService:
+    exec: (file: string, args: string[], options?: SpawnOptions) => Promise<ExecutionResult<string>>,
+    shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>
 ) {
     return {
         getPythonArgv: (python: string) => pythonArgv || [python],
         getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
         isValidExecutable,
-        exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
-        shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
+        exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
+        shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })
     };
 }
 
@@ -148,11 +151,12 @@ export function createPythonEnv(
     fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
-        procs,
         async (filename) => fs.fileExists(filename),
         // We use the default: [pythonPath].
         undefined,
-        undefined
+        undefined,
+        procs.exec,
+        procs.shellExec
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -173,13 +177,14 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        procs,
         async (filename) => fs.fileExists(filename),
         pythonArgv,
         // tslint:disable-next-line:no-suspicious-comment
         // TODO(gh-8473): Use pythonArgv here once 'conda run' can be
         // run without buffering output.
-        undefined
+        undefined,
+        procs.exec,
+        procs.shellExec
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -190,7 +195,6 @@ export function createWindowsStoreEnv(
     procs: IProcessService
 ): PythonEnvironment {
     const deps = createDeps(
-        procs,
         /**
          * With windows store python apps, we have generally use the
          * symlinked python executable.  The actual file is not accessible
@@ -202,7 +206,9 @@ export function createWindowsStoreEnv(
         async (_f: string) => true,
         // We use the default: [pythonPath].
         undefined,
-        undefined
+        undefined,
+        procs.exec,
+        procs.shellExec
     );
     return new PythonEnvironment(pythonPath, deps);
 }
