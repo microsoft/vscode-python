@@ -224,31 +224,16 @@ export namespace CommonEffects {
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
 
-            const outputs = current.cell.data.outputs as nbformat.IOutput[];
             const errorMessage = arg.payload.data.isOnline
                 ? arg.payload.data.error.toString()
                 : getLocString(
                       'DataScience.loadClassFailedWithNoInternet',
                       'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
                   ).format(arg.payload.data.moduleName, arg.payload.data.moduleVersion);
-            const error: nbformat.IError = {
-                output_type: 'error',
-                ename: 'Error',
-                evalue: errorMessage,
-                traceback: []
-            };
-
-            const newVM = Helpers.asCellViewModel({
+            newVMs[index] = Helpers.asCellViewModel({
                 ...current,
-                cell: {
-                    ...current.cell,
-                    data: {
-                        ...current.cell.data,
-                        outputs: [...outputs, error]
-                    }
-                }
+                uiSideError: errorMessage
             });
-            newVMs[index] = newVM;
 
             // Make sure to tell the extension so it can log telemetry.
             postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadFailure, arg.payload.data);

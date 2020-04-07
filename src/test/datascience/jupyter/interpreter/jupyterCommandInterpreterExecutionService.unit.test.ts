@@ -10,7 +10,6 @@ import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionService } from '../../../../client/common/process/types';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
@@ -37,7 +36,7 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
         fs = mock(FileSystem);
         kernelSpecCmd = mock(InterpreterJupyterNotebookCommand);
         const execFactory = mock(PythonExecutionFactory);
-        execService = mock(PythonExecutionService);
+        execService = mock<IPythonExecutionService>();
         jupyterInterpreterExecutionService = mock(JupyterCommandFinderInterpreterExecutionService);
         when(execFactory.create(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any

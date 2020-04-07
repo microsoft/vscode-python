@@ -114,8 +114,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.getExecutablePath();
         }
     }
-    public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        return this.pythonExecutionService.getExecutionInfo(args);
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         try {

@@ -9,7 +9,6 @@ import { Newable } from '../../ioc/types';
 import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
-import { CondaExecutionService } from './condaExecutionService';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -127,7 +126,7 @@ export interface IPythonExecutionFactory {
         pythonPath: string,
         processService?: IProcessService,
         resource?: Uri
-    ): Promise<CondaExecutionService | undefined>;
+    ): Promise<IPythonExecutionService | undefined>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
@@ -145,7 +144,7 @@ export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(args: string[]): PythonExecutionInfo;
+    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -157,6 +156,8 @@ export interface IPythonExecutionService {
 export type PythonExecutionInfo = {
     command: string;
     args: string[];
+
+    python: string[];
 };
 /**
  * Identical to the PythonExecutionService, but with a `dispose` method.

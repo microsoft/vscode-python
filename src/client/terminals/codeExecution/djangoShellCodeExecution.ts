@@ -33,7 +33,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
     }
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
-        const { command, args: executableArgs } = await super.getExecutableInfo(resource, args);
+        const { command, args: executableArgs, python } = await super.getExecutableInfo(resource, args);
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
         const defaultWorkspace =
@@ -45,12 +45,12 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
 
         executableArgs.push(managePyPath.fileToCommandArgument());
         executableArgs.push('shell');
-        return { command, args: executableArgs };
+        return { command, args: executableArgs, python };
     }
 
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
         // We need the executable info but not the 'manage.py shell' args
-        const { command, args } = await super.getExecutableInfo(resource);
-        return { command, args: args.concat(executeArgs) };
+        const { command, args, python } = await super.getExecutableInfo(resource);
+        return { command, args: args.concat(executeArgs), python };
     }
 }
