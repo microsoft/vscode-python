@@ -13,7 +13,7 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { noop } from '../../../client/common/utils/misc';
-import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
+import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 const untildify = require('untildify');
 

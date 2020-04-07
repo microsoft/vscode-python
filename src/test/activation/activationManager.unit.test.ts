@@ -22,7 +22,7 @@ import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
+import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any

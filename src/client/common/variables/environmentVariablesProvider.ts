@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { EnvFileTelemetry } from '../../telemetry/envFileTelemetry';
+import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
@@ -97,7 +97,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
 
     private onEnvironmentFileCreated(workspaceFolderUri?: Uri) {
         this.onEnvironmentFileChanged(workspaceFolderUri);
-        EnvFileTelemetry.sendFileCreationTelemetry();
+        sendFileCreationTelemetry();
     }
 
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {

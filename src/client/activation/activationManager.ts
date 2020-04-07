@@ -13,7 +13,7 @@ import { IFileSystem } from '../common/platform/types';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { EnvFileTelemetry } from '../telemetry/envFileTelemetry';
+import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
@@ -63,7 +63,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Get latest interpreter list in the background.
         this.interpreterService.getInterpreters(resource).ignoreErrors();
 
-        await EnvFileTelemetry.sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
+        await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await this.autoSelection.autoSelectInterpreter(resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));

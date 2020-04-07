@@ -21,7 +21,7 @@ import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
+import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
 // tslint:disable:no-any max-func-body-length
