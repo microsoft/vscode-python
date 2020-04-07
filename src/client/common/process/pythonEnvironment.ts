@@ -155,8 +155,8 @@ export function createPythonEnv(
         // We use the default: [pythonPath].
         undefined,
         undefined,
-        procs.exec,
-        procs.shellExec
+        (file, args, opts) => procs.exec(file, args, opts),
+        (command, opts) => procs.shellExec(command, opts)
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -183,8 +183,8 @@ export function createCondaEnv(
         // TODO(gh-8473): Use pythonArgv here once 'conda run' can be
         // run without buffering output.
         undefined,
-        procs.exec,
-        procs.shellExec
+        (file, args, opts) => procs.exec(file, args, opts),
+        (command, opts) => procs.shellExec(command, opts)
     );
     return new PythonEnvironment(pythonPath, deps);
 }
@@ -207,8 +207,8 @@ export function createWindowsStoreEnv(
         // We use the default: [pythonPath].
         undefined,
         undefined,
-        procs.exec,
-        procs.shellExec
+        (file, args, opts) => procs.exec(file, args, opts),
+        (command, opts) => procs.shellExec(command, opts)
     );
     return new PythonEnvironment(pythonPath, deps);
 }

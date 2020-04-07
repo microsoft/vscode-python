@@ -79,9 +79,9 @@ export function createPythonProcessService(
 ) {
     const deps = {
         // from PythonService:
-        isModuleInstalled: async (moduleName: string) => env.isModuleInstalled(moduleName),
-        getExecutionInfo: (pythonArgs?: string[]) => env.getExecutionInfo(pythonArgs),
-        getExecutionObservableInfo: (pythonArgs?: string[]) => env.getExecutionObservableInfo(pythonArgs),
+        isModuleInstalled: async (m: string) => env.isModuleInstalled(m),
+        getExecutionInfo: (a?: string[]) => env.getExecutionInfo(a),
+        getExecutionObservableInfo: (a?: string[]) => env.getExecutionObservableInfo(a),
         // from ProcessService:
         exec: async (f: string, a: string[], o: SpawnOptions) => procs.exec(f, a, o),
         execObservable: (f: string, a: string[], o: SpawnOptions) => procs.execObservable(f, a, o)
