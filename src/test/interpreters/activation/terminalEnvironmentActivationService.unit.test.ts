@@ -95,6 +95,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                     });
                     test('Should execute python file in terminal (that is what dumps variables into json)', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);
+                        const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
                         const pyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariablesToFile.py');
 
                         await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
@@ -103,7 +104,11 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         verify(
                             terminal.sendCommand(
                                 cmd,
-                                deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]),
+                                deepEqual([
+                                    isolated.fileToCommandArgument(),
+                                    pyFile.fileToCommandArgument(),
+                                    jsonFile.fileToCommandArgument()
+                                ]),
                                 anything(),
                                 false
                             )
