@@ -54,8 +54,6 @@ export class HostRawNotebookProvider
         if (!this.disposed) {
             this.disposed = true;
             await super.dispose();
-            const api = await this.api;
-            return this.onDetach(api);
         }
     }
 
