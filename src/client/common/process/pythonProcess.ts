@@ -68,16 +68,14 @@ class PythonProcessService {
     }
 }
 
-interface IPythonEnvironment {
-    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-    getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
-    isModuleInstalled(moduleName: string): Promise<boolean>;
-}
-
 export function createPythonProcessService(
     procs: IProcessService,
-    // This is composed by the caller.
-    env: IPythonEnvironment
+    // from PythonEnvironment:
+    env: {
+        getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+        getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
+        isModuleInstalled(moduleName: string): Promise<boolean>;
+    }
 ) {
     const deps = {
         // from PythonService:
