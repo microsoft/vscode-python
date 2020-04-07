@@ -398,7 +398,6 @@ export interface IApplicationShell {
      */
     withProgressCustomIcon<R>(
         icon: string,
-        options: ProgressOptions,
         task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
     ): Thenable<R>;
 

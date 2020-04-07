@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
-import { Progress, ProgressLocation } from 'vscode';
+import { Progress } from 'vscode';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
 import { IFileSystem, WriteStream } from '../platform/types';
@@ -41,15 +41,11 @@ export class FileDownloader implements IFileDownloader {
         progressMessage: string,
         tmpFilePath: string
     ): Promise<void> {
-        await this.appShell.withProgressCustomIcon(
-            Octicons.Downloading,
-            { location: ProgressLocation.Window },
-            async (progress) => {
-                const req = await this.httpClient.downloadFile(uri);
-                const fileStream = this.fs.createWriteStream(tmpFilePath);
-                return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
-            }
-        );
+        await this.appShell.withProgressCustomIcon(Octicons.Downloading, async (progress) => {
+            const req = await this.httpClient.downloadFile(uri);
+            const fileStream = this.fs.createWriteStream(tmpFilePath);
+            return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
+        });
     }
 
     public async displayDownloadProgress(

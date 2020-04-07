@@ -124,11 +124,9 @@ export class ApplicationShell implements IApplicationShell {
     }
     public withProgressCustomIcon<R>(
         icon: string,
-        _options: ProgressOptions,
         task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
     ): Thenable<R> {
         const token = new CancellationTokenSource().token;
-        // TODO: Use options.location.
         const statusBarProgress = this.createStatusBarItem(StatusBarAlignment.Left);
         const progress = {
             report: (value: { message?: string; increment?: number }) => {
