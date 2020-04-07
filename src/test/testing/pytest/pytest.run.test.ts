@@ -420,14 +420,14 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             const env = createPythonEnv(pythonPath, procService, fileSystem);
             const procs = createPythonProcessService(procService, env);
             return {
-                getInterpreterInformation: env.getInterpreterInformation,
-                getExecutablePath: env.getExecutablePath,
-                isModuleInstalled: env.isModuleInstalled,
-                getExecutionInfo: env.getExecutionInfo,
-                execObservable: procs.execObservable,
-                execModuleObservable: procs.execModuleObservable,
-                exec: procs.exec,
-                execModule: procs.execModule
+                getInterpreterInformation: () => env.getInterpreterInformation(),
+                getExecutablePath: () => env.getExecutablePath(),
+                isModuleInstalled: (m) => env.isModuleInstalled(m),
+                getExecutionInfo: (a) => env.getExecutionInfo(a),
+                execObservable: (a, o) => procs.execObservable(a, o),
+                execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
+                exec: (a, o) => procs.exec(a, o),
+                execModule: (m, a, o) => procs.execModule(m, a, o)
             };
         }
     }
