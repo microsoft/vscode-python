@@ -251,6 +251,8 @@ function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO(gh-10910): Change this to python3.
     return 'python';
 }
 

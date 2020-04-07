@@ -40,6 +40,7 @@ export interface ICellViewModel {
     hasBeenRun: boolean;
     runDuringDebug?: boolean;
     codeVersion?: number;
+    uiSideError?: string;
 }
 
 export type IMainState = {

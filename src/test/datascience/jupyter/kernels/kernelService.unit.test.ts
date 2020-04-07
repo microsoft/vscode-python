@@ -15,7 +15,6 @@ import { ProductInstaller } from '../../../../client/common/installer/productIns
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
@@ -52,7 +51,7 @@ suite('Data Science - KernelService', () => {
         sessionManager = mock(JupyterSessionManager);
         activationHelper = mock(EnvironmentActivationService);
         execFactory = mock(PythonExecutionFactory);
-        execService = mock(PythonExecutionService);
+        execService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);
         jupyterInterpreterExecutionService = mock(JupyterCommandFinderInterpreterExecutionService);
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));

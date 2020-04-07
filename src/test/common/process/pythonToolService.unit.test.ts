@@ -11,7 +11,6 @@ import { Uri } from 'vscode';
 import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { PythonToolExecutionService } from '../../../client/common/process/pythonToolService';
 import {
     ExecutionResult,
@@ -50,7 +49,7 @@ suite('Process - Python tool execution service', () => {
     let executionService: PythonToolExecutionService;
 
     setup(() => {
-        pythonService = mock(PythonExecutionService);
+        pythonService = mock<IPythonExecutionService>();
         when(pythonService.execModuleObservable(anything(), anything(), anything())).thenReturn(observable);
         when(pythonService.execModule(anything(), anything(), anything())).thenResolve(executionResult);
         const pythonServiceInstance = instance(pythonService);
