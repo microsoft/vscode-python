@@ -22,7 +22,8 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService } from '../../../interpreter/contracts';
+import { Architecture } from '../../../common/utils/platform';
+import { IInterpreterService, InterpreterType } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
@@ -306,7 +307,13 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
                 // For the interpreter, make sure to select the one matching the kernel.
                 launchInfo.interpreter = kernelInfoToUse.metadata?.interpreter?.path
-                    ? await this.interpreterService.getInterpreterDetails(kernelInfoToUse.metadata.interpreter.path)
+                    ? {
+                          path: kernelInfoToUse.metadata.interpreter.path, // This is really the only thing that matters
+                          sysVersion: kernelInfoToUse.metadata.interpreter.sysVersion ?? '',
+                          architecture: kernelInfoToUse.metadata.interpreter.architecture ?? Architecture.Unknown,
+                          sysPrefix: kernelInfoToUse.metadata.interpreter.sysPrefix ?? '',
+                          type: kernelInfoToUse.metadata.interpreter.type ?? InterpreterType.Unknown
+                      }
                     : resourceInterpreter;
                 changedKernel = true;
             }
