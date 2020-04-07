@@ -32,6 +32,10 @@ import { PythonVersionInfo } from './types';
 // For each of those subdirectories there is a sub-namespace where
 // those scripts' functions may be found.
 //
+// In some cases one or more types related to a script are exported
+// from the same namespace in which the script's function is located.
+// These types typically relate to the return type of "parse()".
+//
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
 //  * ptvsd_launcher.py  (used only for the old debug adapter)

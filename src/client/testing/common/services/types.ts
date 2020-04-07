@@ -7,6 +7,8 @@ import { Uri } from 'vscode';
 import { scripts as internalScripts } from '../../../common/process/internal';
 import { Tests } from '../types';
 
+// We expose these here as a convenience and to cut down on churn
+// elsewhere in the code.
 export type DiscoveredTests = internalScripts.testing_tools.DiscoveredTests;
 export type Test = internalScripts.testing_tools.Test;
 export type TestFolder = internalScripts.testing_tools.TestFolder;
