@@ -829,6 +829,10 @@ export namespace DataScience {
         'DataScience.loadClassFailedWithNoInternet',
         'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
     );
+    export const loadThirdPartyWidgetScriptsPostEnabled = localize(
+        'DataScience.loadThirdPartyWidgetScriptsPostEnabled',
+        "Once you have updated the setting 'loadWidgetScriptsFromThirdPartySource' you will need to restart the Kernel."
+    );
 }
 
 export namespace DebugConfigStrings {

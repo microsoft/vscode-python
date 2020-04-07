@@ -270,12 +270,12 @@
     "debug.moduleEnterModuleDefault": "enter-your-module-name",
     "debug.moduleEnterModuleInvalidNameError": "Enter a valid module name",
     "debug.remoteAttachConfigurationLabel": "Remote Attach",
-    "debug.remoteAttachConfigurationDescription": "Attach to a remote ptvsd debug server",
+    "debug.remoteAttachConfigurationDescription": "Attach to a remote debug server",
     "debug.attachRemoteHostTitle": "Remote Debugging",
     "debug.attachRemoteHostPrompt": "Enter the host name",
     "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address",
     "debug.attachRemotePortTitle": "Remote Debugging",
-    "debug.attachRemotePortPrompt": "Enter the port number that the ptvsd server is listening on",
+    "debug.attachRemotePortPrompt": "Enter the port number that the debug server is listening on",
     "debug.attachRemotePortValidationError": "Enter a valid port number",
     "debug.attachPidConfigurationLabel": "Attach using Process ID",
     "debug.attachPidConfigurationDescription": "Attach to a local process",
@@ -457,5 +457,7 @@
     "DataScience.jupyterSelectURIQuickPickTitleRemoteOnly": "Pick an already running jupyter server",
     "DataScience.jupyterSelectURIRemoteDetail": "Specify the URI of an existing server",
     "DataScience.gatherQuality": "Did gather work as desired?",
-    "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets."
+    "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.",
+    "DataScience.loadThirdPartyWidgetScriptsDisabled": "Loading of Widgets is disabled by default. Click <a href='https://command:python.datascience.loadWidgetScriptsFromThirdPartySource'>here</a> to enable the setting 'python.dataScience.loadWidgetScriptsFromThirdPartySource'. Once enabled you will need to restart the Kernel",
+    "DataScience.loadThirdPartyWidgetScriptsPostEnabled": "Please restart the Kernel when changing the setting 'loadWidgetScriptsFromThirdPartySource'."
 }

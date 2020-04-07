@@ -937,8 +937,29 @@ export interface INotebookProvider {
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
     send(data: any, cb?: (err?: Error) => void): void;
-    addListener(event: 'message', listener: (data: WebSocketData) => void): this;
-    removeListener(event: 'message', listener: (data: WebSocketData) => void): this;
+    /**
+     * Adds a listener to a socket that will be called before the socket's onMessage is called. This
+     * allows waiting for a callback before processing messages
+     * @param listener
+     */
+    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
+     * @param listener
+     */
+    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
+     * @param patch
+     */
+    // tslint:disable-next-line: no-any
+    addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+    /**
+     * Removes a send hook from the socket.
+     * @param hook
+     */
+    // tslint:disable-next-line: no-any
+    removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
 }
 
 export type KernelSocketOptions = {

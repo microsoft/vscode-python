@@ -23,7 +23,10 @@ export class WidgetManager extends jupyterlab.WidgetManager {
     constructor(
         kernel: Kernel.IKernelConnection,
         el: HTMLElement,
-        private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+        private readonly scriptLoader: {
+            loadWidgetScriptsFromThirdPartySource: boolean;
+            errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+        }
     ) {
         super(
             new DocumentContext(kernel),
@@ -90,16 +93,29 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
-        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async (x) => {
+        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async (originalException) => {
             try {
+                if (!this.scriptLoader.loadWidgetScriptsFromThirdPartySource) {
+                    throw new Error('Loading from 3rd party source is disabled');
+                }
                 const m = await requireLoader(moduleName, moduleVersion);
                 if (m && m[className]) {
                     return m[className];
                 }
-                throw x;
+                throw originalException;
             } catch (ex) {
-                this.loadErrorHandler(className, moduleName, moduleVersion, x);
-                throw x;
+                this.scriptLoader.errorHandler(className, moduleName, moduleVersion, originalException);
+                if (this.scriptLoader.loadWidgetScriptsFromThirdPartySource) {
+                    throw originalException;
+                } else {
+                    // Don't throw exceptions if disabled, else everything stops working.
+                    window.console.error(ex);
+                    // Returning an unresolved promise will prevent Jupyter ipywidgets from doing anything.
+                    // tslint:disable-next-line: promise-must-complete
+                    return new Promise(() => {
+                        // Noop.
+                    });
+                }
             }
         });
 

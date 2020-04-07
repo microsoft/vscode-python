@@ -383,6 +383,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public get mockJupyter(): MockJupyterManager | undefined {
         return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
     }
+
+    public get kernelService() {
+        return this.kernelServiceMock;
+    }
     private static jupyterInterpreters: PythonInterpreter[] = [];
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
@@ -432,6 +436,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private workspaceFolders: MockWorkspaceFolder[] = [];
     private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
+    private disposed = false;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -444,6 +449,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public async dispose(): Promise<void> {
         await this.asyncRegistry.dispose();
         await super.dispose();
+        this.disposed = true;
 
         if (!this.uiTest) {
             // Blur window focus so we don't have editors polling
@@ -1129,10 +1135,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    public get kernelService() {
-        return this.kernelServiceMock;
-    }
-
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
@@ -1159,7 +1161,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public getSettings(resource?: Uri) {
         const key = this.getResourceKey(resource);
         let setting = this.settingsMap.get(key);
-        if (!setting) {
+        if (!setting && !this.disposed) {
             // Make sure we have the default config for this resource first.
             this.getWorkspaceConfig('python', resource);
             setting = new (class extends PythonSettings {
@@ -1168,6 +1170,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 }
             })(resource, new MockAutoSelectionService(), this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
             this.settingsMap.set(key, setting);
+        } else if (this.disposed) {
+            setting = this.generatePythonSettings();
         }
         return setting;
     }
@@ -1323,7 +1327,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.createWebPanel();
     }
 
-    private generatePythonWorkspaceConfig(): MockWorkspaceConfiguration {
+    private generatePythonSettings() {
         // Create a dummy settings just to setup the workspace config
         const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
         pythonSettings.pythonPath = this.defaultPythonPath!;
@@ -1358,7 +1362,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            disableJupyterAutoStart: true
+            disableJupyterAutoStart: true,
+            loadWidgetScriptsFromThirdPartySource: true
         };
         pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;
@@ -1371,6 +1376,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             activateEnvironment: true,
             activateEnvInCurrentTerminal: false
         };
+        return pythonSettings;
+    }
+
+    private generatePythonWorkspaceConfig(): MockWorkspaceConfiguration {
+        const pythonSettings = this.generatePythonSettings();
 
         // Use these settings to default all of the settings in a python configuration
         return new MockWorkspaceConfiguration(pythonSettings);
@@ -1428,9 +1438,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     private getResourceKey(resource: Resource): string {
-        const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
-        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
-        return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+        if (!this.disposed) {
+            const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+            const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
+            return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+        }
+        return '';
     }
 
     private async hasJupyter(interpreter: PythonInterpreter): Promise<boolean | undefined> {

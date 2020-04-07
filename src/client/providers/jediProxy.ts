@@ -11,6 +11,7 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     BANNER_NAME_PROPOSE_LS,
@@ -160,7 +161,6 @@ export class JediProxy implements Disposable {
     private timer?: NodeJS.Timer | number;
 
     public constructor(
-        private extensionRootDir: string,
         workspacePath: string,
         interpreter: PythonInterpreter | undefined,
         private serviceContainer: IServiceContainer
@@ -234,7 +234,7 @@ export class JediProxy implements Disposable {
 
     // keep track of the directory so we can re-spawn the process.
     private initialize(): Promise<void> {
-        return this.spawnProcess(path.join(this.extensionRootDir, 'pythonFiles')).catch((ex) => {
+        return this.spawnProcess().catch((ex) => {
             if (this.languageServerStarted) {
                 this.languageServerStarted.reject(ex);
             }
@@ -367,7 +367,7 @@ export class JediProxy implements Disposable {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private async spawnProcess(cwd: string) {
+    private async spawnProcess() {
         if (this.languageServerStarted && !this.languageServerStarted.completed) {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
@@ -379,12 +379,8 @@ export class JediProxy implements Disposable {
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
         }
-        const args = ['completion.py'];
-        if (typeof this.pythonSettings.jediPath === 'string' && this.pythonSettings.jediPath.length > 0) {
-            args.push('custom');
-            args.push(this.pythonSettings.jediPath);
-        }
-        const result = pythonProcess.execObservable(args, { cwd });
+        const [args, parse] = internalScripts.completion(this.pythonSettings.jediPath);
+        const result = pythonProcess.execObservable(args, {});
         this.proc = result.proc;
         this.languageServerStarted.resolve();
         this.proc!.on('end', (end) => {
@@ -399,7 +395,7 @@ export class JediProxy implements Disposable {
                 error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0
             ) {
-                this.spawnProcess(cwd).catch((ex) => {
+                this.spawnProcess().catch((ex) => {
                     if (this.languageServerStarted) {
                         this.languageServerStarted.reject(ex);
                     }
@@ -419,7 +415,7 @@ export class JediProxy implements Disposable {
                     // tslint:disable-next-line:no-any
                     let responses: any[];
                     try {
-                        responses = dataStr.splitLines().map((resp) => JSON.parse(resp));
+                        responses = parse(dataStr);
                         this.previousData = '';
                     } catch (ex) {
                         // Possible we've only received part of the data, hence don't clear previousData.

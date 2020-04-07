@@ -19,7 +19,6 @@ import {
     StreamMessageWriter
 } from 'vscode-jsonrpc';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -66,7 +65,7 @@ suite('Daemon', () => {
             new StreamMessageWriter(pythonProc.stdin)
         );
         connection.listen();
-        pythonExecutionService = mock(PythonExecutionService);
+        pythonExecutionService = mock<IPythonExecutionService>();
         pythonDaemon = new PythonDaemonExecutionService(
             instance(pythonExecutionService),
             fullyQualifiedPythonPath,

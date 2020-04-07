@@ -97,8 +97,8 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const msg = { args: ['getExecutablePath'] };
         return this.wrapCall((daemon) => daemon.getExecutablePath(), msg);
     }
-    public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        return this.pythonExecutionService.getExecutionInfo(args);
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const msg = { args: ['-m', moduleName] };

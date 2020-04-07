@@ -5,18 +5,19 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
+import { CondaEnvironmentInfo, ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
+import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { CondaExecutionService } from './condaExecutionService';
 import { ProcessService } from './proc';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
-import { PythonExecutionService } from './pythonProcess';
+import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
+import { createPythonProcessService } from './pythonProcess';
 import {
     DaemonExecutionFactoryCreationOptions,
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -29,7 +30,6 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types';
-import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -54,16 +54,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
-            return new WindowsStorePythonProcess(
-                this.serviceContainer,
-                processService,
-                pythonPath,
-                this.windowsStoreInterpreter
-            );
-        }
-        return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
+        return createPythonService(
+            pythonPath,
+            processService,
+            this.serviceContainer.get<IFileSystem>(IFileSystem),
+            undefined,
+            this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)
+        );
     }
+
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
@@ -143,7 +142,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
 
-        return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
+        return createPythonService(pythonPath, processService, this.serviceContainer.get<IFileSystem>(IFileSystem));
     }
     // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
@@ -151,7 +150,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         pythonPath: string,
         processService?: IProcessService,
         resource?: Uri
-    ): Promise<CondaExecutionService | undefined> {
+    ): Promise<IPythonExecutionService | undefined> {
         const processServicePromise = processService
             ? Promise.resolve(processService)
             : this.processServiceFactory.create(resource);
@@ -169,15 +168,42 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 procService.on('exec', processLogger.logProcess.bind(processLogger));
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
             }
-            return new CondaExecutionService(
-                this.serviceContainer,
-                procService,
+            return createPythonService(
                 pythonPath,
-                condaFile,
-                condaEnvironment
+                procService,
+                this.serviceContainer.get<IFileSystem>(IFileSystem),
+                // This is what causes a CondaEnvironment to be returned:
+                [condaFile, condaEnvironment]
             );
         }
 
         return Promise.resolve(undefined);
     }
+}
+
+function createPythonService(
+    pythonPath: string,
+    procService: IProcessService,
+    fs: IFileSystem,
+    conda?: [string, CondaEnvironmentInfo],
+    isWindowsStore?: boolean
+): IPythonExecutionService {
+    let env = createPythonEnv(pythonPath, procService, fs);
+    if (conda) {
+        const [condaPath, condaInfo] = conda;
+        env = createCondaEnv(condaPath, condaInfo, pythonPath, procService, fs);
+    } else if (isWindowsStore) {
+        env = createWindowsStoreEnv(pythonPath, procService);
+    }
+    const procs = createPythonProcessService(procService, env);
+    return {
+        getInterpreterInformation: () => env.getInterpreterInformation(),
+        getExecutablePath: () => env.getExecutablePath(),
+        isModuleInstalled: (m) => env.isModuleInstalled(m),
+        getExecutionInfo: (a) => env.getExecutionInfo(a),
+        execObservable: (a, o) => procs.execObservable(a, o),
+        execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
+        exec: (a, o) => procs.exec(a, o),
+        execModule: (m, a, o) => procs.execModule(m, a, o)
+    };
 }

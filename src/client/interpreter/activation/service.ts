@@ -4,12 +4,12 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
@@ -17,7 +17,6 @@ import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService, PythonInterpreter } from '../contracts';
@@ -179,8 +178,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             // In order to make sure we know where the environment output is,
             // put in a dummy echo we can look for
-            const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
-            const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
+            const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgument();
+            });
+            const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
@@ -218,7 +220,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                 }
             }
-            const returnedEnv = this.parseEnvironmentOutput(result.stdout);
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
 
             // Put back the PYTHONWARNINGS value
             if (oldWarnings && returnedEnv) {
@@ -247,9 +249,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     @traceDecorators.error('Failed to parse Environment variables')
     @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)
-    protected parseEnvironmentOutput(output: string): NodeJS.ProcessEnv | undefined {
+    protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         output = output.substring(output.indexOf(getEnvironmentPrefix) + getEnvironmentPrefix.length);
         const js = output.substring(output.indexOf('{')).trim();
-        return JSON.parse(js);
+        return parse(js);
     }
 }

@@ -8,13 +8,26 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
-import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
+import {
+    Range,
+    TextEditorCursorStyle,
+    TextEditorLineNumbersStyle,
+    TextEditorOptions,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    IProcessLogger,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -106,6 +119,12 @@ suite('Refactor Rename', () => {
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
+    function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
+        return async () => {
+            const factory = serviceContainer.object.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: Uri.file(workspaceRoot) });
+        };
+    }
 
     test('Rename function in source without a trailing empty line', async () => {
         const sourceFile = path.join(
@@ -122,13 +141,9 @@ suite('Refactor Rename', () => {
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
+        const workspaceRoot = path.dirname(sourceFile);
 
-        const proxy = new RefactorProxy(
-            EXTENSION_ROOT_DIR,
-            pythonSettings.object,
-            path.dirname(sourceFile),
-            serviceContainer.object
-        );
+        const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 
@@ -159,13 +174,9 @@ suite('Refactor Rename', () => {
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
+        const workspaceRoot = path.dirname(sourceFile);
 
-        const proxy = new RefactorProxy(
-            EXTENSION_ROOT_DIR,
-            pythonSettings.object,
-            path.dirname(sourceFile),
-            serviceContainer.object
-        );
+        const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 

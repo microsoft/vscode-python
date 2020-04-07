@@ -1604,6 +1604,12 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
+                "python.dataScience.loadWidgetScriptsFromThirdPartySource": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables loading of scripts files for Widgets (ipywidgest, bqplot, beakerx, ipyleaflet, etc) from https://unpkg.com.",
+                    "scope": "machine"
+                },
                 "python.dataScience.gatherRules": {
                     "type": "array",
                     "default": [
@@ -2972,10 +2978,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.0",
-        "vscode-jsonrpc": "^4.0.0",
-        "vscode-languageclient": "^5.2.1",
-        "vscode-languageserver": "^5.2.1",
-        "vscode-languageserver-protocol": "^3.14.1",
+        "vscode-jsonrpc": "^5.0.1",
+        "vscode-languageclient": "^6.1.3",
+        "vscode-languageserver": "^6.1.1",
+        "vscode-languageserver-protocol": "^3.15.3",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
@@ -3058,7 +3064,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.42.0",
+        "@types/vscode": "^1.43.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

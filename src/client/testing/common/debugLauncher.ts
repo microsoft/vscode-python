@@ -6,6 +6,7 @@ import { IApplicationShell, IDebugService, IWorkspaceService } from '../../commo
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { DebuggerTypeName } from '../../debugger/constants';
@@ -156,8 +157,11 @@ export class DebugLauncher implements ITestDebugLauncher {
     ): Promise<LaunchRequestArguments> {
         const configArgs = debugConfig as LaunchRequestArguments;
 
-        configArgs.program = this.getTestLauncherScript(options.testProvider);
-        configArgs.args = this.fixArgs(options.args, options.testProvider);
+        const testArgs = this.fixArgs(options.args, options.testProvider);
+        const script = this.getTestLauncherScript(options.testProvider);
+        const args = script(testArgs);
+        configArgs.program = args[0];
+        configArgs.args = args.slice(1);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
         const launchArgs = await this.launchResolver.resolveDebugConfiguration(
@@ -184,11 +188,11 @@ export class DebugLauncher implements ITestDebugLauncher {
     private getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
             case 'unittest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
+                return internalScripts.visualstudio_py_testlauncher;
             }
             case 'pytest':
             case 'nosetest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testlauncher.py');
+                return internalScripts.testlauncher;
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);

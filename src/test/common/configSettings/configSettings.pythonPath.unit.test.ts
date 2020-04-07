@@ -7,11 +7,13 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { noop } from '../../../client/common/utils/misc';
+import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 const untildify = require('untildify');
 
@@ -31,11 +33,13 @@ suite('Python Settings - pythonPath', () => {
     let pythonSettings: typemoq.IMock<WorkspaceConfiguration>;
     setup(() => {
         pythonSettings = typemoq.Mock.ofType<WorkspaceConfiguration>();
+        sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
     });
     teardown(() => {
         if (configSettings) {
             configSettings.dispose();
         }
+        sinon.restore();
     });
 
     test('Python Path from settings.json is used', () => {

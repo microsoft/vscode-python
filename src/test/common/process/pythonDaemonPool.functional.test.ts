@@ -17,7 +17,6 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import {
     IProcessLogger,
     IPythonDaemonExecutionService,
@@ -74,7 +73,7 @@ suite('Daemon - Python Daemon Pool', () => {
         }
         logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
-        pythonExecutionService = mock(PythonExecutionService);
+        pythonExecutionService = mock<IPythonExecutionService>();
         when(
             pythonExecutionService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
         ).thenCall(() => {

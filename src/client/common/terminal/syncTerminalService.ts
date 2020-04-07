@@ -4,19 +4,17 @@
 'use strict';
 
 import { inject } from 'inversify';
-import * as path from 'path';
 import { CancellationToken, Disposable, Event } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
+import * as internalScripts from '../process/internal/scripts';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { TerminalService } from './service';
 import { ITerminalService } from './types';
 
-const shellExecFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'shell_exec.py');
 enum State {
     notStarted = 0,
     started = 1,
@@ -139,12 +137,8 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         const state = new ExecutionState(lockFile.filePath, this.fs, [command, ...args]);
         try {
             const pythonExec = this.pythonInterpreter || (await this.interpreter.getActiveInterpreter(undefined));
-            await this.terminalService.sendCommand(pythonExec?.path || 'python', [
-                shellExecFile.fileToCommandArgument(),
-                command.fileToCommandArgument(),
-                ...args,
-                lockFile.filePath.fileToCommandArgument()
-            ]);
+            const sendArgs = internalScripts.shell_exec(command, lockFile.filePath, args);
+            await this.terminalService.sendCommand(pythonExec?.path || 'python', sendArgs);
             const promise = swallowExceptions ? state.completed : state.completed.catch(noop);
             await Cancellation.race(() => promise, cancel);
         } finally {

@@ -4,11 +4,12 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, env, Range, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
-import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
-import { IDisposable, IOutputChannel } from '../../common/types';
+import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
+import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import {
@@ -37,6 +38,8 @@ export class CommandRegistry implements IDisposable {
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
     ) {
         this.disposables.push(this.serverSelectedCommand);
@@ -69,6 +72,10 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
+        this.registerCommand(
+            Commands.EnableLoadingWidgetsFrom3rdPartySource,
+            this.enableLoadingWidgetScriptsFromThirdParty
+        );
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -96,6 +103,27 @@ export class CommandRegistry implements IDisposable {
         }
 
         return undefined;
+    }
+
+    private enableLoadingWidgetScriptsFromThirdParty(): void {
+        if (this.configService.getSettings(undefined).datascience.loadWidgetScriptsFromThirdPartySource) {
+            return;
+        }
+        // Update the setting and once updated, notify user to restart kernel.
+        this.configService
+            .updateSetting(
+                'dataScience.loadWidgetScriptsFromThirdPartySource',
+                true,
+                undefined,
+                ConfigurationTarget.Global
+            )
+            .then(() => {
+                // Let user know they'll need to restart the kernel.
+                this.appShell
+                    .showInformationMessage(DataScience.loadThirdPartyWidgetScriptsPostEnabled())
+                    .then(noop, noop);
+            })
+            .catch(noop);
     }
 
     private async runAllCells(file: string): Promise<void> {

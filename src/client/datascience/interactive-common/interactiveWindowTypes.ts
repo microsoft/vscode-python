@@ -9,7 +9,8 @@ import type { KernelMessage } from '@jupyterlab/services';
 import {
     CommonActionType,
     IAddCellAction,
-    ILoadIPyWidgetClassFailureAction
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassDisabledAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -107,7 +108,8 @@ export enum InteractiveWindowMessages {
     ReceivedUpdateModel = 'received_update_model',
     OpenSettings = 'open_settings',
     UpdateDisplayData = 'update_display_data',
-    IPyWidgetLoadFailure = 'ipywidget_load_failure'
+    IPyWidgetLoadFailure = 'ipywidget_load_failure',
+    IPyWidgetLoadDisabled = 'ipywidget_load_disabled'
 }
 
 export enum IPyWidgetMessages {
@@ -115,8 +117,14 @@ export enum IPyWidgetMessages {
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
+    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
-    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget'
+    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
+    IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
+    IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
+    IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
+    IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
+    IPyWidgets_mirror_execute = 'IPyWidgets_mirror_execute'
 }
 export enum NativeCommandType {
     AddToEnd = 0,
@@ -470,9 +478,23 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     // tslint:disable-next-line: no-any
-    public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;
-    public [IPyWidgetMessages.IPyWidgets_msg]: string;
-
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
+    public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
+        requestId: string;
+        parentId: string;
+        msg: KernelMessage.IIOPubMessage;
+    };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResult]: {
+        requestId: string;
+        parentId: string;
+        msgType: string;
+        result: boolean;
+    };
+    public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
@@ -563,4 +585,5 @@ export class IInteractiveWindowMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
+    public [InteractiveWindowMessages.IPyWidgetLoadDisabled]: LoadIPyWidgetClassDisabledAction;
 }

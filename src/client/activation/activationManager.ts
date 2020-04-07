@@ -9,9 +9,11 @@ import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { traceDecorators } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
+import { EnvFileTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
@@ -28,6 +30,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService
     ) {}
 
@@ -59,6 +62,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.activatedWorkspaces.add(key);
         // Get latest interpreter list in the background.
         this.interpreterService.getInterpreters(resource).ignoreErrors();
+
+        await EnvFileTelemetry.sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 
         await this.autoSelection.autoSelectInterpreter(resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
