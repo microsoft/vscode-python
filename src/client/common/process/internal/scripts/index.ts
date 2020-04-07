@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonVersionInfo } from '../types';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { PythonVersionInfo } from '../../types';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
-const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+const SCRIPTS_DIR = _SCRIPTS_DIR;
 
 // "scripts" contains everything relevant to the scripts found under
 // the top-level "pythonFiles" directory.  Each of those scripts has
-// a function in this namespace which matches the script's filename.
+// a function in this module which matches the script's filename.
 // Each function provides the commandline arguments that should be
 // used when invoking a Python executable, whether through spawn/exec
 // or a terminal.
@@ -21,16 +22,19 @@ const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 // string as the stdout text and returns the relevant data.
 //
 // Some of the scripts are located in subdirectories of "pythonFiles".
-// For each of those subdirectories there is a sub-namespace where
+// For each of those subdirectories there is a sub-module where
 // those scripts' functions may be found.
 //
 // In some cases one or more types related to a script are exported
-// from the same namespace in which the script's function is located.
+// from the same module in which the script's function is located.
 // These types typically relate to the return type of "parse()".
 //
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
 //  * ptvsd_launcher.py  (used only for the old debug adapter)
+
+export * as testing_tools from './testing_tools';
+export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 
 //============================
 // interpreterInfo.py
@@ -325,144 +329,4 @@ export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
     // There is no output to parse, so we do not return a function.
     return [script, ...testArgs];
-}
-
-//============================
-// testing_tools/
-
-export namespace testing_tools {
-    const _SCRIPTS_DIR = path.join(SCRIPTS_DIR, 'testing_tools');
-
-    type TestNode = {
-        id: string;
-        name: string;
-        parentid: string;
-    };
-    type TestParent = TestNode & {
-        kind: 'folder' | 'file' | 'suite' | 'function';
-    };
-    type TestFSNode = TestParent & {
-        kind: 'folder' | 'file';
-        relpath: string;
-    };
-
-    export type TestFolder = TestFSNode & {
-        kind: 'folder';
-    };
-    export type TestFile = TestFSNode & {
-        kind: 'file';
-    };
-    export type TestSuite = TestParent & {
-        kind: 'suite';
-    };
-    // function-as-a-container is for parameterized ("sub") tests.
-    export type TestFunction = TestParent & {
-        kind: 'function';
-    };
-    export type Test = TestNode & {
-        source: string;
-    };
-    export type DiscoveredTests = {
-        rootid: string;
-        root: string;
-        parents: TestParent[];
-        tests: Test[];
-    };
-
-    //============================
-    // run_adapter.py
-
-    export function run_adapter(adapterArgs: string[]): [string[], (out: string) => DiscoveredTests[]] {
-        const script = path.join(_SCRIPTS_DIR, 'run_adapter.py');
-        const args = [script, ...adapterArgs];
-
-        function parse(out: string): DiscoveredTests[] {
-            return JSON.parse(out);
-        }
-
-        return [args, parse];
-    }
-}
-
-//============================
-// vscode_datascience_helpers/
-
-export namespace vscode_datascience_helpers {
-    const _SCRIPTS_DIR = path.join(SCRIPTS_DIR, 'vscode_datascience_helpers');
-
-    type JupyterServerInfo = {
-        base_url: string;
-        notebook_dir: string;
-        hostname: string;
-        password: boolean;
-        pid: number;
-        port: number;
-        secure: boolean;
-        token: string;
-        url: string;
-    };
-
-    //============================
-    // getJupyterVariableDataFrameInfo.py
-
-    export function getJupyterVariableDataFrameInfo(): string[] {
-        const script = path.join(_SCRIPTS_DIR, 'getJupyterVariableDataFrameInfo.py');
-        // There is no script-specific output to parse, so we do not return a function.
-        return [script];
-    }
-
-    //============================
-    // getJupyterVariableDataFrameRows.py
-
-    export function getJupyterVariableDataFrameRows(): string[] {
-        const script = path.join(_SCRIPTS_DIR, 'getJupyterVariableDataFrameRows.py');
-        // There is no script-specific output to parse, so we do not return a function.
-        return [script];
-    }
-
-    //============================
-    // getServerInfo.py
-
-    export function getServerInfo(): [string[], (out: string) => JupyterServerInfo[]] {
-        const script = path.join(_SCRIPTS_DIR, 'getServerInfo.py');
-        const args = [script];
-
-        function parse(out: string): JupyterServerInfo[] {
-            return JSON.parse(out.trim());
-        }
-
-        return [args, parse];
-    }
-
-    //============================
-    // getJupyterKernels.py
-
-    export function getJupyterKernels(): string[] {
-        const script = path.join(_SCRIPTS_DIR, 'getJupyterKernels.py');
-        // There is no script-specific output to parse, so we do not return a function.
-        return [script];
-    }
-
-    //============================
-    // getJupyterKernelspecVersion.py
-
-    export function getJupyterKernelspecVersion(): string[] {
-        const script = path.join(_SCRIPTS_DIR, 'getJupyterKernelspecVersion.py');
-        // For now we do not worry about parsing the output here.
-        return [script];
-    }
-
-    //============================
-    // jupyter_nbInstalled.py
-
-    export function jupyter_nbInstalled(): [string[], (out: string) => boolean] {
-        const script = path.join(_SCRIPTS_DIR, 'jupyter_nbInstalled.py');
-        const args = [script];
-
-        function parse(out: string): boolean {
-            return out.toLowerCase().includes('available');
-        }
-
-        return [args, parse];
-    }
 }
