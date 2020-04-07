@@ -9,7 +9,6 @@ import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceError } from '../../../common/logger';
-import * as internalPython from '../../../common/process/internal/python';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -297,7 +296,7 @@ export class JupyterInterpreterDependencyService {
         const command = this.commandFactory.createInterpreterCommand(
             JupyterCommands.KernelSpecCommand,
             'jupyter',
-            internalPython.execModule('jupyter', ['kernelspec']),
+            ['-m', 'jupyter', 'kernelspec'],
             interpreter,
             false
         );

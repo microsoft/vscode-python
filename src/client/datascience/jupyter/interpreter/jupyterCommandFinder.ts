@@ -8,7 +8,6 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import * as internalPython from '../../../common/process/internal/python';
 import {
     IProcessService,
     IProcessServiceFactory,
@@ -174,7 +173,7 @@ export class JupyterCommandFinderImpl {
                 findResult.command = this.commandFactory.createInterpreterCommand(
                     command,
                     'jupyter',
-                    internalPython.execModule('jupyter', [command]),
+                    ['-m', 'jupyter', command],
                     interpreter,
                     isActiveInterpreter
                 );
@@ -182,7 +181,7 @@ export class JupyterCommandFinderImpl {
                 findResult.command = this.commandFactory.createInterpreterCommand(
                     command,
                     command,
-                    internalPython.execModule(command, []),
+                    ['-m', command],
                     interpreter,
                     isActiveInterpreter
                 );
@@ -457,9 +456,7 @@ export class JupyterCommandFinderImpl {
             const pythonService = await this.createExecutionService(interpreter);
 
             try {
-                // prettier-ignore
-                const [args,] = internalPython.getModuleVersion(moduleName);
-                const execResult = await pythonService.execModule('jupyter', args, newOptions);
+                const execResult = await pythonService.execModule('jupyter', [moduleName, '--version'], newOptions);
                 if (execResult.stderr) {
                     traceWarning(`${execResult.stderr} for ${interpreter.path}`);
                     result.error = execResult.stderr;
