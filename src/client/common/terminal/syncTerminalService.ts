@@ -9,7 +9,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
-import { scripts as internalScripts } from '../process/internal';
+import * as internalScripts from '../process/internal/scripts';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { TerminalService } from './service';

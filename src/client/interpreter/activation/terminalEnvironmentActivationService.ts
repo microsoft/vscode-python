@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationTokenSource } from 'vscode';
 import { LogOptions, traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { scripts as internalScripts } from '../../common/process/internal';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';

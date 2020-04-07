@@ -6,7 +6,7 @@ import { IApplicationShell, IDebugService, IWorkspaceService } from '../../commo
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { scripts as internalScripts } from '../../common/process/internal';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { DebuggerTypeName } from '../../debugger/constants';

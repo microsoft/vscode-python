@@ -6,7 +6,7 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/
 import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { scripts as internalScripts } from '../common/process/internal';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
 import { noop } from '../common/utils/misc';

@@ -4,7 +4,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { scripts as internalScripts } from '../../../common/process/internal';
+import * as internalScripts from '../../../common/process/internal/scripts';
 import { Tests } from '../types';
 
 // We expose these here as a convenience and to cut down on churn

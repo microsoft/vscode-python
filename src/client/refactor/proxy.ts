@@ -5,7 +5,7 @@ import { Disposable, Position, Range, TextDocument, TextEditorOptions, window } 
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IS_WINDOWS } from '../common/platform/constants';
-import { scripts as internalScripts } from '../common/process/internal';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionService } from '../common/process/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { getWindowsLineEndingCount } from '../common/utils/text';

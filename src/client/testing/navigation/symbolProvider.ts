@@ -15,7 +15,7 @@ import {
     Uri
 } from 'vscode';
 import { traceError } from '../../common/logger';
-import { scripts as internalScripts } from '../../common/process/internal';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../../common/process/types';
 
 type RawSymbol = { namespace: string; name: string; range: Range };

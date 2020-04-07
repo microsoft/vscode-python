@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { OutputChannel } from 'vscode';
 import { traceError } from '../../../common/logger';
-import { scripts as internalScripts } from '../../../common/process/internal';
+import * as internalScripts from '../../../common/process/internal/scripts';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,

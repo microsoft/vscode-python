@@ -2,7 +2,7 @@
 
 import { inject, injectable } from 'inversify';
 import { traceError } from '../../common/logger';
-import { scripts as internalScripts } from '../../common/process/internal';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';

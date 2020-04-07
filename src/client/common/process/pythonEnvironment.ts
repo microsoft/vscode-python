@@ -6,7 +6,7 @@ import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
-import { scripts as internalScripts } from './internal';
+import * as internalScripts from './internal/scripts';
 import {
     ExecutionResult,
     InterpreterInfomation,

@@ -11,7 +11,7 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
-import { scripts as internalScripts } from '../common/process/internal';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     BANNER_NAME_PROPOSE_LS,
