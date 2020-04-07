@@ -38,6 +38,7 @@ suite('Interpreter Evaluation', () => {
         interpreterSecurityStorage
             .setup(i => i.unsafeInterpreterPromptEnabled)
             .returns(() => unsafeInterpreterPromptEnabled.object);
+        interpreterSecurityStorage.setup(i => i.storeKeyForWorkspace(resource)).returns(() => Promise.resolve());
         interpreterEvaluation = new InterpreterEvaluation(
             applicationShell.object,
             browserService.object,
@@ -176,6 +177,14 @@ suite('Interpreter Evaluation', () => {
     });
 
     suite('Method _inferValueUsingPrompt()', () => {
+        test('Active workspace key is stored in security storage', async () => {
+            interpreterSecurityStorage
+                .setup(i => i.storeKeyForWorkspace(resource))
+                .returns(() => Promise.resolve())
+                .verifiable(Typemoq.Times.once());
+            await interpreterEvaluation._inferValueUsingPrompt(resource);
+            interpreterSecurityStorage.verifyAll();
+        });
         test('If `Learn more` is selected, launch URL & keep showing the prompt again until user clicks some other option', async () => {
             let promptDisplayCount = 0;
             // Select `Learn more` 2 times, then select something else the 3rd time.

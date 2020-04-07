@@ -64,6 +64,7 @@ export interface IInterpreterSecurityStorage extends IExtensionSingleActivationS
     readonly unsafeInterpreters: IPersistentState<string[]>;
     readonly safeInterpreters: IPersistentState<string[]>;
     hasUserApprovedWorkspaceInterpreters(resource: Uri): IPersistentState<boolean | undefined>;
+    storeKeyForWorkspace(resource: Uri): Promise<void>;
 }
 
 export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');

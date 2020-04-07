@@ -63,6 +63,7 @@ export class InterpreterEvaluation implements IInterpreterEvaluation {
         const areInterpretersInWorkspaceSafe = this.interpreterSecurityStorage.hasUserApprovedWorkspaceInterpreters(
             activeWorkspaceUri
         );
+        await this.interpreterSecurityStorage.storeKeyForWorkspace(activeWorkspaceUri);
         let selection = await this.showPromptAndGetSelection();
         while (selection === Common.learnMore()) {
             this.browserService.launch(learnMoreOnInterpreterSecurityURI);

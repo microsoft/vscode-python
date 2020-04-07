@@ -8,7 +8,12 @@ import { Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import { Commands } from '../../../common/constants';
 import { IDisposable, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../../../common/types';
-import { safeInterpretersKey, unsafeInterpreterPromptKey, unsafeInterpretersKey } from '../constants';
+import {
+    flaggedWorkspacesKeysStorageKey,
+    safeInterpretersKey,
+    unsafeInterpreterPromptKey,
+    unsafeInterpretersKey
+} from '../constants';
 import { IInterpreterSecurityStorage } from '../types';
 
 @injectable()
@@ -25,7 +30,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
     private _unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
     private _unsafeInterpreters: IPersistentState<string[]>;
     private _safeInterpreters: IPersistentState<string[]>;
-    private readonly activatedWorkspacesKeys = new Set<string>();
+    private flaggedWorkspacesKeysStorage: IPersistentState<string[]>;
 
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -43,6 +48,10 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
         );
         this._safeInterpreters = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             safeInterpretersKey,
+            []
+        );
+        this.flaggedWorkspacesKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
+            flaggedWorkspacesKeysStorageKey,
             []
         );
     }
@@ -64,22 +73,27 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
     }
 
     public async resetInterpreterSecurityStorage(): Promise<void> {
-        this.activatedWorkspacesKeys.forEach(async key => {
+        this.flaggedWorkspacesKeysStorage.value.forEach(async key => {
             const areInterpretersInWorkspaceSafe = this.persistentStateFactory.createGlobalPersistentState<
                 boolean | undefined
             >(key, undefined);
             await areInterpretersInWorkspaceSafe.updateValue(undefined);
         });
+        await this.flaggedWorkspacesKeysStorage.updateValue([]);
         await this._safeInterpreters.updateValue([]);
         await this._unsafeInterpreters.updateValue([]);
         await this._unsafeInterpreterPromptEnabled.updateValue(true);
     }
 
     public _getKeyForWorkspace(resource: Uri): string {
-        const key = `ARE_INTERPRETERS_SAFE_FOR_WS_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
-        if (!this.activatedWorkspacesKeys.has(key)) {
-            this.activatedWorkspacesKeys.add(key);
+        return `ARE_INTERPRETERS_SAFE_FOR_WS_${this.workspaceService.getWorkspaceFolderIdentifier(resource)}`;
+    }
+
+    public async storeKeyForWorkspace(resource: Uri): Promise<void> {
+        const key = this._getKeyForWorkspace(resource);
+        const flaggedWorkspacesKeys = this.flaggedWorkspacesKeysStorage.value;
+        if (!flaggedWorkspacesKeys.includes(key)) {
+            await this.flaggedWorkspacesKeysStorage.updateValue([key, ...flaggedWorkspacesKeys]);
         }
-        return key;
     }
 }
