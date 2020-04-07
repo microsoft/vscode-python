@@ -20,26 +20,26 @@ suite('Python Path Settings Updater', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager.setup(e => e.inExperiment(TypeMoq.It.isAny())).returns(() => inExperiment);
+        experimentsManager.setup((e) => e.inExperiment(TypeMoq.It.isAny())).returns(() => inExperiment);
         experimentsManager
-            .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
             .returns(() => undefined);
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IExperimentsManager)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IExperimentsManager)))
             .returns(() => experimentsManager.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterPathService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterPathService)))
             .returns(() => interpreterPathService.object);
         updaterServiceFactory = new PythonPathUpdaterServiceFactory(serviceContainer.object);
     }
     function setupConfigProvider(resource?: Uri): TypeMoq.IMock<WorkspaceConfiguration> {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceService
-            .setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
             .returns(() => workspaceConfig.object);
         return workspaceConfig;
     }
@@ -52,7 +52,7 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider();
                 workspaceConfig
-                    .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                    .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
                         // tslint:disable-next-line:no-any
                         return { globalValue: pythonPath } as any;
@@ -60,7 +60,7 @@ suite('Python Path Settings Updater', () => {
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    (w) => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.never()
                 );
             });
@@ -68,11 +68,11 @@ suite('Python Path Settings Updater', () => {
                 const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
                 const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider();
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w =>
+                    (w) =>
                         w.update(
                             TypeMoq.It.isValue('pythonPath'),
                             TypeMoq.It.isValue(pythonPath),
@@ -92,7 +92,7 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
                 workspaceConfig
-                    .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                    .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
                         // tslint:disable-next-line:no-any
                         return { workspaceFolderValue: pythonPath } as any;
@@ -100,7 +100,7 @@ suite('Python Path Settings Updater', () => {
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    (w) => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.never()
                 );
             });
@@ -110,11 +110,11 @@ suite('Python Path Settings Updater', () => {
                 const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w =>
+                    (w) =>
                         w.update(
                             TypeMoq.It.isValue('pythonPath'),
                             TypeMoq.It.isValue(pythonPath),
@@ -130,11 +130,11 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
                 const expectedPythonPath = path.join('env', 'bin', 'python');
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w =>
+                    (w) =>
                         w.update(
                             TypeMoq.It.isValue('pythonPath'),
                             TypeMoq.It.isValue(expectedPythonPath),
@@ -153,7 +153,7 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
                 workspaceConfig
-                    .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                    .setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath')))
                     .returns(() => {
                         // tslint:disable-next-line:no-any
                         return { workspaceValue: pythonPath } as any;
@@ -161,7 +161,7 @@ suite('Python Path Settings Updater', () => {
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    (w) => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.never()
                 );
             });
@@ -171,11 +171,11 @@ suite('Python Path Settings Updater', () => {
                 const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w =>
+                    (w) =>
                         w.update(
                             TypeMoq.It.isValue('pythonPath'),
                             TypeMoq.It.isValue(pythonPath),
@@ -191,11 +191,11 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
                 const expectedPythonPath = path.join('env', 'bin', 'python');
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
                 await updater.updatePythonPath(pythonPath);
                 workspaceConfig.verify(
-                    w =>
+                    (w) =>
                         w.update(
                             TypeMoq.It.isValue('pythonPath'),
                             TypeMoq.It.isValue(expectedPythonPath),
@@ -213,12 +213,12 @@ suite('Python Path Settings Updater', () => {
             test('Python Path should not be updated when current pythonPath is the same', async () => {
                 const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
                 interpreterPathService
-                    .setup(i => i.inspect(undefined))
+                    .setup((i) => i.inspect(undefined))
                     .returns(() => {
                         return { globalValue: pythonPath };
                     });
                 interpreterPathService
-                    .setup(i => i.update(undefined, ConfigurationTarget.Global, pythonPath))
+                    .setup((i) => i.update(undefined, ConfigurationTarget.Global, pythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.never());
 
@@ -228,10 +228,10 @@ suite('Python Path Settings Updater', () => {
             });
             test('Python Path should be updated when current pythonPath is different', async () => {
                 const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
-                interpreterPathService.setup(i => i.inspect(undefined)).returns(() => ({}));
+                interpreterPathService.setup((i) => i.inspect(undefined)).returns(() => ({}));
 
                 interpreterPathService
-                    .setup(i => i.update(undefined, ConfigurationTarget.Global, pythonPath))
+                    .setup((i) => i.update(undefined, ConfigurationTarget.Global, pythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
                 const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
@@ -247,12 +247,12 @@ suite('Python Path Settings Updater', () => {
                 const workspaceFolder = Uri.file(workspaceFolderPath);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 interpreterPathService
-                    .setup(i => i.inspect(workspaceFolder))
+                    .setup((i) => i.inspect(workspaceFolder))
                     .returns(() => ({
                         workspaceFolderValue: pythonPath
                     }));
                 interpreterPathService
-                    .setup(i => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, pythonPath))
+                    .setup((i) => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, pythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.never());
                 const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
@@ -263,9 +263,9 @@ suite('Python Path Settings Updater', () => {
                 const workspaceFolderPath = path.join('user', 'desktop', 'development');
                 const workspaceFolder = Uri.file(workspaceFolderPath);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
-                interpreterPathService.setup(i => i.inspect(workspaceFolder)).returns(() => ({}));
+                interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
                 interpreterPathService
-                    .setup(i => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, pythonPath))
+                    .setup((i) => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, pythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 
@@ -279,10 +279,10 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
                 const expectedPythonPath = path.join('env', 'bin', 'python');
                 const workspaceConfig = setupConfigProvider(workspaceFolder);
-                workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
-                interpreterPathService.setup(i => i.inspect(workspaceFolder)).returns(() => ({}));
+                workspaceConfig.setup((w) => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
+                interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
                 interpreterPathService
-                    .setup(i => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, expectedPythonPath))
+                    .setup((i) => i.update(workspaceFolder, ConfigurationTarget.WorkspaceFolder, expectedPythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 
@@ -298,10 +298,10 @@ suite('Python Path Settings Updater', () => {
                 const workspaceFolder = Uri.file(workspaceFolderPath);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
                 interpreterPathService
-                    .setup(i => i.inspect(workspaceFolder))
+                    .setup((i) => i.inspect(workspaceFolder))
                     .returns(() => ({ workspaceValue: pythonPath }));
                 interpreterPathService
-                    .setup(i => i.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup((i) => i.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.never());
 
@@ -314,9 +314,9 @@ suite('Python Path Settings Updater', () => {
                 const workspaceFolder = Uri.file(workspaceFolderPath);
                 const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
 
-                interpreterPathService.setup(i => i.inspect(workspaceFolder)).returns(() => ({}));
+                interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
                 interpreterPathService
-                    .setup(i => i.update(workspaceFolder, ConfigurationTarget.Workspace, pythonPath))
+                    .setup((i) => i.update(workspaceFolder, ConfigurationTarget.Workspace, pythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 
@@ -331,9 +331,9 @@ suite('Python Path Settings Updater', () => {
                 const pythonPath = Uri.file(path.join(workspaceFolderPath, 'env', 'bin', 'python')).fsPath;
                 const expectedPythonPath = path.join('env', 'bin', 'python');
 
-                interpreterPathService.setup(i => i.inspect(workspaceFolder)).returns(() => ({}));
+                interpreterPathService.setup((i) => i.inspect(workspaceFolder)).returns(() => ({}));
                 interpreterPathService
-                    .setup(i => i.update(workspaceFolder, ConfigurationTarget.Workspace, expectedPythonPath))
+                    .setup((i) => i.update(workspaceFolder, ConfigurationTarget.Workspace, expectedPythonPath))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
 

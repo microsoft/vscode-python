@@ -84,23 +84,23 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         disposables.push(
-            documentManager.onDidChangeActiveTextEditor(e => (e ? this.refresh(e.document.uri) : undefined))
+            documentManager.onDidChangeActiveTextEditor((e) => (e ? this.refresh(e.document.uri) : undefined))
         );
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this._pythonPathSetting = pySettings.pythonPath;
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
-                this.interpreterPathService.onDidChange(i => {
+                this.interpreterPathService.onDidChange((i) => {
                     this._onConfigChanged(i.uri);
                 })
             );
         } else {
             const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-                ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+                ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
                 : [undefined];
-            const disposable = workspaceService.onDidChangeConfiguration(e => {
-                const workspaceUriIndex = workspacesUris.findIndex(uri =>
+            const disposable = workspaceService.onDidChangeConfiguration((e) => {
+                const workspaceUriIndex = workspacesUris.findIndex((uri) =>
                     e.affectsConfiguration('python.pythonPath', uri)
                 );
                 const workspaceUri = workspaceUriIndex === -1 ? undefined : workspacesUris[workspaceUriIndex];
@@ -116,8 +116,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const interpreters = await this.locator.getInterpreters(resource);
         await Promise.all(
             interpreters
-                .filter(item => !item.displayName)
-                .map(async item => {
+                .filter((item) => !item.displayName)
+                .map(async (item) => {
                     item.displayName = await this.getDisplayName(item, resource);
                     // Keep information up to date with latest details.
                     if (!item.cachedEntry) {
@@ -176,7 +176,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         // This is the preferred approach, hence the delay in option 1.
         const option2 = (async () => {
             const interpreters = await this.getInterpreters(resource);
-            const found = interpreters.find(i => fs.arePathsSame(i.path, pythonPath));
+            const found = interpreters.find((i) => fs.arePathsSame(i.path, pythonPath));
             if (found) {
                 // Cache the interpreter info, only if we get the data from interpretr list.
                 // tslint:disable-next-line:no-any
@@ -257,13 +257,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
             this._pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-            interpreterDisplay.refresh().catch(ex => traceError('Python Extension: display.refresh', ex));
+            interpreterDisplay.refresh().catch((ex) => traceError('Python Extension: display.refresh', ex));
         }
     };
     protected async getInterepreterFileHash(pythonPath: string): Promise<string> {
         return this.hashProviderFactory
             .create({ pythonPath })
-            .then(provider => provider.getInterpreterHash(pythonPath));
+            .then((provider) => provider.getInterpreterHash(pythonPath));
     }
     protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void> {
         const key = JSON.stringify(info);

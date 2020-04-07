@@ -28,10 +28,10 @@ suite('Interpreter Security service', () => {
         unsafeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
         safeInterpreters = Typemoq.Mock.ofType<IPersistentState<string[]>>();
         interpreterSecurityStorage = Typemoq.Mock.ofType<IInterpreterSecurityStorage>();
-        safeInterpreters.setup(s => s.value).returns(() => safeInterpretersList);
-        unsafeInterpreters.setup(s => s.value).returns(() => unsafeInterpretersList);
-        interpreterSecurityStorage.setup(p => p.unsafeInterpreters).returns(() => unsafeInterpreters.object);
-        interpreterSecurityStorage.setup(p => p.safeInterpreters).returns(() => safeInterpreters.object);
+        safeInterpreters.setup((s) => s.value).returns(() => safeInterpretersList);
+        unsafeInterpreters.setup((s) => s.value).returns(() => unsafeInterpretersList);
+        interpreterSecurityStorage.setup((p) => p.unsafeInterpreters).returns(() => unsafeInterpreters.object);
+        interpreterSecurityStorage.setup((p) => p.safeInterpreters).returns(() => safeInterpreters.object);
         interpreterSecurityService = new InterpreterSecurityService(
             interpreterSecurityStorage.object,
             interpreterEvaluation.object
@@ -61,7 +61,7 @@ suite('Interpreter Security service', () => {
             // tslint:disable-next-line: no-any
             const interpreter = { path: 'random' } as any;
             interpreterEvaluation
-                .setup(i => i.inferValueUsingCurrentState(interpreter, resource))
+                .setup((i) => i.inferValueUsingCurrentState(interpreter, resource))
                 // tslint:disable-next-line: no-any
                 .returns(() => 'value' as any)
                 .verifiable(Typemoq.Times.once());
@@ -75,7 +75,7 @@ suite('Interpreter Security service', () => {
         test("If interpreter to be evaluated already exists in the safe intepreters list, simply return and don't evaluate", async () => {
             const interpreter = { path: 'safe2' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.never());
             // tslint:disable-next-line: no-any
             await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
@@ -85,7 +85,7 @@ suite('Interpreter Security service', () => {
         test("If interpreter to be evaluated already exists in the unsafe intepreters list, simply return and don't evaluate", async () => {
             const interpreter = { path: 'unsafe1' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.never());
             // tslint:disable-next-line: no-any
             await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
@@ -95,7 +95,7 @@ suite('Interpreter Security service', () => {
         test('If interpreter to be evaluated does not exists in the either of the intepreters list, evaluate the interpreters', async () => {
             const interpreter = { path: 'notInEitherLists' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
             await interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource);
@@ -105,11 +105,11 @@ suite('Interpreter Security service', () => {
         test('If interpreter is evaluated to be safe, add it in the safe interpreters list', async () => {
             const interpreter = { path: 'notInEitherLists' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .returns(() => Promise.resolve(true))
                 .verifiable(Typemoq.Times.once());
             safeInterpreters
-                .setup(s => s.updateValue(['notInEitherLists', ...safeInterpretersList]))
+                .setup((s) => s.updateValue(['notInEitherLists', ...safeInterpretersList]))
                 .returns(() => Promise.resolve())
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
@@ -121,11 +121,11 @@ suite('Interpreter Security service', () => {
         test('If interpreter is evaluated to be unsafe, add it in the unsafe interpreters list', async () => {
             const interpreter = { path: 'notInEitherLists' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .returns(() => Promise.resolve(false))
                 .verifiable(Typemoq.Times.once());
             unsafeInterpreters
-                .setup(s => s.updateValue(['notInEitherLists', ...unsafeInterpretersList]))
+                .setup((s) => s.updateValue(['notInEitherLists', ...unsafeInterpretersList]))
                 .returns(() => Promise.resolve())
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any
@@ -138,14 +138,14 @@ suite('Interpreter Security service', () => {
             const _didSafeInterpretersChange = Typemoq.Mock.ofType<EventEmitter<void>>();
             const interpreter = { path: 'notInEitherLists' };
             interpreterEvaluation
-                .setup(i => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
+                .setup((i) => i.evaluateIfInterpreterIsSafe(Typemoq.It.isAny(), Typemoq.It.isAny()))
                 .returns(() => Promise.resolve(false));
             unsafeInterpreters
-                .setup(s => s.updateValue(['notInEitherLists', ...unsafeInterpretersList]))
+                .setup((s) => s.updateValue(['notInEitherLists', ...unsafeInterpretersList]))
                 .returns(() => Promise.resolve());
             interpreterSecurityService._didSafeInterpretersChange = _didSafeInterpretersChange.object;
             _didSafeInterpretersChange
-                .setup(d => d.fire())
+                .setup((d) => d.fire())
                 .returns(() => undefined)
                 .verifiable(Typemoq.Times.once());
             // tslint:disable-next-line: no-any

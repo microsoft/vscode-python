@@ -193,12 +193,12 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
             experimentsManager
-                .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
                 .returns(() => undefined);
-            workspace.setup(w => w.hasWorkspaceFolders).returns(() => true);
-            workspace.setup(w => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: Function | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -224,12 +224,12 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
             experimentsManager
-                .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
                 .returns(() => undefined);
-            workspace.setup(w => w.hasWorkspaceFolders).returns(() => true);
-            workspace.setup(w => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: Function | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -250,15 +250,15 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
-            experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
             experimentsManager
-                .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
                 .returns(() => undefined);
-            workspace.setup(w => w.hasWorkspaceFolders).returns(() => true);
-            workspace.setup(w => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let interpreterPathServiceHandler: Function | undefined;
             documentManager
-                .setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => {
                     return { dispose: noop };
                 });
@@ -268,16 +268,16 @@ suite('Interpreters service', () => {
             };
             configService.reset();
             configService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 .returns(() => pythonSettings.object)
                 .verifiable(TypeMoq.Times.once());
             configService
-                .setup(c => c.getSettings(i.uri))
+                .setup((c) => c.getSettings(i.uri))
                 .returns(() => pythonSettings.object)
                 .verifiable(TypeMoq.Times.once());
             interpreterPathService
-                .setup(d => d.onDidChange(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                .callback(cb => (interpreterPathServiceHandler = cb))
+                .setup((d) => d.onDidChange(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .callback((cb) => (interpreterPathServiceHandler = cb))
                 .returns(() => {
                     return { dispose: noop };
                 });
@@ -298,9 +298,9 @@ suite('Interpreters service', () => {
             const resource = Uri.parse('a');
             service._pythonPathSetting = '';
             configService.reset();
-            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
             interpreterDisplay
-                .setup(i => i.refresh())
+                .setup((i) => i.refresh())
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
             service._onConfigChanged(resource);
@@ -312,9 +312,9 @@ suite('Interpreters service', () => {
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'stored setting';
             configService.reset();
-            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
             interpreterDisplay
-                .setup(i => i.refresh())
+                .setup((i) => i.refresh())
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
             service._onConfigChanged(resource);
@@ -326,9 +326,9 @@ suite('Interpreters service', () => {
             const resource = Uri.parse('a');
             service._pythonPathSetting = 'setting';
             configService.reset();
-            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'setting' } as any));
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'setting' } as any));
             interpreterDisplay
-                .setup(i => i.refresh())
+                .setup((i) => i.refresh())
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
             service._onConfigChanged(resource);

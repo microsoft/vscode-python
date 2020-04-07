@@ -161,7 +161,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPathValue = 'Hello there.exe';
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => pythonPathValue)
             .verifiable(typemoq.Times.once());
 
@@ -301,7 +301,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
-            .setup(p => p.workspaceValue)
+            .setup((p) => p.workspaceValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -335,7 +335,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
-            .setup(p => p.workspaceValue)
+            .setup((p) => p.workspaceValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -369,7 +369,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
-            .setup(p => p.workspaceValue)
+            .setup((p) => p.workspaceValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -403,7 +403,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         pythonPathInConfig
-            .setup(p => p.workspaceValue)
+            .setup((p) => p.workspaceValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);

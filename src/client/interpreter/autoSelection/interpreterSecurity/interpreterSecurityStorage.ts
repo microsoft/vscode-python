@@ -73,7 +73,7 @@ export class InterpreterSecurityStorage implements IInterpreterSecurityStorage {
     }
 
     public async resetInterpreterSecurityStorage(): Promise<void> {
-        this.flaggedWorkspacesKeysStorage.value.forEach(async key => {
+        this.flaggedWorkspacesKeysStorage.value.forEach(async (key) => {
             const areInterpretersInWorkspaceSafe = this.persistentStateFactory.createGlobalPersistentState<
                 boolean | undefined
             >(key, undefined);

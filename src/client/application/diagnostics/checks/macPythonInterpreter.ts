@@ -102,7 +102,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
 
         const interpreters = await this.interpreterService.getInterpreters(resource);
-        if (interpreters.filter(i => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
+        if (interpreters.filter((i) => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
             return [
                 new InvalidMacPythonInterpreterDiagnostic(
                     DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
@@ -127,7 +127,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             DiagnosticCommandPromptHandlerServiceId
         );
         await Promise.all(
-            diagnostics.map(async diagnostic => {
+            diagnostics.map(async (diagnostic) => {
                 const canHandle = await this.canHandle(diagnostic);
                 const shouldIgnore = await this.filterService.shouldIgnoreDiagnostic(diagnostic.code);
                 if (!canHandle || shouldIgnore) {
@@ -144,7 +144,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            disposables.push(interpreterPathService.onDidChange(i => this.onDidChangeConfiguration(undefined, i)));
+            disposables.push(interpreterPathService.onDidChange((i) => this.onDidChangeConfiguration(undefined, i)));
         }
         experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
@@ -157,9 +157,9 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         if (event) {
             const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
             const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-                ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+                ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
                 : [undefined];
-            const workspaceUriIndex = workspacesUris.findIndex(uri =>
+            const workspaceUriIndex = workspacesUris.findIndex((uri) =>
                 event.affectsConfiguration('python.pythonPath', uri)
             );
             if (workspaceUriIndex === -1) {
@@ -182,7 +182,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         this.timeOut = setTimeout(() => {
             this.timeOut = undefined;
             this.diagnose(workspaceUri)
-                .then(diagnostics => this.handle(diagnostics))
+                .then((diagnostics) => this.handle(diagnostics))
                 .ignoreErrors();
         }, this.changeThrottleTimeout);
     }

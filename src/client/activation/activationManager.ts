@@ -54,7 +54,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await this.initialize();
         // Activate all activation services together.
         await Promise.all([
-            Promise.all(this.singleActivationServices.map(item => item.activate())),
+            Promise.all(this.singleActivationServices.map((item) => item.activate())),
             this.activateWorkspace(this.activeResourceService.getActiveResource())
         ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
@@ -73,7 +73,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         await this.autoSelection.autoSelectInterpreter(resource);
         await this.evaluateAutoSelectedInterpreterSafety(resource);
-        await Promise.all(this.activationServices.map(item => item.activate(resource)));
+        await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
     public async initialize() {
@@ -125,7 +125,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     protected addHandlers() {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         this.disposables.push(
-            this.interpreterPathService.onDidChange(i => this.evaluateAutoSelectedInterpreterSafety(i.uri))
+            this.interpreterPathService.onDidChange((i) => this.evaluateAutoSelectedInterpreterSafety(i.uri))
         );
     }
     protected addRemoveDocOpenedHandlers() {
@@ -142,11 +142,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder =>
+        const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
             this.getWorkspaceKey(workspaceFolder.uri)
         );
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 this.activatedWorkspaces.delete(folder);

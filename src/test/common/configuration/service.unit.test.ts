@@ -29,7 +29,7 @@ suite('Configuration Service', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
         workspaceService
-            .setup(w => w.getWorkspaceFolder(resource))
+            .setup((w) => w.getWorkspaceFolder(resource))
             .returns(() => ({
                 uri: resource,
                 index: 0,
@@ -39,18 +39,18 @@ suite('Configuration Service', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
         experimentsManager
-            .setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
             .returns(() => undefined);
-        serviceContainer.setup(s => s.get(IWorkspaceService)).returns(() => workspaceService.object);
-        serviceContainer.setup(s => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
-        serviceContainer.setup(s => s.get(IExperimentsManager)).returns(() => experimentsManager.object);
+        serviceContainer.setup((s) => s.get(IWorkspaceService)).returns(() => workspaceService.object);
+        serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
+        serviceContainer.setup((s) => s.get(IExperimentsManager)).returns(() => experimentsManager.object);
         configService = new ConfigurationService(serviceContainer.object);
     });
 
     function setupConfigProvider(): TypeMoq.IMock<WorkspaceConfiguration> {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceService
-            .setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
             .returns(() => workspaceConfig.object);
         return workspaceConfig;
     }
@@ -58,11 +58,11 @@ suite('Configuration Service', () => {
     test('Fetching settings goes as expected', () => {
         const interpreterAutoSelectionProxyService = TypeMoq.Mock.ofType<IInterpreterAutoSeletionProxyService>();
         serviceContainer
-            .setup(s => s.get(IInterpreterSecurityService))
+            .setup((s) => s.get(IInterpreterSecurityService))
             .returns(() => interpreterSecurityService.object)
             .verifiable(TypeMoq.Times.once());
         serviceContainer
-            .setup(s => s.get(IInterpreterAutoSeletionProxyService))
+            .setup((s) => s.get(IInterpreterAutoSeletionProxyService))
             .returns(() => interpreterAutoSelectionProxyService.object)
             .verifiable(TypeMoq.Times.once());
         const settings = configService.getSettings();
@@ -70,12 +70,12 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update global settings if global value is already equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         // tslint:disable-next-line: no-any
-        workspaceConfig.setup(w => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
+        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'globalValue', ConfigurationTarget.Global))
+            .setup((w) => w.update('setting', 'globalValue', ConfigurationTarget.Global))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -85,12 +85,12 @@ suite('Configuration Service', () => {
     });
 
     test('Update global settings if global value is not equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         // tslint:disable-next-line: no-any
-        workspaceConfig.setup(w => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
+        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ globalValue: 'globalValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
+            .setup((w) => w.update('setting', 'newGlobalValue', ConfigurationTarget.Global))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -100,12 +100,12 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update workspace settings if workspace value is already equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         // tslint:disable-next-line: no-any
-        workspaceConfig.setup(w => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
+        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
+            .setup((w) => w.update('setting', 'workspaceValue', ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -115,12 +115,12 @@ suite('Configuration Service', () => {
     });
 
     test('Update workspace settings if workspace value is not equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         // tslint:disable-next-line: no-any
-        workspaceConfig.setup(w => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
+        workspaceConfig.setup((w) => w.inspect('setting')).returns(() => ({ workspaceValue: 'workspaceValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
+            .setup((w) => w.update('setting', 'newWorkspaceValue', ConfigurationTarget.Workspace))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -130,14 +130,14 @@ suite('Configuration Service', () => {
     });
 
     test('Do not update workspace folder settings if workspace folder value is already equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
-            .setup(w => w.inspect('setting'))
+            .setup((w) => w.inspect('setting'))
             // tslint:disable-next-line: no-any
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
+            .setup((w) => w.update('setting', 'workspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -152,14 +152,14 @@ suite('Configuration Service', () => {
     });
 
     test('Update workspace folder settings if workspace folder value is not equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
         workspaceConfig
-            .setup(w => w.inspect('setting'))
+            .setup((w) => w.inspect('setting'))
             // tslint:disable-next-line: no-any
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         workspaceConfig
-            .setup(w => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
+            .setup((w) => w.update('setting', 'newWorkspaceFolderValue', ConfigurationTarget.WorkspaceFolder))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -174,13 +174,13 @@ suite('Configuration Service', () => {
     });
 
     test('If in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
-        experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
         interpreterPathService
-            .setup(w => w.inspect(resource))
+            .setup((w) => w.inspect(resource))
             // tslint:disable-next-line: no-any
             .returns(() => ({ workspaceFolderValue: 'workspaceFolderValue' } as any));
         interpreterPathService
-            .setup(w => w.update(resource, ConfigurationTarget.WorkspaceFolder, 'newWorkspaceFolderValue'))
+            .setup((w) => w.update(resource, ConfigurationTarget.WorkspaceFolder, 'newWorkspaceFolderValue'))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
