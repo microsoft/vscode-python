@@ -471,6 +471,14 @@ export namespace DataScience {
         'DataScience.jupyterNotebookRemoteConnectSelfCertsFailed',
         'Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}'
     );
+    export const rawConnectionDisplayName = localize(
+        'DataScience.rawConnectionDisplayName',
+        'Direct kernel connection'
+    );
+    export const rawConnectionBrokenError = localize(
+        'DataScience.rawConnectionBrokenError',
+        'Direct kernel connection broken'
+    );
     export const jupyterServerCrashed = localize(
         'DataScience.jupyterServerCrashed',
         'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}'

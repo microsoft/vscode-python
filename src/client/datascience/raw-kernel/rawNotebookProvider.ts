@@ -6,10 +6,12 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
-import { LocalZMQKernel } from '../../common/experimentGroups';
+// RAWKERNEL: Enable when experiment is in
+//import { LocalZMQKernel } from '../../common/experimentGroups';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Settings, Telemetry } from '../constants';
@@ -19,8 +21,7 @@ class RawConnection implements IRawConnection {
     public readonly type = 'raw';
     public readonly localLaunch = true;
     public readonly valid = true;
-    // IANHU: Localize?
-    public readonly displayName = 'Raw Connection';
+    public readonly displayName = localize.DataScience.rawConnectionDisplayName();
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
 
     public dispose() {
@@ -45,7 +46,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _liveShare: ILiveShareApi,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configuration: IConfigurationService,
-        private experimentsManager: IExperimentsManager
+        _experimentsManager: IExperimentsManager
     ) {
         this.asyncRegistry.push(this);
     }
@@ -79,11 +80,9 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         throw new Error('Not implemented');
     }
 
-    // IANHU: Jupyter notebook needs this, but kinda a no-op for raw case
-    // For jupyter case it looks for a server crash error and returns that
+    // This may be a bit of a noop in the raw case
     public getDisposedError(): Error {
-        // IANHU: Error message
-        return new Error('Raw Notebook Provider Disposed');
+        return new Error(localize.DataScience.rawConnectionBrokenError());
     }
 
     protected getConnection(): IRawConnection {
@@ -132,8 +131,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
 
     private inExperiment(): boolean {
-        return true;
-        // Current experiements are loading from a local cache which doesn't include
+        return false;
+        // RAWKERNEL: Current experiements are loading from a local cache which doesn't include
         // my new experiment value, so I can't even opt into it
         //return this.experimentsManager.inExperiment(LocalZMQKernel.experiment);
     }

@@ -81,7 +81,8 @@ export class HostRawNotebookProvider
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        // IANHU: Hack to create session
+        throw new Error('Not implemented');
+        // RAWKERNEL: Hack to create session, uncomment throw and update ci to connect to a running kernel
         const ci = {
             version: 0,
             transport: 'tcp',
@@ -139,7 +140,6 @@ export class HostRawNotebookProvider
 
                 notebookPromise.resolve(notebook);
             } else {
-                // IANHU: Error message type
                 notebookPromise.reject(this.getDisposedError());
             }
         } catch (ex) {
@@ -151,10 +151,10 @@ export class HostRawNotebookProvider
         return notebookPromise.promise;
     }
 
-    // IANHU: Not the real execution info, just stub it out for now
+    // RAWKERNEL: Not the real execution info, just stub it out for now
     private getExecutionInfo(
-        resource: Resource,
-        notebookMetadata?: nbformat.INotebookMetadata
+        _resource: Resource,
+        _notebookMetadata?: nbformat.INotebookMetadata
     ): INotebookExecutionInfo {
         return {
             connectionInfo: this.getConnection(),

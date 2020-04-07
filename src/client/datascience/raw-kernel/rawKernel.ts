@@ -460,7 +460,6 @@ export class RawKernel implements Kernel.IKernel {
 
     // Handle a new message arriving from JMP connection
     private async handleMessage(message: KernelMessage.IMessage): Promise<void> {
-        // IANHU: CONVERT TO USING ONE REQUIRE?
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
