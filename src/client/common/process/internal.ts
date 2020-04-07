@@ -5,9 +5,6 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { PythonVersionInfo } from './types';
 
-// It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
-const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-
 /****************************
  * The following namespaces cover the following:
  *
@@ -39,6 +36,9 @@ const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 //  * install_debugpy.py  (used only for extension development)
 //  * ptvsd_launcher.py  (used only for the old debug adapter)
 export namespace scripts {
+    // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
+    const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+
     //============================
     // interpreterInfo.py
 
