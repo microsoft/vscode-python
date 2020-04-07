@@ -312,7 +312,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                           sysVersion: kernelInfoToUse.metadata.interpreter.sysVersion ?? '',
                           architecture: kernelInfoToUse.metadata.interpreter.architecture ?? Architecture.Unknown,
                           sysPrefix: kernelInfoToUse.metadata.interpreter.sysPrefix ?? '',
-                          type: kernelInfoToUse.metadata.interpreter.type ?? InterpreterType.Unknown
+                          type: kernelInfoToUse.metadata.interpreter.type ?? InterpreterType.Unknown,
+                          displayName: kernelInfoToUse.metadata.interpreter.displayName,
+                          envName: kernelInfoToUse.metadata.interpreter.envName
                       }
                     : resourceInterpreter;
                 changedKernel = true;
