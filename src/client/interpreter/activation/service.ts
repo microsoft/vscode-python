@@ -179,6 +179,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // In order to make sure we know where the environment output is,
             // put in a dummy echo we can look for
             const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgument();
+            });
             const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
