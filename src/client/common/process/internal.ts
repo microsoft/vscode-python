@@ -8,11 +8,37 @@ import { PythonVersionInfo } from './types';
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 
-export namespace scripts {
-    // ignored:
-    // * install_debugoy.py
-    // * ptvsd_launcher.py
+/****************************
+ * The following namespaces cover the following:
+ *
+ *  * internal scripts under the top-level "pythonFiles" directory
+ *  * other internal uses of Python
+ *
+ * Unlike elsewhere in the extension code, we use namespaces here
+ * to keep all these internal uses together in a concise manner.
+ * ...
+ ****************************/
 
+// "scripts" contains everything relevant to the scripts found under
+// the top-level "pythonFiles" directory.  Each of those scripts has
+// a function in this namespace which matches the script's filename.
+// Each function provides the commandline arguments that should be
+// used when invoking a Python executable, whether through spawn/exec
+// or a terminal.
+//
+// Where relevant (nearly always), the function also returns a "parse"
+// function that may be used to deserialize the stdout of the script
+// into the corresponding object or objects.  "parse()" takes a single
+// string as the stdout text and returns the relevant data.
+//
+// Some of the scripts are located in subdirectories of "pythonFiles".
+// For each of those subdirectories there is a sub-namespace where
+// those scripts' functions may be found.
+//
+// ignored scripts:
+//  * install_debugpy.py  (used only for extension development)
+//  * ptvsd_launcher.py  (used only for the old debug adapter)
+export namespace scripts {
     //============================
     // interpreterInfo.py
 
