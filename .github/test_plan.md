@@ -135,6 +135,7 @@ SPAM='hello ${WHO}'
 #### Language server
 
 -   [ ] LS is downloaded using HTTP (no SSL) when the "http.proxyStrictSSL" setting is false
+-   [ ] An item with a cloud icon appears in the status bar indicating progress while downloading the language server
 -   [ ] Installing [`requests`](https://pypi.org/project/requests/) in virtual environment is detected
     -   [ ] Import of `requests` without package installed is flagged as unresolved
     -   [ ] Create a virtual environment
