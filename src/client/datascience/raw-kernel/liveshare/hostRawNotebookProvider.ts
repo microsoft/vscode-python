@@ -20,7 +20,7 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
-import { LiveShare } from '../../constants';
+import { Identifiers, LiveShare, Settings } from '../../constants';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -158,11 +158,11 @@ export class HostRawNotebookProvider
     ): INotebookExecutionInfo {
         return {
             connectionInfo: this.getConnection(),
-            uri: undefined,
+            uri: Settings.JupyterServerLocalLaunch,
             interpreter: undefined,
             kernelSpec: undefined,
             workingDir: undefined,
-            purpose: undefined
+            purpose: Identifiers.RawPurpose
         };
     }
 }

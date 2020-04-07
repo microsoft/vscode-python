@@ -95,7 +95,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         resource: Resource,
         notebookMetadata: nbformat.INotebookMetadata,
         cancelToken: CancellationToken
-    ): Promise<INotebook | undefined> {
+    ): Promise<INotebook> {
         const notebookProvider = await this.serverFactory.get();
         return notebookProvider.createNotebook(identity, resource, notebookMetadata, cancelToken);
     }

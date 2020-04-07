@@ -148,7 +148,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
-    ): Promise<INotebook | undefined>;
+    ): Promise<INotebook>;
     getNotebook(identity: Uri): Promise<INotebook | undefined>;
 }
 

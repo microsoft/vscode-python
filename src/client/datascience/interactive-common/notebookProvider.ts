@@ -54,13 +54,7 @@ export class NotebookProvider implements INotebookProvider {
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
-        // IANHU: just for testing
-        //const zmqSupported = await this.rawNotebookProvider.supported();
-        //const zmqConnection = await this.rawNotebookProvider.connect();
-
-        //const server = await this.serverProvider.getOrCreateServer(options);
-
-        //return server?.getConnectionInfo();
+        // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect();
         } else {
@@ -70,20 +64,28 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        // IANHU: Just for testing
         if (await this.rawNotebookProvider.supported()) {
-            const rawNotebook = await this.rawNotebookProvider.getNotebook(options.identity);
-            if (rawNotebook) {
-                return rawNotebook;
+            // Check to see if our raw notebook provider already has this notebook
+            const notebook = await this.rawNotebookProvider.getNotebook(options.identity);
+            if (notebook) {
+                return notebook;
             }
-            const rawNotebookPromise = this.rawNotebookProvider.createNotebook(
+
+            // Check our provider cache
+            if (this.notebooks.get(options.identity.fsPath)) {
+                return this.notebooks.get(options.identity.fsPath)!!;
+            }
+            const promise = this.rawNotebookProvider.createNotebook(
                 options.identity,
                 options.identity,
                 options.metadata
             );
 
-            return rawNotebookPromise;
+            this.cacheNotebookPromise(options.identity, promise);
+
+            return promise;
         } else {
+            // Jupyter server case
             // Make sure we have a server
             const server = await this.serverProvider.getOrCreateServer({
                 getOnly: options.getOnly,
@@ -101,30 +103,36 @@ export class NotebookProvider implements INotebookProvider {
                 }
 
                 const promise = server.createNotebook(options.identity, options.identity, options.metadata);
-                this.notebooks.set(options.identity.fsPath, promise);
 
-                // Remove promise from cache if the same promise still exists.
-                const removeFromCache = () => {
-                    const cachedPromise = this.notebooks.get(options.identity.fsPath);
-                    if (cachedPromise === promise) {
-                        this.notebooks.delete(options.identity.fsPath);
-                    }
-                };
-
-                promise
-                    .then(nb => {
-                        // If the notebook is disposed, remove from cache.
-                        nb.onDisposed(removeFromCache);
-                        this._notebookCreated.fire({ identity: options.identity, notebook: nb });
-                    })
-                    .catch(noop);
-
-                // If promise fails, then remove the promise from cache.
-                promise.catch(removeFromCache);
+                this.cacheNotebookPromise(options.identity, promise);
 
                 return promise;
             }
         }
+    }
+
+    // Cache the promise that will return a notebook
+    private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook>) {
+        this.notebooks.set(identity.fsPath, promise);
+
+        // Remove promise from cache if the same promise still exists.
+        const removeFromCache = () => {
+            const cachedPromise = this.notebooks.get(identity.fsPath);
+            if (cachedPromise === promise) {
+                this.notebooks.delete(identity.fsPath);
+            }
+        };
+
+        promise
+            .then(nb => {
+                // If the notebook is disposed, remove from cache.
+                nb.onDisposed(removeFromCache);
+                this._notebookCreated.fire({ identity: identity, notebook: nb });
+            })
+            .catch(noop);
+
+        // If promise fails, then remove the promise from cache.
+        promise.catch(removeFromCache);
     }
 
     private async onDidCloseNotebookEditor(editor: INotebookEditor) {

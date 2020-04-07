@@ -49,7 +49,7 @@ export class GuestRawNotebookProvider
         _resource: Resource,
         _notebookMetadata: nbformat.INotebookMetadata,
         _cancelToken: CancellationToken
-    ): Promise<INotebook | undefined> {
+    ): Promise<INotebook> {
         throw new Error('Not implemented');
     }
 

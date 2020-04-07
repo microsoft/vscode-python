@@ -15,6 +15,22 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Settings, Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
+class RawConnection implements IRawConnection {
+    public readonly type = 'raw';
+    public readonly localLaunch = true;
+    public readonly valid = true;
+    // IANHU: Localize?
+    public readonly displayName = 'Raw Connection';
+    private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
+
+    public dispose() {
+        noop();
+    }
+    public get disconnected(): Event<number> {
+        return this.eventEmitter.event;
+    }
+}
+
 export class RawNotebookProviderBase implements IRawNotebookProvider {
     public get id(): string {
         return this._id;
@@ -51,7 +67,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         resource: Resource,
         notebookMetadata: nbformat.INotebookMetadata,
         cancelToken: CancellationToken
-    ): Promise<INotebook | undefined> {
+    ): Promise<INotebook> {
         return this.createNotebookInstance(resource, identity, notebookMetadata, cancelToken);
     }
 
@@ -138,21 +154,5 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         }
 
         return this._zmqSupported;
-    }
-}
-
-class RawConnection implements IRawConnection {
-    public readonly type = 'raw';
-    public readonly localLaunch = true;
-    public readonly valid = true;
-    // IANHU: Localize?
-    public readonly displayName = 'Raw Connection';
-    private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
-
-    public dispose() {
-        noop();
-    }
-    public get disconnected(): Event<number> {
-        return this.eventEmitter.event;
     }
 }
