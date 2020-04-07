@@ -160,6 +160,17 @@
         "salt": "EnableIPyWidgets",
         "min": 0,
         "max": 0
+    },
+    {
+        "name": "DeprecatePythonPath - experiment",
+        "salt": "DeprecatePythonPath",
+        "min": 0,
+        "max": 0
+    },
+    {
+        "name": "DeprecatePythonPath - control",
+        "salt": "DeprecatePythonPath",
+        "min": 100,
+        "max": 100
     }
-
 ]

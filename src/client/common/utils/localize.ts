@@ -59,6 +59,8 @@ export namespace Diagnostics {
 }
 
 export namespace Common {
+    export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
+    export const bannerLabelNo = localize('Common.bannerLabelNo', 'No');
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const gotIt = localize('Common.gotIt', 'Got it!');
@@ -70,6 +72,7 @@ export namespace Common {
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
     export const reload = localize('Common.reload', 'Reload');
     export const moreInfo = localize('Common.moreInfo', 'More Info');
+    export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
 }
 
@@ -135,6 +138,10 @@ export namespace Interpreters {
     export const condaInheritEnvMessage = localize(
         'Interpreters.condaInheritEnvMessage',
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.'
+    );
+    export const unsafeInterpreterMessage = localize(
+        'Interpreters.unsafeInterpreterMessage',
+        'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
     );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
@@ -208,8 +215,6 @@ export namespace InteractiveShiftEnterBanner {
         'InteractiveShiftEnterBanner.bannerMessage',
         'Would you like shift-enter to send code to the new Interactive Window experience?'
     );
-    export const bannerLabelYes = localize('InteractiveShiftEnterBanner.bannerLabelYes', 'Yes');
-    export const bannerLabelNo = localize('InteractiveShiftEnterBanner.bannerLabelNo', 'No');
 }
 
 export namespace DataScienceSurveyBanner {

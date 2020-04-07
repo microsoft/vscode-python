@@ -164,6 +164,7 @@ suite('Installer', () => {
         ioc.registerVariableTypes();
         ioc.registerLinterTypes();
         ioc.registerFormatterTypes();
+        ioc.registerInterpreterStorageTypes();
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);

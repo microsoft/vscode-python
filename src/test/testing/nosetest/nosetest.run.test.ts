@@ -75,6 +75,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
 
         ioc.registerMockProcessTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);

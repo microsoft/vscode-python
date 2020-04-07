@@ -85,9 +85,6 @@ export enum EnableIPyWidgets {
 
 /*
  * Experiment to check whether the extension should deprecate `python.pythonPath` setting
-
- * Note: 'DeprecatePythonPath - experiment' string is directly used in `src\test\common.ts` instead
- * of accessing through the object. Be sure to remove it when removing the experiment.
  */
 export enum DeprecatePythonPath {
     control = 'DeprecatePythonPath - control',

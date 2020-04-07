@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
-import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
+import { IInterpreterAutoSeletionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
@@ -47,6 +47,41 @@ const untildify = require('untildify');
 
 // tslint:disable-next-line:completed-docs
 export class PythonSettings implements IPythonSettings {
+    public get onDidChange(): Event<void> {
+        return this.changed.event;
+    }
+
+    public get pythonPath(): string {
+        return this._pythonPath;
+    }
+    public set pythonPath(value: string) {
+        if (this._pythonPath === value) {
+            return;
+        }
+        // Add support for specifying just the directory where the python executable will be located.
+        // E.g. virtual directory name.
+        try {
+            this._pythonPath = this.getPythonExecutable(value);
+        } catch (ex) {
+            this._pythonPath = value;
+        }
+    }
+
+    public get defaultInterpreterPath(): string {
+        return this._defaultInterpreterPath;
+    }
+    public set defaultInterpreterPath(value: string) {
+        if (this._defaultInterpreterPath === value) {
+            return;
+        }
+        // Add support for specifying just the directory where the python executable will be located.
+        // E.g. virtual directory name.
+        try {
+            this._defaultInterpreterPath = this.getPythonExecutable(value);
+        } catch (ex) {
+            this._defaultInterpreterPath = value;
+        }
+    }
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
     public downloadLanguageServer = true;
     public jediEnabled = true;
@@ -82,16 +117,14 @@ export class PythonSettings implements IPythonSettings {
     private _pythonPath = '';
     private _defaultInterpreterPath = '';
     private readonly workspace: IWorkspaceService;
-    public get onDidChange(): Event<void> {
-        return this.changed.event;
-    }
 
     constructor(
         workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService,
         private readonly experimentsManager?: IExperimentsManager,
-        private readonly interpreterPathService?: IInterpreterPathService
+        private readonly interpreterPathService?: IInterpreterPathService,
+        private readonly interpreterSecurityService?: IInterpreterSecurityService
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -103,7 +136,8 @@ export class PythonSettings implements IPythonSettings {
         interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService,
         experimentsManager?: IExperimentsManager,
-        interpreterPathService?: IInterpreterPathService
+        interpreterPathService?: IInterpreterPathService,
+        interpreterSecurityService?: IInterpreterSecurityService
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -115,7 +149,8 @@ export class PythonSettings implements IPythonSettings {
                 interpreterAutoSelectionService,
                 workspace,
                 experimentsManager,
-                interpreterPathService
+                interpreterPathService,
+                interpreterSecurityService
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             // Pass null to avoid VSC from complaining about not passing in a value.
@@ -167,35 +202,7 @@ export class PythonSettings implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
-        /**
-         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
-         * That's not true here, as this method is often called in the constructor,which runs before `.activate()` methods.
-         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
-         * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
-         */
-        if (this.experimentsManager && this.interpreterPathService) {
-            if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
-                this.pythonPath = systemVariables.resolveAny(this.interpreterPathService.get(this.workspaceRoot))!;
-            } else {
-                this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
-            }
-            this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-        } else {
-            this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
-        }
-        // If user has defined a custom value, use it else try to get the best interpreter ourselves.
-        if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
-            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
-                this.workspaceRoot
-            );
-            if (autoSelectedPythonInterpreter && this.workspaceRoot) {
-                this.interpreterAutoSelectionService
-                    .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)
-                    .ignoreErrors();
-            }
-            this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
-        }
-        this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
+        this.pythonPath = this.getPythonPath(pythonSettings, systemVariables, workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'));
@@ -524,37 +531,6 @@ export class PythonSettings implements IPythonSettings {
         this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
-    public get pythonPath(): string {
-        return this._pythonPath;
-    }
-    public set pythonPath(value: string) {
-        if (this._pythonPath === value) {
-            return;
-        }
-        // Add support for specifying just the directory where the python executable will be located.
-        // E.g. virtual directory name.
-        try {
-            this._pythonPath = this.getPythonExecutable(value);
-        } catch (ex) {
-            this._pythonPath = value;
-        }
-    }
-
-    public get defaultInterpreterPath(): string {
-        return this._defaultInterpreterPath;
-    }
-    public set defaultInterpreterPath(value: string) {
-        if (this._defaultInterpreterPath === value) {
-            return;
-        }
-        // Add support for specifying just the directory where the python executable will be located.
-        // E.g. virtual directory name.
-        try {
-            this._defaultInterpreterPath = this.getPythonExecutable(value);
-        } catch (ex) {
-            this._defaultInterpreterPath = value;
-        }
-    }
     protected getPythonExecutable(pythonPath: string) {
         return getPythonExecutable(pythonPath);
     }
@@ -582,6 +558,9 @@ export class PythonSettings implements IPythonSettings {
         this.disposables.push(
             this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this))
         );
+        if (this.interpreterSecurityService) {
+            this.disposables.push(this.interpreterSecurityService.onDidChangeSafeInterpreters(onDidChange.bind(this)));
+        }
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
                 if (event.affectsConfiguration('python')) {
@@ -601,6 +580,56 @@ export class PythonSettings implements IPythonSettings {
     @debounceSync(1)
     protected debounceChangeNotification() {
         this.changed.fire();
+    }
+
+    private getPythonPath(
+        pythonSettings: WorkspaceConfiguration,
+        systemVariables: SystemVariables,
+        workspaceRoot: string | undefined
+    ) {
+        /**
+         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
+         * That's not true here, as this method is often called in the constructor,which runs before `.activate()` methods.
+         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
+         * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
+         */
+        const inExperiment = this.experimentsManager?.inExperiment(DeprecatePythonPath.experiment);
+        this.experimentsManager?.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        // Use the interpreter path service if in the experiment otherwise use the normal settings
+        this.pythonPath = systemVariables.resolveAny(
+            inExperiment && this.interpreterPathService
+                ? this.interpreterPathService.get(this.workspaceRoot)
+                : pythonSettings.get<string>('pythonPath')
+        )!;
+        if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
+                this.workspaceRoot
+            );
+            if (inExperiment && this.interpreterSecurityService) {
+                if (
+                    autoSelectedPythonInterpreter &&
+                    this.interpreterSecurityService.isSafe(autoSelectedPythonInterpreter) &&
+                    this.workspaceRoot
+                ) {
+                    this.pythonPath = autoSelectedPythonInterpreter.path;
+                    this.interpreterAutoSelectionService
+                        .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)
+                        .ignoreErrors();
+                }
+            } else {
+                if (autoSelectedPythonInterpreter && this.workspaceRoot) {
+                    this.pythonPath = autoSelectedPythonInterpreter.path;
+                    this.interpreterAutoSelectionService
+                        .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)
+                        .ignoreErrors();
+                }
+            }
+        }
+        if (inExperiment && this.pythonPath === DEFAULT_INTERPRETER_SETTING) {
+            // This is to ensure that we ask users to select an interpreter in case auto selected interpreter is not safe to select
+            this.pythonPath = '';
+        }
+        return getAbsolutePath(this.pythonPath, workspaceRoot);
     }
 }
 
