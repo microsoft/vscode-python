@@ -58,19 +58,19 @@ export class HostRawNotebookProvider
     }
 
     public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
-        throw new Error('Not implemented');
+        // Not implemented yet
     }
 
     public async onSessionChange(_api: vsls.LiveShare | null): Promise<void> {
-        throw new Error('Not implemented');
+        // Not implemented yet
     }
 
     public async onDetach(_api: vsls.LiveShare | null): Promise<void> {
-        throw new Error('Not implemented');
+        // Not implemented yet
     }
 
     public async waitForServiceName(): Promise<string> {
-        throw new Error('Not implemented');
+        return 'Not implemented';
     }
 
     protected async createNotebookInstance(

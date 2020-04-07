@@ -41,7 +41,8 @@ export class GuestRawNotebookProvider
     }
 
     public async supported(): Promise<boolean> {
-        throw new Error('Not implemented');
+        // For now just false, but when implemented will message the host
+        return false;
     }
 
     public async createNotebook(
@@ -58,7 +59,7 @@ export class GuestRawNotebookProvider
     }
 
     public async onSessionChange(_api: vsls.LiveShare | null): Promise<void> {
-        throw new Error('Not implemented');
+        // Not implemented yet
     }
 
     public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
@@ -74,6 +75,6 @@ export class GuestRawNotebookProvider
     }
 
     public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
-        throw new Error('Not implemented');
+        // Not implemented yet
     }
 }
