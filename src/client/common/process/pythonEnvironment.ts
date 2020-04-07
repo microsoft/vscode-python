@@ -69,9 +69,8 @@ class PythonEnvironment {
     }
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        const [args, _parse] = internalPython.isModuleInstalled(moduleName);
-        // tslint:disable-next-line:no-unused-expression
-        _parse; // Silence the compiler.
+        // prettier-ignore
+        const [args,] = internalPython.isModuleInstalled(moduleName);
         const info = this.getExecutionInfo(args);
         try {
             await this.deps.exec(info.command, info.args);

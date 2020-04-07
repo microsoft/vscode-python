@@ -457,9 +457,8 @@ export class JupyterCommandFinderImpl {
             const pythonService = await this.createExecutionService(interpreter);
 
             try {
-                const [args, _parse] = internalPython.getModuleVersion(moduleName);
-                // tslint:disable-next-line:no-unused-expression
-                _parse; // Silence the compiler.
+                // prettier-ignore
+                const [args,] = internalPython.getModuleVersion(moduleName);
                 const execResult = await pythonService.execModule('jupyter', args, newOptions);
                 if (execResult.stderr) {
                     traceWarning(`${execResult.stderr} for ${interpreter.path}`);
