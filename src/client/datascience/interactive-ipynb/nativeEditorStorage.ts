@@ -571,7 +571,9 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Reuse our original json except for the cells.
         const json = {
             cells: cells.map((c) => this.fixupCell(c.data)),
-            ...(this._state.notebookJson as nbformat.INotebookContent)
+            metadata: this._state.notebookJson.metadata,
+            nbformat: this._state.notebookJson.nbformat,
+            nbformat_minor: this._state.notebookJson.nbformat_minor
         };
         return JSON.stringify(json, null, this.indentAmount);
     }
