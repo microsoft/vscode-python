@@ -1272,6 +1272,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         delete msg.payload;
     }
 
+    public changeViewState(active: boolean, visible: boolean) {
+        if (this.webPanelListener) {
+            this.webPanelListener.onChangeViewState({
+                isActive: () => active,
+                isVisible: () => visible,
+                setTitle: noop,
+                show: noop as any,
+                postMessage: noop as any,
+                close: noop,
+                updateCwd: noop as any
+            });
+        }
+    }
+
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
         if (!section || section !== 'python') {
             return this.emptyConfig;

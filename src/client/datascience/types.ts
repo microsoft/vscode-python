@@ -466,6 +466,11 @@ export interface IInteractiveWindowListener extends IDisposable {
      */
     // tslint:disable-next-line: no-any
     onMessage(message: string, payload?: any): void;
+    /**
+     * Fired when the view state of the interactive window changes
+     * @param args
+     */
+    onViewStateChanged?(args: WebViewViewChangeEventArgs): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
