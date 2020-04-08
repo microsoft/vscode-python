@@ -8,7 +8,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { traceDecorators, traceError } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
+import { Common, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService, InterpreterType } from '../contracts';
@@ -49,11 +49,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.moreInfo()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.moreInfo()];
         const telemetrySelections: ['Yes', 'No', 'More Info'] = ['Yes', 'No', 'More Info'];
         const selection = await this.appShell.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts);
         sendTelemetryEvent(EventName.CONDA_INHERIT_ENV_PROMPT, undefined, {

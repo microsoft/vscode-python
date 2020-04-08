@@ -1,8 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { Disposable, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
+import { Disposable, OutputChannel, StatusBarAlignment, StatusBarItem, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
-import { IDisposableRegistry, IPathUtils, Resource } from '../../common/types';
+import { IDisposableRegistry, IOutputChannel, IPathUtils, Resource } from '../../common/types';
+import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { IInterpreterAutoSelectionService } from '../autoSelection/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, PythonInterpreter } from '../contracts';
@@ -18,8 +20,9 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private currentlySelectedInterpreterPath?: string;
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
+    private interpreterPath: string | undefined;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
@@ -61,10 +64,16 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
             this.statusBar.color = '';
-            this.statusBar.tooltip = this.pathUtils.getDisplayName(
-                interpreter.path,
-                workspaceFolder ? workspaceFolder.fsPath : undefined
-            );
+            this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
+            if (this.interpreterPath !== interpreter.path) {
+                const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+                output.appendLine(
+                    Interpreters.pythonInterpreterPath().format(
+                        this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath)
+                    )
+                );
+                this.interpreterPath = interpreter.path;
+            }
             this.statusBar.text = interpreter.displayName!;
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {

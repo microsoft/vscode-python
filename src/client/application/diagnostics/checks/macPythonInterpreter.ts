@@ -6,9 +6,17 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, DiagnosticSeverity, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { DeprecatePythonPath } from '../../../common/experimentGroups';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IInterpreterPathService,
+    InterpreterConfigurationScope,
+    Resource
+} from '../../../common/types';
 import { IInterpreterHelper, IInterpreterService, InterpreterType } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -133,18 +141,37 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     protected addPythonPathChangedHandler() {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            disposables.push(interpreterPathService.onDidChange((i) => this.onDidChangeConfiguration(undefined, i)));
+        }
+        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         disposables.push(workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
-    protected async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-            ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
-            : [undefined];
-        const workspaceUriIndex = workspacesUris.findIndex((uri) =>
-            event.affectsConfiguration('python.pythonPath', uri)
-        );
-        if (workspaceUriIndex === -1) {
-            return;
+    protected async onDidChangeConfiguration(
+        event?: ConfigurationChangeEvent,
+        interpreterConfigurationScope?: InterpreterConfigurationScope
+    ) {
+        let workspaceUri: Resource;
+        if (event) {
+            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
+                ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
+                : [undefined];
+            const workspaceUriIndex = workspacesUris.findIndex((uri) =>
+                event.affectsConfiguration('python.pythonPath', uri)
+            );
+            if (workspaceUriIndex === -1) {
+                return;
+            }
+            workspaceUri = workspacesUris[workspaceUriIndex];
+        } else if (interpreterConfigurationScope) {
+            workspaceUri = interpreterConfigurationScope.uri;
+        } else {
+            throw new Error(
+                'One of `interpreterConfigurationScope` or `event` should be defined when calling `onDidChangeConfiguration`.'
+            );
         }
         // Lets wait, for more changes, dirty simple throttling.
         if (this.timeOut) {
@@ -154,7 +181,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
         this.timeOut = setTimeout(() => {
             this.timeOut = undefined;
-            this.diagnose(workspacesUris[workspaceUriIndex])
+            this.diagnose(workspaceUri)
                 .then((diagnostics) => this.handle(diagnostics))
                 .ignoreErrors();
         }, this.changeThrottleTimeout);

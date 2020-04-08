@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { _SCRIPTS_DIR } from './index';
+import { _ISOLATED as ISOLATED, _SCRIPTS_DIR } from './index';
 
 const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'vscode_datascience_helpers');
 
@@ -12,7 +12,7 @@ const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'vscode_datascience_helpers');
 export function getJupyterVariableDataFrameInfo(): string[] {
     const script = path.join(SCRIPTS_DIR, 'getJupyterVariableDataFrameInfo.py');
     // There is no script-specific output to parse, so we do not return a function.
-    return [script];
+    return [ISOLATED, script];
 }
 
 //============================
@@ -21,7 +21,7 @@ export function getJupyterVariableDataFrameInfo(): string[] {
 export function getJupyterVariableDataFrameRows(): string[] {
     const script = path.join(SCRIPTS_DIR, 'getJupyterVariableDataFrameRows.py');
     // There is no script-specific output to parse, so we do not return a function.
-    return [script];
+    return [ISOLATED, script];
 }
 
 //============================
@@ -41,7 +41,7 @@ type JupyterServerInfo = {
 
 export function getServerInfo(): [string[], (out: string) => JupyterServerInfo[]] {
     const script = path.join(SCRIPTS_DIR, 'getServerInfo.py');
-    const args = [script];
+    const args = [ISOLATED, script];
 
     function parse(out: string): JupyterServerInfo[] {
         return JSON.parse(out.trim());
@@ -56,7 +56,7 @@ export function getServerInfo(): [string[], (out: string) => JupyterServerInfo[]
 export function getJupyterKernels(): string[] {
     const script = path.join(SCRIPTS_DIR, 'getJupyterKernels.py');
     // There is no script-specific output to parse, so we do not return a function.
-    return [script];
+    return [ISOLATED, script];
 }
 
 //============================
@@ -65,7 +65,7 @@ export function getJupyterKernels(): string[] {
 export function getJupyterKernelspecVersion(): string[] {
     const script = path.join(SCRIPTS_DIR, 'getJupyterKernelspecVersion.py');
     // For now we do not worry about parsing the output here.
-    return [script];
+    return [ISOLATED, script];
 }
 
 //============================
@@ -73,7 +73,7 @@ export function getJupyterKernelspecVersion(): string[] {
 
 export function jupyter_nbInstalled(): [string[], (out: string) => boolean] {
     const script = path.join(SCRIPTS_DIR, 'jupyter_nbInstalled.py');
-    const args = [script];
+    const args = [ISOLATED, script];
 
     function parse(out: string): boolean {
         return out.toLowerCase().includes('available');

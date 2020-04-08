@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
@@ -9,7 +8,6 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -30,7 +28,6 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterSessionStartError } from './jupyterSession';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { JupyterZMQBinariesNotFoundError } from './jupyterZMQBinariesNotFoundError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
 
@@ -42,7 +39,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
-    private zmqError: Error | undefined;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -333,36 +329,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
-    private async verifyZMQ() {
-        if (this.zmqError) {
-            throw this.zmqError;
-        }
-        try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Push();
-            const port = await portfinder.getPortPromise();
-
-            await sock.bind(`tcp://127.0.0.1:${port}`);
-            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-            await sleep(50);
-            sock.close();
-            traceInfo(`ZMQ connection to port ${port} verified.`);
-        } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this.zmqError = new JupyterZMQBinariesNotFoundError(e.toString());
-            throw this.zmqError;
-        }
-    }
     private async startOrConnect(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<IConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
-            // First verify we have ZMQ installed correctly (this might change when we don't 'launch' servers anymore)
-            await this.verifyZMQ();
-
             // If that works, then attempt to start the server
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;

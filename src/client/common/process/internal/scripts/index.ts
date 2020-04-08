@@ -8,6 +8,8 @@ import { PythonVersionInfo } from '../../types';
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 const SCRIPTS_DIR = _SCRIPTS_DIR;
+export const _ISOLATED = path.join(_SCRIPTS_DIR, 'pyvsc-run-isolated.py');
+const ISOLATED = _ISOLATED;
 
 // "scripts" contains everything relevant to the scripts found under
 // the top-level "pythonFiles" directory.  Each of those scripts has
@@ -48,7 +50,7 @@ type PythonEnvInfo = {
 
 export function interpreterInfo(): [string[], (out: string) => PythonEnvInfo] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
-    const args = [script];
+    const args = [ISOLATED, script];
 
     function parse(out: string): PythonEnvInfo {
         let json: PythonEnvInfo;
@@ -158,7 +160,7 @@ namespace _completion {
 
 export function completion(jediPath?: string): [string[], (out: string) => _completion.Response[]] {
     const script = path.join(SCRIPTS_DIR, 'completion.py');
-    const args = [script];
+    const args = [ISOLATED, script];
     if (jediPath) {
         args.push('custom');
         args.push(jediPath);
@@ -176,7 +178,7 @@ export function completion(jediPath?: string): [string[], (out: string) => _comp
 
 export function sortImports(filename: string, sortArgs?: string[]): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'sortImports.py');
-    const args = [script, filename, '--diff'];
+    const args = [ISOLATED, script, filename, '--diff'];
     if (sortArgs) {
         args.push(...sortArgs);
     }
@@ -194,7 +196,7 @@ export function sortImports(filename: string, sortArgs?: string[]): [string[], (
 
 export function refactor(root: string): [string[], (out: string) => object[]] {
     const script = path.join(SCRIPTS_DIR, 'refactor.py');
-    const args = [script, root];
+    const args = [ISOLATED, script, root];
 
     // tslint:disable-next-line:no-suspicious-comment
     // TODO: Make the return type more specific, like we did
@@ -216,7 +218,7 @@ export function refactor(root: string): [string[], (out: string) => object[]] {
 
 export function normalizeForInterpreter(code: string): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeForInterpreter.py');
-    const args = [script, code];
+    const args = [ISOLATED, script, code];
 
     function parse(out: string) {
         // The text will be used as-is.
@@ -256,7 +258,7 @@ export function symbolProvider(
     text?: string
 ): [string[], (out: string) => _symbolProvider.Symbols] {
     const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
-    const args = [script, filename];
+    const args = [ISOLATED, script, filename];
     if (text) {
         args.push(text);
     }
@@ -273,7 +275,7 @@ export function symbolProvider(
 
 export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
     const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgument();
-    const args = [script];
+    const args = [ISOLATED, script];
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);
@@ -287,7 +289,7 @@ export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessE
 
 export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
     const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
-    const args = [script, filename.fileToCommandArgument()];
+    const args = [ISOLATED, script, filename.fileToCommandArgument()];
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);
@@ -304,6 +306,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
     // We don't bother with a "parse" function since the output
     // could be anything.
     return [
+        ISOLATED,
         script,
         command.fileToCommandArgument(),
         // The shell args must come after the command
@@ -319,7 +322,7 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
 export function testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'testlauncher.py');
     // There is no output to parse, so we do not return a function.
-    return [script, ...testArgs];
+    return [ISOLATED, script, ...testArgs];
 }
 
 //============================
@@ -328,5 +331,5 @@ export function testlauncher(testArgs: string[]): string[] {
 export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
     // There is no output to parse, so we do not return a function.
-    return [script, ...testArgs];
+    return [ISOLATED, script, ...testArgs];
 }

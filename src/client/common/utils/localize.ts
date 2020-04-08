@@ -59,6 +59,8 @@ export namespace Diagnostics {
 }
 
 export namespace Common {
+    export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
+    export const bannerLabelNo = localize('Common.bannerLabelNo', 'No');
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
@@ -71,6 +73,7 @@ export namespace Common {
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
     export const reload = localize('Common.reload', 'Reload');
     export const moreInfo = localize('Common.moreInfo', 'More Info');
+    export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
 }
 
@@ -137,14 +140,20 @@ export namespace Interpreters {
         'Interpreters.condaInheritEnvMessage',
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings.'
     );
+    export const unsafeInterpreterMessage = localize(
+        'Interpreters.unsafeInterpreterMessage',
+        'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+    );
     export const environmentPromptMessage = localize(
         'Interpreters.environmentPromptMessage',
         'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
     );
+    export const entireWorkspace = localize('Interpreters.entireWorkspace', 'Entire workspace');
     export const selectInterpreterTip = localize(
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar'
     );
+    export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
 }
 export namespace ExtensionChannels {
     export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
@@ -207,8 +216,6 @@ export namespace InteractiveShiftEnterBanner {
         'InteractiveShiftEnterBanner.bannerMessage',
         'Would you like shift-enter to send code to the new Interactive Window experience?'
     );
-    export const bannerLabelYes = localize('InteractiveShiftEnterBanner.bannerLabelYes', 'Yes');
-    export const bannerLabelNo = localize('InteractiveShiftEnterBanner.bannerLabelNo', 'No');
 }
 
 export namespace DataScienceSurveyBanner {

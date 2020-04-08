@@ -4,7 +4,8 @@
 'use strict';
 
 import { Event, Uri } from 'vscode';
-import { Resource } from '../../common/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
+import { IPersistentState, Resource } from '../../common/types';
 import { PythonInterpreter } from '../contracts';
 
 export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
@@ -29,6 +30,7 @@ export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectio
 export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
+    getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
     setGlobalInterpreter(interpreter: PythonInterpreter | undefined): Promise<void>;
 }
 
@@ -47,4 +49,26 @@ export interface IInterpreterAutoSelectionRule {
     setNextRule(rule: IInterpreterAutoSelectionRule): void;
     autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void>;
     getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+}
+
+export const IInterpreterSecurityService = Symbol('IInterpreterSecurityService');
+export interface IInterpreterSecurityService {
+    readonly onDidChangeSafeInterpreters: Event<void>;
+    evaluateAndRecordInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void>;
+    isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined;
+}
+
+export const IInterpreterSecurityStorage = Symbol('IInterpreterSecurityStorage');
+export interface IInterpreterSecurityStorage extends IExtensionSingleActivationService {
+    readonly unsafeInterpreterPromptEnabled: IPersistentState<boolean>;
+    readonly unsafeInterpreters: IPersistentState<string[]>;
+    readonly safeInterpreters: IPersistentState<string[]>;
+    hasUserApprovedWorkspaceInterpreters(resource: Uri): IPersistentState<boolean | undefined>;
+    storeKeyForWorkspace(resource: Uri): Promise<void>;
+}
+
+export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');
+export interface IInterpreterEvaluation {
+    evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean>;
+    inferValueUsingCurrentState(interpreter: PythonInterpreter, resource: Resource): boolean | undefined;
 }

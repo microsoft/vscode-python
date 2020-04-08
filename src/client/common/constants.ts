@@ -63,6 +63,8 @@ export namespace Commands {
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
     export const PickLocalProcess = 'python.pickLocalProcess';
+    export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
+    export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
@@ -83,6 +85,8 @@ export namespace Delays {
     // Max time to wait before aborting the generation of code lenses for unit tests
     export const MaxUnitTestCodeLensDelay = 5000;
 }
+
+export const DEFAULT_INTERPRETER_SETTING = 'python';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 

@@ -12,7 +12,12 @@ import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import * as Telemetry from '../../client/telemetry';
 import { EventName } from '../../client/telemetry/constants';
-import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
+import {
+    EnvFileTelemetryTests,
+    sendActivationTelemetry,
+    sendFileCreationTelemetry,
+    sendSettingTelemetry
+} from '../../client/telemetry/envFileTelemetry';
 
 suite('Env file telemetry', () => {
     const defaultEnvFileValue = 'someDefaultValue';
@@ -53,45 +58,45 @@ suite('Env file telemetry', () => {
     teardown(() => {
         telemetryEvent = undefined;
         sinon.restore();
-        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
+        EnvFileTelemetryTests.resetState();
     });
 
     test('Setting telemetry should be sent with hasCustomEnvPath at true if the python.envFile setting is different from the default value', () => {
-        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), 'bar');
+        sendSettingTelemetry(instance(workspaceService), 'bar');
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
     });
 
     test('Setting telemetry should not be sent if a telemetry event has already been sent', () => {
-        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
+        EnvFileTelemetryTests.setState({ telemetrySent: true });
 
-        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), 'bar');
+        sendSettingTelemetry(instance(workspaceService), 'bar');
 
         sinon.assert.notCalled(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, undefined);
     });
 
     test('Setting telemetry should not be sent if the python.envFile setting is the same as the default value', () => {
-        EnvFileTelemetry.EnvFileTelemetryTests.setState({ defaultSetting: defaultEnvFileValue });
+        EnvFileTelemetryTests.setState({ defaultSetting: defaultEnvFileValue });
 
-        EnvFileTelemetry.sendSettingTelemetry(instance(workspaceService), defaultEnvFileValue);
+        sendSettingTelemetry(instance(workspaceService), defaultEnvFileValue);
 
         sinon.assert.notCalled(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, undefined);
     });
 
     test('File creation telemetry should be sent if no telemetry event has been sent before', () => {
-        EnvFileTelemetry.sendFileCreationTelemetry();
+        sendFileCreationTelemetry();
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
     });
 
     test('File creation telemetry should not be sent if a telemetry event has already been sent', () => {
-        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
+        EnvFileTelemetryTests.setState({ telemetrySent: true });
 
-        EnvFileTelemetry.sendFileCreationTelemetry();
+        sendFileCreationTelemetry();
 
         sinon.assert.notCalled(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, undefined);
@@ -100,16 +105,16 @@ suite('Env file telemetry', () => {
     test('Activation telemetry should be sent if no telemetry event has been sent before, and a .env file exists', async () => {
         when(fileSystem.fileExists(anyString())).thenResolve(true);
 
-        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+        await sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
 
         sinon.assert.calledOnce(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
     });
 
     test('Activation telemetry should not be sent if a telemetry event has already been sent', async () => {
-        EnvFileTelemetry.EnvFileTelemetryTests.setState({ telemetrySent: true });
+        EnvFileTelemetryTests.setState({ telemetrySent: true });
 
-        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+        await sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
 
         sinon.assert.notCalled(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, undefined);
@@ -118,7 +123,7 @@ suite('Env file telemetry', () => {
     test('Activation telemetry should not be sent if no .env file exists', async () => {
         when(fileSystem.fileExists(anyString())).thenResolve(false);
 
-        await EnvFileTelemetry.sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
+        await sendActivationTelemetry(instance(fileSystem), instance(workspaceService), resource);
 
         sinon.assert.notCalled(sendTelemetryStub);
         assert.deepEqual(telemetryEvent, undefined);

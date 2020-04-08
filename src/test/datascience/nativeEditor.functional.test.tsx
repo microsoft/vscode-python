@@ -2279,7 +2279,10 @@ df.head()`;
                         assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
                     }).timeout(10_000);
 
-                    async function testAutoSavingWithChangesToWindowState(focused: boolean) {
+                    async function testAutoSavingWithChangesToWindowState(
+                        configSetting: 'onFocusChange' | 'onWindowChange',
+                        focused: boolean
+                    ) {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
@@ -2288,7 +2291,7 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        await updateFileConfig('autoSave', 'onWindowChange');
+                        await updateFileConfig('autoSave', configSetting);
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, send notification about changes to window state.
@@ -2303,16 +2306,18 @@ df.head()`;
                     }
 
                     test('Auto save notebook when window state changes to being not focused', async () =>
-                        testAutoSavingWithChangesToWindowState(false));
+                        testAutoSavingWithChangesToWindowState('onWindowChange', false));
                     test('Auto save notebook when window state changes to being focused', async () =>
-                        testAutoSavingWithChangesToWindowState(true));
+                        testAutoSavingWithChangesToWindowState('onWindowChange', true));
+                    test('Auto save notebook when window state changes to being focused for focusChange', async () =>
+                        testAutoSavingWithChangesToWindowState('onFocusChange', true));
+                    test('Auto save notebook when window state changes to being not focused for focusChange', async () =>
+                        testAutoSavingWithChangesToWindowState('onFocusChange', false));
 
-                    test('Should not auto save notebook when window state changes', async () => {
+                    test('Auto save notebook when view state changes', async () => {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, {
-                            timeoutMs: 5_000
-                        });
+                        const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                         await modifyNotebook();
                         await dirtyPromise;
@@ -2321,16 +2326,16 @@ df.head()`;
                         await updateFileConfig('autoSave', 'onFocusChange');
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
-                        // Now that the notebook is dirty, change window state.
-                        // This should not trigger a save of notebook (as its configured to save only when focus is changed).
-                        windowStateChangeHandlers.forEach((item) => item({ focused: false }));
-                        windowStateChangeHandlers.forEach((item) => item({ focused: true }));
+                        // Force a view state change
+                        ioc.changeViewState(true, false);
 
-                        // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                        await expect(cleanPromise).to.eventually.be.rejected;
-                        // Confirm file has not been updated as well.
-                        assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-                    }).timeout(10_000);
+                        // At this point a message should be sent to extension asking it to save.
+                        // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                        await cleanPromise;
+
+                        // Confirm file has been updated as well.
+                        assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
+                    });
                 });
 
                 const oldJson: nbformat.INotebookContent = {

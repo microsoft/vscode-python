@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import * as path from 'path';
 import {
     CancellationToken,
     ConfigurationChangeEvent,
@@ -15,6 +16,7 @@ import {
     WorkspaceFoldersChangeEvent
 } from 'vscode';
 import { Resource } from '../types';
+import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
 @injectable()
@@ -33,6 +35,9 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public get hasWorkspaceFolders() {
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
+    }
+    public get workspaceFile() {
+        return workspace.workspaceFile;
     }
     public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
         return workspace.getConfiguration(section, resource || null);
@@ -66,6 +71,10 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? workspaceFolder.uri.fsPath : defaultValue;
+        return workspaceFolder
+            ? path.normalize(
+                  getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
+              )
+            : defaultValue;
     }
 }

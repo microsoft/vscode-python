@@ -96,19 +96,18 @@ export class JupyterExporter implements INotebookExporter {
         // Use this to build our metadata object
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
-                name: 'python',
                 codemirror_mode: {
                     name: 'ipython',
                     version: pythonNumber
-                }
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                name: 'python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: `ipython${pythonNumber}`,
+                version: pythonNumber
             },
-            orig_nbformat: 2,
-            file_extension: '.py',
-            mimetype: 'text/x-python',
-            name: 'python',
-            npconvert_exporter: 'python',
-            pygments_lexer: `ipython${pythonNumber}`,
-            version: pythonNumber
+            orig_nbformat: 2
         };
 
         // Create an object for matching cell definitions

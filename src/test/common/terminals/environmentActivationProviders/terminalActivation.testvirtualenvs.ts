@@ -7,11 +7,15 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { IExperimentsManager } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
+    resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
+    setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition
@@ -53,6 +57,7 @@ suite('Activation of Environments in Terminal', () => {
     };
     let terminalSettings: any;
     let pythonSettings: any;
+    let experiments: IExperimentsManager;
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
@@ -60,7 +65,7 @@ suite('Activation of Environments in Terminal', () => {
         defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
         defaultShell.Linux = terminalSettings.inspect('integrated.shell.linux').globalValue;
         await terminalSettings.update('integrated.shell.linux', '/bin/bash', vscode.ConfigurationTarget.Global);
-        await initialize();
+        experiments = (await initialize()).serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     });
 
     setup(async () => {
@@ -101,7 +106,11 @@ suite('Activation of Environments in Terminal', () => {
         );
         await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
-        await restorePythonPathInWorkspaceRoot();
+        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            await resetGlobalInterpreterPathSetting();
+        } else {
+            await restorePythonPathInWorkspaceRoot();
+        }
     }
 
     /**
@@ -142,7 +151,11 @@ suite('Activation of Environments in Terminal', () => {
             vscode.workspace.workspaceFolders![0].uri,
             vscode.ConfigurationTarget.WorkspaceFolder
         );
-        await setPythonPathInWorkspaceRoot(envPath);
+        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            await setGlobalInterpreterPath(envPath);
+        } else {
+            await setPythonPathInWorkspaceRoot(envPath);
+        }
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }

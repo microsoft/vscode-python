@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
@@ -16,13 +16,21 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { DeprecatePythonPath } from '../../client/common/experimentGroups';
+import { ExperimentsManager } from '../../client/common/experiments';
+import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IDisposable } from '../../client/common/types';
-import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
+import { IDisposable, IExperimentsManager, IInterpreterPathService } from '../../client/common/types';
+import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterSecurityService
+} from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
+import * as EnvFileTelemetry from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any
@@ -48,10 +56,16 @@ suite('Language Server Activation - ActivationManager', () => {
     let interpreterService: IInterpreterService;
     let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
+    let interpreterSecurityService: IInterpreterSecurityService;
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    let experiments: IExperimentsManager;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     let fileSystem: IFileSystem;
     setup(() => {
+        interpreterSecurityService = mock(InterpreterSecurityService);
+        experiments = mock(ExperimentsManager);
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
@@ -61,6 +75,9 @@ suite('Language Server Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         fileSystem = mock(FileSystem);
+        interpreterPathService
+            .setup((i) => i.onDidChange(typemoq.It.isAny()))
+            .returns(() => typemoq.Mock.ofType<IDisposable>().object);
         managerTest = new ExtensionActivationManagerTest(
             [instance(activationService1), instance(activationService2)],
             [],
@@ -70,10 +87,14 @@ suite('Language Server Activation - ActivationManager', () => {
             appDiagnostics.object,
             instance(workspaceService),
             instance(fileSystem),
-            instance(activeResourceService)
+            instance(activeResourceService),
+            instance(experiments),
+            interpreterPathService.object,
+            instance(interpreterSecurityService)
         );
 
         sinon.stub(EnvFileTelemetry, 'sendActivationTelemetry').resolves();
+        managerTest.evaluateAutoSelectedInterpreterSafety = () => Promise.resolve();
     });
 
     teardown(() => {
@@ -352,6 +373,7 @@ suite('Language Server Activation - activate()', () => {
     let interpreterService: IInterpreterService;
     let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
+    let interpreterSecurityService: IInterpreterSecurityService;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     let fileSystem: IFileSystem;
@@ -360,11 +382,17 @@ suite('Language Server Activation - activate()', () => {
     let activateWorkspace: sinon.SinonStub<any>;
     let managerTest: ExtensionActivationManager;
     const resource = Uri.parse('a');
+    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    let experiments: IExperimentsManager;
+
     setup(() => {
+        interpreterSecurityService = mock(InterpreterSecurityService);
+        experiments = mock(ExperimentsManager);
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         interpreterService = mock(InterpreterService);
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
@@ -375,6 +403,9 @@ suite('Language Server Activation - activate()', () => {
         initialize.resolves();
         activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
         activateWorkspace.resolves();
+        interpreterPathService
+            .setup((i) => i.onDidChange(typemoq.It.isAny()))
+            .returns(() => typemoq.Mock.ofType<IDisposable>().object);
         managerTest = new ExtensionActivationManager(
             [instance(activationService1), instance(activationService2)],
             [singleActivationService.object],
@@ -384,8 +415,12 @@ suite('Language Server Activation - activate()', () => {
             appDiagnostics.object,
             instance(workspaceService),
             instance(fileSystem),
-            instance(activeResourceService)
+            instance(activeResourceService),
+            instance(experiments),
+            interpreterPathService.object,
+            instance(interpreterSecurityService)
         );
+        managerTest.evaluateAutoSelectedInterpreterSafety = () => Promise.resolve();
     });
 
     teardown(() => {
@@ -421,5 +456,134 @@ suite('Language Server Activation - activate()', () => {
         when(activeResourceService.getActiveResource()).thenReturn(resource);
         const promise = managerTest.activate();
         await expect(promise).to.eventually.be.rejectedWith('Kaboom');
+    });
+});
+
+suite('Selected Python Activation - evaluateIfAutoSelectedInterpreterIsSafe()', () => {
+    let workspaceService: IWorkspaceService;
+    let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
+    let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
+    let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
+    let documentManager: typemoq.IMock<IDocumentManager>;
+    let activationService1: IExtensionActivationService;
+    let activationService2: IExtensionActivationService;
+    let fileSystem: IFileSystem;
+    let managerTest: ExtensionActivationManager;
+    const resource = Uri.parse('a');
+    let interpreterSecurityService: IInterpreterSecurityService;
+    let interpreterPathService: IInterpreterPathService;
+    let experiments: IExperimentsManager;
+    setup(() => {
+        interpreterSecurityService = mock(InterpreterSecurityService);
+        experiments = mock(ExperimentsManager);
+        fileSystem = mock(FileSystem);
+        interpreterPathService = mock(InterpreterPathService);
+        workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
+        appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
+        autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterService = mock(InterpreterService);
+        documentManager = typemoq.Mock.ofType<IDocumentManager>();
+        activationService1 = mock(LanguageServerExtensionActivationService);
+        activationService2 = mock(LanguageServerExtensionActivationService);
+        when(experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
+        managerTest = new ExtensionActivationManager(
+            [instance(activationService1), instance(activationService2)],
+            [],
+            documentManager.object,
+            instance(interpreterService),
+            autoSelection.object,
+            appDiagnostics.object,
+            instance(workspaceService),
+            instance(fileSystem),
+            instance(activeResourceService),
+            instance(experiments),
+            instance(interpreterPathService),
+            instance(interpreterSecurityService)
+        );
+    });
+
+    test(`If in Deprecate PythonPath experiment, and setting is not set, fetch autoselected interpreter but don't evaluate it if it equals 'undefined'`, async () => {
+        const interpreter = undefined;
+        when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+        when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
+        autoSelection
+            .setup((a) => a.getAutoSelectedInterpreter(resource))
+            .returns(() => interpreter as any)
+            .verifiable(typemoq.Times.once());
+        when(interpreterPathService.get(resource)).thenReturn('python');
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
+        await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
+        autoSelection.verifyAll();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
+    });
+
+    ['', 'python'].forEach((setting) => {
+        test(`If in Deprecate PythonPath experiment, and setting equals '${setting}', fetch autoselected interpreter and evaluate it`, async () => {
+            const interpreter = { path: 'pythonPath' };
+            when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+            when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
+            autoSelection
+                .setup((a) => a.getAutoSelectedInterpreter(resource))
+                .returns(() => interpreter as any)
+                .verifiable(typemoq.Times.once());
+            when(interpreterPathService.get(resource)).thenReturn('python');
+            when(
+                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
+            ).thenResolve();
+            await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
+            autoSelection.verifyAll();
+            verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).once();
+        });
+    });
+
+    test(`If in Deprecate PythonPath experiment, and setting is not set, fetch autoselected interpreter but don't evaluate it if it equals 'undefined'`, async () => {
+        const interpreter = undefined;
+        when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+        when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
+        autoSelection
+            .setup((a) => a.getAutoSelectedInterpreter(resource))
+            .returns(() => interpreter as any)
+            .verifiable(typemoq.Times.once());
+        when(interpreterPathService.get(resource)).thenReturn('python');
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
+        await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
+        autoSelection.verifyAll();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
+    });
+
+    test(`If in Deprecate PythonPath experiment, and setting is set, simply return`, async () => {
+        const interpreter = undefined;
+        when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+        when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
+        autoSelection
+            .setup((a) => a.getAutoSelectedInterpreter(resource))
+            .returns(() => interpreter as any)
+            .verifiable(typemoq.Times.never());
+        when(interpreterPathService.get(resource)).thenReturn('settingSetToSomePath');
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenResolve();
+        await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
+        autoSelection.verifyAll();
+        verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
+    });
+
+    test(`If in Deprecate PythonPath experiment, if setting is set during evaluation, don't wait for the evaluation to finish to resolve method promise`, async () => {
+        const interpreter = { path: 'pythonPath' };
+        const evaluateIfInterpreterIsSafeDeferred = createDeferred<void>();
+        when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+        when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
+        autoSelection.setup((a) => a.getAutoSelectedInterpreter(resource)).returns(() => interpreter as any);
+        when(interpreterPathService.get(resource)).thenReturn('python');
+        when(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).thenReturn(
+            evaluateIfInterpreterIsSafeDeferred.promise
+        );
+        const deferredPromise = createDeferredFromPromise(managerTest.evaluateAutoSelectedInterpreterSafety(resource));
+        expect(deferredPromise.completed).to.equal(false, 'Promise should not be resolved yet');
+        reset(interpreterPathService);
+        when(interpreterPathService.get(resource)).thenReturn('settingSetToSomePath');
+        await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
+        await sleep(1);
+        expect(deferredPromise.completed).to.equal(true, 'Promise should be resolved');
     });
 });

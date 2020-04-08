@@ -31,6 +31,8 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 
+const ISOLATED = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
+
 suite('Import Sort Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let shell: TypeMoq.IMock<IApplicationShell>;
@@ -398,7 +400,7 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(processExeService.object))
             .verifiable(TypeMoq.Times.once());
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
-        const expectedArgs = [importScript, tmpFile.filePath, '--diff', '1', '2'];
+        const expectedArgs = [ISOLATED, importScript, tmpFile.filePath, '--diff', '1', '2'];
         processExeService
             .setup((p) =>
                 p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined }))

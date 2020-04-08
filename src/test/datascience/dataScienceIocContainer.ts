@@ -103,6 +103,7 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
+import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
@@ -143,6 +144,7 @@ import {
     IExtensionContext,
     IExtensions,
     IInstaller,
+    IInterpreterPathService,
     IMemento,
     IOutputChannel,
     IPathUtils,
@@ -550,6 +552,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
+        this.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry
@@ -797,9 +800,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(packageService)
         );
 
-        // Disable experiments.
+        // Enable experiments.
         const experimentManager = mock(ExperimentsManager);
-        when(experimentManager.inExperiment(anything())).thenReturn(false);
+        when(experimentManager.inExperiment(anything())).thenReturn(true);
         when(experimentManager.activate()).thenResolve();
         this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
 
@@ -1270,6 +1273,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Clear out msg payload
         delete msg.payload;
+    }
+
+    public changeViewState(active: boolean, visible: boolean) {
+        if (this.webPanelListener) {
+            this.webPanelListener.onChangeViewState({
+                isActive: () => active,
+                isVisible: () => visible,
+                setTitle: noop,
+                show: noop as any,
+                postMessage: noop as any,
+                close: noop,
+                updateCwd: noop as any
+            });
+        }
     }
 
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {

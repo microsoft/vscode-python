@@ -22,8 +22,6 @@ import { addMockData } from '../testHelpersCore';
 import { waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
-import { TestRecorder } from './recorder';
-import { WebServer } from './webBrowserPanel';
 
 const sanitize = require('sanitize-filename');
 // Include default timeout.
@@ -41,45 +39,18 @@ use(chaiAsPromised);
             // These are UI tests, hence nothing to do with platforms.
             UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
-            this.retries(3); // UI Tests can be flaky.
+            if (!process.env.VSCODE_PYTHON_ROLLING) {
+                // Skip all tests unless using real jupyter
+                this.skip();
+            }
         });
-        let testRecorder: TestRecorder;
-        setup(async function () {
-            const testFileName = path.join(
-                EXTENSION_ROOT_DIR,
-                `src/test/datascience/uiTests/recordedTests/test_log_${sanitize(this.currentTest?.title)}.log`
-            );
+        setup(async () => {
             UseCustomEditor.enabled = useCustomEditorApi;
             ioc = new DataScienceIocContainer(true);
             ioc.registerDataScienceTypes(useCustomEditorApi);
-
-            // Use mode = 'replay' for testing with fake jupyter and fake messages (play back recorded messages sent/received from/to UI).
-            // Use mode = 'record' to record messages to be played back for running tests without real jupyter.
-            //              Use this locally so you can generate the test logs and check in with PR.
-            // Use mode = 'skip' to run tests without recording or playing (with real jupyter and on CI.)
-            let mode: 'skip' | 'replay' | 'record' = 'skip';
-            if (process.env.VSCODE_PYTHON_ROLLING) {
-                // Definitely running tests on CI/local machine with real jupyter.
-                mode = 'skip';
-            } else if (!process.env.VSCODE_PYTHON_ROLLING) {
-                // Definitely running tests without real jupyter.
-                // Hence use fake messages.
-                mode = 'replay';
-            }
-            // Hardcode value to `record` to re-generate or generate new test logs.
-            // mode = 'record';
-            if (mode === 'replay' && !(await fs.pathExists(testFileName))) {
-                return this.skip();
-            }
-            WebServer.create = () => {
-                const server = new WebServer();
-                testRecorder = new TestRecorder(server, mode, testFileName);
-                return server;
-            };
             await ioc.activate();
         });
         teardown(async () => {
-            await testRecorder.end();
             sinon.restore();
             mockedVSCodeNamespaces.window?.reset();
             for (const disposable of disposables) {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ActiveResourceService } from '../common/application/activeResource';
-import { IActiveResourceService } from '../common/application/types';
+
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
 import {
@@ -211,6 +210,5 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IExtensionSingleActivationService,
         ExtensionSurveyPrompt
     );
-    serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }

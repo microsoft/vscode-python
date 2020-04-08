@@ -66,9 +66,7 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
 
     public onChangeViewState(panel: IWebPanel) {
         // Forward this onto our callback
-        if (this.viewChanged) {
-            this.viewChanged(panel);
-        }
+        this.viewChanged(panel);
     }
 
     private getInteractiveWindowMessages(): string[] {

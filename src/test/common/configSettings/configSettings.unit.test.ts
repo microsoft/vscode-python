@@ -27,7 +27,7 @@ import {
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
+import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
@@ -49,6 +49,7 @@ suite('Python Settings', async () => {
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+        expected.defaultInterpreterPath = 'python';
     });
 
     teardown(() => {
@@ -64,7 +65,8 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
-            'insidersChannel'
+            'insidersChannel',
+            'defaultInterpreterPath'
         ]) {
             config
                 .setup((c) => c.get<string>(name))
@@ -136,11 +138,18 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(
-            async (settingName) => {
-                testIfValueIsUpdated(settingName, 'stringValue');
-            }
-        );
+        [
+            'pythonPath',
+            'venvPath',
+            'condaPath',
+            'pipenvPath',
+            'envFile',
+            'poetryPath',
+            'insidersChannel',
+            'defaultInterpreterPath'
+        ].forEach(async (settingName) => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
     });
 
     suite('Boolean settings', async () => {
