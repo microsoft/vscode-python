@@ -63,6 +63,7 @@ import { JupyterDebugger } from './jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
+import { JupyterNotebookProvider } from './jupyter/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerWrapper } from './jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
@@ -106,6 +107,7 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
+    IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
@@ -153,6 +155,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
     serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+    serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<CellOutputMimeTypeTracker>(CellOutputMimeTypeTracker, CellOutputMimeTypeTracker, undefined, [IExtensionSingleActivationService, INotebookExecutionLogger]);

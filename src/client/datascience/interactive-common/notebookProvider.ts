@@ -16,12 +16,12 @@ import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
     IInteractiveWindowProvider,
+    IJupyterNotebookProvider,
     INotebook,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookProvider,
     INotebookProviderConnection,
-    INotebookServerProvider,
     IRawNotebookProvider
 } from '../types';
 
@@ -38,8 +38,8 @@ export class NotebookProvider implements INotebookProvider {
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(INotebookServerProvider) private readonly serverProvider: INotebookServerProvider,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {
@@ -54,9 +54,10 @@ export class NotebookProvider implements INotebookProvider {
 
     // Disconnect from the specified provider
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
-        const server = await this.serverProvider.getOrCreateServer(options);
-
-        return server?.dispose();
+        // Only need to disconnect from actual jupyter servers
+        if (!(await this.rawKernelSupported())) {
+            return this.jupyterNotebookProvider.disconnect(options);
+        }
     }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
@@ -65,57 +66,34 @@ export class NotebookProvider implements INotebookProvider {
         if (await this.rawKernelSupported()) {
             return this.rawNotebookProvider.connect();
         } else {
-            const server = await this.serverProvider.getOrCreateServer(options);
-            return server?.getConnectionInfo();
+            return this.jupyterNotebookProvider.connect(options);
         }
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        if (await this.rawKernelSupported()) {
-            // Check to see if our raw notebook provider already has this notebook
-            const notebook = await this.rawNotebookProvider.getNotebook(options.identity);
-            if (notebook) {
-                return notebook;
-            }
+        const rawKernel = await this.rawKernelSupported();
 
-            // Check our provider cache
-            if (this.notebooks.get(options.identity.fsPath)) {
-                return this.notebooks.get(options.identity.fsPath)!!;
-            }
-            const promise = this.rawNotebookProvider.createNotebook(
-                options.identity,
-                options.identity,
-                options.metadata
-            );
-
-            this.cacheNotebookPromise(options.identity, promise);
-
-            return promise;
-        } else {
-            // Jupyter server case
-            // Make sure we have a server
-            const server = await this.serverProvider.getOrCreateServer({
-                getOnly: options.getOnly,
-                disableUI: options.disableUI
-            });
-            if (server) {
-                // We could have multiple native editors opened for the same file/model.
-                const notebook = await server.getNotebook(options.identity);
-                if (notebook) {
-                    return notebook;
-                }
-
-                if (this.notebooks.get(options.identity.fsPath)) {
-                    return this.notebooks.get(options.identity.fsPath)!!;
-                }
-
-                const promise = server.createNotebook(options.identity, options.identity, options.metadata);
-
-                this.cacheNotebookPromise(options.identity, promise);
-
-                return promise;
-            }
+        // First check to see if our provider already has this notebook
+        const notebook = rawKernel
+            ? await this.rawNotebookProvider.getNotebook(options.identity)
+            : await this.jupyterNotebookProvider.getNotebook(options);
+        if (notebook) {
+            return notebook;
         }
+
+        // Next check our own promise cache
+        if (this.notebooks.get(options.identity.fsPath)) {
+            return this.notebooks.get(options.identity.fsPath)!!;
+        }
+
+        // Finally create if needed
+        const promise = rawKernel
+            ? this.rawNotebookProvider.createNotebook(options.identity, options.identity, options.metadata)
+            : this.jupyterNotebookProvider.createNotebook(options);
+
+        this.cacheNotebookPromise(options.identity, promise);
+
+        return promise;
     }
 
     // Check to see if we have all that we need for supporting raw kernel launch
