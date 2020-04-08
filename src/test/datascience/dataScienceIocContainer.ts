@@ -797,9 +797,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             instance(packageService)
         );
 
-        // Disable experiments.
+        // Enable experiments.
         const experimentManager = mock(ExperimentsManager);
-        when(experimentManager.inExperiment(anything())).thenReturn(false);
+        when(experimentManager.inExperiment(anything())).thenReturn(true);
         when(experimentManager.activate()).thenResolve();
         this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
 
