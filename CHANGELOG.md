@@ -20,6 +20,8 @@
    ([#10437](https://github.com/Microsoft/vscode-python/issues/10437))
 1. Use specific icons when downloading MPLS and Insiders instead of the spinner.
    ([#10495](https://github.com/Microsoft/vscode-python/issues/10495))
+1. Notebook metadata is now initialized in alphabetical order.
+   ([#10571](https://github.com/Microsoft/vscode-python/issues/10571))
 1. Added command translations for Hindi Language.
    (thanks [Pai026](https://github.com/Pai026/))
    ([#10711](https://github.com/Microsoft/vscode-python/issues/10711))
@@ -48,6 +50,8 @@
    ([#10395](https://github.com/Microsoft/vscode-python/issues/10395))
 1. Fix interactive window debugging for extra lines in a function.
    ([#10396](https://github.com/Microsoft/vscode-python/issues/10396))
+1. Notebook metadata is now initialized in the correct place.
+   ([#10544](https://github.com/Microsoft/vscode-python/issues/10544))
 1. Fix save button not working on notebooks.
    ([#10647](https://github.com/Microsoft/vscode-python/issues/10647))
 1. Fix toolbars on 3rd party widgets to show correct icons.
@@ -56,6 +60,8 @@
    ([#10749](https://github.com/Microsoft/vscode-python/issues/10749))
 1. Fix for notebooks not becoming dirty when changing a kernel.
    ([#10795](https://github.com/Microsoft/vscode-python/issues/10795))
+1. Auto save for focusChange is not respected when switching to non text documents. Menu focus will still not cause a save (no callback from VS code for this), but should work for switching to other apps and non text documents.
+   ([#10853](https://github.com/Microsoft/vscode-python/issues/10853))
 1. Handle display.update inside of cells.
    ([#10873](https://github.com/Microsoft/vscode-python/issues/10873))
 1. ZMQ should not cause local server to fail.
@@ -83,6 +89,9 @@
    ([#10483](https://github.com/Microsoft/vscode-python/issues/10483))
 1. Added test harness for `ipywidgets` in `notebooks`.
    ([#10655](https://github.com/Microsoft/vscode-python/issues/10655))
+1. Run internal modules and scripts in isolated manner.
+   This helps avoid problems like shadowing stdlib modules.
+   ([#10681](https://github.com/Microsoft/vscode-python/issues/10681))
 1. Add telemetry for .env files.
    ([#10780](https://github.com/Microsoft/vscode-python/issues/10780))
 1. Update prettier to latest version.
