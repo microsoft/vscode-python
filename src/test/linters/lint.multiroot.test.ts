@@ -55,6 +55,7 @@ suite('Multiroot Linting', () => {
         ioc.registerVariableTypes();
         ioc.registerFileSystemTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
         ioc.serviceManager.addSingleton<IProductPathService>(

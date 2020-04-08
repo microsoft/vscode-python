@@ -3,31 +3,26 @@
 import { expect } from 'chai';
 import { workspace } from 'vscode';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../client/common/types';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../common';
 import { initialize } from '../../initialize';
-import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Configuration Service', () => {
-    let ioc: UnitTestIocContainer;
-    suiteSetup(initialize);
-    setup(() => {
-        ioc = new UnitTestIocContainer();
-        ioc.registerCommonTypes();
+    let serviceContainer: IServiceContainer;
+    suiteSetup(async () => {
+        serviceContainer = (await initialize()).serviceContainer;
     });
-    teardown(() => ioc.dispose());
 
     test('Ensure same instance of settings return', () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
-        const settings = ioc.serviceContainer
-            .get<IConfigurationService>(IConfigurationService)
-            .getSettings(workspaceUri);
+        const settings = serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
         const instanceIsSame = settings === getExtensionSettings(workspaceUri);
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });
 
     test('Ensure async registry works', async () => {
-        const asyncRegistry = ioc.serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+        const asyncRegistry = serviceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         let disposed = false;
         const disposable = {
             dispose(): Promise<void> {

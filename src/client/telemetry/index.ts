@@ -644,6 +644,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
+     * Telemetry event sent when an environment file is detected in the workspace.
+     */
+    [EventName.ENVFILE_WORKSPACE]: {
+        /**
+         * If there's a custom path specified in the python.envFile workspace settings.
+         */
+        hasCustomEnvPath: boolean;
+    };
+    /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
@@ -1013,6 +1022,19 @@ export interface IEventNamePropertyMapping {
          * `More info` When 'More Info' option is selected
          */
         selection: 'Yes' | 'No' | 'More Info' | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+     */
+    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `Learn more` When 'More Info' option is selected
+         * `Do not show again` When 'Do not show again' option is selected
+         */
+        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
@@ -1921,4 +1943,8 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
+     */
+    [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
 }

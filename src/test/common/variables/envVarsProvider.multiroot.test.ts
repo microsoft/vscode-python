@@ -53,6 +53,7 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
@@ -91,7 +92,8 @@ suite('Multiroot Environment Variables Provider', () => {
             new PlatformService(),
             workspaceService,
             cfgService,
-            mockProcess
+            mockProcess,
+            ioc.serviceContainer
         );
     }
 

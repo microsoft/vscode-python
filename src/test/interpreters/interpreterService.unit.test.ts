@@ -12,14 +12,18 @@ import * as md5 from 'md5';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Disposable, TextDocument, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { DeprecatePythonPath } from '../../client/common/experimentGroups';
 import { getArchitectureDisplayName } from '../../client/common/platform/registry';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
+    IInterpreterPathService,
+    InterpreterConfigurationScope,
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings
@@ -65,6 +69,8 @@ suite('Interpreters service', () => {
     let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
+    let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
+    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let hashProviderFactory: TypeMoq.IMock<IInterpreterHashProviderFactory>;
 
@@ -73,6 +79,8 @@ suite('Interpreters service', () => {
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
+        interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         locator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -119,6 +127,11 @@ suite('Interpreters service', () => {
             INTERPRETER_LOCATOR_SERVICE
         );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
+        serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, experimentsManager.object);
+        serviceManager.addSingletonInstance<IInterpreterPathService>(
+            IInterpreterPathService,
+            interpreterPathService.object
+        );
         serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
         serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
             IVirtualEnvironmentManager,
@@ -180,6 +193,12 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experimentsManager
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .returns(() => undefined);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: Function | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -205,6 +224,12 @@ suite('Interpreters service', () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experimentsManager
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .returns(() => undefined);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
             let activeTextEditorChangeHandler: Function | undefined;
             documentManager
                 .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -219,6 +244,95 @@ suite('Interpreters service', () => {
             activeTextEditorChangeHandler!();
 
             interpreterDisplay.verify((i) => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
+        });
+
+        test('If user belongs to Deprecate Pythonpath experiment, register the correct handler', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+
+            experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+            experimentsManager
+                .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+                .returns(() => undefined);
+            workspace.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+            workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
+            let interpreterPathServiceHandler: Function | undefined;
+            documentManager
+                .setup((d) => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => {
+                    return { dispose: noop };
+                });
+            const i: InterpreterConfigurationScope = {
+                uri: Uri.parse('a'),
+                configTarget: ConfigurationTarget.Workspace
+            };
+            configService.reset();
+            configService
+                .setup((c) => c.getSettings())
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            configService
+                .setup((c) => c.getSettings(i.uri))
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            interpreterPathService
+                .setup((d) => d.onDidChange(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .callback((cb) => (interpreterPathServiceHandler = cb))
+                .returns(() => {
+                    return { dispose: noop };
+                });
+            serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
+
+            // tslint:disable-next-line:no-any
+            service.initialize();
+            expect(interpreterPathServiceHandler).to.not.equal(undefined, 'Handler not set');
+
+            interpreterPathServiceHandler!(i);
+
+            // Ensure correct handler was invoked
+            configService.verifyAll();
+        });
+
+        test('If stored setting is an empty string, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = '';
+            configService.reset();
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            interpreterDisplay
+                .setup((i) => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
+        });
+
+        test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = 'stored setting';
+            configService.reset();
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            interpreterDisplay
+                .setup((i) => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
+        });
+
+        test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = 'setting';
+            configService.reset();
+            configService.setup((c) => c.getSettings(resource)).returns(() => ({ pythonPath: 'setting' } as any));
+            interpreterDisplay
+                .setup((i) => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
         });
     });
 

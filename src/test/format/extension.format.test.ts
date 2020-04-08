@@ -82,6 +82,7 @@ suite('Formatting - General', () => {
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
         ioc.registerFormatterTypes();
+        ioc.registerInterpreterStorageTypes();
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);

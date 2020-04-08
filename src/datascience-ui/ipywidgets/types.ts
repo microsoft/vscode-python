@@ -18,8 +18,11 @@ export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOp
 export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
-    // tslint:disable-next-line: no-any
-    loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+    scriptLoader: {
+        loadWidgetScriptsFromThirdPartySource: boolean;
+        // tslint:disable-next-line: no-any
+        errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+    }
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {
@@ -74,5 +77,5 @@ export interface IIPyWidgetManager {
      * @returns {Promise<{ dispose: Function }>}
      * @memberof IIPyWidgetManager
      */
-    renderWidget(data: nbformat.IMimeBundle, ele: HTMLElement): Promise<{ dispose: Function }>;
+    renderWidget(data: nbformat.IMimeBundle, ele: HTMLElement): Promise<Widget | undefined>;
 }

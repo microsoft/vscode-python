@@ -4,11 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { CancellationTokenSource } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { LogOptions, traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -16,8 +15,6 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
-
-const pyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariablesToFile.py');
 
 /**
  * This class will provide the environment variables of an interpreter by activating it in a terminal.
@@ -61,19 +58,15 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
 
         const command = interpreter?.path || 'python';
         const jsonFile = await this.fs.createTemporaryFile('.json');
-
         try {
+            const [args, parse] = internalScripts.printEnvVariablesToFile(jsonFile.filePath);
+
             // Pass a cancellation token to ensure we wait until command has completed.
             // If there are any errors in executing in the terminal, throw them so they get logged and bubbled up.
-            await terminal.sendCommand(
-                command,
-                [pyFile.fileToCommandArgument(), jsonFile.filePath.fileToCommandArgument()],
-                new CancellationTokenSource().token,
-                false
-            );
+            await terminal.sendCommand(command, args, new CancellationTokenSource().token, false);
 
             const contents = await this.fs.readFile(jsonFile.filePath);
-            return JSON.parse(contents);
+            return parse(contents);
         } finally {
             // We created a hidden terminal for temp usage, hence dispose when done.
             terminal.dispose();

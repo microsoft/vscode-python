@@ -82,6 +82,7 @@ export namespace Commands {
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
     export const GatherQuality = 'python.datascience.gatherquality';
+    export const EnableLoadingWidgetsFrom3rdPartySource = 'python.datascience.loadWidgetScriptsFromThirdPartySource';
 }
 
 export namespace CodeLensCommands {
@@ -288,7 +289,8 @@ export enum Telemetry {
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
     ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING',
-    IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE'
+    IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE',
+    IPyWidgetLoadDisabled = 'DS_INTERNAL.IPYWIDGET_LOAD_DISABLED'
 }
 
 export enum NativeKeyboardCommandTelemetry {

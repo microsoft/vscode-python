@@ -10,6 +10,9 @@ import { EnvironmentActivationService } from './activation/service';
 import { TerminalEnvironmentActivationService } from './activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './activation/types';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
+import { InterpreterEvaluation } from './autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from './autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from './autoSelection/interpreterSecurity/interpreterSecurityStorage';
 import { InterpreterAutoSeletionProxyService } from './autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from './autoSelection/rules/currentPath';
@@ -21,7 +24,10 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
 } from './autoSelection/types';
 import { InterpreterComparer } from './configuration/interpreterComparer';
 import { InterpreterSelector } from './configuration/interpreterSelector';
@@ -105,6 +111,13 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  */
 // tslint:disable-next-line: max-func-body-length
 export function registerInterpreterTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterSecurityStorage
+    );
+    serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
+    serviceManager.addSingleton<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
+    serviceManager.addSingleton<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
         IKnownSearchPathsForInterpreters,
         KnownSearchPathsForInterpreters

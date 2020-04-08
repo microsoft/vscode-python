@@ -66,6 +66,7 @@ export interface IMonacoEditorState {
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
 
 export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEditorState> {
+    private static lineHeight: number = 0;
     private containerRef: React.RefObject<HTMLDivElement>;
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
@@ -90,6 +91,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * Reference to parameter widget (used by monaco to display parameter docs).
      */
     private parameterWidget?: Element;
+    private insideLayout = false;
 
     constructor(props: IMonacoEditorProps) {
         super(props);
@@ -318,6 +320,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.updateMargin(this.state.editor);
                 }
                 this.state.editor.updateOptions(this.props.options);
+                MonacoEditor.lineHeight = 0; // Font size and family come from theoptions.
             }
             if (
                 prevProps.value !== this.props.value &&
@@ -581,7 +584,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
         }
-        this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
+        // If this was caused by a layout, don't bother updating again
+        if (!this.insideLayout) {
+            this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
+        }
     };
 
     private startUpdateWidgetPosition = () => {
@@ -632,6 +638,24 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
+    private computeLineHeight(): number {
+        if (MonacoEditor.lineHeight <= 0 && this.state.editor) {
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
+                const lineHeightPx =
+                    container.firstChild && (container.firstChild as HTMLElement).style.height
+                        ? (container.firstChild as HTMLElement).style.height
+                        : `${LINE_HEIGHT}px`;
+                MonacoEditor.lineHeight =
+                    lineHeightPx && lineHeightPx.endsWith('px')
+                        ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10)
+                        : LINE_HEIGHT;
+            }
+        }
+        return MonacoEditor.lineHeight;
+    }
+
     private updateEditorSize() {
         if (
             this.measureWidthRef.current &&
@@ -648,14 +672,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const grandParent = this.containerRef.current.parentElement.parentElement;
             const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
             const currLineCount = Math.max(container.childElementCount, this.state.model.getLineCount());
-            const lineHeightPx =
-                container.firstChild && (container.firstChild as HTMLElement).style.height
-                    ? (container.firstChild as HTMLElement).style.height
-                    : `${LINE_HEIGHT}px`;
-            const lineHeight =
-                lineHeightPx && lineHeightPx.endsWith('px')
-                    ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10)
-                    : LINE_HEIGHT;
+            const lineHeight = this.computeLineHeight();
             const height = currLineCount * lineHeight + 3; // Fudge factor
             const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
@@ -671,7 +688,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
                 this.setState({ visibleLineCount: currLineCount, attached: true });
-                this.state.editor.layout({ width, height });
+                try {
+                    this.insideLayout = true;
+                    this.state.editor.layout({ width, height });
+                } finally {
+                    this.insideLayout = false;
+                }
             }
         }
     }

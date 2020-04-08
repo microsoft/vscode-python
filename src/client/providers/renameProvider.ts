@@ -5,15 +5,17 @@ import {
     ProviderResult,
     RenameProvider,
     TextDocument,
+    Uri,
     window,
     workspace,
     WorkspaceEdit
 } from 'vscode';
-import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
+import { IPythonExecutionFactory } from '../common/process/types';
+import { IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
 import { captureTelemetry } from '../telemetry';
@@ -25,10 +27,8 @@ type RenameResponse = {
 
 export class PythonRenameProvider implements RenameProvider {
     private readonly outputChannel: OutputChannel;
-    private readonly configurationService: IConfigurationService;
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     @captureTelemetry(EventName.REFACTOR_RENAME)
     public provideRenameEdits(
@@ -64,9 +64,11 @@ export class PythonRenameProvider implements RenameProvider {
             workspaceFolder = workspace.workspaceFolders[0];
         }
         const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-        const pythonSettings = this.configurationService.getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
-        const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
+        const proxy = new RefactorProxy(workspaceRoot, async () => {
+            const factory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: Uri.file(workspaceRoot) });
+        });
         return proxy
             .rename<RenameResponse>(document, newName, document.uri.fsPath, range)
             .then((response) => {

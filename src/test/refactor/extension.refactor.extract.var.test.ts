@@ -16,16 +16,16 @@ import {
     workspace
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
-import { getExtensionSettings, isPythonVersion } from '../common';
+import { isPythonVersion } from '../common';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './../initialize';
 import { MockOutputChannel } from './../mockClasses';
 
-const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
 const refactorSourceFile = path.join(
     __dirname,
     '..',
@@ -84,7 +84,6 @@ suite('Variable Extraction', () => {
         } catch {}
         await closeActiveWindows();
     });
-
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
@@ -94,20 +93,21 @@ suite('Variable Extraction', () => {
 
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
+    function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
+        return async () => {
+            const factory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: Uri.file(workspaceRoot) });
+        };
+    }
 
     async function testingVariableExtraction(
         shouldError: boolean,
         startPos: Position,
         endPos: Position
     ): Promise<void> {
-        const pythonSettings = getExtensionSettings(Uri.file(refactorTargetFile));
         const rangeOfTextToExtract = new Range(startPos, endPos);
-        const proxy = new RefactorProxy(
-            EXTENSION_DIR,
-            pythonSettings,
-            path.dirname(refactorTargetFile),
-            ioc.serviceContainer
-        );
+        const workspaceRoot = path.dirname(refactorTargetFile);
+        const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
 
         const DIFF =
             '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
@@ -172,7 +172,7 @@ suite('Variable Extraction', () => {
         editor.selections = [new Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end)];
         editor.selection = new Selection(rangeOfTextToExtract.start, rangeOfTextToExtract.end);
         try {
-            await extractVariable(EXTENSION_DIR, editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
+            await extractVariable(editor, rangeOfTextToExtract, ch, ioc.serviceContainer);
             if (shouldError) {
                 assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
             }

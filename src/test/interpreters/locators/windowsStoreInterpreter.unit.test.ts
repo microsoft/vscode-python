@@ -11,8 +11,7 @@ import { PersistentState, PersistentStateFactory } from '../../../client/common/
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { IPythonExecutionFactory } from '../../../client/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IPersistentStateFactory } from '../../../client/common/types';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -163,7 +162,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
 
         const stateStore = mock<PersistentState<string | undefined>>(PersistentState);
         const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
-        const pythonService = mock(PythonExecutionService);
+        const pythonService = mock<IPythonExecutionService>();
         const pythonServiceInstance = instance(pythonService);
         (pythonServiceInstance as any).then = undefined;
         const oneHour = 60 * 60 * 1000;

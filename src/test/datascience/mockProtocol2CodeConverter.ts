@@ -309,7 +309,7 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asSymbolKind(_item: proto.SymbolKind): code.SymbolKind {
         throw new Error('Method not implemented.');
     }
-    public asSymbolTag(_item: 1): code.SymbolTag | undefined {
+    public asSymbolTag(_item: 1): code.SymbolTag {
         throw new Error('Method not implemented.');
     }
     public asSymbolTags(items: null | undefined): undefined;

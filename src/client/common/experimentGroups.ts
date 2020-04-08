@@ -42,6 +42,12 @@ export enum WebHostNotebook {
     experiment = 'WebHostNotebook - experiment'
 }
 
+// Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
+export enum LocalZMQKernel {
+    control = 'LocalZMQKernel - control',
+    experiment = 'LocalZMQKernel - experiment'
+}
+
 /**
  * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
  *
@@ -69,4 +75,18 @@ export enum CollectLSRequestTiming {
 export enum CollectNodeLSRequestTiming {
     control = 'CollectNodeLSRequestTiming - control',
     experiment = 'CollectNodeLSRequestTiming - experiment'
+}
+
+// Determine if ipywidgets is enabled or not
+export enum EnableIPyWidgets {
+    control = 'EnableIPyWidgets - control',
+    experiment = 'EnableIPyWidgets - experiment'
+}
+
+/*
+ * Experiment to check whether the extension should deprecate `python.pythonPath` setting
+ */
+export enum DeprecatePythonPath {
+    control = 'DeprecatePythonPath - control',
+    experiment = 'DeprecatePythonPath - experiment'
 }

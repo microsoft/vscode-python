@@ -13,7 +13,9 @@ import sys
 del sys.path[0]
 del sys.argv[0]
 module = sys.argv[0]
-if module.endswith(".py"):
-    runpy.run_path(module)
+if module.startswith("-"):
+    raise NotImplementedError(sys.argv)
+elif module.endswith(".py"):
+    runpy.run_path(module, run_name="__main__")
 else:
-    runpy.run_module(module, alter_sys=True)
+    runpy.run_module(module, run_name="__main__", alter_sys=True)

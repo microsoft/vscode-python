@@ -1,7 +1,8 @@
 // tslint:disable:no-any no-require-imports no-function-expression no-invalid-this
 
-import { ProgressLocation, ProgressOptions, Uri, window } from 'vscode';
+import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
+import { IServiceContainer } from '../../ioc/types';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
@@ -126,38 +127,15 @@ export function makeDebounceAsyncDecorator(wait?: number) {
 }
 
 type VSCodeType = typeof import('vscode');
-type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]]) => Promise<any>;
 
 export function clearCachedResourceSpecificIngterpreterData(
     key: string,
     resource: Resource,
+    serviceContainer: IServiceContainer,
     vscode: VSCodeType = require('vscode')
 ) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
+    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
     cacheStore.clear();
-}
-export function cacheResourceSpecificInterpreterData(
-    key: string,
-    expiryDurationMs: number,
-    vscode: VSCodeType = require('vscode')
-) {
-    return function (
-        _target: Object,
-        _propertyName: string,
-        descriptor: TypedPropertyDescriptor<PromiseFunctionWithFirstArgOfResource>
-    ) {
-        const originalMethod = descriptor.value!;
-        descriptor.value = async function (...args: [Uri | undefined, ...any[]]) {
-            const cacheStore = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
-            if (cacheStore.hasData) {
-                traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
-                return Promise.resolve(cacheStore.data);
-            }
-            const promise = originalMethod.apply(this, args) as Promise<any>;
-            promise.then((result) => (cacheStore.data = result)).ignoreErrors();
-            return promise;
-        };
-    };
 }
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;

@@ -118,6 +118,24 @@ export async function restorePythonPathInWorkspaceRoot() {
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
 }
 
+export async function setGlobalInterpreterPath(pythonPath: string) {
+    return retryAsync(setGlobalPathToInterpreter)(pythonPath);
+}
+
+export const resetGlobalInterpreterPathSetting = async () => retryAsync(restoreGlobalInterpreterPathSetting)();
+
+async function restoreGlobalInterpreterPathSetting(): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('defaultInterpreterPath', undefined, true);
+    await disposePythonSettings();
+}
+async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
+    await disposePythonSettings();
+}
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
@@ -222,7 +240,10 @@ async function setPythonPathInWorkspace(
 async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('pythonPath', undefined, true);
+    await Promise.all([
+        pythonConfig.update('pythonPath', undefined, true),
+        pythonConfig.update('defaultInterpreterPath', undefined, true)
+    ]);
     await disposePythonSettings();
 }
 
@@ -251,6 +272,8 @@ function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO(gh-10910): Change this to python3.
     return 'python';
 }
 

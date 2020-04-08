@@ -171,6 +171,7 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    private launchInfo: INotebookServerLaunchInfo;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this.session.kernelSocket;
     }
@@ -181,7 +182,7 @@ export class JupyterNotebookBase implements INotebook {
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
-        private launchInfo: INotebookServerLaunchInfo,
+        _launchInfo: INotebookServerLaunchInfo,
         private loggers: INotebookExecutionLogger[],
         resource: Resource,
         identity: Uri,
@@ -200,8 +201,9 @@ export class JupyterNotebookBase implements INotebook {
         this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
         this._identity = identity;
         this._resource = resource;
-        // Save our interpreter and don't change it. Later on when kernel changes
-        // are possible, recompute it.
+
+        // Make a copy of the launch info so we can update it in this class
+        this.launchInfo = cloneDeep(_launchInfo);
     }
     public get server(): INotebookServer {
         return this.owner;
@@ -596,15 +598,15 @@ export class JupyterNotebookBase implements INotebook {
         return this.launchInfo.interpreter;
     }
 
-    public setInterpreter(interpreter: PythonInterpreter) {
-        this.launchInfo.interpreter = interpreter;
-    }
-
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
         return this.launchInfo.kernelSpec;
     }
 
-    public async setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
+    public async setKernelSpec(
+        spec: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void> {
         // We need to start a new session with the new kernel spec
         if (this.session) {
             // Turn off setup
@@ -625,6 +627,11 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         this.kernelChanged.fire(spec);
+
+        // If our new kernelspec has an interpreter, set that as our interpreter too
+        if (interpreter) {
+            this.launchInfo.interpreter = interpreter;
+        }
     }
 
     public getLoggers(): INotebookExecutionLogger[] {

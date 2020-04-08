@@ -7,6 +7,7 @@
 
 import { assert, expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 // tslint:disable-next-line:no-require-imports
 import untildify = require('untildify');
@@ -26,6 +27,7 @@ import {
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
@@ -43,9 +45,15 @@ suite('Python Settings', async () => {
     let expected: CustomPythonSettings;
     let settings: CustomPythonSettings;
     setup(() => {
+        sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+        expected.defaultInterpreterPath = 'python';
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {
@@ -57,7 +65,8 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
-            'insidersChannel'
+            'insidersChannel',
+            'defaultInterpreterPath'
         ]) {
             config
                 .setup((c) => c.get<string>(name))
@@ -129,11 +138,18 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(
-            async (settingName) => {
-                testIfValueIsUpdated(settingName, 'stringValue');
-            }
-        );
+        [
+            'pythonPath',
+            'venvPath',
+            'condaPath',
+            'pipenvPath',
+            'envFile',
+            'poetryPath',
+            'insidersChannel',
+            'defaultInterpreterPath'
+        ].forEach(async (settingName) => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
     });
 
     suite('Boolean settings', async () => {
@@ -265,6 +281,7 @@ suite('Python Settings', async () => {
         }
         config.verifyAll();
     });
+
     test('File env variables remain in settings', () => {
         expected.datascience = {
             allowImportFromNotebook: true,

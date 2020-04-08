@@ -74,6 +74,8 @@
         "onCommand:python.switchOffInsidersChannel",
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
+        "onCommand:python.clearWorkspaceInterpreter",
+        "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
@@ -222,6 +224,16 @@
             {
                 "command": "python.switchToWeeklyChannel",
                 "title": "%python.command.python.switchToWeeklyChannel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.clearWorkspaceInterpreter",
+                "title": "%python.command.python.clearWorkspaceInterpreter.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.resetInterpreterSecurityStorage",
+                "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
                 "category": "Python"
             },
             {
@@ -752,6 +764,16 @@
                     "title": "%python.command.python.switchToWeeklyChannel.title%",
                     "category": "Python",
                     "when": "config.python.insidersChannel != 'weekly'"
+                },
+                {
+                    "command": "python.clearWorkspaceInterpreter",
+                    "title": "%python.command.python.clearWorkspaceInterpreter.title%",
+                    "category": "Python"
+                },
+                {
+                    "command": "python.resetInterpreterSecurityStorage",
+                    "title": "%python.command.python.resetInterpreterSecurityStorage.title%",
+                    "category": "Python"
                 },
                 {
                     "command": "python.viewOutput",
@@ -1554,6 +1576,12 @@
                     "description": "Enables/disables A/B tests.",
                     "scope": "machine"
                 },
+                "python.defaultInterpreterPath": {
+                    "type": "string",
+                    "default": "python",
+                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
+                    "scope": "machine"
+                },
                 "python.experiments.optInto": {
                     "type": "array",
                     "default": [],
@@ -1567,9 +1595,11 @@
                             "Reload - experiment",
                             "AA_testing - experiment",
                             "WebHostNotebook - experiment",
+                            "LocalZMQKernel - experiment",
                             "UseTerminalToGetActivatedEnvVars - experiment",
                             "CollectLSRequestTiming - experiment",
                             "CollectNodeLSRequestTiming - experiment",
+                            "DeprecatePythonPath - experiment",
                             "All"
                         ]
                     },
@@ -1589,9 +1619,11 @@
                             "Reload - experiment",
                             "AA_testing - experiment",
                             "WebHostNotebook - experiment",
+                            "LocalZMQKernel - experiment",
                             "UseTerminalToGetActivatedEnvVars - experiment",
                             "CollectLSRequestTiming - experiment",
                             "CollectNodeLSRequestTiming - experiment",
+                            "DeprecatePythonPath - experiment",
                             "All"
                         ]
                     },
@@ -1603,6 +1635,12 @@
                     "default": true,
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
+                },
+                "python.dataScience.loadWidgetScriptsFromThirdPartySource": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables loading of scripts files for Widgets (ipywidgest, bqplot, beakerx, ipyleaflet, etc) from https://unpkg.com.",
+                    "scope": "machine"
                 },
                 "python.dataScience.gatherRules": {
                     "type": "array",
@@ -2972,10 +3010,10 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.0",
-        "vscode-languageclient": "^6.2.0-next.1",
-        "vscode-languageserver": "^6.2.0-next.1",
-        "vscode-languageserver-protocol": "^3.16.0-next.1",
-        "vscode-jsonrpc": "^5.1.0-next.1",
+        "vscode-jsonrpc": "^5.0.1",
+        "vscode-languageclient": "^6.1.3",
+        "vscode-languageserver": "^6.1.1",
+        "vscode-languageserver-protocol": "^3.15.3",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",

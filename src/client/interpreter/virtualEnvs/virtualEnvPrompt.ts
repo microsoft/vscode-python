@@ -8,7 +8,7 @@ import { IApplicationShell } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
+import { Common, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
@@ -66,11 +66,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(
             Interpreters.environmentPromptMessage(),

@@ -40,13 +40,14 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE]: CommonEffects.handleLoadIPyWidgetClassDisabled,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.Undo]: Execution.undo,
     [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]: Creation.updateCell,
     [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,

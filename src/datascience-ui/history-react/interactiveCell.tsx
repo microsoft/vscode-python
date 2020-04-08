@@ -130,7 +130,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
         const themeMatplotlibPlots = this.props.settings.themeMatplotlibPlots ? true : false;
-
+        const loadWidgetScriptsFromThirdPartySource =
+            this.props.settings.loadWidgetScriptsFromThirdPartySource === true;
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
@@ -154,6 +155,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
+                                        loadWidgetScriptsFromThirdPartySource={loadWidgetScriptsFromThirdPartySource}
                                     />
                                 </div>
                             </div>

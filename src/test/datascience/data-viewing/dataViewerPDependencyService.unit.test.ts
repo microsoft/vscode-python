@@ -11,7 +11,6 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { IApplicationShell } from '../../../client/common/application/types';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IInstaller, Product } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
@@ -36,7 +35,7 @@ suite('Data Science - DataViewerDependencyService', () => {
             type: InterpreterType.Unknown,
             version: new SemVer('3.3.3')
         };
-        pythonExecService = mock(PythonExecutionService);
+        pythonExecService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);
         appShell = mock(ApplicationShell);
         pythonExecFactory = mock(PythonExecutionFactory);

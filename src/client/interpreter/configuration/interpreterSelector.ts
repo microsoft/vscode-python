@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Disposable, QuickPickOptions, Uri } from 'vscode';
+import * as path from 'path';
+import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
@@ -8,7 +9,8 @@ import {
 } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../common/types';
-import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
+import { Interpreters } from '../../common/utils/localize';
+import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter } from '../contracts';
 import {
     IInterpreterComparer,
     IInterpreterQuickPickItem,
@@ -42,6 +44,9 @@ export class InterpreterSelector implements IInterpreterSelector {
             this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this))
         );
         this.disposables.push(
+            this.commandManager.registerCommand(Commands.ClearWorkspaceInterpreter, this.resetInterpreter.bind(this))
+        );
+        this.disposables.push(
             this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this))
         );
     }
@@ -50,6 +55,17 @@ export class InterpreterSelector implements IInterpreterSelector {
         const interpreters = await this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
+    }
+
+    protected async resetInterpreter() {
+        const targetConfig = await this.getConfigTarget();
+        if (!targetConfig) {
+            return;
+        }
+        const configTarget = targetConfig.configTarget;
+        const wkspace = targetConfig.folderUri;
+
+        await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
     }
     protected async suggestionToQuickPickItem(
         suggestion: PythonInterpreter,
@@ -67,19 +83,12 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     protected async setInterpreter() {
-        const setInterpreterGlobally =
-            !Array.isArray(this.workspaceService.workspaceFolders) ||
-            this.workspaceService.workspaceFolders.length === 0;
-        let configTarget = ConfigurationTarget.Global;
-        let wkspace: Uri | undefined;
-        if (!setInterpreterGlobally) {
-            const targetConfig = await this.getWorkspaceToSetPythonPath();
-            if (!targetConfig) {
-                return;
-            }
-            configTarget = targetConfig.configTarget;
-            wkspace = targetConfig.folderUri;
+        const targetConfig = await this.getConfigTarget();
+        if (!targetConfig) {
+            return;
         }
+        const configTarget = targetConfig.configTarget;
+        const wkspace = targetConfig.folderUri;
 
         const suggestions = await this.getSuggestions(wkspace);
         const currentPythonPath = this.pathUtils.getDisplayName(
@@ -138,14 +147,23 @@ export class InterpreterSelector implements IInterpreterSelector {
             workspaceFolder.uri
         );
     }
-    private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
+    private async getConfigTarget(): Promise<
+        | {
+              folderUri: Resource;
+              configTarget: ConfigurationTarget;
+          }
+        | undefined
+    > {
         if (
             !Array.isArray(this.workspaceService.workspaceFolders) ||
             this.workspaceService.workspaceFolders.length === 0
         ) {
-            return undefined;
+            return {
+                folderUri: undefined,
+                configTarget: ConfigurationTarget.Global
+            };
         }
-        if (this.workspaceService.workspaceFolders.length === 1) {
+        if (!this.workspaceService.workspaceFile && this.workspaceService.workspaceFolders.length === 1) {
             return {
                 folderUri: this.workspaceService.workspaceFolders[0].uri,
                 configTarget: ConfigurationTarget.WorkspaceFolder
@@ -153,11 +171,28 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
 
         // Ok we have multiple workspaces, get the user to pick a folder.
-        const workspaceFolder = await this.applicationShell.showWorkspaceFolderPick({
+
+        type WorkspaceSelectionQuickPickItem = QuickPickItem & { uri: Uri };
+        const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
+            ...this.workspaceService.workspaceFolders.map((w) => ({
+                label: w.name,
+                description: path.dirname(w.uri.fsPath),
+                uri: w.uri
+            })),
+            {
+                label: Interpreters.entireWorkspace(),
+                uri: this.workspaceService.workspaceFolders[0].uri
+            }
+        ];
+
+        const selection = await this.applicationShell.showQuickPick(quickPickItems, {
             placeHolder: 'Select the workspace to set the interpreter'
         });
-        return workspaceFolder
-            ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder }
+
+        return selection
+            ? selection.label === Interpreters.entireWorkspace()
+                ? { folderUri: selection.uri, configTarget: ConfigurationTarget.Workspace }
+                : { folderUri: selection.uri, configTarget: ConfigurationTarget.WorkspaceFolder }
             : undefined;
     }
 }
