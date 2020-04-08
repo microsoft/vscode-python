@@ -11,12 +11,14 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {
+    MessageConnection,
     CancellationReceiverStrategy,
     CancellationSenderStrategy,
     CancellationStrategy,
     Disposable
 } from 'vscode-languageclient';
-import { CancellationId, MessageConnection } from 'vscode-languageclient/node_modules/vscode-jsonrpc';
+
+type CancellationId = string | number;
 
 function getCancellationFolderPath(folderName: string) {
     return path.join(os.tmpdir(), 'python-languageserver-cancellation', folderName);
