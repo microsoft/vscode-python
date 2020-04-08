@@ -92,7 +92,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
 
-    @captureTelemetry(EventName.PYTHON_NODE_SERVER_STARTUP, undefined, true)
+    @captureTelemetry(EventName.LANGUAGE_SERVER_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);

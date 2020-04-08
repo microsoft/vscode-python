@@ -58,7 +58,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @traceDecorators.error('Failed to start language server')
-    @captureTelemetry(EventName.PYTHON_NODE_SERVER_ENABLED, undefined, true)
+    @captureTelemetry(EventName.LANGUAGE_SERVER_ENABLED, undefined, true)
     public async start(
         resource: Resource,
         interpreter: PythonInterpreter | undefined,
@@ -94,7 +94,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     // tslint:disable-next-line: no-empty
     public loadExtension(_args?: {}) {}
 
-    @captureTelemetry(EventName.PYTHON_NODE_SERVER_READY, undefined, true)
+    @captureTelemetry(EventName.LANGUAGE_SERVER_READY, undefined, true)
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);
