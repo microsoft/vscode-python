@@ -116,7 +116,7 @@ export function isModuleInstalled(name: string): [string[], (out: string) => boo
 }
 
 export function getModuleVersion(name: string): [string[], (out: string) => string] {
-    const args = [ISOLATED, '-m', name, '--version'];
+    const args = [ISOLATED, name, '--version'];
 
     function parse(out: string): string {
         return out.trim();
