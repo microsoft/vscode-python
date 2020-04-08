@@ -52,6 +52,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private waitingMessageIds = new Map<string, PendingMessage>();
     private totalWaitTime: number = 0;
     private totalWaitedMessages: number = 0;
+    private hookCount: number = 0;
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -318,6 +319,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private registerMessageHook(msgId: string) {
         if (this.notebook && !this.messageHooks.has(msgId)) {
+            this.hookCount += 1;
             const callback = this.messageHookCallback.bind(this);
             this.messageHooks.set(msgId, callback);
             this.notebook.registerMessageHook(msgId, callback);
@@ -378,7 +380,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         sendTelemetryEvent(Telemetry.IPyWidgetOverhead, 0, {
             totalOverheadInMs: this.totalWaitTime,
             numberOfMessagesWaitedOn: this.totalWaitedMessages,
-            averageWaitTime: this.totalWaitTime / this.totalWaitedMessages
+            averageWaitTime: this.totalWaitTime / this.totalWaitedMessages,
+            numberOfRegisteredHooks: this.hookCount
         });
     }
 }

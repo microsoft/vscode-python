@@ -1958,6 +1958,7 @@ export interface IEventNamePropertyMapping {
         totalOverheadInMs: number;
         numberOfMessagesWaitedOn: number;
         averageWaitTime: number;
+        numberOfRegisteredHooks: number;
     };
     /**
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
