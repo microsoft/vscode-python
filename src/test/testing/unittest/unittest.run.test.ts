@@ -145,10 +145,11 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (
+                //args[0] is pyvsc-run-isolated.py.
                 args.length > 1 &&
-                args[0] === '-c' &&
-                args[1].includes('import unittest') &&
-                args[1].includes('loader = unittest.TestLoader()')
+                args[1] === '-c' &&
+                args[2].includes('import unittest') &&
+                args[2].includes('loader = unittest.TestLoader()')
             ) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed
