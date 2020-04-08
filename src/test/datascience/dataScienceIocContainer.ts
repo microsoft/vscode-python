@@ -204,6 +204,7 @@ import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugge
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterNotebookProvider } from '../../client/datascience/jupyter/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 import { JupyterServerWrapper } from '../../client/datascience/jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
@@ -246,6 +247,7 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
+    IJupyterNotebookProvider,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
@@ -677,6 +679,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+        this.serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
         this.serviceManager.addSingleton<INotebookServerProvider>(INotebookServerProvider, NotebookServerProvider);
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);

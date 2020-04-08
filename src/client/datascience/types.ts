@@ -153,7 +153,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IConnection | undefined>;
-    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
+    createNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
     getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
@@ -978,7 +978,7 @@ export interface INotebookProvider {
     /**
      * List of all notebooks (active and ones that are being constructed).
      */
-    activeNotebooks: Promise<INotebook>[];
+    activeNotebooks: Promise<INotebook | undefined>[];
 
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.

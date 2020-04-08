@@ -5,14 +5,19 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDataScienceSettings,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IPythonSettings
+} from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import {
     IInteractiveWindowProvider,
+    IJupyterNotebookProvider,
     INotebook,
     INotebookEditorProvider,
-    INotebookServer,
-    INotebookServerProvider,
     IRawNotebookProvider
 } from '../../../client/datascience/types';
 
@@ -37,99 +42,72 @@ suite('Data Science - NotebookProvider', () => {
     let notebookEditorProvider: INotebookEditorProvider;
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposableRegistry: IDisposableRegistry;
-    let notebookServerProvider: INotebookServerProvider;
+    let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
     let experimentsManager: IExperimentsManager;
     let configuration: IConfigurationService;
+    let pythonSettings: IPythonSettings;
+    let dataScienceSettings: IDataScienceSettings;
 
     setup(() => {
         fileSystem = mock<IFileSystem>();
         notebookEditorProvider = mock<INotebookEditorProvider>();
         interactiveWindowProvider = mock<IInteractiveWindowProvider>();
         disposableRegistry = mock<IDisposableRegistry>();
-        notebookServerProvider = mock<INotebookServerProvider>();
+        jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
         experimentsManager = mock<IExperimentsManager>();
         configuration = mock<IConfigurationService>();
+
+        // Set up our settings
+        pythonSettings = mock<IPythonSettings>();
+        dataScienceSettings = mock<IDataScienceSettings>();
+        when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
+        when(dataScienceSettings.jupyterServerURI).thenReturn('local');
+        when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
+        when(configuration.getSettings(anything())).thenReturn(instance(pythonSettings));
+
+        // Set up experiment manager
+        when(experimentsManager.inExperiment(anything())).thenReturn(false);
+
         notebookProvider = new NotebookProvider(
             instance(fileSystem),
             instance(notebookEditorProvider),
             instance(interactiveWindowProvider),
             instance(disposableRegistry),
-            instance(notebookServerProvider),
             instance(rawNotebookProvider),
+            instance(jupyterNotebookProvider),
             instance(configuration),
             instance(experimentsManager)
         );
     });
 
-    test('NotebookProvider getOrCreateNotebook no server', async () => {
-        when(notebookServerProvider.getOrCreateServer(anything())).thenResolve(undefined);
+    test('NotebookProvider getOrCreateNotebook jupyter provider has notebook already', async () => {
+        const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
+        when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(notebookMock.object);
 
         const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
-        expect(notebook).to.equal(undefined, 'No server should return no notebook');
+        expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
 
-    test('NotebookProvider getOrCreateNotebook server has notebook already', async () => {
-        const notebookServer = createTypeMoq<INotebookServer>('jupyter server');
+    test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
-        notebookServer
-            .setup(s => s.getNotebook(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(notebookMock.object));
-        when(notebookServerProvider.getOrCreateServer(anything())).thenResolve(notebookServer.object);
+        when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
+        when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
 
         const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
-        expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
-    });
-
-    test('NotebookProvider getOrCreateNotebook server does not have notebook already', async () => {
-        const notebookServer = createTypeMoq<INotebookServer>('jupyter server');
-        const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
-        // Get notebook undefined, but create notebook set
-        notebookServer.setup(s => s.getNotebook(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        notebookServer
-            .setup(s => s.createNotebook(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve(notebookMock.object));
-        when(notebookServerProvider.getOrCreateServer(anything())).thenResolve(notebookServer.object);
-
-        const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
-        expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
-    });
-
-    test('NotebookProvider getOrCreateNotebook getOnly server does not have notebook already', async () => {
-        const notebookServer = createTypeMoq<INotebookServer>('jupyter server');
-        const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
-        // Get notebook undefined, but create notebook set
-        notebookServer.setup(s => s.getNotebook(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        notebookServer
-            .setup(s => s.createNotebook(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve(notebookMock.object));
-        when(notebookServerProvider.getOrCreateServer(anything())).thenResolve(notebookServer.object);
-
-        const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
-        expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
+        expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
 
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
-        const notebookServer = createTypeMoq<INotebookServer>('jupyter server');
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
-        // Get notebook undefined, but create notebook set
-        notebookServer.setup(s => s.getNotebook(typemoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        notebookServer
-            .setup(s => s.createNotebook(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve(notebookMock.object));
-        when(notebookServerProvider.getOrCreateServer(anything())).thenResolve(notebookServer.object);
+        when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
+        when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
 
         const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
         expect(notebook2).to.equal(notebook);
-
-        // Only one create call
-        notebookServer.verify(
-            s => s.createNotebook(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()),
-            typemoq.Times.once()
-        );
     });
 });

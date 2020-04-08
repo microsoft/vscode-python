@@ -27,7 +27,7 @@ import {
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
-    private readonly notebooks = new Map<string, Promise<INotebook>>();
+    private readonly notebooks = new Map<string, Promise<INotebook | undefined>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     private _zmqSupported: boolean | undefined;
     public get activeNotebooks() {
@@ -73,7 +73,7 @@ export class NotebookProvider implements INotebookProvider {
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = await this.rawKernelSupported();
 
-        // First check to see if our provider already has this notebook
+        // Check to see if our provider already has this notebook
         const notebook = rawKernel
             ? await this.rawNotebookProvider.getNotebook(options.identity)
             : await this.jupyterNotebookProvider.getNotebook(options);
@@ -136,7 +136,7 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     // Cache the promise that will return a notebook
-    private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook>) {
+    private cacheNotebookPromise(identity: Uri, promise: Promise<INotebook | undefined>) {
         this.notebooks.set(identity.fsPath, promise);
 
         // Remove promise from cache if the same promise still exists.
@@ -149,9 +149,11 @@ export class NotebookProvider implements INotebookProvider {
 
         promise
             .then(nb => {
-                // If the notebook is disposed, remove from cache.
-                nb.onDisposed(removeFromCache);
-                this._notebookCreated.fire({ identity: identity, notebook: nb });
+                if (nb) {
+                    // If the notebook is disposed, remove from cache.
+                    nb.onDisposed(removeFromCache);
+                    this._notebookCreated.fire({ identity: identity, notebook: nb });
+                }
             })
             .catch(noop);
 
@@ -181,7 +183,7 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         Array.from(this.notebooks.values()).forEach(promise => {
-            promise.then(notebook => notebook.dispose()).catch(noop);
+            promise.then(notebook => notebook?.dispose()).catch(noop);
         });
 
         this.notebooks.clear();
