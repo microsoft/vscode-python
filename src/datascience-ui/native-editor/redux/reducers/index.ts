@@ -58,6 +58,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
     [CommonActionType.UNMOUNT]: Creation.unmount,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE]: CommonEffects.handleLoadIPyWidgetClassDisabled,
 

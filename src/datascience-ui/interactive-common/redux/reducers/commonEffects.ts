@@ -18,7 +18,8 @@ import {
     CommonReducerArg,
     ILoadIPyWidgetClassFailureAction,
     IOpenSettingsAction,
-    LoadIPyWidgetClassDisabledAction
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
 } from './types';
 
 export namespace CommonEffects {
@@ -207,7 +208,13 @@ export namespace CommonEffects {
             cellVMs: newVMs
         };
     }
-
+    export function handleLoadIPyWidgetClassSuccess(
+        arg: CommonReducerArg<CommonActionType, LoadIPyWidgetClassLoadAction>
+    ): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadSuccess, arg.payload.data);
+        return arg.prevState;
+    }
     export function handleLoadIPyWidgetClassFailure(
         arg: CommonReducerArg<CommonActionType, ILoadIPyWidgetClassFailureAction>
     ): IMainState {
@@ -251,6 +258,11 @@ export namespace CommonEffects {
     ): IMainState {
         // Make sure to tell the extension so it can log telemetry.
         postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadDisabled, arg.payload.data);
+        return arg.prevState;
+    }
+    export function handleIPyWidgetRenderFailure(arg: CommonReducerArg<CommonActionType, Error>): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetRenderFailure, arg.payload.data);
         return arg.prevState;
     }
 }

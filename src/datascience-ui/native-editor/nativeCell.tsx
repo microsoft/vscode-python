@@ -700,6 +700,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         maxTextSize={this.props.maxTextSize}
                         themeMatplotlibPlots={themeMatplotlibPlots}
                         loadWidgetScriptsFromThirdPartySource={loadWidgetScriptsFromThirdPartySource}
+                        widgetFailed={this.props.widgetFailed}
                     />
                 </div>
             );

@@ -36,6 +36,7 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
+    widgetFailed(ex: Error): void;
 }
 
 interface ICellOutputData {
@@ -592,6 +593,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private async createWidgetView(widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number }) {
         const wm = await this.getWidgetManager();
         const element = this.ipyWidgetRef.current!;
-        return wm?.renderWidget(widgetData, element);
+        try {
+            return await wm?.renderWidget(widgetData, element);
+        } catch (ex) {
+            this.props.widgetFailed(ex);
+        }
     }
 }

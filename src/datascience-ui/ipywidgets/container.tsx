@@ -16,7 +16,8 @@ import {
     CommonAction,
     CommonActionType,
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassDisabledAction
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
 } from '../interactive-common/redux/reducers/types';
 
 type Props = {
@@ -29,7 +30,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
     private readonly loaderSettings = {
         loadWidgetScriptsFromThirdPartySource: false,
-        errorHandler: this.handleLoadError.bind(this)
+        errorHandler: this.handleLoadError.bind(this),
+        successHandler: this.handleLoadSuccess.bind(this)
     };
     constructor(props: Props) {
         super(props);
@@ -59,6 +61,17 @@ export class WidgetManagerComponent extends React.Component<Props> {
     }
     public componentWillUnmount() {
         this.widgetManager.dispose();
+    }
+
+    private createLoadSuccessAction(
+        className: string,
+        moduleName: string,
+        moduleVersion: string,
+    ): CommonAction<LoadIPyWidgetClassLoadAction> {
+        return {
+            type: CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS,
+            payload: { messageDirection: 'incoming', data: { className, moduleName, moduleVersion } }
+        };
     }
 
     private createLoadErrorAction(
@@ -95,5 +108,9 @@ export class WidgetManagerComponent extends React.Component<Props> {
         } else {
             this.props.store.dispatch(this.createLoadDisabledErrorAction(className, moduleName, moduleVersion));
         }
+    }
+
+    private handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
+        this.props.store.dispatch(this.createLoadSuccessAction(className, moduleName, moduleVersion));
     }
 }

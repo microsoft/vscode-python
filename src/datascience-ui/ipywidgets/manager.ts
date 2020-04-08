@@ -50,6 +50,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             loadWidgetScriptsFromThirdPartySource: boolean;
             // tslint:disable-next-line: no-any
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
+            successHandler(className: string, moduleName: string, moduleVersion: string): void;
         }
     ) {
         // tslint:disable-next-line: no-any

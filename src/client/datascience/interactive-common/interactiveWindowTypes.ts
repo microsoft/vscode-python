@@ -10,7 +10,8 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassDisabledAction
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -108,8 +109,10 @@ export enum InteractiveWindowMessages {
     ReceivedUpdateModel = 'received_update_model',
     OpenSettings = 'open_settings',
     UpdateDisplayData = 'update_display_data',
+    IPyWidgetLoadSuccess = 'ipywidget_load_success',
     IPyWidgetLoadFailure = 'ipywidget_load_failure',
-    IPyWidgetLoadDisabled = 'ipywidget_load_disabled'
+    IPyWidgetLoadDisabled = 'ipywidget_load_disabled',
+    IPyWidgetRenderFailure = 'ipywidget_render_failure'
 }
 
 export enum IPyWidgetMessages {
@@ -584,6 +587,8 @@ export class IInteractiveWindowMapping {
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
+    public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
     public [InteractiveWindowMessages.IPyWidgetLoadDisabled]: LoadIPyWidgetClassDisabledAction;
+    public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
 }

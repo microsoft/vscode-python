@@ -1940,6 +1940,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
     /**
+     * Telemetry event sent when an ipywidget module loads. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadSuccess]: { moduleHash: string; moduleVersion: string };
+    /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
@@ -1947,4 +1951,16 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
      */
     [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
+     */
+    [Telemetry.IPyWidgetOverhead]: {
+        totalOverheadInMs: number;
+        numberOfMessagesWaitedOn: number;
+        averageWaitTime: number;
+    };
+    /**
+     * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
+     */
+    [Telemetry.IPyWidgetRenderFailure]: never | undefined;
 }
