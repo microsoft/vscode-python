@@ -16,8 +16,8 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { DeprecatePythonPath } from '../../../client/common/experimentGroups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
+import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 const untildify = require('untildify');
 
