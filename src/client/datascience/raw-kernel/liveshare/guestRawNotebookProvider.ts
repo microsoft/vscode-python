@@ -7,13 +7,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    Resource
-} from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare } from '../../constants';
 import {
@@ -34,8 +28,7 @@ export class GuestRawNotebookProvider
         _workspaceService: IWorkspaceService,
         _appShell: IApplicationShell,
         _fs: IFileSystem,
-        _serviceContainer: IServiceContainer,
-        _experimentsManager: IExperimentsManager
+        _serviceContainer: IServiceContainer
     ) {
         super(liveShare);
     }

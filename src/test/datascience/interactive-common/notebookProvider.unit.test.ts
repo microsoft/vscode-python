@@ -5,7 +5,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IDisposableRegistry } from '../../../client/common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import {
     IInteractiveWindowProvider,
@@ -39,6 +39,8 @@ suite('Data Science - NotebookProvider', () => {
     let disposableRegistry: IDisposableRegistry;
     let notebookServerProvider: INotebookServerProvider;
     let rawNotebookProvider: IRawNotebookProvider;
+    let experimentsManager: IExperimentsManager;
+    let configuration: IConfigurationService;
 
     setup(() => {
         fileSystem = mock<IFileSystem>();
@@ -47,13 +49,17 @@ suite('Data Science - NotebookProvider', () => {
         disposableRegistry = mock<IDisposableRegistry>();
         notebookServerProvider = mock<INotebookServerProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
+        experimentsManager = mock<IExperimentsManager>();
+        configuration = mock<IConfigurationService>();
         notebookProvider = new NotebookProvider(
             instance(fileSystem),
             instance(notebookEditorProvider),
             instance(interactiveWindowProvider),
             instance(disposableRegistry),
             instance(notebookServerProvider),
-            instance(rawNotebookProvider)
+            instance(rawNotebookProvider),
+            instance(configuration),
+            instance(experimentsManager)
         );
     });
 

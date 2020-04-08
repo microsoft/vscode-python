@@ -9,13 +9,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    Resource
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -35,8 +29,7 @@ type RawNotebookProviderClassType = {
         workspaceService: IWorkspaceService,
         appShell: IApplicationShell,
         fs: IFileSystem,
-        serviceContainer: IServiceContainer,
-        experimentsManager: IExperimentsManager
+        serviceContainer: IServiceContainer
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -55,8 +48,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -71,18 +63,12 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             workspaceService,
             appShell,
             fs,
-            serviceContainer,
-            experimentsManager
+            serviceContainer
         );
     }
 
     public get role(): vsls.Role {
         return this.serverFactory.role;
-    }
-
-    public async supported(): Promise<boolean> {
-        const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.supported();
     }
 
     public async connect(): Promise<IRawConnection> {

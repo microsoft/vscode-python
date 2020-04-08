@@ -5,9 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+import { LocalZMQKernel } from '../../common/experimentGroups';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Settings, Telemetry } from '../constants';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -25,6 +29,7 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private _zmqSupported: boolean | undefined;
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -34,7 +39,9 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(INotebookServerProvider) private readonly serverProvider: INotebookServerProvider,
-        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(
@@ -55,7 +62,7 @@ export class NotebookProvider implements INotebookProvider {
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (await this.rawNotebookProvider.supported()) {
+        if (await this.rawKernelSupported()) {
             return this.rawNotebookProvider.connect();
         } else {
             const server = await this.serverProvider.getOrCreateServer(options);
@@ -64,7 +71,7 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        if (await this.rawNotebookProvider.supported()) {
+        if (await this.rawKernelSupported()) {
             // Check to see if our raw notebook provider already has this notebook
             const notebook = await this.rawNotebookProvider.getNotebook(options.identity);
             if (notebook) {
@@ -109,6 +116,45 @@ export class NotebookProvider implements INotebookProvider {
                 return promise;
             }
         }
+    }
+
+    // Check to see if we have all that we need for supporting raw kernel launch
+    private async rawKernelSupported(): Promise<boolean> {
+        const zmqOk = await this.zmqSupported();
+
+        return zmqOk && this.localLaunch() && this.experimentsManager.inExperiment(LocalZMQKernel.experiment)
+            ? true
+            : false;
+    }
+
+    private localLaunch(): boolean {
+        const settings = this.configuration.getSettings(undefined);
+        const serverURI: string | undefined = settings.datascience.jupyterServerURI;
+
+        if (!serverURI || serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // Check to see if this machine supports our local ZMQ launching
+    private async zmqSupported(): Promise<boolean> {
+        if (this._zmqSupported) {
+            return this._zmqSupported;
+        }
+
+        try {
+            await import('zeromq');
+            traceInfo(`ZMQ install verified.`);
+            this._zmqSupported = true;
+        } catch (e) {
+            traceError(`Exception while attempting zmq :`, e);
+            sendTelemetryEvent(Telemetry.ZMQNotSupported);
+            this._zmqSupported = false;
+        }
+
+        return this._zmqSupported;
     }
 
     // Cache the promise that will return a notebook

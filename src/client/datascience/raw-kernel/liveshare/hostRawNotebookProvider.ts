@@ -11,13 +11,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    Resource
-} from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
@@ -44,10 +38,9 @@ export class HostRawNotebookProvider
         private workspaceService: IWorkspaceService,
         private appShell: IApplicationShell,
         private fs: IFileSystem,
-        private serviceContainer: IServiceContainer,
-        experimentsManager: IExperimentsManager
+        private serviceContainer: IServiceContainer
     ) {
-        super(liveShare, asyncRegistry, configService, experimentsManager);
+        super(liveShare, asyncRegistry);
     }
 
     public async dispose(): Promise<void> {

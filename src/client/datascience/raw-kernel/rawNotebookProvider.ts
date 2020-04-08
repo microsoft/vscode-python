@@ -6,15 +6,11 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
-// RAWKERNEL: Enable when experiment is in
-//import { LocalZMQKernel } from '../../common/experimentGroups';
 import '../../common/extensions';
-import { traceError, traceInfo } from '../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
+import { traceInfo } from '../../common/logger';
+import { IAsyncDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Settings, Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
 class RawConnection implements IRawConnection {
@@ -38,25 +34,11 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
     // Keep track of the notebooks that we have provided
     private notebooks = new Map<string, Promise<INotebook>>();
-    private _zmqSupported: boolean | undefined;
     private rawConnection = new RawConnection();
     private _id = uuid();
 
-    constructor(
-        _liveShare: ILiveShareApi,
-        private asyncRegistry: IAsyncDisposableRegistry,
-        private configuration: IConfigurationService,
-        _experimentsManager: IExperimentsManager
-    ) {
+    constructor(_liveShare: ILiveShareApi, private asyncRegistry: IAsyncDisposableRegistry) {
         this.asyncRegistry.push(this);
-    }
-
-    // Check to see if this machine supports raw notebooks
-    // It needs to be in the experiement, have ZMQ, and be a local launch scenario
-    public async supported(): Promise<boolean> {
-        const zmqOk = await this.zmqSupported();
-
-        return zmqOk && this.localLaunch() && this.inExperiment() ? true : false;
     }
 
     public connect(): Promise<IRawConnection> {
@@ -119,41 +101,5 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
-    }
-
-    private localLaunch(): boolean {
-        const settings = this.configuration.getSettings(undefined);
-        const serverURI: string | undefined = settings.datascience.jupyterServerURI;
-
-        if (!serverURI || serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private inExperiment(): boolean {
-        return false;
-        // RAWKERNEL: Current experiements are loading from a local cache which doesn't include
-        // my new experiment value, so I can't even opt into it
-        //return this.experimentsManager.inExperiment(LocalZMQKernel.experiment);
-    }
-
-    private async zmqSupported(): Promise<boolean> {
-        if (this._zmqSupported) {
-            return this._zmqSupported;
-        }
-
-        try {
-            await import('zeromq');
-            traceInfo(`ZMQ install verified.`);
-            this._zmqSupported = true;
-        } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this._zmqSupported = false;
-        }
-
-        return this._zmqSupported;
     }
 }
