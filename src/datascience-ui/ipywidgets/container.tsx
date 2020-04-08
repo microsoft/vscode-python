@@ -66,7 +66,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private createLoadSuccessAction(
         className: string,
         moduleName: string,
-        moduleVersion: string,
+        moduleVersion: string
     ): CommonAction<LoadIPyWidgetClassLoadAction> {
         return {
             type: CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS,
