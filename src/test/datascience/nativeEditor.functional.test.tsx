@@ -2336,31 +2336,6 @@ df.head()`;
                         // Confirm file has been updated as well.
                         assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
                     });
-
-                    test('Should not auto save notebook when window state changes', async () => {
-                        const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, {
-                            timeoutMs: 5_000
-                        });
-
-                        await modifyNotebook();
-                        await dirtyPromise;
-
-                        // Configure notebook to save when active editor changes.
-                        await updateFileConfig('autoSave', 'onFocusChange');
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
-
-                        // Now that the notebook is dirty, change window state.
-                        // This should not trigger a save of notebook (as its configured to save only when focus is changed).
-                        windowStateChangeHandlers.forEach((item) => item({ focused: false }));
-                        windowStateChangeHandlers.forEach((item) => item({ focused: true }));
-
-                        // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                        await expect(cleanPromise).to.eventually.be.rejected;
-                        // Confirm file has not been updated as well.
-                        assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-                    }).timeout(10_000);
                 });
 
                 const oldJson: nbformat.INotebookContent = {
