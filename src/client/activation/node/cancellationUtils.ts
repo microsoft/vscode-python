@@ -11,11 +11,11 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {
-    MessageConnection,
     CancellationReceiverStrategy,
     CancellationSenderStrategy,
     CancellationStrategy,
-    Disposable
+    Disposable,
+    MessageConnection
 } from 'vscode-languageclient';
 
 type CancellationId = string | number;
