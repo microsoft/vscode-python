@@ -249,6 +249,7 @@ import {
     IJupyterInterpreterDependencyManager,
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
+    IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
@@ -259,7 +260,6 @@ import {
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
-    INotebookServerProvider,
     INotebookStorage,
     IPlotViewer,
     IPlotViewerProvider,
@@ -680,7 +680,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
         this.serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
-        this.serviceManager.addSingleton<INotebookServerProvider>(INotebookServerProvider, NotebookServerProvider);
+        this.serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);

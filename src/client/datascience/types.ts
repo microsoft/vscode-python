@@ -996,8 +996,8 @@ export interface INotebookProvider {
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
-export const INotebookServerProvider = Symbol('INotebookServerProvider');
-export interface INotebookServerProvider {
+export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
+export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */

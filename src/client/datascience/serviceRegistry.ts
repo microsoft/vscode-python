@@ -109,6 +109,7 @@ import {
     IJupyterInterpreterDependencyManager,
     IJupyterNotebookProvider,
     IJupyterPasswordConnect,
+    IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
@@ -119,7 +120,6 @@ import {
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
-    INotebookServerProvider,
     INotebookStorage,
     IPlotViewer,
     IPlotViewerProvider,
@@ -204,7 +204,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
-    serviceManager.addSingleton<INotebookServerProvider>(INotebookServerProvider, NotebookServerProvider);
+    serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
     serviceManager.add<IJMPConnection>(IJMPConnection, EnchannelJMPConnection);
 

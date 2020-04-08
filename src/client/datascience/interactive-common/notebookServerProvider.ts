@@ -20,14 +20,14 @@ import { ProgressReporter } from '../progress/progressReporter';
 import {
     GetServerOptions,
     IJupyterExecution,
+    IJupyterServerProvider,
     INotebook,
     INotebookServer,
-    INotebookServerOptions,
-    INotebookServerProvider
+    INotebookServerOptions
 } from '../types';
 
 @injectable()
-export class NotebookServerProvider implements INotebookServerProvider {
+export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
     private allowingUI = false;
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();

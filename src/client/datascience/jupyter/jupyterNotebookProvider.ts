@@ -9,15 +9,14 @@ import {
     GetNotebookOptions,
     IConnection,
     IJupyterNotebookProvider,
-    INotebook,
-    INotebookServerProvider
+    IJupyterServerProvider,
+    INotebook
 } from '../types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook
-// This class uses the INotebookServerProvider and the server to create the notebook
 @injectable()
 export class JupyterNotebookProvider implements IJupyterNotebookProvider {
-    constructor(@inject(INotebookServerProvider) private readonly serverProvider: INotebookServerProvider) {}
+    constructor(@inject(IJupyterServerProvider) private readonly serverProvider: IJupyterServerProvider) {}
 
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
         const server = await this.serverProvider.getOrCreateServer(options);
