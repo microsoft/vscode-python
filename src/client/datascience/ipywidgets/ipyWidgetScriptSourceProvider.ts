@@ -133,29 +133,27 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (this.configuredScriptSources.length === 0) {
             return;
         }
+
+        const scriptProviders: IWidgetScriptSourceProvider[] = [];
+
+        // If we're allowed to use CDN providers, then use them, and use in order of preference.
+        if (this.canUseCDN()) {
+            scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, this.httpClient));
+        }
         if (this.notebook.connection.localLaunch) {
-            this.scriptProviders = [
+            scriptProviders.push(
                 new LocalWidgetScriptSourceProvider(
                     this.notebook,
                     this.localResourceUriConverter,
                     this.fs,
                     this.interpreterService
                 )
-            ];
+            );
         } else {
-            this.scriptProviders = [new RemoteWidgetScriptSourceProvider(this.notebook.connection)];
+            scriptProviders.push(new RemoteWidgetScriptSourceProvider(this.notebook.connection));
         }
 
-        // If we're allowed to use CDN providers, then use them, and use in order of preference.
-        if (this.canUseCDN()) {
-            const cdnProvider = new CDNWidgetScriptSourceProvider(this.configurationSettings, this.httpClient);
-
-            if (this.preferCDNFirst()) {
-                this.scriptProviders.splice(0, 0, cdnProvider);
-            } else {
-                this.scriptProviders.push(cdnProvider);
-            }
-        }
+        this.scriptProviders = scriptProviders;
     }
     private canUseCDN(): boolean {
         if (!this.notebook) {
@@ -168,21 +166,6 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         return scriptSources.indexOf('jsdelivr.com') >= 0 || scriptSources.indexOf('unpkg.com') >= 0;
-    }
-    /**
-     * Whether we should load widgets first from CDN then from else where.
-     */
-    private preferCDNFirst(): boolean {
-        if (!this.notebook) {
-            return false;
-        }
-        const settings = this.configurationSettings.getSettings(undefined);
-        const scriptSources = settings.datascience.widgetScriptSources;
-        if (scriptSources.length === 0) {
-            return false;
-        }
-        const item = scriptSources[0];
-        return item === 'jsdelivr.com' || item === 'unpkg.com';
     }
 
     private async configureWidgets(): Promise<void> {
