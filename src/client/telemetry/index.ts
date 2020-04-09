@@ -1230,23 +1230,23 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_NODE_SERVER_ENABLED]: never | undefined;
+    [EventName.LANGUAGE_SERVER_ENABLED]: never | undefined;
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.PYTHON_NODE_SERVER_READY]: never | undefined;
+    [EventName.LANGUAGE_SERVER_READY]: never | undefined;
     /**
      * Telemetry event sent when starting Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_STARTUP]: never | undefined;
+    [EventName.LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    [EventName.LANGUAGE_SERVER_TELEMETRY]: any;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
+    [EventName.LANGUAGE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */

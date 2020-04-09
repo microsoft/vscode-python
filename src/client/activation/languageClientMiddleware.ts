@@ -96,7 +96,7 @@ export class LanguageClientMiddleware implements Middleware {
             this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
             group = CollectLSRequestTiming;
         } else if (serverType === LanguageServerType.Node) {
-            this.eventName = EventName.PYTHON_NODE_SERVER_REQUEST;
+            this.eventName = EventName.LANGUAGE_SERVER_REQUEST;
             group = CollectNodeLSRequestTiming;
         } else {
             return;
