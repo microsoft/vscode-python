@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.4.0-rc (8 April 2020)
+## 2020.4.0-rc (9 April 2020)
 
 ### Enhancements
 
@@ -31,6 +31,8 @@
    ([#10912](https://github.com/Microsoft/vscode-python/issues/10912))
 1. Added a user setting `python.defaultInterpreterPath` to set up the default interpreter path when in Deprecate PythonPath experiment.
    ([#11021](https://github.com/Microsoft/vscode-python/issues/11021))
+1. Hide "untrusted" interpreters from 'Select interpreter' dropdown list when in DeprecatePythonPath Experiment.
+   ([#11046](https://github.com/Microsoft/vscode-python/issues/11046))
 
 ### Fixes
 
@@ -76,6 +78,8 @@
    ([#10949](https://github.com/Microsoft/vscode-python/issues/10949))
 1. Make sure the interpreter in the notebook matches the kernel.
    ([#10953](https://github.com/Microsoft/vscode-python/issues/10953))
+1. Jupyter notebooks and interactive window crashing on startup.
+   ([#11035](https://github.com/Microsoft/vscode-python/issues/11035))
 
 ### Code Health
 
@@ -98,6 +102,8 @@
    ([#10837](https://github.com/Microsoft/vscode-python/issues/10837))
 1. Update typescript to `3.8`.
    ([#10839](https://github.com/Microsoft/vscode-python/issues/10839))
+1. Add telemetry around ipywidgets usage, failures, and overhead.
+   ([#11027](https://github.com/Microsoft/vscode-python/issues/11027))
 
 ### Thanks
 
