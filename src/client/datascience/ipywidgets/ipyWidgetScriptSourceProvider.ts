@@ -7,7 +7,13 @@ import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
+import {
+    IConfigurationService,
+    IHttpClient,
+    IPersistentState,
+    IPersistentStateFactory,
+    WidgetCDNs
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -18,6 +24,8 @@ import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+
+const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';
 
 /**
  * This class decides where to get widget scripts from.
@@ -32,6 +40,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.datascience.widgetScriptSources;
     }
+    private readonly userConfiguredCDNAtLeastOnce: IPersistentState<boolean>;
     constructor(
         private readonly notebook: INotebook,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
@@ -40,8 +49,14 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly appShell: IApplicationShell,
         private readonly configurationSettings: IConfigurationService,
         private readonly workspaceService: IWorkspaceService,
+        private readonly stateFactory: IPersistentStateFactory,
         private readonly httpClient: IHttpClient
-    ) {}
+    ) {
+        this.userConfiguredCDNAtLeastOnce = this.stateFactory.createGlobalPersistentState<boolean>(
+            GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce,
+            false
+        );
+    }
     public initialize() {
         this.workspaceService.onDidChangeConfiguration(this.onSettingsChagned.bind(this));
     }
@@ -168,6 +183,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (this.configuredScriptSources.length !== 0) {
             return;
         }
+
+        if (this.userConfiguredCDNAtLeastOnce.value) {
+            return;
+        }
+
         if (this.configurationPromise) {
             return this.configurationPromise.promise;
         }
@@ -176,18 +196,33 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const selection = await this.appShell.showInformationMessage(
             DataScience.useCDNForWidgets(),
             Common.ok(),
-            Common.cancel()
+            Common.cancel(),
+            Common.doNotShowAgain()
         );
-        if (selection === Common.ok()) {
-            sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: 'ok' });
-            // always search local interpreter or attempt to fetch scripts from remote jupyter server as backups.
-            await this.updateScriptSources(['jsdelivr.com', 'unpkg.com']);
-        } else {
-            const selected = selection === Common.cancel() ? 'cancel' : 'dismissed';
-            sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: selected });
-            // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
-            await this.updateScriptSources([]);
+
+        let selectionForTelemetry: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain' = 'dismissed';
+        switch (selection) {
+            case Common.ok(): {
+                selectionForTelemetry = 'ok';
+                // always search local interpreter or attempt to fetch scripts from remote jupyter server as backups.
+                await Promise.all([
+                    this.updateScriptSources(['jsdelivr.com', 'unpkg.com']),
+                    this.userConfiguredCDNAtLeastOnce.updateValue(true)
+                ]);
+                break;
+            }
+            case Common.doNotShowAgain(): {
+                selectionForTelemetry = 'doNotShowAgain';
+                // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
+                await Promise.all([this.updateScriptSources([]), this.userConfiguredCDNAtLeastOnce.updateValue(true)]);
+                break;
+            }
+            default:
+                selectionForTelemetry = selection === Common.cancel() ? 'cancel' : 'dismissed';
+                break;
         }
+
+        sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: selectionForTelemetry });
         this.configurationPromise.resolve();
     }
     private async updateScriptSources(scriptSources: WidgetCDNs[]) {

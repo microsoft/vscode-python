@@ -11,7 +11,7 @@ import type { Data as WebSocketData } from 'ws';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IHttpClient } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IHttpClient, IPersistentStateFactory } from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -74,7 +74,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
     ) {
         disposables.push(this);
         this.notebookProvider.onNotebookCreated(
@@ -207,6 +208,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
             this.appShell,
             this.configurationSettings,
             this.workspaceService,
+            this.stateFactory,
             this.httpClient
         );
         await this.initializeNotebook();

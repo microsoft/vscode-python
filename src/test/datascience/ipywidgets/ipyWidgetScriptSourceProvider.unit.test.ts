@@ -9,6 +9,7 @@ import { IApplicationShell, IWorkspaceService } from '../../../client/common/app
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
+import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
@@ -31,6 +32,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
     let appShell: IApplicationShell;
     let workspaceService: IWorkspaceService;
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
+    let state: PersistentState<boolean>;
     setup(() => {
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
@@ -42,7 +44,10 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock(FileSystem);
         const interpreterService = mock(InterpreterService);
+        const stateFactory = mock(PersistentStateFactory);
+        state = mock<PersistentState<boolean>>();
 
+        when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(state));
         settings = { datascience: { widgetScriptSources: [] } } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
@@ -54,6 +59,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             instance(appShell),
             instance(configService),
             instance(workspaceService),
+            instance(stateFactory),
             instance(httpClient)
         );
     });

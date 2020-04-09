@@ -2000,6 +2000,6 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent when user does somethign with the prompt displsyed to user about using CDN for IPyWidget scripts.
      */
     [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
-        selection: 'ok' | 'cancel' | 'dismissed';
+        selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
     };
 }
