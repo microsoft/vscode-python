@@ -6,5 +6,5 @@
 export const unsafeInterpreterPromptKey = 'unsafeInterpreterPromptKey';
 export const unsafeInterpretersKey = 'unsafeInterpretersKey';
 export const safeInterpretersKey = 'safeInterpretersKey';
-export const flaggedWorkspacesKeysStorageKey = 'flaggedWorkspacesKeysStorageKey';
+export const flaggedWorkspacesKeysStorageKey = 'flaggedWorkspacesKeysInterpreterSecurityStorageKey';
 export const learnMoreOnInterpreterSecurityURI = 'https://aka.ms/AA7jfor';

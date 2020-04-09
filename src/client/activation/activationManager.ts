@@ -66,6 +66,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             return;
         }
         this.activatedWorkspaces.add(key);
+
+        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
+        }
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+
         // Get latest interpreter list in the background.
         this.interpreterService.getInterpreters(resource).ignoreErrors();
 

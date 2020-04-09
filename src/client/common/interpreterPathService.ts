@@ -21,6 +21,7 @@ import {
     Resource
 } from './types';
 
+export const workspaceKeysForWhichTheCopyIsDone_Key = 'workspaceKeysForWhichTheCopyIsDone_Key';
 export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
 const CI_PYTHON_PATH = getCIPythonPath();
 
@@ -88,8 +89,11 @@ export class InterpreterPathService implements IInterpreterPathService {
         resource = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');
-            await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-            this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
+            const globalValue = pythonConfig.inspect<string>('defaultInterpreterPath')!.globalValue;
+            if (globalValue !== pythonPath) {
+                await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
+                this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
+            }
             return;
         }
         if (!resource) {
@@ -100,8 +104,10 @@ export class InterpreterPathService implements IInterpreterPathService {
             settingKey,
             undefined
         );
-        await persistentSetting.updateValue(pythonPath);
-        this._didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
+        if (persistentSetting.value !== pythonPath) {
+            await persistentSetting.updateValue(pythonPath);
+            this._didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
+        }
     }
 
     public get onDidChange(): Event<InterpreterConfigurationScope> {
@@ -123,5 +129,27 @@ export class InterpreterPathService implements IInterpreterPathService {
                   `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
         }
         return settingKey;
+    }
+
+    public async copyOldInterpreterStorageValuesToNew(resource: Resource): Promise<void> {
+        resource = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
+        const workspaceKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
+        const flaggedWorkspaceKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
+            workspaceKeysForWhichTheCopyIsDone_Key,
+            []
+        );
+        const flaggedWorkspaceKeys = flaggedWorkspaceKeysStorage.value;
+        if (flaggedWorkspaceKeys.includes(workspaceKey)) {
+            // Only do a one-off import for each workspace
+            return;
+        } else {
+            await flaggedWorkspaceKeysStorage.updateValue([workspaceKey, ...flaggedWorkspaceKeys]);
+        }
+        const oldSettings = this.workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
+        await Promise.all([
+            this.update(resource, ConfigurationTarget.WorkspaceFolder, oldSettings.workspaceFolderValue),
+            this.update(resource, ConfigurationTarget.Workspace, oldSettings.workspaceValue),
+            this.update(undefined, ConfigurationTarget.Global, oldSettings.globalValue)
+        ]);
     }
 }
