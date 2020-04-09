@@ -141,14 +141,14 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     private rebuildProviders() {
         this.disposeScriptProviders();
         // If we haven't configured anything, then nothing to do here.
-        if (this.configuredScriptSources.length === 0) {
+        if (this.configuredScriptSources.length === 0 && !this.userConfiguredCDNAtLeastOnce.value) {
             return;
         }
 
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
-        if (this.canUseCDN()) {
+        if (this.configuredScriptSources.length > 0) {
             scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, this.httpClient));
         }
         if (this.notebook.connection.localLaunch) {
@@ -165,18 +165,6 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         this.scriptProviders = scriptProviders;
-    }
-    private canUseCDN(): boolean {
-        if (!this.notebook) {
-            return false;
-        }
-        const settings = this.configurationSettings.getSettings(undefined);
-        const scriptSources = settings.datascience.widgetScriptSources;
-        if (scriptSources.length === 0) {
-            return false;
-        }
-
-        return scriptSources.indexOf('jsdelivr.com') >= 0 || scriptSources.indexOf('unpkg.com') >= 0;
     }
 
     private async configureWidgets(): Promise<void> {
