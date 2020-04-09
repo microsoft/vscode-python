@@ -75,6 +75,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
             return widgetScriptSource;
         });
+        // tslint:disable-next-line: no-any
         return Promise.all(mappedFiles as any);
     }
     private async getSysPrefixOfKernel() {

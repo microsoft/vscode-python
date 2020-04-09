@@ -471,7 +471,7 @@ export interface IHttpClient {
     /**
      * Returns the url is valid (i.e. return status code of 200).
      */
-        exists(uri: string): Promise<boolean>;
+    exists(uri: string): Promise<boolean>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');

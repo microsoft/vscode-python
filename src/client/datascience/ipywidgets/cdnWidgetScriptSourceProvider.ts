@@ -3,12 +3,12 @@
 
 'use strict';
 
+import { traceWarning } from '../../common/logger';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
-import { traceWarning } from '../../common/logger';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';
