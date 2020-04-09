@@ -3,9 +3,10 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
+import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
-import { IConfigurationService, IHttpClient, WidgetCDNs, WidgetSettings } from '../../../client/common/types';
+import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
@@ -21,20 +22,15 @@ suite('Data Science - ipywidget - CDN', () => {
     let notebook: INotebook;
     let configService: IConfigurationService;
     let httpClient: IHttpClient;
-    let widgetSettings: WidgetSettings;
+    let settings: PythonSettings;
     setup(() => {
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
         httpClient = mock(HttpClient);
-        widgetSettings = { localConnectionScriptSources: [], remoteConnectionScriptSources: [] };
-        const settings = { datascience: { widgets: widgetSettings } };
+        settings = { datascience: { widgetScriptSources: [] } } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
-        scriptSourceProvider = new CDNWidgetScriptSourceProvider(
-            instance(notebook),
-            instance(configService),
-            instance(httpClient)
-        );
+        scriptSourceProvider = new CDNWidgetScriptSourceProvider(instance(configService), instance(httpClient));
     });
 
     [true, false].forEach((localLaunch) => {
@@ -67,11 +63,7 @@ suite('Data Science - ipywidget - CDN', () => {
                 verify(httpClient.getContents(anything())).never();
             });
             function updateCDNSettings(...values: WidgetCDNs[]) {
-                if (localLaunch) {
-                    widgetSettings.localConnectionScriptSources = values;
-                } else {
-                    widgetSettings.remoteConnectionScriptSources = values;
-                }
+                settings.datascience.widgetScriptSources = values;
             }
             (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {
                 suite(cdn, () => {

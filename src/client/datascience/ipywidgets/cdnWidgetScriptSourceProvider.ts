@@ -3,16 +3,10 @@
 
 'use strict';
 
-import {
-    IConfigurationService,
-    IHttpClient,
-    LocalKernelScriptSource,
-    RemoteKernelScriptSource
-} from '../../common/types';
+import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { INotebook } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
@@ -37,7 +31,7 @@ function moduleNameToCDNUrl(cdn: string, moduleName: string, moduleVersion: stri
     return `${cdn}${packageName}@${moduleVersion}/dist/${fileName}`;
 }
 
-function getCDNPrefix(cdn?: LocalKernelScriptSource | RemoteKernelScriptSource): string | undefined {
+function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
     switch (cdn) {
         case 'unpkg.com':
             return unpgkUrl;
@@ -53,17 +47,12 @@ function getCDNPrefix(cdn?: LocalKernelScriptSource | RemoteKernelScriptSource):
  * We'll need to stick to the order of preference prescribed by the user.
  */
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
-    private get cdnProviders(): readonly (LocalKernelScriptSource | RemoteKernelScriptSource)[] {
+    private get cdnProviders(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
-        if (this.notebook.connection.localLaunch) {
-            return settings.datascience.widgets.localConnectionScriptSources;
-        } else {
-            return settings.datascience.widgets.remoteConnectionScriptSources;
-        }
+        return settings.datascience.widgetScriptSources;
     }
     public static validUrls = new Map<string, boolean>();
     constructor(
-        private readonly notebook: INotebook,
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient
     ) {}

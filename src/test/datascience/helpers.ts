@@ -33,9 +33,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         debugJustMyCode: true,
         variableQueries: [],
         jupyterCommandLineArguments: [],
-        widgets: {
-            localConnectionScriptSources: [],
-            remoteConnectionScriptSources: []
-        }
+        widgetScriptSources: []
     };
 }

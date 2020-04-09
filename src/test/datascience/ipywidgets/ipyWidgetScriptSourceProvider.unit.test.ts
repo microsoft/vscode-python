@@ -10,7 +10,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IConfigurationService, WidgetSettings } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';

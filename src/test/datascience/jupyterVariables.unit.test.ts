@@ -98,10 +98,7 @@ suite('JupyterVariables', () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgets: {
-                localConnectionScriptSources: [],
-                remoteConnectionScriptSources: []
-            }
+            widgetScriptSources: []
         };
 
         // Create our fake notebook

@@ -394,24 +394,10 @@ export interface IDataScienceSettings {
     disableJupyterAutoStart?: boolean;
     jupyterCommandLineArguments: string[];
     loadWidgetScriptsFromThirdPartySource?: boolean;
-    widgets: WidgetSettings;
+    widgetScriptSources: WidgetCDNs[];
 }
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
-export type LocalKernelScriptSource = WidgetCDNs | 'localPythonEnvironment';
-export type RemoteKernelScriptSource = WidgetCDNs | 'remoteJupyterServer';
-export type WidgetSettings = {
-    /**
-     * Order of sources to fetch the widget scripts (when running a local kernel).
-     * In this case we might be able to get the widget scripts from the local python environment.
-     */
-    localConnectionScriptSources: LocalKernelScriptSource[];
-    /**
-     * Order of sources to fetch the widget scripts (when running a remote kernel).
-     * In this case we cannot get widget script from local environment, but might be able to get it from the remote jupyter server.
-     */
-    remoteConnectionScriptSources: RemoteKernelScriptSource[];
-};
 
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {

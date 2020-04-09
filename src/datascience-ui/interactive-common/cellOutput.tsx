@@ -31,7 +31,6 @@ import { TrimmedOutputMessage } from './trimmedOutputLink';
 interface ICellOutputProps {
     cellVM: ICellViewModel;
     baseTheme: string;
-    loadWidgetScriptsFromThirdPartySource: boolean;
     maxTextSize?: number;
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
@@ -473,25 +472,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         transformedList.forEach((transformed, index) => {
             const mimetype = transformed.output.mimeType;
             if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
-                if (this.props.loadWidgetScriptsFromThirdPartySource) {
-                    // Create a view for this output if not already there.
-                    this.renderWidget(transformed.output);
-                } else {
-                    // If loading of widget source is not allowed, display a message.
-                    const errorMessage = getLocString(
-                        'DataScience.loadThirdPartyWidgetScriptsDisabled',
-                        "Loading of Widgets is disabled by default. Click <a href='https://command:python.datascience.loadWidgetScriptsFromThirdPartySource'>here</a> to enable the setting 'python.dataScience.loadWidgetScriptsFromThirdPartySource'. Once enabled you will need to restart the Kernel"
-                    );
-
-                    // tslint:disable: react-no-dangerous-html
-                    buffer.push(
-                        <div role="group" key={index}>
-                            <span className={'cell-output-html cell-output-error'}>
-                                <div dangerouslySetInnerHTML={{ __html: errorMessage }} />
-                            </span>
-                        </div>
-                    );
-                }
+                // Create a view for this output if not already there.
+                this.renderWidget(transformed.output);
             } else if (mimetype && isMimeTypeSupported(mimetype)) {
                 // If that worked, use the transform
                 // Get the matching React.Component for that mimetype

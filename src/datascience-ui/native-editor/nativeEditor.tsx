@@ -247,8 +247,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         if (!this.props.settings || !this.props.editorOptions) {
             return null;
         }
-        const loadWidgetScriptsFromThirdPartySource =
-            this.props.settings.loadWidgetScriptsFromThirdPartySource === true;
         const addNewCell = () => {
             setTimeout(() => this.props.insertBelow(cellVM.cell.id), 1);
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
@@ -285,7 +283,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         // Focus pending does not apply to native editor.
                         focusPending={0}
                         busy={this.props.busy}
-                        loadWidgetScriptsFromThirdPartySource={loadWidgetScriptsFromThirdPartySource}
                     />
                 </ErrorBoundary>
                 {lastLine}

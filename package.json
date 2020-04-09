@@ -1636,36 +1636,22 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
-                "python.dataScience.widgets.localConnectionScriptSources": {
+                "python.dataScience.widgetScriptSources": {
                     "type": "array",
                     "default": [],
                     "items": {
+                        "type": "string",
                         "enum": [
                             "jsdelivr.com",
-                            "unpkg.com",
-                            "localPythonEnvironment"
-                        ]
+                            "unpkg.com"
+                        ],
+						"enumDescriptions": [
+							"Loads widget (javascript) scripts from https://www.jsdelivr.com/",
+							"Loads widget (javascript) scripts from https://unpkg.com/"
+						]
                     },
-                    "description": "For local connections, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
-                    "scope": "machine"
-                },
-                "python.dataScience.widgets.remoteConnectionScriptSources": {
-                    "type": "array",
-                    "default": [],
-                    "items": {
-                        "enum": [
-                            "jsdelivr.com",
-                            "unpkg.com",
-                            "remoteJupyterServer"
-                        ]
-                    },
-                    "description": "For remote connections, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
-                    "scope": "machine"
-                },
-                "python.dataScience.loadWidgetScriptsFromThirdPartySource": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "Enables loading of scripts files for Widgets (ipywidgest, bqplot, beakerx, ipyleaflet, etc) from https://unpkg.com.",
+					"uniqueItems": true,
+                    "markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](http://www.google.com) for more information.",
                     "scope": "machine"
                 },
                 "python.dataScience.gatherRules": {

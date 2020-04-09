@@ -67,10 +67,7 @@ export function getDefaultSettings() {
         debugJustMyCode: true,
         variableQueries: [],
         jupyterCommandLineArguments: [],
-        widgets: {
-            localConnectionScriptSources: [],
-            remoteConnectionScriptSources: []
-        }
+        widgetScriptSources: []
     };
 
     return result;

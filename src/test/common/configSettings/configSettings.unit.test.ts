@@ -309,10 +309,7 @@ suite('Python Settings', async () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgets: {
-                localConnectionScriptSources: [],
-                remoteConnectionScriptSources: []
-            }
+            widgetScriptSources: []
         };
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any

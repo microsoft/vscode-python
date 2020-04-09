@@ -7,12 +7,7 @@ import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IConfigurationService,
-    IHttpClient,
-    LocalKernelScriptSource,
-    RemoteKernelScriptSource
-} from '../../common/types';
+import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -33,13 +28,9 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     private scriptProviders?: IWidgetScriptSourceProvider[];
     private configurationPromise?: Deferred<void>;
-    private get configuredScriptSources(): readonly (LocalKernelScriptSource | RemoteKernelScriptSource)[] {
+    private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
-        if (this.notebook.connection.localLaunch) {
-            return settings.datascience.widgets.localConnectionScriptSources;
-        } else {
-            return settings.datascience.widgets.remoteConnectionScriptSources;
-        }
+        return settings.datascience.widgetScriptSources;
     }
     constructor(
         private readonly notebook: INotebook,
@@ -157,11 +148,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
         if (this.canUseCDN()) {
-            const cdnProvider = new CDNWidgetScriptSourceProvider(
-                this.notebook,
-                this.configurationSettings,
-                this.httpClient
-            );
+            const cdnProvider = new CDNWidgetScriptSourceProvider(this.configurationSettings, this.httpClient);
 
             if (this.preferCDNFirst()) {
                 this.scriptProviders.splice(0, 0, cdnProvider);
@@ -175,10 +162,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return false;
         }
         const settings = this.configurationSettings.getSettings(undefined);
-        const scriptSources = this.notebook.connection.localLaunch
-            ? settings.datascience.widgets.localConnectionScriptSources
-            : settings.datascience.widgets.remoteConnectionScriptSources;
-
+        const scriptSources = settings.datascience.widgetScriptSources;
         if (scriptSources.length === 0) {
             return false;
         }
@@ -193,10 +177,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return false;
         }
         const settings = this.configurationSettings.getSettings(undefined);
-        const scriptSources = this.notebook.connection.localLaunch
-            ? settings.datascience.widgets.localConnectionScriptSources
-            : settings.datascience.widgets.remoteConnectionScriptSources;
-
+        const scriptSources = settings.datascience.widgetScriptSources;
         if (scriptSources.length === 0) {
             return false;
         }
@@ -221,24 +202,17 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (selection === Common.ok()) {
             sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: 'ok' });
             // always search local interpreter or attempt to fetch scripts from remote jupyter server as backups.
-            await this.updateScriptSources(true, ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment']);
-            await this.updateScriptSources(false, ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer']);
+            await this.updateScriptSources(['jsdelivr.com', 'unpkg.com']);
         } else {
             const selected = selection === Common.cancel() ? 'cancel' : 'dismissed';
             sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: selected });
             // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
-            await this.updateScriptSources(true, ['localPythonEnvironment']);
-            await this.updateScriptSources(false, ['remoteJupyterServer']);
+            await this.updateScriptSources([]);
         }
         this.configurationPromise.resolve();
     }
-    private async updateScriptSources(
-        updateLocalKernelSettings: boolean,
-        scriptSources: LocalKernelScriptSource[] | RemoteKernelScriptSource[]
-    ) {
-        const targetSetting = updateLocalKernelSettings
-            ? 'dataScience.widgets.localConnectionScriptSources'
-            : 'dataScience.widgets.remoteConnectionScriptSources';
+    private async updateScriptSources(scriptSources: WidgetCDNs[]) {
+        const targetSetting = 'dataScience.widgetScriptSources';
         await this.configurationSettings.updateSetting(
             targetSetting,
             scriptSources,

@@ -142,10 +142,7 @@ suite('Interactive window command listener', async () => {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            widgets: {
-                localConnectionScriptSources: [],
-                remoteConnectionScriptSources: []
-            }
+            widgetScriptSources: []
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
