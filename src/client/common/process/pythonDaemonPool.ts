@@ -17,7 +17,6 @@ import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
 import { noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
-import * as internalPython from './internal/python';
 import { ProcessService } from './proc';
 import { PythonDaemonExecutionService } from './pythonDaemon';
 import {
@@ -102,8 +101,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        const args = internalPython.execModule(moduleName, []);
-        const msg = { args };
+        const msg = { args: ['-m', moduleName] };
         return this.wrapCall((daemon) => daemon.isModuleInstalled(moduleName), msg);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
@@ -112,11 +110,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public async execModule(
         moduleName: string,
-        moduleArgs: string[],
+        args: string[],
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
-        const args = internalPython.execModule(moduleName, moduleArgs);
-        const msg = { args, options };
+        const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapCall((daemon) => daemon.execModule(moduleName, args, options), msg);
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -125,11 +122,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public execModuleObservable(
         moduleName: string,
-        moduleArgs: string[],
+        args: string[],
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
-        const args = internalPython.execModule(moduleName, moduleArgs);
-        const msg = { args, options };
+        const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapObservableCall((daemon) => daemon.execModuleObservable(moduleName, args, options), msg);
     }
     /**
