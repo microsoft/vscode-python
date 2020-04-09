@@ -17,12 +17,12 @@ import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import {
     CommonAction,
     CommonActionType,
-    ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassDisabledAction
+    ILoadIPyWidgetClassFailureAction
 } from '../interactive-common/redux/reducers/types';
 import { IStore } from '../interactive-common/redux/store';
 import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
+import { registerScripts } from './requirejsRegistry';
 
 type Props = {
     postOffice: PostOffice;
@@ -30,18 +30,12 @@ type Props = {
     store: Store<IStore> & { dispatch: unknown };
 };
 
-type NonPartial<T> = {
-    [P in keyof T]-?: T[P];
-};
-
 export class WidgetManagerComponent extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
     private readonly widgetSourceRequests = new Map<string, Deferred<void>>();
-    private readonly widgetSourcesAlreadyRegistered = new Map<string, string | undefined>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
+    private widgetsCanLoadFromCDN: boolean = false;
     private readonly loaderSettings = {
-        // Whether to allow loading widgets from 3rd party (cdn).
-        loadWidgetScriptsFromThirdPartySource: false,
         // Total time to wait for a script to load. This includes ipywidgets making a request to extension for a Uri of a widget,
         // then extension replying back with the Uri (max 5 seconds round trip time).
         // If expires, then Widget downloader will attempt to download with what ever information it has (potentially failing).
@@ -57,9 +51,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
     };
     constructor(props: Props) {
         super(props);
-        this.loaderSettings.loadWidgetScriptsFromThirdPartySource =
-            props.store.getState().main.settings?.loadWidgetScriptsFromThirdPartySource === true;
-
         this.widgetManager = new WidgetManager(
             document.getElementById(this.props.widgetContainerId)!,
             this.props.postOffice,
@@ -71,8 +62,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             handleMessage: (type: string, payload?: any) => {
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload) as IDataScienceExtraSettings;
-                    this.loaderSettings.loadWidgetScriptsFromThirdPartySource =
-                        settings.loadWidgetScriptsFromThirdPartySource === true;
+                    this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesResponse) {
                     this.registerScriptSourcesInRequirejs(payload as WidgetScriptSource[]);
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
@@ -113,60 +103,20 @@ export class WidgetManagerComponent extends React.Component<Props> {
         if (!Array.isArray(sources) || sources.length === 0) {
             return;
         }
-        // tslint:disable-next-line: no-any
-        const requirejs = (window as any).requirejs as { config: Function };
-        if (!requirejs) {
-            return window.console.error('Requirejs not found');
-        }
-        const config: { paths: Record<string, string> } = {
-            paths: {}
-        };
 
-        const promisesToResolve: Deferred<void>[] = [];
-        sources
-            .filter((source) => {
-                // Ignore scripts that have already been registered once before.
-                if (
-                    this.widgetSourcesAlreadyRegistered.has(source.moduleName) &&
-                    this.widgetSourcesAlreadyRegistered.get(source.moduleName) === source.scriptUri
-                ) {
-                    return true;
-                }
-                this.widgetSourcesAlreadyRegistered.set(source.moduleName, source.scriptUri);
-                return false;
-            })
-            .map((source) => {
-                if (source.scriptUri) {
-                    // tslint:disable-next-line: no-console
-                    console.log(
-                        `Source for IPyWidget ${source.moduleName} found in ${source.source} @ ${source.scriptUri}.`
-                    );
-                } else {
-                    // tslint:disable-next-line: no-console
-                    console.error(`Source for IPyWidget ${source.moduleName} not found.`);
-                }
+        registerScripts(sources);
 
-                // We have fetched the script sources for all of these modules.
-                // In some cases we might not have the source, meaning we don't have it or couldn't find it.
-                let deferred = this.widgetSourceRequests.get(source.moduleName);
-                if (!deferred) {
-                    deferred = createDeferred();
-                    this.widgetSourceRequests.set(source.moduleName, deferred);
-                }
-                promisesToResolve.push(deferred);
-                return source;
-            })
-            .filter((source) => source.scriptUri)
-            .map((source) => source as NonPartial<WidgetScriptSource>)
-            .forEach((source) => {
-                this.loaderSettings.widgetsRegisteredInRequireJs.add(source.moduleName);
-                // Register the script source into requirejs so it gets loaded via requirejs.
-                config.paths[source.moduleName] = source.scriptUri;
-            });
-
-        requirejs.config(config);
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
-        promisesToResolve.forEach((item) => item.resolve());
+        sources.map((source) => {
+            // We have fetched the script sources for all of these modules.
+            // In some cases we might not have the source, meaning we don't have it or couldn't find it.
+            let deferred = this.widgetSourceRequests.get(source.moduleName);
+            if (!deferred) {
+                deferred = createDeferred();
+                this.widgetSourceRequests.set(source.moduleName, deferred);
+            }
+            deferred.resolve();
+        });
     }
     private registerScriptSourceInRequirejs(source?: WidgetScriptSource) {
         if (!source) {
@@ -184,30 +134,23 @@ export class WidgetManagerComponent extends React.Component<Props> {
     ): CommonAction<ILoadIPyWidgetClassFailureAction> {
         return {
             type: CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE,
-            payload: { messageDirection: 'incoming', data: { className, moduleName, moduleVersion, isOnline, error } }
+            payload: {
+                messageDirection: 'incoming',
+                data: {
+                    className,
+                    moduleName,
+                    moduleVersion,
+                    isOnline,
+                    error,
+                    cdnsUsed: this.widgetsCanLoadFromCDN
+                }
+            }
         };
     }
-    private createLoadDisabledErrorAction(
-        className: string,
-        moduleName: string,
-        moduleVersion: string
-    ): CommonAction<LoadIPyWidgetClassDisabledAction> {
-        return {
-            type: CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE,
-            payload: { messageDirection: 'incoming', data: { className, moduleName, moduleVersion } }
-        };
-    }
-
     // tslint:disable-next-line: no-any
     private async handleLoadError(className: string, moduleName: string, moduleVersion: string, error: any) {
-        if (this.loaderSettings.loadWidgetScriptsFromThirdPartySource) {
-            const isOnline = await isonline.default({ timeout: 1000 });
-            this.props.store.dispatch(
-                this.createLoadErrorAction(className, moduleName, moduleVersion, isOnline, error)
-            );
-        } else {
-            this.props.store.dispatch(this.createLoadDisabledErrorAction(className, moduleName, moduleVersion));
-        }
+        const isOnline = await isonline.default({ timeout: 1000 });
+        this.props.store.dispatch(this.createLoadErrorAction(className, moduleName, moduleVersion, isOnline, error));
     }
 
     /**

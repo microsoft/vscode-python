@@ -106,14 +106,14 @@ export class CommandRegistry implements IDisposable {
     }
 
     private enableLoadingWidgetScriptsFromThirdParty(): void {
-        if (this.configService.getSettings(undefined).datascience.loadWidgetScriptsFromThirdPartySource) {
+        if (this.configService.getSettings(undefined).datascience.widgetScriptSources.length > 0) {
             return;
         }
         // Update the setting and once updated, notify user to restart kernel.
         this.configService
             .updateSetting(
-                'dataScience.loadWidgetScriptsFromThirdPartySource',
-                true,
+                'dataScience.widgetScriptSources',
+                ['jsdelivr.com', 'unpkg.com'],
                 undefined,
                 ConfigurationTarget.Global
             )

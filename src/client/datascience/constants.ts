@@ -82,7 +82,8 @@ export namespace Commands {
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
     export const GatherQuality = 'python.datascience.gatherquality';
-    export const EnableLoadingWidgetsFrom3rdPartySource = 'python.datascience.loadWidgetScriptsFromThirdPartySource';
+    export const EnableLoadingWidgetsFrom3rdPartySource =
+        'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
 }
 
 export namespace CodeLensCommands {

@@ -19,7 +19,6 @@ export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
     el: HTMLElement,
     scriptLoader: {
-        loadWidgetScriptsFromThirdPartySource: boolean;
         // tslint:disable-next-line: no-any
         errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
     }

@@ -47,7 +47,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         private readonly widgetContainer: HTMLElement,
         private readonly postOffice: PostOffice,
         private readonly scriptLoader: {
-            readonly loadWidgetScriptsFromThirdPartySource: boolean;
             readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
             // tslint:disable-next-line: no-any
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;

@@ -86,7 +86,6 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.REFRESH_VARIABLES]: MessageType.other,
     [CommonActionType.FOCUS_INPUT]: MessageType.other,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
-    [CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE]: MessageType.other,
 
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
@@ -113,7 +112,6 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Interrupt]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
-    [InteractiveWindowMessages.IPyWidgetLoadDisabled]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,

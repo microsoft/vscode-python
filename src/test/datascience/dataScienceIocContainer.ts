@@ -1381,7 +1381,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             disableJupyterAutoStart: true,
-            loadWidgetScriptsFromThirdPartySource: true,
             widgetScriptSources: []
         };
         pythonSettings.jediEnabled = false;

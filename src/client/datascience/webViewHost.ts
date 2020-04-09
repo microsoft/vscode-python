@@ -373,7 +373,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather') ||
-            event.affectsConfiguration('python.dataScience.loadWidgetScriptsFromThirdPartySource')
+            event.affectsConfiguration('python.dataScience.widgetScriptSources')
         ) {
             // See if the theme changed
             const newSettings = await this.generateDataScienceExtraSettings();

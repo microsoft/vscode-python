@@ -264,8 +264,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const outputs = this.renderOutputs(this.getCodeCell().outputs, trim);
 
             // Render any UI side errors
+            // tslint:disable: react-no-dangerous-html
             if (this.props.cellVM.uiSideError) {
-                outputs.push(<div className="cell-output-uiSideError">{this.props.cellVM.uiSideError}</div>);
+                outputs.push(
+                    <div className="cell-output-uiSideError">
+                        <div dangerouslySetInnerHTML={{ __html: this.props.cellVM.uiSideError }} />
+                    </div>
+                );
             }
 
             return outputs;

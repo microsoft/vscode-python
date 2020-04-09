@@ -1645,13 +1645,13 @@
                             "jsdelivr.com",
                             "unpkg.com"
                         ],
-						"enumDescriptions": [
-							"Loads widget (javascript) scripts from https://www.jsdelivr.com/",
-							"Loads widget (javascript) scripts from https://unpkg.com/"
-						]
+                        "enumDescriptions": [
+                            "Loads widget (javascript) scripts from https://www.jsdelivr.com/",
+                            "Loads widget (javascript) scripts from https://unpkg.com/"
+                        ]
                     },
-					"uniqueItems": true,
-                    "markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](http://www.google.com) for more information.",
+                    "uniqueItems": true,
+                    "markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](http://www.google.com) for more information. Once updated you will need to restart the Kernel.",
                     "scope": "machine"
                 },
                 "python.dataScience.gatherRules": {

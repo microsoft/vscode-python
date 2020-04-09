@@ -111,11 +111,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return [];
     }
     private onSettingsChagned(e: ConfigurationChangeEvent) {
-        const isLocalConnection = this.notebook.connection.localLaunch;
-        if (e.affectsConfiguration('python.datasSience.widgets.localConnectionScriptSources') && isLocalConnection) {
-            this.rebuildProviders();
-        }
-        if (e.affectsConfiguration('python.datasSience.widgets.remoteConnectionScriptSources') && !isLocalConnection) {
+        if (e.affectsConfiguration('dataScience.widgetScriptSources')) {
             this.rebuildProviders();
         }
     }

@@ -19,7 +19,7 @@ const LineQueryRegex = /line=(\d+)/;
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
 const linkCommandWhitelist = [
     'python.datascience.gatherquality',
-    'python.datascience.loadWidgetScriptsFromThirdPartySource'
+    'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'
 ];
 
 // tslint:disable: no-any

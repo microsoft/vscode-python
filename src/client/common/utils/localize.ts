@@ -839,11 +839,15 @@ export namespace DataScience {
     );
     export const loadThirdPartyWidgetScriptsPostEnabled = localize(
         'DataScience.loadThirdPartyWidgetScriptsPostEnabled',
-        "Once you have updated the setting 'loadWidgetScriptsFromThirdPartySource' you will need to restart the Kernel."
+        "Please restart the Kernel when changing the setting 'python.dataScience.widgetScriptSources'."
     );
     export const useCDNForWidgets = localize(
         'DataScience.useCDNForWidgets',
-        'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/widgets) for more information.'
+        'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
+    );
+    export const enableCDNForWidgetsSetting = localize(
+        'DataScience.enableCDNForWidgetsSetting',
+        "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
     );
 }
 

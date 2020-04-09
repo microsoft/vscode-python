@@ -100,7 +100,6 @@ export function requireLoader(moduleName: string, moduleVersion: string): Promis
 export function renderWidgets(element = document.documentElement): void {
     const managerFactory = (): any => {
         return new wm.WidgetManager(undefined, element, {
-            loadWidgetScriptsFromThirdPartySource: false,
             widgetsRegisteredInRequireJs: new Set<string>(),
             errorHandler: () => 'Error loading widget.',
             loadWidgetScript: (_moduleName: string, _moduleVersion: string) => Promise.resolve()
