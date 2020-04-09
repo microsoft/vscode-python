@@ -135,12 +135,15 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from './../initialize';
 
 chai_use(chaiAsPromised);
+
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
@@ -549,7 +552,7 @@ suite('Module Installer', () => {
 
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
-                `-m pip install -U ${moduleName} --user`,
+                `${isolated} pip install -U ${moduleName} --user`,
                 'Invalid command sent to terminal for installation.'
             );
         });
@@ -590,7 +593,7 @@ suite('Module Installer', () => {
 
             mockTerminalFactory.verifyAll();
             expect(argsSent.join(' ')).equal(
-                `-m pip install -U ${moduleName}`,
+                `${isolated} pip install -U ${moduleName}`,
                 'Invalid command sent to terminal for installation.'
             );
         });

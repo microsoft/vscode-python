@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, CodeLens, Command, Event, Position, Range, TextDocument, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
+import * as internalPython from '../../common/process/internal/python';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { IConfigurationService } from '../../common/types';
 import { IShebangCodeLensProvider } from '../contracts';
@@ -37,7 +38,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     }
     private async getFullyQualifiedPathToInterpreter(pythonPath: string, resource: Uri) {
         let cmdFile = pythonPath;
-        let args = ['-c', 'import sys;print(sys.executable)'];
+        const [args, parse] = internalPython.getExecutable();
         if (pythonPath.indexOf('bin/env ') >= 0 && !this.platformService.isWindows) {
             // In case we have pythonPath as '/usr/bin/env python'.
             const parts = pythonPath
@@ -45,12 +46,12 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
                 .map((part) => part.trim())
                 .filter((part) => part.length > 0);
             cmdFile = parts.shift()!;
-            args = parts.concat(args);
+            args.splice(0, 0, ...parts);
         }
         const processService = await this.processServiceFactory.create(resource);
         return processService
             .exec(cmdFile, args)
-            .then((output) => output.stdout.trim())
+            .then((output) => parse(output.stdout))
             .catch(() => '');
     }
     private async createShebangCodeLens(document: TextDocument) {

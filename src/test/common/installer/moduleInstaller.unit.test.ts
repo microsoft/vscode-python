@@ -49,6 +49,9 @@ import {
     PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
@@ -331,7 +334,7 @@ suite('Module Installer', () => {
                                                 const proxyArgs =
                                                     proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
                                                 const expectedArgs = [
-                                                    '-m',
+                                                    isolated,
                                                     'pip',
                                                     ...proxyArgs,
                                                     'install',
@@ -374,7 +377,7 @@ suite('Module Installer', () => {
                                                 const proxyArgs =
                                                     proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
                                                 const expectedArgs = [
-                                                    '-m',
+                                                    isolated,
                                                     'pip',
                                                     ...proxyArgs,
                                                     'install',
@@ -434,7 +437,8 @@ suite('Module Installer', () => {
                                         } catch (ex) {
                                             noop();
                                         }
-                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, ['-m', 'executionInfo']));
+                                        const args = [isolated, 'executionInfo'];
+                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
                                         interpreterService.verifyAll();
                                     });
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
@@ -447,8 +451,9 @@ suite('Module Installer', () => {
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.resolve(false)
                                         );
+                                        const args = [isolated, 'executionInfo'];
                                         terminalService
-                                            .setup((t) => t.sendCommand(pythonPath, ['-m', 'executionInfo'], undefined))
+                                            .setup((t) => t.sendCommand(pythonPath, args, undefined))
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {
@@ -466,10 +471,9 @@ suite('Module Installer', () => {
                                         info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => false);
+                                        const args = [isolated, 'executionInfo', '--user'];
                                         terminalService
-                                            .setup((t) =>
-                                                t.sendCommand(pythonPath, ['-m', 'executionInfo', '--user'], undefined)
-                                            )
+                                            .setup((t) => t.sendCommand(pythonPath, args, undefined))
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {
@@ -496,12 +500,14 @@ suite('Module Installer', () => {
                                         fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.reject(err)
                                         );
+
                                         try {
                                             await installer.installModule(product.name, resource);
                                         } catch (ex) {
                                             noop();
                                         }
-                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, ['-m', 'executionInfo']));
+                                        const args = [isolated, 'executionInfo'];
+                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
                                         interpreterService.verifyAll();
                                     });
                                     test('If cancellation token is provided, install while showing progress', async () => {
@@ -545,7 +551,7 @@ suite('Module Installer', () => {
                                 test(`Test Args (${product.name})`, async () => {
                                     setActiveInterpreter();
                                     const proxyArgs = proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                    const expectedArgs = ['-m', 'pip', ...proxyArgs, 'install', '-U', moduleName];
+                                    const expectedArgs = [isolated, 'pip', ...proxyArgs, 'install', '-U', moduleName];
                                     await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                     interpreterService.verifyAll();
                                 });

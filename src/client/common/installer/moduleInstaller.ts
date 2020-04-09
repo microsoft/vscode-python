@@ -12,6 +12,7 @@ import { IApplicationShell } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
+import * as internalPython from '../process/internal/python';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { Products } from '../utils/localize';
@@ -38,13 +39,13 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             if (executionInfo.moduleName) {
                 const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
                 const settings = configService.getSettings(uri);
-                const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
 
                 const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
                 const interpreter = isResource(resource)
                     ? await interpreterService.getActiveInterpreter(resource)
                     : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
+                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {

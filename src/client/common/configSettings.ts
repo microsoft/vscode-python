@@ -24,6 +24,7 @@ import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
 import { DeprecatePythonPath } from './experimentGroups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
+import * as internalPython from './process/internal/python';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -695,9 +696,10 @@ function getPythonExecutable(pythonPath: string): string {
 }
 
 function isValidPythonPath(pythonPath: string): boolean {
+    const [args, parse] = internalPython.isValid();
     try {
-        const output = child_process.execFileSync(pythonPath, ['-c', 'print(1234)'], { encoding: 'utf8' });
-        return output.startsWith('1234');
+        const output = child_process.execFileSync(pythonPath, args, { encoding: 'utf8' });
+        return parse(output);
     } catch (ex) {
         return false;
     }

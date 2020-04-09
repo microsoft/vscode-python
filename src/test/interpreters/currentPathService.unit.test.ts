@@ -6,6 +6,7 @@
 // tslint:disable:max-func-body-length no-any
 
 import { expect } from 'chai';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
@@ -26,6 +27,9 @@ import {
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 suite('Interpreters CurrentPath Service', () => {
     let processService: TypeMoq.IMock<IProcessService>;
@@ -97,7 +101,7 @@ suite('Interpreters CurrentPath Service', () => {
                 .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve({ version }));
 
-            const execArgs = ['-c', 'import sys;print(sys.executable)'];
+            const execArgs = [isolated, '-c', 'import sys;print(sys.executable)'];
             pythonSettings.setup((p) => p.pythonPath).returns(() => 'root:Python');
             processService
                 .setup((p) =>
