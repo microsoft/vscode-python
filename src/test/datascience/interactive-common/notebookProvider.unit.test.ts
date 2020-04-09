@@ -94,6 +94,7 @@ suite('Data Science - NotebookProvider', () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
+        when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
 
         const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
@@ -103,6 +104,7 @@ suite('Data Science - NotebookProvider', () => {
         const notebookMock = createTypeMoq<INotebook>('jupyter notebook');
         when(jupyterNotebookProvider.getNotebook(anything())).thenResolve(undefined);
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(notebookMock.object);
+        when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
 
         const notebook = await notebookProvider.getOrCreateNotebook({ identity: Uri('C:\\\\foo.py') });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');

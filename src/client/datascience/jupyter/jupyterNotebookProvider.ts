@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as localize from '../../common/utils/localize';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -29,7 +30,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         return server?.getConnectionInfo();
     }
 
-    public async createNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
+    public async createNotebook(options: GetNotebookOptions): Promise<INotebook> {
         // Make sure we have a server
         const server = await this.serverProvider.getOrCreateServer({
             getOnly: options.getOnly,
@@ -39,8 +40,9 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         if (server) {
             return server.createNotebook(options.identity, options.identity, options.metadata);
         }
-
-        return undefined;
+        // We want createNotebook to always return a notebook promise, so if we don't have a server
+        // here throw our generic server disposed message that we use in server creatio n
+        throw new Error(localize.DataScience.sessionDisposed());
     }
     public async getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const server = await this.serverProvider.getOrCreateServer({

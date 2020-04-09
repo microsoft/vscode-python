@@ -87,13 +87,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         notebookProvider.onNotebookCreated(e => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
 
         notebookProvider.activeNotebooks.forEach(nbPromise =>
-            nbPromise
-                .then(notebook => {
-                    if (notebook) {
-                        this.trackDisposingOfNotebook(notebook);
-                    }
-                })
-                .ignoreErrors()
+            nbPromise.then(notebook => this.trackDisposingOfNotebook(notebook)).ignoreErrors()
         );
     }
 
