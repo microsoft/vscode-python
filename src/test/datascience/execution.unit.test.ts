@@ -894,8 +894,8 @@ suite('Jupyter Execution', async () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgets: {
-                localKernelScriptSources: [],
-                remoteKernelScriptSources: []
+                localConnectionScriptSources: [],
+                remoteConnectionScriptSources: []
             }
         };
 

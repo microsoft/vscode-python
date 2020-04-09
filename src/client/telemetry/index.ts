@@ -759,30 +759,6 @@ export interface IEventNamePropertyMapping {
         hasJupyter: boolean;
         hasVnd: boolean;
     };
-    /**
-     * Telemetry event sent with name of a Widget used in a notebook.
-     * This is used by the user.
-     */
-    [Telemetry.HashedIPyWidgetNameUsed]: {
-        /**
-         * Hash of the widget
-         */
-        hashedName: string;
-    };
-    /**
-     * Telemetry event sent with named of a Widget found in user environment.
-     * This is what we found on the system.
-     */
-    [Telemetry.HashedIPyWidgetNameDiscovered]: {
-        /**
-         * Hash of the widget
-         */
-        hashedName: string;
-    };
-    /**
-     * Total time taken to discover all IPyWidgets on disc.
-     */
-    [Telemetry.DiscoverIPyWidgetNamesPerf]: never | undefined;
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
      * Telemetry event sent with details of selection in prompt
@@ -1964,6 +1940,41 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
     /**
+     * Telemetry event sent with name of a Widget that is used.
+     */
+    [Telemetry.HashedIPyWidgetNameUsed]: {
+        /**
+         * Hash of the widget
+         */
+        hashedName: string;
+        /**
+         * Where did we find the hashed name (CDN or user environment or remote jupyter).
+         */
+        source?: 'cdn' | 'local' | 'remote';
+    };
+    /**
+     * Telemetry event sent with name of a Widget found.
+     */
+    [Telemetry.HashedIPyWidgetNameDiscovered]: {
+        /**
+         * Hash of the widget
+         */
+        hashedName: string;
+        /**
+         * Where did we find the hashed name (CDN or user environment or remote jupyter).
+         */
+        source?: 'cdn' | 'local' | 'remote';
+    };
+    /**
+     * Total time taken to discover all IPyWidgets on disc.
+     * This is how long it takes to discover a single widget on disc (from python environment).
+     */
+    [Telemetry.DiscoverIPyWidgetNamesLocalPerf]: never | undefined;
+    /**
+     * Something went wrong in looking for a widget.
+     */
+    [Telemetry.HashedIPyWidgetScriptDiscoveryError]: never | undefined;
+    /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
@@ -1972,10 +1983,9 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
     /**
-     * Telemetry sent when we check whether a 3rd party widget exists on a CDN or not.
-     * We capture the time and whether the widget was found or not.
+     * Total time taken to discover a widget script on CDN.
      */
-    [Telemetry.IPyWidgetTestAvailabilityOnCDN]: {
+    [Telemetry.DiscoverIPyWidgetNamesCDNPerf]: {
         // The CDN we were testing.
         cdn: string;
         // Whether we managed to find the widget on the CDN or not.

@@ -4,7 +4,6 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import type * as serlialize from '@jupyterlab/services/lib/kernel/serialize';
-import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -31,6 +30,7 @@ import {
     KernelSocketInformation
 } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
+import { WidgetScriptSource } from './types';
 
 @injectable()
 export class IPyWidgetScriptSource implements IInteractiveWindowListener {
@@ -107,9 +107,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
-                sendTelemetryEvent(Telemetry.HashedIPyWidgetNameDiscovered, undefined, {
-                    hashedName: sha256().update(moduleName).digest('hex')
-                });
                 this.sendWidgetSource(moduleName, moduleVersion).catch(
                     traceError.bind('Failed to send widget sources upon ready')
                 );
@@ -119,6 +116,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
 
     /**
      * Send a list of all widgets and sources to the UI.
+     * Used to pre-emptively register widgets with requirejs, even if they are not used.
+     * (this is merely a perf optimization).
      */
     private async sendListOfWidgetSources(ignoreCache?: boolean) {
         if (!this.notebook || !this.scriptProvider) {
@@ -133,6 +132,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
     }
     /**
      * Send the widget script source for a specific widget module & version.
+     * This is a request made when a widget is certainly used in a notebook.
      */
     private async sendWidgetSource(moduleName: string, moduleVersion: string) {
         // Standard widgets area already available, hence no need to look for them.
@@ -144,11 +144,19 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
             return;
         }
 
-        const source = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
-        this.postEmitter.fire({
-            message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-            payload: source
-        });
+        let widgetSource: WidgetScriptSource = { moduleName };
+        try {
+            widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
+        } catch (ex) {
+            traceError('Failed to get widget source due to an error', ex);
+            sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
+        } finally {
+            // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
+            this.postEmitter.fire({
+                message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                payload: widgetSource
+            });
+        }
     }
     private async saveIdentity(args: INotebookIdentity) {
         this.notebookIdentity = Uri.parse(args.resource);

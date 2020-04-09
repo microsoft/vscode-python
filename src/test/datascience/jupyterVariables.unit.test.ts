@@ -99,8 +99,8 @@ suite('JupyterVariables', () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgets: {
-                localKernelScriptSources: [],
-                remoteKernelScriptSources: []
+                localConnectionScriptSources: [],
+                remoteConnectionScriptSources: []
             }
         };
 

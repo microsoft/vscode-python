@@ -37,6 +37,8 @@ type NonPartial<T> = {
 export class WidgetManagerComponent extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
     private readonly widgetSourceRequests = new Map<string, Deferred<void>>();
+    private readonly widgetSourcesAlreadyRegistered = new Map<string, string | undefined>();
+    private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private readonly loaderSettings = {
         // Whether to allow loading widgets from 3rd party (cdn).
         loadWidgetScriptsFromThirdPartySource: false,
@@ -119,8 +121,31 @@ export class WidgetManagerComponent extends React.Component<Props> {
         const config: { paths: Record<string, string> } = {
             paths: {}
         };
+
+        const promisesToResolve: Deferred<void>[] = [];
         sources
+            .filter((source) => {
+                // Ignore scripts that have already been registered once before.
+                if (
+                    this.widgetSourcesAlreadyRegistered.has(source.moduleName) &&
+                    this.widgetSourcesAlreadyRegistered.get(source.moduleName) === source.scriptUri
+                ) {
+                    return true;
+                }
+                this.widgetSourcesAlreadyRegistered.set(source.moduleName, source.scriptUri);
+                return false;
+            })
             .map((source) => {
+                if (source.scriptUri) {
+                    // tslint:disable-next-line: no-console
+                    console.log(
+                        `Source for IPyWidget ${source.moduleName} found in ${source.source} @ ${source.scriptUri}.`
+                    );
+                } else {
+                    // tslint:disable-next-line: no-console
+                    console.error(`Source for IPyWidget ${source.moduleName} not found.`);
+                }
+
                 // We have fetched the script sources for all of these modules.
                 // In some cases we might not have the source, meaning we don't have it or couldn't find it.
                 let deferred = this.widgetSourceRequests.get(source.moduleName);
@@ -128,7 +153,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     deferred = createDeferred();
                     this.widgetSourceRequests.set(source.moduleName, deferred);
                 }
-                deferred.resolve();
+                promisesToResolve.push(deferred);
                 return source;
             })
             .filter((source) => source.scriptUri)
@@ -140,13 +165,13 @@ export class WidgetManagerComponent extends React.Component<Props> {
             });
 
         requirejs.config(config);
+        // Now resolve promises (anything that was waiting for modules to get registered can carry on).
+        promisesToResolve.forEach((item) => item.resolve());
     }
     private registerScriptSourceInRequirejs(source?: WidgetScriptSource) {
         if (!source) {
             return;
         }
-        // tslint:disable-next-line: no-console
-        console.log(`Source for IPyWidget ${source.moduleName} ${source.scriptUri ? 'Not found' : source.scriptUri}`);
         this.registerScriptSourcesInRequirejs([source]);
     }
     private createLoadErrorAction(
@@ -198,9 +223,24 @@ export class WidgetManagerComponent extends React.Component<Props> {
         if (!deferred) {
             deferred = createDeferred<void>();
             this.widgetSourceRequests.set(moduleName, deferred);
+
             // If we timeout, then resolve this promise.
             // We don't want the calling code to unnecessary wait for too long.
-            setTimeout(() => deferred?.resolve(), this.loaderSettings.timeoutWaitingForScriptToLoad);
+            // Else UI will not get rendered due to blocking ipywidets (at the end of the day ipywidgets gets loaded via kernel)
+            // And kernel blocks the UI from getting processed.
+            // Also, if we timeout once, then for subsequent attempts, wait for just 1 second.
+            // Possible user has ignored some UI prompt and things are now in a state of limbo.
+            // This way thigns will fall over sooner due to missing widget sources.
+            const timeoutTime = this.timedoutWaitingForWidgetsToGetLoaded
+                ? 1_000
+                : this.loaderSettings.timeoutWaitingForScriptToLoad;
+
+            setTimeout(() => {
+                // tslint:disable-next-line: no-console
+                console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
+                deferred?.resolve();
+                this.timedoutWaitingForWidgetsToGetLoaded = true;
+            }, timeoutTime);
         }
         // Whether we have the scripts or not, send message to extension.
         // Useful telemetry and also we know it was explicity requestd by ipywidgest.
@@ -209,10 +249,9 @@ export class WidgetManagerComponent extends React.Component<Props> {
             { moduleName, moduleVersion }
         );
 
-        return (
-            deferred.promise
-                // tslint:disable-next-line: no-console
-                .catch((ex) => console.log('Failed to load Widget Script from Extension', ex))
+        return deferred.promise.catch((ex) =>
+            // tslint:disable-next-line: no-console
+            console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
         );
     }
 }

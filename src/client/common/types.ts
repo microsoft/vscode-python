@@ -405,12 +405,12 @@ export type WidgetSettings = {
      * Order of sources to fetch the widget scripts (when running a local kernel).
      * In this case we might be able to get the widget scripts from the local python environment.
      */
-    localKernelScriptSources: LocalKernelScriptSource[];
+    localConnectionScriptSources: LocalKernelScriptSource[];
     /**
      * Order of sources to fetch the widget scripts (when running a remote kernel).
      * In this case we cannot get widget script from local environment, but might be able to get it from the remote jupyter server.
      */
-    remoteKernelScriptSources: RemoteKernelScriptSource[];
+    remoteConnectionScriptSources: RemoteKernelScriptSource[];
 };
 
 export const IConfigurationService = Symbol('IConfigurationService');

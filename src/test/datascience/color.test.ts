@@ -76,8 +76,8 @@ suite('Theme colors', () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgets: {
-                localKernelScriptSources: [],
-                remoteKernelScriptSources: []
+                localConnectionScriptSources: [],
+                remoteConnectionScriptSources: []
             }
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();

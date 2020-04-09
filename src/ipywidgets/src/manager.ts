@@ -27,7 +27,6 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         kernel: Kernel.IKernelConnection,
         el: HTMLElement,
         private readonly scriptLoader: {
-            readonly loadWidgetScriptsFromThirdPartySource: boolean;
             readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
             loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void>;
@@ -104,35 +103,22 @@ export class WidgetManager extends jupyterlab.WidgetManager {
                     widgetsRegisteredInRequireJs.includes(moduleName) ||
                     this.scriptLoader.widgetsRegisteredInRequireJs.has(moduleName);
 
-                if (!this.scriptLoader.loadWidgetScriptsFromThirdPartySource && !loadModuleFromRequirejs) {
-                    throw new Error('Loading from 3rd party source is disabled');
-                }
-
                 if (!loadModuleFromRequirejs) {
                     // If not loading from requirejs, then check if we can.
+                    // Notify the script loader that we need to load the widget module.
+                    // If possible the loader will locate and register that in requirejs for things to start working.
                     await this.scriptLoader.loadWidgetScript(moduleName, moduleVersion);
                 }
 
                 // If loading module from requirejs (e.g. already bundled), then do not use the cdn.
-                const useCdn = !loadModuleFromRequirejs && this.scriptLoader.loadWidgetScriptsFromThirdPartySource;
-                const m = await requireLoader(moduleName, moduleVersion, useCdn);
+                const m = await requireLoader(moduleName);
                 if (m && m[className]) {
                     return m[className];
                 }
                 throw originalException;
             } catch (ex) {
                 this.scriptLoader.errorHandler(className, moduleName, moduleVersion, originalException);
-                if (this.scriptLoader.loadWidgetScriptsFromThirdPartySource) {
-                    throw originalException;
-                } else {
-                    // Don't throw exceptions if disabled, else everything stops working.
-                    window.console.error(ex);
-                    // Returning an unresolved promise will prevent Jupyter ipywidgets from doing anything.
-                    // tslint:disable-next-line: promise-must-complete
-                    return new Promise(() => {
-                        // Noop.
-                    });
-                }
+                throw originalException;
             }
         });
 

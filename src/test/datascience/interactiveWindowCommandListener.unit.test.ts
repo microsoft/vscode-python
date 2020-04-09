@@ -143,8 +143,8 @@ suite('Interactive window command listener', async () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgets: {
-                localKernelScriptSources: [],
-                remoteKernelScriptSources: []
+                localConnectionScriptSources: [],
+                remoteConnectionScriptSources: []
             }
         };
 

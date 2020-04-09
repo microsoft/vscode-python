@@ -52,8 +52,8 @@ suite('Data Science - ServerCache', () => {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             widgets: {
-                localKernelScriptSources: [],
-                remoteKernelScriptSources: []
+                localConnectionScriptSources: [],
+                remoteConnectionScriptSources: []
             }
         };
         when(configService.getSettings(anything())).thenReturn(pythonSettings);

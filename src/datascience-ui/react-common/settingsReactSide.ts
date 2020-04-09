@@ -68,8 +68,8 @@ export function getDefaultSettings() {
         variableQueries: [],
         jupyterCommandLineArguments: [],
         widgets: {
-            localKernelScriptSources: [],
-            remoteKernelScriptSources: []
+            localConnectionScriptSources: [],
+            remoteConnectionScriptSources: []
         }
     };
 

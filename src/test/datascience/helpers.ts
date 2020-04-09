@@ -34,8 +34,8 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         variableQueries: [],
         jupyterCommandLineArguments: [],
         widgets: {
-            localKernelScriptSources: [],
-            remoteKernelScriptSources: []
+            localConnectionScriptSources: [],
+            remoteConnectionScriptSources: []
         }
     };
 }

@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -35,9 +36,9 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     private get configuredScriptSources(): readonly (LocalKernelScriptSource | RemoteKernelScriptSource)[] {
         const settings = this.configurationSettings.getSettings(undefined);
         if (this.notebook.connection.localLaunch) {
-            return settings.datascience.widgets.localKernelScriptSources;
+            return settings.datascience.widgets.localConnectionScriptSources;
         } else {
-            return settings.datascience.widgets.remoteKernelScriptSources;
+            return settings.datascience.widgets.remoteConnectionScriptSources;
         }
     }
     constructor(
@@ -70,19 +71,25 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // Get script sources in order, if one works, then get out.
         const scriptSourceProviders = (this.scriptProviders || []).slice();
+        let found: WidgetScriptSource = { moduleName };
         while (scriptSourceProviders.length) {
             const scriptProvider = scriptSourceProviders.shift();
             if (!scriptProvider) {
                 continue;
             }
             const source = await scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
+            // If we found the script source, then use that.
             if (source.scriptUri) {
-                return source;
+                found = source;
+                break;
             }
         }
 
-        // Tried all providers, nothing worked, hence send an empty response.
-        return { moduleName };
+        sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
+            hashedName: sha256().update(found.moduleName).digest('hex'),
+            source: found.source
+        });
+        return found;
     }
     public async getWidgetScriptSources(ignoreCache?: boolean | undefined): Promise<readonly WidgetScriptSource[]> {
         // At this point we dont need to configure the settings.
@@ -100,6 +107,13 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             }
             const sources = await scriptProvider.getWidgetScriptSources(ignoreCache);
             if (sources.length > 0) {
+                sources.forEach((item) =>
+                    sendTelemetryEvent(Telemetry.HashedIPyWidgetNameDiscovered, undefined, {
+                        hashedName: sha256().update(item.moduleName).digest('hex'),
+                        source: item.source
+                    })
+                );
+
                 return sources;
             }
         }
@@ -107,10 +121,10 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
     private onSettingsChagned(e: ConfigurationChangeEvent) {
         const isLocalConnection = this.notebook.connection.localLaunch;
-        if (e.affectsConfiguration('python.datascience.widgets.localKernelScriptSources') && isLocalConnection) {
+        if (e.affectsConfiguration('python.datasSience.widgets.localConnectionScriptSources') && isLocalConnection) {
             this.rebuildProviders();
         }
-        if (e.affectsConfiguration('python.datascience.widgets.remoteKernelScriptSources') && !isLocalConnection) {
+        if (e.affectsConfiguration('python.datasSience.widgets.remoteConnectionScriptSources') && !isLocalConnection) {
             this.rebuildProviders();
         }
     }
@@ -162,8 +176,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         const settings = this.configurationSettings.getSettings(undefined);
         const scriptSources = this.notebook.connection.localLaunch
-            ? settings.datascience.widgets.localKernelScriptSources
-            : settings.datascience.widgets.remoteKernelScriptSources;
+            ? settings.datascience.widgets.localConnectionScriptSources
+            : settings.datascience.widgets.remoteConnectionScriptSources;
 
         if (scriptSources.length === 0) {
             return false;
@@ -180,8 +194,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
         const settings = this.configurationSettings.getSettings(undefined);
         const scriptSources = this.notebook.connection.localLaunch
-            ? settings.datascience.widgets.localKernelScriptSources
-            : settings.datascience.widgets.remoteKernelScriptSources;
+            ? settings.datascience.widgets.localConnectionScriptSources
+            : settings.datascience.widgets.remoteConnectionScriptSources;
 
         if (scriptSources.length === 0) {
             return false;
@@ -223,8 +237,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         scriptSources: LocalKernelScriptSource[] | RemoteKernelScriptSource[]
     ) {
         const targetSetting = updateLocalKernelSettings
-            ? 'datascience.widgets.localKernelScriptSources'
-            : 'datascience.widgets.remoteKernelScriptSources';
+            ? 'dataScience.widgets.localConnectionScriptSources'
+            : 'dataScience.widgets.remoteConnectionScriptSources';
         await this.configurationSettings.updateSetting(
             targetSetting,
             scriptSources,

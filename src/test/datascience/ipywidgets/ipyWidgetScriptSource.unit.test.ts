@@ -43,7 +43,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
         const fs = mock(FileSystem);
         const interpreterService = mock(InterpreterService);
 
-        widgetSettings = { localKernelScriptSources: [], remoteKernelScriptSources: [] };
+        widgetSettings = { localConnectionScriptSources: [], remoteConnectionScriptSources: [] };
         const settings = { datascience: { widgets: widgetSettings } };
         when(configService.getSettings(anything())).thenReturn(settings as any);
         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
@@ -96,7 +96,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 // Confirm settings were updated.
                 verify(
                     configService.updateSetting(
-                        'datascience.widgets.localKernelScriptSources',
+                        'dataScience.widgets.localConnectionScriptSources',
                         deepEqual(['localPythonEnvironment']),
                         undefined,
                         ConfigurationTarget.Global
@@ -104,7 +104,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 ).once();
                 verify(
                     configService.updateSetting(
-                        'datascience.widgets.remoteKernelScriptSources',
+                        'dataScience.widgets.remoteConnectionScriptSources',
                         deepEqual(['remoteJupyterServer']),
                         undefined,
                         ConfigurationTarget.Global
@@ -142,7 +142,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 // Confirm settings were updated.
                 verify(
                     configService.updateSetting(
-                        'datascience.widgets.localKernelScriptSources',
+                        'dataScience.widgets.localConnectionScriptSources',
                         deepEqual(['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment']),
                         undefined,
                         ConfigurationTarget.Global
@@ -150,7 +150,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 ).once();
                 verify(
                     configService.updateSetting(
-                        'datascience.widgets.remoteKernelScriptSources',
+                        'dataScience.widgets.remoteConnectionScriptSources',
                         deepEqual(['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer']),
                         undefined,
                         ConfigurationTarget.Global
@@ -159,9 +159,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             });
             test('Attempt to get widget sources from all providers', async () => {
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'jsdelivr.com',
+                        'unpkg.com',
+                        'localPythonEnvironment'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
                 }
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources')
@@ -180,9 +184,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             });
             test('Attempt to get widget source from all providers', async () => {
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'jsdelivr.com',
+                        'unpkg.com',
+                        'localPythonEnvironment'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
                 }
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
@@ -202,9 +210,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             test('Widget sources should respect changes to configuration settings', async () => {
                 // 1. Search CDN then local/remote juptyer.
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'jsdelivr.com',
+                        'unpkg.com',
+                        'localPythonEnvironment'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
                 }
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources')
@@ -225,9 +237,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.reset();
                 localOrRemoteSource.resolves([{ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' }]);
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['localPythonEnvironment', 'jsdelivr.com', 'unpkg.com'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'localPythonEnvironment',
+                        'jsdelivr.com',
+                        'unpkg.com'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['remoteJupyterServer', 'jsdelivr.com', 'unpkg.com'];
+                    widgetSettings.remoteConnectionScriptSources = ['remoteJupyterServer', 'jsdelivr.com', 'unpkg.com'];
                 }
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
@@ -244,9 +260,9 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.reset();
                 cdnSource.resolves([{ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' }]);
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com'];
+                    widgetSettings.localConnectionScriptSources = ['jsdelivr.com'];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com'];
                 }
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
@@ -260,9 +276,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             test('Widget source should respect changes to configuration settings', async () => {
                 // 1. Search CDN then local/remote juptyer.
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'jsdelivr.com',
+                        'unpkg.com',
+                        'localPythonEnvironment'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
                 }
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
@@ -283,9 +303,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.reset();
                 localOrRemoteSource.resolves({ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['localPythonEnvironment', 'jsdelivr.com', 'unpkg.com'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'localPythonEnvironment',
+                        'jsdelivr.com',
+                        'unpkg.com'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['remoteJupyterServer', 'jsdelivr.com', 'unpkg.com'];
+                    widgetSettings.remoteConnectionScriptSources = ['remoteJupyterServer', 'jsdelivr.com', 'unpkg.com'];
                 }
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
@@ -302,9 +326,9 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 cdnSource.reset();
                 cdnSource.resolves({ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' });
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com'];
+                    widgetSettings.localConnectionScriptSources = ['jsdelivr.com'];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com'];
                 }
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
@@ -318,9 +342,13 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             test('Widget source should support fall back search', async () => {
                 // 1. Search CDN and if that fails then get from local/remote.
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                    widgetSettings.localConnectionScriptSources = [
+                        'jsdelivr.com',
+                        'unpkg.com',
+                        'localPythonEnvironment'
+                    ];
                 } else {
-                    widgetSettings.remoteKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
+                    widgetSettings.remoteConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'remoteJupyterServer'];
                 }
                 const localOrRemoteSource = localLaunch
                     ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
@@ -343,7 +371,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 if (!localLaunch) {
                     return this.skip();
                 }
-                widgetSettings.localKernelScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
+                widgetSettings.localConnectionScriptSources = ['jsdelivr.com', 'unpkg.com', 'localPythonEnvironment'];
                 const localSource = sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
                 const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
 
@@ -361,7 +389,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 if (!localLaunch) {
                     return this.skip();
                 }
-                widgetSettings.localKernelScriptSources = ['localPythonEnvironment', 'jsdelivr.com', 'unpkg.com'];
+                widgetSettings.localConnectionScriptSources = ['localPythonEnvironment', 'jsdelivr.com', 'unpkg.com'];
                 const localSource = sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
                 const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
 

@@ -26,7 +26,7 @@ suite('Data Science - ipywidget - CDN', () => {
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
         httpClient = mock(HttpClient);
-        widgetSettings = { localKernelScriptSources: [], remoteKernelScriptSources: [] };
+        widgetSettings = { localConnectionScriptSources: [], remoteConnectionScriptSources: [] };
         const settings = { datascience: { widgets: widgetSettings } };
         when(configService.getSettings(anything())).thenReturn(settings as any);
         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
@@ -68,9 +68,9 @@ suite('Data Science - ipywidget - CDN', () => {
             });
             function updateCDNSettings(...values: WidgetCDNs[]) {
                 if (localLaunch) {
-                    widgetSettings.localKernelScriptSources = values;
+                    widgetSettings.localConnectionScriptSources = values;
                 } else {
-                    widgetSettings.remoteKernelScriptSources = values;
+                    widgetSettings.remoteConnectionScriptSources = values;
                 }
             }
             (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {

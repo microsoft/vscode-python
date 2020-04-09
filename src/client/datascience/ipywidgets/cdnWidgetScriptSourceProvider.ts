@@ -56,9 +56,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     private get cdnProviders(): readonly (LocalKernelScriptSource | RemoteKernelScriptSource)[] {
         const settings = this.configurationSettings.getSettings(undefined);
         if (this.notebook.connection.localLaunch) {
-            return settings.datascience.widgets.localKernelScriptSources;
+            return settings.datascience.widgets.localConnectionScriptSources;
         } else {
-            return settings.datascience.widgets.remoteKernelScriptSources;
+            return settings.datascience.widgets.remoteConnectionScriptSources;
         }
     }
     public static validUrls = new Map<string, boolean>();
@@ -79,7 +79,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 continue;
             }
             const scriptUri = moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
-            const exists = await this.getUrlForWidget(cdn, moduleName, scriptUri);
+            const exists = await this.getUrlForWidget(cdn, scriptUri);
             if (exists) {
                 return { moduleName, scriptUri, source: 'cdn' };
             }
@@ -89,7 +89,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     public async getWidgetScriptSources(_ignoreCache?: boolean): Promise<Readonly<WidgetScriptSource[]>> {
         return [];
     }
-    private async getUrlForWidget(cdn: string, moduleName: string, url: string): Promise<boolean> {
+    private async getUrlForWidget(cdn: string, url: string): Promise<boolean> {
         if (CDNWidgetScriptSourceProvider.validUrls.has(url)) {
             return CDNWidgetScriptSourceProvider.validUrls.get(url)!;
         }
@@ -99,12 +99,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             .getContents(url)
             .then(() => true)
             .catch(() => false);
-        sendTelemetryEvent(Telemetry.IPyWidgetTestAvailabilityOnCDN, stopWatch.elapsedTime, { cdn, exists });
+        sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesCDNPerf, stopWatch.elapsedTime, { cdn, exists });
 
-        // If exists, then can't contain PII, as its a public module.
-        if (exists) {
-            sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, stopWatch.elapsedTime, { hashedName: moduleName });
-        }
         CDNWidgetScriptSourceProvider.validUrls.set(url, exists);
         return exists;
     }

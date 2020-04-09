@@ -1636,7 +1636,7 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
-                "python.dataScience.widgets.localKernelScriptSources": {
+                "python.dataScience.widgets.localConnectionScriptSources": {
                     "type": "array",
                     "default": [],
                     "items": {
@@ -1646,10 +1646,10 @@
                             "localPythonEnvironment"
                         ]
                     },
-                    "description": "For local Kernels, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
+                    "description": "For local connections, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
                     "scope": "machine"
                 },
-                "python.dataScience.widgets.remoteKernelScriptSources": {
+                "python.dataScience.widgets.remoteConnectionScriptSources": {
                     "type": "array",
                     "default": [],
                     "items": {
@@ -1659,7 +1659,7 @@
                             "remoteJupyterServer"
                         ]
                     },
-                    "description": "For remote Kernels, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
+                    "description": "For remote connections, this defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc)",
                     "scope": "machine"
                 },
                 "python.dataScience.loadWidgetScriptsFromThirdPartySource": {

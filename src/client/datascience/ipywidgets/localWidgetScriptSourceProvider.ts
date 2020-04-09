@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ILocalResourceUriConverter, INotebook } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
@@ -43,7 +42,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         }
         return (this.cachedWidgetScripts = this.getWidgetScriptSourcesWithoutCache());
     }
-    @captureTelemetry(Telemetry.DiscoverIPyWidgetNamesPerf)
+    @captureTelemetry(Telemetry.DiscoverIPyWidgetNamesLocalPerf)
     private async getWidgetScriptSourcesWithoutCache(): Promise<WidgetScriptSource[]> {
         const sysPrefix = await this.getSysPrefixOfKernel();
         if (!sysPrefix) {
@@ -62,10 +61,6 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
                     return;
                 }
                 const moduleName = parts[0];
-
-                sendTelemetryEvent(Telemetry.HashedIPyWidgetNameDiscovered, undefined, {
-                    hashedName: sha256().update(moduleName).digest('hex')
-                });
 
                 // Drop the `.js`.
                 const fileUri = Uri.file(path.join(nbextensionsPath, moduleName, 'index'));
