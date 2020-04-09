@@ -103,7 +103,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         registerScripts(sources);
 
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
-        sources.map((source) => {
+        sources.forEach((source) => {
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
             let deferred = this.widgetSourceRequests.get(source.moduleName);
@@ -188,7 +188,9 @@ export class WidgetManagerComponent extends React.Component<Props> {
             setTimeout(() => {
                 // tslint:disable-next-line: no-console
                 console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
-                deferred?.resolve();
+                if (deferred) {
+                    deferred.resolve();
+                }
                 this.timedoutWaitingForWidgetsToGetLoaded = true;
             }, timeoutTime);
         }
