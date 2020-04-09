@@ -26,7 +26,7 @@ import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvid
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
-const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfiguredyy';
+const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';
 
 /**
  * This class decides where to get widget scripts from.
@@ -145,9 +145,9 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return;
         }
 
-        // if (this.userConfiguredCDNAtLeastOnce.value) {
-        //     return;
-        // }
+        if (this.userConfiguredCDNAtLeastOnce.value) {
+            return;
+        }
 
         if (this.configurationPromise) {
             return this.configurationPromise.promise;
