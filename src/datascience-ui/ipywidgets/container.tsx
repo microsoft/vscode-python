@@ -18,7 +18,6 @@ import {
     CommonAction,
     CommonActionType,
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassDisabledAction,
     LoadIPyWidgetClassLoadAction
 } from '../interactive-common/redux/reducers/types';
 import { IStore } from '../interactive-common/redux/store';
