@@ -183,8 +183,6 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     // IpyWidgets
     [IPyWidgetMessages.IPyWidgets_kernelOptions]: MessageType.syncAcrossSameNotebooks,
     [IPyWidgetMessages.IPyWidgets_Ready]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesRequest]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesResponse]: MessageType.syncAcrossSameNotebooks,
     [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: MessageType.syncAcrossSameNotebooks,
     [IPyWidgetMessages.IPyWidgets_onKernelChanged]: MessageType.syncAcrossSameNotebooks,

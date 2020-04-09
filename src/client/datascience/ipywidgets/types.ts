@@ -48,10 +48,4 @@ export interface IWidgetScriptSourceProvider extends IDisposable {
      * This is called when ipywidgets needs a source for a particular widget.
      */
     getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<Readonly<WidgetScriptSource>>;
-    /**
-     * Returns a list of all widgets with their sources. Can be empty.
-     * This is only called as a way for extension to pre-fetch all known widgest to improve performance.
-     * But this doesn't mean ipywidgest is being used or user has any widgets.
-     */
-    getWidgetScriptSources(ignoreCache?: boolean): Promise<Readonly<WidgetScriptSource[]>>;
 }

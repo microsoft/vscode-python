@@ -47,14 +47,6 @@ suite('Data Science - ipywidget - CDN', () => {
                 };
                 when(notebook.connection).thenReturn(connection);
             });
-            test('Return empty list when requesting sources for all known widgets', async () => {
-                const values = await scriptSourceProvider.getWidgetScriptSources();
-                assert.deepEqual(values, []);
-            });
-            test('Return empty list when requesting sources for all known widgets (even with cache ignored)', async () => {
-                const values = await scriptSourceProvider.getWidgetScriptSources(true);
-                assert.deepEqual(values, []);
-            });
             test('Script source will be empty if CDN is not a configured source of widget scripts in settings', async () => {
                 const value = await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 

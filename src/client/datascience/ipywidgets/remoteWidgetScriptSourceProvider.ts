@@ -18,7 +18,4 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
     public async getWidgetScriptSource(moduleName: string): Promise<WidgetScriptSource> {
         return { moduleName, scriptUri: `${this.connection.baseUrl}/nbextensions/${moduleName}/index` };
     }
-    public async getWidgetScriptSources(_ignoreCache?: boolean): Promise<Readonly<WidgetScriptSource[]>> {
-        return [];
-    }
 }

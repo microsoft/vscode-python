@@ -24,7 +24,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 
 // tslint:disable: no-any no-invalid-this
 
-suite('Data Science - ipywidget - Widget Script Source Provider', () => {
+suite('xxxData Science - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let notebook: INotebook;
     let configService: IConfigurationService;
@@ -82,10 +82,6 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                     token: ''
                 };
                 when(notebook.connection).thenReturn(connection);
-            });
-            test('Return empty list when requesting sources for all known widgets (and nothing is configured)', async () => {
-                const values = await scriptSourceProvider.getWidgetScriptSources();
-                assert.deepEqual(values, []);
             });
             test('Prompt to use CDN', async () => {
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
@@ -192,23 +188,6 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                     )
                 ).once();
             });
-            test('Attempt to get widget sources from all providers', async () => {
-                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
-                const localOrRemoteSource = localLaunch
-                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources')
-                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
-                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
-
-                localOrRemoteSource.resolves([]);
-                cdnSource.resolves([]);
-
-                scriptSourceProvider.initialize();
-                const values = await scriptSourceProvider.getWidgetScriptSources();
-
-                assert.deepEqual(values, []);
-                assert.isTrue(localOrRemoteSource.calledOnce);
-                assert.isTrue(cdnSource.calledOnce);
-            });
             test('Attempt to get widget source from all providers', async () => {
                 settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
@@ -230,27 +209,29 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 // 1. Search CDN then local/remote juptyer.
                 settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
-                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources')
-                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
-                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
-                cdnSource.resolves([{ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' }]);
+                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
+                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
+                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
+                cdnSource.resolves({ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' });
 
                 scriptSourceProvider.initialize();
-                let values = await scriptSourceProvider.getWidgetScriptSources();
+                let values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '`');
 
-                // 1. Confirm CDN was given preference.
-                assert.deepEqual(values, [{ moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' }]);
+                assert.deepEqual(values, { moduleName: 'moduleCDN', scriptUri: '1', source: 'cdn' });
                 assert.isFalse(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
 
-                // 2. Update settings to use local python environment or remote jupyter in case of remote connection.
+                // 2. Update settings to remove the use of CDNs
                 localOrRemoteSource.reset();
                 cdnSource.reset();
-                localOrRemoteSource.resolves([{ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' }]);
+                localOrRemoteSource.resolves({ moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
                 settings.datascience.widgetScriptSources = [];
                 onDidChangeWorkspaceSettings.fire({ affectsConfiguration: () => true });
 
-                values = await scriptSourceProvider.getWidgetScriptSources();
+                values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '`');
+                assert.deepEqual(values, { moduleName: 'moduleLocal', scriptUri: '1', source: 'local' });
+                assert.isTrue(localOrRemoteSource.calledOnce);
+                assert.isFalse(cdnSource.calledOnce);
             });
             test('Widget source should support fall back search', async () => {
                 // 1. Search CDN and if that fails then get from local/remote.
@@ -275,17 +256,17 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
             test('Widget sources from CDN should be given prefernce', async () => {
                 settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
                 const localOrRemoteSource = localLaunch
-                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources')
-                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
-                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSources');
+                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
+                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
+                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
 
-                localOrRemoteSource.resolves([]);
-                cdnSource.resolves([{ moduleName: 'module1', scriptUri: '1', source: 'cdn' }]);
+                localOrRemoteSource.resolves({ moduleName: 'module1' });
+                cdnSource.resolves({ moduleName: 'module1', scriptUri: '1', source: 'cdn' });
 
                 scriptSourceProvider.initialize();
-                const values = await scriptSourceProvider.getWidgetScriptSources();
+                const values = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
-                assert.deepEqual(values, [{ moduleName: 'module1', scriptUri: '1', source: 'cdn' }]);
+                assert.deepEqual(values, { moduleName: 'module1', scriptUri: '1', source: 'cdn' });
                 assert.isFalse(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
             });

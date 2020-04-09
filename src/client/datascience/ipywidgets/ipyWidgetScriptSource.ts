@@ -101,10 +101,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
             this.saveIdentity(payload).catch((ex) =>
                 traceError(`Failed to initialize ${(this as Object).constructor.name}`, ex)
             );
-        } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
-            this.sendListOfWidgetSources().catch(traceError.bind('Failed to send widget sources upon ready'));
-        } else if (message === IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesRequest) {
-            this.sendListOfWidgetSources().catch(traceError.bind('Failed to send widget sources upon ready'));
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
@@ -115,22 +111,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         }
     }
 
-    /**
-     * Send a list of all widgets and sources to the UI.
-     * Used to pre-emptively register widgets with requirejs, even if they are not used.
-     * (this is merely a perf optimization).
-     */
-    private async sendListOfWidgetSources(ignoreCache?: boolean) {
-        if (!this.notebook || !this.scriptProvider) {
-            return;
-        }
-
-        const sources = await this.scriptProvider.getWidgetScriptSources(ignoreCache);
-        this.postEmitter.fire({
-            message: IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesResponse,
-            payload: sources
-        });
-    }
     /**
      * Send the widget script source for a specific widget module & version.
      * This is a request made when a widget is certainly used in a notebook.
@@ -232,19 +212,11 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
                 }
                 // Let UI know that kernel has changed.
                 this.postEmitter.fire({ message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined });
-                this.sendListOfWidgetSources(true).catch(traceError.bind('Failed to refresh widget sources'));
             },
             this,
             this.disposables
         );
-        // Kernel restarts are required when user installs new packages, possible a new widget/package was installed.
-        this.notebook.onKernelRestarted(
-            () => this.sendListOfWidgetSources(true).catch(traceError.bind('Failed to refresh widget sources')),
-            this,
-            this.disposables
-        );
         this.handlePendingRequests();
-        this.sendListOfWidgetSources().catch(traceError.bind('Failed to send initial list of Widget Sources'));
     }
     private subscribeToKernelSocket() {
         if (this.subscribedToKernelSocket || !this.notebook) {

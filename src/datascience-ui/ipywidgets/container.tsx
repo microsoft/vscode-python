@@ -63,8 +63,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload) as IDataScienceExtraSettings;
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
-                } else if (type === IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesResponse) {
-                    this.registerScriptSourcesInRequirejs(payload as WidgetScriptSource[]);
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
                     this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
                 } else if (
@@ -74,10 +72,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     // This happens when we have restarted a kernel.
                     // If user changed the kernel, then some widgets might exist now and some might now.
                     this.widgetSourceRequests.clear();
-                    // Request again.
-                    this.props.postOffice.sendMessage<IInteractiveWindowMapping>(
-                        IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesRequest
-                    );
                 }
                 return true;
             }

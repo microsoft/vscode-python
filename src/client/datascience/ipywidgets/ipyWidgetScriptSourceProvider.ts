@@ -6,6 +6,7 @@
 import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
@@ -25,7 +26,7 @@ import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvid
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
-const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';
+const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfiguredyy';
 
 /**
  * This class decides where to get widget scripts from.
@@ -95,35 +96,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             hashedName: sha256().update(found.moduleName).digest('hex'),
             source: found.source
         });
+
+        if (!found.scriptUri) {
+            traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
+        }
         return found;
-    }
-    public async getWidgetScriptSources(ignoreCache?: boolean | undefined): Promise<readonly WidgetScriptSource[]> {
-        // At this point we dont need to configure the settings.
-        // We don't know if widgest are being used.
-        if (!this.scriptProviders) {
-            this.rebuildProviders();
-        }
-
-        // Get script sources in order, if one works, then get out.
-        const scriptSourceProviders = (this.scriptProviders || []).slice();
-        while (scriptSourceProviders.length) {
-            const scriptProvider = scriptSourceProviders.shift();
-            if (!scriptProvider) {
-                continue;
-            }
-            const sources = await scriptProvider.getWidgetScriptSources(ignoreCache);
-            if (sources.length > 0) {
-                sources.forEach((item) =>
-                    sendTelemetryEvent(Telemetry.HashedIPyWidgetNameDiscovered, undefined, {
-                        hashedName: sha256().update(item.moduleName).digest('hex'),
-                        source: item.source
-                    })
-                );
-
-                return sources;
-            }
-        }
-        return [];
     }
     private onSettingsChagned(e: ConfigurationChangeEvent) {
         if (e.affectsConfiguration('dataScience.widgetScriptSources')) {
@@ -140,10 +117,6 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
     private rebuildProviders() {
         this.disposeScriptProviders();
-        // If we haven't configured anything, then nothing to do here.
-        if (this.configuredScriptSources.length === 0 && !this.userConfiguredCDNAtLeastOnce.value) {
-            return;
-        }
 
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
@@ -172,9 +145,9 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             return;
         }
 
-        if (this.userConfiguredCDNAtLeastOnce.value) {
-            return;
-        }
+        // if (this.userConfiguredCDNAtLeastOnce.value) {
+        //     return;
+        // }
 
         if (this.configurationPromise) {
             return this.configurationPromise.promise;

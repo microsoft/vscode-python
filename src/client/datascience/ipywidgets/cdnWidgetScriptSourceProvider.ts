@@ -8,6 +8,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import { traceWarning } from '../../common/logger';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';
@@ -73,10 +74,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 return { moduleName, scriptUri, source: 'cdn' };
             }
         }
+        traceWarning(`Widget Script not found for ${moduleName}@${moduleVersion}`);
         return { moduleName };
-    }
-    public async getWidgetScriptSources(_ignoreCache?: boolean): Promise<Readonly<WidgetScriptSource[]>> {
-        return [];
     }
     private async getUrlForWidget(cdn: string, url: string): Promise<boolean> {
         if (CDNWidgetScriptSourceProvider.validUrls.has(url)) {
@@ -86,7 +85,6 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const stopWatch = new StopWatch();
         const exists = await this.httpClient.exists(url);
         sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesCDNPerf, stopWatch.elapsedTime, { cdn, exists });
-
         CDNWidgetScriptSourceProvider.validUrls.set(url, exists);
         return exists;
     }

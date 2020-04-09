@@ -37,22 +37,22 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             instance(interpreterService)
         );
     });
-    test('Empty list when there is no kernel associated with notebook', async () => {
+    test('No script source when there is no kernel associated with notebook', async () => {
         when(notebook.getKernelSpec()).thenReturn();
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
+        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
-        assert.deepEqual(values, []);
+        assert.deepEqual(value, { moduleName: 'ModuleName' });
     });
-    test('Empty list when there are no widgets', async () => {
+    test('No script source when there are no widgets', async () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
         } as any);
         when(fs.search(anything(), anything())).thenResolve([]);
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
+        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
-        assert.deepEqual(values, []);
+        assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we searched the directories.
         verify(fs.search(anything(), anything())).once();
@@ -66,9 +66,9 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
         } as any);
         when(fs.search(anything(), anything())).thenResolve([]);
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
+        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
-        assert.deepEqual(values, []);
+        assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we look for the right things in the right place.
         verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
@@ -82,66 +82,28 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
         when(notebook.getKernelSpec()).thenReturn({ path: kernelPath } as any);
         when(fs.search(anything(), anything())).thenResolve([]);
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
+        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
 
-        assert.deepEqual(values, []);
+        assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we look for the right things in the right place.
         verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
     });
-    test('Ensure we cache the list of all widgets', async () => {
+    test('Ensure we cache the list of widgets source (when nothing is found)', async () => {
         when(notebook.getKernelSpec()).thenReturn({
             metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
         } as any);
         when(fs.search(anything(), anything())).thenResolve([]);
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
-        assert.deepEqual(values, []);
-        const values1 = await scriptSourceProvider.getWidgetScriptSources();
-        assert.deepEqual(values1, []);
-        const values2 = await scriptSourceProvider.getWidgetScriptSources();
-        assert.deepEqual(values2, []);
+        const value = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
+        assert.deepEqual(value, { moduleName: 'ModuleName' });
+        const value1 = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
+        assert.deepEqual(value1, { moduleName: 'ModuleName' });
+        const value2 = await scriptSourceProvider.getWidgetScriptSource('ModuleName', '1');
+        assert.deepEqual(value2, { moduleName: 'ModuleName' });
 
         // Ensure we search directories once.
         verify(fs.search(anything(), anything())).once();
-    });
-    test('Return widget sources', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(notebook.getKernelSpec()).thenReturn({
-            metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-        } as any);
-        when(fs.search(anything(), anything())).thenResolve([
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
-        ]);
-
-        const values = await scriptSourceProvider.getWidgetScriptSources();
-
-        // Ensure the script paths are properly converted to be used within notebooks.
-        assert.deepEqual(values, [
-            {
-                moduleName: 'widget1',
-                source: 'local',
-                scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget1', 'index')))
-            },
-            {
-                moduleName: 'widget2',
-                source: 'local',
-                scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index')))
-            },
-            {
-                moduleName: 'widget3',
-                source: 'local',
-                scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget3', 'index')))
-            }
-        ] as any);
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
-        // We must use resource convert to conver paths.
-        verify(resourceConverter.asWebviewUri(anything())).called();
     });
     test('Ensure we search directory only once (cache results)', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -155,12 +117,16 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             'widget3/index.js'
         ]);
 
-        const values = await scriptSourceProvider.getWidgetScriptSources();
-        assert.equal(values.length, 3);
-        const values1 = await scriptSourceProvider.getWidgetScriptSources();
-        assert.equal(values1.length, 3);
-        const values2 = await scriptSourceProvider.getWidgetScriptSources();
-        assert.equal(values2.length, 3);
+        const value = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
+        assert.deepEqual(value, {
+            moduleName: 'widget2',
+            source: 'local',
+            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index')))
+        });
+        const value1 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
+        assert.deepEqual(value1, value);
+        const value2 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
+        assert.deepEqual(value2, value);
 
         // Ensure we look for the right things in the right place.
         verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
@@ -185,35 +151,6 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             source: 'local',
             scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget1', 'index')))
         });
-
-        // Ensure we look for the right things in the right place.
-        verify(fs.search(filesToLookSerachFor, searchDirectory)).once();
-    });
-    test('Get source for a specific widget & ensure we search directory once (ensur we cache)', async () => {
-        const sysPrefix = 'sysPrefix Of Python in Metadata';
-        const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
-        when(notebook.getKernelSpec()).thenReturn({
-            metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
-        } as any);
-        when(fs.search(anything(), anything())).thenResolve([
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
-        ]);
-
-        const value = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.deepEqual(value, {
-            moduleName: 'widget2',
-            source: 'local',
-            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index')))
-        });
-        const value1 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.isOk(value1);
-        const value2 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
-        assert.deepEqual(value2, value1);
-        // We should ignore version numbers (when getting widget sources from local fs).
-        const value3 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1234');
-        assert.deepEqual(value3, value1);
 
         // Ensure we look for the right things in the right place.
         verify(fs.search(filesToLookSerachFor, searchDirectory)).once();

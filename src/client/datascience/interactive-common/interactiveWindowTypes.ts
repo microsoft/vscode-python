@@ -124,8 +124,6 @@ export enum IPyWidgetMessages {
      * Extension sends response to the request with yes/no.
      */
     IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
-    IPyWidgets_AllWidgetScriptSourcesRequest = 'IPyWidgets_AllWidgetScriptSourcesRequest',
-    IPyWidgets_AllWidgetScriptSourcesResponse = 'IPyWidgets_AllWidgetScriptSourcesResponse',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
@@ -485,8 +483,6 @@ export type NotebookModelChange =
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
-    public [IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesRequest]: undefined | never;
-    public [IPyWidgetMessages.IPyWidgets_AllWidgetScriptSourcesResponse]: WidgetScriptSource[];
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: { moduleName: string; moduleVersion: string };
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: WidgetScriptSource;
     public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
