@@ -133,6 +133,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             historyReactDir,
             [
                 path.join(historyReactDir, 'require.js'),
+                path.join(historyReactDir, 'azuremlregistration.js'),
                 path.join(historyReactDir, 'ipywidgets.js'),
                 path.join(historyReactDir, 'monaco.bundle.js'),
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
