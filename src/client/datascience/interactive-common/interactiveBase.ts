@@ -177,6 +177,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // For each listener sign up for their post events
         this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
+        // Channel for listeners to send messages to the interactive base.
+        this.listeners.forEach((l) => {
+            if (l.postInternalMessage) {
+                l.postInternalMessage((e) => this.onMessage(e.message, e.payload));
+            }
+        });
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
@@ -204,6 +210,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
+            case InteractiveWindowMessages.ConvertUriForUseInWebViewRequest:
+                const request = payload as Uri;
+                const response = { request, response: this.asWebviewUri(request) };
+                this.postMessageToListeners(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, response);
+                break;
+
             case InteractiveWindowMessages.Started:
                 // Send the first settings message
                 this.onDataScienceSettingsChanged().ignoreErrors();

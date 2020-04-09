@@ -82,13 +82,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             this.webPanel.updateCwd(cwd);
         }
     }
-    public asWebviewUri(localResource: Uri) {
-        if (!this.webPanel) {
-            throw new Error('asWebViewUri called too early');
-        }
-        return this.webPanel?.asWebviewUri(localResource);
-    }
-
     public dispose() {
         if (!this.isDisposed) {
             this.disposed = true;
@@ -122,6 +115,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise = createDeferred<boolean>();
             this.themeIsDarkPromise.resolve(isDark);
         }
+    }
+    protected asWebviewUri(localResource: Uri) {
+        if (!this.webPanel) {
+            throw new Error('asWebViewUri called too early');
+        }
+        return this.webPanel?.asWebviewUri(localResource);
     }
 
     protected abstract getOwningResource(): Promise<Resource>;

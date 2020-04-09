@@ -385,10 +385,10 @@ export interface ILocalResourceUriConverter {
      * webview.html = `<img src="${webview.asWebviewUri(vscode.Uri.file('/Users/codey/workspace/cat.gif'))}">`
      * ```
      */
-    asWebviewUri(localResource: Uri): Uri;
+    asWebviewUri(localResource: Uri): Promise<Uri>;
 }
 
-export interface IInteractiveBase extends Disposable, ILocalResourceUriConverter {
+export interface IInteractiveBase extends Disposable {
     onExecutedCode: Event<string>;
     notebook?: INotebook;
     show(): Promise<void>;
@@ -478,6 +478,11 @@ export interface IInteractiveWindowListener extends IDisposable {
      */
     // tslint:disable-next-line: no-any
     postMessage: Event<{ message: string; payload: any }>;
+    /**
+     * Fires this event when posting a message to the interactive base.
+     */
+    // tslint:disable-next-line: no-any
+    postInternalMessage?: Event<{ message: string; payload: any }>;
     /**
      * Handles messages that the interactive window receives
      * @param message message type

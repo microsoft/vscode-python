@@ -12,6 +12,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IHttpClient, IPersistentStateFactory } from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -21,11 +22,9 @@ import {
     IPyWidgetMessages
 } from '../interactive-common/interactiveWindowTypes';
 import {
-    IInteractiveBase,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
+    ILocalResourceUriConverter,
     INotebook,
-    INotebookEditorProvider,
     INotebookProvider,
     KernelSocketInformation
 } from '../types';
@@ -33,10 +32,14 @@ import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 
 @injectable()
-export class IPyWidgetScriptSource implements IInteractiveWindowListener {
+export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocalResourceUriConverter {
     // tslint:disable-next-line: no-any
     public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
+    }
+    // tslint:disable-next-line: no-any
+    public get postInternalMessage(): Event<{ message: string; payload: any }> {
+        return this.postInternalMessageEmitter.event;
     }
     private notebookIdentity?: Uri;
     private postEmitter = new EventEmitter<{
@@ -44,9 +47,13 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
+    private postInternalMessageEmitter = new EventEmitter<{
+        message: string;
+        // tslint:disable-next-line: no-any
+        payload: any;
+    }>();
     private notebook?: INotebook;
     private jupyterLab?: typeof jupyterlabService;
-    private interactiveBase?: IInteractiveBase;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private disposables: IDisposable[] = [];
     private interpreterForWhichWidgetSourcesWereFetched?: PythonInterpreter;
@@ -64,12 +71,11 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         }
         return this.jupyterSerialize.deserialize;
     }
+    private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
@@ -88,6 +94,18 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
             this.disposables
         );
     }
+    public asWebviewUri(localResource: Uri): Promise<Uri> {
+        const key = localResource.toString();
+        if (!this.uriConversionPromises.has(key)) {
+            this.uriConversionPromises.set(key, createDeferred<Uri>());
+            // Send a request for the translation.
+            this.postInternalMessageEmitter.fire({
+                message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
+                payload: localResource
+            });
+        }
+        return this.uriConversionPromises.get(key)!.promise;
+    }
 
     public dispose() {
         while (this.disposables.length) {
@@ -101,6 +119,11 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
             this.saveIdentity(payload).catch((ex) =>
                 traceError(`Failed to initialize ${(this as Object).constructor.name}`, ex)
             );
+        } else if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
+            const response: undefined | { request: Uri; response: Uri } = payload;
+            if (response && this.uriConversionPromises.get(response.request.toString())) {
+                this.uriConversionPromises.get(response.request.toString())!.resolve(response.response);
+            }
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
@@ -117,7 +140,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
      */
     private async sendWidgetSource(moduleName: string, moduleVersion: string) {
         // Standard widgets area already available, hence no need to look for them.
-        if (moduleName.startsWith('@jupyter')) {
+        if (moduleName.startsWith('@jupyter') || moduleName === 'azureml_widgets') {
             return;
         }
         if (!this.notebook || !this.scriptProvider) {
@@ -164,25 +187,12 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
         if (!this.notebook) {
             return;
         }
-        if (!this.interactiveBase) {
-            this.interactiveBase = this.notebookEditorProvider.editors.find(
-                (editor) =>
-                    editor.notebook?.identity.toString() === this.notebookIdentity?.toString() ||
-                    editor.file.toString() === this.notebookIdentity?.toString()
-            );
-            if (!this.interactiveBase) {
-                this.interactiveBase = this.interactiveWindowProvider.getActive();
-            }
-        }
-        if (!this.interactiveBase) {
-            return;
-        }
         if (this.scriptProvider) {
             return;
         }
         this.scriptProvider = new IPyWidgetScriptSourceProvider(
             this.notebook,
-            this.interactiveBase,
+            this,
             this.fs,
             this.interpreterService,
             this.appShell,

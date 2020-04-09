@@ -171,6 +171,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
     [InteractiveWindowMessages.VariablesComplete]: MessageType.other,
+    [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: MessageType.other,
+    [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: MessageType.other,
     // Types from CssMessages
     [CssMessages.GetCssRequest]: MessageType.other,
     [CssMessages.GetCssResponse]: MessageType.other,

@@ -52,25 +52,30 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         const nbextensionsPath = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
         // Search only one level deep, hence `*/index.js`.
         const files = await this.fs.search(`*${path.sep}index.js`, nbextensionsPath);
-        return files
-            .map((file) => {
-                // Should be of the form `<widget module>/index.js`
-                const parts = file.split(path.sep);
-                if (parts.length !== 2) {
-                    traceError('Incorrect file found when searching for nnbextension entrypoints');
-                    return;
-                }
-                const moduleName = parts[0];
 
-                // Drop the `.js`.
-                const fileUri = Uri.file(path.join(nbextensionsPath, moduleName, 'index'));
-                const scriptUri = this.localResourceUriConverter.asWebviewUri(fileUri).toString();
-                // tslint:disable-next-line: no-unnecessary-local-variable
-                const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
-                return widgetScriptSource;
-            })
-            .filter((item) => !!item)
-            .map((item) => item!);
+        const validFiles = files.filter((file) => {
+            // Should be of the form `<widget module>/index.js`
+            const parts = file.split(path.sep);
+            if (parts.length !== 2) {
+                traceError('Incorrect file found when searching for nnbextension entrypoints');
+                return false;
+            }
+            return true;
+        });
+
+        const mappedFiles = validFiles.map(async (file) => {
+            // Should be of the form `<widget module>/index.js`
+            const parts = file.split(path.sep);
+            const moduleName = parts[0];
+
+            // Drop the `.js`.
+            const fileUri = Uri.file(path.join(nbextensionsPath, moduleName, 'index'));
+            const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
+            // tslint:disable-next-line: no-unnecessary-local-variable
+            const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };
+            return widgetScriptSource;
+        });
+        return Promise.all(mappedFiles as any);
     }
     private async getSysPrefixOfKernel() {
         const interpreter = this.getInterpreter();

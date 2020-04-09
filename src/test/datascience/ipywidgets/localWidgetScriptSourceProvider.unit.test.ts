@@ -29,7 +29,7 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
         resourceConverter = mock<ILocalResourceUriConverter>();
         fs = mock(FileSystem);
         interpreterService = mock(InterpreterService);
-        when(resourceConverter.asWebviewUri(anything())).thenCall(asVSCodeUri);
+        when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(
             instance(notebook),
             instance(resourceConverter),

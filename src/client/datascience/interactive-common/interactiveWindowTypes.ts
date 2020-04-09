@@ -52,6 +52,8 @@ export enum InteractiveWindowMessages {
     DoSave = 'DoSave',
     SendInfo = 'send_info',
     Started = 'started',
+    ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
+    ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
     AddedSysInfo = 'added_sys_info',
     RemoteAddCode = 'remote_add_code',
     RemoteReexecuteCode = 'remote_reexecute_code',
@@ -597,4 +599,6 @@ export class IInteractiveWindowMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
+    public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
+    public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
 }
