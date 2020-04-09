@@ -51,6 +51,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // tslint:disable-next-line: no-any
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
             loadWidgetScript(moduleName: string, moduleVersion: string): void;
+            successHandler(className: string, moduleName: string, moduleVersion: string): void;
         }
     ) {
         // tslint:disable-next-line: no-any

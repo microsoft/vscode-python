@@ -90,6 +90,7 @@ suite('DataScience Interactive Panel', () => {
             undo: noopAny,
             undoStack: noopAny,
             unfocus: noopAny,
+            widgetFailed: noopAny,
             variableState: {
                 currentExecutionCount: 0,
                 pageSize: 0,

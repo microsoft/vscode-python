@@ -35,6 +35,7 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
+    widgetFailed(ex: Error): void;
 }
 
 interface ICellOutputData {
@@ -127,10 +128,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 ? `cell-output cell-output-${this.props.baseTheme}`
                 : 'markdown-cell-output-container';
 
-            // Then combine them inside a div
+            // Then combine them inside a div. IPyWidget ref has to be separate so we don't end up
+            // with a div in the way. If we try setting all div's background colors, we break
+            // some widgets
             return (
-                <div className={outputClassNames} ref={this.ipyWidgetRef}>
+                <div className={outputClassNames}>
                     {this.renderResults()}
+                    <div className="cell-output-ipywidget-background" ref={this.ipyWidgetRef}></div>
                 </div>
             );
         }
@@ -576,6 +580,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private async createWidgetView(widgetData: nbformat.IMimeBundle & { model_id: string; version_major: number }) {
         const wm = await this.getWidgetManager();
         const element = this.ipyWidgetRef.current!;
-        return wm?.renderWidget(widgetData, element);
+        try {
+            return await wm?.renderWidget(widgetData, element);
+        } catch (ex) {
+            this.props.widgetFailed(ex);
+        }
     }
 }

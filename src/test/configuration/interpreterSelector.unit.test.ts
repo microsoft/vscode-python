@@ -12,11 +12,13 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { DeprecatePythonPath } from '../../client/common/experimentGroups';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IExperimentsManager, IPythonSettings } from '../../client/common/types';
 import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
+import { IInterpreterSecurityService } from '../../client/interpreter/autoSelection/types';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import {
     IInterpreterComparer,
@@ -66,6 +68,8 @@ suite('Interpreters - selector', () => {
     let comparer: TypeMoq.IMock<IInterpreterComparer>;
     let pythonPathUpdater: TypeMoq.IMock<IPythonPathUpdaterServiceManager>;
     let shebangProvider: TypeMoq.IMock<IShebangCodeLensProvider>;
+    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -96,6 +100,12 @@ suite('Interpreters - selector', () => {
     let selector: TestInterpreterSelector;
 
     setup(() => {
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+        experimentsManager
+            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .returns(() => undefined);
+        interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -124,7 +134,9 @@ suite('Interpreters - selector', () => {
             pythonPathUpdater.object,
             shebangProvider.object,
             configurationService.object,
-            commandManager.object
+            commandManager.object,
+            experimentsManager.object,
+            interpreterSecurityService.object
         );
     });
 
@@ -140,7 +152,9 @@ suite('Interpreters - selector', () => {
                 pythonPathUpdater.object,
                 shebangProvider.object,
                 configurationService.object,
-                commandManager.object
+                commandManager.object,
+                experimentsManager.object,
+                interpreterSecurityService.object
             );
 
             const initial: PythonInterpreter[] = [
@@ -182,6 +196,27 @@ suite('Interpreters - selector', () => {
                 );
             }
         });
+    });
+
+    test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
+        // tslint:disable-next-line: no-any
+        const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
+        interpreterService.setup((i) => i.getInterpreters(folder1.uri)).returns(() => interpreterList);
+        // tslint:disable-next-line: no-any
+        interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
+        // tslint:disable-next-line: no-any
+        interpreterSecurityService.setup((i) => i.isSafe('interpreter2' as any)).returns(() => false);
+        // tslint:disable-next-line: no-any
+        interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
+        experimentsManager.reset();
+        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
+        experimentsManager
+            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
+            .returns(() => undefined);
+        // tslint:disable-next-line: no-any
+        selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
+        const suggestion = await selector.getSuggestions(folder1.uri);
+        assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);
     });
 
     // tslint:disable-next-line: max-func-body-length

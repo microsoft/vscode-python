@@ -35,6 +35,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             readonly widgetsRegisteredInRequireJs: Readonly<Set<string>>;
             errorHandler(className: string, moduleName: string, moduleVersion: string, error: any): void;
             loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void>;
+            successHandler(className: string, moduleName: string, moduleVersion: string): void;
         }
     ) {
         super(
@@ -98,35 +99,56 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // Disabled for now.
         // This throws errors if enabled, can be added later.
     }
+
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
-        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async (originalException) => {
-            try {
-                const loadModuleFromRequirejs =
-                    widgetsRegisteredInRequireJs.includes(moduleName) ||
-                    this.scriptLoader.widgetsRegisteredInRequireJs.has(moduleName);
+        const result = await super
+            .loadClass(className, moduleName, moduleVersion)
+            .then((r) => {
+                this.sendSuccess(className, moduleName, moduleVersion);
+                return r;
+            })
+            .catch(async (originalException) => {
+                try {
+                    const loadModuleFromRequirejs =
+                        widgetsRegisteredInRequireJs.includes(moduleName) ||
+                        this.scriptLoader.widgetsRegisteredInRequireJs.has(moduleName);
 
-                if (!loadModuleFromRequirejs) {
-                    // If not loading from requirejs, then check if we can.
-                    // Notify the script loader that we need to load the widget module.
-                    // If possible the loader will locate and register that in requirejs for things to start working.
-                    await this.scriptLoader.loadWidgetScript(moduleName, moduleVersion);
+                    if (!loadModuleFromRequirejs) {
+                        // If not loading from requirejs, then check if we can.
+                        // Notify the script loader that we need to load the widget module.
+                        // If possible the loader will locate and register that in requirejs for things to start working.
+                        await this.scriptLoader.loadWidgetScript(moduleName, moduleVersion);
+                    }
+                    const m = await requireLoader(moduleName);
+                    if (m && m[className]) {
+                        this.sendSuccess(className, moduleName, moduleVersion);
+                        return m[className];
+                    }
+                    throw originalException;
+                } catch (ex) {
+                    this.sendError(className, moduleName, moduleVersion, originalException);
+                    throw originalException;
                 }
-
-                // If loading module from requirejs (e.g. already bundled), then do not use the cdn.
-                const m = await requireLoader(moduleName);
-                if (m && m[className]) {
-                    return m[className];
-                }
-                throw originalException;
-            } catch (ex) {
-                this.scriptLoader.errorHandler(className, moduleName, moduleVersion, originalException);
-                throw originalException;
-            }
-        });
+            });
 
         return result;
+    }
+    private sendSuccess(className: string, moduleName: string, moduleVersion: string) {
+        try {
+            this.scriptLoader.successHandler(className, moduleName, moduleVersion);
+        } catch {
+            // Don't let script loader failures cause a break
+        }
+    }
+
+    private sendError(className: string, moduleName: string, moduleVersion: string, originalException: Error) {
+        try {
+            this.scriptLoader.errorHandler(className, moduleName, moduleVersion, originalException);
+        } catch {
+            // Don't let script loader failures cause a break
+        }
     }
 }

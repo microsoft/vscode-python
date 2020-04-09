@@ -9,7 +9,8 @@ import type { KernelMessage } from '@jupyterlab/services';
 import {
     CommonActionType,
     IAddCellAction,
-    ILoadIPyWidgetClassFailureAction
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassLoadAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { WidgetScriptSource } from '../ipywidgets/types';
@@ -110,7 +111,9 @@ export enum InteractiveWindowMessages {
     ReceivedUpdateModel = 'received_update_model',
     OpenSettings = 'open_settings',
     UpdateDisplayData = 'update_display_data',
-    IPyWidgetLoadFailure = 'ipywidget_load_failure'
+    IPyWidgetLoadSuccess = 'ipywidget_load_success',
+    IPyWidgetLoadFailure = 'ipywidget_load_failure',
+    IPyWidgetRenderFailure = 'ipywidget_render_failure'
 }
 
 export enum IPyWidgetMessages {
@@ -598,7 +601,9 @@ export class IInteractiveWindowMapping {
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
+    public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
+    public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
 }

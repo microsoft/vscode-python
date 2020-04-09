@@ -8,8 +8,10 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { Commands } from '../../common/constants';
-import { IConfigurationService, IPathUtils, Resource } from '../../common/types';
+import { DeprecatePythonPath } from '../../common/experimentGroups';
+import { IConfigurationService, IExperimentsManager, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
+import { IInterpreterSecurityService } from '../autoSelection/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter } from '../contracts';
 import {
     IInterpreterComparer,
@@ -33,7 +35,9 @@ export class InterpreterSelector implements IInterpreterSelector {
         private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IShebangCodeLensProvider) private readonly shebangCodeLensProvider: IShebangCodeLensProvider,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService
     ) {}
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());
@@ -52,7 +56,11 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     public async getSuggestions(resource: Resource) {
-        const interpreters = await this.interpreterManager.getInterpreters(resource);
+        let interpreters = await this.interpreterManager.getInterpreters(resource);
+        if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
+            interpreters = interpreters.filter((item) => this.interpreterSecurityService.isSafe(item) !== false);
+        }
+        this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }

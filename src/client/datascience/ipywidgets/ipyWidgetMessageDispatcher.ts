@@ -13,9 +13,16 @@ import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
+
+type PendingMessage = {
+    resultPromise: Deferred<void>;
+    startTime: number;
+};
 
 // tslint:disable: no-any
 /**
@@ -42,7 +49,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private disposed = false;
     private pendingMessages: string[] = [];
     private subscribedToKernelSocket: boolean = false;
-    private waitingMessageIds = new Map<string, Deferred<void>>();
+    private waitingMessageIds = new Map<string, PendingMessage>();
+    private totalWaitTime: number = 0;
+    private totalWaitedMessages: number = 0;
+    private hookCount: number = 0;
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -61,6 +71,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
     }
     public dispose() {
+        // Send overhead telemetry for our message hooking
+        this.sendOverheadTelemetry();
         this.disposed = true;
         while (this.disposables.length) {
             const disposable = this.disposables.shift();
@@ -155,7 +167,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                     this.pendingMessages.shift();
                 }
                 this.sentKernelOptions = false;
-                this.waitingMessageIds.forEach((d) => d.resolve());
+                this.waitingMessageIds.forEach((d) => d.resultPromise.resolve());
                 this.waitingMessageIds.clear();
                 this.messageHookRequests.forEach((m) => m.resolve(false));
                 this.messageHookRequests.clear();
@@ -195,11 +207,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string') {
+            const startTime = Date.now();
             // tslint:disable-next-line: no-require-imports
             const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
             const msg = jupyterLabSerialize.deserialize(data);
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
                 await this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
+                this.totalWaitTime = Date.now() - startTime;
+                this.totalWaitedMessages += 1;
             }
         }
     }
@@ -210,7 +225,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private mirrorExecuteRequest(msg: KernelMessage.IExecuteRequestMsg) {
         const promise = createDeferred<void>();
-        this.waitingMessageIds.set(msg.header.msg_id, promise);
+        this.waitingMessageIds.set(msg.header.msg_id, { startTime: Date.now(), resultPromise: promise });
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_mirror_execute, { id: msg.header.msg_id, msg });
         return promise.promise;
     }
@@ -218,7 +233,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private onKernelSocketMessage(data: WebSocketData) {
         const msgUuid = uuid();
         const promise = createDeferred<void>();
-        this.waitingMessageIds.set(msgUuid, promise);
+        this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
         if (typeof data === 'string') {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
         } else {
@@ -230,10 +245,12 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
     private onKernelSocketResponse(payload: { id: string }) {
-        const promise = this.waitingMessageIds.get(payload.id);
-        if (promise) {
+        const pending = this.waitingMessageIds.get(payload.id);
+        if (pending) {
             this.waitingMessageIds.delete(payload.id);
-            promise.resolve();
+            this.totalWaitTime += Date.now() - pending.startTime;
+            this.totalWaitedMessages += 1;
+            pending.resultPromise.resolve();
         }
     }
     private sendPendingMessages() {
@@ -302,6 +319,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private registerMessageHook(msgId: string) {
         if (this.notebook && !this.messageHooks.has(msgId)) {
+            this.hookCount += 1;
             const callback = this.messageHookCallback.bind(this);
             this.messageHooks.set(msgId, callback);
             this.notebook.registerMessageHook(msgId, callback);
@@ -356,5 +374,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // During a comm message, make sure all messages come out.
             promise.resolve(args.msgType.includes('comm') ? true : args.result);
         }
+    }
+
+    private sendOverheadTelemetry() {
+        sendTelemetryEvent(Telemetry.IPyWidgetOverhead, 0, {
+            totalOverheadInMs: this.totalWaitTime,
+            numberOfMessagesWaitedOn: this.totalWaitedMessages,
+            averageWaitTime: this.totalWaitTime / this.totalWaitedMessages,
+            numberOfRegisteredHooks: this.hookCount
+        });
     }
 }

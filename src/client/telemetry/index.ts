@@ -1975,6 +1975,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.HashedIPyWidgetScriptDiscoveryError]: never | undefined;
     /**
+     * Telemetry event sent when an ipywidget module loads. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadSuccess]: { moduleHash: string; moduleVersion: string };
+    /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
@@ -2002,4 +2006,17 @@ export interface IEventNamePropertyMapping {
     [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
         selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
     };
+    /**
+     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
+     */
+    [Telemetry.IPyWidgetOverhead]: {
+        totalOverheadInMs: number;
+        numberOfMessagesWaitedOn: number;
+        averageWaitTime: number;
+        numberOfRegisteredHooks: number;
+    };
+    /**
+     * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
+     */
+    [Telemetry.IPyWidgetRenderFailure]: never | undefined;
 }

@@ -104,6 +104,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
+import { BrowserService } from '../../client/common/net/browser';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
@@ -136,6 +137,7 @@ import {
     BANNER_NAME_LS_SURVEY,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
+    IBrowserService,
     IConfigurationService,
     ICryptoUtils,
     ICurrentProcess,
@@ -271,6 +273,14 @@ import {
     EnvironmentActivationServiceCache
 } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
+import {
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
+} from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
@@ -362,6 +372,7 @@ import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
+import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
@@ -390,6 +401,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.kernelServiceMock;
     }
     private static jupyterInterpreters: PythonInterpreter[] = [];
+    private static foundPythonPath: string | undefined;
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
@@ -553,6 +565,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
+        this.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry
@@ -922,6 +935,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 InterpeterHashProviderFactory,
                 InterpeterHashProviderFactory
             );
+            this.serviceManager.addSingleton<IInterpreterSecurityService>(
+                IInterpreterSecurityService,
+                InterpreterSecurityService
+            );
+            this.serviceManager.addSingleton<IInterpreterSecurityStorage>(
+                IInterpreterSecurityStorage,
+                InterpreterSecurityStorage
+            );
+            this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
             this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
             this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
             this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
@@ -1167,11 +1189,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (!setting && !this.disposed) {
             // Make sure we have the default config for this resource first.
             this.getWorkspaceConfig('python', resource);
-            setting = new (class extends PythonSettings {
-                public fireChangeEvent() {
-                    this.changed.fire();
-                }
-            })(resource, new MockAutoSelectionService(), this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
+            setting = new MockPythonSettings(
+                resource,
+                new MockAutoSelectionService(),
+                this.serviceManager.get<IWorkspaceService>(IWorkspaceService)
+            );
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
             setting = this.generatePythonSettings();
@@ -1347,7 +1369,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private generatePythonSettings() {
         // Create a dummy settings just to setup the workspace config
-        const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+        const pythonSettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
@@ -1477,13 +1499,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private findPythonPath(): string {
         try {
-            // Give preference to the CI test python (could also be set in launch.json for debugging).
-            const output = child_process.execFileSync(
-                process.env.CI_PYTHON_PATH || 'python',
-                ['-c', 'import sys;print(sys.executable)'],
-                { encoding: 'utf8' }
-            );
-            return output.replace(/\r?\n/g, '');
+            // Use a static variable so we don't have to recompute this on subsequenttests
+            if (!DataScienceIocContainer.foundPythonPath) {
+                // Give preference to the CI test python (could also be set in launch.json for debugging).
+                const output = child_process.execFileSync(
+                    process.env.CI_PYTHON_PATH || 'python',
+                    ['-c', 'import sys;print(sys.executable)'],
+                    { encoding: 'utf8' }
+                );
+                DataScienceIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
+            }
+            return DataScienceIocContainer.foundPythonPath;
         } catch (ex) {
             return 'python';
         }

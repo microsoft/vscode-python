@@ -5,7 +5,10 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { ILoadIPyWidgetClassFailureAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import {
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassLoadAction
+} from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { EnableIPyWidgets } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -64,22 +67,49 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
+        } else if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
+            this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
             this.sendLoadFailureTelemetry(payload);
+        } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
+            this.sendRenderFailureTelemetry(payload);
         }
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
+    }
+
+    private hash(s: string): string {
+        return this.hashFn().update(s).digest('hex');
+    }
+
+    private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadSuccess, 0, {
+                moduleHash: this.hash(payload.moduleName),
+                moduleVersion: payload.moduleVersion
+            });
+        } catch {
+            // do nothing on failure
+        }
     }
 
     private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
-                moduleHash: this.hashFn(payload.moduleName),
+                moduleHash: this.hash(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
             // do nothing on failure
+        }
+    }
+    private sendRenderFailureTelemetry(payload: Error) {
+        try {
+            traceError('Error rendering a widget: ', payload);
+            sendTelemetryEvent(Telemetry.IPyWidgetRenderFailure);
+        } catch {
+            // Do nothing on a failure
         }
     }
     private getIPyWidgetMessageDispatcher() {

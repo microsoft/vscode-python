@@ -82,7 +82,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private scrollAndFlash() {
         if (this.wrapperRef && this.wrapperRef.current) {
-            if (this.wrapperRef.current.scrollIntoView) {
+            // tslint:disable-next-line: no-any
+            if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
             this.wrapperRef.current.classList.add('flash');
@@ -104,7 +105,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
-            if (this.wrapperRef.current.scrollIntoView) {
+            // tslint:disable-next-line: no-any
+            if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }
@@ -153,6 +155,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
+                                        widgetFailed={this.props.widgetFailed}
                                     />
                                 </div>
                             </div>
@@ -218,10 +221,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive a click, propagate upwards. Might change our state
-        if (this.props.clickCell) {
-            ev.stopPropagation();
-            this.props.clickCell(this.props.cellVM.cell.id);
-        }
+        ev.stopPropagation();
+        this.props.clickCell(this.props.cellVM.cell.id);
     };
 
     private renderControls = () => {

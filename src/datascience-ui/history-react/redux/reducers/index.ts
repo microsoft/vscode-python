@@ -39,7 +39,9 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
+    [CommonActionType.IPYWIDGET_RENDER_FAILURE]: CommonEffects.handleIPyWidgetRenderFailure,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.Undo]: Execution.undo,

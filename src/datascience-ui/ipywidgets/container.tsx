@@ -17,7 +17,9 @@ import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import {
     CommonAction,
     CommonActionType,
-    ILoadIPyWidgetClassFailureAction
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
 } from '../interactive-common/redux/reducers/types';
 import { IStore } from '../interactive-common/redux/store';
 import { PostOffice } from '../react-common/postOffice';
@@ -47,7 +49,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
         // Callback when loading a widget fails.
         errorHandler: this.handleLoadError.bind(this),
         // Callback when requesting a module be registered with requirejs (if possible).
-        loadWidgetScript: this.loadWidgetScript.bind(this)
+        loadWidgetScript: this.loadWidgetScript.bind(this),
+        successHandler: this.handleLoadSuccess.bind(this)
     };
     constructor(props: Props) {
         super(props);
@@ -118,6 +121,17 @@ export class WidgetManagerComponent extends React.Component<Props> {
         }
         this.registerScriptSourcesInRequirejs([source]);
     }
+    private createLoadSuccessAction(
+        className: string,
+        moduleName: string,
+        moduleVersion: string
+    ): CommonAction<LoadIPyWidgetClassLoadAction> {
+        return {
+            type: CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS,
+            payload: { messageDirection: 'incoming', data: { className, moduleName, moduleVersion } }
+        };
+    }
+
     private createLoadErrorAction(
         className: string,
         moduleName: string,
@@ -190,5 +204,9 @@ export class WidgetManagerComponent extends React.Component<Props> {
             // tslint:disable-next-line: no-console
             console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
         );
+    }
+
+    private handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
+        this.props.store.dispatch(this.createLoadSuccessAction(className, moduleName, moduleVersion));
     }
 }
