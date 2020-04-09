@@ -362,6 +362,7 @@ import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
+import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
@@ -390,6 +391,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.kernelServiceMock;
     }
     private static jupyterInterpreters: PythonInterpreter[] = [];
+    private static foundPythonPath: string | undefined;
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
@@ -1167,11 +1169,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (!setting && !this.disposed) {
             // Make sure we have the default config for this resource first.
             this.getWorkspaceConfig('python', resource);
-            setting = new (class extends PythonSettings {
-                public fireChangeEvent() {
-                    this.changed.fire();
-                }
-            })(resource, new MockAutoSelectionService(), this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
+            setting = new MockPythonSettings(
+                resource,
+                new MockAutoSelectionService(),
+                this.serviceManager.get<IWorkspaceService>(IWorkspaceService)
+            );
             this.settingsMap.set(key, setting);
         } else if (this.disposed) {
             setting = this.generatePythonSettings();
@@ -1346,7 +1348,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private generatePythonSettings() {
         // Create a dummy settings just to setup the workspace config
-        const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+        const pythonSettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
@@ -1476,13 +1478,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private findPythonPath(): string {
         try {
-            // Give preference to the CI test python (could also be set in launch.json for debugging).
-            const output = child_process.execFileSync(
-                process.env.CI_PYTHON_PATH || 'python',
-                ['-c', 'import sys;print(sys.executable)'],
-                { encoding: 'utf8' }
-            );
-            return output.replace(/\r?\n/g, '');
+            // Use a static variable so we don't have to recompute this on subsequenttests
+            if (!DataScienceIocContainer.foundPythonPath) {
+                // Give preference to the CI test python (could also be set in launch.json for debugging).
+                const output = child_process.execFileSync(
+                    process.env.CI_PYTHON_PATH || 'python',
+                    ['-c', 'import sys;print(sys.executable)'],
+                    { encoding: 'utf8' }
+                );
+                DataScienceIocContainer.foundPythonPath = output.replace(/\r?\n/g, '');
+            }
+            return DataScienceIocContainer.foundPythonPath;
         } catch (ex) {
             return 'python';
         }
