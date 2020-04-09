@@ -104,6 +104,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
+import { BrowserService } from '../../client/common/net/browser';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
@@ -136,6 +137,7 @@ import {
     BANNER_NAME_LS_SURVEY,
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
+    IBrowserService,
     IConfigurationService,
     ICryptoUtils,
     ICurrentProcess,
@@ -271,6 +273,14 @@ import {
     EnvironmentActivationServiceCache
 } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
+import {
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
+} from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
@@ -553,6 +563,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
+        this.serviceManager.addSingleton<IInterpreterSecurityService>(
+            IInterpreterSecurityService,
+            InterpreterSecurityService
+        );
+        this.serviceManager.addSingleton<IInterpreterSecurityStorage>(
+            IInterpreterSecurityStorage,
+            InterpreterSecurityStorage
+        );
+        this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
+        this.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry

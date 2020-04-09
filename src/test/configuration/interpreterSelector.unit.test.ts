@@ -198,7 +198,7 @@ suite('Interpreters - selector', () => {
         });
     });
 
-    test('When in Deprecate PythonPath experiment, do not unsafe interpreters in the suggested interpreters list', async () => {
+    test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
         // tslint:disable-next-line: no-any
         const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
         interpreterService.setup((i) => i.getInterpreters(folder1.uri)).returns(() => interpreterList);
