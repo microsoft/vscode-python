@@ -84,10 +84,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         }
 
         const stopWatch = new StopWatch();
-        const exists = await this.httpClient
-            .getContents(url)
-            .then(() => true)
-            .catch(() => false);
+        const exists = await this.httpClient.exists(url);
         sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesCDNPerf, stopWatch.elapsedTime, { cdn, exists });
 
         CDNWidgetScriptSourceProvider.validUrls.set(url, exists);

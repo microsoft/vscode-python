@@ -469,9 +469,9 @@ export interface IHttpClient {
      */
     getJSON<T>(uri: string, strict?: boolean): Promise<T>;
     /**
-     * Returns the contents of a remote resource.
+     * Returns the url is valid (i.e. return status code of 200).
      */
-    getContents(uri: string): Promise<string>;
+        exists(uri: string): Promise<boolean>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');

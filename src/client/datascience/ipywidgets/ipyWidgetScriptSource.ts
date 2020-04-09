@@ -3,7 +3,7 @@
 
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
-import type * as serlialize from '@jupyterlab/services/lib/kernel/serialize';
+import type * as serialize from '@jupyterlab/services/lib/kernel/serialize';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -56,11 +56,11 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener {
      * Key value pair of widget modules along with the version that needs to be loaded.
      */
     private pendingModuleRequests = new Map<string, string>();
-    private jupyterSerialize?: typeof serlialize;
-    private get deserialize(): typeof serlialize.deserialize {
+    private jupyterSerialize?: typeof serialize;
+    private get deserialize(): typeof serialize.deserialize {
         if (!this.jupyterSerialize) {
             // tslint:disable-next-line: no-require-imports
-            this.jupyterSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof serlialize;
+            this.jupyterSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof serialize;
         }
         return this.jupyterSerialize.deserialize;
     }

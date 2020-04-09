@@ -60,7 +60,7 @@ suite('Data Science - ipywidget - CDN', () => {
 
                 assert.deepEqual(value, { moduleName: 'HelloWorld' });
                 // Should not make any http calls.
-                verify(httpClient.getContents(anything())).never();
+                verify(httpClient.exists(anything())).never();
             });
             function updateCDNSettings(...values: WidgetCDNs[]) {
                 settings.datascience.widgetScriptSources = values;
@@ -77,7 +77,7 @@ suite('Data Science - ipywidget - CDN', () => {
                     });
                     test('Get widget source from CDN', async () => {
                         updateCDNSettings(cdn);
-                        when(httpClient.getContents(anything())).thenResolve();
+                        when(httpClient.exists(anything())).thenResolve(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -86,11 +86,11 @@ suite('Data Science - ipywidget - CDN', () => {
                             scriptUri: expectedSource,
                             source: 'cdn'
                         });
-                        verify(httpClient.getContents(anything())).once();
+                        verify(httpClient.exists(anything())).once();
                     });
                     test('Ensure widgtet script is downloaded once and cached', async () => {
                         updateCDNSettings(cdn);
-                        when(httpClient.getContents(anything())).thenResolve();
+                        when(httpClient.exists(anything())).thenResolve(true);
                         const expectedValue: WidgetScriptSource = {
                             moduleName: 'HelloWorld',
                             scriptUri: expectedSource,
@@ -105,20 +105,20 @@ suite('Data Science - ipywidget - CDN', () => {
                         assert.deepEqual(value2, expectedValue);
 
                         // Only one http request
-                        verify(httpClient.getContents(anything())).once();
+                        verify(httpClient.exists(anything())).once();
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        when(httpClient.getContents(anything())).thenReject(new Error('Not found'));
+                        when(httpClient.exists(anything())).thenResolve(false);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
                         assert.deepEqual(value, { moduleName: 'HelloWorld' });
-                        verify(httpClient.getContents(anything())).once();
+                        verify(httpClient.exists(anything())).once();
                     });
                     test('No script source if package does not exist on both CDNs', async () => {
                         updateCDNSettings('jsdelivr.com', 'unpkg.com');
-                        when(httpClient.getContents(anything())).thenReject(new Error('Not found'));
+                        when(httpClient.exists(anything())).thenResolve(false);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -126,7 +126,7 @@ suite('Data Science - ipywidget - CDN', () => {
                     });
                     test('Give preference to jsdelivr over unpkg', async () => {
                         updateCDNSettings('jsdelivr.com', 'unpkg.com');
-                        when(httpClient.getContents(anything())).thenResolve();
+                        when(httpClient.exists(anything())).thenResolve(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -135,11 +135,11 @@ suite('Data Science - ipywidget - CDN', () => {
                             scriptUri: `${jsdelivrUrl}${moduleName}@${moduleVersion}/dist/index`,
                             source: 'cdn'
                         });
-                        verify(httpClient.getContents(anything())).once();
+                        verify(httpClient.exists(anything())).once();
                     });
                     test('Give preference to unpkg over jsdelivr', async () => {
                         updateCDNSettings('unpkg.com', 'jsdelivr.com');
-                        when(httpClient.getContents(anything())).thenResolve();
+                        when(httpClient.exists(anything())).thenResolve(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -148,52 +148,44 @@ suite('Data Science - ipywidget - CDN', () => {
                             scriptUri: `${unpgkUrl}${moduleName}@${moduleVersion}/dist/index`,
                             source: 'cdn'
                         });
-                        verify(httpClient.getContents(anything())).once();
+                        verify(httpClient.exists(anything())).once();
                     });
                     test('Get Script from unpk if jsdelivr fails', async () => {
                         updateCDNSettings('jsdelivr.com', 'unpkg.com');
-                        when(httpClient.getContents(anything())).thenCall(async (url: string) => {
-                            if (url.startsWith(jsdelivrUrl)) {
-                                throw new Error('Kaboom');
-                            }
-                        });
-
-                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value, {
-                            moduleName: 'HelloWorld',
-                            scriptUri: `${unpgkUrl}${moduleName}@${moduleVersion}/dist/index`,
-                            source: 'cdn'
-                        });
-                        verify(httpClient.getContents(anything())).twice();
-                    });
-                    test('Get Script from jsdelivr if unpkg fails', async () => {
-                        updateCDNSettings('unpkg.com', 'jsdelivr.com');
-                        when(httpClient.getContents(anything())).thenCall(async (url: string) => {
-                            if (url.startsWith(unpgkUrl)) {
-                                throw new Error('Kaboom');
-                            }
-                        });
-
-                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value, {
-                            moduleName: 'HelloWorld',
-                            scriptUri: `${jsdelivrUrl}${moduleName}@${moduleVersion}/dist/index`,
-                            source: 'cdn'
-                        });
-                        verify(httpClient.getContents(anything())).twice();
-                    });
-                    test('No script source if downloading from both CDNs fail', async () => {
-                        updateCDNSettings('unpkg.com', 'jsdelivr.com');
-                        when(httpClient.getContents(anything())).thenCall(async () =>
-                            Promise.reject(new Error('Kaboom'))
+                        when(httpClient.exists(anything())).thenCall(
+                            async (url: string) => !url.startsWith(jsdelivrUrl)
                         );
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld',
+                            scriptUri: `${unpgkUrl}${moduleName}@${moduleVersion}/dist/index`,
+                            source: 'cdn'
+                        });
+                        verify(httpClient.exists(anything())).twice();
+                    });
+                    test('Get Script from jsdelivr if unpkg fails', async () => {
+                        updateCDNSettings('unpkg.com', 'jsdelivr.com');
+                        when(httpClient.exists(anything())).thenCall(async (url: string) => !url.startsWith(unpgkUrl));
+
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld',
+                            scriptUri: `${jsdelivrUrl}${moduleName}@${moduleVersion}/dist/index`,
+                            source: 'cdn'
+                        });
+                        verify(httpClient.exists(anything())).twice();
+                    });
+                    test('No script source if downloading from both CDNs fail', async () => {
+                        updateCDNSettings('unpkg.com', 'jsdelivr.com');
+                        when(httpClient.exists(anything())).thenResolve(false);
+
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
                         assert.deepEqual(value, { moduleName: 'HelloWorld' });
-                        verify(httpClient.getContents(anything())).twice();
+                        verify(httpClient.exists(anything())).twice();
                     });
                 });
             });
