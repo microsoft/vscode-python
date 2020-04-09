@@ -134,7 +134,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 )
             );
         } else {
-            scriptProviders.push(new RemoteWidgetScriptSourceProvider(this.notebook.connection));
+            scriptProviders.push(new RemoteWidgetScriptSourceProvider(this.notebook.connection, this.httpClient));
         }
 
         this.scriptProviders = scriptProviders;
