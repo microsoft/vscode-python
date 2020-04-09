@@ -129,10 +129,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 ? `cell-output cell-output-${this.props.baseTheme}`
                 : 'markdown-cell-output-container';
 
-            // Then combine them inside a div
+            // Then combine them inside a div. IPyWidget ref has to be separate so we don't end up
+            // with a div in the way. If we try setting all div's background colors, we break
+            // some widgets
             return (
-                <div className={outputClassNames} ref={this.ipyWidgetRef}>
+                <div className={outputClassNames}>
                     {this.renderResults()}
+                    <div className="cell-output-ipywidget-background" ref={this.ipyWidgetRef}></div>
                 </div>
             );
         }

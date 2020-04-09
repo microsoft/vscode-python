@@ -563,15 +563,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
         this.serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
-        this.serviceManager.addSingleton<IInterpreterSecurityService>(
-            IInterpreterSecurityService,
-            InterpreterSecurityService
-        );
-        this.serviceManager.addSingleton<IInterpreterSecurityStorage>(
-            IInterpreterSecurityStorage,
-            InterpreterSecurityStorage
-        );
-        this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
         this.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
@@ -942,6 +933,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 InterpeterHashProviderFactory,
                 InterpeterHashProviderFactory
             );
+            this.serviceManager.addSingleton<IInterpreterSecurityService>(
+                IInterpreterSecurityService,
+                InterpreterSecurityService
+            );
+            this.serviceManager.addSingleton<IInterpreterSecurityStorage>(
+                IInterpreterSecurityStorage,
+                InterpreterSecurityStorage
+            );
+            this.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
             this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
             this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
             this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
