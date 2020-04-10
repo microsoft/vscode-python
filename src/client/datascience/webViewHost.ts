@@ -256,6 +256,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             traceWarning(`startHttpServer=${startHttpServer}, will not be used. Temporarily turned off`);
 
+            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
+
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
             this.webPanel = await this.provider.create({
@@ -267,7 +269,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 settings,
                 startHttpServer: false,
                 cwd,
-                webViewPanel
+                webViewPanel,
+                additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
             });
 
             traceInfo('Web view created.');

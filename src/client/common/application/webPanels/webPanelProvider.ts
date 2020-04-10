@@ -30,6 +30,9 @@ export class WebPanelProvider implements IWebPanelProvider {
         // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
         // Used by widgets to place files that are not otherwise accessible.
         const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
+        if (Array.isArray(options.additionalPaths)) {
+            additionalRootPaths.push(...options.additionalPaths.map((item) => Uri.file(item)));
+        }
         return new WebPanel(
             this.fs,
             this.disposableRegistry,
