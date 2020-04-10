@@ -188,8 +188,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(
                 editor.onDidLayoutChange(() => {
                     this.windowResized();
-                    // Also recompute our visible line heights
+                    // Recompute visible line tops
                     this.debouncedComputeLineTops();
+
+                    // A layout change may be because of a new line
+                    this.throttledScrollCurrentPosition(editor);
                 })
             );
 
@@ -243,7 +246,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(
                 editor.onDidChangeCursorPosition(() => {
                     this.throttledUpdateWidgetPosition();
-                    this.throttledScrollCurrentPosition(editor);
+
+                    // Do this after the cursor changes so the text has time to appear
+                    setTimeout(() => this.throttledScrollCurrentPosition(editor), 0);
                 })
             );
 
@@ -643,14 +648,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const editorDomNode = this.state.editor.getDomNode();
             if (editorDomNode) {
                 const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
-                const lineHeightPx =
-                    container.firstChild && (container.firstChild as HTMLElement).style.height
-                        ? (container.firstChild as HTMLElement).style.height
-                        : `${LINE_HEIGHT}px`;
-                MonacoEditor.lineHeight =
-                    lineHeightPx && lineHeightPx.endsWith('px')
-                        ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10)
-                        : LINE_HEIGHT;
+                if (container.firstChild && (container.firstChild as HTMLElement).style.height) {
+                    const lineHeightPx = (container.firstChild as HTMLElement).style.height;
+                    MonacoEditor.lineHeight = parseInt(lineHeightPx, 10);
+                } else {
+                    return LINE_HEIGHT;
+                }
             }
         }
         return MonacoEditor.lineHeight;
