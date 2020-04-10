@@ -61,7 +61,7 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                     }
                 }
 
-                if (missedTimes.length >= 1) {
+                if (missedTimes.length >= 2) {
                     const skippedTimes = result.times.filter((t) => t === -1);
                     const failedTimes = result.times.filter((t) => t === -10);
 
@@ -69,10 +69,10 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                         'Performance is slow in: ' +
                         testcase.name +
                         '.\n\tBenchmark time: ' +
-                        testcase.time +
-                        '\n\tTimes the test missed the benchmark:' +
+                        String(parseFloat(testcase.time) * errorMargin) +
+                        '\n\tTimes the test missed the benchmark: ' +
                         missedTimes.length +
-                        '\n\tFailing times:' +
+                        '\n\tFailing times: ' +
                         getFailingTimesString(missedTimes) +
                         '\n\tTimes it was skipped: ' +
                         skippedTimes.length +
