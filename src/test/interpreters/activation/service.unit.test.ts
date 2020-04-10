@@ -140,10 +140,13 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             const shellCmd = capture(processService.shellExec).first()[0];
 
+                            const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
                             const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
-                            const expectedCommand = `${cmd.join(
-                                ' && '
-                            )} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
+                            const expectedCommand = [
+                                ...cmd,
+                                `echo '${getEnvironmentPrefix}'`,
+                                `python ${isolated} ${printEnvPyFile.fileToCommandArgument()}`
+                            ].join(' && ');
 
                             expect(shellCmd).to.equal(expectedCommand);
                         });

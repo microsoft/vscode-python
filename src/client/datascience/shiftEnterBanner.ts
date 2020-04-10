@@ -28,10 +28,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage();
-    private bannerLabels: string[] = [
-        localize.InteractiveShiftEnterBanner.bannerLabelYes(),
-        localize.InteractiveShiftEnterBanner.bannerLabelNo()
-    ];
+    private bannerLabels: string[] = [localize.Common.bannerLabelYes(), localize.Common.bannerLabelNo()];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,

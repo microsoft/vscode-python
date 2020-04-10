@@ -78,6 +78,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         ioc.registerVariableTypes();
 
         ioc.registerMockProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,

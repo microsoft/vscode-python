@@ -14,7 +14,6 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, ObservableExecutionResult, Output } from '../../../../client/common/process/types';
 import { Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
@@ -49,7 +48,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
         jupyterDependencyService = mock(JupyterInterpreterDependencyService);
         fs = mock(FileSystem);
         const execFactory = mock(PythonExecutionFactory);
-        execService = mock(PythonExecutionService);
+        execService = mock<IPythonExecutionService>();
         when(
             execFactory.createDaemon(
                 deepEqual({ daemonModule: PythonDaemonModule, pythonPath: selectedJupyterInterpreter.path })

@@ -375,6 +375,33 @@ export interface IApplicationShell {
     ): Thenable<R>;
 
     /**
+     * Show progress in the status bar with a custom icon instead of the default spinner.
+     * Progress is shown while running the given callback and while the promise it returned isn't resolved nor rejected.
+     * At the moment, progress can only be displayed in the status bar when using this method. If you want to
+     * display it elsewhere, use `withProgress`.
+     *
+     * @param icon A valid Octicon.
+     *
+     * @param task A callback returning a promise. Progress state can be reported with
+     * the provided [progress](#Progress)-object.
+     *
+     * To report discrete progress, use `increment` to indicate how much work has been completed. Each call with
+     * a `increment` value will be summed up and reflected as overall progress until 100% is reached (a value of
+     * e.g. `10` accounts for `10%` of work done).
+     * Note that currently only `ProgressLocation.Notification` is capable of showing discrete progress.
+     *
+     * To monitor if the operation has been cancelled by the user, use the provided [`CancellationToken`](#CancellationToken).
+     * Note that currently only `ProgressLocation.Notification` is supporting to show a cancel button to cancel the
+     * long running operation.
+     *
+     * @return The thenable the task-callback returned.
+     */
+    withProgressCustomIcon<R>(
+        icon: string,
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+    ): Thenable<R>;
+
+    /**
      * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
      * @param viewId Id of the view contributed using the extension point `views`.
      * @param options Options for creating the [TreeView](#TreeView)
@@ -468,7 +495,7 @@ export interface IDocumentManager {
      *
      * @readonly
      */
-    readonly textDocuments: TextDocument[];
+    readonly textDocuments: readonly TextDocument[];
     /**
      * The currently active editor or `undefined`. The active editor is the one
      * that currently has focus or, when none has focus, the one that has changed
@@ -638,7 +665,38 @@ export interface IWorkspaceService {
      *
      * @readonly
      */
-    readonly workspaceFolders: WorkspaceFolder[] | undefined;
+    readonly workspaceFolders: readonly WorkspaceFolder[] | undefined;
+
+    /**
+     * The location of the workspace file, for example:
+     *
+     * `file:///Users/name/Development/myProject.code-workspace`
+     *
+     * or
+     *
+     * `untitled:1555503116870`
+     *
+     * for a workspace that is untitled and not yet saved.
+     *
+     * Depending on the workspace that is opened, the value will be:
+     *  * `undefined` when no workspace or  a single folder is opened
+     *  * the path of the workspace file as `Uri` otherwise. if the workspace
+     * is untitled, the returned URI will use the `untitled:` scheme
+     *
+     * The location can e.g. be used with the `vscode.openFolder` command to
+     * open the workspace again after it has been closed.
+     *
+     * **Example:**
+     * ```typescript
+     * vscode.commands.executeCommand('vscode.openFolder', uriOfWorkspace);
+     * ```
+     *
+     * **Note:** it is not advised to use `workspace.workspaceFile` to write
+     * configuration data into the file. You can use `workspace.getConfiguration().update()`
+     * for that purpose which will work both when a single folder is opened as
+     * well as an untitled or saved workspace.
+     */
+    readonly workspaceFile: Resource;
 
     /**
      * An event that is emitted when a workspace folder is added or removed.

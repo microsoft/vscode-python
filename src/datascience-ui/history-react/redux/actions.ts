@@ -99,5 +99,7 @@ export const actionCreators = {
             sortAscending: true,
             startIndex,
             pageSize
-        })
+        }),
+    widgetFailed: (ex: Error): CommonAction<Error> =>
+        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex)
 };

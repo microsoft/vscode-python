@@ -10,7 +10,7 @@
 
 ---
 
-[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [ptvsd](https://github.com/microsoft/ptvsd) see its own repo]
+[For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
 ## Contributing a pull request
 

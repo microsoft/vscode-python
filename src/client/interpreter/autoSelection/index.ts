@@ -18,7 +18,8 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
+    IInterpreterSecurityService
 } from './types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
@@ -54,7 +55,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         @named(AutoSelectionRule.workspaceVirtualEnvs)
         workspaceInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSeletionProxyService) proxy: IInterpreterAutoSeletionProxyService,
-        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper
+        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService
     ) {
         // It is possible we area always opening the same workspace folder, but we still need to determine and cache
         // the best available interpreters based on other rules (cache for furture use).
@@ -114,6 +116,12 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         // Do not execute anycode other than fetching fromm a property.
         // This method gets invoked from settings class, and this class in turn uses classes that relies on settings.
         // I.e. we can end up in a recursive loop.
+        const interpreter = this._getAutoSelectedInterpreter(resource);
+        // Unless the interpreter is marked as unsafe, return interpreter.
+        return interpreter && this.interpreterSecurityService.isSafe(interpreter) === false ? undefined : interpreter;
+    }
+
+    public _getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined {
         const workspaceState = this.getWorkspaceState(resource);
         if (workspaceState && workspaceState.value) {
             return workspaceState.value;

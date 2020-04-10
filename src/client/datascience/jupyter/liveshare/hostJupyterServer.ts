@@ -3,6 +3,8 @@
 'use strict';
 import '../../../common/extensions';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
 import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -22,7 +24,7 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService } from '../../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
@@ -303,7 +305,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
             if (kernelInfoToUse) {
                 launchInfo.kernelSpec = kernelInfoToUse;
-                launchInfo.interpreter = resourceInterpreter;
+
+                // For the interpreter, make sure to select the one matching the kernel.
+                launchInfo.interpreter = kernelInfoToUse.metadata?.interpreter?.path
+                    ? (cloneDeep(kernelInfoToUse.metadata.interpreter) as PythonInterpreter)
+                    : resourceInterpreter;
                 changedKernel = true;
             }
         }

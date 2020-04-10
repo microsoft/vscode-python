@@ -25,7 +25,7 @@ import { IDocumentManager } from './types';
 
 @injectable()
 export class DocumentManager implements IDocumentManager {
-    public get textDocuments(): TextDocument[] {
+    public get textDocuments(): readonly TextDocument[] {
         return workspace.textDocuments;
     }
     public get activeTextEditor(): TextEditor | undefined {

@@ -267,14 +267,11 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         },
         logger: testMode ? createTestLogger() : window.console
     });
-    // On CI we might want to disable logging, as its a big wall of text.
-    // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
     const loggerMiddleware =
-        !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING &&
-        (process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode))
+        process.env.VSC_PYTHON_FORCE_LOGGING !== undefined && !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING
             ? logger
             : undefined;
-    // tslint:disable-next-line: no-console
+
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);

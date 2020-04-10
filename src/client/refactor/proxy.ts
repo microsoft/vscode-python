@@ -1,20 +1,17 @@
 // tslint:disable:no-any no-empty member-ordering prefer-const prefer-template no-var-self
 
 import { ChildProcess } from 'child_process';
-import * as path from 'path';
-import { Disposable, Position, Range, TextDocument, TextEditorOptions, Uri, window } from 'vscode';
+import { Disposable, Position, Range, TextDocument, TextEditorOptions, window } from 'vscode';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IS_WINDOWS } from '../common/platform/constants';
-import { IPythonExecutionFactory } from '../common/process/types';
-import { IPythonSettings } from '../common/types';
+import * as internalScripts from '../common/process/internal/scripts';
+import { IPythonExecutionService } from '../common/process/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { getWindowsLineEndingCount } from '../common/utils/text';
-import { IServiceContainer } from '../ioc/types';
 
 export class RefactorProxy extends Disposable {
     private _process?: ChildProcess;
-    private _extensionDir: string;
     private _previousOutData: string = '';
     private _previousStdErrData: string = '';
     private _startedSuccessfully: boolean = false;
@@ -22,13 +19,10 @@ export class RefactorProxy extends Disposable {
     private _commandReject!: (reason?: any) => void;
     private initialized!: Deferred<void>;
     constructor(
-        extensionDir: string,
-        _pythonSettings: IPythonSettings,
         private workspaceRoot: string,
-        private serviceContainer: IServiceContainer
+        private getPythonExecutionService: () => Promise<IPythonExecutionService>
     ) {
         super(() => {});
-        this._extensionDir = extensionDir;
     }
 
     public dispose() {
@@ -132,13 +126,10 @@ export class RefactorProxy extends Disposable {
         });
     }
     private async initialize(): Promise<void> {
-        const pythonProc = await this.serviceContainer
-            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-            .create({ resource: Uri.file(this.workspaceRoot) });
+        const pythonProc = await this.getPythonExecutionService();
         this.initialized = createDeferred<void>();
-        const args = ['refactor.py', this.workspaceRoot];
-        const cwd = path.join(this._extensionDir, 'pythonFiles');
-        const result = pythonProc.execObservable(args, { cwd });
+        const [args, parse] = internalScripts.refactor(this.workspaceRoot);
+        const result = pythonProc.execObservable(args, {});
         this._process = result.proc;
         result.out.subscribe(
             (output) => {
@@ -147,7 +138,7 @@ export class RefactorProxy extends Disposable {
                         this._startedSuccessfully = true;
                         return this.initialized.resolve();
                     }
-                    this.onData(output.out);
+                    this.onData(output.out, parse);
                 } else {
                     this.handleStdError(output.out);
                 }
@@ -195,7 +186,7 @@ export class RefactorProxy extends Disposable {
         }
         this.initialized.reject(error);
     }
-    private onData(data: string) {
+    private onData(data: string, parse: (out: string) => object[]) {
         if (!this._commandResolve) {
             return;
         }
@@ -205,10 +196,7 @@ export class RefactorProxy extends Disposable {
         let dataStr = (this._previousOutData = this._previousOutData + data + '');
         let response: any;
         try {
-            response = dataStr
-                .split(/\r?\n/g)
-                .filter((line) => line.length > 0)
-                .map((resp) => JSON.parse(resp));
+            response = parse(dataStr);
             this._previousOutData = '';
         } catch (ex) {
             // Possible we've only received part of the data, hence don't clear previousData

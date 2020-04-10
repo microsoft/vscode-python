@@ -9,12 +9,12 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
+import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
+import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { IServiceContainer } from '../../../client/ioc/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
@@ -308,15 +308,19 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
 
                 const condaFile = 'conda';
-                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(
-                    serviceContainer.object,
-                    processService.object,
-                    pythonPath,
-                    condaFile,
-                    condaEnv
-                );
+                const procService = TypeMoq.Mock.ofType<IProcessService>();
+                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                const procs = createPythonProcessService(procService.object, env);
+                const condaExecutionService = {
+                    getInterpreterInformation: env.getInterpreterInformation,
+                    getExecutablePath: env.getExecutablePath,
+                    isModuleInstalled: env.isModuleInstalled,
+                    getExecutionInfo: env.getExecutionInfo,
+                    execObservable: procs.execObservable,
+                    execModuleObservable: procs.execModuleObservable,
+                    exec: procs.exec,
+                    execModule: procs.execModule
+                };
                 pythonExecutionFactory
                     .setup((p) =>
                         p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
@@ -415,15 +419,19 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 const condaFile = 'conda';
-                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(
-                    serviceContainer.object,
-                    processService.object,
-                    pythonPath,
-                    condaFile,
-                    condaEnv
-                );
+                const procService = TypeMoq.Mock.ofType<IProcessService>();
+                const env = createCondaEnv(condaFile, condaEnv, pythonPath, procService.object, fileSystem.object);
+                const procs = createPythonProcessService(procService.object, env);
+                const condaExecutionService = {
+                    getInterpreterInformation: env.getInterpreterInformation,
+                    getExecutablePath: env.getExecutablePath,
+                    isModuleInstalled: env.isModuleInstalled,
+                    getExecutionInfo: env.getExecutionInfo,
+                    execObservable: procs.execObservable,
+                    execModuleObservable: procs.execModuleObservable,
+                    exec: procs.exec,
+                    execModule: procs.execModule
+                };
                 pythonExecutionFactory
                     .setup((p) =>
                         p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())

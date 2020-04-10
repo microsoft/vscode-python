@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
 import { getTextEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IInstaller, Product } from '../common/types';
+import { IPythonExecutionFactory } from '../common/process/types';
+import { IInstaller, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -24,7 +25,6 @@ export function activateSimplePythonRefactorProvider(
     let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
         const stopWatch = new StopWatch();
         const promise = extractVariable(
-            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
@@ -38,7 +38,6 @@ export function activateSimplePythonRefactorProvider(
     disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Method, () => {
         const stopWatch = new StopWatch();
         const promise = extractMethod(
-            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
@@ -52,7 +51,6 @@ export function activateSimplePythonRefactorProvider(
 
 // Exported for unit testing
 export function extractVariable(
-    extensionDir: string,
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
@@ -68,13 +66,13 @@ export function extractVariable(
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = serviceContainer
-        .get<IConfigurationService>(IConfigurationService)
-        .getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newvariable${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
+        const proxy = new RefactorProxy(workspaceRoot, async () => {
+            const factory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: vscode.Uri.file(workspaceRoot) });
+        });
         const rename = proxy
             .extractVariable<RenameResponse>(
                 textEditor.document,
@@ -93,7 +91,6 @@ export function extractVariable(
 
 // Exported for unit testing
 export function extractMethod(
-    extensionDir: string,
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
@@ -109,13 +106,13 @@ export function extractMethod(
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = serviceContainer
-        .get<IConfigurationService>(IConfigurationService)
-        .getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newmethod${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
+        const proxy = new RefactorProxy(workspaceRoot, async () => {
+            const factory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: vscode.Uri.file(workspaceRoot) });
+        });
         const rename = proxy
             .extractMethod<RenameResponse>(
                 textEditor.document,

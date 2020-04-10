@@ -23,6 +23,7 @@ import {
     ProviderResult,
     Range,
     SignatureHelp,
+    SignatureHelpContext,
     SymbolInformation,
     TextDocument,
     TextEdit,
@@ -95,7 +96,7 @@ export class LanguageClientMiddleware implements Middleware {
             this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
             group = CollectLSRequestTiming;
         } else if (serverType === LanguageServerType.Node) {
-            this.eventName = EventName.PYTHON_NODE_SERVER_REQUEST;
+            this.eventName = EventName.LANGUAGE_SERVER_REQUEST;
             group = CollectNodeLSRequestTiming;
         } else {
             return;
@@ -167,11 +168,12 @@ export class LanguageClientMiddleware implements Middleware {
     public provideSignatureHelp(
         document: TextDocument,
         position: Position,
+        context: SignatureHelpContext,
         token: CancellationToken,
         next: ProvideSignatureHelpSignature
     ): ProviderResult<SignatureHelp> {
         if (this.connected) {
-            return next(document, position, token);
+            return next(document, position, context, token);
         }
     }
 

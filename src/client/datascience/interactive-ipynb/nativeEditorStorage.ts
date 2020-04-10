@@ -541,26 +541,25 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             // Use these as the defaults unless we have been given some in the options.
             const metadata: nbformat.INotebookMetadata = {
                 language_info: {
-                    name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
                         version: pythonNumber
-                    }
+                    },
+                    file_extension: '.py',
+                    mimetype: 'text/x-python',
+                    name: 'python',
+                    nbconvert_exporter: 'python',
+                    pygments_lexer: `ipython${pythonNumber}`,
+                    version: pythonNumber
                 },
-                orig_nbformat: 2,
-                file_extension: '.py',
-                mimetype: 'text/x-python',
-                name: 'python',
-                npconvert_exporter: 'python',
-                pygments_lexer: `ipython${pythonNumber}`,
-                version: pythonNumber
+                orig_nbformat: 2
             };
 
             // Default notebook data.
             this._state.notebookJson = {
+                metadata: metadata,
                 nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
+                nbformat_minor: 2
             };
         }
     }
@@ -571,8 +570,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
         // Reuse our original json except for the cells.
         const json = {
-            ...(this._state.notebookJson as nbformat.INotebookContent),
-            cells: cells.map((c) => this.fixupCell(c.data))
+            cells: cells.map((c) => this.fixupCell(c.data)),
+            metadata: this._state.notebookJson.metadata,
+            nbformat: this._state.notebookJson.nbformat,
+            nbformat_minor: this._state.notebookJson.nbformat_minor
         };
         return JSON.stringify(json, null, this.indentAmount);
     }

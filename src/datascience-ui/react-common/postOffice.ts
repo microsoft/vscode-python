@@ -56,7 +56,6 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
-            logMessage(`Posting message ${type} to extension.`);
             api.postMessage({ type: type, payload });
         } else {
             logMessage(`No vscode API to post message ${type}`);

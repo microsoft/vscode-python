@@ -83,7 +83,7 @@ export namespace Helpers {
 
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
-            const newVM = {
+            const newVM: ICellViewModel = {
                 ...newVMs[index],
                 hasBeenRun: true,
                 cell: {
@@ -95,7 +95,7 @@ export namespace Helpers {
                     }
                 }
             };
-            newVMs[index] = asCellViewModel(newVM);
+            newVMs[index] = newVM;
 
             return {
                 ...arg.prevState,

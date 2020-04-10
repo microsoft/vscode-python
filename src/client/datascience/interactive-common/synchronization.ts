@@ -85,7 +85,10 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.PostOutgoingMessage]: MessageType.other,
     [CommonActionType.REFRESH_VARIABLES]: MessageType.other,
     [CommonActionType.FOCUS_INPUT]: MessageType.other,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: MessageType.other,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_DISABLED_FAILURE]: MessageType.other,
+    [CommonActionType.IPYWIDGET_RENDER_FAILURE]: MessageType.other,
 
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
@@ -111,7 +114,10 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GotoCodeCell]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Interrupt]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetLoadSuccess]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetLoadDisabled]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetRenderFailure]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,
@@ -164,7 +170,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.Sync]: MessageType.other,
     [InteractiveWindowMessages.Undo]: MessageType.other,
     [InteractiveWindowMessages.UnfocusedCellEditor]: MessageType.syncWithLiveShare,
-    [InteractiveWindowMessages.UpdateCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]:
+        MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateModel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateKernel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
@@ -185,7 +192,13 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea
+    [IPyWidgetMessages.IPyWidgets_msg_handled]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookResult]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_mirror_execute]: MessageType.noIdea
 };
 
 /**

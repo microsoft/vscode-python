@@ -7,6 +7,7 @@
 import { injectable } from 'inversify';
 import {
     CancellationToken,
+    CancellationTokenSource,
     Disposable,
     env,
     Event,
@@ -120,6 +121,23 @@ export class ApplicationShell implements IApplicationShell {
         task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
     ): Thenable<R> {
         return window.withProgress<R>(options, task);
+    }
+    public withProgressCustomIcon<R>(
+        icon: string,
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+    ): Thenable<R> {
+        const token = new CancellationTokenSource().token;
+        const statusBarProgress = this.createStatusBarItem(StatusBarAlignment.Left);
+        const progress = {
+            report: (value: { message?: string; increment?: number }) => {
+                statusBarProgress.text = `${icon} ${value.message}`;
+            }
+        };
+        statusBarProgress.show();
+        return task(progress, token).then((result) => {
+            statusBarProgress.dispose();
+            return result;
+        });
     }
     public createQuickPick<T extends QuickPickItem>(): QuickPick<T> {
         return window.createQuickPick<T>();

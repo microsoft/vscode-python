@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
+import * as internalPython from '../../../common/process/internal/python';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
@@ -92,16 +93,17 @@ export class CurrentPathService extends CacheableLocatorService {
     private async getInterpreter(options: { command: string; args?: string[] }) {
         try {
             const processService = await this.processServiceFactory.create();
-            const args = Array.isArray(options.args) ? options.args : [];
+            const pyArgs = Array.isArray(options.args) ? options.args : [];
+            const [args, parse] = internalPython.getExecutable();
             return processService
-                .exec(options.command, args.concat(['-c', 'import sys;print(sys.executable)']), {})
-                .then((output) => output.stdout.trim())
+                .exec(options.command, pyArgs.concat(args), {})
+                .then((output) => parse(output.stdout))
                 .then(async (value) => {
                     if (value.length > 0 && (await this.fs.fileExists(value))) {
                         return value;
                     }
                     traceError(
-                        `Detection of Python Interpreter for Command ${options.command} and args ${args.join(
+                        `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
                             ' '
                         )} failed as file ${value} does not exist`
                     );
@@ -109,7 +111,7 @@ export class CurrentPathService extends CacheableLocatorService {
                 })
                 .catch((_ex) => {
                     traceInfo(
-                        `Detection of Python Interpreter for Command ${options.command} and args ${args.join(
+                        `Detection of Python Interpreter for Command ${options.command} and args ${pyArgs.join(
                             ' '
                         )} failed`
                     );

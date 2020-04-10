@@ -644,6 +644,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
+     * Telemetry event sent when an environment file is detected in the workspace.
+     */
+    [EventName.ENVFILE_WORKSPACE]: {
+        /**
+         * If there's a custom path specified in the python.envFile workspace settings.
+         */
+        hasCustomEnvPath: boolean;
+    };
+    /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
@@ -1015,6 +1024,19 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+     */
+    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `Learn more` When 'More Info' option is selected
+         * `Do not show again` When 'Do not show again' option is selected
+         */
+        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */
@@ -1208,23 +1230,23 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_NODE_SERVER_ENABLED]: never | undefined;
+    [EventName.LANGUAGE_SERVER_ENABLED]: never | undefined;
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.PYTHON_NODE_SERVER_READY]: never | undefined;
+    [EventName.LANGUAGE_SERVER_READY]: never | undefined;
     /**
      * Telemetry event sent when starting Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_STARTUP]: never | undefined;
+    [EventName.LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    [EventName.LANGUAGE_SERVER_TELEMETRY]: any;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
+    [EventName.LANGUAGE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */
@@ -1918,7 +1940,28 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
     /**
+     * Telemetry event sent when an ipywidget module loads. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadSuccess]: { moduleHash: string; moduleVersion: string };
+    /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
     [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
+     */
+    [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
+     */
+    [Telemetry.IPyWidgetOverhead]: {
+        totalOverheadInMs: number;
+        numberOfMessagesWaitedOn: number;
+        averageWaitTime: number;
+        numberOfRegisteredHooks: number;
+    };
+    /**
+     * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
+     */
+    [Telemetry.IPyWidgetRenderFailure]: never | undefined;
 }

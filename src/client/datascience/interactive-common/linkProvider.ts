@@ -17,7 +17,10 @@ const LineQueryRegex = /line=(\d+)/;
 
 // The following list of commands represent those that can be executed
 // in a markdown cell using the syntax: https://command:[my.vscode.command].
-const linkCommandWhitelist = ['python.datascience.gatherquality'];
+const linkCommandWhitelist = [
+    'python.datascience.gatherquality',
+    'python.datascience.loadWidgetScriptsFromThirdPartySource'
+];
 
 // tslint:disable: no-any
 @injectable()
@@ -49,8 +52,12 @@ export class LinkProvider implements IInteractiveWindowListener {
                         this.openFile(href);
                     } else if (href.startsWith('https://command:')) {
                         const temp: string = href.split(':')[2];
-                        const command = temp.split('/?')[0];
-                        const params: string[] = temp.split('/?')[1].split(',');
+                        const params: string[] =
+                            temp.includes('/?') && temp.includes(',') ? temp.split('/?')[1].split(',') : [];
+                        let command = temp.split('/?')[0];
+                        if (command.endsWith('/')) {
+                            command = command.substring(0, command.length - 1);
+                        }
                         if (linkCommandWhitelist.includes(command)) {
                             commands.executeCommand(command, params);
                         }

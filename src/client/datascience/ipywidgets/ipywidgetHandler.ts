@@ -5,9 +5,14 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { ILoadIPyWidgetClassFailureAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import {
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
+} from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { EnableIPyWidgets } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -35,11 +40,13 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }>();
     // tslint:disable-next-line: no-require-imports
     private hashFn = require('hash.js').sha256;
+    private enabled = false;
 
     constructor(
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory
+        @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory,
+        @inject(IExperimentsManager) readonly experimentsManager: IExperimentsManager
     ) {
         disposables.push(
             notebookProvider.onNotebookCreated(async (e) => {
@@ -48,6 +55,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
                 }
             })
         );
+
+        this.enabled = experimentsManager.inExperiment(EnableIPyWidgets.experiment);
     }
 
     public dispose() {
@@ -58,26 +67,66 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
+        } else if (message === InteractiveWindowMessages.IPyWidgetLoadSuccess) {
+            this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
             this.sendLoadFailureTelemetry(payload);
+        } else if (message === InteractiveWindowMessages.IPyWidgetLoadDisabled) {
+            this.sendLoadDisabledTelemetry(payload);
+        } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
+            this.sendRenderFailureTelemetry(payload);
         }
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
     }
 
-    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+    private hash(s: string): string {
+        return this.hashFn().update(s).digest('hex');
+    }
+
+    private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
         try {
-            sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
-                isOnline: payload.isOnline,
-                moduleHash: this.hashFn(payload.moduleName),
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadSuccess, 0, {
+                moduleHash: this.hash(payload.moduleName),
                 moduleVersion: payload.moduleVersion
             });
         } catch {
             // do nothing on failure
         }
     }
+
+    private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
+                isOnline: payload.isOnline,
+                moduleHash: this.hash(payload.moduleName),
+                moduleVersion: payload.moduleVersion
+            });
+        } catch {
+            // do nothing on failure
+        }
+    }
+    private sendLoadDisabledTelemetry(payload: LoadIPyWidgetClassDisabledAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetLoadDisabled, 0, {
+                moduleHash: this.hash(payload.moduleName),
+                moduleVersion: payload.moduleVersion
+            });
+        } catch {
+            // do nothing on failure
+        }
+    }
+
+    private sendRenderFailureTelemetry(payload: Error) {
+        try {
+            traceError('Error rendering a widget: ', payload);
+            sendTelemetryEvent(Telemetry.IPyWidgetRenderFailure);
+        } catch {
+            // Do nothing on a failure
+        }
+    }
     private getIPyWidgetMessageDispatcher() {
-        if (!this.notebookIdentity) {
+        if (!this.notebookIdentity || !this.enabled) {
             return;
         }
         this.ipyWidgetMessageDispatcher = this.factory.create(this.notebookIdentity);

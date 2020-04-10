@@ -13,7 +13,14 @@ import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { getLocString, storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
 import { Transfer } from './transfer';
-import { CommonActionType, CommonReducerArg, ILoadIPyWidgetClassFailureAction, IOpenSettingsAction } from './types';
+import {
+    CommonActionType,
+    CommonReducerArg,
+    ILoadIPyWidgetClassFailureAction,
+    IOpenSettingsAction,
+    LoadIPyWidgetClassDisabledAction,
+    LoadIPyWidgetClassLoadAction
+} from './types';
 
 export namespace CommonEffects {
     export function notebookDirty(arg: CommonReducerArg): IMainState {
@@ -201,7 +208,13 @@ export namespace CommonEffects {
             cellVMs: newVMs
         };
     }
-
+    export function handleLoadIPyWidgetClassSuccess(
+        arg: CommonReducerArg<CommonActionType, LoadIPyWidgetClassLoadAction>
+    ): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadSuccess, arg.payload.data);
+        return arg.prevState;
+    }
     export function handleLoadIPyWidgetClassFailure(
         arg: CommonReducerArg<CommonActionType, ILoadIPyWidgetClassFailureAction>
     ): IMainState {
@@ -218,31 +231,16 @@ export namespace CommonEffects {
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
 
-            const outputs = current.cell.data.outputs as nbformat.IOutput[];
             const errorMessage = arg.payload.data.isOnline
                 ? arg.payload.data.error.toString()
                 : getLocString(
                       'DataScience.loadClassFailedWithNoInternet',
                       'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
                   ).format(arg.payload.data.moduleName, arg.payload.data.moduleVersion);
-            const error: nbformat.IError = {
-                output_type: 'error',
-                ename: 'Error',
-                evalue: errorMessage,
-                traceback: []
-            };
-
-            const newVM = Helpers.asCellViewModel({
+            newVMs[index] = Helpers.asCellViewModel({
                 ...current,
-                cell: {
-                    ...current.cell,
-                    data: {
-                        ...current.cell.data,
-                        outputs: [...outputs, error]
-                    }
-                }
+                uiSideError: errorMessage
             });
-            newVMs[index] = newVM;
 
             // Make sure to tell the extension so it can log telemetry.
             postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadFailure, arg.payload.data);
@@ -254,5 +252,17 @@ export namespace CommonEffects {
         } else {
             return arg.prevState;
         }
+    }
+    export function handleLoadIPyWidgetClassDisabled(
+        arg: CommonReducerArg<CommonActionType, LoadIPyWidgetClassDisabledAction>
+    ): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadDisabled, arg.payload.data);
+        return arg.prevState;
+    }
+    export function handleIPyWidgetRenderFailure(arg: CommonReducerArg<CommonActionType, Error>): IMainState {
+        // Make sure to tell the extension so it can log telemetry.
+        postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetRenderFailure, arg.payload.data);
+        return arg.prevState;
     }
 }

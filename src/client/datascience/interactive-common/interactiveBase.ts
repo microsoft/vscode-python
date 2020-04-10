@@ -41,6 +41,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -257,9 +258,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.VariableExplorerToggle:
-                if (this.variableExplorerToggle) {
-                    this.variableExplorerToggle(payload);
-                }
+                this.variableExplorerToggle(payload);
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
@@ -442,6 +441,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         if (args.current.active && !args.previous.active) {
             this.activating().ignoreErrors();
         }
+
+        // Tell our listeners, they may need to know too
+        this.listeners.forEach((l) => (l.onViewStateChanged ? l.onViewStateChanged(args) : noop()));
     }
 
     protected async activating() {
@@ -671,7 +673,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 case CellState.executing:
                     // Tell the react controls we have an update
-                    this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.UpdateCellWithExecutionResults, cell).ignoreErrors();
                     break;
 
                 case CellState.error:

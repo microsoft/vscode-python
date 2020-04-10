@@ -11,6 +11,8 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
+import * as internalPython from '../common/process/internal/python';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     BANNER_NAME_PROPOSE_LS,
@@ -160,7 +162,6 @@ export class JediProxy implements Disposable {
     private timer?: NodeJS.Timer | number;
 
     public constructor(
-        private extensionRootDir: string,
         workspacePath: string,
         interpreter: PythonInterpreter | undefined,
         private serviceContainer: IServiceContainer
@@ -234,7 +235,7 @@ export class JediProxy implements Disposable {
 
     // keep track of the directory so we can re-spawn the process.
     private initialize(): Promise<void> {
-        return this.spawnProcess(path.join(this.extensionRootDir, 'pythonFiles')).catch((ex) => {
+        return this.spawnProcess().catch((ex) => {
             if (this.languageServerStarted) {
                 this.languageServerStarted.reject(ex);
             }
@@ -367,7 +368,7 @@ export class JediProxy implements Disposable {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private async spawnProcess(cwd: string) {
+    private async spawnProcess() {
         if (this.languageServerStarted && !this.languageServerStarted.completed) {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
@@ -379,12 +380,8 @@ export class JediProxy implements Disposable {
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
         }
-        const args = ['completion.py'];
-        if (typeof this.pythonSettings.jediPath === 'string' && this.pythonSettings.jediPath.length > 0) {
-            args.push('custom');
-            args.push(this.pythonSettings.jediPath);
-        }
-        const result = pythonProcess.execObservable(args, { cwd });
+        const [args, parse] = internalScripts.completion(this.pythonSettings.jediPath);
+        const result = pythonProcess.execObservable(args, {});
         this.proc = result.proc;
         this.languageServerStarted.resolve();
         this.proc!.on('end', (end) => {
@@ -399,7 +396,7 @@ export class JediProxy implements Disposable {
                 error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0
             ) {
-                this.spawnProcess(cwd).catch((ex) => {
+                this.spawnProcess().catch((ex) => {
                     if (this.languageServerStarted) {
                         this.languageServerStarted.reject(ex);
                     }
@@ -419,7 +416,7 @@ export class JediProxy implements Disposable {
                     // tslint:disable-next-line:no-any
                     let responses: any[];
                     try {
-                        responses = dataStr.splitLines().map((resp) => JSON.parse(resp));
+                        responses = parse(dataStr);
                         this.previousData = '';
                     } catch (ex) {
                         // Possible we've only received part of the data, hence don't clear previousData.
@@ -656,13 +653,14 @@ export class JediProxy implements Disposable {
         return payload;
     }
 
-    private async getPathFromPythonCommand(args: string[]): Promise<string> {
+    private async getPathFromPython(getArgs = internalPython.getExecutable): Promise<string> {
+        const [args, parse] = getArgs();
         try {
             const pythonProcess = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 .create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
             const result = await pythonProcess.exec(args, { cwd: this.workspacePath });
-            const lines = result.stdout.trim().splitLines();
+            const lines = parse(result.stdout).splitLines();
             if (lines.length === 0) {
                 return '';
             }
@@ -676,18 +674,13 @@ export class JediProxy implements Disposable {
     private async buildAutoCompletePaths(): Promise<string[]> {
         const filePathPromises = [
             // Sysprefix.
-            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.prefix)']).catch(() => ''),
+            this.getPathFromPython(internalPython.getSysPrefix).catch(() => ''),
             // exeucutable path.
-            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.executable)'])
+            this.getPathFromPython(internalPython.getExecutable)
                 .then((execPath) => path.dirname(execPath))
                 .catch(() => ''),
             // Python specific site packages.
-            // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
-            // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
-            this.getPathFromPythonCommand([
-                '-c',
-                'from distutils.sysconfig import get_python_lib; print(get_python_lib())'
-            ])
+            this.getPathFromPython(internalPython.getSitePackages)
                 .then((libPath) => {
                     // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
                     // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
@@ -695,7 +688,7 @@ export class JediProxy implements Disposable {
                 })
                 .catch(() => ''),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
-            this.getPathFromPythonCommand(['-m', 'site', '--user-site']).catch(() => '')
+            this.getPathFromPython(internalPython.getUserSitePackages).catch(() => '')
         ];
 
         try {
