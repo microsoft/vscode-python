@@ -22,6 +22,7 @@ import {
     workspaceFolderKeysForWhichTheCopyIsDone_Key,
     workspaceKeysForWhichTheCopyIsDone_Key
 } from '../../client/common/interpreterPathService';
+import { FileSystemPaths } from '../../client/common/platform/fs-paths';
 import { InterpreterConfigurationScope, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { createDeferred, sleep } from '../../client/common/utils/async';
 
@@ -32,6 +33,7 @@ suite('Interpreter Path Service', async () => {
     const resource = Uri.parse('a');
     const resourceOutsideOfWorkspace = Uri.parse('b');
     const interpreterPath = 'path/to/interpreter';
+    const fs = FileSystemPaths.withDefaults();
     setup(() => {
         const event = TypeMoq.Mock.ofType<Event<ConfigurationChangeEvent>>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -126,7 +128,7 @@ suite('Interpreter Path Service', async () => {
 
     test('If the one-off transfer to new storage has not happened yet for the workspace, do it and record the transfer', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedWorkspaceKey = 'PATH\\TO\\WORKSPACEFILE';
+        const expectedWorkspaceKey = fs.normCase(workspaceFileUri.fsPath);
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string[]>>();
         workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
@@ -148,7 +150,7 @@ suite('Interpreter Path Service', async () => {
 
     test('If the one-off transfer to new storage has already happened for the workspace, do not update and simply return', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedWorkspaceKey = 'PATH\\TO\\WORKSPACEFILE';
+        const expectedWorkspaceKey = fs.normCase(workspaceFileUri.fsPath);
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string[]>>();
         workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
@@ -330,7 +332,7 @@ suite('Interpreter Path Service', async () => {
 
     test('Workspace settings are correctly updated in case of multiroot folders', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedSettingKey = 'WORKSPACE_INTERPRETER_PATH_PATH\\TO\\WORKSPACEFILE';
+        const expectedSettingKey = `WORKSPACE_INTERPRETER_PATH_${fs.normCase(workspaceFileUri.fsPath)}`;
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
         workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
@@ -507,7 +509,7 @@ suite('Interpreter Path Service', async () => {
 
     test('Inspecting settings returns as expected in case of multiroot folders', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedWorkspaceSettingKey = 'WORKSPACE_INTERPRETER_PATH_PATH\\TO\\WORKSPACEFILE';
+        const expectedWorkspaceSettingKey = `WORKSPACE_INTERPRETER_PATH_${fs.normCase(workspaceFileUri.fsPath)}`;
         const expectedWorkspaceFolderSettingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         // A workspace file is present in case of multiroot workspace folders
