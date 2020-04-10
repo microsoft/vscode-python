@@ -470,5 +470,5 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
 // tslint:disable-next-line: no-any
 function isThenable<T>(v: any): v is Thenable<T> {
-    return typeof v.then === 'function';
+    return typeof v?.then === 'function';
 }
