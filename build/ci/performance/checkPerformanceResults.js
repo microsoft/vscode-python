@@ -50,6 +50,8 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                     testcase.name +
                     '.\n\tBenchmark time: ' +
                     testcase.time +
+                    '\n\tStandard Deviation:' +
+                    standardDev +
                     '\n\tAverage test time: ' +
                     avg +
                     '\n\tTimes it was skipped: ' +
