@@ -121,7 +121,7 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value, {
             moduleName: 'widget2',
             source: 'local',
-            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index')))
+            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget2', 'index.js')))
         });
         const value1 = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
         assert.deepEqual(value1, value);
@@ -149,7 +149,7 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value, {
             moduleName: 'widget1',
             source: 'local',
-            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget1', 'index')))
+            scriptUri: asVSCodeUri(Uri.file(path.join(searchDirectory, 'widget1', 'index.js')))
         });
 
         // Ensure we look for the right things in the right place.
