@@ -19,7 +19,13 @@ import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, IKernelProcess } from '../../kernel-launcher/types';
-import { INotebook, INotebookExecutionInfo, INotebookExecutionLogger, IRawNotebookProvider } from '../../types';
+import {
+    IJMPConnection,
+    INotebook,
+    INotebookExecutionInfo,
+    INotebookExecutionLogger,
+    IRawNotebookProvider
+} from '../../types';
 import { EnchannelJMPConnection } from '../enchannelJMPConnection';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
@@ -116,7 +122,8 @@ export class HostRawNotebookProvider
         await this.kernelProcess.ready;
         //await this.delay(10_000);
 
-        const rawSession = new RawJupyterSession(new EnchannelJMPConnection());
+        const jmpConnection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
+        const rawSession = new RawJupyterSession(jmpConnection);
         try {
             await rawSession.connect(this.kernelProcess.connection!);
         } finally {
