@@ -22,8 +22,6 @@ export class RawSession implements Session.ISession {
     private _kernel: RawKernel;
     private _statusChanged = new Signal<this, Kernel.Status>(this);
 
-    // RAWKERNEL: Still just pass connection for now, we'll have to
-    // inject this further up the chain
     constructor(connection: IJMPConnection) {
         // Unique ID for this session instance
         this._id = uuid();
@@ -33,14 +31,28 @@ export class RawSession implements Session.ISession {
 
         // Connect our kernel
         this._kernel = new RawKernel(connection, this._clientID);
-    }
-
-    public async connect(connectionInfo: IJMPConnectionInfo) {
-        await this._kernel.connect(connectionInfo);
-
         // Connect for status changes
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
     }
+    // RAWKERNEL: Still just pass connection for now, we'll have to
+    // inject this further up the chain
+    //constructor(connection: IJMPConnection) {
+    //// Unique ID for this session instance
+    //this._id = uuid();
+
+    //// ID for our client JMP connection
+    //this._clientID = uuid();
+
+    //// Connect our kernel
+    //this._kernel = new RawKernel(connection, this._clientID);
+    //}
+
+    //public async connect(connectionInfo: IJMPConnectionInfo) {
+    //await this._kernel.connect(connectionInfo);
+
+    //// Connect for status changes
+    //this._kernel.statusChanged.connect(this.onKernelStatus, this);
+    //}
 
     public dispose() {
         if (!this.isDisposed) {

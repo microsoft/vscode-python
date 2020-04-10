@@ -89,22 +89,33 @@ export class RawKernel implements Kernel.IKernel {
         RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
     >();
 
-    // JMP connection should be injected, but no need to yet until it actually exists
-    constructor(jmpConnection: IJMPConnection, clientID: string) {
+    constructor(jmpConnection: IJMPConnection, clientId: string) {
         // clientID is controlled by the session as we keep the same id
-        this._clientId = clientID;
+        this._clientId = clientId;
         this._id = uuid();
         this._status = 'unknown';
         this._statusChanged = new Signal<this, Kernel.Status>(this);
         this.jmpConnection = jmpConnection;
-    }
-
-    public async connect(connectInfo: IJMPConnectionInfo) {
-        await this.jmpConnection.connect(connectInfo);
         this.jmpConnection.subscribe(message => {
             this.msgIn(message);
         });
     }
+    //// JMP connection should be injected, but no need to yet until it actually exists
+    //constructor(jmpConnection: IJMPConnection, clientID: string) {
+    //// clientID is controlled by the session as we keep the same id
+    //this._clientId = clientID;
+    //this._id = uuid();
+    //this._status = 'unknown';
+    //this._statusChanged = new Signal<this, Kernel.Status>(this);
+    //this.jmpConnection = jmpConnection;
+    //}
+
+    //public async connect(connectInfo: IJMPConnectionInfo) {
+    //await this.jmpConnection.connect(connectInfo);
+    //this.jmpConnection.subscribe(message => {
+    //this.msgIn(message);
+    //});
+    //}
 
     public requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],

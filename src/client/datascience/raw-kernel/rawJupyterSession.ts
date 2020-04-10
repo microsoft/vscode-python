@@ -21,11 +21,9 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    //private rawSession: RawSession;
     // IANHU: Do I need to keep RawSession here? Just keep session and process in sync?
     private currentSession: { session: RawSession; process: IKernelProcess | undefined } | undefined;
 
-    //constructor(connection: IJMPConnection) {
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         private readonly serviceContainer: IServiceContainer
@@ -96,7 +94,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         // IANHU: Cleanup for both RawSession and RawKernel we can just
         // connect in the constructor or just pass the connection in connect
         const session = new RawSession(connection);
-        await session.connect(process.connection);
+        //await session.connect(process.connection);
 
         return { session, process: undefined };
     }
@@ -112,7 +110,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     private async jmpConnection(kernelConnection: IKernelConnection): Promise<IJMPConnection> {
         const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
 
-        //await connection.connect(kernelConnection);
+        await connection.connect(kernelConnection);
 
         return connection;
     }
