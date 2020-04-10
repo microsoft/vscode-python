@@ -7,6 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { traceDecorators } from '../../common/logger';
 import {
     BANNER_NAME_LS_SURVEY,
+    IConfigurationService,
     IDisposable,
     IExperimentsManager,
     IPythonExtensionBanner,
@@ -43,7 +44,8 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         @named(BANNER_NAME_LS_SURVEY)
         private readonly surveyBanner: IPythonExtensionBanner,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public dispose() {
         if (this.languageProxy) {
@@ -107,6 +109,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.surveyBanner,
             this.experimentsManager,
+            this.configService,
             LanguageServerType.Microsoft,
             versionPair?.version.format()
         );

@@ -31,7 +31,10 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import {
+    ConfigurationParams,
+    ConfigurationRequest,
     HandleDiagnosticsSignature,
+    HandlerResult,
     Middleware,
     PrepareRenameSignature,
     ProvideCodeActionsSignature,
@@ -51,13 +54,14 @@ import {
     ProvideWorkspaceSymbolsSignature,
     ResolveCodeLensSignature,
     ResolveCompletionItemSignature,
-    ResolveDocumentLinkSignature
+    ResolveDocumentLinkSignature,
+    ResponseError
 } from 'vscode-languageclient';
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
 import { HiddenFilePrefix } from '../common/constants';
 import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experimentGroups';
-import { IExperimentsManager, IPythonExtensionBanner } from '../common/types';
+import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -80,11 +84,47 @@ export class LanguageClientMiddleware implements Middleware {
     public nextWindow: number = 0;
     public eventCount: number = 0;
 
+    public workspace = {
+        // tslint:disable:no-any
+        configuration: (
+            params: ConfigurationParams,
+            token: CancellationToken,
+            next: ConfigurationRequest.HandlerSignature
+        ): HandlerResult<any[], void> => {
+            const result = next(params, token);
+
+            // For backwards compatibility, set python.pythonPath to the configured
+            // value as though it were in the user's settings.json file.
+            const addPythonPath = (settings: any[] | ResponseError<void>) => {
+                if (settings instanceof ResponseError) {
+                    return settings;
+                }
+
+                params.items.forEach((item, i) => {
+                    if (item.section === 'python') {
+                        const uri = item.scopeUri ? Uri.parse(item.scopeUri) : undefined;
+                        settings[i].pythonPath = this.configService.getSettings(uri).pythonPath;
+                    }
+                });
+
+                return settings;
+            };
+
+            if (isThenable(result)) {
+                return (result as Thenable<any[] | ResponseError<void>>).then(addPythonPath);
+            }
+
+            return addPythonPath(result);
+        }
+        // tslint:enable:no-any
+    };
+
     private connected = false; // Default to not forwarding to VS code.
 
     public constructor(
         private readonly surveyBanner: IPythonExtensionBanner,
         experimentsManager: IExperimentsManager,
+        private readonly configService: IConfigurationService,
         serverType: LanguageServerType,
         public readonly serverVersion?: string
     ) {
@@ -413,8 +453,8 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             const result = originalMethod.apply(this, args);
 
             // tslint:disable-next-line:no-unsafe-any
-            if (result && typeof result.then === 'function') {
-                (result as Thenable<void>).then(() => {
+            if (result && isThenable<void>(result)) {
+                result.then(() => {
                     sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
                 });
             } else {
@@ -426,4 +466,9 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
         return descriptor;
     };
+}
+
+// tslint:disable-next-line: no-any
+function isThenable<T>(v: any): v is Thenable<T> {
+    return typeof v.then === 'function';
 }
