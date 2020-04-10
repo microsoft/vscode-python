@@ -13,7 +13,7 @@ const performanceResultsFile = path.join(
     'performance',
     'performance-results.json'
 );
-const errorMargin = 1.2;
+const errorMargin = 1.1;
 let failedTests = '';
 
 function getFailingTimesString(missedTimes) {
