@@ -68,8 +68,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
             const parts = file.split(path.sep);
             const moduleName = parts[0];
 
-            // Drop the `.js`.
-            const fileUri = Uri.file(path.join(nbextensionsPath, moduleName, 'index'));
+            const fileUri = Uri.file(path.join(nbextensionsPath, file));
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
             // tslint:disable-next-line: no-unnecessary-local-variable
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };

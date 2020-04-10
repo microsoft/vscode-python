@@ -55,8 +55,12 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
     };
     scripts.forEach((script) => {
         scriptsAlreadyRegisteredInRequireJs.set(script.moduleName, script.scriptUri);
+        // Drop the `.js` from the scriptUri.
+        const scriptUri = script.scriptUri.toLowerCase().endsWith('.js')
+            ? script.scriptUri.substring(0, script.scriptUri.length - 3)
+            : script.scriptUri;
         // Register the script source into requirejs so it gets loaded via requirejs.
-        config.paths[script.moduleName] = script.scriptUri;
+        config.paths[script.moduleName] = scriptUri;
     });
 
     requirejs.config(config);

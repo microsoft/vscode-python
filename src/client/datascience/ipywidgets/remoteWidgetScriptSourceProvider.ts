@@ -19,8 +19,8 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
         // Noop.
     }
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
-        const scriptUri = `${this.connection.baseUrl}nbextensions/${moduleName}/index`;
-        const exists = await this.getUrlForWidget(`${scriptUri}.js`);
+        const scriptUri = `${this.connection.baseUrl}nbextensions/${moduleName}/index.js`;
+        const exists = await this.getUrlForWidget(scriptUri);
         if (exists) {
             return { moduleName, scriptUri, source: 'cdn' };
         }

@@ -4,14 +4,22 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import type * as serialize from '@jupyterlab/services/lib/kernel/serialize';
+import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
+import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IHttpClient, IPersistentStateFactory } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExtensionContext,
+    IHttpClient,
+    IPersistentStateFactory
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -30,6 +38,8 @@ import {
 } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
+// tslint:disable: no-var-requires no-require-imports
+const sanitize = require('sanitize-filename');
 
 @injectable()
 export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocalResourceUriConverter {
@@ -41,6 +51,14 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
     }
+    private get deserialize(): typeof serialize.deserialize {
+        if (!this.jupyterSerialize) {
+            // tslint:disable-next-line: no-require-imports
+            this.jupyterSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof serialize;
+        }
+        return this.jupyterSerialize.deserialize;
+    }
+    private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private notebookIdentity?: Uri;
     private postEmitter = new EventEmitter<{
         message: string;
@@ -64,14 +82,9 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      */
     private pendingModuleRequests = new Map<string, string>();
     private jupyterSerialize?: typeof serialize;
-    private get deserialize(): typeof serialize.deserialize {
-        if (!this.jupyterSerialize) {
-            // tslint:disable-next-line: no-require-imports
-            this.jupyterSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof serialize;
-        }
-        return this.jupyterSerialize.deserialize;
-    }
     private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
+    private readonly targetWidgetScriptsFolder: string;
+    private readonly createTargetWidgetScriptsFolder: Promise<string>;
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
@@ -81,8 +94,18 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
+        this.targetWidgetScriptsFolder = path.join(extensionContext.extensionPath, 'tmp', 'nbextensions');
+        this.createTargetWidgetScriptsFolder = this.fs
+            .directoryExists(this.targetWidgetScriptsFolder)
+            .then(async (exists) => {
+                if (!exists) {
+                    await this.fs.createDirectory(this.targetWidgetScriptsFolder);
+                }
+                return this.targetWidgetScriptsFolder;
+            });
         disposables.push(this);
         this.notebookProvider.onNotebookCreated(
             (e) => {
@@ -94,7 +117,39 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             this.disposables
         );
     }
-    public asWebviewUri(localResource: Uri): Promise<Uri> {
+    /**
+     * This method is called to convert a Uri to a format such that it can be used in a webview.
+     * WebViews only allow files that are part of extension and the same directory where notebook lives.
+     * To ensure widgets can find the js files, we copy the script file to a into the extensionr folder  `tmp/nbextensions`.
+     * (storing files in `tmp/nbextensions` is relatively safe as this folder gets deleted when ever a user updates to a new version of VSC).
+     * Hence we need to copy for every version of the extension.
+     * Copying into global workspace folder would also work, but over time this folder size could grow (in an unmanaged way).
+     */
+    public async asWebviewUri(localResource: Uri): Promise<Uri> {
+        if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
+            const deferred = createDeferred<Uri>();
+            this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
+            try {
+                // Create a file name such that it will be unique and consistent across VSC reloads.
+                // Only if original file has been modified should we create a new copy of the sam file.
+                const fileHash: string = await this.fs.getFileHash(localResource.fsPath);
+                const uniqueFileName = sanitize(sha256().update(`${localResource.fsPath}${fileHash}`).digest('hex'));
+                const targetFolder = await this.createTargetWidgetScriptsFolder;
+                const mappedResource = Uri.file(
+                    path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
+                );
+                if (!(await this.fs.fileExists(mappedResource.fsPath))) {
+                    await this.fs.copyFile(localResource.fsPath, mappedResource.fsPath);
+                }
+                traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);
+                deferred.resolve(mappedResource);
+            } catch (ex) {
+                traceError(`Failed to map widget Script file ${localResource.fsPath}`);
+                deferred.reject(ex);
+            }
+        }
+        localResource = await this.resourcesMappedToExtensionFolder.get(localResource.fsPath)!;
+
         const key = localResource.toString();
         if (!this.uriConversionPromises.has(key)) {
             this.uriConversionPromises.set(key, createDeferred<Uri>());

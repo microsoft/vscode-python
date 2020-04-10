@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
-
+import { Uri } from 'vscode';
 import { IFileSystem } from '../../platform/types';
-import { IDisposableRegistry } from '../../types';
+import { IDisposableRegistry, IExtensionContext } from '../../types';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
 
@@ -16,8 +17,9 @@ export class WebPanelProvider implements IWebPanelProvider {
     private token: string | undefined;
 
     constructor(
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
     // tslint:disable-next-line:no-any
@@ -25,8 +27,17 @@ export class WebPanelProvider implements IWebPanelProvider {
         const serverData = options.startHttpServer
             ? await this.ensureServerIsRunning()
             : { port: undefined, token: undefined };
-
-        return new WebPanel(this.fs, this.disposableRegistry, serverData.port, serverData.token, options);
+        // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
+        // Used by widgets to place files that are not otherwise accessible.
+        const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
+        return new WebPanel(
+            this.fs,
+            this.disposableRegistry,
+            serverData.port,
+            serverData.token,
+            options,
+            additionalRootPaths
+        );
     }
 
     private async ensureServerIsRunning(): Promise<{ port: number; token: string }> {

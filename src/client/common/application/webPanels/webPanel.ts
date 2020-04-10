@@ -28,11 +28,12 @@ export class WebPanel implements IWebPanel {
         private disposableRegistry: IDisposableRegistry,
         private port: number | undefined,
         private token: string | undefined,
-        private options: IWebPanelOptions
+        private options: IWebPanelOptions,
+        additionalRootPaths: Uri[] = []
     ) {
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd), ...additionalRootPaths],
             portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
         };
         if (options.webViewPanel) {

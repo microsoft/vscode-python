@@ -17,12 +17,7 @@ export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/master/examples/web3/src/manager.ts
 
 // These widgets can always be loaded from requirejs (as it is bundled).
-const widgetsRegisteredInRequireJs = [
-    '@jupyter-widgets/controls',
-    '@jupyter-widgets/base',
-    '@jupyter-widgets/output',
-    'azureml_widgets'
-];
+const widgetsRegisteredInRequireJs = ['@jupyter-widgets/controls', '@jupyter-widgets/base', '@jupyter-widgets/output'];
 
 export class WidgetManager extends jupyterlab.WidgetManager {
     public kernel: Kernel.IKernelConnection;
