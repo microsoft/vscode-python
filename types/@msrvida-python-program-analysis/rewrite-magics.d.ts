@@ -55,6 +55,7 @@ export declare class MagicsRewriter {
      * Rewrite code so that it doesn't contain magics.
      */
     rewrite(text: string, lineMagicRewriters?: LineMagicRewriter[]): string;
+    rewriteShellCommand(text: string): string;
     /**
      * Default rewrite rule for cell magics.
      */

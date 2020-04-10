@@ -1,26 +1,33 @@
-import { FunctionSpec, TypeSpec, ModuleSpec, ModuleMap, JsonSpecs } from "./specs";
+import { Spec, PythonType } from "./specs";
 import * as ast from './python-parser';
-export declare class SymbolTable {
-    private jsonSpecs;
-    modules: ModuleMap<FunctionSpec>;
+declare class Scope {
     types: {
-        [name: string]: TypeSpec<FunctionSpec>;
+        [name: string]: PythonType;
     };
     functions: {
-        [name: string]: FunctionSpec;
+        [name: string]: ast.Def;
     };
-    constructor(jsonSpecs: JsonSpecs);
-    lookupFunction(name: string): FunctionSpec | undefined;
-    lookupNode(func: ast.SyntaxNode): FunctionSpec;
-    lookupModuleFunction(modName: string, funcName: string): FunctionSpec | undefined;
-    importModule(modulePath: string, alias: string): ModuleSpec<FunctionSpec>;
-    private resolveFunction;
-    private resolveType;
-    private makePythonType;
-    private resolveModule;
-    importModuleDefinitions(namePath: string, imports: {
-        path: string;
-        alias: string;
-    }[]): string[];
-    private lookupSpec;
 }
+export declare class SymbolTable {
+    private pkgSpecs;
+    private globals;
+    private scopes;
+    constructor(pkgSpecs: Spec);
+    lookup(name: string): Spec | undefined;
+    lookupModuleFunction(func: ast.SyntaxNode): Spec;
+    private lookupPath;
+    store(name: string, spec: Spec): void;
+    get currentScope(): Scope;
+    storeType(name: string, type: PythonType): void;
+    lookupType(name: string): PythonType;
+    storeLocalFunction(def: ast.Def): void;
+    lookupLocalFunction(name: string): ast.Def;
+    pushScope(): void;
+    popScope(): void;
+    importModule(modulePath: string, alias: string): Spec;
+    importModuleDefinitions(namePath: string, imports: {
+        name: string;
+        alias?: string;
+    }[]): string[];
+}
+export {};

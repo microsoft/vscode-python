@@ -66,7 +66,7 @@ export declare class ExecutionLogSlicer<TCell extends Cell> {
      * Relevant line numbers are relative to the cell's start line (starting at first line = 0).
      */
     sliceAllExecutions(cellId: string, seedLocations?: LocationSet): SlicedExecution[];
-    readonly cellExecutions: ReadonlyArray<CellExecution<TCell>>;
+    get cellExecutions(): ReadonlyArray<CellExecution<TCell>>;
     /**
      * Get the cell program (tree, defs, uses) for a cell.
      */

@@ -3,9 +3,12 @@ export declare class Block {
     id: number;
     readonly hint: string;
     statements: ast.SyntaxNode[];
+    private imports;
     loopVariables: ast.SyntaxNode[];
-    constructor(id: number, hint: string, statements: ast.SyntaxNode[], loopVariables?: ast.SyntaxNode[]);
+    private ssa;
+    constructor(id: number, hint: string, statements: ast.SyntaxNode[], imports: string[], loopVariables?: ast.SyntaxNode[]);
     toString(): string;
+    get flattenedStatements(): ast.SyntaxNode[];
 }
 export declare class ControlFlowGraph {
     private _blocks;
@@ -14,9 +17,10 @@ export declare class ControlFlowGraph {
     private exit;
     private successors;
     private loopVariables;
+    private imports;
     constructor(node: ast.SyntaxNode);
     private makeBlock;
-    readonly blocks: Block[];
+    get blocks(): Block[];
     getSuccessors(block: Block): Block[];
     getPredecessors(block: Block): Block[];
     print(): void;

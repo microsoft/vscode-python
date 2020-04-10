@@ -5,6 +5,6 @@ export declare class Graph<T> {
     private _nodes;
     constructor(getIdentifier: (item: T) => string);
     addEdge(fromNode: T, toNode: T): void;
-    readonly nodes: T[];
+    get nodes(): T[];
     topoSort(): T[];
 }
