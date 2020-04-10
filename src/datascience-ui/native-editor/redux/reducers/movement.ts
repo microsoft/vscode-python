@@ -82,7 +82,7 @@ export namespace Movement {
         if (index < arg.prevState.cellVMs.length - 1) {
             queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, {
                 cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                cursorPos: CursorPos.Bottom
+                cursorPos: CursorPos.Top
             });
         }
 
