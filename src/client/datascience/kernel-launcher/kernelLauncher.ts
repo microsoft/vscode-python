@@ -11,6 +11,7 @@ import { InterpreterUri } from '../../common/installer/types';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import { isResource, noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
@@ -21,6 +22,12 @@ class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
     private connectionFile?: TemporaryFile;
+    private readyPromise: Deferred<void>;
+
+    public get ready(): Promise<void> {
+        return this.readyPromise.promise;
+    }
+
     public get process(): ChildProcess | undefined {
         return this._process;
     }
@@ -31,7 +38,9 @@ class KernelProcess implements IKernelProcess {
     constructor(
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IFileSystem) private file: IFileSystem
-    ) {}
+    ) {
+        this.readyPromise = createDeferred<void>();
+    }
 
     public async launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void> {
         this.connectionFile = await this.file.createTemporaryFile('json');
@@ -54,15 +63,21 @@ class KernelProcess implements IKernelProcess {
         //this._process = executionService.execObservable(args, {}).proc;
         const exeObs = executionService.execObservable(args, {});
         exeObs.proc!.on('end', end => {
+            this.readyPromise.reject();
             traceInfo('spawnProcess.end', `End - ${end}`);
         });
         exeObs.proc!.on('error', error => {
+            this.readyPromise.reject();
             traceInfo('spawnProcess.error', `Error - ${error}`);
         });
         exeObs.out.subscribe(output => {
             if (output.source === 'stderr') {
                 traceInfo(output.out);
             } else {
+                // Search for --existing
+                if (output.out.includes('--existing')) {
+                    this.readyPromise.resolve();
+                }
                 traceInfo(output.out);
             }
         });

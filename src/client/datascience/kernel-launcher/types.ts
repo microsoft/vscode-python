@@ -28,6 +28,7 @@ export interface IKernelConnection {
 export interface IKernelProcess extends IDisposable {
     process: ChildProcess | undefined;
     connection: IKernelConnection | undefined;
+    ready: Promise<void>;
     dispose(): void;
     launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }

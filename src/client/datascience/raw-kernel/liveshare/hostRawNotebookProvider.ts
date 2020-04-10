@@ -113,7 +113,8 @@ export class HostRawNotebookProvider
         // Now hack in the kernel launcher
         this.kernelProcess = await this.kernelLauncher.launch(resource, notebookMetadata?.kernelspec?.name);
 
-        await this.delay(10_000);
+        await this.kernelProcess.ready;
+        //await this.delay(10_000);
 
         const rawSession = new RawJupyterSession(new EnchannelJMPConnection());
         try {
