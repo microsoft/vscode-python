@@ -11,9 +11,9 @@ let performanceData = [];
 
 function getTime(testcase) {
     if (testcase.failure) {
-        return -10;
+        return 'F';
     } else if (testcase.skipped === '') {
-        return -1;
+        return 'S';
     }
     return parseFloat(testcase.time);
 }
@@ -36,7 +36,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 time: getTime(testcase)
             };
 
-            if (test.time !== -1) {
+            if (test.time !== 'S') {
                 performanceData.push(test);
             }
         });

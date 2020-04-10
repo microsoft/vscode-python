@@ -33,7 +33,7 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
     const performanceJson = JSON.parse(performanceData);
 
     performanceJson.forEach((result) => {
-        const cleanTimes = result.times.filter((x) => x !== -1 && x !== -10);
+        const cleanTimes = result.times.filter((x) => x !== 'S' && x !== 'F');
         const n = cleanTimes.length;
         const avg = n === 0 ? 0 : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / n;
         const standardDev =
@@ -42,13 +42,13 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 : Math.sqrt(cleanTimes.map((x) => Math.pow(parseFloat(x) - avg, 2)).reduce((a, b) => a + b) / n);
         const testcase = benchmarkJson.find((x) => x.name === result.name);
 
-        if (testcase && testcase.time !== -1) {
+        if (testcase && testcase.time !== 'S') {
             if (n === 0) {
-                // if (result.times.every((t) => t === -1)) {
+                // if (result.times.every((t) => t === 'S')) {
                 //     // Test was skipped every time
                 //     failedTests += 'Skipped every time: ' + testcase.name + '\n';
                 // } else
-                if (result.times.every((t) => t === -10)) {
+                if (result.times.every((t) => t === 'F')) {
                     // Test failed every time
                     failedTests += 'Failed every time: ' + testcase.name + '\n';
                 }
@@ -62,8 +62,8 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                 }
 
                 if (missedTimes.length >= 2) {
-                    const skippedTimes = result.times.filter((t) => t === -1);
-                    const failedTimes = result.times.filter((t) => t === -10);
+                    const skippedTimes = result.times.filter((t) => t === 'S');
+                    const failedTimes = result.times.filter((t) => t === 'F');
 
                     failedTests +=
                         'Performance is slow in: ' +
