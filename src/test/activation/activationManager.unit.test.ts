@@ -558,7 +558,7 @@ suite('Activation Manager', () => {
                     .setup((a) => a.getAutoSelectedInterpreter(resource))
                     .returns(() => interpreter as any)
                     .verifiable(typemoq.Times.once());
-                when(interpreterPathService.get(resource)).thenReturn('python');
+                when(interpreterPathService.get(resource)).thenReturn(setting);
                 when(
                     interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
                 ).thenResolve();
@@ -588,20 +588,12 @@ suite('Activation Manager', () => {
         });
 
         test(`If in Deprecate PythonPath experiment, and setting is set, simply return`, async () => {
-            const interpreter = undefined;
             when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
             when(workspaceService.getWorkspaceFolderIdentifier(resource)).thenReturn('1');
-            autoSelection
-                .setup((a) => a.getAutoSelectedInterpreter(resource))
-                .returns(() => interpreter as any)
-                .verifiable(typemoq.Times.never());
+            autoSelection.setup((a) => a.getAutoSelectedInterpreter(resource)).verifiable(typemoq.Times.never());
             when(interpreterPathService.get(resource)).thenReturn('settingSetToSomePath');
-            when(
-                interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)
-            ).thenResolve();
             await managerTest.evaluateAutoSelectedInterpreterSafety(resource);
             autoSelection.verifyAll();
-            verify(interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter as any, resource)).never();
         });
 
         test(`If in Deprecate PythonPath experiment, if setting is set during evaluation, don't wait for the evaluation to finish to resolve method promise`, async () => {
