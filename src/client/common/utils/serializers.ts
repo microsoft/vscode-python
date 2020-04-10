@@ -32,7 +32,7 @@ export function serializeDataViews(buffers: undefined | (ArrayBuffer | ArrayBuff
             } as any);
         } else {
             // tslint:disable-next-line: no-any
-            newBufferView.push(Array.apply(null, new Uint8Array(item as any) as any) as any);
+            newBufferView.push([...new Uint8Array(item as any)]);
         }
     }
 
