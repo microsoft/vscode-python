@@ -15,9 +15,11 @@ const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 // tslint:disable-next-line:no-var-requires no-require-imports
 const FileManagerPlugin = require('filemanager-webpack-plugin');
-// If ENABLE_GATHER variable is defined, don't exclude the python-program-analysis pacakge.
+// If ENABLE_GATHER variable is defined, only package the specs folder, not the rest of the code.
 // See externals, below.
-const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
+const ppaPackageList = process.env.ENABLE_GATHER
+    ? ['@msrvida/python-program-analysis/dist/es5/specs']
+    : ['@msrvida/python-program-analysis'];
 const config = {
     mode: 'production',
     target: 'node',
