@@ -13,7 +13,6 @@ const performanceResultsFile = path.join(
     'performance',
     'performance-results.json'
 );
-const errorMargin = 1.1;
 let failedTests = '';
 
 fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
@@ -26,14 +25,15 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
 
     performanceJson.forEach((result) => {
         const cleanTimes = result.times.filter((x) => x !== -1 && x !== -10);
-        const avg =
-            cleanTimes.length === 0
-                ? 0
-                : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
+        const n = cleanTimes.length;
+        const avg = n === 0 ? 0 : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / n;
+        const standardDev = Math.sqrt(
+            cleanTimes.map((x) => Math.pow(parseFloat(x) - avg, 2)).reduce((a, b) => a + b) / n
+        );
         const testcase = benchmarkJson.find((x) => x.name === result.name);
 
         if (testcase && testcase.time !== -1) {
-            if (cleanTimes.length === 0) {
+            if (n === 0) {
                 if (result.times.every((t) => t === -1)) {
                     // Test was skipped every time
                     failedTests += 'Skipped every time: ' + testcase.name + '\n';
@@ -41,7 +41,7 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
                     // Test failed every time
                     failedTests += 'Failed every time: ' + testcase.name + '\n';
                 }
-            } else if (avg > parseFloat(testcase.time) * errorMargin) {
+            } else if (avg > parseFloat(testcase.time) + standardDev) {
                 const skippedTimes = result.times.filter((t) => t === -1);
                 const failedTimes = result.times.filter((t) => t === -10);
 
