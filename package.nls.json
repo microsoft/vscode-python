@@ -145,6 +145,7 @@
     "Common.reload": "Reload",
     "Common.moreInfo": "More Info",
     "Common.and": "and",
+    "Common.ok": "Ok",
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
     "OutputChannelNames.languageServer": "Python Language Server",
