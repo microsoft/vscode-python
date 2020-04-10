@@ -37,7 +37,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 jsonObj.testsuite.testcase.forEach((testcase) => {
                     const test = {
                         name: testcase.classname + ' ' + testcase.name,
-                        times: getTime(testcase)
+                        times: [getTime(testcase)]
                     };
 
                     performanceData.push(test);
