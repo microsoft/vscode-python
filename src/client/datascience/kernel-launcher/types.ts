@@ -9,7 +9,7 @@ import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri, kernelName: string): Promise<IKernelProcess>;
+    launch(interpreterUri: InterpreterUri, kernelName?: string): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {

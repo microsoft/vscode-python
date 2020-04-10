@@ -8,6 +8,7 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { InterpreterUri } from '../../common/installer/types';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource, noop } from '../../common/utils/misc';
@@ -50,7 +51,22 @@ class KernelProcess implements IKernelProcess {
         args.splice(0, 1);
 
         const executionService = await this.executionFactory.create({ resource, pythonPath });
-        this._process = executionService.execObservable(args, {}).proc;
+        //this._process = executionService.execObservable(args, {}).proc;
+        const exeObs = executionService.execObservable(args, {});
+        exeObs.proc!.on('end', end => {
+            traceInfo('spawnProcess.end', `End - ${end}`);
+        });
+        exeObs.proc!.on('error', error => {
+            traceInfo('spawnProcess.error', `Error - ${error}`);
+        });
+        exeObs.out.subscribe(output => {
+            if (output.source === 'stderr') {
+                traceInfo(output.out);
+            } else {
+                traceInfo(output.out);
+            }
+        });
+        this._process = exeObs.proc;
     }
 
     public dispose() {
