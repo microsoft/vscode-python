@@ -23,7 +23,7 @@ import {
 import { InterpreterConfigurationScope, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { createDeferred, sleep } from '../../client/common/utils/async';
 
-suite('Interpreter Path Service', async () => {
+suite('xInterpreter Path Service', async () => {
     let interpreterPathService: InterpreterPathService;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -227,7 +227,7 @@ suite('Interpreter Path Service', async () => {
 
     test('Workspace settings are correctly updated in case of multiroot folders', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedSettingKey = `WORKSPACE_INTERPRETER_PATH_${workspaceFileUri.fsPath}`;
+        const expectedSettingKey = 'WORKSPACE_INTERPRETER_PATH_PATH\\TO\\WORKSPACEFILE';
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
         workspaceService.setup((w) => w.workspaceFile).returns(() => workspaceFileUri);
@@ -404,7 +404,7 @@ suite('Interpreter Path Service', async () => {
 
     test('Inspecting settings returns as expected in case of multiroot folders', async () => {
         const workspaceFileUri = Uri.parse('path/to/workspaceFile');
-        const expectedWorkspaceSettingKey = `WORKSPACE_INTERPRETER_PATH_${workspaceFileUri.fsPath}`;
+        const expectedWorkspaceSettingKey = 'WORKSPACE_INTERPRETER_PATH_PATH\\TO\\WORKSPACEFILE';
         const expectedWorkspaceFolderSettingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         // A workspace file is present in case of multiroot workspace folders

@@ -9,6 +9,7 @@ import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri
 import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
 import { isTestExecution } from './constants';
+import { FileSystemPaths } from './platform/fs-paths';
 import {
     IDisposable,
     IDisposableRegistry,
@@ -22,6 +23,8 @@ import {
 } from './types';
 
 export const workspaceKeysForWhichTheCopyIsDone_Key = 'workspaceKeysForWhichTheCopyIsDone_Key';
+export const workspaceFolderKeysForWhichTheCopyIsDone_Key = 'workspaceFolderKeysForWhichTheCopyIsDone_Key';
+export const isGlobalSettingCopiedKey = 'isGlobalSettingCopiedKey';
 export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
 const CI_PYTHON_PATH = getCIPythonPath();
 
@@ -33,13 +36,18 @@ export function getCIPythonPath(): string {
 }
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
+    public get onDidChange(): Event<InterpreterConfigurationScope> {
+        return this._didChangeInterpreterEmitter.event;
+    }
     public _didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
+    private fileSystemPaths: FileSystemPaths;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) disposables: IDisposable[]
     ) {
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+        this.fileSystemPaths = FileSystemPaths.withDefaults();
     }
 
     public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
@@ -110,10 +118,6 @@ export class InterpreterPathService implements IInterpreterPathService {
         }
     }
 
-    public get onDidChange(): Event<InterpreterConfigurationScope> {
-        return this._didChangeInterpreterEmitter.event;
-    }
-
     public getSettingKey(
         resource: Uri,
         configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
@@ -124,7 +128,9 @@ export class InterpreterPathService implements IInterpreterPathService {
             settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
         } else {
             settingKey = this.workspaceService.workspaceFile
-                ? `WORKSPACE_INTERPRETER_PATH_${this.workspaceService.workspaceFile.fsPath}`
+                ? `WORKSPACE_INTERPRETER_PATH_${this.fileSystemPaths.normCase(
+                      this.workspaceService.workspaceFile.fsPath
+                  )}`
                 : // Only a single folder is opened, use fsPath of the folder as key
                   `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
         }
@@ -133,23 +139,48 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public async copyOldInterpreterStorageValuesToNew(resource: Resource): Promise<void> {
         resource = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
-        const workspaceKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
+        const workspaceConfig = this.workspaceService.getConfiguration('python', resource);
+        const oldSettings = workspaceConfig.inspect<string>('pythonPath')!;
+
+        // Copy workspace folder setting into the new storage if it hasn't been copied already
+        const workspaceFolderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
+        const flaggedWorkspaceFolderKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
+            workspaceFolderKeysForWhichTheCopyIsDone_Key,
+            []
+        );
+        const flaggedWorkspaceFolderKeys = flaggedWorkspaceFolderKeysStorage.value;
+        const shouldUpdateWorkspaceFolderSetting = !flaggedWorkspaceFolderKeys.includes(workspaceFolderKey);
+        if (shouldUpdateWorkspaceFolderSetting) {
+            await this.update(resource, ConfigurationTarget.WorkspaceFolder, oldSettings.workspaceFolderValue);
+            await flaggedWorkspaceFolderKeysStorage.updateValue([workspaceFolderKey, ...flaggedWorkspaceFolderKeys]);
+        }
+
+        // Copy workspace setting into the new storage if it hasn't been copied already
+        const workspaceKey = this.workspaceService.workspaceFile
+            ? this.fileSystemPaths.normCase(this.workspaceService.workspaceFile.fsPath)
+            : undefined;
         const flaggedWorkspaceKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             workspaceKeysForWhichTheCopyIsDone_Key,
             []
         );
         const flaggedWorkspaceKeys = flaggedWorkspaceKeysStorage.value;
-        if (flaggedWorkspaceKeys.includes(workspaceKey)) {
-            // Only do a one-off import for each workspace
-            return;
-        } else {
+        const shouldUpdateWorkspaceSetting = workspaceKey && !flaggedWorkspaceKeys.includes(workspaceKey);
+        if (workspaceKey && shouldUpdateWorkspaceSetting) {
+            await this.update(resource, ConfigurationTarget.Workspace, oldSettings.workspaceValue);
             await flaggedWorkspaceKeysStorage.updateValue([workspaceKey, ...flaggedWorkspaceKeys]);
         }
-        const oldSettings = this.workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-        await Promise.all([
-            this.update(resource, ConfigurationTarget.WorkspaceFolder, oldSettings.workspaceFolderValue),
-            this.update(resource, ConfigurationTarget.Workspace, oldSettings.workspaceValue),
-            this.update(undefined, ConfigurationTarget.Global, oldSettings.globalValue)
-        ]);
+
+        // Move global setting into the new storage if it hasn't been moved already
+        const isGlobalSettingCopiedStorage = this.persistentStateFactory.createGlobalPersistentState<boolean>(
+            isGlobalSettingCopiedKey,
+            false
+        );
+        const shouldUpdateGlobalSetting = !isGlobalSettingCopiedStorage.value;
+        if (shouldUpdateGlobalSetting) {
+            await this.update(undefined, ConfigurationTarget.Global, oldSettings.globalValue);
+            // Make sure to delete the original setting after copying it
+            await workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.Global);
+            await isGlobalSettingCopiedStorage.updateValue(true);
+        }
     }
 }
