@@ -36,7 +36,9 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 time: getTime(testcase)
             };
 
-            performanceData.push(test);
+            if (test.time !== -1) {
+                performanceData.push(test);
+            }
         });
 
         fs.writeFile(
