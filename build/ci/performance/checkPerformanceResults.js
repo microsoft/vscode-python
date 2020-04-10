@@ -13,7 +13,16 @@ const performanceResultsFile = path.join(
     'performance',
     'performance-results.json'
 );
+const errorMargin = 1.1;
 let failedTests = '';
+
+function getFailingTimesString(missedTimes) {
+    let printValue = '';
+    for (const time of missedTimes) {
+        printValue += String(time) + ', ';
+    }
+    return printValue.substring(0, printValue.length - 2);
+}
 
 fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
     if (performanceResultsFileError) {
@@ -35,31 +44,42 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
 
         if (testcase && testcase.time !== -1) {
             if (n === 0) {
-                if (result.times.every((t) => t === -1)) {
-                    // Test was skipped every time
-                    failedTests += 'Skipped every time: ' + testcase.name + '\n';
-                } else if (result.times.every((t) => t === -10)) {
+                // if (result.times.every((t) => t === -1)) {
+                //     // Test was skipped every time
+                //     failedTests += 'Skipped every time: ' + testcase.name + '\n';
+                // } else
+                if (result.times.every((t) => t === -10)) {
                     // Test failed every time
                     failedTests += 'Failed every time: ' + testcase.name + '\n';
                 }
-            } else if (avg > parseFloat(testcase.time) + standardDev) {
-                const skippedTimes = result.times.filter((t) => t === -1);
-                const failedTimes = result.times.filter((t) => t === -10);
+            } else {
+                // if (avg > parseFloat(testcase.time) + standardDev) {
+                let missedTimes = [];
+                for (let time of cleanTimes) {
+                    if (parseFloat(time) > parseFloat(testcase.time) * errorMargin) {
+                        missedTimes.push(parseFloat(time));
+                    }
+                }
 
-                failedTests +=
-                    'Performance is slow in: ' +
-                    testcase.name +
-                    '.\n\tBenchmark time: ' +
-                    testcase.time +
-                    '\n\tStandard Deviation:' +
-                    standardDev +
-                    '\n\tAverage test time: ' +
-                    avg +
-                    '\n\tTimes it was skipped: ' +
-                    skippedTimes.length +
-                    '\n\tTimes it failed: ' +
-                    failedTimes.length +
-                    '\n';
+                if (missedTimes.length >= 1) {
+                    const skippedTimes = result.times.filter((t) => t === -1);
+                    const failedTimes = result.times.filter((t) => t === -10);
+
+                    failedTests +=
+                        'Performance is slow in: ' +
+                        testcase.name +
+                        '.\n\tBenchmark time: ' +
+                        testcase.time +
+                        '\n\tTimes the test missed the benchmark:' +
+                        missedTimes.length +
+                        '\n\tFailing times:' +
+                        getFailingTimesString(missedTimes) +
+                        '\n\tTimes it was skipped: ' +
+                        skippedTimes.length +
+                        '\n\tTimes it failed: ' +
+                        failedTimes.length +
+                        '\n';
+                }
             }
         }
     });
