@@ -28,8 +28,6 @@ export class Activation implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
-        // Warm up our selected interpreter for the extension
-        this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
         this.contextService.activate().ignoreErrors();
     }
 
@@ -37,10 +35,14 @@ export class Activation implements IExtensionSingleActivationService {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
+        // Warm up our selected interpreter for the extension
+        this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
     }
 
     private onDidChangeInterpreter() {
         if (this.notebookOpened) {
+            // Warm up our selected interpreter for the extension
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
             this.PreWarmDaemonPool().ignoreErrors();
         }
     }
