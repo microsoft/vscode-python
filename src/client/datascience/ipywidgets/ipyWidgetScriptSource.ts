@@ -195,7 +195,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      */
     private async sendWidgetSource(moduleName: string, moduleVersion: string) {
         // Standard widgets area already available, hence no need to look for them.
-        if (moduleName.startsWith('@jupyter') || moduleName === 'azureml_widgets') {
+        if (moduleName.startsWith('@jupyter')) {
             return;
         }
         if (!this.notebook || !this.scriptProvider) {
