@@ -17,9 +17,7 @@ const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 // If ENABLE_GATHER variable is defined, only package the specs folder, not the rest of the code.
 // See externals, below.
-const ppaPackageList = process.env.ENABLE_GATHER
-    ? ['@msrvida/python-program-analysis/dist/es5/specs']
-    : ['@msrvida/python-program-analysis'];
+const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
 const config = {
     mode: 'production',
     target: 'node',
