@@ -36,7 +36,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 time: getTime(testcase)
             };
 
-            if (test.time !== 'S') {
+            if (test.time !== 'S' && test.time > 0.1) {
                 performanceData.push(test);
             }
         });

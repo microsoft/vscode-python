@@ -22,11 +22,5 @@ stages:
         timeoutInMinutes: 5
         pool: DSPerf
         steps:
-          - task: DownloadSecureFile@1
-            name: benchmark
-            inputs:
-              secureFile: 'DS_test_benchmark.json'
           - powershell: |
-              $arg = cat $(benchmark.secureFilePath) -Raw
-              $arg = $arg -replace '"','\"'
-              node ./build/ci/performance/checkPerformanceResults.js $arg
+              node ./build/ci/performance/checkPerformanceResults.js
