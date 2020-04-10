@@ -105,6 +105,7 @@ import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
+import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
@@ -145,6 +146,7 @@ import {
     IExperimentsManager,
     IExtensionContext,
     IExtensions,
+    IHttpClient,
     IInstaller,
     IInterpreterPathService,
     IMemento,
@@ -192,6 +194,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
+import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
@@ -535,6 +538,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
         if (this.uiTest) {
             this.serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebBrowserPanelProvider);
+            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
+            this.serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
         } else {
             this.serviceManager.addSingletonInstance<IWebPanelProvider>(
                 IWebPanelProvider,
@@ -622,6 +627,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.extensionPath).returns(() => os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         const mockServerSelector = mock(JupyterServerSelector);
@@ -1403,7 +1409,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableQueries: [],
             jupyterCommandLineArguments: [],
             disableJupyterAutoStart: true,
-            widgetScriptSources: []
+            widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
         };
         pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;

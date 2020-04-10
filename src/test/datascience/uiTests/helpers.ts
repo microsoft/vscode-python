@@ -4,7 +4,7 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as playwright from 'playwright';
+import * as playwright from 'playwright-chromium';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -35,7 +35,7 @@ const maxWaitTimeForMessage = 75_000;
  * UI could take a while to update, could be slower on CI server.
  * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
  */
-export const waitTimeForUIToUpdate = 5_000;
+export const waitTimeForUIToUpdate = 10_000;
 
 export class BaseWebUI implements IAsyncDisposable {
     public page?: playwright.Page;

@@ -441,12 +441,12 @@ use(chaiAsPromised);
 
                 // Confirm canvas is rendered.
                 await retryIfFail(async () => {
-                    const cellOutputHtml = await notebookUI.getCellOutputHTML(3);
+                    let cellOutputHtml = await notebookUI.getCellOutputHTML(3);
                     assert.include(cellOutputHtml, '<canvas ');
                     // Last cell is flakey. Can take too long to render. We need some way
                     // to know when a widget is done rendering.
-                    // cellOutputHtml = await notebookUI.getCellOutputHTML(8);
-                    // assert.include(cellOutputHtml, '<canvas ');
+                    cellOutputHtml = await notebookUI.getCellOutputHTML(8);
+                    assert.include(cellOutputHtml, '<canvas ');
                 });
             });
             test('Render beakerx', async () => {
@@ -478,13 +478,13 @@ use(chaiAsPromised);
                 });
 
                 // This last part if flakey. BeakerX can fail itself loading settings
-                // await notebookUI.executeCell(3);
-                // await retryIfFail(async () => {
-                //     // Confirm form with fields have been rendered.
-                //     const cellOutput = await notebookUI.getCellOutput(3);
-                //     const textAreas = await cellOutput.$$('div.widget-textarea');
-                //     assert.isAtLeast(textAreas.length, 1);
-                // });
+                await notebookUI.executeCell(3);
+                await retryIfFail(async () => {
+                    // Confirm form with fields have been rendered.
+                    const cellOutput = await notebookUI.getCellOutput(3);
+                    const textAreas = await cellOutput.$$('div.widget-textarea');
+                    assert.isAtLeast(textAreas.length, 1);
+                });
             });
             test('Render bqplot', async () => {
                 const { notebookUI } = await openBqplotIpynb();
