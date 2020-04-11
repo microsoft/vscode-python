@@ -11,7 +11,7 @@ import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../kernel-la
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
-import { IJMPConnection, IJMPConnectionInfo, IJupyterKernelSpec } from '../types';
+import { IJMPConnection, IJupyterKernelSpec } from '../types';
 
 /* 
 RawJupyterSession is the implementation of IJupyterSession that instead of

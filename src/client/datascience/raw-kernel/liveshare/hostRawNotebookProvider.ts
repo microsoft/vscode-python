@@ -19,14 +19,7 @@ import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, IKernelProcess } from '../../kernel-launcher/types';
-import {
-    IJMPConnection,
-    INotebook,
-    INotebookExecutionInfo,
-    INotebookExecutionLogger,
-    IRawNotebookProvider
-} from '../../types';
-import { EnchannelJMPConnection } from '../enchannelJMPConnection';
+import { INotebook, INotebookExecutionInfo, INotebookExecutionLogger, IRawNotebookProvider } from '../../types';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
@@ -178,10 +171,7 @@ export class HostRawNotebookProvider
 
         return notebookPromise.promise;
     }
-    // IANHU: Remove
-    private delay(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+
     // RAWKERNEL: Not the real execution info, just stub it out for now
     private getExecutionInfo(
         _resource: Resource,

@@ -3,7 +3,7 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Slot } from '@phosphor/signaling';
 import { assert, expect } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
@@ -37,8 +37,6 @@ suite('Data Science - RawKernel', () => {
         });
 
         test('RawKernel connect should connect and subscribe to JMP', async () => {
-            await rawKernel.connect(connectInfo);
-            verify(jmpConnection.connect(deepEqual(connectInfo))).once();
             verify(jmpConnection.subscribe(anything())).once();
             // Verify that we have a client id an a kernel id
             expect(rawKernel.id).to.not.equal(rawKernel.clientId);
@@ -46,8 +44,6 @@ suite('Data Science - RawKernel', () => {
 
         test('RawKernel dispose should dispose the jmp', async () => {
             when(jmpConnection.dispose()).thenReturn();
-
-            await rawKernel.connect(connectInfo);
 
             // Dispose our kernel
             rawKernel.dispose();
@@ -58,8 +54,6 @@ suite('Data Science - RawKernel', () => {
 
         test('RawKernel requestExecute should pass a valid execute message to JMP', async () => {
             when(jmpConnection.sendMessage(anything())).thenReturn();
-
-            await rawKernel.connect(connectInfo);
 
             const code = 'print("hello world")';
             const executeContent: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -80,8 +74,6 @@ suite('Data Science - RawKernel', () => {
         test('RawKernel dispose should also dispose of any futures', async () => {
             when(jmpConnection.sendMessage(anything())).thenReturn();
             when(jmpConnection.dispose()).thenReturn();
-
-            await rawKernel.connect(connectInfo);
 
             const code = 'print("hello world")';
             const executeContent: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -110,8 +102,6 @@ suite('Data Science - RawKernel', () => {
         });
 
         test('RawKernel executeRequest messages', async () => {
-            await rawKernel.connect(connectInfo);
-
             // Check our status at the start
             expect(rawKernel.status).to.equal('unknown');
 
@@ -202,8 +192,6 @@ suite('Data Science - RawKernel', () => {
         });
 
         test('RawKernel requestInspect messages', async () => {
-            await rawKernel.connect(connectInfo);
-
             // Check our status at the start
             expect(rawKernel.status).to.equal('unknown');
 
@@ -240,8 +228,6 @@ suite('Data Science - RawKernel', () => {
         });
 
         test('RawKernel requestComplete messages', async () => {
-            await rawKernel.connect(connectInfo);
-
             // Check our status at the start
             expect(rawKernel.status).to.equal('unknown');
 
@@ -277,8 +263,6 @@ suite('Data Science - RawKernel', () => {
         });
 
         test('RawKernel sendInput messages', async () => {
-            await rawKernel.connect(connectInfo);
-
             // Check our status at the start
             expect(rawKernel.status).to.equal('unknown');
 
@@ -303,7 +287,6 @@ suite('Data Science - RawKernel', () => {
         // update_display_data message
         test('rawKernel displayid check', async () => {
             const displayId = '1';
-            await rawKernel.connect(connectInfo);
 
             // Check our status at the start
             expect(rawKernel.status).to.equal('unknown');

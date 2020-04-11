@@ -8,7 +8,7 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { InterpreterUri } from '../../common/installer/types';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';

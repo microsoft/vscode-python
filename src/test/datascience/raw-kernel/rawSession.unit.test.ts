@@ -3,7 +3,7 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Slot } from '@phosphor/signaling';
 import { expect } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { RawSession } from '../../../client/datascience/raw-kernel/rawSession';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
@@ -45,10 +45,7 @@ suite('Data Science - RawSession', () => {
         });
 
         test('RawSession connect', async () => {
-            await rawSession.connect(connectInfo);
-
             // Did we hook up our connection
-            verify(jmpConnection.connect(deepEqual(connectInfo))).once();
             verify(jmpConnection.subscribe(anything())).once();
             // The ID of the session is not the same as the kernel client id
             expect(rawSession.kernel.clientId).to.not.equal(rawSession.id);
@@ -86,7 +83,7 @@ suite('Data Science - RawSession', () => {
         });
 
         test('RawSession status updates', async () => {
-            await rawSession.connect(connectInfo);
+            //await rawSession.connect(connectInfo);
 
             const statusChanges = ['busy', 'idle'];
             let statusHit = 0;
