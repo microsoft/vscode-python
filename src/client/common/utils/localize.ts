@@ -26,6 +26,18 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.'
     );
+    export const removePythonPathSettingsJson = localize(
+        'diagnostics.removePythonPathSettingsJson',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json.'
+    );
+    export const removePythonPathWorkspaceJson = localize(
+        'diagnostics.removePythonPathWorkspaceJson',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your workspace.json.'
+    );
+    export const removePythonPathWorkspaceJsonAndSettingsJson = localize(
+        'diagnostics.removePythonPathWorkspaceJsonAndSettingsJson',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and workspace.json.'
+    );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
         'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.'
@@ -61,13 +73,14 @@ export namespace Diagnostics {
 export namespace Common {
     export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
     export const bannerLabelNo = localize('Common.bannerLabelNo', 'No');
+    export const yesPlease = localize('Common.yesPlease', 'Yes, please');
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const install = localize('Common.install', 'Install');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
-    export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
+    export const noIWillDoItLater = localize('Common.noIWillDoItLater', "No, I'll do it later");
     export const notNow = localize('Common.notNow', 'Not now');
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
     export const reload = localize('Common.reload', 'Reload');
