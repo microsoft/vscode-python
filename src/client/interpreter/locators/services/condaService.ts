@@ -18,7 +18,7 @@ import {
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE
 } from '../../contracts';
-import { CondaHelper } from './condaHelper';
+import { parseCondaEnvFileContents } from './condaHelper';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const untildify: (value: string) => string = require('untildify');
@@ -58,7 +58,6 @@ export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
 export class CondaService implements ICondaService {
     private condaFile?: Promise<string | undefined>;
     private isAvailable: boolean | undefined;
-    private readonly condaHelper = new CondaHelper();
 
     constructor(
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
@@ -260,7 +259,7 @@ export class CondaService implements ICondaService {
                     .exec(condaFile, ['env', 'list'], { env: newEnv })
                     .then((output) => output.stdout);
             }
-            const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
+            const environments = parseCondaEnvFileContents(envInfo);
             await globalPersistence.updateValue({ data: environments });
             return environments;
         } catch (ex) {
