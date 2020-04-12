@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseJupyterSession } from '../baseJupyterSession';
@@ -83,10 +83,12 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         if (!process.connection) {
             // IANHU: Why would this happen? Maybe process should not be returned in this case?
+            traceError('KernelProcess launched without connection info');
             throw new Error('Kernel Process created without connection info');
         }
 
         // IANHU: Where to wait for connection?
+        // IANHU: Also handle if ready is rejected, Throw I think?
         await process.ready;
 
         const connection = await this.jmpConnection(process.connection);

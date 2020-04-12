@@ -78,44 +78,6 @@ export class HostRawNotebookProvider
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        //throw new Error('Not implemented');
-        // RAWKERNEL: Hack to create session, uncomment throw and update ci to connect to a running kernel
-
-        // This is launched by the old code
-        //const ci = {
-        //version: 0,
-        //transport: 'tcp',
-        //ip: '127.0.0.1',
-        //shell_port: 62834,
-        //iopub_port: 62835,
-        //stdin_port: 62836,
-        //hb_port: 62838,
-        //control_port: 62837,
-        //signature_scheme: 'hmac-sha256',
-        //key: 'cedbcdb2-e9994951b3490851775e9452'
-        //};
-
-        // This is launched by an imitation of David's launch code
-        //const ci3 = {
-        //version: 0,
-        //shell_port: 9002,
-        //iopub_port: 9004,
-        //stdin_port: 9003,
-        //control_port: 9001,
-        //hb_port: 9000,
-        //ip: '127.0.0.1',
-        //key: 'f264d881-af9e-4961-aeb3-ca590b5b5dda',
-        //transport: 'tcp',
-        //signature_scheme: 'hmac-sha256'
-        //};
-
-        // Now hack in the kernel launcher
-        //this.kernelProcess = await this.kernelLauncher.launch(resource, notebookMetadata?.kernelspec?.name);
-
-        //await this.kernelProcess.ready;
-        //await this.delay(10_000);
-
-        //const jmpConnection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
         const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
         try {
             await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
@@ -149,6 +111,7 @@ export class HostRawNotebookProvider
                     this.fs
                 );
 
+                // IANHU: Use this or not?
                 // Wait for it to be ready
                 traceInfo(`Waiting for idle (session) ${this.id}`);
                 const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;

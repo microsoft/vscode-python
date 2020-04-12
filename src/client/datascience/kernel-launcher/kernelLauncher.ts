@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
+import { Event, EventEmitter } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
@@ -23,9 +24,16 @@ class KernelProcess implements IKernelProcess {
     private _connection?: IKernelConnection;
     private connectionFile?: TemporaryFile;
     private readyPromise: Deferred<void>;
+    private exitEvent: EventEmitter<number | null> = new EventEmitter<number | null>();
 
+    // This promise is resolved when the launched process is ready to get JMP messages
     public get ready(): Promise<void> {
         return this.readyPromise.promise;
+    }
+
+    // This event is triggered if the process is exited
+    public get exited(): Event<number | null> {
+        return this.exitEvent.event;
     }
 
     public get process(): ChildProcess | undefined {
@@ -43,7 +51,7 @@ class KernelProcess implements IKernelProcess {
     }
 
     public async launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void> {
-        this.connectionFile = await this.file.createTemporaryFile('json');
+        this.connectionFile = await this.file.createTemporaryFile('.json');
 
         const resource = isResource(interpreter) ? interpreter : undefined;
         const pythonPath = isResource(interpreter) ? undefined : interpreter.path;
@@ -60,16 +68,18 @@ class KernelProcess implements IKernelProcess {
         args.splice(0, 1);
 
         const executionService = await this.executionFactory.create({ resource, pythonPath });
-        //this._process = executionService.execObservable(args, {}).proc;
         const exeObs = executionService.execObservable(args, {});
-        exeObs.proc!.on('end', end => {
+
+        if (exeObs.proc) {
+            exeObs.proc!.on('exit', exitCode => {
+                traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
+                this.readyPromise.reject();
+                this.exitEvent.fire(exitCode);
+            });
+        } else {
+            traceInfo('KernelProcess failed to launch');
             this.readyPromise.reject();
-            traceInfo('spawnProcess.end', `End - ${end}`);
-        });
-        exeObs.proc!.on('error', error => {
-            this.readyPromise.reject();
-            traceInfo('spawnProcess.error', `Error - ${error}`);
-        });
+        }
         exeObs.out.subscribe(output => {
             if (output.source === 'stderr') {
                 traceInfo(output.out);
