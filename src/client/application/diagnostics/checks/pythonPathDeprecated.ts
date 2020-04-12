@@ -70,7 +70,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         return [];
     }
 
-    public async removePythonPathFromWorkspaceSettings(resource: Resource) {
+    public async _removePythonPathFromWorkspaceSettings(resource: Resource) {
         const workspaceConfig = this.workspaceService.getConfiguration('python', resource);
         await Promise.all([
             workspaceConfig.update('pythonPath', undefined, ConfigurationTarget.Workspace),
@@ -79,7 +79,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
     }
 
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
-        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
+        if (diagnostics.length === 0 || !(await this.canHandle(diagnostics[0]))) {
             return;
         }
         const diagnostic = diagnostics[0];
@@ -93,7 +93,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
                 command: {
                     diagnostic,
                     invoke: async (): Promise<void> => {
-                        return this.removePythonPathFromWorkspaceSettings(diagnostic.resource);
+                        return this._removePythonPathFromWorkspaceSettings(diagnostic.resource);
                     }
                 }
             },

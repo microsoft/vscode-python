@@ -49,7 +49,7 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         }
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
-        if (diagnostics.length === 0 || !this.canHandle(diagnostics[0])) {
+        if (diagnostics.length === 0 || !(await this.canHandle(diagnostics[0]))) {
             return;
         }
         const diagnostic = diagnostics[0];
