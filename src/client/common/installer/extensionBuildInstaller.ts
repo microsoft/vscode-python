@@ -5,8 +5,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
-import { ICommandManager } from '../application/types';
-import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IApplicationShell, ICommandManager } from '../application/types';
+import { Octicons, PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceDecorators } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IFileDownloader, IOutputChannel } from '../types';
@@ -20,13 +20,17 @@ export const vsixFileExtension = '.vsix';
 export class StableBuildInstaller implements IExtensionBuildInstaller {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
 
     @traceDecorators.error('Installing stable build of extension failed')
     public async install(): Promise<void> {
         this.output.append(ExtensionChannels.installingStableMessage());
-        await this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+        await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
+            progress.report({ message: ExtensionChannels.installingStableMessage() });
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+        });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
     }
 }
@@ -37,14 +41,18 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
 
     @traceDecorators.error('Installing insiders build of extension failed')
     public async install(): Promise<void> {
         const vsixFilePath = await this.downloadInsiders();
         this.output.append(ExtensionChannels.installingInsidersMessage());
-        await this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath));
+        await this.appShell.withProgressCustomIcon(Octicons.Installing, async (progress) => {
+            progress.report({ message: ExtensionChannels.installingInsidersMessage() });
+            return this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath));
+        });
         this.output.appendLine(ExtensionChannels.installationCompleteMessage());
         await this.fs.deleteFile(vsixFilePath);
     }
