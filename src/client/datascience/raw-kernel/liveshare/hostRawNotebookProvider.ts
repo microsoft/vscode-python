@@ -9,7 +9,7 @@ import * as vsls from 'vsls/vscode';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
+import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -78,19 +78,13 @@ export class HostRawNotebookProvider
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
-        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
-        try {
-            await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
-        } finally {
-            if (!rawSession.isConnected) {
-                await rawSession.dispose();
-            }
-        }
-
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(identity, notebookPromise.promise);
 
+        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
         try {
+            await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
+
             // Get the execution info for our notebook
             const info = this.getExecutionInfo(resource, notebookMetadata);
 
@@ -111,12 +105,6 @@ export class HostRawNotebookProvider
                     this.fs
                 );
 
-                // IANHU: Use this or not?
-                // Wait for it to be ready
-                traceInfo(`Waiting for idle (session) ${this.id}`);
-                const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
-                await notebook.waitForIdle(idleTimeout);
-
                 // Run initial setup
                 await notebook.initialize(cancelToken);
 
@@ -127,6 +115,10 @@ export class HostRawNotebookProvider
                 notebookPromise.reject(this.getDisposedError());
             }
         } catch (ex) {
+            // Make sure we shut down our session in case we started a process
+            rawSession.dispose().catch(error => {
+                traceError(`Failed to dispose of raw session on launch error: ${error} `);
+            });
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
