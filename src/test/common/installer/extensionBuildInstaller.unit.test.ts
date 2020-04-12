@@ -7,10 +7,12 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Progress, Uri } from 'vscode';
+import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { PVSC_EXTENSION_ID } from '../../../client/common/constants';
 import {
     developmentBuildUri,
@@ -25,14 +27,22 @@ import { DownloadOptions, IFileDownloader, IOutputChannel } from '../../../clien
 import { ExtensionChannels } from '../../../client/common/utils/localize';
 import { MockOutputChannel } from '../../../test/mockClasses';
 
+type ProgressReporterData = { message?: string; increment?: number };
+
 suite('Extension build installer - Stable build installer', async () => {
     let output: IOutputChannel;
     let cmdManager: ICommandManager;
+    let appShell: IApplicationShell;
     let stableBuildInstaller: StableBuildInstaller;
+    let progressReporter: Progress<ProgressReporterData>;
+    let progressReportStub: sinon.SinonStub;
     setup(() => {
         output = mock(MockOutputChannel);
         cmdManager = mock(CommandManager);
-        stableBuildInstaller = new StableBuildInstaller(instance(output), instance(cmdManager));
+        appShell = mock(ApplicationShell);
+        stableBuildInstaller = new StableBuildInstaller(instance(output), instance(cmdManager), instance(appShell));
+        progressReportStub = sinon.stub();
+        progressReporter = { report: progressReportStub };
     });
     test('Installing stable build logs progress and installs stable', async () => {
         when(output.append(ExtensionChannels.installingStableMessage())).thenReturn();
@@ -40,9 +50,12 @@ suite('Extension build installer - Stable build installer', async () => {
         when(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).thenResolve(
             undefined
         );
+        when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
         await stableBuildInstaller.install();
         verify(output.append(ExtensionChannels.installingStableMessage())).once();
         verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
+        verify(appShell.withProgressCustomIcon(anything(), anything()));
+        expect(progressReportStub.callCount).to.equal(1);
         verify(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).once();
     });
 });
@@ -52,17 +65,24 @@ suite('Extension build installer - Insiders build installer', async () => {
     let cmdManager: ICommandManager;
     let fileDownloader: IFileDownloader;
     let fs: IFileSystem;
+    let appShell: IApplicationShell;
     let insidersBuildInstaller: InsidersBuildInstaller;
+    let progressReporter: Progress<ProgressReporterData>;
+    let progressReportStub: sinon.SinonStub;
     setup(() => {
         output = mock(MockOutputChannel);
         fileDownloader = mock(FileDownloader);
         fs = mock(FileSystem);
         cmdManager = mock(CommandManager);
+        appShell = mock(ApplicationShell);
+        progressReportStub = sinon.stub();
+        progressReporter = { report: progressReportStub };
         insidersBuildInstaller = new InsidersBuildInstaller(
             instance(output),
             instance(fileDownloader),
             instance(fs),
-            instance(cmdManager)
+            instance(cmdManager),
+            instance(appShell)
         );
     });
     test('Installing Insiders build downloads and installs Insiders', async () => {
@@ -83,6 +103,7 @@ suite('Extension build installer - Insiders build installer', async () => {
                 return Promise.resolve(vsixFilePath);
             }
         );
+        when(appShell.withProgressCustomIcon(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
         when(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).thenCall((_, cb) => {
             assert.deepEqual(cb, Uri.file(vsixFilePath), 'Wrong VSIX installed');
         });
@@ -94,6 +115,8 @@ suite('Extension build installer - Insiders build installer', async () => {
         verify(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).once();
         verify(output.appendLine(ExtensionChannels.downloadCompletedOutputMessage())).once();
         verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
+        verify(appShell.withProgressCustomIcon(anything(), anything()));
+        expect(progressReportStub.callCount).to.equal(1);
         verify(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).once();
         verify(fs.deleteFile(vsixFilePath)).once();
     });
