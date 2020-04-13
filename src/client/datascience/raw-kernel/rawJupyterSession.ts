@@ -95,10 +95,10 @@ export class RawJupyterSession extends BaseJupyterSession {
                 this.session = rawSessionStart.session;
                 this.currentKernelProcess = rawSessionStart.process;
             }
-        } catch {
-            traceError('Failed to connect raw kernel session');
+        } catch (error) {
+            traceError(`Failed to connect raw kernel session: ${error}`);
             this.connected = false;
-            throw new Error(localize.DataScience.sessionDisposed());
+            throw error;
         }
 
         this.connected = true;

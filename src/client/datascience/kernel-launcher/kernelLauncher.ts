@@ -13,6 +13,7 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import * as localize from '../../common/utils/localize';
 import { isResource, noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
@@ -78,12 +79,14 @@ class KernelProcess implements IKernelProcess {
         if (exeObs.proc) {
             exeObs.proc!.on('exit', exitCode => {
                 traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
-                this.readyPromise.reject(new Error('Kernel Process Exited'));
+                if (!this.readyPromise.completed) {
+                    this.readyPromise.reject(new Error(localize.DataScience.rawKernelProcessExitBeforeConnect()));
+                }
                 this.exitEvent.fire(exitCode);
             });
         } else {
             traceInfo('KernelProcess failed to launch');
-            this.readyPromise.reject();
+            this.readyPromise.reject(new Error(localize.DataScience.rawKernelProcessNotStarted()));
         }
         exeObs.out.subscribe(output => {
             if (output.source === 'stderr') {
@@ -93,7 +96,7 @@ class KernelProcess implements IKernelProcess {
                 // up and started from stdout
                 //    To connect another client to this kernel, use:
                 //    --existing /var/folders/q7/cn8fg6s94fgdcl0h7rbxldf00000gn/T/tmp-16231TOL2dgBoWET1.json
-                if (output.out.includes('--existing')) {
+                if (!this.readyPromise.completed && output.out.includes('--existing')) {
                     this.readyPromise.resolve();
                 }
                 traceInfo(output.out);

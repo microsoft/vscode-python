@@ -258,6 +258,14 @@ export namespace DataScience {
         'DataScience.passwordFailure',
         'Failed to connect to password protected server. Check that password is correct.'
     );
+    export const rawKernelProcessNotStarted = localize(
+        'DataScience.rawKernelProcessNotStarted',
+        'Raw kernel process was not able to start.'
+    );
+    export const rawKernelProcessExitBeforeConnect = localize(
+        'DataScience.rawKernelProcessExitBeforeConnect',
+        'Raw kernel process exited before connecting.'
+    );
     export const unknownMimeTypeFormat = localize(
         'DataScience.unknownMimeTypeFormat',
         'Mime type {0} is not currently supported'
