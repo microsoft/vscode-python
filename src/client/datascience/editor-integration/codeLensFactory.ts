@@ -12,7 +12,11 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
 import { CodeLensCommands, Commands, Identifiers } from '../constants';
-import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookIdentity,
+    InteractiveWindowMessages,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHashProvider,
@@ -78,7 +82,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
             case InteractiveWindowMessages.NotebookClose:
                 if (payload.resource.toString() === this.interactiveIdentity?.toString()) {
-                    this.codeLensCache.clear();
                     this.interactiveIdentity = undefined;
                     this.hashProvider = undefined;
                     this.documentExecutionCounts.clear();
@@ -89,6 +92,17 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 break;
             case InteractiveWindowMessages.NotebookExecutionActivated:
                 this.initCellHashProvider();
+                break;
+
+            case InteractiveWindowMessages.AddedSysInfo:
+                if (payload && payload.type) {
+                    const reason = payload.type as SysInfoReason;
+                    if (reason !== SysInfoReason.Interrupt) {
+                        this.documentExecutionCounts.clear();
+                        // Clear out any goto cell code lenses.
+                        this.updateEvent.fire();
+                    }
+                }
                 break;
 
             case InteractiveWindowMessages.FinishCell:
