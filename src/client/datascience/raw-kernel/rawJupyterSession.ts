@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { Resource } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,7 +25,7 @@ jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
     private currentSession: { session: RawSession; process: IKernelProcess | undefined } | undefined;
-    private processExitHandler: Disposable | undefined;
+    private processExitHandler: IDisposable | undefined;
 
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
@@ -43,6 +42,8 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         // Unhook our process exit handler before we dispose the process ourselves
         this.processExitHandler?.dispose();
+        this.processExitHandler = undefined;
+
         if (this.currentSession?.process) {
             this.currentSession.process.dispose();
         }
