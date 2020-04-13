@@ -19,7 +19,13 @@ import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, IKernelProcess } from '../../kernel-launcher/types';
-import { INotebook, INotebookExecutionInfo, INotebookExecutionLogger, IRawNotebookProvider } from '../../types';
+import {
+    IJupyterKernelSpec,
+    INotebook,
+    INotebookExecutionInfo,
+    INotebookExecutionLogger,
+    IRawNotebookProvider
+} from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
@@ -84,10 +90,10 @@ export class HostRawNotebookProvider
 
         const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
         try {
-            await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
+            const launchedKernelSpec = await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
 
             // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(resource, notebookMetadata);
+            const info = await this.getExecutionInfo(launchedKernelSpec);
 
             if (rawSession.isConnected) {
                 // Create our notebook
@@ -128,16 +134,13 @@ export class HostRawNotebookProvider
         return notebookPromise.promise;
     }
 
-    // RAWKERNEL: Not the real execution info, just stub it out for now
-    private async getExecutionInfo(
-        _resource: Resource,
-        _notebookMetadata?: nbformat.INotebookMetadata
-    ): Promise<INotebookExecutionInfo> {
+    // Get the notebook execution info for this raw session instance
+    private async getExecutionInfo(kernelSpec?: IJupyterKernelSpec): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
             interpreter: undefined,
-            kernelSpec: undefined,
+            kernelSpec: kernelSpec,
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };

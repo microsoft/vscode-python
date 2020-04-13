@@ -22,6 +22,7 @@ import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } fro
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
+    private _kernelSpec?: IJupyterKernelSpec;
     private connectionFile?: TemporaryFile;
     private readyPromise: Deferred<void>;
     private exitEvent: EventEmitter<number | null> = new EventEmitter<number | null>();
@@ -36,6 +37,9 @@ class KernelProcess implements IKernelProcess {
         return this.exitEvent.event;
     }
 
+    public get kernelSpec(): IJupyterKernelSpec | undefined {
+        return this._kernelSpec;
+    }
     public get process(): ChildProcess | undefined {
         return this._process;
     }
@@ -52,6 +56,7 @@ class KernelProcess implements IKernelProcess {
 
     public async launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void> {
         this.connectionFile = await this.file.createTemporaryFile('.json');
+        this._kernelSpec = kernelSpec;
 
         const resource = isResource(interpreter) ? interpreter : undefined;
         const pythonPath = isResource(interpreter) ? undefined : interpreter.path;
@@ -82,9 +87,12 @@ class KernelProcess implements IKernelProcess {
         }
         exeObs.out.subscribe(output => {
             if (output.source === 'stderr') {
-                traceInfo(output.out);
+                traceInfo(`StdErr from Kernel Process ${output.out}`);
             } else {
-                // Search for --existing
+                // Search for --existing this is the message that will indicate that our kernel is actually
+                // up and started from stdout
+                //    To connect another client to this kernel, use:
+                //    --existing /var/folders/q7/cn8fg6s94fgdcl0h7rbxldf00000gn/T/tmp-16231TOL2dgBoWET1.json
                 if (output.out.includes('--existing')) {
                     this.readyPromise.resolve();
                 }

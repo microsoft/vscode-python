@@ -62,7 +62,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         throw new Error('Not implemented');
     }
 
-    public async connect(resource: Resource, kernelName?: string, cancelToken?: CancellationToken): Promise<void> {
+    public async connect(
+        resource: Resource,
+        kernelName?: string,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined> {
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
@@ -97,6 +101,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         this.connected = true;
+        return this.currentSession.process?.kernelSpec;
     }
 
     public async changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
@@ -127,9 +132,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         await process.ready;
 
         const connection = await this.jmpConnection(process.connection);
-
         const session = new RawSession(connection);
-
         return { session, process };
     }
 
