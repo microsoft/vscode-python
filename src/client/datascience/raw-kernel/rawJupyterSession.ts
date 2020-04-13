@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
@@ -22,8 +23,8 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    // IANHU: Do I need to keep RawSession here? Just keep session and process in sync?
     private currentSession: { session: RawSession; process: IKernelProcess | undefined } | undefined;
+    private processExitHandler: Disposable | undefined;
 
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
@@ -38,6 +39,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.session = undefined;
         }
 
+        // Unhook our process exit handler before we dispose the process ourselves
+        this.processExitHandler?.dispose();
         if (this.currentSession?.process) {
             this.currentSession.process.dispose();
         }
@@ -85,6 +88,15 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceError('KernelProcess launched without connection info');
             throw new Error();
         }
+
+        // Watch to see if our process exits
+        this.processExitHandler = process.exited(exitCode => {
+            traceError(`Raw kernel process exited code: ${exitCode}`);
+            this.shutdown().catch(reason => {
+                traceError(`Error shutting down raw jupyter session: ${reason}`);
+            });
+            throw new Error(localize.DataScience.sessionDisposed());
+        });
 
         // Wait for the process to actually be ready to connect to
         await process.ready;

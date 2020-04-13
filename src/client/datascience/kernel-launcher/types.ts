@@ -4,6 +4,7 @@
 
 import { ChildProcess } from 'child_process';
 import { IDisposable } from 'monaco-editor';
+import { Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IJupyterKernelSpec } from '../types';
 
@@ -29,6 +30,7 @@ export interface IKernelProcess extends IDisposable {
     process: ChildProcess | undefined;
     connection: IKernelConnection | undefined;
     ready: Promise<void>;
+    exited: Event<number | null>;
     dispose(): void;
     launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }
