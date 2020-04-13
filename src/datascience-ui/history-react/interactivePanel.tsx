@@ -51,7 +51,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             fontFamily: this.props.font.family
         };
 
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
+        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {

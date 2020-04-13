@@ -79,7 +79,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         }
 
         // Update the state controller with our new state
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
+        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
         const addCellLine =
             this.props.cellVMs.length === 0 ? null : (
                 <AddCellLine

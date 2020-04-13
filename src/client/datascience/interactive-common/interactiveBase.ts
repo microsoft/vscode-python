@@ -759,6 +759,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 }
             }
 
+            if (reason === SysInfoReason.Start) {
+                this.postMessage(InteractiveWindowMessages.AddedSysInfoAtStart).ignoreErrors();
+            }
             traceInfo(`Sys info for ${this.id} ${reason} complete`);
             deferred.resolve(true);
         } else if (this.addSysInfoPromise) {

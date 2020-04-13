@@ -148,6 +148,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ResolveCompletionItemRequest]: MessageType.other,
     [InteractiveWindowMessages.ResolveCompletionItemResponse]: MessageType.other,
     [InteractiveWindowMessages.RestartKernel]: MessageType.other,
+    [InteractiveWindowMessages.AddedSysInfoAtStart]: MessageType.other,
     [InteractiveWindowMessages.ReturnAllCells]: MessageType.other,
     [InteractiveWindowMessages.SaveAll]: MessageType.other,
     [InteractiveWindowMessages.SavePng]: MessageType.other,

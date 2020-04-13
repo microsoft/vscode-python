@@ -183,4 +183,12 @@ export namespace Creation {
             editCellVM: undefined
         };
     }
+
+    export function loaded(arg: InteractiveReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            loaded: true,
+            busy: false
+        };
+    }
 }

@@ -34,6 +34,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.SUBMIT_INPUT]: Execution.submitInput,
     [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
+    [InteractiveWindowMessages.AddedSysInfoAtStart]: Creation.loaded,
     [CommonActionType.SCROLL]: Effects.scrolled,
     [CommonActionType.CLICK_CELL]: Effects.clickCell,
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,

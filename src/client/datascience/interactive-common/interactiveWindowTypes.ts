@@ -56,6 +56,7 @@ export enum InteractiveWindowMessages {
     ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
     ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
     AddedSysInfo = 'added_sys_info',
+    AddedSysInfoAtStart = 'added_sys_info_at_start',
     RemoteAddCode = 'remote_add_code',
     RemoteReexecuteCode = 'remote_reexecute_code',
     Activate = 'activate',
@@ -519,6 +520,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
     public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
+    public [InteractiveWindowMessages.AddedSysInfoAtStart]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
