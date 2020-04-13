@@ -56,8 +56,6 @@ suite('Data Science - RawSession', () => {
         });
 
         test('RawSession status updates', async () => {
-            //await rawSession.connect(connectInfo);
-
             const statusChanges = ['busy', 'idle'];
             let statusHit = 0;
             const statusHandler: Slot<RawSession, Kernel.Status> = (_sender: RawSession, args: Kernel.Status) => {

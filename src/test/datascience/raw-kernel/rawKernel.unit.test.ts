@@ -6,14 +6,13 @@ import { assert, expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
-import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
+import { IJMPConnection } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
 
 // tslint:disable: max-func-body-length
 suite('Data Science - RawKernel', () => {
     let rawKernel: RawKernel;
     let jmpConnection: IJMPConnection;
-    let connectInfo: IJMPConnectionInfo;
 
     suite('RawKernel basic mock jmp', () => {
         setup(() => {
@@ -21,19 +20,6 @@ suite('Data Science - RawKernel', () => {
             when(jmpConnection.connect(anything())).thenResolve();
             when(jmpConnection.subscribe(anything())).thenReturn();
             rawKernel = new RawKernel(instance(jmpConnection), uuid());
-
-            connectInfo = {
-                version: 0,
-                transport: 'tcp',
-                ip: '127.0.0.1',
-                shell_port: 55196,
-                iopub_port: 55197,
-                stdin_port: 55198,
-                hb_port: 55200,
-                control_port: 55199,
-                signature_scheme: 'hmac-sha256',
-                key: 'adaf9032-487d222a85026db284c3d5e7'
-            };
         });
 
         test('RawKernel connect should connect and subscribe to JMP', async () => {
