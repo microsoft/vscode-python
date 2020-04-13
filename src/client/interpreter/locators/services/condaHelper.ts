@@ -56,10 +56,10 @@ export function getDisplayName(condaInfo: CondaInfo = {}): string {
  */
 export function parseCondaEnvFileContents(
     condaEnvFileContents: string
-): { name: string; path: string; isBase: boolean }[] | undefined {
+): { name: string; path: string; isActive: boolean }[] | undefined {
     // Don't trim the lines. `path` portion of the line can end with a space.
     const lines = condaEnvFileContents.splitLines({ trim: false });
-    const envs: { name: string; path: string; isBase: boolean }[] = [];
+    const envs: { name: string; path: string; isActive: boolean }[] = [];
 
     lines.forEach((line) => {
         const item = parseCondaEnvFileLine(line);
@@ -71,11 +71,16 @@ export function parseCondaEnvFileContents(
     return envs.length > 0 ? envs : undefined;
 }
 
-function parseCondaEnvFileLine(line: string): { name: string; path: string; isBase: boolean } | undefined {
+function parseCondaEnvFileLine(line: string): { name: string; path: string; isActive: boolean } | undefined {
     // Empty lines or lines starting with `#` are comments and can be ignored.
     if (line.length === 0 || line.startsWith('#')) {
         return undefined;
     }
+
+    // This extraction is based on the following code for `conda env list`:
+    // https://github.com/conda/conda/blob/f207a2114c388fd17644ee3a5f980aa7cf86b04b/conda/cli/common.py#L188
+    // It uses "%-20s  %s  %s" as the format string. Where the middle %s is '*'
+    // if the environment is active, and ' '  if it is not active.
 
     // If conda environment was created using `-p` then it may NOT have a name.
     // Use empty string as default name for envs created using path only.
@@ -89,7 +94,7 @@ function parseCondaEnvFileLine(line: string): { name: string; path: string; isBa
     // a valid name when using --clone. Highly unlikely that users will have this
     // form as the environment name. lastIndexOf() can also be used but that assumes
     // that `path` does NOT end with 5*spaces.
-    const spaceIndex = line.indexOf('     ');
+    let spaceIndex = line.indexOf('     ');
     if (spaceIndex > 0) {
         // Parsing `name`
         // > `conda create -n <name>`
@@ -112,20 +117,28 @@ function parseCondaEnvFileLine(line: string): { name: string; path: string; isBa
         remainder = line.substring(spaceIndex);
     }
 
-    // Detecting Base:
-    // Only `base` environment will have `*` between `name` and `path`. `name`
+    // This means the environment name is longer than 17 characters and it is
+    // active. Try '  *  ' for separator between name and path.
+    if (spaceIndex === -1) {
+        spaceIndex = line.indexOf('  *  ');
+        name = line.substring(0, spaceIndex).trimRight();
+        remainder = line.substring(spaceIndex);
+    }
+
+    // Detecting Active Environment:
+    // Only active environment will have `*` between `name` and `path`. `name`
     // or `path` can have `*` in them as well. So we have to look for `*` in
     // between `name` and `path`. We already extracted the name, the next non-
     // whitespace character should either be `*` or environment path.
     remainder = remainder.trimLeft();
-    const isBase = remainder.startsWith('*');
+    const isActive = remainder.startsWith('*');
 
     // Parsing `path`
     // If `*` is the first then we can skip that character. Trim left again,
     // don't do trim() or trimRight(), since paths can end with a space.
-    remainder = (isBase ? remainder.substring(1) : remainder).trimLeft();
+    remainder = (isActive ? remainder.substring(1) : remainder).trimLeft();
 
-    return { name, path: remainder, isBase };
+    return { name, path: remainder, isActive };
 }
 /**
  * Does the given string match a known Anaconda identifier.
