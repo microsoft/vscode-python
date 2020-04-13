@@ -34,8 +34,8 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             4; // plus 4 for the icon
         const displayNameTextSize = this.props.kernel.displayName.length + this.props.kernel.jupyterServerStatus.length;
         const dynamicFont: React.CSSProperties = {
-            fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
-            fontFamily: this.props.font.family,
+            fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
+            fontFamily: 'var(--vscode-font-family)',
             maxWidth: this.getMaxWidth(serverTextSize + displayNameTextSize + 5) // plus 5 for the line and margins
         };
         const serverTextWidth: React.CSSProperties = {
