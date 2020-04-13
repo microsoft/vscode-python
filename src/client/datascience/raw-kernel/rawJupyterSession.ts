@@ -4,6 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -58,17 +59,16 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     // RAWKERNEL: Cancel token routed down?
     public async connect(resource: Resource, kernelName?: string, _cancelToken?: CancellationToken): Promise<void> {
-        let connected = true;
-
         try {
             this.currentSession = await this.startRawSession(resource, kernelName);
             this.session = this.currentSession.session;
         } catch {
-            // IANHU: Need to look better into error handling
-            connected = false;
+            traceError('Failed to connect raw kernel session');
+            this.connected = false;
+            throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        this.connected = connected;
+        this.connected = true;
     }
 
     public async changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
@@ -79,36 +79,24 @@ export class RawJupyterSession extends BaseJupyterSession {
         resource: Resource,
         kernelName?: string
     ): Promise<{ session: RawSession; process: IKernelProcess | undefined }> {
-        const process = await this.launchKernel(resource, kernelName);
+        const process = await this.kernelLauncher.launch(resource, kernelName);
 
         if (!process.connection) {
-            // IANHU: Why would this happen? Maybe process should not be returned in this case?
             traceError('KernelProcess launched without connection info');
-            throw new Error('Kernel Process created without connection info');
+            throw new Error();
         }
 
-        // IANHU: Where to wait for connection?
-        // IANHU: Also handle if ready is rejected, Throw I think?
+        // Wait for the process to actually be ready to connect to
         await process.ready;
 
         const connection = await this.jmpConnection(process.connection);
 
-        // IANHU: Cleanup for both RawSession and RawKernel we can just
-        // connect in the constructor or just pass the connection in connect
         const session = new RawSession(connection);
-        //await session.connect(process.connection);
 
-        return { session, process: undefined };
+        return { session, process };
     }
 
-    private async launchKernel(resource: Resource, kernelName?: string): Promise<IKernelProcess> {
-        try {
-            return await this.kernelLauncher.launch(resource, kernelName);
-        } catch {
-            throw new Error('Failed to start kernel process');
-        }
-    }
-
+    // Create and connect our JMP (Jupyter Messaging Protocol) for talking to the raw kernel
     private async jmpConnection(kernelConnection: IKernelConnection): Promise<IJMPConnection> {
         const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
 
