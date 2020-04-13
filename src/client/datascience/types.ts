@@ -188,7 +188,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
-    restartedKernel(): void;
+    onKernelRestarted(): void;
 }
 
 export const IGatherProvider = Symbol('IGatherProvider');

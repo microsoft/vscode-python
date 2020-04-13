@@ -1398,7 +1398,7 @@ plt.show()`,
         const outputs: string[] = [];
         @injectable()
         class Logger implements INotebookExecutionLogger {
-            public restartedKernel() {
+            public onKernelRestarted() {
                 // Do nothing on restarted
             }
 

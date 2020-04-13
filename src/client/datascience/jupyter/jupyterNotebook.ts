@@ -452,7 +452,7 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup completed');
 
             // Tell our loggers
-            this.loggers.forEach((l) => l.restartedKernel());
+            this.loggers.forEach((l) => l.onKernelRestarted());
 
             this.kernelRestarted.fire();
             return;

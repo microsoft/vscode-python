@@ -81,7 +81,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             .filter((e) => e.hashes.length > 0);
     }
 
-    public restartedKernel() {
+    public onKernelRestarted() {
         this.hashes.clear();
         this.executionCount = 0;
         this.updateEventEmitter.fire();

@@ -21,7 +21,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
     }
 
-    public restartedKernel() {
+    public onKernelRestarted() {
         // Do nothing on restarted
     }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {

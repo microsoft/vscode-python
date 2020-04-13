@@ -527,7 +527,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Restart the kernel
-        hashProvider.restartedKernel();
+        hashProvider.onKernelRestarted();
 
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 0, 'Restart should have cleared');

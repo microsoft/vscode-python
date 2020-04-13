@@ -14,7 +14,7 @@ export class GatherLogger implements IGatherLogger {
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
-    public restartedKernel() {
+    public onKernelRestarted() {
         noop();
     }
 
