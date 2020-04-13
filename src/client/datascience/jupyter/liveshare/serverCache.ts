@@ -3,7 +3,6 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
@@ -11,6 +10,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
+import { calculateWorkingDirectory } from '../../utils';
 
 interface IServerData {
     options: INotebookServerOptions;
@@ -111,7 +111,11 @@ export class ServerCache implements IAsyncDisposable {
             skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            //workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            workingDir:
+                options && options.workingDir
+                    ? options.workingDir
+                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fileSystem),
             metadata: options?.metadata,
             allowUI: options?.allowUI ? options.allowUI : () => false
         };
@@ -126,41 +130,5 @@ export class ServerCache implements IAsyncDisposable {
             const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
             return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
         }
-    }
-
-    private async calculateWorkingDirectory(): Promise<string | undefined> {
-        let workingDir: string | undefined;
-        // For a local launch calculate the working directory that we should switch into
-        const settings = this.configService.getSettings(undefined);
-        const fileRoot = settings.datascience.notebookFileRoot;
-
-        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
-        // so only do this setting if we actually have a valid workspace open
-        if (fileRoot && this.workspace.hasWorkspaceFolders) {
-            const workspaceFolderPath = this.workspace.workspaceFolders![0].uri.fsPath;
-            if (path.isAbsolute(fileRoot)) {
-                if (await this.fileSystem.directoryExists(fileRoot)) {
-                    // User setting is absolute and exists, use it
-                    workingDir = fileRoot;
-                } else {
-                    // User setting is absolute and doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else if (!fileRoot.includes('${')) {
-                // fileRoot is a relative path, combine it with the workspace folder
-                const combinedPath = path.join(workspaceFolderPath, fileRoot);
-                if (await this.fileSystem.directoryExists(combinedPath)) {
-                    // combined path exists, use it
-                    workingDir = combinedPath;
-                } else {
-                    // Combined path doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else {
-                // fileRoot is a variable that hasn't been expanded
-                workingDir = fileRoot;
-            }
-        }
-        return workingDir;
     }
 }

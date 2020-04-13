@@ -20,6 +20,7 @@ import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParti
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher, IKernelProcess } from '../../kernel-launcher/types';
 import { INotebook, INotebookExecutionInfo, INotebookExecutionLogger, IRawNotebookProvider } from '../../types';
+import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
 import { RawNotebookProviderBase } from '../rawNotebookProvider';
 
@@ -86,7 +87,7 @@ export class HostRawNotebookProvider
             await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
 
             // Get the execution info for our notebook
-            const info = this.getExecutionInfo(resource, notebookMetadata);
+            const info = await this.getExecutionInfo(resource, notebookMetadata);
 
             if (rawSession.isConnected) {
                 // Create our notebook
@@ -128,16 +129,16 @@ export class HostRawNotebookProvider
     }
 
     // RAWKERNEL: Not the real execution info, just stub it out for now
-    private getExecutionInfo(
+    private async getExecutionInfo(
         _resource: Resource,
         _notebookMetadata?: nbformat.INotebookMetadata
-    ): INotebookExecutionInfo {
+    ): Promise<INotebookExecutionInfo> {
         return {
             connectionInfo: this.getConnection(),
             uri: Settings.JupyterServerLocalLaunch,
             interpreter: undefined,
             kernelSpec: undefined,
-            workingDir: undefined,
+            workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
     }
