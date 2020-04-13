@@ -77,8 +77,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 break;
 
             case InteractiveWindowMessages.NotebookClose:
-                if (payload.resource === this.interactiveIdentity) {
+                if (payload.resource.toString() === this.interactiveIdentity?.toString()) {
                     this.codeLensCache.clear();
+                    this.interactiveIdentity = undefined;
+                    this.hashProvider = undefined;
+                    this.documentExecutionCounts.clear();
+
+                    // Clear out any goto cell code lenses.
+                    this.updateEvent.fire();
                 }
                 break;
             case InteractiveWindowMessages.NotebookExecutionActivated:
