@@ -112,9 +112,9 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
         when(fs.search(anything(), anything())).thenResolve([
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
+            path.join('widget1', 'index.js'),
+            path.join('widget2', 'index.js'),
+            path.join('widget3', 'index.js')
         ]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('widget2', '1');
@@ -138,9 +138,9 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
         when(fs.search(anything(), anything())).thenResolve([
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
+            path.join('widget1', 'index.js'),
+            path.join('widget2', 'index.js'),
+            path.join('widget3', 'index.js')
         ]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('widget1', '1');
@@ -162,9 +162,9 @@ suite('Data Science - ipywidget - Local Widget Script Source', () => {
             metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
         } as any);
         when(fs.search(anything(), anything())).thenResolve([
-            'widget1/index.js',
-            'widget2/index.js',
-            'widget3/index.js'
+            path.join('widget1', 'index.js'),
+            path.join('widget2', 'index.js'),
+            path.join('widget3', 'index.js')
         ]);
 
         const value = await scriptSourceProvider.getWidgetScriptSource('widgetNotFound', '1');
