@@ -174,6 +174,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             this.saveIdentity(payload).catch((ex) =>
                 traceError(`Failed to initialize ${(this as Object).constructor.name}`, ex)
             );
+        } else if (message === InteractiveWindowMessages.NotebookClose) {
+            this.dispose();
         } else if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
             const response: undefined | { request: Uri; response: Uri } = payload;
             if (response && this.uriConversionPromises.get(response.request.toString())) {

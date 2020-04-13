@@ -75,6 +75,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             case InteractiveWindowMessages.NotebookIdentity:
                 this.setIdentity(payload);
                 break;
+
+            case InteractiveWindowMessages.NotebookClose:
+                if (payload.resource === this.interactiveIdentity) {
+                    this.codeLensCache.clear();
+                }
+                break;
             case InteractiveWindowMessages.NotebookExecutionActivated:
                 this.initCellHashProvider();
                 break;
