@@ -8,7 +8,6 @@ import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
-import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
@@ -26,6 +25,7 @@ import {
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
+import { MockPythonSettings } from '../mockPythonSettings';
 import { createDocument } from './helpers';
 
 //tslint:disable:no-any
@@ -47,11 +47,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
-    const pythonSettings = new (class extends PythonSettings {
-        public fireChangeEvent() {
-            this.changed.fire();
-        }
-    })(undefined, new MockAutoSelectionService());
+    const pythonSettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -105,7 +101,15 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup the file system
         fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
 
-        const codeLensFactory = new CodeLensFactory(configService.object, notebookProvider.object, fileSystem.object);
+        // Setup config service
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
+
+        const codeLensFactory = new CodeLensFactory(
+            configService.object,
+            notebookProvider.object,
+            fileSystem.object,
+            documentManager.object
+        );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(
@@ -132,9 +136,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup our active text editor
         documentManager.setup((dm) => dm.activeTextEditor).returns(() => textEditor.object);
 
-        // Setup config service
-        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
-
         commandManager
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((c, n, v) => {
@@ -144,7 +145,12 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 return Promise.resolve();
             });
 
-        const codeLens = new CodeLensFactory(configService.object, notebookProvider.object, fileSystem.object);
+        const codeLens = new CodeLensFactory(
+            configService.object,
+            notebookProvider.object,
+            fileSystem.object,
+            documentManager.object
+        );
 
         codeWatcher = new CodeWatcher(
             interactiveWindowProvider.object,
@@ -895,6 +901,7 @@ testing2`;
 
         // Change settings
         pythonSettings.datascience.codeRegularExpression = '#%%%.*dude';
+        pythonSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
@@ -904,6 +911,7 @@ testing2`;
 
         // Change settings to empty
         pythonSettings.datascience.codeRegularExpression = '';
+        pythonSettings.fireChangeEvent();
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];

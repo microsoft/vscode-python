@@ -105,6 +105,10 @@ suite('DataScience gotocell tests', () => {
                     Uri.parse(Identifiers.InteractiveWindowIdentity)
                 );
                 const listener = (codeLensFactory as any) as IInteractiveWindowListener;
+                listener.onMessage(InteractiveWindowMessages.NotebookIdentity, {
+                    resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+                    type: 'interactive'
+                });
                 listener.onMessage(
                     InteractiveWindowMessages.NotebookExecutionActivated,
                     Identifiers.InteractiveWindowIdentity

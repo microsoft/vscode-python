@@ -110,7 +110,7 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
 }
 
 // CellRange is used as the basis for creating new ICells. We only use it in this file.
-interface ICellRange {
+export interface ICellRange {
     range: Range;
     title: string;
     cell_type: string;

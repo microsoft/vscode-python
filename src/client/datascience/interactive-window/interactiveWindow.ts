@@ -33,6 +33,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
+    INotebookIdentity,
     InteractiveWindowMessages,
     ISubmitNewCell,
     NotebookModelChange,
@@ -311,9 +312,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Do nothing as this data isn't stored in our options.
     }
 
-    protected async getNotebookIdentity(): Promise<Uri> {
+    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
         // Always the same identity (for now)
-        return Uri.parse(Identifiers.InteractiveWindowIdentity);
+        return {
+            resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+            type: 'interactive'
+        };
     }
 
     protected updateContexts(info: IInteractiveWindowInfo | undefined) {

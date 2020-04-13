@@ -173,7 +173,6 @@ import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
-import { CellHashLogger } from '../../client/datascience/editor-integration/cellhashLogger';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
@@ -231,7 +230,6 @@ import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICellHashListener,
-    ICellHashLogger,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -714,8 +712,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
-        this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
-        this.serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [
+        this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
         ]);
         this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);

@@ -706,8 +706,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }
 
     private setIdentity(identity: INotebookIdentity) {
-        this.notebookIdentity = Uri.parse(identity.resource);
-        this.potentialResource = Uri.parse(identity.resource);
+        this.notebookIdentity = identity.resource;
+        this.potentialResource = identity.resource;
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {

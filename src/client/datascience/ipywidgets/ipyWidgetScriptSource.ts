@@ -218,7 +218,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         }
     }
     private async saveIdentity(args: INotebookIdentity) {
-        this.notebookIdentity = Uri.parse(args.resource);
+        this.notebookIdentity = args.resource;
         await this.initialize();
     }
 
