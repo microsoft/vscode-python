@@ -166,14 +166,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 commands.forEach((c) => {
                     const codeLens = this.createCodeLens(document, r, c, firstCell);
                     if (codeLens) {
-                        cache?.documentLenses.push(codeLens);
+                        cache?.documentLenses.push(codeLens); // NOSONAR
                     }
                 });
                 firstCell = false;
             });
         }
 
-        // Generate the goto cell lense if necessary
+        // Generate the goto cell lenses if necessary
         if (
             needUpdate &&
             cache.gotoCellLens.length === 0 &&
@@ -185,12 +185,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             cache.cellRanges.forEach((r) => {
                 const codeLens = this.createExecutionLens(document, r.range, hashes);
                 if (codeLens) {
-                    cache?.gotoCellLens.push(codeLens);
+                    cache?.gotoCellLens.push(codeLens); // NOSONAR
                 }
             });
         }
 
-        return [...cache?.documentLenses, ...cache?.gotoCellLens];
+        return [...cache.documentLenses, ...cache.gotoCellLens];
     }
 
     private setIdentity(identity: INotebookIdentity) {
