@@ -35,6 +35,7 @@ export class CodeWatcher implements ICodeWatcher {
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
     private updateRequiredDisposable: IDisposable | undefined;
+    private closeDocumentDisposable: IDisposable | undefined;
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -63,7 +64,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.updateRequiredDisposable = this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
 
         // Make sure to stop listening for changes when this document closes.
-        this.documentManager.onDidCloseTextDocument(this.onDocumentClosed.bind(this));
+        this.closeDocumentDisposable = this.documentManager.onDidCloseTextDocument(this.onDocumentClosed.bind(this));
     }
 
     public get codeLensUpdated(): Event<void> {
@@ -375,6 +376,7 @@ export class CodeWatcher implements ICodeWatcher {
     private onDocumentClosed(doc: TextDocument): void {
         if (this.document && this.fileSystem.arePathsSame(doc.fileName, this.document.fileName)) {
             this.codeLensUpdatedEvent.dispose();
+            this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR
         }
     }
