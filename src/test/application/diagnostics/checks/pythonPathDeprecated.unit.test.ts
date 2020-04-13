@@ -8,7 +8,7 @@
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
-import { DiagnosticSeverity, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, DiagnosticSeverity, Uri, WorkspaceConfiguration } from 'vscode';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     PythonPathDeprecatedDiagnostic,
@@ -375,6 +375,24 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             assert.deepEqual(diagnostics, []);
 
             workspaceService.verifyAll();
+        });
+
+        test('Method _removePythonPathFromWorkspaceSettings() removes `python.pythonPath` setting from Workspace & Workspace Folder', async () => {
+            const workspaceConfig = typemoq.Mock.ofType<WorkspaceConfiguration>();
+            workspaceService.setup((w) => w.workspaceFile).returns(() => Uri.parse('path/to/workspaceFile'));
+            workspaceService.setup((w) => w.getConfiguration('python', resource)).returns(() => workspaceConfig.object);
+            workspaceConfig
+                .setup((w) => w.update('pythonPath', undefined, ConfigurationTarget.Workspace))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+            workspaceConfig
+                .setup((w) => w.update('pythonPath', undefined, ConfigurationTarget.WorkspaceFolder))
+                .returns(() => Promise.resolve())
+                .verifiable(typemoq.Times.once());
+
+            await diagnosticService._removePythonPathFromWorkspaceSettings(resource);
+
+            workspaceConfig.verifyAll();
         });
     });
 });
