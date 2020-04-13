@@ -14,7 +14,7 @@ const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 // tslint:disable-next-line:no-var-requires no-require-imports
-const FileManagerPlugin = require('filemanager-webpack-plugin');
+const FileManagerPlugin = require('filemanager-webpack-plugin-fixed');
 // If ENABLE_GATHER variable is defined, don't exclude the python-program-analysis pacakge.
 // See externals, below.
 const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
