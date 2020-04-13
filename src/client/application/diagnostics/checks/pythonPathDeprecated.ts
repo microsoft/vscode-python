@@ -50,22 +50,19 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
             return [];
         }
         const setting = this.workspaceService.getConfiguration('python', resource).inspect<string>('pythonPath');
-        if (setting) {
-            const isWorkspaceJsonSettingSet =
-                this.workspaceService.workspaceFile && setting.workspaceValue !== undefined;
-            const isSettingsJsonSettingSet = setting.workspaceFolderValue !== undefined;
-            if (isWorkspaceJsonSettingSet && isSettingsJsonSettingSet) {
-                return [
-                    new PythonPathDeprecatedDiagnostic(
-                        Diagnostics.removePythonPathWorkspaceJsonAndSettingsJson(),
-                        resource
-                    )
-                ];
-            } else if (isSettingsJsonSettingSet) {
-                return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathSettingsJson(), resource)];
-            } else if (isWorkspaceJsonSettingSet) {
-                return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathWorkspaceJson(), resource)];
-            }
+        if (!setting) {
+            return [];
+        }
+        const isWorkspaceJsonSettingSet = this.workspaceService.workspaceFile && setting.workspaceValue !== undefined;
+        const isSettingsJsonSettingSet = setting.workspaceFolderValue !== undefined;
+        if (isWorkspaceJsonSettingSet && isSettingsJsonSettingSet) {
+            return [
+                new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathWorkspaceJsonAndSettingsJson(), resource)
+            ];
+        } else if (isSettingsJsonSettingSet) {
+            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathSettingsJson(), resource)];
+        } else if (isWorkspaceJsonSettingSet) {
+            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathWorkspaceJson(), resource)];
         }
         return [];
     }
