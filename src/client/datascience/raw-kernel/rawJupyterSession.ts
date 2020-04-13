@@ -3,8 +3,10 @@
 'use strict';
 import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { Resource } from '../../common/types';
+import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseJupyterSession } from '../baseJupyterSession';
@@ -60,11 +62,34 @@ export class RawJupyterSession extends BaseJupyterSession {
         throw new Error('Not implemented');
     }
 
-    // RAWKERNEL: Cancel token routed down?
-    public async connect(resource: Resource, kernelName?: string, _cancelToken?: CancellationToken): Promise<void> {
+    public async connect(resource: Resource, kernelName?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
-            this.currentSession = await this.startRawSession(resource, kernelName);
-            this.session = this.currentSession.session;
+            // Try to start up our raw session, allow for cancellation or timeout
+            // Notebook Provider level will handle the thrown error
+            const rawSessionStart = await waitForPromise(
+                Promise.race([
+                    this.startRawSession(resource, kernelName),
+                    createPromiseFromCancellation({
+                        cancelAction: 'reject',
+                        defaultValue: new CancellationError(),
+                        token: cancelToken
+                    })
+                ]),
+                5_000
+            );
+
+            // Only connect our session if we didn't cancel or timeout
+            if (rawSessionStart instanceof CancellationError) {
+                traceInfo('Starting of raw session cancelled by user');
+                throw rawSessionStart;
+            } else if (rawSessionStart === null) {
+                traceError('Raw session failed to start in given timeout');
+                throw new Error(localize.DataScience.sessionDisposed());
+            } else {
+                traceInfo('Raw session started and connected');
+                this.currentSession = rawSessionStart;
+                this.session = this.currentSession.session;
+            }
         } catch {
             traceError('Failed to connect raw kernel session');
             this.connected = false;
