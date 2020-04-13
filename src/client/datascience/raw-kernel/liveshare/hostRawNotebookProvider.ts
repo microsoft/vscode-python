@@ -18,7 +18,7 @@ import { Identifiers, LiveShare, Settings } from '../../constants';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher, IKernelProcess } from '../../kernel-launcher/types';
+import { IKernelLauncher } from '../../kernel-launcher/types';
 import {
     IJupyterKernelSpec,
     INotebook,
@@ -37,7 +37,6 @@ export class HostRawNotebookProvider
     extends LiveShareParticipantHost(RawNotebookProviderBase, LiveShare.RawNotebookProviderService)
     implements IRoleBasedObject, IRawNotebookProvider {
     private disposed = false;
-    private kernelProcess: IKernelProcess | undefined;
     constructor(
         private liveShare: ILiveShareApi,
         private disposableRegistry: IDisposableRegistry,
@@ -54,10 +53,6 @@ export class HostRawNotebookProvider
 
     public async dispose(): Promise<void> {
         if (!this.disposed) {
-            if (this.kernelProcess) {
-                this.kernelProcess.dispose();
-            }
-
             this.disposed = true;
             await super.dispose();
         }

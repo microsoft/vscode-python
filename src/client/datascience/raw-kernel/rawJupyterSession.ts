@@ -24,7 +24,7 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    private currentSession: { session: RawSession; process: IKernelProcess | undefined } | undefined;
+    private currentKernelProcess: IKernelProcess | undefined;
     private processExitHandler: IDisposable | undefined;
 
     constructor(
@@ -44,8 +44,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.processExitHandler?.dispose(); // NOSONAR
         this.processExitHandler = undefined;
 
-        if (this.currentSession?.process) {
-            this.currentSession.process.dispose();
+        if (this.currentKernelProcess) {
+            this.currentKernelProcess.dispose();
         }
 
         if (this.onStatusChangedEvent) {
@@ -80,7 +80,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                         token: cancelToken
                     })
                 ]),
-                5_000
+                30_000
             );
 
             // Only connect our session if we didn't cancel or timeout
@@ -92,8 +92,8 @@ export class RawJupyterSession extends BaseJupyterSession {
                 throw new Error(localize.DataScience.sessionDisposed());
             } else {
                 traceInfo('Raw session started and connected');
-                this.currentSession = rawSessionStart;
-                this.session = this.currentSession.session;
+                this.session = rawSessionStart.session;
+                this.currentKernelProcess = rawSessionStart.process;
             }
         } catch {
             traceError('Failed to connect raw kernel session');
@@ -102,7 +102,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         this.connected = true;
-        return this.currentSession.process?.kernelSpec;
+        return this.currentKernelProcess.kernelSpec;
     }
 
     public async changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
@@ -112,7 +112,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     private async startRawSession(
         resource: Resource,
         kernelName?: string
-    ): Promise<{ session: RawSession; process: IKernelProcess | undefined }> {
+    ): Promise<{ session: RawSession; process: IKernelProcess }> {
         const process = await this.kernelLauncher.launch(resource, kernelName);
 
         if (!process.connection) {

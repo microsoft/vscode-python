@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -37,13 +37,13 @@ class KernelProcess implements IKernelProcess {
         return this.exitEvent.event;
     }
 
-    public get kernelSpec(): IJupyterKernelSpec | undefined {
+    public get kernelSpec(): Readonly<IJupyterKernelSpec> | undefined {
         return this._kernelSpec;
     }
     public get process(): ChildProcess | undefined {
         return this._process;
     }
-    public get connection(): IKernelConnection | undefined {
+    public get connection(): Readonly<IKernelConnection> | undefined {
         return this._connection;
     }
 
@@ -78,7 +78,7 @@ class KernelProcess implements IKernelProcess {
         if (exeObs.proc) {
             exeObs.proc!.on('exit', exitCode => {
                 traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
-                this.readyPromise.reject();
+                this.readyPromise.reject(new Error('Kernel Process Exited'));
                 this.exitEvent.fire(exitCode);
             });
         } else {
@@ -87,7 +87,7 @@ class KernelProcess implements IKernelProcess {
         }
         exeObs.out.subscribe(output => {
             if (output.source === 'stderr') {
-                traceInfo(`StdErr from Kernel Process ${output.out}`);
+                traceWarning(`StdErr from Kernel Process ${output.out}`);
             } else {
                 // Search for --existing this is the message that will indicate that our kernel is actually
                 // up and started from stdout
