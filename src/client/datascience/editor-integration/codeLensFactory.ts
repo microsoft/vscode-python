@@ -243,6 +243,9 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     private onChangedSettings() {
         // When config settings change, refresh our code lenses.
         this.codeLensCache.clear();
+
+        // Force an update so that code lenses are recomputed now and not during execution.
+        this.updateEvent.fire();
     }
 
     private enumerateCommands(resource: Resource): string[] {
