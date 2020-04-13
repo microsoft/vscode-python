@@ -41,7 +41,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         // Unhook our process exit handler before we dispose the process ourselves
-        this.processExitHandler?.dispose();
+        this.processExitHandler?.dispose(); // NOSONAR
         this.processExitHandler = undefined;
 
         if (this.currentSession?.process) {
