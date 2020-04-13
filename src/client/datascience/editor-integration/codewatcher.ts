@@ -14,6 +14,7 @@ import {
     TextEditorRevealType
 } from 'vscode';
 
+import { IDisposable } from 'monaco-editor';
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, Resource } from '../../common/types';
@@ -34,6 +35,7 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
+    private updateRequiredDisposable: IDisposable | undefined;
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -59,7 +61,10 @@ export class CodeWatcher implements ICodeWatcher {
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
 
         // Listen for changes
-        this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
+        this.updateRequiredDisposable = this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
+
+        // Make sure to stop listening for changes when this document closes.
+        this.documentManager.onDidCloseTextDocument(this.onDocumentClosed.bind(this));
     }
 
     public get codeLensUpdated(): Event<void> {
@@ -366,6 +371,13 @@ export class CodeWatcher implements ICodeWatcher {
             this.codeLenses = this.codeLensFactory.createCodeLenses(this.document);
         }
         this.codeLensUpdatedEvent.fire();
+    }
+
+    private onDocumentClosed(doc: TextDocument): void {
+        if (this.document && this.fileSystem.arePathsSame(doc.fileName, this.document.fileName)) {
+            this.codeLensUpdatedEvent.dispose();
+            this.updateRequiredDisposable?.dispose(); // NOSONAR
+        }
     }
 
     private async addCode(

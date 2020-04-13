@@ -11,7 +11,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHashLogger,
@@ -35,6 +35,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }>();
     private cellExecutionCounts: Map<string, string> = new Map<string, string>();
     private hashProvider: ICellHashProvider | undefined;
+    private notebookIdentity: Uri | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -54,8 +55,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any) {
         switch (message) {
+            case InteractiveWindowMessages.NotebookIdentity:
+                this.setIdentity(payload);
+                break;
             case InteractiveWindowMessages.NotebookExecutionActivated:
-                this.initCellHashProvider(<string>payload).ignoreErrors();
+                this.initCellHashProvider();
                 break;
 
             case InteractiveWindowMessages.FinishCell:
@@ -69,10 +73,6 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             default:
                 break;
         }
-    }
-
-    public hashesUpdated(): void {
-        this.updateEvent.fire();
     }
 
     public get updateRequired(): Event<void> {
@@ -107,31 +107,32 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return codeLenses;
     }
 
-    private async initCellHashProvider(notebookUri: string) {
-        const nbUri: Uri = Uri.parse(notebookUri);
-        if (!nbUri) {
-            return;
-        }
-
-        // First get the active server
-        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: nbUri, getOnly: true });
-
-        // If we have an executing notebook, get its cell hash provider service.
-        if (nb) {
-            this.hashProvider = this.getCellHashProvider(nb);
-            if (this.hashProvider) {
-                this.hashProvider.updated(this.hashesUpdated.bind(this));
-            }
-        }
+    private setIdentity(identity: INotebookIdentity) {
+        this.notebookIdentity = Uri.parse(identity.resource);
     }
-    private getCellHashProvider(nb: INotebook): ICellHashProvider | undefined {
-        const cellHashLogger = <ICellHashLogger>(
-            nb.getLoggers().find((logger: INotebookExecutionLogger) => (<ICellHashLogger>logger).getCellHashProvider)
-        );
 
-        if (cellHashLogger) {
-            return cellHashLogger.getCellHashProvider();
-        }
+    private initCellHashProvider() {
+        this.getNotebook()
+            .then((nb) => {
+                if (nb) {
+                    const cellHashLogger = <ICellHashLogger>(
+                        nb
+                            .getLoggers()
+                            .find((logger: INotebookExecutionLogger) => (<ICellHashLogger>logger).getCellHashProvider)
+                    );
+
+                    if (cellHashLogger) {
+                        this.hashProvider = cellHashLogger.getCellHashProvider();
+                    }
+                }
+            })
+            .ignoreErrors();
+    }
+
+    private async getNotebook(): Promise<INotebook | undefined> {
+        return this.notebookIdentity
+            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true })
+            : undefined;
     }
 
     private enumerateCommands(resource: Resource): string[] {
