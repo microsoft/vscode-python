@@ -91,7 +91,8 @@ export class LanguageClientMiddleware implements Middleware {
             token: CancellationToken,
             next: ConfigurationRequest.HandlerSignature
         ): HandlerResult<any[], void> => {
-            const result = next(params, token);
+            // Hand-collapse "Thenable<A> | Thenable<B> | Thenable<A|B>" into just "Thenable<A|B>" to make TS happy.
+            const result: any[] | ResponseError<void> | Thenable<any[] | ResponseError<void>> = next(params, token);
 
             // For backwards compatibility, set python.pythonPath to the configured
             // value as though it were in the user's settings.json file.
@@ -111,7 +112,7 @@ export class LanguageClientMiddleware implements Middleware {
             };
 
             if (isThenable(result)) {
-                return (result as Thenable<any[] | ResponseError<void>>).then(addPythonPath);
+                return result.then(addPythonPath);
             }
 
             return addPythonPath(result);
