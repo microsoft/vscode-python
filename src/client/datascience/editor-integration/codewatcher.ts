@@ -14,10 +14,9 @@ import {
     TextEditorRevealType
 } from 'vscode';
 
-import { IDisposable } from 'monaco-editor';
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDataScienceSettings, Resource } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings, IDisposable, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
