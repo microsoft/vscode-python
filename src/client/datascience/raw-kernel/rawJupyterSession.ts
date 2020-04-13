@@ -116,7 +116,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         if (!process.connection) {
             traceError('KernelProcess launched without connection info');
-            throw new Error();
+            throw new Error(localize.DataScience.sessionDisposed());
         }
 
         // Watch to see if our process exits
