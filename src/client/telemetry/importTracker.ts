@@ -59,6 +59,9 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
         this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
     }
+    public onKernelRestarted() {
+        // Do nothing on restarted
+    }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
     }

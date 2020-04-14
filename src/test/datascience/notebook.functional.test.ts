@@ -1398,6 +1398,10 @@ plt.show()`,
         const outputs: string[] = [];
         @injectable()
         class Logger implements INotebookExecutionLogger {
+            public onKernelRestarted() {
+                // Do nothing on restarted
+            }
+
             public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
                 cellInputs.push(concatMultilineStringInput(cell.data.source));
             }

@@ -188,6 +188,7 @@ export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
+    onKernelRestarted(): void;
 }
 
 export const IGatherProvider = Symbol('IGatherProvider');
@@ -776,11 +777,6 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-}
-
-export const ICellHashLogger = Symbol('ICellHashLogger');
-export interface ICellHashLogger extends INotebookExecutionLogger {
-    getCellHashProvider(): ICellHashProvider;
 }
 
 export interface IDebugLocation {

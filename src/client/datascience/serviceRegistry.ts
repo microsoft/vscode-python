@@ -18,7 +18,6 @@ import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
-import { CellHashLogger } from './editor-integration/cellhashLogger';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
@@ -85,7 +84,6 @@ import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
     ICellHashListener,
-    ICellHashLogger,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -131,8 +129,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     const useCustomEditorApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, useCustomEditorApi);
 
-    serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [INotebookExecutionLogger]);
-    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
+    serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);

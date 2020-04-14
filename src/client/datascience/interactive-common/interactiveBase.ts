@@ -55,6 +55,7 @@ import {
     ICopyCode,
     IGotoCode,
     IInteractiveWindowMapping,
+    INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
     IRemoteAddCode,
@@ -187,10 +188,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
             this.getNotebookIdentity()
-                .then((uri) =>
-                    this.listeners.forEach((l) =>
-                        l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })
-                    )
+                .then((identity) =>
+                    this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookIdentity, identity))
                 )
                 .ignoreErrors();
         }, 0);
@@ -340,7 +339,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     public dispose() {
         super.dispose();
-        this.listeners.forEach((l) => l.dispose());
+        this.getNotebookIdentity()
+            .then((r) => {
+                // Tell listeners we're closing. They can decide if they should dispose themselves or not.
+                this.listeners.forEach((l) => l.onMessage(InteractiveWindowMessages.NotebookClose, r));
+            })
+            .ignoreErrors();
         this.updateContexts(undefined);
     }
 
@@ -488,7 +492,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
 
-    protected abstract getNotebookIdentity(): Promise<Uri>;
+    protected abstract getNotebookIdentity(): Promise<INotebookIdentity>;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
@@ -1034,14 +1038,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async createNotebook(server: INotebookServer): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
-            const [resource, uri, metadata] = await Promise.all([
+            const [resource, identity, metadata] = await Promise.all([
                 this.getOwningResource(),
                 this.getNotebookIdentity(),
                 this.getNotebookMetadata()
             ]);
             try {
-                notebook = uri
-                    ? await this.notebookProvider.getOrCreateNotebook({ identity: uri, metadata })
+                notebook = identity
+                    ? await this.notebookProvider.getOrCreateNotebook({ identity: identity.resource, metadata })
                     : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch

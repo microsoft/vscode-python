@@ -54,6 +54,7 @@ import {
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
+    INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
     ISubmitNewCell,
@@ -333,9 +334,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow, { newCellId: uuid() }).ignoreErrors();
     }
 
-    public getOwningResource(): Promise<Resource> {
+    public async getOwningResource(): Promise<Resource> {
         // Resource to use for loading and our identity are the same.
-        return this.getNotebookIdentity();
+        const identity = await this.getNotebookIdentity();
+        return identity.resource;
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {
@@ -425,13 +427,16 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected async getNotebookIdentity(): Promise<Uri> {
+    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
         if (this.loadedPromise) {
             await this.loadedPromise.promise;
         }
 
         // File should be set now
-        return this.file;
+        return {
+            resource: this.file,
+            type: 'native'
+        };
     }
 
     protected async setLaunchingFile(_file: string): Promise<void> {

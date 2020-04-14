@@ -4,26 +4,41 @@
 import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from 'vscode';
 
+import { IDocumentManager } from '../../common/application/types';
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCellRangesFromDocument } from '../cellFactory';
-import { CodeLensCommands, Commands } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
+import { CodeLensCommands, Commands, Identifiers } from '../constants';
+import {
+    INotebookIdentity,
+    InteractiveWindowMessages,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
-    ICellHashLogger,
     ICellHashProvider,
     ICodeLensFactory,
     IFileHashes,
     IInteractiveWindowListener,
     INotebook,
-    INotebookExecutionLogger,
     INotebookProvider
 } from '../types';
 
+type CodeLensCacheData = {
+    cachedDocumentVersion: number | undefined;
+    cachedExecutionCount: number | undefined;
+    documentLenses: CodeLens[];
+    cellRanges: ICellRange[];
+    gotoCellLens: CodeLens[];
+};
+
+/**
+ * This class is a singleton that generates code lenses for any document the user opens. It listens
+ * to cells being execute so it can add 'goto' lenses on cells that have already been run.
+ */
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
@@ -33,14 +48,21 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
-    private cellExecutionCounts: Map<string, string> = new Map<string, string>();
+    private cellExecutionCounts = new Map<string, string>();
+    private documentExecutionCounts = new Map<string, number>();
     private hashProvider: ICellHashProvider | undefined;
+    private interactiveIdentity: Uri | undefined; // Once we have more than one interactive window, this logic won't work anymore
+    private codeLensCache = new Map<string, CodeLensCacheData>();
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IFileSystem) private fileSystem: IFileSystem
-    ) {}
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDocumentManager) private documentManager: IDocumentManager
+    ) {
+        this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
+        this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
+    }
 
     public dispose(): void {
         noop();
@@ -54,16 +76,47 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any) {
         switch (message) {
+            case InteractiveWindowMessages.NotebookIdentity:
+                this.setIdentity(payload);
+                break;
+
+            case InteractiveWindowMessages.NotebookClose:
+                if (payload.resource.toString() === this.interactiveIdentity?.toString()) {
+                    this.interactiveIdentity = undefined;
+                    this.hashProvider = undefined;
+                    this.documentExecutionCounts.clear();
+
+                    // Clear out any goto cell code lenses.
+                    this.updateEvent.fire();
+                }
+                break;
             case InteractiveWindowMessages.NotebookExecutionActivated:
-                this.initCellHashProvider(<string>payload).ignoreErrors();
+                this.initCellHashProvider();
+                break;
+
+            case InteractiveWindowMessages.AddedSysInfo:
+                if (payload && payload.type) {
+                    const reason = payload.type as SysInfoReason;
+                    if (reason !== SysInfoReason.Interrupt) {
+                        this.documentExecutionCounts.clear();
+                        // Clear out any goto cell code lenses.
+                        this.updateEvent.fire();
+                    }
+                }
                 break;
 
             case InteractiveWindowMessages.FinishCell:
                 const cell = payload as ICell;
                 if (cell && cell.data && cell.data.execution_count) {
-                    this.cellExecutionCounts.set(cell.id, cell.data.execution_count.toString());
+                    if (cell.file && cell.file !== Identifiers.EmptyFileName) {
+                        this.cellExecutionCounts.set(cell.id, cell.data.execution_count.toString());
+                        this.documentExecutionCounts.set(
+                            cell.file.toLocaleLowerCase(),
+                            parseInt(cell.data.execution_count.toString(), 10)
+                        );
+                        this.updateEvent.fire();
+                    }
                 }
-                this.updateEvent.fire();
                 break;
 
             default:
@@ -71,67 +124,128 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
     }
 
-    public hashesUpdated(): void {
-        this.updateEvent.fire();
-    }
-
     public get updateRequired(): Event<void> {
         return this.updateEvent.event;
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
-        const ranges = generateCellRangesFromDocument(
-            document,
-            this.configService.getSettings(document.uri).datascience
-        );
-        const commands = this.enumerateCommands(document.uri);
-        const hashes = this.configService.getSettings(document.uri).datascience.addGotoCodeLenses
-            ? this.hashProvider
-                ? this.hashProvider.getHashes()
-                : []
-            : [];
-        const codeLenses: CodeLens[] = [];
-        let firstCell = true;
+        // See if we have a cached version of the code lenses for this document
+        const key = document.fileName.toLocaleLowerCase();
+        let cache = this.codeLensCache.get(key);
+        let needUpdate = false;
 
-        ranges.forEach((range) => {
-            commands.forEach((c) => {
-                const codeLens = this.createCodeLens(document, range, c, firstCell);
+        // If we don't have one, generate one
+        if (!cache) {
+            cache = {
+                cachedDocumentVersion: undefined,
+                cachedExecutionCount: undefined,
+                documentLenses: [],
+                cellRanges: [],
+                gotoCellLens: []
+            };
+            needUpdate = true;
+            this.codeLensCache.set(key, cache);
+        }
+
+        // If the document version doesn't match, our cell ranges are out of date
+        if (cache.cachedDocumentVersion !== document.version) {
+            cache.cellRanges = generateCellRangesFromDocument(
+                document,
+                this.configService.getSettings(document.uri).datascience
+            );
+
+            // Because we have all new ranges, we need to recompute ALL of our code lenses.
+            cache.documentLenses = [];
+            cache.gotoCellLens = [];
+            cache.cachedDocumentVersion = document.version;
+            needUpdate = true;
+        }
+
+        // If the document execution count doesn't match, then our goto cell lens is out of date
+        if (cache.cachedExecutionCount !== this.documentExecutionCounts.get(key)) {
+            cache.gotoCellLens = [];
+            cache.cachedExecutionCount = this.documentExecutionCounts.get(key);
+            needUpdate = true;
+        }
+
+        // Generate our code lenses if necessary
+        if (cache.documentLenses.length === 0 && needUpdate && cache.cellRanges.length) {
+            // Enumerate the possible commands for the document based code lenses
+            const commands = needUpdate ? this.enumerateCommands(document.uri) : [];
+
+            // Then iterate over all of the cell ranges and generate code lenses for each possible
+            // commands
+            let firstCell = true;
+            cache.cellRanges.forEach((r) => {
+                commands.forEach((c) => {
+                    const codeLens = this.createCodeLens(document, r, c, firstCell);
+                    if (codeLens) {
+                        cache?.documentLenses.push(codeLens); // NOSONAR
+                    }
+                });
+                firstCell = false;
+            });
+        }
+
+        // Generate the goto cell lenses if necessary
+        if (
+            needUpdate &&
+            cache.gotoCellLens.length === 0 &&
+            this.hashProvider &&
+            cache.cellRanges.length &&
+            this.configService.getSettings(document.uri).datascience.addGotoCodeLenses
+        ) {
+            const hashes = this.hashProvider.getHashes();
+            cache.cellRanges.forEach((r) => {
+                const codeLens = this.createExecutionLens(document, r.range, hashes);
                 if (codeLens) {
-                    codeLenses.push(codeLens);
+                    cache?.gotoCellLens.push(codeLens); // NOSONAR
                 }
             });
-            this.addExecutionCount(codeLenses, document, range.range, hashes);
-            firstCell = false;
-        });
+        }
 
-        return codeLenses;
+        return [...cache.documentLenses, ...cache.gotoCellLens];
     }
 
-    private async initCellHashProvider(notebookUri: string) {
-        const nbUri: Uri = Uri.parse(notebookUri);
-        if (!nbUri) {
-            return;
-        }
-
-        // First get the active server
-        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: nbUri, getOnly: true });
-
-        // If we have an executing notebook, get its cell hash provider service.
-        if (nb) {
-            this.hashProvider = this.getCellHashProvider(nb);
-            if (this.hashProvider) {
-                this.hashProvider.updated(this.hashesUpdated.bind(this));
-            }
+    private setIdentity(identity: INotebookIdentity) {
+        if (identity.type === 'interactive') {
+            this.interactiveIdentity = identity.resource;
         }
     }
-    private getCellHashProvider(nb: INotebook): ICellHashProvider | undefined {
-        const cellHashLogger = <ICellHashLogger>(
-            nb.getLoggers().find((logger: INotebookExecutionLogger) => (<ICellHashLogger>logger).getCellHashProvider)
-        );
 
-        if (cellHashLogger) {
-            return cellHashLogger.getCellHashProvider();
-        }
+    private initCellHashProvider() {
+        // Try getting our notebook. This should fail if
+        // the user hasn't opened the interactive window yet.
+        this.getInteractiveWindowNotebook()
+            .then((nb) => {
+                if (nb) {
+                    // From the notebook, find the logger that is the cell hash provider
+                    // tslint:disable-next-line: no-any
+                    this.hashProvider = (nb.getLoggers().find((l) => (l as any).getHashes) as any) as ICellHashProvider;
+                }
+            })
+            .ignoreErrors();
+    }
+
+    private async getInteractiveWindowNotebook(): Promise<INotebook | undefined> {
+        return this.interactiveIdentity
+            ? this.notebookProvider.getOrCreateNotebook({ identity: this.interactiveIdentity, getOnly: true })
+            : undefined;
+    }
+
+    private onClosedDocument(doc: TextDocument) {
+        this.codeLensCache.delete(doc.fileName.toLocaleLowerCase());
+
+        // Don't delete the document execution count, we need to keep track
+        // of it past the closing of a doc if the notebook or interactive window is still open.
+    }
+
+    private onChangedSettings() {
+        // When config settings change, refresh our code lenses.
+        this.codeLensCache.clear();
+
+        // Force an update so that code lenses are recomputed now and not during execution.
+        this.updateEvent.fire();
     }
 
     private enumerateCommands(resource: Resource): string[] {
@@ -282,7 +396,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return undefined;
     }
 
-    private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[]) {
+    private createExecutionLens(document: TextDocument, range: Range, hashes: IFileHashes[]) {
         const list = hashes.find((h) => this.fileSystem.arePathsSame(h.file, document.fileName));
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
@@ -290,15 +404,13 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
                 if (this.cellExecutionCounts.has(rangeMatch.id)) {
-                    codeLens.push(
-                        this.generateCodeLens(
-                            range,
-                            Commands.ScrollToCell,
-                            localize.DataScience.scrollToCellTitleFormatMessage().format(
-                                this.cellExecutionCounts.get(rangeMatch.id)!
-                            ),
-                            [document.fileName, rangeMatch.id]
-                        )
+                    return this.generateCodeLens(
+                        range,
+                        Commands.ScrollToCell,
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(
+                            this.cellExecutionCounts.get(rangeMatch.id)!
+                        ),
+                        [document.fileName, rangeMatch.id]
                     );
                 }
             }

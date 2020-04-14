@@ -91,6 +91,7 @@ export enum InteractiveWindowMessages {
     ScrollToCell = 'scroll_to_cell',
     ReExecuteCells = 'reexecute_cells',
     NotebookIdentity = 'identity',
+    NotebookClose = 'close',
     NotebookDirty = 'dirty',
     NotebookClean = 'clean',
     SaveAll = 'save_all',
@@ -327,7 +328,8 @@ export interface IScrollToCell {
 }
 
 export interface INotebookIdentity {
-    resource: string;
+    resource: Uri;
+    type: 'interactive' | 'native';
 }
 
 export interface ISaveAll {
@@ -576,6 +578,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
     public [InteractiveWindowMessages.ReExecuteCells]: IReExecuteCells;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
+    public [InteractiveWindowMessages.NotebookClose]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;

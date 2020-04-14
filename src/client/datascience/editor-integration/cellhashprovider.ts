@@ -14,14 +14,13 @@ import { noop } from '../../common/utils/misc';
 import { getCellResource } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
-import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHash,
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
-    IInteractiveWindowListener
+    INotebookExecutionLogger
 } from '../types';
 
 interface IRangedCellHash extends ICellHash {
@@ -35,7 +34,7 @@ interface IRangedCellHash extends ICellHash {
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
 @injectable()
-export class CellHashProvider implements ICellHashProvider, IInteractiveWindowListener {
+export class CellHashProvider implements ICellHashProvider, INotebookExecutionLogger {
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
@@ -71,25 +70,6 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         return this.postEmitter.event;
     }
 
-    // tslint:disable-next-line: no-any
-    public onMessage(message: string, payload?: any): void {
-        switch (message) {
-            case InteractiveWindowMessages.AddedSysInfo:
-                if (payload && payload.type) {
-                    const reason = payload.type as SysInfoReason;
-                    if (reason !== SysInfoReason.Interrupt) {
-                        this.hashes.clear();
-                        this.executionCount = 0;
-                        this.updateEventEmitter.fire();
-                    }
-                }
-                break;
-
-            default:
-                break;
-        }
-    }
-
     public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()]
             .map((e) => {
@@ -99,6 +79,12 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 };
             })
             .filter((e) => e.hashes.length > 0);
+    }
+
+    public onKernelRestarted() {
+        this.hashes.clear();
+        this.executionCount = 0;
+        this.updateEventEmitter.fire();
     }
 
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {

@@ -60,9 +60,10 @@ export class AutoSaveService implements IInteractiveWindowListener {
 
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
-            this.notebookUri = Uri.parse((payload as INotebookIdentity).resource);
-        }
-        if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
+            this.notebookUri = (payload as INotebookIdentity).resource;
+        } else if (message === InteractiveWindowMessages.NotebookClose) {
+            this.dispose();
+        } else if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
             const notebook = this.getNotebook();
             if (!notebook) {
                 traceError(

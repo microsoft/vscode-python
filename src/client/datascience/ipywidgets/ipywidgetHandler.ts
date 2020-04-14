@@ -121,7 +121,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }
 
     private async saveIdentity(args: INotebookIdentity) {
-        this.notebookIdentity = Uri.parse(args.resource);
+        this.notebookIdentity = args.resource;
 
         const dispatcher = this.getIPyWidgetMessageDispatcher();
         if (dispatcher) {

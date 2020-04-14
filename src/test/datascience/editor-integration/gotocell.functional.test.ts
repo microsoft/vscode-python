@@ -5,12 +5,15 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CodeLens, Disposable, Position, Range, Uri } from 'vscode';
+import { CodeLens, Disposable, Position, Range, TextDocument, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { range } from 'lodash';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
+import { IDataScienceSettings } from '../../../client/common/types';
+import * as CellFactory from '../../../client/datascience/cellFactory';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
@@ -105,6 +108,10 @@ suite('DataScience gotocell tests', () => {
                     Uri.parse(Identifiers.InteractiveWindowIdentity)
                 );
                 const listener = (codeLensFactory as any) as IInteractiveWindowListener;
+                listener.onMessage(InteractiveWindowMessages.NotebookIdentity, {
+                    resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+                    type: 'interactive'
+                });
                 listener.onMessage(
                     InteractiveWindowMessages.NotebookExecutionActivated,
                     Identifiers.InteractiveWindowIdentity
@@ -134,7 +141,7 @@ suite('DataScience gotocell tests', () => {
             addMockData(c.code, c.result, c.cellType);
             docText = docText.concat(c.code, '\n');
         });
-        documentManager.addDocument(docText, filePath);
+        return documentManager.addDocument(docText, filePath);
     }
 
     function srcDirectory() {
@@ -198,9 +205,9 @@ suite('DataScience gotocell tests', () => {
         assert.ok(scrollTo!.command!.title.includes(count), 'Wrong goto on cell');
     }
 
-    function addSingleChange(range: Range, newText: string) {
+    function addSingleChange(r: Range, newText: string) {
         const filePath = path.join(srcDirectory(), 'foo.py');
-        documentManager.changeDocument(filePath, [{ range, newText }]);
+        documentManager.changeDocument(filePath, [{ range: r, newText }]);
     }
 
     runTest('Basic execution', async () => {
@@ -294,5 +301,54 @@ suite('DataScience gotocell tests', () => {
 
         // Our 1st execute should have moved
         verifyGoto('1', 3);
+    });
+
+    runTest('Verify not recreating code lenses when not necessary', async () => {
+        // Override the function that generates cell ranges. We want to count how many times this is called
+        let generateCount = 0;
+        const oldGenerateRanges = (CellFactory as any).generateCellRangesFromDocument;
+        (CellFactory as any).generateCellRangesFromDocument = (
+            document: TextDocument,
+            settings?: IDataScienceSettings
+        ) => {
+            generateCount = generateCount + 1;
+            return oldGenerateRanges(document, settings);
+        };
+
+        for (const i of range(0, 10)) {
+            const filePath = path.join(srcDirectory(), `foo${i}.py`);
+            const doc = addDocument(
+                [
+                    {
+                        code: `#%%\na=1\na`,
+                        result: 1
+                    },
+                    {
+                        code: `#%%\na+=1\na`,
+                        result: 2
+                    },
+                    {
+                        code: `#%%\na+=4\na`,
+                        result: 6
+                    },
+                    {
+                        code: `#%%\n`,
+                        result: undefined
+                    }
+                ],
+                filePath
+            );
+            codeLensFactory.createCodeLenses(doc);
+        }
+
+        const server = await createNotebook(true);
+        assert.ok(server, 'No server created');
+        const currentGenerateCount = generateCount;
+
+        // Execute the second cell
+        await executeCell(1, server!);
+
+        // verify we did not generate any new cell ranges
+        assert.equal(generateCount, currentGenerateCount, 'Should not be regenerating cell ranges on execute');
     });
 });
