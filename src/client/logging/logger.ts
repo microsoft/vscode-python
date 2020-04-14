@@ -6,9 +6,10 @@
 
 import * as path from 'path';
 import * as util from 'util';
-import { createLogger, format, transports } from 'winston';
+import { createLogger, transports } from 'winston';
 import { isTestExecution } from '../common/constants';
 import { EXTENSION_ROOT_DIR } from '../constants';
+import { getFormatter } from './formatters';
 import { LogLevel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -43,47 +44,6 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
     }
     const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
     fileLogger.log(logLevelMap[logLevel], message);
-}
-
-// Return a consistent representation of the given log level.
-//
-// Pascal casing is used so log files get highlighted when viewing
-// in VSC and other editors.
-function normalizeLevel(level: string): string {
-    return `${level.substring(0, 1).toUpperCase()}${level.substring(1)}`;
-}
-
-function formatMessage(level: string, timestamp: string, message: string): string {
-    level = normalizeLevel(level);
-    return `${level} ${timestamp}: ${message}`;
-}
-
-function formatLabeledMessage(level: string, timestamp: string, label: string, message: string): string {
-    level = normalizeLevel(level);
-    return `${level} ${label} ${timestamp}: ${message}`;
-}
-
-const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
-
-function getFormatter() {
-    return format.combine(
-        format.timestamp({ format: TIMESTAMP }),
-        format.printf(
-            // a minimal message
-            ({ level, message, timestamp }) => formatMessage(level, timestamp, message)
-        )
-    );
-}
-
-function getLabeledFormatter(label_: string) {
-    return format.combine(
-        format.label({ label: label_ }),
-        format.timestamp({ format: TIMESTAMP }),
-        format.printf(
-            // mostly a minimal message
-            ({ level, message, label, timestamp }) => formatLabeledMessage(level, timestamp, label, message)
-        )
-    );
 }
 
 /**
@@ -190,7 +150,7 @@ function initializeConsoleLogger() {
     consoleLogger.add(
         new ConsoleTransport({
             // In CI there's no need for the label.
-            format: process.env.TF_BUILD ? getFormatter() : getLabeledFormatter('Python Extension:')
+            format: getFormatter({ label: process.env.TF_BUILD ? undefined : 'Python Extension:' })
         }) as any
     );
 }

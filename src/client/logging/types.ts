@@ -9,6 +9,11 @@ export enum LogLevel {
     Information = 2
 }
 
+// Knobs used when creating a formatter.
+export type FormatterOptions = {
+    label?: string;
+};
+
 // The information we want to log.
 export enum TraceOptions {
     None = 0,
