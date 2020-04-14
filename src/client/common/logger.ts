@@ -5,5 +5,5 @@ export {
     traceInfo,
     traceVerbose,
     traceWarning
-} from '../logging';
+} from '../logging/_trace';
 export { TraceOptions as LogOptions } from '../logging/types';
