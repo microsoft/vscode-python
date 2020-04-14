@@ -53,6 +53,16 @@ function normalizeLevel(level: string): string {
     return `${level.substring(0, 1).toUpperCase()}${level.substring(1)}`;
 }
 
+function formatMessage(level: string, timestamp: string, message: string): string {
+    level = normalizeLevel(level);
+    return `${level} ${timestamp}: ${message}`;
+}
+
+function formatLabeledMessage(level: string, timestamp: string, label: string, message: string): string {
+    level = normalizeLevel(level);
+    return `${level} ${label} ${timestamp}: ${message}`;
+}
+
 /**
  * Initialize the logger for console.
  * We do two things here:
@@ -155,10 +165,12 @@ function initializeConsoleLogger() {
         }
     }
     const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
-        level = normalizeLevel(level);
-        // If we're on CI server, no need for the label (prefix)
-        const prefix = `${level} ${process.env.TF_BUILD ? '' : label}`;
-        return `${prefix.trim()} ${timestamp}: ${message}`;
+        if (process.env.TF_BUILD) {
+            // In CI there's no need for the label.
+            return formatMessage(level, timestamp, message);
+        } else {
+            return formatLabeledMessage(level, timestamp, label, message);
+        }
     });
     const consoleFormat = format.combine(
         format.label({ label: 'Python Extension:' }),
@@ -179,10 +191,10 @@ function initializeFileLogger() {
     if (!process.env.VSC_PYTHON_LOG_FILE) {
         return;
     }
-    const fileFormatter = format.printf(({ level, message, timestamp }) => {
-        level = normalizeLevel(level);
-        return `${level} ${timestamp}: ${message}`;
-    });
+    const fileFormatter = format.printf(
+        // a minimal format
+        ({ level, message, timestamp }) => formatMessage(level, timestamp, message)
+    );
     const fileFormat = format.combine(
         format.timestamp({
             format: 'YYYY-MM-DD HH:mm:ss'
