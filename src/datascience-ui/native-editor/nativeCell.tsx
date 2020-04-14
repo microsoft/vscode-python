@@ -448,6 +448,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
         e.stopPropagation();
         e.preventDefault();
 
+        // Unfocus the current cell if it is markdown to make it render
+        if (this.isMarkdownCell() && this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
+            this.wrapperRef.current.focus();
+        }
+
         // Submit this cell
         this.submitCell('none');
         this.props.sendCommand(NativeCommandType.Run, 'keyboard');
