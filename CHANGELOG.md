@@ -94,6 +94,9 @@
    ([#10953](https://github.com/Microsoft/vscode-python/issues/10953))
 1. Jupyter notebooks and interactive window crashing on startup.
    ([#11035](https://github.com/Microsoft/vscode-python/issues/11035))
+1. Fix perf problems after running the interactive window for an extended period of time.
+   ([#10971](https://github.com/Microsoft/vscode-python/issues/10971))
+
 
 ### Code Health
 
