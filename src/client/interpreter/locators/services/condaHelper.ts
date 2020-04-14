@@ -95,6 +95,12 @@ function parseCondaEnvFileLine(line: string): { name: string; path: string; isAc
     // form as the environment name. lastIndexOf() can also be used but that assumes
     // that `path` does NOT end with 5*spaces.
     let spaceIndex = line.indexOf('     ');
+    if (spaceIndex === -1) {
+        // This means the environment name is longer than 17 characters and it is
+        // active. Try '  *  ' for separator between name and path.
+        spaceIndex = line.indexOf('  *  ');
+    }
+
     if (spaceIndex > 0) {
         // Parsing `name`
         // > `conda create -n <name>`
@@ -113,14 +119,6 @@ function parseCondaEnvFileLine(line: string): { name: string; path: string; isAc
         // are NOT allowed. But leading spaces are allowed. Currently there no
         // special separator character between name and path, other than spaces.
         // We will need a well known separator if this ever becomes a issue.
-        name = line.substring(0, spaceIndex).trimRight();
-        remainder = line.substring(spaceIndex);
-    }
-
-    // This means the environment name is longer than 17 characters and it is
-    // active. Try '  *  ' for separator between name and path.
-    if (spaceIndex === -1) {
-        spaceIndex = line.indexOf('  *  ');
         name = line.substring(0, spaceIndex).trimRight();
         remainder = line.substring(spaceIndex);
     }
