@@ -85,7 +85,13 @@ export class HostRawNotebookProvider
 
         const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
         try {
-            const launchedKernelSpec = await rawSession.connect(resource, notebookMetadata?.kernelspec?.name);
+            const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
+            const launchedKernelSpec = await rawSession.connect(
+                resource,
+                launchTimeout,
+                notebookMetadata?.kernelspec?.name,
+                cancelToken
+            );
 
             // Get the execution info for our notebook
             const info = await this.getExecutionInfo(launchedKernelSpec);

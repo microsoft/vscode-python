@@ -61,7 +61,7 @@ suite('Data Science - RawJupyterSession', () => {
     });
 
     test('RawJupyterSession - connect', async () => {
-        await rawJupyterSession.connect({} as any);
+        await rawJupyterSession.connect({} as any, 60_000);
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
     });
 
@@ -69,14 +69,12 @@ suite('Data Science - RawJupyterSession', () => {
         const shutdown = sinon.stub(rawJupyterSession, 'shutdown');
         shutdown.resolves();
 
-        const kernelSpec = await rawJupyterSession.connect({} as any);
+        const kernelSpec = await rawJupyterSession.connect({} as any, 60_000);
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
         expect(kernelSpec).to.equal('testspec');
 
-        // Kill the process, we should throw and shutdown
-        expect(() => {
-            processExitEvent.fire(0);
-        }).to.throw(localize.DataScience.sessionDisposed());
+        // Kill the process, we should shutdown
+        processExitEvent.fire(0);
 
         assert.isTrue(shutdown.calledOnce);
     });

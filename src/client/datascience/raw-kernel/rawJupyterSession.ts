@@ -65,6 +65,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     public async connect(
         resource: Resource,
+        timeout: number,
         kernelName?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
@@ -80,7 +81,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                         token: cancelToken
                     })
                 ]),
-                30_000
+                timeout
             );
 
             // Only connect our session if we didn't cancel or timeout
@@ -126,7 +127,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.shutdown().catch(reason => {
                 traceError(`Error shutting down raw jupyter session: ${reason}`);
             });
-            throw new Error(localize.DataScience.sessionDisposed());
+            // Next code the user executes will show a session disposed message
         });
 
         // Wait for the process to actually be ready to connect to
