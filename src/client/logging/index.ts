@@ -12,6 +12,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel, TraceOptions } from './types';
+import { argsToLogString, returnValueToLogString } from './util';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const TransportStream = require('winston-transport');
@@ -190,48 +191,6 @@ function initializeFileLogger() {
         handleExceptions: true
     });
     fileLogger.add(logFileSink);
-}
-
-// tslint:disable-next-line:no-any
-function argsToLogString(args: any[]): string {
-    try {
-        return (args || [])
-            .map((item, index) => {
-                if (item === undefined) {
-                    return `Arg ${index + 1}: undefined`;
-                }
-                if (item === null) {
-                    return `Arg ${index + 1}: null`;
-                }
-                try {
-                    if (item && item.fsPath) {
-                        return `Arg ${index + 1}: <Uri:${item.fsPath}>`;
-                    }
-                    return `Arg ${index + 1}: ${JSON.stringify(item)}`;
-                } catch {
-                    return `Arg ${index + 1}: <argument cannot be serialized for logging>`;
-                }
-            })
-            .join(', ');
-    } catch {
-        return '';
-    }
-}
-
-// tslint:disable-next-line:no-any
-function returnValueToLogString(returnValue: any): string {
-    const returnValueMessage = 'Return Value: ';
-    if (returnValue === undefined) {
-        return `${returnValueMessage}undefined`;
-    }
-    if (returnValue === null) {
-        return `${returnValueMessage}null`;
-    }
-    try {
-        return `${returnValueMessage}${JSON.stringify(returnValue)}`;
-    } catch {
-        return `${returnValueMessage}<Return value cannot be serialized for logging>`;
-    }
 }
 
 export function traceVerbose(...args: any[]) {
