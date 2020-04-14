@@ -24,22 +24,24 @@ const logLevelMap = {
     [LogLevel.Warning]: 'warn'
 };
 
-// Emit a log message derived from the args to all enabled transports.
-export function _log(logLevel: LogLevel, ...args: any[]) {
-    if (consoleLogger.transports.length > 0) {
-        const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
-        consoleLogger.log(logLevelMap[logLevel], message);
-    }
-    logToFile(logLevel, ...args);
+interface ILogger {
+    transports: unknown[];
+    log(level: string, message: string): void;
 }
 
-// Emit a log message derived from the args to a file, if enabled.
-function logToFile(logLevel: LogLevel, ...args: any[]) {
-    if (fileLogger.transports.length === 0) {
-        return;
+// Emit a log message derived from the args to all enabled transports.
+function log(loggers: ILogger[], logLevel: LogLevel, args: any[]) {
+    for (const logger of loggers) {
+        if (logger.transports.length > 0) {
+            const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
+            logger.log(logLevelMap[logLevel], message);
+        }
     }
-    const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
-    fileLogger.log(logLevelMap[logLevel], message);
+}
+
+// Emit a log message derived from the args to all enabled transports.
+export function _log(logLevel: LogLevel, ...args: any[]) {
+    log([consoleLogger, fileLogger], logLevel, args);
 }
 
 /**
@@ -68,6 +70,9 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
 function initialize() {
     // Hijack `console.log` when running tests on CI.
     if (process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD) {
+        function logToFile(logLevel: LogLevel, ...args: any[]) {
+            log([fileLogger], logLevel, args);
+        }
         monkeypatchConsole(logToFile);
     }
     // Do not log to console if running tests on CI and we're not
