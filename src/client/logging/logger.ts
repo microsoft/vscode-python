@@ -63,6 +63,29 @@ function formatLabeledMessage(level: string, timestamp: string, label: string, m
     return `${level} ${label} ${timestamp}: ${message}`;
 }
 
+const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
+
+function getFormatter() {
+    return format.combine(
+        format.timestamp({ format: TIMESTAMP }),
+        format.printf(
+            // a minimal message
+            ({ level, message, timestamp }) => formatMessage(level, timestamp, message)
+        )
+    );
+}
+
+function getLabeledFormatter(label_: string) {
+    return format.combine(
+        format.label({ label: label_ }),
+        format.timestamp({ format: TIMESTAMP }),
+        format.printf(
+            // mostly a minimal message
+            ({ level, message, label, timestamp }) => formatLabeledMessage(level, timestamp, label, message)
+        )
+    );
+}
+
 /**
  * Initialize the logger for console.
  * We do two things here:
@@ -164,22 +187,12 @@ function initializeConsoleLogger() {
             }
         }
     }
-    const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
-        if (process.env.TF_BUILD) {
+    consoleLogger.add(
+        new ConsoleTransport({
             // In CI there's no need for the label.
-            return formatMessage(level, timestamp, message);
-        } else {
-            return formatLabeledMessage(level, timestamp, label, message);
-        }
-    });
-    const consoleFormat = format.combine(
-        format.label({ label: 'Python Extension:' }),
-        format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss'
-        }),
-        consoleFormatter
+            format: process.env.TF_BUILD ? getFormatter() : getLabeledFormatter('Python Extension:')
+        }) as any
     );
-    consoleLogger.add(new ConsoleTransport({ format: consoleFormat }) as any);
 }
 
 /**
@@ -191,21 +204,11 @@ function initializeFileLogger() {
     if (!process.env.VSC_PYTHON_LOG_FILE) {
         return;
     }
-    const fileFormatter = format.printf(
-        // a minimal format
-        ({ level, message, timestamp }) => formatMessage(level, timestamp, message)
-    );
-    const fileFormat = format.combine(
-        format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss'
-        }),
-        fileFormatter
-    );
     const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE)
         ? process.env.VSC_PYTHON_LOG_FILE
         : path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
     const logFileSink = new transports.File({
-        format: fileFormat,
+        format: getFormatter(),
         filename: logFilePath,
         handleExceptions: true
     });
