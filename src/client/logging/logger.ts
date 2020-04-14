@@ -45,6 +45,14 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
     fileLogger.log(logLevelMap[logLevel], message);
 }
 
+// Return a consistent representation of the given log level.
+//
+// Pascal casing is used so log files get highlighted when viewing
+// in VSC and other editors.
+function normalizeLevel(level: string): string {
+    return `${level.substring(0, 1).toUpperCase()}${level.substring(1)}`;
+}
+
 /**
  * Initialize the logger for console.
  * We do two things here:
@@ -147,11 +155,9 @@ function initializeConsoleLogger() {
         }
     }
     const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
+        level = normalizeLevel(level);
         // If we're on CI server, no need for the label (prefix)
-        // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
-        const prefix = `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${
-            process.env.TF_BUILD ? '' : label
-        }`;
+        const prefix = `${level} ${process.env.TF_BUILD ? '' : label}`;
         return `${prefix.trim()} ${timestamp}: ${message}`;
     });
     const consoleFormat = format.combine(
@@ -174,8 +180,8 @@ function initializeFileLogger() {
         return;
     }
     const fileFormatter = format.printf(({ level, message, timestamp }) => {
-        // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
-        return `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${timestamp}: ${message}`;
+        level = normalizeLevel(level);
+        return `${level} ${timestamp}: ${message}`;
     });
     const fileFormat = format.combine(
         format.timestamp({
