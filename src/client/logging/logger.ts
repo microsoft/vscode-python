@@ -4,6 +4,7 @@
 
 // tslint:disable:no-console no-any
 
+import * as logform from 'logform';
 import * as path from 'path';
 import * as util from 'util';
 import { createLogger, transports } from 'winston';
@@ -46,6 +47,23 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
     fileLogger.log(logLevelMap[logLevel], message);
 }
 
+const logMethods = {
+    log: Symbol.for('log'),
+    info: Symbol.for('info'),
+    error: Symbol.for('error'),
+    debug: Symbol.for('debug'),
+    warn: Symbol.for('warn')
+};
+
+function logToConsole(stream: 'info' | 'error' | 'warn' | 'log' | 'debug', ...args: any[]) {
+    if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
+        stream = 'log';
+    }
+    // Further below we monkeypatch the console.log, etc methods.
+    const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
+    fn(...args);
+}
+
 /**
  * Initialize the logger for console.
  * We do two things here:
@@ -63,23 +81,6 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  */
 // tslint:disable-next-line: max-func-body-length
 function initializeConsoleLogger() {
-    const logMethods = {
-        log: Symbol.for('log'),
-        info: Symbol.for('info'),
-        error: Symbol.for('error'),
-        debug: Symbol.for('debug'),
-        warn: Symbol.for('warn')
-    };
-
-    function logToConsole(stream: 'info' | 'error' | 'warn' | 'log' | 'debug', ...args: any[]) {
-        if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
-            stream = 'log';
-        }
-        // Further below we monkeypatch the console.log, etc methods.
-        const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
-        fn(...args);
-    }
-
     // Hijack `console.log` when running tests on CI.
     if (process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD) {
         /*
@@ -134,6 +135,30 @@ function initializeConsoleLogger() {
 
     // Rest of this stuff is just to instantiate the console logger.
     // I.e. when we use our logger, ensure we also log to the console (for end users).
+    const formatter = getFormatter({
+        // In CI there's no need for the label.
+        label: process.env.TF_BUILD ? undefined : 'Python Extension:'
+    });
+    const transport = getConsoleTransport(formatter);
+    consoleLogger.add(transport as any);
+}
+
+/**
+ * Send all logging output to a log file.
+ * We log to the file only if a file has been specified as an env variable.
+ * Currently this is setup on CI servers.
+ */
+function initializeFileLogger() {
+    const logfile = process.env.VSC_PYTHON_LOG_FILE;
+    if (!logfile) {
+        return;
+    }
+    const formatter = getFormatter();
+    const transport = getFileTransport(logfile, formatter);
+    fileLogger.add(transport);
+}
+
+function getConsoleTransport(formatter: logform.Format) {
     const formattedMessage = Symbol.for('message');
     class ConsoleTransport extends TransportStream {
         constructor(options?: any) {
@@ -147,30 +172,19 @@ function initializeConsoleLogger() {
             }
         }
     }
-    consoleLogger.add(
-        new ConsoleTransport({
-            // In CI there's no need for the label.
-            format: getFormatter({ label: process.env.TF_BUILD ? undefined : 'Python Extension:' })
-        }) as any
-    );
+    return new ConsoleTransport({
+        // We minimize customization.
+        format: formatter
+    });
 }
 
-/**
- * Send all logging output to a log file.
- * We log to the file only if a file has been specified as an env variable.
- * Currently this is setup on CI servers.
- */
-function initializeFileLogger() {
-    if (!process.env.VSC_PYTHON_LOG_FILE) {
-        return;
+function getFileTransport(logfile: string, formatter: logform.Format) {
+    if (!path.isAbsolute(logfile)) {
+        logfile = path.join(EXTENSION_ROOT_DIR, logfile);
     }
-    const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE)
-        ? process.env.VSC_PYTHON_LOG_FILE
-        : path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
-    const logFileSink = new transports.File({
-        format: getFormatter(),
-        filename: logFilePath,
+    return new transports.File({
+        format: formatter,
+        filename: logfile,
         handleExceptions: true
     });
-    fileLogger.add(logFileSink);
 }
