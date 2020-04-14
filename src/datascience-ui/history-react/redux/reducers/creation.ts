@@ -184,7 +184,10 @@ export namespace Creation {
         };
     }
 
-    export function loaded(arg: InteractiveReducerArg): IMainState {
+    export function loaded(arg: InteractiveReducerArg<{ cells: ICell[] }>): IMainState {
+        postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
+            cells: []
+        });
         return {
             ...arg.prevState,
             loaded: true,

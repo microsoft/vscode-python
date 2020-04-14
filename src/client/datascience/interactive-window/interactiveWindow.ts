@@ -270,6 +270,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
+    protected async addSysInfo(reason: SysInfoReason): Promise<void> {
+        await super.addSysInfo(reason);
+
+        // If `reason == Start`, then this means UI has been updated with the last
+        // pience of informaiotn (which was sys info), and now UI can be deemed as having been loaded.
+        // Marking a UI as having been loaded is done by sending a message `LoadAllCells`, even though we're not loading any cells.
+        // We're merely using existing messages (from NativeEditor).
+        if (reason === SysInfoReason.Start) {
+            this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells: [] }).ignoreErrors();
+        }
+    }
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         super.onViewStateChanged(args);
         this._onDidChangeViewState.fire();
