@@ -60,7 +60,7 @@ export function addToUriList(globalState: Memento, uri: string, time: number) {
 
 function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
     const result = { ...output };
-    let allowedKeys = new Set();
+    let allowedKeys: Set<string>;
     switch (output.output_type) {
         case 'stream':
         case 'error':
