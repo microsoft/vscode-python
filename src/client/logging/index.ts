@@ -8,10 +8,10 @@ import * as path from 'path';
 import * as util from 'util';
 import { createLogger, format, transports } from 'winston';
 import { isTestExecution } from '../common/constants';
-import { LogLevel } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { sendTelemetryEvent } from '../telemetry';
+import { LogLevel, TraceOptions } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const TransportStream = require('winston-transport');
@@ -192,17 +192,6 @@ function initializeFileLogger() {
     fileLogger.add(logFileSink);
 }
 
-/**
- * What do we want to log.
- * @export
- * @enum {number}
- */
-export enum LogOptions {
-    None = 0,
-    Arguments = 1,
-    ReturnValue = 2
-}
-
 // tslint:disable-next-line:no-any
 function argsToLogString(args: any[]): string {
     try {
@@ -262,20 +251,20 @@ export function traceWarning(...args: any[]) {
 }
 
 export namespace traceDecorators {
-    export function verbose(message: string, options: LogOptions = LogOptions.Arguments | LogOptions.ReturnValue) {
-        return trace(message, options);
+    export function verbose(message: string, opts: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue) {
+        return trace(message, opts);
     }
     export function error(message: string) {
-        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Error);
+        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Error);
     }
     export function info(message: string) {
         return trace(message);
     }
     export function warn(message: string) {
-        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Warning);
+        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Warning);
     }
 }
-function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
+function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -300,10 +289,10 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                         returnValue ? 'truthy' : 'falsy'
                     } return value`
                 );
-                if ((options & LogOptions.Arguments) === LogOptions.Arguments) {
+                if ((opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
                     messagesToLog.push(argsToLogString(args));
                 }
-                if ((options & LogOptions.ReturnValue) === LogOptions.ReturnValue) {
+                if ((opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
                     messagesToLog.push(returnValueToLogString(returnValue));
                 }
                 if (ex) {
