@@ -4,17 +4,12 @@
 
 // tslint:disable:no-console no-any
 
-import * as logform from 'logform';
-import * as path from 'path';
 import * as util from 'util';
-import { createLogger, transports } from 'winston';
+import { createLogger } from 'winston';
 import { isTestExecution } from '../common/constants';
-import { EXTENSION_ROOT_DIR } from '../constants';
 import { getFormatter } from './formatters';
-import { LogLevel } from './types';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-const TransportStream = require('winston-transport');
+import { getConsoleTransport, getFileTransport } from './transports';
+import { ConsoleStreams, LogLevel } from './types';
 
 // Initialize the loggers as soon as this module is imported.
 const consoleLogger = createLogger();
@@ -55,7 +50,7 @@ const logMethods = {
     warn: Symbol.for('warn')
 };
 
-function logToConsole(stream: 'info' | 'error' | 'warn' | 'log' | 'debug', ...args: any[]) {
+function logToConsole(stream: ConsoleStreams, ...args: any[]) {
     if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
         stream = 'log';
     }
@@ -139,7 +134,7 @@ function initializeConsoleLogger() {
         // In CI there's no need for the label.
         label: process.env.TF_BUILD ? undefined : 'Python Extension:'
     });
-    const transport = getConsoleTransport(formatter);
+    const transport = getConsoleTransport(logToConsole, formatter);
     consoleLogger.add(transport as any);
 }
 
@@ -156,35 +151,4 @@ function initializeFileLogger() {
     const formatter = getFormatter();
     const transport = getFileTransport(logfile, formatter);
     fileLogger.add(transport);
-}
-
-function getConsoleTransport(formatter: logform.Format) {
-    const formattedMessage = Symbol.for('message');
-    class ConsoleTransport extends TransportStream {
-        constructor(options?: any) {
-            super(options);
-        }
-        public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
-            setImmediate(() => this.emit('logged', info));
-            logToConsole(info.level as any, info[formattedMessage] || info.message);
-            if (next) {
-                next();
-            }
-        }
-    }
-    return new ConsoleTransport({
-        // We minimize customization.
-        format: formatter
-    });
-}
-
-function getFileTransport(logfile: string, formatter: logform.Format) {
-    if (!path.isAbsolute(logfile)) {
-        logfile = path.join(EXTENSION_ROOT_DIR, logfile);
-    }
-    return new transports.File({
-        format: formatter,
-        filename: logfile,
-        handleExceptions: true
-    });
 }

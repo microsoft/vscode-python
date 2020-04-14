@@ -9,6 +9,9 @@ export enum LogLevel {
     Information = 2
 }
 
+// The logging "streams" (methods) of the node console.
+export type ConsoleStreams = 'log' | 'error' | 'warn' | 'info' | 'debug';
+
 // Knobs used when creating a formatter.
 export type FormatterOptions = {
     label?: string;
