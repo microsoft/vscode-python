@@ -70,7 +70,7 @@ suite('Application Diagnostics - PromptHandler', () => {
             await promptHandler.handle(diagnostic);
             appShell.verifyAll();
         });
-        test(`Handling a diagnositic of severity '${severity.name}' should invoke the onClose handler if there is one`, async () => {
+        test(`Handling a diagnositic of severity '${severity.name}' should invoke the onClose handler`, async () => {
             const diagnostic: IDiagnostic = {
                 code: '1' as any,
                 message: 'one',
