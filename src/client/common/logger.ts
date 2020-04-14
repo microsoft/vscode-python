@@ -295,7 +295,7 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                         returnValue ? 'truthy' : 'falsy'
                     } return value`
                 );
-                if ((options && LogOptions.Arguments) === LogOptions.Arguments) {
+                if ((options & LogOptions.Arguments) === LogOptions.Arguments) {
                     messagesToLog.push(argsToLogString(args));
                 }
                 if ((options & LogOptions.ReturnValue) === LogOptions.ReturnValue) {
