@@ -294,7 +294,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
 
             const diagnostics = await diagnosticService.diagnose(resource);
             expect(diagnostics.length).to.equal(1);
-            expect(diagnostics[0].message).to.equal(Diagnostics.removePythonPathWorkspaceJson());
+            expect(diagnostics[0].message).to.equal(Diagnostics.removePythonPathCodeWorkspace());
             expect(diagnostics[0].resource).to.equal(resource);
 
             workspaceService.verifyAll();
@@ -352,7 +352,7 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
 
             const diagnostics = await diagnosticService.diagnose(resource);
             expect(diagnostics.length).to.equal(1);
-            expect(diagnostics[0].message).to.equal(Diagnostics.removePythonPathWorkspaceJsonAndSettingsJson());
+            expect(diagnostics[0].message).to.equal(Diagnostics.removePythonPathCodeWorkspaceAndSettingsJson());
             expect(diagnostics[0].resource).to.equal(resource);
 
             workspaceService.verifyAll();

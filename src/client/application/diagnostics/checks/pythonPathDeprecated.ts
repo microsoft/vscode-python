@@ -53,16 +53,16 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         if (!setting) {
             return [];
         }
-        const isWorkspaceJsonSettingSet = this.workspaceService.workspaceFile && setting.workspaceValue !== undefined;
+        const isCodeWorkspaceSettingSet = this.workspaceService.workspaceFile && setting.workspaceValue !== undefined;
         const isSettingsJsonSettingSet = setting.workspaceFolderValue !== undefined;
-        if (isWorkspaceJsonSettingSet && isSettingsJsonSettingSet) {
+        if (isCodeWorkspaceSettingSet && isSettingsJsonSettingSet) {
             return [
-                new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathWorkspaceJsonAndSettingsJson(), resource)
+                new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathCodeWorkspaceAndSettingsJson(), resource)
             ];
         } else if (isSettingsJsonSettingSet) {
             return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathSettingsJson(), resource)];
-        } else if (isWorkspaceJsonSettingSet) {
-            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathWorkspaceJson(), resource)];
+        } else if (isCodeWorkspaceSettingSet) {
+            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathCodeWorkspace(), resource)];
         }
         return [];
     }
