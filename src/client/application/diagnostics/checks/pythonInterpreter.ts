@@ -9,11 +9,19 @@ import '../../../common/extensions';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticCommand,
+    IDiagnosticHandlerService,
+    IDiagnosticMessageOnCloseHandler
+} from '../types';
 
 const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]:
@@ -91,7 +99,8 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                     return;
                 }
                 const commandPrompts = this.getCommandPrompts(diagnostic);
-                return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message });
+                const onClose = this.getOnCloseHandler(diagnostic);
+                return messageService.handle(diagnostic, { commandPrompts, message: diagnostic.message, onClose });
             })
         );
     }
@@ -124,5 +133,16 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                 throw new Error("Invalid diagnostic for 'InvalidPythonInterpreterService'");
             }
         }
+    }
+    private getOnCloseHandler(diagnostic: IDiagnostic): IDiagnosticMessageOnCloseHandler | undefined {
+        if (diagnostic.code === DiagnosticCodes.NoPythonInterpretersDiagnostic) {
+            return (response?: string) => {
+                sendTelemetryEvent(EventName.PYTHON_NOT_INSTALLED_PROMPT, undefined, {
+                    selection: response ? 'Download' : 'Ignore'
+                });
+            };
+        }
+
+        return;
     }
 }

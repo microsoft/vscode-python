@@ -54,6 +54,8 @@ export interface IDiagnosticCommand {
     invoke(): Promise<void>;
 }
 
+export type IDiagnosticMessageOnCloseHandler = (response?: string) => void;
+
 export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
 
 export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
