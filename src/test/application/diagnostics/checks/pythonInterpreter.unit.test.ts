@@ -221,14 +221,10 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
 
             await diagnosticService.handle([diagnostic]);
 
-            const commandPrompts = messagePrompt!.commandPrompts;
-
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(commandPrompts).to.be.length(1);
-            expect(commandPrompts[0].prompt).to.be.deep.equal('Download');
-            expect(commandPrompts[0].command).to.be.deep.equal(cmd);
+            expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Download', command: cmd }]);
             expect(messagePrompt!.onClose).to.not.be.equal(undefined, 'onClose handler should be set.');
         });
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
