@@ -59,7 +59,6 @@ export function addToUriList(globalState: Memento, uri: string, time: number) {
 }
 
 function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
-    const result = { ...output };
     let allowedKeys: Set<string>;
     switch (output.output_type) {
         case 'stream':
@@ -69,8 +68,9 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
             allowedKeys = AllowedKeys[output.output_type];
             break;
         default:
-            return result;
+            return output;
     }
+    const result = { ...output };
     for (const k of Object.keys(output)) {
         if (!allowedKeys.has(k)) {
             delete result[k];
