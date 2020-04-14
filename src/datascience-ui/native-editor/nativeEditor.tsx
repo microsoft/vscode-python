@@ -11,7 +11,7 @@ import { handleLinkClick } from '../interactive-common/handlers';
 import { getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
-import { getOSType, UseCustomEditor } from '../react-common/constants';
+import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -193,7 +193,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             }
             case 'z':
             case 'Z':
-                if (!getSelectedAndFocusedInfo(this.props).focusedCellId && !UseCustomEditor.enabled) {
+                if (
+                    !getSelectedAndFocusedInfo(this.props).focusedCellId &&
+                    !this.props.settings?.extraSettings.useCustomEditorApi
+                ) {
                     if (event.shiftKey && !event.ctrlKey && !event.altKey) {
                         event.stopPropagation();
                         this.props.redo();
@@ -283,6 +286,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         // Focus pending does not apply to native editor.
                         focusPending={0}
                         busy={this.props.busy}
+                        useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
                     />
                 </ErrorBoundary>
                 {lastLine}

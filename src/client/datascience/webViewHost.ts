@@ -50,7 +50,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() private readonly useWebViewServer: boolean
+        @unmanaged() private readonly useWebViewServer: boolean,
+        @unmanaged() protected readonly useCustomEditorApi: boolean
     ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -193,7 +194,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                     fontSize: this.getValue(editor, 'fontSize', 14),
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
-                theme: theme
+                theme: theme,
+                useCustomEditorApi: this.useCustomEditorApi
             },
             intellisenseOptions: {
                 quickSuggestions: {

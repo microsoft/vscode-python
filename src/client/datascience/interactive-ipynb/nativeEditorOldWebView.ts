@@ -15,6 +15,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
@@ -95,7 +96,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             listeners,
@@ -124,7 +126,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             experimentsManager,
             asyncRegistry,
             switcher,
-            notebookProvider
+            notebookProvider,
+            useCustomEditorApi
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

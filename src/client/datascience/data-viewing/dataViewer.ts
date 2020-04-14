@@ -8,7 +8,7 @@ import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
@@ -39,7 +39,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IJupyterVariables) private variableManager: IJupyterVariables,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             configuration,
@@ -52,7 +53,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             [path.join(dataExplorereDir, 'commons.initial.bundle.js'), path.join(dataExplorereDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
-            experimentsManager.inExperiment(WebHostNotebook.experiment)
+            experimentsManager.inExperiment(WebHostNotebook.experiment),
+            useCustomEditorApi
         );
 
         // Load the web panel using our current directory as we don't expect to load any other files

@@ -19,7 +19,7 @@ import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
-import { getOSType, UseCustomEditor } from '../react-common/constants';
+import { getOSType } from '../react-common/constants';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -51,6 +51,7 @@ interface INativeCellBaseProps {
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
     busy: boolean;
+    useCustomEditorApi: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -356,7 +357,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 break;
             case 'z':
             case 'Z':
-                if (!this.isFocused() && !UseCustomEditor.enabled) {
+                if (!this.isFocused() && !this.props.useCustomEditorApi) {
                     if (e.shiftKey && !e.ctrlKey && !e.altKey) {
                         e.stopPropagation();
                         this.props.redo();
@@ -657,7 +658,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         keyDown={this.keyDownInput}
                         showLineNumbers={this.props.cellVM.showLineNumbers}
                         font={this.props.font}
-                        disableUndoStack={UseCustomEditor.enabled}
+                        disableUndoStack={this.props.useCustomEditorApi}
                         codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 1}
                         focusPending={this.props.focusPending}
                     />

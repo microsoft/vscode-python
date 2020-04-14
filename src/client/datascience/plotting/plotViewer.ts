@@ -10,7 +10,7 @@ import { Event, EventEmitter, ViewColumn } from 'vscode';
 import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -35,7 +35,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             configuration,
@@ -48,7 +49,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One,
-            experimentsManager.inExperiment(WebHostNotebook.experiment)
+            experimentsManager.inExperiment(WebHostNotebook.experiment),
+            useCustomEditorApi
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebPanel(process.cwd()).catch(traceError);

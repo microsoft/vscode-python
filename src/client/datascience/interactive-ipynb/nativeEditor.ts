@@ -90,7 +90,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { isTestExecution } from '../../common/constants';
+import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -177,7 +177,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             listeners,
@@ -212,7 +213,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ViewColumn.Active,
             experimentsManager,
             switcher,
-            notebookProvider
+            notebookProvider,
+            useCustomEditorApi
         );
         asyncRegistry.push(this);
 
