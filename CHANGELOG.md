@@ -98,6 +98,8 @@
    ([#10971](https://github.com/Microsoft/vscode-python/issues/10971))
 1. Fix problem with opening a notebook in jupyter after saving in VS code.
    ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))   
+1. Fix CTRL+Z and Z for undo on notebooks.
+   ([#11160](https://github.com/Microsoft/vscode-python/issues/11160))
 
 
 ### Code Health
