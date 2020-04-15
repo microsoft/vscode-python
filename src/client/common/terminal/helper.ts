@@ -125,10 +125,6 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[]
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
-        const activateEnvironment = settings.terminal.activateEnvironment;
-        if (!activateEnvironment) {
-            return;
-        }
 
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
