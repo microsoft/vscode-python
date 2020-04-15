@@ -44,6 +44,32 @@ export namespace traceDecorators {
     }
 }
 
+function formatMessages(
+    opts: TraceOptions,
+    message: string,
+    kind: string,
+    name: string,
+    elapsed: number,
+    // tslint:disable-next-line:no-any
+    args: any[],
+    // tslint:disable-next-line:no-any
+    returnValue?: any
+): string {
+    const messages = [message];
+    messages.push(
+        `${kind} name = ${name}`.trim(),
+        `completed in ${elapsed}ms`,
+        `has a ${returnValue ? 'truthy' : 'falsy'} return value`
+    );
+    if ((opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
+        messages.push(argsToLogString(args));
+    }
+    if ((opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
+        messages.push(returnValueToLogString(returnValue));
+    }
+    return messages.join(', ');
+}
+
 function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
@@ -63,23 +89,13 @@ function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel
             }
             // tslint:disable-next-line:no-any
             function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
-                const messagesToLog = [message];
-                messagesToLog.push(
-                    `Class name = ${className}, completed in ${elapsedTime}ms, has a ${
-                        returnValue ? 'truthy' : 'falsy'
-                    } return value`
-                );
-                if ((opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
-                    messagesToLog.push(argsToLogString(args));
-                }
-                if ((opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
-                    messagesToLog.push(returnValueToLogString(returnValue));
-                }
+                const formatted = formatMessages(opts, message, 'Class', className, elapsedTime, args, returnValue);
                 if (ex) {
-                    log(LogLevel.Error, messagesToLog.join(', '), ex);
+                    log(LogLevel.Error, formatted, ex);
+                    // tslint:disable-next-line:no-any
                     sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
                 } else {
-                    log(LogLevel.Info, messagesToLog.join(', '));
+                    log(LogLevel.Info, formatted);
                 }
             }
             const timer = new StopWatch();
