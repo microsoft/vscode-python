@@ -32,11 +32,11 @@ export namespace Diagnostics {
     );
     export const removePythonPathCodeWorkspace = localize(
         'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your .code-workspace.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your .code-workspace file.'
     );
     export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
         'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and .code-workspace.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and .code-workspace file.'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
