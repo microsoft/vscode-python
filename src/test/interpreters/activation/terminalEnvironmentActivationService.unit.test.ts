@@ -104,11 +104,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         verify(
                             terminal.sendCommand(
                                 cmd,
-                                deepEqual([
-                                    isolated.fileToCommandArgument(),
-                                    pyFile.fileToCommandArgument(),
-                                    jsonFile.fileToCommandArgument()
-                                ]),
+                                deepEqual([isolated, pyFile, jsonFile.fileToCommandArgument()]),
                                 anything(),
                                 false
                             )
