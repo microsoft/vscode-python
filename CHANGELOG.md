@@ -96,6 +96,8 @@
    ([#11035](https://github.com/Microsoft/vscode-python/issues/11035))
 1. Fix perf problems after running the interactive window for an extended period of time.
    ([#10971](https://github.com/Microsoft/vscode-python/issues/10971))
+1. Fix problem with opening a notebook in jupyter after saving in VS code.
+   ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))   
 
 
 ### Code Health
