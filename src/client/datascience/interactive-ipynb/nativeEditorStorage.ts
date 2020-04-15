@@ -20,12 +20,12 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
 import { sendTelemetryEvent } from '../../telemetry';
+import { pruneCell } from '../common';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
-
 interface INativeEditorStorageState {
     file: Uri;
     cells: ICell[];
@@ -570,21 +570,12 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
         // Reuse our original json except for the cells.
         const json = {
-            cells: cells.map((c) => this.fixupCell(c.data)),
+            cells: cells.map((c) => pruneCell(c.data)),
             metadata: this._state.notebookJson.metadata,
             nbformat: this._state.notebookJson.nbformat,
             nbformat_minor: this._state.notebookJson.nbformat_minor
         };
         return JSON.stringify(json, null, this.indentAmount);
-    }
-
-    private fixupCell(cell: nbformat.ICell): nbformat.ICell {
-        // Source is usually a single string on input. Convert back to an array
-        return ({
-            ...cell,
-            source: splitMultilineString(cell.source)
-            // tslint:disable-next-line: no-any
-        } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
     }
 
     private getStorageKey(): string {
