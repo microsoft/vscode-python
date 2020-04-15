@@ -112,16 +112,6 @@ suite('Terminal Environment Activation conda', () => {
         });
     });
 
-    test('Ensure no activation commands are returned if the feature is disabled', async () => {
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => false);
-
-        const activationCommands = await terminalHelper.getEnvironmentActivationCommands(
-            TerminalShellType.bash,
-            undefined
-        );
-        expect(activationCommands).to.equal(undefined, 'Activation commands should be undefined');
-    });
-
     test('Conda activation for fish escapes spaces in conda filename', async () => {
         conda = 'path to conda';
         const envName = 'EnvA';
@@ -283,7 +273,6 @@ suite('Terminal Environment Activation conda', () => {
         shellType: TerminalShellType,
         envName: string
     ) {
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => true);
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
         platformService.setup((p) => p.isMac).returns(() => isOsx);
@@ -384,7 +373,6 @@ suite('Terminal Environment Activation conda', () => {
         isLinux: boolean,
         pythonPath: string
     ) {
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => true);
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
         platformService.setup((p) => p.isMac).returns(() => isOsx);
@@ -432,7 +420,6 @@ suite('Terminal Environment Activation conda', () => {
 
     test('Get activation script command if environment is not a conda environment', async () => {
         const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => true);
         condaService.setup((c) => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         pythonSettings.setup((s) => s.pythonPath).returns(() => pythonPath);
 
@@ -462,7 +449,6 @@ suite('Terminal Environment Activation conda', () => {
         isLinux: boolean,
         pythonPath: string
     ) {
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => true);
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
         platformService.setup((p) => p.isWindows).returns(() => isWindows);
         platformService.setup((p) => p.isMac).returns(() => isOsx);
@@ -512,7 +498,6 @@ suite('Terminal Environment Activation conda', () => {
     test('Return undefined if unable to get activation command', async () => {
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
 
-        terminalSettings.setup((t) => t.activateEnvironment).returns(() => true);
         condaService.setup((c) => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 
         pythonSettings.setup((s) => s.pythonPath).returns(() => pythonPath);
