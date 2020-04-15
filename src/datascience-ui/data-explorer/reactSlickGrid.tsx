@@ -88,6 +88,7 @@ class ColumnFilter {
                 case 'float':
                 case 'int64':
                 case 'int32':
+                case 'float32':
                 case 'float64':
                 case 'number':
                     this.matchFunc = this.generateNumericOperation(text);
