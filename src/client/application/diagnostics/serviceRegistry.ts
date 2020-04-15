@@ -29,6 +29,10 @@ import {
     PowerShellActivationHackDiagnosticsServiceId
 } from './checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
+import {
+    PythonPathDeprecatedDiagnosticService,
+    PythonPathDeprecatedDiagnosticServiceId
+} from './checks/pythonPathDeprecated';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -75,6 +79,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IDiagnosticsService,
         InvalidMacPythonInterpreterService,
         InvalidMacPythonInterpreterServiceId
+    );
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        PythonPathDeprecatedDiagnosticService,
+        PythonPathDeprecatedDiagnosticServiceId
     );
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);

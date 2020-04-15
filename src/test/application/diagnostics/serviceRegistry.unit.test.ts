@@ -34,6 +34,10 @@ import {
     InvalidPythonInterpreterService,
     InvalidPythonInterpreterServiceId
 } from '../../../client/application/diagnostics/checks/pythonInterpreter';
+import {
+    PythonPathDeprecatedDiagnosticService,
+    PythonPathDeprecatedDiagnosticServiceId
+} from '../../../client/application/diagnostics/checks/pythonPathDeprecated';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -117,6 +121,13 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
                 IDiagnosticsService,
                 InvalidMacPythonInterpreterService,
                 InvalidMacPythonInterpreterServiceId
+            )
+        );
+        verify(
+            serviceManager.addSingleton<IDiagnosticsService>(
+                IDiagnosticsService,
+                PythonPathDeprecatedDiagnosticService,
+                PythonPathDeprecatedDiagnosticServiceId
             )
         );
         verify(
