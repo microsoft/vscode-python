@@ -87,6 +87,7 @@ class ColumnFilter {
                 case 'integer':
                 case 'float':
                 case 'int64':
+                case 'int32':
                 case 'float64':
                 case 'number':
                     this.matchFunc = this.generateNumericOperation(text);
@@ -112,22 +113,22 @@ class ColumnFilter {
     private generateNumericOperation(text: string): (v: any) => boolean {
         if (this.lessThanRegEx.test(text)) {
             const n1 = this.extractDigits(text, this.lessThanRegEx);
-            return (v: any) => v && v < n1;
+            return (v: any) => v !== undefined && v < n1;
         } else if (this.lessThanEqualRegEx.test(text)) {
             const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
-            return (v: any) => v && v <= n2;
+            return (v: any) => v !== undefined && v <= n2;
         } else if (this.greaterThanRegEx.test(text)) {
             const n3 = this.extractDigits(text, this.greaterThanRegEx);
-            return (v: any) => v && v > n3;
+            return (v: any) => v !== undefined && v > n3;
         } else if (this.greaterThanEqualRegEx.test(text)) {
             const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
-            return (v: any) => v && v >= n4;
+            return (v: any) => v !== undefined && v >= n4;
         } else if (this.equalThanRegEx.test(text)) {
             const n5 = this.extractDigits(text, this.equalThanRegEx);
-            return (v: any) => v && v === n5;
+            return (v: any) => v !== undefined && v === n5;
         } else {
             const n6 = parseFloat(text);
-            return (v: any) => v && v === n6;
+            return (v: any) => v !== undefined && v === n6;
         }
     }
 }
@@ -307,6 +308,14 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
         args.grid.invalidateAllRows();
         args.grid.render();
+    };
+
+    // Public for testing
+    public filterChanged = (text: string, column: Slick.Column<Slick.SlickData>) => {
+        if (column && column.field) {
+            this.columnFilters.set(column.field, new ColumnFilter(text, column));
+            this.dataView.refresh();
+        }
     };
 
     // These adjustments for the row height come from trial and error, by changing the font size in VS code,
@@ -499,13 +508,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private renderFilterCell = (_e: Slick.EventData, args: Slick.OnHeaderRowCellRenderedEventArgs<Slick.SlickData>) => {
         ReactDOM.render(<ReactSlickGridFilterBox column={args.column} onChange={this.filterChanged} />, args.node);
-    };
-
-    private filterChanged = (text: string, column: Slick.Column<Slick.SlickData>) => {
-        if (column && column.field) {
-            this.columnFilters.set(column.field, new ColumnFilter(text, column));
-            this.dataView.refresh();
-        }
     };
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>): number {
