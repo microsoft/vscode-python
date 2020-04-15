@@ -27,7 +27,7 @@ exports.nodeModulesToExternalize = [
     'node-stream-zip',
     'xml2js',
     'vsls/vscode',
-    'pdfkit',
+    'pdfkit/js/pdfkit.standalone',
     'crypto-js',
     'fontkit',
     'linebreak',

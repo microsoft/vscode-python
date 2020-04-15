@@ -67,18 +67,16 @@ const config = {
     externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
-        // Copy pdfkit bits after extension builds. webpack can't handle pdfkit.
-        new FileManagerPlugin({
-            onEnd: [
-                {
-                    copy: [
-                        { source: './node_modules/fontkit/*.trie', destination: './out/client/node_modules' },
-                        { source: './node_modules/pdfkit/js/data/*.*', destination: './out/client/node_modules/data' },
-                        { source: './node_modules/pdfkit/js/pdfkit.js', destination: './out/client/node_modules/' }
-                    ]
-                }
-            ]
+        // Copy pdfkit after extension builds. webpack can't handle pdfkit.
+        new removeFilesWebpackPlugin({
+            after: { include: ['./out/client/node_modules/pdfkit/js/pdfkit.standalone.*'] }
         }),
+        new copyWebpackPlugin([
+            {
+                from: './node_modules/pdfkit/js/pdfkit.standalone.js',
+                to: './node_modules/pdfkit/js/pdfkit.standalone.js'
+            }
+        ]),
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
         // so at runtime we pick up the original structure.
