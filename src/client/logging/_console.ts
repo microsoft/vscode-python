@@ -4,21 +4,32 @@
 
 // tslint:disable:no-console no-any
 
-import { ConsoleStreams, LogLevel } from './types';
+import { LogLevel } from './levels';
+
+// The logging "streams" (methods) of the node console.
+type ConsoleStream = 'log' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+
+// Convert from LogLevel enum to node console "stream" (logger method).
+const streamByLevel: { [K in LogLevel]: ConsoleStream } = {
+    [LogLevel.Error]: 'error',
+    [LogLevel.Warn]: 'warn',
+    [LogLevel.Info]: 'info',
+    [LogLevel.Debug]: 'debug',
+    [LogLevel.Trace]: 'trace'
+};
 
 const logMethods = {
     log: Symbol.for('log'),
-    info: Symbol.for('info'),
     error: Symbol.for('error'),
+    warn: Symbol.for('warn'),
+    info: Symbol.for('info'),
     debug: Symbol.for('debug'),
-    warn: Symbol.for('warn')
+    trace: Symbol.for('trace')
 };
 
 // Log a message based on "args" to the given console "stream".
-export function logToConsole(stream: ConsoleStreams, ...args: any[]) {
-    if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
-        stream = 'log';
-    }
+export function logToConsole(level: LogLevel | undefined, ...args: any[]) {
+    const stream = (level ? streamByLevel[level] : undefined) || 'log';
     // Further below we monkeypatch the console.log, etc methods.
     const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
     fn(...args);
@@ -44,31 +55,37 @@ export function monkeypatchConsole(logToFile: (logLevel: LogLevel, ...args: any[
     // tslint:disable-next-line: no-function-expression
     console.log = function () {
         const args = Array.prototype.slice.call(arguments);
-        logToConsole('log', ...args);
-        logToFile(LogLevel.Information, ...args);
+        logToConsole(undefined, ...args);
+        logToFile(LogLevel.Info, ...args);
     };
     // tslint:disable-next-line: no-function-expression
     console.info = function () {
         const args = Array.prototype.slice.call(arguments);
-        logToConsole('info', ...args);
-        logToFile(LogLevel.Information, ...args);
+        logToConsole(LogLevel.Info, ...args);
+        logToFile(LogLevel.Info, ...args);
     };
     // tslint:disable-next-line: no-function-expression
     console.warn = function () {
         const args = Array.prototype.slice.call(arguments);
-        logToConsole('warn', ...args);
-        logToFile(LogLevel.Warning, ...args);
+        logToConsole(LogLevel.Warn, ...args);
+        logToFile(LogLevel.Warn, ...args);
     };
     // tslint:disable-next-line: no-function-expression
     console.error = function () {
         const args = Array.prototype.slice.call(arguments);
-        logToConsole('error', ...args);
+        logToConsole(LogLevel.Error, ...args);
         logToFile(LogLevel.Error, ...args);
     };
     // tslint:disable-next-line: no-function-expression
     console.debug = function () {
         const args = Array.prototype.slice.call(arguments);
-        logToConsole('debug', ...args);
-        logToFile(LogLevel.Information, ...args);
+        logToConsole(LogLevel.Debug, ...args);
+        logToFile(LogLevel.Info, ...args);
+    };
+    // tslint:disable-next-line: no-function-expression
+    console.trace = function () {
+        const args = Array.prototype.slice.call(arguments);
+        logToConsole(LogLevel.Trace, ...args);
+        logToFile(LogLevel.Info, ...args);
     };
 }

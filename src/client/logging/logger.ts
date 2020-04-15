@@ -5,27 +5,21 @@
 // tslint:disable:no-any
 
 import * as util from 'util';
-import { createLogger } from 'winston';
+import * as winston from 'winston';
 import { isTestExecution } from '../common/constants';
 import { logToConsole, monkeypatchConsole } from './_console';
 import { getFormatter } from './formatters';
+import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport } from './transports';
-import { LogLevel } from './types';
 
 // Initialize the loggers as soon as this module is imported.
-const consoleLogger = createLogger();
-const fileLogger = createLogger();
+const consoleLogger = winston.createLogger();
+const fileLogger = winston.createLogger();
 initialize();
-
-// Convert from LogLevel enum to node console "stream" (logger method).
-const logLevelMap = {
-    [LogLevel.Error]: 'error',
-    [LogLevel.Information]: 'info',
-    [LogLevel.Warning]: 'warn'
-};
 
 interface ILogger {
     transports: unknown[];
+    levels: winston.config.AbstractConfigSetLevels;
     log(level: string, message: string): void;
 }
 
@@ -34,7 +28,8 @@ function log(loggers: ILogger[], logLevel: LogLevel, args: any[]) {
     for (const logger of loggers) {
         if (logger.transports.length > 0) {
             const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
-            logger.log(logLevelMap[logLevel], message);
+            const levelName: string = resolveLevelName(logLevel, logger.levels) || '';
+            logger.log(levelName, message);
         }
     }
 }

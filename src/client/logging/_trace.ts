@@ -6,12 +6,13 @@
 
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
+import { LogLevel } from './levels';
 import { _log as log } from './logger';
-import { LogLevel, TraceOptions } from './types';
+import { TraceOptions } from './types';
 import { argsToLogString, returnValueToLogString } from './util';
 
 export function traceVerbose(...args: any[]) {
-    log(LogLevel.Information, ...args);
+    log(LogLevel.Info, ...args);
 }
 
 export function traceError(...args: any[]) {
@@ -19,11 +20,11 @@ export function traceError(...args: any[]) {
 }
 
 export function traceInfo(...args: any[]) {
-    log(LogLevel.Information, ...args);
+    log(LogLevel.Info, ...args);
 }
 
 export function traceWarning(...args: any[]) {
-    log(LogLevel.Warning, ...args);
+    log(LogLevel.Warn, ...args);
 }
 
 export namespace traceDecorators {
@@ -37,7 +38,7 @@ export namespace traceDecorators {
         return trace(message);
     }
     export function warn(message: string) {
-        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Warning);
+        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Warn);
     }
 }
 
@@ -76,7 +77,7 @@ function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel
                     log(LogLevel.Error, messagesToLog.join(', '), ex);
                     sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
                 } else {
-                    log(LogLevel.Information, messagesToLog.join(', '));
+                    log(LogLevel.Info, messagesToLog.join(', '));
                 }
             }
             const timer = new StopWatch();
