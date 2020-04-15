@@ -37,6 +37,7 @@ use(chaiAsPromised);
         suiteSetup(function () {
             // These are UI tests, hence nothing to do with platforms.
             this.timeout(30_000); // UI Tests, need time to start jupyter.
+            this.retries(3); // UI tests can be flaky.
             if (!process.env.VSCODE_PYTHON_ROLLING) {
                 // Skip all tests unless using real jupyter
                 this.skip();
