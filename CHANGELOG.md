@@ -100,7 +100,8 @@
    ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))   
 1. Fix CTRL+Z and Z for undo on notebooks.
    ([#11160](https://github.com/Microsoft/vscode-python/issues/11160))
-
+1. Fix saving to PDF for viewed plots.
+   ([#11157](https://github.com/Microsoft/vscode-python/issues/11157))
 
 ### Code Health
 
