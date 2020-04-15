@@ -381,22 +381,30 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (this._notebook && !this.restartingKernel) {
-            if (await this.shouldAskForRestart()) {
-                // Ask the user if they want us to restart or not.
-                const message = localize.DataScience.restartKernelMessage();
-                const yes = localize.DataScience.restartKernelMessageYes();
-                const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
-                const no = localize.DataScience.restartKernelMessageNo();
+            this.restartingKernel = true;
+            this.startProgress();
 
-                const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
-                if (v === dontAskAgain) {
-                    await this.disableAskForRestart();
-                    await this.restartKernelInternal();
-                } else if (v === yes) {
+            try {
+                if (await this.shouldAskForRestart()) {
+                    // Ask the user if they want us to restart or not.
+                    const message = localize.DataScience.restartKernelMessage();
+                    const yes = localize.DataScience.restartKernelMessageYes();
+                    const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
+                    const no = localize.DataScience.restartKernelMessageNo();
+
+                    const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                    if (v === dontAskAgain) {
+                        await this.disableAskForRestart();
+                        await this.restartKernelInternal();
+                    } else if (v === yes) {
+                        await this.restartKernelInternal();
+                    }
+                } else {
                     await this.restartKernelInternal();
                 }
-            } else {
-                await this.restartKernelInternal();
+            } finally {
+                this.restartingKernel = false;
+                this.stopProgress();
             }
         }
     }
@@ -404,6 +412,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
         if (this._notebook && !this.restartingKernel) {
+            this.restartingKernel = true;
+            this.startProgress();
+
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
                 true,
@@ -412,10 +423,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this
             );
 
-            const settings = this.configuration.getSettings(await this.getOwningResource());
-            const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
-
             try {
+                const settings = this.configuration.getSettings(await this.getOwningResource());
+                const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
+
                 const result = await this._notebook.interruptKernel(interruptTimeout);
                 status.dispose();
 
@@ -436,6 +447,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 status.dispose();
                 traceError(err);
                 this.applicationShell.showErrorMessage(err);
+            } finally {
+                this.restartingKernel = false;
+                this.stopProgress();
             }
         }
     }

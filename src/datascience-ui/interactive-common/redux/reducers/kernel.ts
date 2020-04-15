@@ -24,21 +24,13 @@ export namespace Kernel {
     export function restartKernel(arg: CommonReducerArg): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.RestartKernel);
 
-        // Set busy until kernel is restarted
-        return {
-            ...arg.prevState,
-            busy: true
-        };
+        return arg.prevState;
     }
 
     export function interruptKernel(arg: CommonReducerArg): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.Interrupt);
 
-        // Set busy until kernel is finished interrupting
-        return {
-            ...arg.prevState,
-            busy: true
-        };
+        return arg.prevState;
     }
 
     export function updateStatus(
