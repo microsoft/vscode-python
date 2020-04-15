@@ -652,6 +652,7 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
             fontFamily: string;
         };
         theme: string;
+        useCustomEditorApi: boolean;
     };
     intellisenseOptions: {
         quickSuggestions: {

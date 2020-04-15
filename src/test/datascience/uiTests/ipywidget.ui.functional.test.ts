@@ -14,7 +14,6 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { UseCustomEditor } from '../../../datascience-ui/react-common/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -37,7 +36,6 @@ use(chaiAsPromised);
 
         suiteSetup(function () {
             // These are UI tests, hence nothing to do with platforms.
-            UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             if (!process.env.VSCODE_PYTHON_ROLLING) {
                 // Skip all tests unless using real jupyter
@@ -45,7 +43,6 @@ use(chaiAsPromised);
             }
         });
         setup(async () => {
-            UseCustomEditor.enabled = useCustomEditorApi;
             ioc = new DataScienceIocContainer(true);
             ioc.registerDataScienceTypes(useCustomEditorApi);
             await ioc.activate();

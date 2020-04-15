@@ -13,6 +13,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
@@ -108,7 +109,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(INotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             listeners,
@@ -143,7 +145,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ViewColumn.Two,
             experimentsManager,
             switcher,
-            notebookProvider
+            notebookProvider,
+            useCustomEditorApi
         );
 
         // Send a telemetry event to indicate window is opening

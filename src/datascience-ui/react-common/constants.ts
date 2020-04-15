@@ -23,5 +23,3 @@ export function getOSType() {
         return OSType.Unknown;
     }
 }
-
-export const UseCustomEditor = { enabled: true };
