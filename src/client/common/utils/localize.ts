@@ -80,7 +80,7 @@ export namespace Common {
     export const install = localize('Common.install', 'Install');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
-    export const noIWillDoItLater = localize('Common.noIWillDoItLater', "No, I'll do it later");
+    export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = localize('Common.notNow', 'Not now');
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
     export const reload = localize('Common.reload', 'Reload');

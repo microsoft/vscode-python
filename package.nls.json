@@ -338,7 +338,7 @@
     "DataScience.valuesColumn": "values",
     "DataScience.liveShareInvalid": "One or more guests in the session do not have the Python [extension](https://marketplace.visualstudio.com/itemdetails?itemName=ms-python.python) installed.\r\nYour Live Share session cannot continue and will be closed.",
     "diagnostics.updateSettings": "Yes, update settings",
-    "Common.noIWillDoItLater": "No, I'll do it later",
+    "Common.noIWillDoItLater": "No, I will do it later",
     "Common.notNow": "Not now",
     "Common.gotIt": "Got it!",
     "Interpreters.selectInterpreterTip": "Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar",
