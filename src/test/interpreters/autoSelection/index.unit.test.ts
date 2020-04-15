@@ -319,26 +319,6 @@ suite('Interpreters - Auto Selection', () => {
         expect(selectedInterpreter).to.deep.equal(interpreterInfo);
         expect(eventFired).to.deep.equal(false, 'event fired');
     });
-    test('Storing workspace interpreter info in state store should fail', async () => {
-        const pythonPath = 'Hello World';
-        const interpreterInfo = { path: pythonPath } as any;
-        const resource = Uri.parse('one');
-        when(
-            stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(
-                preferredGlobalInterpreter,
-                undefined
-            )
-        ).thenReturn(instance(state));
-        when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
-        when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenReturn('');
-
-        await autoSelectionService.initializeStore(undefined);
-        await autoSelectionService.setWorkspaceInterpreter(resource, interpreterInfo);
-        const selectedInterpreter = autoSelectionService.getAutoSelectedInterpreter(resource);
-
-        verify(state.updateValue(interpreterInfo)).never();
-        expect(selectedInterpreter ? selectedInterpreter : undefined).to.deep.equal(undefined, 'not undefined');
-    });
     test('Store workspace interpreter info in state store', async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
