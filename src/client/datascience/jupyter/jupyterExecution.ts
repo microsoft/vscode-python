@@ -6,6 +6,7 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -278,17 +279,19 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
-                                throw new Error(
+                                throw new WrappedError(
                                     localize.DataScience.jupyterNotebookRemoteConnectFailed().format(
                                         connection.baseUrl,
                                         err
-                                    )
+                                    ),
+                                    err
                                 );
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                            throw new Error(
-                                localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err)
+                            throw new WrappedError(
+                                localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
+                                err
                             );
                         }
                     } else {

@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
@@ -149,7 +150,7 @@ export class NotebookStarter implements Disposable {
             if (exitCode !== 0) {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
-                throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+                throw new WrappedError(localize.DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
             starter?.dispose();

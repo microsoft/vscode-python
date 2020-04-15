@@ -358,10 +358,6 @@ suite('DataScience notebook tests', () => {
     }
 
     runTest('Remote Self Certs', async (_this: Mocha.Context) => {
-        // Skip this. Entered a bug here to fix: https://github.com/microsoft/vscode-python/issues/10622
-        _this.skip();
-
-        /*
         const pythonService = await createPythonService(2);
 
         if (pythonService) {
@@ -369,14 +365,6 @@ suite('DataScience notebook tests', () => {
             ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 
             const connectionFound = createDeferred();
-            const configFile = path.join(
-                EXTENSION_ROOT_DIR,
-                'src',
-                'test',
-                'datascience',
-                'serverConfigFiles',
-                'selfCert.py'
-            );
             const pemFile = path.join(
                 EXTENSION_ROOT_DIR,
                 'src',
@@ -399,7 +387,7 @@ suite('DataScience notebook tests', () => {
                     '-m',
                     'jupyter',
                     'notebook',
-                    `--config=${configFile}`,
+                    '--NotebookApp.open_browser=False',
                     `--certfile=${pemFile}`,
                     `--keyfile=${keyFile}`
                 ],
@@ -408,7 +396,6 @@ suite('DataScience notebook tests', () => {
                 }
             );
             disposables.push(exeResult);
-
             exeResult.out.subscribe((output: Output<string>) => {
                 const connectionURL = getIPConnectionInfo(output.out);
                 if (connectionURL) {
@@ -429,7 +416,7 @@ suite('DataScience notebook tests', () => {
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
             if (!notebook) {
-                assert.fail('Failed to connect to remote self cert server');
+                assert.fail(`Failed to connect to remote self cert server on ${uri}`);
             } else {
                 await verifySimple(notebook, `a=1${os.EOL}a`, 1);
             }
@@ -439,7 +426,6 @@ suite('DataScience notebook tests', () => {
             traceInfo('Remote Self Cert is not supported on 2.7');
             _this.skip();
         }
-        */
     });
 
     // Connect to a server that doesn't have a token or password, customers use this and we regressed it once
