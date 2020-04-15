@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-any
-
 import * as logform from 'logform';
 import * as path from 'path';
 import * as winston from 'winston';
@@ -18,14 +16,16 @@ const formattedMessage = Symbol.for('message');
 // A winston-compatible transport type.
 class ConsoleTransport extends TransportStream {
     constructor(
-        // logToConsole() is used to emit the log entry.
+        // tslint:disable-next-line:no-any
         private readonly logToConsole: (level: LogLevel | undefined, ...args: any[]) => void,
+        // tslint:disable-next-line:no-any
         options?: any,
         private readonly levels?: winston.config.AbstractConfigSetLevels
     ) {
         super(options);
     }
 
+    // tslint:disable-next-line:no-any
     public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
         setImmediate(() => this.emit('logged', info));
         const level = resolveLevel(info.level, this.levels);
@@ -39,6 +39,7 @@ class ConsoleTransport extends TransportStream {
 
 // Create a console-targeting transport that can be added to a winston logger.
 export function getConsoleTransport(
+    // tslint:disable-next-line:no-any
     logToConsole: (level: LogLevel | undefined, ...args: any[]) => void,
     formatter: logform.Format
 ) {

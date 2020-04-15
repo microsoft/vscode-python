@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-console no-any
+// tslint:disable:no-console
 
 import { LogLevel } from './levels';
 
@@ -27,10 +27,14 @@ const logMethods = {
     trace: Symbol.for('trace')
 };
 
+// tslint:disable-next-line:no-any
+type Arguments = any[];
+
 // Log a message based on "args" to the given console "stream".
-export function logToConsole(level: LogLevel | undefined, ...args: any[]) {
+export function logToConsole(level: LogLevel | undefined, ...args: Arguments) {
     const stream = (level ? streamByLevel[level] : undefined) || 'log';
     // Further below we monkeypatch the console.log, etc methods.
+    // tslint:disable-next-line:no-any
     const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
     fn(...args);
 }
@@ -43,14 +47,17 @@ export function logToConsole(level: LogLevel | undefined, ...args: any[]) {
  * on CI so we can see everything logged to the console window
  * (via the logs).
  */
-export function monkeypatchConsole(logToFile: (logLevel: LogLevel, ...args: any[]) => void) {
+export function monkeypatchConsole(logToFile: (logLevel: LogLevel, ...args: Arguments) => void) {
     // Keep track of the original functions before we monkey patch them.
     // Using symbols guarantee the properties will be unique & prevents clashing with names other code/library may create or have created.
+    // tslint:disable:no-any
     (console as any)[logMethods.log] = console.log;
     (console as any)[logMethods.info] = console.info;
     (console as any)[logMethods.error] = console.error;
     (console as any)[logMethods.debug] = console.debug;
+    (console as any)[logMethods.trace] = console.trace;
     (console as any)[logMethods.warn] = console.warn;
+    // tslint:enable:no-any
 
     // tslint:disable-next-line: no-function-expression
     console.log = function () {

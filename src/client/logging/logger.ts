@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-any
-
 import * as util from 'util';
 import * as winston from 'winston';
 import { isTestExecution } from '../common/constants';
@@ -17,6 +15,9 @@ const consoleLogger = winston.createLogger();
 const fileLogger = winston.createLogger();
 initialize();
 
+// tslint:disable-next-line:no-any
+type Arguments = any[];
+
 interface ILogger {
     transports: unknown[];
     levels: winston.config.AbstractConfigSetLevels;
@@ -24,7 +25,7 @@ interface ILogger {
 }
 
 // Emit a log message derived from the args to all enabled transports.
-function log(loggers: ILogger[], logLevel: LogLevel, args: any[]) {
+function log(loggers: ILogger[], logLevel: LogLevel, args: Arguments) {
     for (const logger of loggers) {
         if (logger.transports.length > 0) {
             const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
@@ -35,7 +36,7 @@ function log(loggers: ILogger[], logLevel: LogLevel, args: any[]) {
 }
 
 // Emit a log message derived from the args to all enabled transports.
-export function _log(logLevel: LogLevel, ...args: any[]) {
+export function _log(logLevel: LogLevel, ...args: Arguments) {
     log([consoleLogger, fileLogger], logLevel, args);
 }
 
@@ -65,7 +66,7 @@ export function _log(logLevel: LogLevel, ...args: any[]) {
 function initialize() {
     // Hijack `console.log` when running tests on CI.
     if (process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD) {
-        function logToFile(logLevel: LogLevel, ...args: any[]) {
+        function logToFile(logLevel: LogLevel, ...args: Arguments) {
             log([fileLogger], logLevel, args);
         }
         monkeypatchConsole(logToFile);
@@ -81,6 +82,7 @@ function initialize() {
             label: process.env.TF_BUILD ? undefined : 'Python Extension:'
         });
         const transport = getConsoleTransport(logToConsole, formatter);
+        // tslint:disable-next-line:no-any
         consoleLogger.add(transport as any);
     }
 

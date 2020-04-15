@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-any
-
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel } from './levels';
@@ -11,18 +9,22 @@ import { _log as log } from './logger';
 import { TraceOptions } from './types';
 import { argsToLogString, returnValueToLogString } from './util';
 
+// tslint:disable-next-line:no-any
 export function traceVerbose(...args: any[]) {
     log(LogLevel.Info, ...args);
 }
 
+// tslint:disable-next-line:no-any
 export function traceError(...args: any[]) {
     log(LogLevel.Error, ...args);
 }
 
+// tslint:disable-next-line:no-any
 export function traceInfo(...args: any[]) {
     log(LogLevel.Info, ...args);
 }
 
+// tslint:disable-next-line:no-any
 export function traceWarning(...args: any[]) {
     log(LogLevel.Warn, ...args);
 }
