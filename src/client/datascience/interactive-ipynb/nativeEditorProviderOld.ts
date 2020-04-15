@@ -66,6 +66,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
                     const customDocument = this.customDocuments.get(resource.fsPath);
                     if (customDocument) {
                         await this.saveAs(customDocument, targetResource);
+                        this.customDocuments.delete(resource.fsPath);
                         this.customDocuments.set(targetResource.fsPath, { ...customDocument, uri: targetResource });
                     }
                 }
