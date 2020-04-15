@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { assert } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { TerminalActivator } from '../../../../client/common/terminal/activator';
@@ -30,7 +31,7 @@ suite('Terminal Activator', () => {
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns(() => {
                 return ({
-                    terminalSettings: terminalSettings.object
+                    terminal: terminalSettings.object
                 } as unknown) as IPythonSettings;
             });
         activator = new (class extends TerminalActivator {
@@ -58,7 +59,7 @@ suite('Terminal Activator', () => {
                 )
             )
             .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
         handler2
             .setup((h) =>
                 h.handleActivation(
@@ -69,13 +70,15 @@ suite('Terminal Activator', () => {
                 )
             )
             .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
 
         const terminal = TypeMoq.Mock.ofType<Terminal>();
-        await activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: activationSuccessful });
+        const activated = await activator.activateEnvironmentInTerminal(terminal.object, {
+            preserveFocus: activationSuccessful
+        });
 
+        assert.equal(activated, activationSuccessful);
         baseActivator.verifyAll();
-        terminalSettings.verifyAll();
         handler1.verifyAll();
         handler2.verifyAll();
     }
