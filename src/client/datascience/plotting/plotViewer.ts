@@ -147,7 +147,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         const SVGtoPDF = require('svg-to-pdfkit');
                         const deferred = createDeferred<void>();
                         // tslint:disable-next-line: no-require-imports
-                        const pdfkit = require('pdfkit') as typeof import('pdfkit');
+                        const pdfkit = require('pdfkit/js/pdfkit.standalone') as typeof import('pdfkit');
                         const doc = new pdfkit();
                         const ws = this.fileSystem.createWriteStream(file.fsPath);
                         traceInfo(`Writing pdf to ${file.fsPath}`);
