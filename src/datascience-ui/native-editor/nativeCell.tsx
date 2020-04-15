@@ -448,9 +448,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
         e.stopPropagation();
         e.preventDefault();
 
-        // Refocus the current cell if it is markdown to make it render
-        if (this.isMarkdownCell() && this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
-            this.wrapperRef.current.focus();
+        // Escape the current cell if it is markdown to make it render
+        if (this.isMarkdownCell()) {
+            this.escapeCell(e);
         }
 
         // Submit this cell
