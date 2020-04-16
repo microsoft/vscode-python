@@ -47,6 +47,7 @@ import { IPyWidgetHandler } from './ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipywidgets/ipyWidgetScriptSource';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
+import { JupyterCommandFactory } from './jupyter/interpreter/jupyterCommand';
 import { JupyterInterpreterDependencyService } from './jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from './jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterSelectionCommand } from './jupyter/interpreter/jupyterInterpreterSelectionCommand';
@@ -101,6 +102,7 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJMPConnection,
+    IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
@@ -145,6 +147,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
+    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
