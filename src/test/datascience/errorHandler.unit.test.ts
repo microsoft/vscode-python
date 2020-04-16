@@ -7,22 +7,23 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { IJupyterInterpreterDependencyManager } from '../../client/datascience/types';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let channels: typemoq.IMock<IInstallationChannelManager>;
     let dataScienceErrorHandler: DataScienceErrorHandler;
+    let dependencyManager: IJupyterInterpreterDependencyManager;
     const serverSelector = mock(JupyterServerSelector);
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         channels = typemoq.Mock.ofType<IInstallationChannelManager>();
-        const dependencyManager = mock(JupyterInterpreterSubCommandExecutionService);
+        dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         dataScienceErrorHandler = new DataScienceErrorHandler(
             applicationShell.object,
@@ -94,8 +95,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         const err = new JupyterInstallError(message, 'test.com');
         await dataScienceErrorHandler.handleError(err);
 
-        applicationShell.verifyAll();
-        channels.verifyAll();
+        verify(dependencyManager.installMissingDependencies(err)).once();
     });
 
     test('ZMQ Install Error', async () => {
