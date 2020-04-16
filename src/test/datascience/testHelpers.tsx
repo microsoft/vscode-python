@@ -156,6 +156,16 @@ export function runDoubleTest(
     test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
+export function runInteractiveTest(
+    name: string,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    getIOC: () => DataScienceIocContainer
+) {
+    // Run the test with just the interactive window
+    test(`${name} (interactive)`, async () =>
+        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+}
+
 export function mountWebView(
     ioc: DataScienceIocContainer,
     type: 'native' | 'interactive'

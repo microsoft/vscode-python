@@ -593,7 +593,7 @@ export class IntellisenseDocument implements TextDocument {
         }
 
         // in interactive window
-        return this._cellRanges[this._cellRanges.length - 1].start;
+        return this._cellRanges.length > 0 ? this._cellRanges[this._cellRanges.length - 1].start : 0;
     }
 
     private getLineFromOffset(offset: number) {

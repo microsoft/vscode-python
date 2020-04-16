@@ -49,6 +49,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
+    private disposed = false;
     constructor(
         protected readonly pythonExecutionService: IPythonExecutionService,
         protected readonly pythonPath: string,
@@ -64,6 +65,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     }
     public dispose() {
         try {
+            this.disposed = true;
             // The daemon should die as a result of this.
             this.connection.sendNotification(new NotificationType('exit'));
             this.proc.kill();
@@ -382,11 +384,13 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     private monitorConnection() {
         // tslint:disable-next-line: no-any
         const logConnectionStatus = (msg: string, ex?: any) => {
-            this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
-            this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
-            traceWarning(msg);
-            if (ex) {
-                traceError('Connection errored', ex);
+            if (!this.disposed) {
+                this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
+                this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
+                traceWarning(msg);
+                if (ex) {
+                    traceError('Connection errored', ex);
+                }
             }
         };
         this.disposables.push(this.connection.onClose(() => logConnectionStatus('Daemon Connection Closed')));
