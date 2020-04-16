@@ -424,7 +424,8 @@ export class JupyterVariables implements IJupyterVariables {
             result.count &&
             !result.shape &&
             notebook.getKernelSpec()?.language === 'python' &&
-            result.supportsDataExplorer
+            result.supportsDataExplorer &&
+            result.type !== 'list' // List count is good enough
         ) {
             const computedShape = await this.runScript<IJupyterVariable>(
                 notebook,
