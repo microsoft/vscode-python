@@ -207,8 +207,11 @@ export class IntellisenseDocument implements TextDocument {
         };
     }
 
-    public loadAllCells(cells: { code: string; id: string }[]): TextDocumentContentChangeEvent[] {
-        if (!this.inEditMode) {
+    public loadAllCells(
+        cells: { code: string; id: string }[],
+        notebookType: 'interactive' | 'native'
+    ): TextDocumentContentChangeEvent[] {
+        if (!this.inEditMode && notebookType === 'native') {
             this.inEditMode = true;
             return this.reloadCells(cells);
         }
@@ -593,7 +596,9 @@ export class IntellisenseDocument implements TextDocument {
         }
 
         // in interactive window
-        return this._cellRanges.length > 0 ? this._cellRanges[this._cellRanges.length - 1].start : 0;
+        return this._cellRanges && this._cellRanges.length > 0
+            ? this._cellRanges[this._cellRanges.length - 1].start
+            : 0;
     }
 
     private getLineFromOffset(offset: number) {

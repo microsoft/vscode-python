@@ -68,6 +68,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }>();
     private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
+    private notebookType: 'interactive' | 'native' = 'interactive';
     private potentialResource: Uri | undefined;
     private sentOpenDocument: boolean = false;
     private languageServer: ILanguageServer | undefined;
@@ -688,7 +689,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                             code: concatMultilineStringInput(cell.data.source),
                             id: cell.id
                         };
-                    })
+                    }),
+                this.notebookType
             );
 
             await this.handleChanges(document, changes);
@@ -708,6 +710,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private setIdentity(identity: INotebookIdentity) {
         this.notebookIdentity = identity.resource;
         this.potentialResource = identity.resource;
+        this.notebookType = identity.type;
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {
