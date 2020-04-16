@@ -271,6 +271,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     <ConnectedNativeCell
                         role="listitem"
                         maxTextSize={this.props.settings.maxOutputSize}
+                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
                         baseTheme={this.props.baseTheme}

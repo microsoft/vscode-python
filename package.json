@@ -1818,6 +1818,12 @@
                     "description": "Maximum size (in pixels) of text output in the Python Interactive window before a scrollbar appears. Set to -1 for infinity.",
                     "scope": "resource"
                 },
+                "python.dataScience.enableScrollingForCellOutputs": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables scrolling for large cell outputs.",
+                    "scope": "resource"
+                },
                 "python.dataScience.errorBackgroundColor": {
                     "type": "string",
                     "default": "#FFFFFF",

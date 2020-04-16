@@ -33,6 +33,7 @@ interface IInteractiveCellBaseProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
+    enableScroll?: boolean;
     showWatermark: boolean;
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
@@ -154,6 +155,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         baseTheme={this.props.baseTheme}
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
+                                        enableScroll={this.props.enableScroll}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
                                         widgetFailed={this.props.widgetFailed}
                                     />

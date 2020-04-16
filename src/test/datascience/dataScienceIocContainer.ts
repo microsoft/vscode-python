@@ -1408,6 +1408,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',

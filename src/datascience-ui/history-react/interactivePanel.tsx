@@ -260,6 +260,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         role="form"
                         editorOptions={this.props.editorOptions}
                         maxTextSize={maxTextSize}
+                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         autoFocus={document.hasFocus()}
                         testMode={this.props.testMode}
                         cellVM={this.props.editCellVM}
@@ -331,6 +332,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             role="listitem"
                             editorOptions={this.props.editorOptions}
                             maxTextSize={this.props.settings.maxOutputSize}
+                            enableScroll={this.props.settings.enableScrollingForCellOutputs}
                             autoFocus={false}
                             testMode={this.props.testMode}
                             cellVM={cellVM}
