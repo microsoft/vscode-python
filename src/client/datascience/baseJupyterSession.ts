@@ -1,16 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
-import { traceError } from '../common/logger';
+import { isTestExecution } from '../common/constants';
+import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
 import { JupyterWebSockets } from './jupyter/jupyterWebSocket';
@@ -68,6 +71,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             });
         }
     }
+    protected kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -96,6 +100,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     protected statusHandler: Slot<ISession, Kernel.Status>;
     protected connected: boolean = false;
+    protected restartSessionPromise: Promise<ISession | undefined> | undefined;
     private _session: ISession | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
@@ -107,7 +112,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     // Abstracts for each Session type to implement
     public abstract async shutdown(): Promise<void>;
-    public abstract async restart(timeout: number): Promise<void>;
+    //public abstract async restart(timeout: number): Promise<void>;
     public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
@@ -121,6 +126,49 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 timeout,
                 localize.DataScience.interruptingKernelFailed()
             );
+        }
+    }
+
+    public async restart(_timeout: number): Promise<void> {
+        if (this.session?.isRemoteSession) {
+            await this.session.kernel.restart();
+            return;
+        }
+
+        // Start the restart session now in case it wasn't started
+        if (!this.restartSessionPromise) {
+            this.startRestartSession();
+        }
+
+        // Just kill the current session and switch to the other
+        if (this.restartSessionPromise && this.session) {
+            traceInfo(`Restarting ${this.session.kernel.id}`);
+
+            // Save old state for shutdown
+            const oldSession = this.session;
+            const oldStatusHandler = this.statusHandler;
+
+            // Just switch to the other session. It should already be ready
+            this.session = await this.restartSessionPromise;
+            if (!this.session) {
+                throw new Error(localize.DataScience.sessionDisposed());
+            }
+            // IANHU: Re-add kernel selector
+            //this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
+            traceInfo(`Got new session ${this.session.kernel.id}`);
+
+            // Rewire our status changed event.
+            this.session.statusChanged.connect(this.statusHandler);
+
+            // After switching, start another in case we restart again.
+            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, oldSession.serverSettings);
+            traceInfo('Started new restart session');
+            if (oldStatusHandler) {
+                oldSession.statusChanged.disconnect(oldStatusHandler);
+            }
+            this.shutdownSession(oldSession, undefined).ignoreErrors();
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
         }
     }
 
@@ -228,6 +276,67 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
+    protected abstract startRestartSession(): void;
+    protected abstract async createRestartSession(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        serverSettings?: ServerConnection.ISettings,
+        cancelToken?: CancellationToken
+    ): Promise<ISession>;
+
+    protected async shutdownSession(
+        session: ISession | undefined,
+        statusHandler: Slot<ISession, Kernel.Status> | undefined
+    ): Promise<void> {
+        if (session && session.kernel) {
+            const kernelId = session.kernel.id;
+            traceInfo(`shutdownSession ${kernelId} - start`);
+            try {
+                if (statusHandler) {
+                    session.statusChanged.disconnect(statusHandler);
+                }
+                // Do not shutdown remote sessions.
+                if (session.isRemoteSession) {
+                    session.dispose();
+                    return;
+                }
+                try {
+                    // When running under a test, mark all futures as done so we
+                    // don't hit this problem:
+                    // https://github.com/jupyterlab/jupyterlab/issues/4252
+                    // tslint:disable:no-any
+                    if (isTestExecution()) {
+                        const defaultKernel = session.kernel as any;
+                        if (defaultKernel && defaultKernel._futures) {
+                            const futures = defaultKernel._futures as Map<any, any>;
+                            if (futures) {
+                                futures.forEach((f) => {
+                                    if (f._status !== undefined) {
+                                        f._status |= 4;
+                                    }
+                                });
+                            }
+                        }
+                        if (defaultKernel && defaultKernel._reconnectLimit) {
+                            defaultKernel._reconnectLimit = 0;
+                        }
+                        await waitForPromise(session.shutdown(), 1000);
+                    } else {
+                        // Shutdown may fail if the process has been killed
+                        await waitForPromise(session.shutdown(), 1000);
+                    }
+                } catch {
+                    noop();
+                }
+                if (session && !session.isDisposed) {
+                    session.dispose();
+                }
+            } catch (e) {
+                // Ignore, just trace.
+                traceWarning(e);
+            }
+            traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
+        }
+    }
     private getServerStatus(): ServerStatus {
         if (this.session) {
             switch (this.session.kernel.status) {

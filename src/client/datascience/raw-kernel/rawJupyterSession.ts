@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { ServerConnection } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
@@ -8,7 +9,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { BaseJupyterSession } from '../baseJupyterSession';
+import { BaseJupyterSession, ISession } from '../baseJupyterSession';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
@@ -95,6 +96,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceInfo('Raw session started and connected');
                 this.session = rawSessionStart.session;
                 this.currentKernelProcess = rawSessionStart.process;
+                this.kernelSpec = this.currentKernelProcess.kernelSpec;
             }
         } catch (error) {
             traceError(`Failed to connect raw kernel session: ${error}`);
@@ -110,6 +112,18 @@ export class RawJupyterSession extends BaseJupyterSession {
         throw new Error('Not implemented');
     }
 
+    protected startRestartSession() {
+        //if (!this.restartSessionPromise && this.session && this.contentsManager) {
+        //this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session.serverSettings);
+        //}
+    }
+    protected async createRestartSession(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        serverSettings?: ServerConnection.ISettings,
+        cancelToken?: CancellationToken
+    ): Promise<ISession> {
+        throw new Error('Not yet implemented');
+    }
     private async startRawSession(
         resource: Resource,
         kernelName?: string

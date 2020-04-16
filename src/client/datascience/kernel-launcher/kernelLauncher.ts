@@ -22,9 +22,6 @@ import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } fro
 // Exposes connection information and the process itself.
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
-    //private _connection: IKernelConnection;
-    //private _kernelSpec: IJupyterKernelSpec;
-    //private _interpreterUri: InterpreterUri;
     private connectionFile?: TemporaryFile;
     private readyPromise: Deferred<void>;
     private exitEvent: EventEmitter<number | null> = new EventEmitter<number | null>();
