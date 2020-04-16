@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
-import { anyString, anything, instance, match, mock, reset, verify, when } from 'ts-mockito';
+import { anything, instance, match, mock, reset, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
@@ -32,10 +32,20 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    IPathUtils,
+    Product
+} from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
+import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -52,7 +62,7 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { getOSType, OSType } from '../common';
-import { noop, sleep } from '../core';
+import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterServer } from './mockJupyterServer';
@@ -538,6 +548,11 @@ suite('Jupyter Execution', async () => {
             .returns((_v) => {
                 return Promise.reject('cant exec');
             });
+        service
+            .setup((x) => x.execModuleObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                throw new Error('Not supported');
+            });
         service.setup((x) => x.getInterpreterInformation()).returns(() => Promise.resolve(missingNotebookPython));
     }
 
@@ -948,12 +963,50 @@ suite('Jupyter Execution', async () => {
         ).thenResolve({
             kernelSpec
         });
-        const jupyterCmdExecutionService = mock<IJupyterSubCommandExecutionService>();
+
+        const dependencyService = mock(JupyterInterpreterDependencyService);
+        when(dependencyService.areDependenciesInstalled(anything(), anything())).thenCall(
+            async (interpreter: PythonInterpreter) => {
+                if (interpreter === missingNotebookPython) {
+                    return false;
+                }
+                return true;
+            }
+        );
+        when(dependencyService.isExportSupported(anything(), anything())).thenCall(
+            async (interpreter: PythonInterpreter) => {
+                if (interpreter === missingNotebookPython) {
+                    return false;
+                }
+                return true;
+            }
+        );
+        when(dependencyService.getDependenciesNotInstalled(anything(), anything())).thenCall(
+            async (interpreter: PythonInterpreter) => {
+                if (interpreter === missingNotebookPython) {
+                    return [Product.jupyter];
+                }
+                return [];
+            }
+        );
+        const oldStore = mock(JupyterInterpreterOldCacheStateStore);
+        when(oldStore.getCachedInterpreterPath()).thenReturn();
+        const jupyterInterpreterService = mock(JupyterInterpreterService);
+        when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(activeInterpreter);
+        const jupyterCmdExecutionService = new JupyterInterpreterSubCommandExecutionService(
+            instance(jupyterInterpreterService),
+            instance(interpreterService),
+            instance(dependencyService),
+            instance(fileSystem),
+            instance(executionFactory),
+            instance(mock<IOutputChannel>()),
+            instance(mock<IPathUtils>())
+        );
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
-            instance(jupyterCmdExecutionService)
+            jupyterCmdExecutionService
         );
         notebookStarter = new NotebookStarter(
-            instance(jupyterCmdExecutionService),
+            jupyterCmdExecutionService,
             instance(fileSystem),
             instance(serviceContainer),
             instance(jupyterOutputChannel)
@@ -1007,27 +1060,7 @@ suite('Jupyter Execution', async () => {
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
-    }).timeout(10000);
-
-    test('Failing others throws exception', async () => {
-        const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters(anything())).thenResolve([
-            missingNotebookPython,
-            missingNotebookPython2
-        ]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
-    }).timeout(10000);
-
-    test('Other than active works', async () => {
-        const execution = createExecution(missingNotebookPython);
-        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
-        await assert.eventually.equal(execution.isImportSupported(), true, 'Import not supported');
-        const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        if (usableInterpreter) {
-            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
-        }
+        await assert.isRejected(execution.connectToNotebookServer(), 'Data Science library jupyter is not installed.');
     }).timeout(10000);
 
     test('Missing kernel python still finds interpreter', async () => {
@@ -1052,140 +1085,9 @@ suite('Jupyter Execution', async () => {
         }
     }).timeout(10000);
 
-    test('Other than active finds closest match', async () => {
+    test('If active interpreter does not support notebooks then no support for notebooks', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(missingNotebookPython);
-        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
-        const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        if (usableInterpreter) {
-            // Linter
-            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
-            assert.notEqual(
-                usableInterpreter.version!.major,
-                missingNotebookPython.version!.major,
-                'Found interpreter should not match on major'
-            );
-        }
-        // Force config change and ask again
-        pythonSettings.datascience.searchForJupyter = false;
-        const evt = {
-            affectsConfiguration(_m: string): boolean {
-                return true;
-            }
-        };
-        configChangeEvent.fire(evt);
-        // Wait for cache to get cleared.
-        await sleep(100);
-        await assert.eventually.equal(
-            execution.isNotebookSupported(),
-            false,
-            'Notebook should not be supported after config change'
-        );
-    }).timeout(10000);
-
-    test('Display progress message', async () => {
-        const execution = createExecution(missingNotebookPython);
-        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
-        const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable interpreter not found');
-        if (usableInterpreter) {
-            // Linter
-            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
-            assert.notEqual(
-                usableInterpreter.version!.major,
-                missingNotebookPython.version!.major,
-                'Found interpreter should not match on major'
-            );
-        }
-        // Force config change and ask again
-        pythonSettings.datascience.searchForJupyter = false;
-        const evt = {
-            affectsConfiguration(_m: string): boolean {
-                return true;
-            }
-        };
-        configChangeEvent.fire(evt);
-        // Wait for cache to get cleared.
-        await sleep(100);
-        await assert.eventually.equal(
-            execution.isNotebookSupported(),
-            false,
-            'Notebook should not be supported after config change'
-        );
-        verify(application.withProgress(anything(), anything())).atLeast(1);
-    }).timeout(10000);
-
-    test('Progress message should not be displayed for more than 1s when interpreter search completes quickly', async () => {
-        const execution = createExecution(missingNotebookPython);
-        const progressCancellation = new CancellationTokenSource();
-        reset(application);
-        when(application.withProgress(anything(), anything())).thenCall(
-            (_, cb: (_: any, token: any) => Promise<any>) => {
-                return new Promise((resolve, reject) => {
-                    cb({ report: noop }, progressCancellation.token).then(resolve).catch(reject);
-                });
-            }
-        );
-
-        // Now interpreters = fast discovery (less time for display of progress).
-        when(interpreterService.getInterpreters(anything())).thenReturn(Promise.resolve([]));
-
-        // The call to isNotebookSupported should not timeout in 1 seconds.
-        const isNotebookSupported = execution.isNotebookSupported();
-        await assert.eventually.notEqual(
-            Promise.race([isNotebookSupported, sleep(1000).then(() => 'timeout')]),
-            'timeout'
-        );
-        verify(application.withProgress(anything(), anything())).atLeast(1);
-    }).timeout(10_000);
-
-    test('Cancel progress message if interpreter search takes too long', async () => {
-        const execution = createExecution(missingNotebookPython);
-        const progressCancellation = new CancellationTokenSource();
-        reset(application);
-        when(application.withProgress(anything(), anything())).thenCall(
-            (_, cb: (_: any, token: any) => Promise<any>) => {
-                return new Promise((resolve, reject) => {
-                    cb({ report: noop }, progressCancellation.token).then(resolve).catch(reject);
-                });
-            }
-        );
-
-        const slowInterpreterDiscovery = createDeferred<PythonInterpreter[]>();
-        when(interpreterService.getInterpreters(anything())).thenReturn(slowInterpreterDiscovery.promise);
-
-        // The call to interpreterService.getInterpreters shoud not complete, it is very slow.
-        const isNotebookSupported = execution.isNotebookSupported();
-        await assert.eventually.equal(
-            Promise.race([isNotebookSupported, sleep(5000).then(() => 'timeout')]),
-            'timeout'
-        );
-
-        // Once we cancel the progress message, the promise should resolve almost immediately.
-        progressCancellation.cancel();
-        await assert.eventually.notEqual(
-            Promise.race([isNotebookSupported, sleep(500).then(() => 'timeout')]),
-            'timeout'
-        );
-        verify(application.withProgress(anything(), anything())).atLeast(1);
-    }).timeout(20_000);
-
-    test('Jupyter found on the path', async () => {
-        // Make sure we can find jupyter on the path if we
-        // can't find it in a python module.
-        const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
-    }).timeout(10000);
-
-    test('Jupyter found on the path skipped', async () => {
-        // Make sure we can find jupyter on the path if we
-        // can't find it in a python module.
-        const execution = createExecution(missingNotebookPython, undefined, true);
-        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
-        when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
-    }).timeout(10000);
+        await assert.eventually.equal(execution.isNotebookSupported(), false);
+    });
 });
