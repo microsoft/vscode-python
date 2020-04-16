@@ -44,13 +44,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import {
-    EditorContexts,
-    Identifiers,
-    NativeKeyboardCommandTelemetryLookup,
-    NativeMouseCommandTelemetryLookup,
-    Telemetry
-} from '../constants';
+import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
@@ -672,11 +666,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private logNativeCommand(args: INativeCommand) {
-        const telemetryEvent =
-            args.source === 'mouse'
-                ? NativeMouseCommandTelemetryLookup[args.command]
-                : NativeKeyboardCommandTelemetryLookup[args.command];
-        sendTelemetryEvent(telemetryEvent);
+        sendTelemetryEvent(args.command);
     }
 
     private async loadCellsComplete() {

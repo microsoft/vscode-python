@@ -13,6 +13,7 @@ import {
     LoadIPyWidgetClassLoadAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
@@ -141,35 +142,6 @@ export enum IPyWidgetMessages {
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
     IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
     IPyWidgets_mirror_execute = 'IPyWidgets_mirror_execute'
-}
-export enum NativeCommandType {
-    AddToEnd = 0,
-    ArrowDown,
-    ArrowUp,
-    ChangeToCode,
-    ChangeToMarkdown,
-    CollapseInput,
-    CollapseOutput,
-    DeleteCell,
-    Save,
-    InsertAbove,
-    InsertBelow,
-    MoveCellDown,
-    MoveCellUp,
-    Redo,
-    Run,
-    RunAbove,
-    RunAll,
-    RunAndAdd,
-    RunAndMove,
-    RunBelow,
-    SelectKernel,
-    SelectServer,
-    ToggleLineNumbers,
-    ToggleOutput,
-    ToggleVariableExplorer,
-    Undo,
-    Unfocus
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -338,8 +310,7 @@ export interface ISaveAll {
 }
 
 export interface INativeCommand {
-    command: NativeCommandType;
-    source: 'keyboard' | 'mouse';
+    command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
 }
 
 export interface IRenderComplete {

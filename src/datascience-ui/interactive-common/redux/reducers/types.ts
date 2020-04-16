@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../client/datascience/constants';
 import {
     IEditorContentChange,
     InteractiveWindowMessages,
-    IShowDataViewer,
-    NativeCommandType
+    IShowDataViewer
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
@@ -201,8 +201,7 @@ export interface IRefreshVariablesAction {
 export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ISendCommandAction {
-    commandType: 'mouse' | 'keyboard';
-    command: NativeCommandType;
+    command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
 }
 
 export interface IChangeCellTypeAction {

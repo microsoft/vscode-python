@@ -55,8 +55,7 @@ export namespace Transfer {
 
     export function sendCommand(arg: CommonReducerArg<CommonActionType, ISendCommandAction>): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.NativeCommand, {
-            command: arg.payload.data.command,
-            source: arg.payload.data.commandType
+            command: arg.payload.data.command
         });
         return arg.prevState;
     }

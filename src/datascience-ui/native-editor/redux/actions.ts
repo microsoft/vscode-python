@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages,
-    NativeCommandType
+    InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
@@ -74,8 +74,9 @@ export const actionCreators = {
     save: (): CommonAction => createIncomingAction(CommonActionType.SAVE),
     showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
         createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
-    sendCommand: (command: NativeCommandType, commandType: 'mouse' | 'keyboard'): CommonAction<ISendCommandAction> =>
-        createIncomingActionWithPayload(CommonActionType.SEND_COMMAND, { command, commandType }),
+    sendCommand: (
+        command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry
+    ): CommonAction<ISendCommandAction> => createIncomingActionWithPayload(CommonActionType.SEND_COMMAND, { command }),
     moveCellUp: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.MOVE_CELL_UP, { cellId }),
     moveCellDown: (cellId: string): CommonAction<ICellAction> =>

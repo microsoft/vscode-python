@@ -1678,54 +1678,37 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
-    [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.CollapseInput]: never | undefined;
-    [NativeKeyboardCommandTelemetry.CollapseOutput]: never | undefined;
     [NativeKeyboardCommandTelemetry.DeleteCell]: never | undefined;
     [NativeKeyboardCommandTelemetry.InsertAbove]: never | undefined;
     [NativeKeyboardCommandTelemetry.InsertBelow]: never | undefined;
-    [NativeKeyboardCommandTelemetry.MoveCellDown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Redo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Run]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAbove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAll]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunBelow]: never | undefined;
     [NativeKeyboardCommandTelemetry.Save]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ToggleVariableExplorer]: never | undefined;
     [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
     [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowUp]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeMouseCommandTelemetry.CollapseInput]: never | undefined;
-    [NativeMouseCommandTelemetry.CollapseOutput]: never | undefined;
     [NativeMouseCommandTelemetry.DeleteCell]: never | undefined;
-    [NativeMouseCommandTelemetry.InsertAbove]: never | undefined;
     [NativeMouseCommandTelemetry.InsertBelow]: never | undefined;
     [NativeMouseCommandTelemetry.MoveCellDown]: never | undefined;
     [NativeMouseCommandTelemetry.MoveCellUp]: never | undefined;
     [NativeMouseCommandTelemetry.Run]: never | undefined;
     [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
     [NativeMouseCommandTelemetry.RunAll]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAndAdd]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAndMove]: never | undefined;
     [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
     [NativeMouseCommandTelemetry.Save]: never | undefined;
-    [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
-    [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.SelectKernel]: never | undefined;
+    [NativeMouseCommandTelemetry.SelectServer]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
-    [NativeMouseCommandTelemetry.Undo]: never | undefined;
-    [NativeMouseCommandTelemetry.Unfocus]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
     mem_use - Memory usage of Process in kb.

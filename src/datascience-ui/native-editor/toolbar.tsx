@@ -3,7 +3,7 @@
 'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NativeMouseCommandTelemetry } from '../../client/datascience/constants';
 import { KernelSelection } from '../interactive-common/kernelSelection';
 import {
     getSelectedAndFocusedInfo,
@@ -66,20 +66,20 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
 
         const addCell = () => {
             setTimeout(() => this.props.addCell(), 1);
-            this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.AddToEnd);
         };
         const runAll = () => {
             // Run all cells currently available.
             this.props.executeAllCells();
-            this.props.sendCommand(NativeCommandType.RunAll, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.RunAll);
         };
         const save = () => {
             this.props.save();
-            this.props.sendCommand(NativeCommandType.Save, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.Save);
         };
         const toggleVariableExplorer = () => {
             this.props.toggleVariableExplorer();
-            this.props.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.ToggleVariableExplorer);
         };
         const variableExplorerTooltip = this.props.variablesVisible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
@@ -87,7 +87,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         const runAbove = () => {
             if (selectedInfo.selectedCellId) {
                 this.props.executeAbove(selectedInfo.selectedCellId);
-                this.props.sendCommand(NativeCommandType.RunAbove, 'mouse');
+                this.props.sendCommand(NativeMouseCommandTelemetry.RunAbove);
             }
         };
         const runBelow = () => {
@@ -95,16 +95,16 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                 // tslint:disable-next-line: no-suspicious-comment
                 // TODO: Is the source going to be up to date during run below?
                 this.props.executeCellAndBelow(selectedInfo.selectedCellId);
-                this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
+                this.props.sendCommand(NativeMouseCommandTelemetry.RunBelow);
             }
         };
         const selectKernel = () => {
             this.props.selectKernel();
-            this.props.sendCommand(NativeCommandType.SelectKernel, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.SelectKernel);
         };
         const selectServer = () => {
             this.props.selectServer();
-            this.props.sendCommand(NativeCommandType.SelectServer, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.SelectServer);
         };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =

@@ -10,8 +10,11 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { OSType } from '../../client/common/utils/platform';
-import { Identifiers } from '../../client/datascience/constants';
-import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    Identifiers,
+    NativeKeyboardCommandTelemetry,
+    NativeMouseCommandTelemetry
+} from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { concatMultilineStringInput } from '../common';
 import { CellInput } from '../interactive-common/cellInput';
@@ -296,7 +299,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     this.props.changeCellType(cellId);
-                    this.props.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.ChangeToCode);
                 }
                 break;
             case 'm':
@@ -304,7 +307,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     this.props.changeCellType(cellId);
-                    this.props.sendCommand(NativeCommandType.ChangeToMarkdown, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.ChangeToMarkdown);
                 }
                 break;
             case 'l':
@@ -312,7 +315,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     this.props.toggleLineNumbers(cellId);
-                    this.props.sendCommand(NativeCommandType.ToggleLineNumbers, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.ToggleLineNumbers);
                 }
                 break;
             case 'o':
@@ -320,7 +323,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     this.props.toggleOutput(cellId);
-                    this.props.sendCommand(NativeCommandType.ToggleOutput, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.ToggleOutput);
                 }
                 break;
             case 'NumpadEnter':
@@ -340,7 +343,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
                     this.props.deleteCell(cellId);
-                    this.props.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.DeleteCell);
                 }
                 break;
             case 'a':
@@ -348,7 +351,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     setTimeout(() => this.props.insertAbove(cellId), 1);
-                    this.props.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.InsertAbove);
                 }
                 break;
             case 'b':
@@ -356,7 +359,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     e.stopPropagation();
                     e.preventDefault();
                     setTimeout(() => this.props.insertBelow(cellId), 1);
-                    this.props.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.InsertBelow);
                 }
                 break;
             case 'z':
@@ -365,11 +368,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     if (e.shiftKey && !e.ctrlKey && !e.altKey) {
                         e.stopPropagation();
                         this.props.redo();
-                        this.props.sendCommand(NativeCommandType.Redo, 'keyboard');
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
                     } else if (!e.shiftKey && !e.altKey && !e.ctrlKey) {
                         e.stopPropagation();
                         this.props.undo();
-                        this.props.sendCommand(NativeCommandType.Undo, 'keyboard');
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
                     }
                 }
                 break;
@@ -389,7 +392,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
             e.stopPropagation();
             this.wrapperRef.current.focus();
-            this.props.sendCommand(NativeCommandType.Unfocus, 'keyboard');
+            this.props.sendCommand(NativeKeyboardCommandTelemetry.Unfocus);
         }
     };
 
@@ -397,14 +400,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
         e.stopPropagation();
         e.preventDefault();
         this.props.arrowUp(this.cellId, this.getCurrentCode());
-        this.props.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
+        this.props.sendCommand(NativeKeyboardCommandTelemetry.ArrowUp);
     };
 
     private arrowDownFromCell = (e: IKeyboardEvent) => {
         e.stopPropagation();
         e.preventDefault();
         this.props.arrowDown(this.cellId, this.getCurrentCode());
-        this.props.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
+        this.props.sendCommand(NativeKeyboardCommandTelemetry.ArrowDown);
     };
 
     private enterCell = (e: IKeyboardEvent) => {
@@ -424,7 +427,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Submit and move to the next.
         this.runAndMove();
 
-        this.props.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+        this.props.sendCommand(NativeKeyboardCommandTelemetry.RunAndMove);
     };
 
     private altEnterCell = (e: IKeyboardEvent) => {
@@ -435,7 +438,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Submit this cell
         this.runAndAdd();
 
-        this.props.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
+        this.props.sendCommand(NativeKeyboardCommandTelemetry.RunAndAdd);
     };
 
     private runAndMove() {
@@ -460,7 +463,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         // Submit this cell
         this.submitCell('none');
-        this.props.sendCommand(NativeCommandType.Run, 'keyboard');
+        this.props.sendCommand(NativeKeyboardCommandTelemetry.Run);
     };
 
     private submitCell = (moveOp: 'add' | 'select' | 'none') => {
@@ -469,23 +472,27 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private addNewCell = () => {
         setTimeout(() => this.props.insertBelow(this.cellId), 1);
-        this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+        this.props.sendCommand(NativeMouseCommandTelemetry.AddToEnd);
+    };
+    private addNewCellBelow = () => {
+        setTimeout(() => this.props.insertBelow(this.cellId), 1);
+        this.props.sendCommand(NativeMouseCommandTelemetry.InsertBelow);
     };
 
     private renderNavbar = () => {
         const moveUp = () => {
             this.props.moveCellUp(this.cellId);
-            this.props.sendCommand(NativeCommandType.MoveCellUp, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.MoveCellUp);
         };
         const moveDown = () => {
             this.props.moveCellDown(this.cellId);
-            this.props.sendCommand(NativeCommandType.MoveCellDown, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.MoveCellDown);
         };
         const addButtonRender = !this.props.lastCell ? (
             <div className="navbar-add-button">
                 <ImageButton
                     baseTheme={this.props.baseTheme}
-                    onClick={this.addNewCell}
+                    onClick={this.addNewCellBelow}
                     tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
@@ -549,14 +556,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
             this.runAndMove();
-            this.props.sendCommand(NativeCommandType.Run, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.Run);
         };
         const gatherCell = () => {
             this.props.gatherCell(cellId);
         };
         const deleteCell = () => {
             this.props.deleteCell(cellId);
-            this.props.sendCommand(NativeCommandType.DeleteCell, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.DeleteCell);
         };
         const gatherDisabled =
             this.props.cellVM.cell.data.execution_count === null ||
@@ -571,7 +578,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 : getLocString('DataScience.switchToCode', 'Change to code');
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
         const otherCellTypeCommand =
-            otherCellType === 'markdown' ? NativeCommandType.ChangeToMarkdown : NativeCommandType.ChangeToCode;
+            otherCellType === 'markdown'
+                ? NativeMouseCommandTelemetry.ChangeToMarkdown
+                : NativeMouseCommandTelemetry.ChangeToCode;
         const otherCellImage = otherCellType === 'markdown' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
         const switchCellType = (event: React.MouseEvent<HTMLButtonElement>) => {
             // Prevent this mouse click from stealing focus so that we
@@ -579,7 +588,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             event.stopPropagation();
             event.preventDefault();
             this.props.changeCellType(cellId);
-            this.props.sendCommand(otherCellTypeCommand, 'mouse');
+            this.props.sendCommand(otherCellTypeCommand);
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
