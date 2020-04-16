@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -40,7 +41,7 @@ df
 `;
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science Intellisense Unit Tests', () => {
+suite('DataScience Intellisense Unit Tests', () => {
     let intellisenseProvider: IntellisenseProvider;
     let intellisenseDocument: IntellisenseDocument;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -291,6 +292,12 @@ suite('Data Science Intellisense Unit Tests', () => {
 
     function loadAllCells(allCells: ICell[]): Promise<void> {
         cells = allCells;
+        intellisenseProvider.onMessage(InteractiveWindowMessages.NotebookIdentity, {
+            resource: Uri.parse('file:///foo.ipynb'),
+            type: 'native'
+        });
+
+        // Load all cells will actually respond with a notification, NotebookIdentity won't so don't wait for it.
         return sendMessage(InteractiveWindowMessages.LoadAllCellsComplete, { cells });
     }
 
