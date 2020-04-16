@@ -10,6 +10,7 @@ import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { BaseJupyterSession, ISession } from '../baseJupyterSession';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
@@ -33,9 +34,10 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
-        private readonly serviceContainer: IServiceContainer
+        private readonly serviceContainer: IServiceContainer,
+        kernelSelector: KernelSelector
     ) {
-        super();
+        super(kernelSelector);
     }
 
     public async shutdown(): Promise<void> {
@@ -137,13 +139,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         const startPromise = this.startRawSession(this.resource, kernelSpec);
         return startPromise.then((session) => {
             this.restartKernelProcess = session.process;
+            this.kernelSelector.addKernelToIgnoreList(session.session.kernel);
             return session.session;
         });
     }
-    //private async startRawSession(
-    //resource: Resource,
-    //kernelName?: string | IJupyterKernelSpec
-    //): Promise<{ session: RawSession; process: IKernelProcess }> {
+
     private async startRawSession(
         resource: Resource,
         kernelName?: string | IJupyterKernelSpec

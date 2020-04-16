@@ -11,6 +11,7 @@ import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
@@ -31,7 +32,8 @@ type RawNotebookProviderClassType = {
         appShell: IApplicationShell,
         fs: IFileSystem,
         serviceContainer: IServiceContainer,
-        kernelLauncher: IKernelLauncher
+        kernelLauncher: IKernelLauncher,
+        kernelSelector: KernelSelector
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -51,7 +53,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IKernelLauncher) kernelLauncher: IKernelLauncher
+        @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
+        @inject(KernelSelector) kernelSelector: KernelSelector
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -67,7 +70,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             appShell,
             fs,
             serviceContainer,
-            kernelLauncher
+            kernelLauncher,
+            kernelSelector
         );
     }
 

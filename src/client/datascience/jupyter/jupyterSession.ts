@@ -42,10 +42,10 @@ export class JupyterSession extends BaseJupyterSession {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
-        private readonly kernelSelector: KernelSelector,
+        kernelSelector: KernelSelector,
         private readonly outputChannel: IOutputChannel
     ) {
-        super();
+        super(kernelSelector);
         this.kernelSpec = kernelSpec;
     }
 
@@ -88,52 +88,6 @@ export class JupyterSession extends BaseJupyterSession {
         // Wait for idle on this session
         await this.waitForIdleOnSession(this.session, timeout);
     }
-
-    //public async restart(_timeout: number): Promise<void> {
-    //if (this.session?.isRemoteSession) {
-    //await this.session.kernel.restart();
-    //return;
-    //}
-
-    //// Start the restart session now in case it wasn't started
-    //if (!this.restartSessionPromise) {
-    //this.startRestartSession();
-    //}
-
-    //// Just kill the current session and switch to the other
-    //if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
-    //traceInfo(`Restarting ${this.session.kernel.id}`);
-
-    //// Save old state for shutdown
-    //const oldSession = this.session;
-    //const oldStatusHandler = this.statusHandler;
-
-    //// Just switch to the other session. It should already be ready
-    //this.session = await this.restartSessionPromise;
-    //if (!this.session) {
-    //throw new Error(localize.DataScience.sessionDisposed());
-    //}
-    //this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
-    //traceInfo(`Got new session ${this.session.kernel.id}`);
-
-    //// Rewire our status changed event.
-    //this.session.statusChanged.connect(this.statusHandler);
-
-    //// After switching, start another in case we restart again.
-    //this.restartSessionPromise = this.createRestartSession(
-    //oldSession.serverSettings,
-    //this.kernelSpec,
-    //this.contentsManager
-    //);
-    //traceInfo('Started new restart session');
-    //if (oldStatusHandler) {
-    //oldSession.statusChanged.disconnect(oldStatusHandler);
-    //}
-    //this.shutdownSession(oldSession, undefined).ignoreErrors();
-    //} else {
-    //throw new Error(localize.DataScience.sessionDisposed());
-    //}
-    //}
 
     public requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],

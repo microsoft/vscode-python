@@ -5,6 +5,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
+import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
 import { IJMPConnection } from '../../../client/datascience/types';
@@ -27,6 +28,7 @@ suite('Data Science - RawJupyterSession', () => {
     let rawJupyterSession: RawJupyterSession;
     let serviceContainer: IServiceContainer;
     let kernelLauncher: IKernelLauncher;
+    let kernelSelector: KernelSelector;
     let jmpConnection: typemoq.IMock<IJMPConnection>;
     let kernelProcess: typemoq.IMock<IKernelProcess>;
     let processExitEvent: EventEmitter<number | null>;
@@ -34,6 +36,7 @@ suite('Data Science - RawJupyterSession', () => {
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
         kernelLauncher = mock<IKernelLauncher>();
+        kernelSelector = mock(KernelSelector);
 
         // Fake out our jmp connection
         jmpConnection = createTypeMoq<IJMPConnection>('jmp connection');
@@ -49,7 +52,11 @@ suite('Data Science - RawJupyterSession', () => {
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
         when(kernelLauncher.launch(anything(), anything())).thenResolve(kernelProcess.object);
 
-        rawJupyterSession = new RawJupyterSession(instance(kernelLauncher), instance(serviceContainer));
+        rawJupyterSession = new RawJupyterSession(
+            instance(kernelLauncher),
+            instance(serviceContainer),
+            instance(kernelSelector)
+        );
     });
 
     test('RawJupyterSession - shutdown on dispose', async () => {

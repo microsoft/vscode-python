@@ -15,6 +15,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, R
 import { createDeferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
+import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -46,7 +47,8 @@ export class HostRawNotebookProvider
         private appShell: IApplicationShell,
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
-        private kernelLauncher: IKernelLauncher
+        private kernelLauncher: IKernelLauncher,
+        private kernelSelector: KernelSelector
     ) {
         super(liveShare, asyncRegistry);
     }
@@ -83,7 +85,7 @@ export class HostRawNotebookProvider
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(identity, notebookPromise.promise);
 
-        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer);
+        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer, this.kernelSelector);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
             const launchedKernelSpec = await rawSession.connect(

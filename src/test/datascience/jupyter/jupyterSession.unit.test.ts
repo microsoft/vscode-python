@@ -356,6 +356,8 @@ suite('Data Science - JupyterSession', () => {
                         traceInfo('Shutting down');
                         return Promise.resolve();
                     });
+                    const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
+                    when(session.serverSettings).thenReturn(instance(sessionServerSettings));
 
                     await jupyterSession.restart(0);
 

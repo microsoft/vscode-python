@@ -18,6 +18,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
 import { JupyterWebSockets } from './jupyter/jupyterWebSocket';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from './jupyter/kernels/types';
 import { IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from './types';
 
@@ -105,7 +106,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _session: ISession | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
-    constructor() {
+
+    constructor(protected readonly kernelSelector: KernelSelector) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
     public dispose(): Promise<void> {
@@ -113,7 +115,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     // Abstracts for each Session type to implement
     public abstract async shutdown(): Promise<void>;
-    //public abstract async restart(timeout: number): Promise<void>;
     public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
@@ -154,8 +155,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
-            // IANHU: Re-add kernel selector
-            //this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
+            this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
