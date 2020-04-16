@@ -28,6 +28,7 @@ export type ISession = Session.ISession & {
      * @type {boolean}
      */
     isRemoteSession?: boolean;
+    isRawSession?: boolean;
 };
 
 /**
@@ -161,7 +162,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, oldSession.serverSettings);
+            this.restartSessionPromise = this.createRestartSession(
+                this.kernelSpec,
+                oldSession.isRawSession ? undefined : oldSession.serverSettings
+            );
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);

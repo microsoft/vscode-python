@@ -26,7 +26,10 @@ jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
     private currentKernelProcess: IKernelProcess | undefined;
+    // IANHU: Don't like this, have the session own / dispose instead?
+    private restartKernelProcess: IKernelProcess | undefined;
     private processExitHandler: IDisposable | undefined;
+    private resource?: Resource;
 
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
@@ -45,8 +48,12 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.processExitHandler?.dispose(); // NOSONAR
         this.processExitHandler = undefined;
 
+        // Dispose our current and restart processes
         if (this.currentKernelProcess) {
             this.currentKernelProcess.dispose();
+        }
+        if (this.restartKernelProcess) {
+            this.restartKernelProcess.dispose();
         }
 
         if (this.onStatusChangedEvent) {
@@ -60,16 +67,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         // RawKernels are good to go right away
     }
 
-    public async restart(_timeout: number): Promise<void> {
-        throw new Error('Not implemented');
-    }
-
     public async connect(
         resource: Resource,
         timeout: number,
         kernelName?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
+        // Save the resource that we connect with
+        this.resource = resource;
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
@@ -104,6 +109,9 @@ export class RawJupyterSession extends BaseJupyterSession {
             throw error;
         }
 
+        // Start our restart session at this point
+        this.startRestartSession();
+
         this.connected = true;
         return this.currentKernelProcess.kernelSpec;
     }
@@ -113,21 +121,33 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession() {
-        //if (!this.restartSessionPromise && this.session && this.contentsManager) {
-        //this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session.serverSettings);
-        //}
+        if (!this.restartSessionPromise && this.session) {
+            this.restartSessionPromise = this.createRestartSession(this.kernelSpec);
+        }
     }
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        serverSettings?: ServerConnection.ISettings,
-        cancelToken?: CancellationToken
+        _serverSettings?: ServerConnection.ISettings,
+        _cancelToken?: CancellationToken
     ): Promise<ISession> {
-        throw new Error('Not yet implemented');
+        if (!this.resource || !kernelSpec || 'session' in kernelSpec) {
+            // Need to have connected before restarting and can't use a LiveKernelModel
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+        const startPromise = this.startRawSession(this.resource, kernelSpec);
+        return startPromise.then((session) => {
+            this.restartKernelProcess = session.process;
+            return session.session;
+        });
     }
+    //private async startRawSession(
+    //resource: Resource,
+    //kernelName?: string | IJupyterKernelSpec
+    //): Promise<{ session: RawSession; process: IKernelProcess }> {
     private async startRawSession(
         resource: Resource,
-        kernelName?: string
-    ): Promise<{ session: RawSession; process: IKernelProcess }> {
+        kernelName?: string | IJupyterKernelSpec
+    ): Promise<{ session: ISession; process: IKernelProcess }> {
         const process = await this.kernelLauncher.launch(resource, kernelName);
 
         if (!process.connection) {
@@ -148,7 +168,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         await process.ready;
 
         const connection = await this.jmpConnection(process.connection);
-        const session = new RawSession(connection);
+        const session: ISession = new RawSession(connection);
+        session.isRawSession = true;
         return { session, process };
     }
 

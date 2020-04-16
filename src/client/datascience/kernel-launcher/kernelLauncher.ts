@@ -125,8 +125,18 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
-    public async launch(interpreterUri: InterpreterUri, kernelName?: string): Promise<IKernelProcess> {
-        const kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
+    public async launch(
+        interpreterUri: InterpreterUri,
+        kernelName?: string | IJupyterKernelSpec
+    ): Promise<IKernelProcess> {
+        let kernelSpec: IJupyterKernelSpec;
+        if (typeof kernelName === 'object') {
+            // IJupyterKernelSpec
+            kernelSpec = kernelName;
+        } else {
+            // string or undefined
+            kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
+        }
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.executionFactory,
