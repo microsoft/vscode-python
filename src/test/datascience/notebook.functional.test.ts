@@ -27,7 +27,6 @@ import { createDeferred, waitForPromise } from '../../client/common/utils/async'
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { Identifiers } from '../../client/datascience/constants';
-import { ModuleExistsStatus } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -1453,9 +1452,6 @@ plt.show()`,
             this.skip();
         } else {
             const application = mock(ApplicationShell);
-            when(application.withProgress(anything(), anything())).thenResolve({
-                status: ModuleExistsStatus.NotFound
-            } as any);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);

@@ -7,7 +7,7 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
+import { JupyterInterpreterSubCommandExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
@@ -16,17 +16,17 @@ import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSe
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let channels: typemoq.IMock<IInstallationChannelManager>;
-    let dependencyManager: JupyterCommandInterpreterDependencyService;
     let dataScienceErrorHandler: DataScienceErrorHandler;
     const serverSelector = mock(JupyterServerSelector);
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         channels = typemoq.Mock.ofType<IInstallationChannelManager>();
-        dependencyManager = new JupyterCommandInterpreterDependencyService(applicationShell.object, channels.object);
+        const dependencyManager = mock(JupyterInterpreterSubCommandExecutionService);
+        when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         dataScienceErrorHandler = new DataScienceErrorHandler(
             applicationShell.object,
-            dependencyManager,
+            instance(dependencyManager),
             instance(serverSelector)
         );
     });

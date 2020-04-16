@@ -18,7 +18,6 @@ import { PythonExecutionFactory } from '../../../../client/common/process/python
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { JupyterCommandFinderInterpreterExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
@@ -53,7 +52,7 @@ suite('Data Science - KernelService', () => {
         execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);
-        jupyterInterpreterExecutionService = mock(JupyterCommandFinderInterpreterExecutionService);
+        jupyterInterpreterExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
         (instance(execService) as any).then = undefined;

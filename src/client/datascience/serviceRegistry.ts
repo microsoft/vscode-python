@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
+import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
 import { IServiceManager } from '../ioc/types';
 import { Activation } from './activation';
@@ -47,10 +47,6 @@ import { IPyWidgetHandler } from './ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipywidgets/ipyWidgetScriptSource';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
-import { JupyterCommandFactory } from './jupyter/interpreter/jupyterCommand';
-import { JupyterCommandFinder } from './jupyter/interpreter/jupyterCommandFinder';
-import { JupyterCommandInterpreterDependencyService } from './jupyter/interpreter/jupyterCommandInterpreterDependencyService';
-import { JupyterCommandFinderInterpreterExecutionService } from './jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterInterpreterDependencyService } from './jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from './jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterSelectionCommand } from './jupyter/interpreter/jupyterInterpreterSelectionCommand';
@@ -105,7 +101,6 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJMPConnection,
-    IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
@@ -150,7 +145,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
-    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
@@ -189,7 +183,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
-    serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
     serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(JupyterCommandLineSelectorCommand, JupyterCommandLineSelectorCommand);
     serviceManager.addSingleton<JupyterInterpreterDependencyService>(JupyterInterpreterDependencyService, JupyterInterpreterDependencyService);
@@ -211,16 +204,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.add<IJMPConnection>(IJMPConnection, EnchannelJMPConnection);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
-
-    // Temporary code, to allow users to revert to the old behavior.
-    const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);
-    if (cfg.get<boolean>('useOldJupyterServer', false)) {
-        serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterCommandInterpreterDependencyService);
-        serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterCommandFinderInterpreterExecutionService);
-    } else {
-        serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
-        serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
-    }
+    serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
+    serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
 
     registerGatherTypes(serviceManager);
 }

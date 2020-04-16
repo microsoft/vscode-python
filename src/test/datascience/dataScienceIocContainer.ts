@@ -196,10 +196,6 @@ import { InteractiveWindowCommandListener } from '../../client/datascience/inter
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
-import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
-import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
-import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterSelectionCommand } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand';
@@ -252,7 +248,6 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJMPConnection,
-    IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
@@ -413,7 +408,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private static jupyterInterpreters: PythonInterpreter[] = [];
     private static foundPythonPath: string | undefined;
     public webPanelListener: IWebPanelMessageListener | undefined;
-    public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
@@ -572,7 +566,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
         this.serviceManager.addSingleton<IExtensions>(IExtensions, MockExtensions);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
-        this.serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
         this.serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
         this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
@@ -733,7 +726,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IInteractiveWindowListener
         ]);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
-        this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
         this.serviceManager.addSingleton<IDiagnosticsService>(
             IDiagnosticsService,
             LSNotSupportedDiagnosticService,
@@ -921,25 +913,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
         this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
-        if (this.useCommandFinderForJupyterServer) {
-            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
-                IJupyterSubCommandExecutionService,
-                JupyterCommandFinderInterpreterExecutionService
-            );
-            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
-                IJupyterInterpreterDependencyManager,
-                JupyterCommandInterpreterDependencyService
-            );
-        } else {
-            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
-                IJupyterSubCommandExecutionService,
-                JupyterInterpreterSubCommandExecutionService
-            );
-            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
-                IJupyterInterpreterDependencyManager,
-                JupyterInterpreterSubCommandExecutionService
-            );
-        }
+        this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
+            IJupyterSubCommandExecutionService,
+            JupyterInterpreterSubCommandExecutionService
+        );
+        this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
+            IJupyterInterpreterDependencyManager,
+            JupyterInterpreterSubCommandExecutionService
+        );
 
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         interpreterDisplay.setup((i) => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());

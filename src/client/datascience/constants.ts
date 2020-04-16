@@ -217,7 +217,6 @@ export enum Telemetry {
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
-    ClassConstructionTime = 'DS_INTERNAL.CLASS_CONSTRUCTION_TIME',
     FindJupyterCommand = 'DS_INTERNAL.FIND_JUPYTER_COMMAND',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
@@ -340,8 +339,6 @@ for (let i = 0; i < keys.length; i += 1) {
 
 export enum NativeMouseCommandTelemetry {
     AddToEnd = 'DATASCIENCE.NATIVE.MOUSE.ADD_TO_END',
-    ArrowDown = 'DATASCIENCE.NATIVE.MOUSE.ARROW_DOWN',
-    ArrowUp = 'DATASCIENCE.NATIVE.MOUSE.ARROW_UP',
     ChangeToCode = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE',
     ChangeToMarkdown = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN',
     CollapseInput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_INPUT',

@@ -36,9 +36,6 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
-import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
-import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
@@ -917,12 +914,6 @@ suite('Jupyter Execution', async () => {
             '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
         );
 
-        const commandFactory = new JupyterCommandFactory(
-            instance(executionFactory),
-            instance(activationHelper),
-            instance(processServiceFactory),
-            instance(interpreterService)
-        );
         const persistentSateFactory = mock(PersistentStateFactory);
         const persistentState = mock(PersistentState);
         when(persistentState.updateValue(anything())).thenResolve();
@@ -934,20 +925,6 @@ suite('Jupyter Execution', async () => {
         when(persistentSateFactory.createWorkspacePersistentState(anything(), anything())).thenReturn(
             instance(persistentState)
         );
-        const commandFinder = new JupyterCommandFinder(
-            instance(interpreterService),
-            instance(executionFactory),
-            instance(configService),
-            instance(knownSearchPaths),
-            disposableRegistry,
-            instance(fileSystem),
-            instance(processServiceFactory),
-            commandFactory,
-            instance(workspaceService),
-            instance(application),
-            instance(persistentSateFactory)
-        );
-        when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(commandFinder);
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
         when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(
             instance(processServiceFactory)
@@ -971,17 +948,12 @@ suite('Jupyter Execution', async () => {
         ).thenResolve({
             kernelSpec
         });
-        const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
-            commandFinder,
-            instance(interpreterService),
-            instance(fileSystem),
-            instance(executionFactory)
-        );
+        const jupyterCmdExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
-            jupyterCmdExecutionService
+            instance(jupyterCmdExecutionService)
         );
         notebookStarter = new NotebookStarter(
-            jupyterCmdExecutionService,
+            instance(jupyterCmdExecutionService),
             instance(fileSystem),
             instance(serviceContainer),
             instance(jupyterOutputChannel)

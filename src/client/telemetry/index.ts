@@ -1516,7 +1516,6 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
-    [Telemetry.ClassConstructionTime]: { class: string };
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
@@ -1703,8 +1702,6 @@ export interface IEventNamePropertyMapping {
     [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
     [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowUp]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
     [NativeMouseCommandTelemetry.CollapseInput]: never | undefined;
