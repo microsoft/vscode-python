@@ -27,7 +27,6 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
-
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)/g;
 
 interface IRangedCellHash extends ICellHash {
@@ -219,7 +218,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 endOffset,
                 deleted: false,
                 code: hashedCode,
-                trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+$/g, '')).join(''),
+                trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
                 id: cell.id
