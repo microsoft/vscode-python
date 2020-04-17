@@ -22,7 +22,7 @@ export class InputFlowAction {
 export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
 
 export interface IQuickPickParameters<T extends QuickPickItem> {
-    title: string;
+    title?: string;
     step?: number;
     totalSteps?: number;
     canGoBack?: boolean;
@@ -30,6 +30,9 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     activeItem?: T;
     placeholder: string;
     buttons?: QuickInputButton[];
+    matchOnDescription?: boolean;
+    matchOnDetail?: boolean;
+    acceptFilterBoxTextAsSelection?: boolean;
     shouldResume?(): Promise<boolean>;
 }
 
@@ -87,20 +90,33 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume
+        shouldResume,
+        matchOnDescription,
+        matchOnDetail,
+        acceptFilterBoxTextAsSelection
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
             return await new Promise<MultiStepInputQuickPicResponseType<T, P>>((resolve, reject) => {
                 const input = this.shell.createQuickPick<T>();
-                input.title = title;
+                if (title !== undefined) {
+                    input.title = title;
+                }
                 input.step = step;
                 input.totalSteps = totalSteps;
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
                 input.items = items;
+                if (matchOnDescription !== undefined) {
+                    input.matchOnDescription = matchOnDescription;
+                }
+                if (matchOnDetail !== undefined) {
+                    input.matchOnDetail = matchOnDetail;
+                }
                 if (activeItem) {
                     input.activeItems = [activeItem];
+                } else {
+                    input.activeItems = [];
                 }
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
                 disposables.push(
@@ -120,6 +136,13 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         })().catch(reject);
                     })
                 );
+                if (acceptFilterBoxTextAsSelection) {
+                    disposables.push(
+                        input.onDidAccept(() => {
+                            resolve(<any>input.value);
+                        })
+                    );
+                }
                 if (this.current) {
                     this.current.dispose();
                 }

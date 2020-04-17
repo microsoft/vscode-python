@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
@@ -9,8 +9,15 @@ import {
 } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { DeprecatePythonPath } from '../../common/experimentGroups';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExperimentsManager, IPathUtils, Resource } from '../../common/types';
-import { Interpreters } from '../../common/utils/localize';
+import { InterpreterQuickPickList, Interpreters } from '../../common/utils/localize';
+import {
+    IMultiStepInput,
+    IMultiStepInputFactory,
+    InputStep,
+    IQuickPickParameters
+} from '../../common/utils/multiStepInput';
 import { IInterpreterSecurityService } from '../autoSelection/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter } from '../contracts';
 import {
@@ -20,6 +27,7 @@ import {
     IPythonPathUpdaterServiceManager
 } from './types';
 
+type InterpreterStateArgs = { path?: string; workspace: Resource };
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     private disposables: Disposable[] = [];
@@ -37,7 +45,9 @@ export class InterpreterSelector implements IInterpreterSelector {
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService
+        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {}
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());
@@ -63,6 +73,78 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
+    }
+
+    public async _pickInterpreter(
+        input: IMultiStepInput<InterpreterStateArgs>,
+        state: InterpreterStateArgs
+    ): Promise<void | InputStep<InterpreterStateArgs>> {
+        const interpreterSuggestions = await this.getSuggestions(state.workspace);
+        const enterInterpreterPathSuggestion = {
+            label: InterpreterQuickPickList.enterPath.label(),
+            detail: InterpreterQuickPickList.enterPath.detail(),
+            alwaysShow: true
+        };
+        const suggestions = [enterInterpreterPathSuggestion, ...interpreterSuggestions];
+        const currentPythonPath = this.pathUtils.getDisplayName(
+            this.configurationService.getSettings(state.workspace).pythonPath,
+            state.workspace ? state.workspace.fsPath : undefined
+        );
+
+        state.path = undefined;
+        const selection = await input.showQuickPick<
+            IInterpreterQuickPickItem | typeof enterInterpreterPathSuggestion,
+            IQuickPickParameters<IInterpreterQuickPickItem | typeof enterInterpreterPathSuggestion>
+        >({
+            placeholder: InterpreterQuickPickList.quickPickListPlaceholder().format(currentPythonPath),
+            items: suggestions,
+            activeItem: suggestions[1],
+            matchOnDetail: true,
+            matchOnDescription: true
+        });
+
+        if (selection === undefined) {
+            return;
+        } else if (selection !== enterInterpreterPathSuggestion) {
+            state.path = (selection as IInterpreterQuickPickItem).path;
+        } else {
+            return this._enterOrBrowseInterpreterPath.bind(this);
+        }
+    }
+
+    public async _enterOrBrowseInterpreterPath(
+        input: IMultiStepInput<InterpreterStateArgs>,
+        state: InterpreterStateArgs
+    ): Promise<void | InputStep<InterpreterStateArgs>> {
+        const items: QuickPickItem[] = [
+            {
+                label: InterpreterQuickPickList.browsePath.label(),
+                detail: InterpreterQuickPickList.browsePath.detail()
+            }
+        ];
+
+        const selection = <QuickPickItem | string>await input.showQuickPick({
+            placeholder: InterpreterQuickPickList.enterPath.placeholder(),
+            items,
+            acceptFilterBoxTextAsSelection: true
+        });
+
+        if (typeof selection === 'string') {
+            // User entered text in the filter box to enter path to python, store it
+            state.path = selection;
+        } else if (selection.label === 'Browse...') {
+            const filtersKey = 'Executables';
+            const filtersObject: { [name: string]: string[] } = {};
+            filtersObject[filtersKey] = ['exe'];
+            const uris = await this.applicationShell.showOpenDialog({
+                filters: this.platformService.isWindows ? filtersObject : undefined,
+                openLabel: InterpreterQuickPickList.browsePath.openButtonLabel(),
+                canSelectMany: false
+            });
+            if (uris && uris.length > 0) {
+                state.path = uris[0].fsPath;
+            }
+        }
     }
 
     protected async resetInterpreter() {
@@ -97,21 +179,11 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
         const configTarget = targetConfig.configTarget;
         const wkspace = targetConfig.folderUri;
-
-        const suggestions = await this.getSuggestions(wkspace);
-        const currentPythonPath = this.pathUtils.getDisplayName(
-            this.configurationService.getSettings(wkspace).pythonPath,
-            wkspace ? wkspace.fsPath : undefined
-        );
-        const quickPickOptions: QuickPickOptions = {
-            matchOnDetail: true,
-            matchOnDescription: true,
-            placeHolder: `current: ${currentPythonPath}`
-        };
-
-        const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);
-        if (selection !== undefined) {
-            await this.pythonPathUpdaterService.updatePythonPath(selection.path, configTarget, 'ui', wkspace);
+        const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };
+        const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
+        await multiStep.run((input, s) => this._pickInterpreter(input, s), interpreterState);
+        if (interpreterState.path !== undefined) {
+            await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
         }
     }
 
