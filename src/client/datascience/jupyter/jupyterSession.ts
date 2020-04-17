@@ -33,7 +33,6 @@ import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
 export class JupyterSession extends BaseJupyterSession {
-    //    private restartSessionPromise: Promise<ISession | undefined> | undefined;
     private notebookFiles: Contents.IModel[] = [];
     constructor(
         private connInfo: IConnection,
