@@ -26,30 +26,8 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    //private processExitHandler: IDisposable | undefined;
     private resource?: Resource;
 
-    //protected set session(session: ISession | undefined) {
-    //// When setting the session clear our current exit handler and hook up to the
-    //// new session process
-    //if (this.processExitHandler) {
-    //this.processExitHandler?.dispose();
-    //}
-    //if (session?.process) {
-    //// Watch to see if our process exits
-    //this.processExitHandler = session.process.exited((exitCode) => {
-    //traceError(`Raw kernel process exited code: ${exitCode}`);
-    //this.shutdown().catch((reason) => {
-    //traceError(`Error shutting down raw jupyter session: ${reason}`);
-    //});
-    //// Next code the user executes will show a session disposed message
-    //});
-    //}
-    //super.session = session;
-    //}
-    //protected get session(): ISession | undefined {
-    //return super.session;
-    //}
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         private readonly serviceContainer: IServiceContainer,
@@ -57,22 +35,6 @@ export class RawJupyterSession extends BaseJupyterSession {
     ) {
         super(kernelSelector);
     }
-
-    //public async shutdown(): Promise<void> {
-    //if (this.session) {
-    //this.session.dispose();
-    //this.session = undefined;
-    //}
-
-    //// Unhook our process exit handler before we dispose the process ourselves
-    //this.processExitHandler?.dispose(); // NOSONAR
-    //this.processExitHandler = undefined;
-
-    //if (this.onStatusChangedEvent) {
-    //this.onStatusChangedEvent.dispose();
-    //}
-    //traceInfo('Shutdown session -- complete');
-    //}
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(_timeout: number): Promise<void> {
@@ -159,15 +121,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceError('KernelProcess launched without connection info');
             throw new Error(localize.DataScience.sessionDisposed());
         }
-
-        //// Watch to see if our process exits
-        //this.processExitHandler = process.exited((exitCode) => {
-        //traceError(`Raw kernel process exited code: ${exitCode}`);
-        //this.shutdown().catch((reason) => {
-        //traceError(`Error shutting down raw jupyter session: ${reason}`);
-        //});
-        //// Next code the user executes will show a session disposed message
-        //});
 
         // Wait for the process to actually be ready to connect to
         await process.ready;

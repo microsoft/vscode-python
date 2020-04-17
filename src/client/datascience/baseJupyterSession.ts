@@ -25,28 +25,13 @@ import { IKernelProcess } from './kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from './types';
 
 export type ISession = Session.ISession & {
-    /**
-     * Whether this is a remote session that we attached to.
-     *
-     * @type {boolean}
-     */
+    // Whether this is a remote session that we attached to.
     isRemoteSession?: boolean;
+    // If this is a raw session
     isRawSession?: boolean;
+    // If a kernel process is associated with this session
     process?: IKernelProcess;
-    //kernelSpec?: IJupyterKernelSpec;
 };
-// Additional ISession properties for either Jupyter or raw case
-//export type ISession =
-//| (Session.ISession & {
-//// Whether this is a remote session that we attached to.
-//isRemoteSession?: boolean;
-//isRawSession?: boolean;
-//})
-//| (Session.ISession & {
-//isRawSession: true;
-//isRemoteSession: false;
-//kernelProcess?: IKernelProcess;
-//});
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -153,7 +138,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    //public abstract async shutdown(): Promise<void>;
     public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
