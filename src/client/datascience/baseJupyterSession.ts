@@ -27,8 +27,6 @@ import { IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from './
 export type ISession = Session.ISession & {
     // Whether this is a remote session that we attached to.
     isRemoteSession?: boolean;
-    // If this is a raw session
-    isRawSession?: boolean;
     // If a kernel process is associated with this session
     process?: IKernelProcess;
 };

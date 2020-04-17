@@ -128,7 +128,6 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         // Create our raw session, it will own the process lifetime
         const session: ISession = new RawSession(connection, process);
-        session.isRawSession = true;
         session.isRemoteSession = false;
         session.process = process;
         return session;
