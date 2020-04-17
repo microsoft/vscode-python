@@ -3,6 +3,7 @@
 import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
+import { IKernelProcess } from '../kernel-launcher/types';
 import { IJMPConnection } from '../types';
 import { RawKernel } from './rawKernel';
 
@@ -22,7 +23,7 @@ export class RawSession implements Session.ISession {
     private _kernel: RawKernel;
     private _statusChanged = new Signal<this, Kernel.Status>(this);
 
-    constructor(connection: IJMPConnection) {
+    constructor(connection: IJMPConnection, private kernelProcess: IKernelProcess) {
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -37,6 +38,7 @@ export class RawSession implements Session.ISession {
     public dispose() {
         if (!this.isDisposed) {
             this._kernel.dispose();
+            this.kernelProcess.dispose();
         }
 
         this.isDisposed = true;

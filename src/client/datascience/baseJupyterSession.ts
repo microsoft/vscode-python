@@ -11,6 +11,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { isTestExecution } from '../common/constants';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
+import { IDisposable } from '../common/types';
 import { waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -20,6 +21,7 @@ import { JupyterWebSockets } from './jupyter/jupyterWebSocket';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from './jupyter/kernels/types';
+import { IKernelProcess } from './kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from './types';
 
 export type ISession = Session.ISession & {
@@ -30,7 +32,21 @@ export type ISession = Session.ISession & {
      */
     isRemoteSession?: boolean;
     isRawSession?: boolean;
+    process?: IKernelProcess;
+    //kernelSpec?: IJupyterKernelSpec;
 };
+// Additional ISession properties for either Jupyter or raw case
+//export type ISession =
+//| (Session.ISession & {
+//// Whether this is a remote session that we attached to.
+//isRemoteSession?: boolean;
+//isRawSession?: boolean;
+//})
+//| (Session.ISession & {
+//isRawSession: true;
+//isRemoteSession: false;
+//kernelProcess?: IKernelProcess;
+//});
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -54,6 +70,24 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected set session(session: ISession | undefined) {
         const oldSession = this._session;
         this._session = session;
+
+        // When setting the session clear our current exit handler and hook up to the
+        // new session process
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
+        if (session?.process) {
+            // Watch to see if our process exits
+            this.processExitHandler = session.process.exited((exitCode) => {
+                traceError(`Raw kernel process exited code: ${exitCode}`);
+                this.shutdown().catch((reason) => {
+                    traceError(`Error shutting down jupyter session: ${reason}`);
+                });
+                // Next code the user executes will show a session disposed message
+            });
+        }
+
         // If we have a new session, then emit the new kernel connection information.
         if (session && oldSession !== session) {
             const socket = JupyterWebSockets.get(session.kernel.id);
@@ -106,18 +140,50 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _session: ISession | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private _jupyterLab?: typeof import('@jupyterlab/services');
+    private processExitHandler: IDisposable | undefined;
 
     constructor(protected readonly kernelSelector: KernelSelector) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
     public dispose(): Promise<void> {
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async shutdown(): Promise<void>;
+    //public abstract async shutdown(): Promise<void>;
     public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
+    public async shutdown(): Promise<void> {
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
+
+        if (this.session) {
+            try {
+                traceInfo('Shutdown session - current session');
+                await this.shutdownSession(this.session, this.statusHandler);
+                traceInfo('Shutdown session - get restart session');
+                if (this.restartSessionPromise) {
+                    const restartSession = await this.restartSessionPromise;
+                    traceInfo('Shutdown session - shutdown restart session');
+                    await this.shutdownSession(restartSession, undefined);
+                }
+            } catch {
+                noop();
+            }
+            this.session = undefined;
+            this.restartSessionPromise = undefined;
+        }
+        if (this.onStatusChangedEvent) {
+            this.onStatusChangedEvent.dispose();
+        }
+        traceInfo('Shutdown session -- complete');
+    }
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
             // Listen for session status changes
@@ -280,6 +346,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
+    // Sub classes need to implement their own restarting specific code
     protected abstract startRestartSession(): void;
     protected abstract async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,

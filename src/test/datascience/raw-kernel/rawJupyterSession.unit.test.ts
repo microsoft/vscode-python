@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
@@ -32,6 +32,7 @@ suite('Data Science - RawJupyterSession', () => {
     let jmpConnection: typemoq.IMock<IJMPConnection>;
     let kernelProcess: typemoq.IMock<IKernelProcess>;
     let processExitEvent: EventEmitter<number | null>;
+    const fakeSpec = { name: 'testspec' };
 
     setup(() => {
         serviceContainer = mock<IServiceContainer>();
@@ -46,7 +47,12 @@ suite('Data Science - RawJupyterSession', () => {
         // Set up a fake kernel process for the launcher to return
         processExitEvent = new EventEmitter<number | null>();
         kernelProcess = createTypeMoq<IKernelProcess>('kernel process');
-        kernelProcess.setup((kp) => kp.kernelSpec).returns(() => 'testspec' as any);
+        //kernelProcess.setup((kp) => kp.kernelSpec).returns(() => 'testspec' as any);
+        kernelProcess
+            .setup((kp) => kp.kernelSpec)
+            .returns(() => {
+                return fakeSpec as any;
+            });
         kernelProcess.setup((kp) => kp.connection).returns(() => 'testconnection' as any);
         kernelProcess.setup((kp) => kp.ready).returns(() => Promise.resolve());
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
@@ -71,17 +77,33 @@ suite('Data Science - RawJupyterSession', () => {
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
     });
 
+    test('RawJupyterSession - restart', async () => {
+        const shutdown = sinon.stub(rawJupyterSession, 'shutdown');
+        shutdown.resolves();
+
+        await rawJupyterSession.connect({} as any, 60_000);
+
+        await rawJupyterSession.restart(60_000);
+
+        // Three calls to launch (connect, first restart session, second restart session)
+        verify(kernelLauncher.launch(anything(), anything())).thrice();
+
+        // Shutdown should have been called for the first process
+        // IANHU
+    });
+
     test('RawJupyterSession - Kill process', async () => {
         const shutdown = sinon.stub(rawJupyterSession, 'shutdown');
         shutdown.resolves();
 
         const kernelSpec = await rawJupyterSession.connect({} as any, 60_000);
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
-        expect(kernelSpec).to.equal('testspec');
+        expect(kernelSpec).to.equal(fakeSpec);
 
         // Kill the process, we should shutdown
         processExitEvent.fire(0);
 
-        assert.isTrue(shutdown.calledOnce);
+        // Shut down the session and the restart session
+        assert.isTrue(shutdown.calledTwice);
     });
 });

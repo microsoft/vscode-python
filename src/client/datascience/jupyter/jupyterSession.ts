@@ -61,26 +61,8 @@ export class JupyterSession extends BaseJupyterSession {
                 noop();
             }
         }
-        if (this.session) {
-            try {
-                traceInfo('Shutdown session - current session');
-                await this.shutdownSession(this.session, this.statusHandler);
-                traceInfo('Shutdown session - get restart session');
-                if (this.restartSessionPromise) {
-                    const restartSession = await this.restartSessionPromise;
-                    traceInfo('Shutdown session - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined);
-                }
-            } catch {
-                noop();
-            }
-            this.session = undefined;
-            this.restartSessionPromise = undefined;
-        }
-        if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.dispose();
-        }
-        traceInfo('Shutdown session -- complete');
+
+        return super.shutdown();
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)

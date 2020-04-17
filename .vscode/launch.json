@@ -216,6 +216,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
+                "--grep", "RawJupyterSession",
                 "--timeout=300000"
             ],
             "outFiles": [
