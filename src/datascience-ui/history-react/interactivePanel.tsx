@@ -248,8 +248,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             return null;
         }
 
-        const maxOutputSize = this.props.settings.maxOutputSize;
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
         const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
@@ -259,7 +257,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     <InteractiveCellComponent
                         role="form"
                         editorOptions={this.props.editorOptions}
-                        maxTextSize={maxTextSize}
+                        maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
                         enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         autoFocus={document.hasFocus()}
                         testMode={this.props.testMode}
@@ -325,16 +323,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         containerRef?: React.RefObject<HTMLDivElement>
     ): JSX.Element | null => {
         if (this.props.settings && this.props.editorOptions) {
-            const maxOutputSize = this.props.settings.maxOutputSize;
-            const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
                         <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
-                            maxTextSize={maxTextSize}
+                            maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
                             enableScroll={this.props.settings.enableScrollingForCellOutputs}
                             autoFocus={false}
                             testMode={this.props.testMode}
@@ -382,6 +377,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private linkClick = (ev: MouseEvent) => {
         handleLinkClick(ev, this.props.linkClick);
     };
+
+    private getMaxTextSize(maxOutputSize: number): number | undefined {
+        return maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+    }
 }
 
 // Main export, return a redux connected editor
