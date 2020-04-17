@@ -37,7 +37,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../types';
-import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
+import { expandWorkingDir } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
@@ -940,6 +940,9 @@ export class JupyterNotebookBase implements INotebook {
         // tslint:disable-next-line: no-any
         let result: Promise<any> = Promise.resolve();
 
+        // Let our loggers get a first crack at the message. They may change it
+        this.getLoggers().forEach((f) => (msg = f.preHandleIOPub ? f.preHandleIOPub(msg) : msg));
+
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -1366,7 +1369,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: modifyTraceback(cell.file, this.fs.getDisplayName(cell.file), cell.line, msg.content.traceback)
+            traceback: msg.content.traceback
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;

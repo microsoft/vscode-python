@@ -37,6 +37,8 @@ suite('Data Science JupyterUtils', () => {
         );
     });
 
+    function createFileRegex(displayName: string): RegExp {}
+
     test('modifying traceback', () => {
         const trace1 = [
             '"\u001b[1;36m  File \u001b[1;32m"<ipython-input-2-940d61ce6e42>"\u001b[1;36m, line \u001b[1;32m599999\u001b[0m\n\u001b[1;33m    sys.\u001b[0m\n\u001b[1;37m        ^\u001b[0m\n\u001b[1;31mSyntaxError\u001b[0m\u001b[1;31m:\u001b[0m invalid syntax\n"'
@@ -45,12 +47,9 @@ suite('Data Science JupyterUtils', () => {
             `"\u001b[1;36m  File \u001b[1;32m"footastic.py"\u001b[1;36m, line \u001b[1;32m<a href='file://foo.py?line=600001'>600002</a>\u001b[0m\n\u001b[1;33m    sys.\u001b[0m\n\u001b[1;37m        ^\u001b[0m\n\u001b[1;31mSyntaxError\u001b[0m\u001b[1;31m:\u001b[0m invalid syntax\n"`
         ];
         const file1 = 'foo.py';
+        const fileHash1 = new Map<string, RegExp>([[file1, createFileRegex('footastic.py')]]);
         // Use a join after to make the assert show the results
-        assert.equal(
-            after1.join('\n'),
-            modifyTraceback(file1, 'footastic.py', 2, trace1).join('\n'),
-            'Syntax error failure'
-        );
+        assert.equal(after1.join('\n'), modifyTraceback(trace1, fileHash1).join('\n'), 'Syntax error failure');
         const trace2 = [
             '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
             '\u001b[1;31mException\u001b[0m                                 Traceback (most recent call last)',

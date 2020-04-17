@@ -249,6 +249,7 @@ export interface INotebookExecutionLogger {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
     onKernelRestarted(): void;
+    preHandleIOPub?(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage;
 }
 
 export const IGatherProvider = Symbol('IGatherProvider');
