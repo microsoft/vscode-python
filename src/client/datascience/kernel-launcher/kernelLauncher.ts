@@ -130,13 +130,14 @@ export class KernelLauncher implements IKernelLauncher {
         kernelName?: string | IJupyterKernelSpec
     ): Promise<IKernelProcess> {
         let kernelSpec: IJupyterKernelSpec;
-        if (typeof kernelName === 'object') {
-            // IJupyterKernelSpec
-            kernelSpec = kernelName;
-        } else {
+        if (!kernelName || typeof kernelName === 'string') {
             // string or undefined
             kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
+        } else {
+            // IJupyterKernelSpec
+            kernelSpec = kernelName;
         }
+
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.executionFactory,
