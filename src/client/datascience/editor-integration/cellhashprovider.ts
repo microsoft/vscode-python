@@ -26,7 +26,7 @@ import {
 } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
-const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
+const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)/g;
 
 interface IRangedCellHash extends ICellHash {
@@ -131,7 +131,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 ...msg,
                 content: {
                     ...msg.content,
-                    traceback: this.modifyTraceback(msg as KernelMessage.IErrorMsg)
+                    traceback: this.modifyTraceback(msg as KernelMessage.IErrorMsg) // NOSONAR
                 }
             };
         }
