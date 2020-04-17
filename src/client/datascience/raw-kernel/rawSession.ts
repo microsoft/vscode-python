@@ -23,6 +23,7 @@ export class RawSession implements Session.ISession {
     private _kernel: RawKernel;
     private _statusChanged = new Signal<this, Kernel.Status>(this);
 
+    // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(connection: IJMPConnection, private kernelProcess: IKernelProcess) {
         // Unique ID for this session instance
         this._id = uuid();

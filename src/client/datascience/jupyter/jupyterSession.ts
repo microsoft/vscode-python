@@ -145,16 +145,16 @@ export class JupyterSession extends BaseJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernel, this.serverSettings);
+        this.restartSessionPromise = this.createRestartSession(kernel, this.session);
     }
 
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        serverSettings?: ServerConnection.ISettings,
+        session: ISession,
         cancelToken?: CancellationToken
     ): Promise<ISession> {
         // We need all of the above to create a restart session
-        if (!serverSettings || !this.contentsManager || !this.sessionManager) {
+        if (!session || !this.contentsManager || !this.sessionManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
@@ -164,7 +164,12 @@ export class JupyterSession extends BaseJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(serverSettings, kernelSpec, this.contentsManager, cancelToken);
+                result = await this.createSession(
+                    session.serverSettings,
+                    kernelSpec,
+                    this.contentsManager,
+                    cancelToken
+                );
                 await this.waitForIdleOnSession(result, 30000);
                 this.kernelSelector.addKernelToIgnoreList(result.kernel);
                 return result;
@@ -183,7 +188,7 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session.serverSettings);
+            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
         }
     }
 

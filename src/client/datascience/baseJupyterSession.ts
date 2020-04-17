@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
@@ -212,10 +212,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(
-                this.kernelSpec,
-                oldSession.isRawSession ? undefined : oldSession.serverSettings
-            );
+            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, oldSession);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -334,7 +331,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected abstract startRestartSession(): void;
     protected abstract async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        serverSettings?: ServerConnection.ISettings,
+        session: ISession,
         cancelToken?: CancellationToken
     ): Promise<ISession>;
 

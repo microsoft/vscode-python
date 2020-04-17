@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ServerConnection } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
@@ -95,12 +94,12 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session) {
-            this.restartSessionPromise = this.createRestartSession(this.kernelSpec);
+            this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);
         }
     }
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        _serverSettings?: ServerConnection.ISettings,
+        _session: ISession,
         _cancelToken?: CancellationToken
     ): Promise<ISession> {
         if (!this.resource || !kernelSpec || 'session' in kernelSpec) {
