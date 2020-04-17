@@ -4,6 +4,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Slot } from '@phosphor/signaling';
 import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawSession } from '../../../client/datascience/raw-kernel/rawSession';
 import { IJMPConnection } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
@@ -12,6 +13,7 @@ import { buildStatusMessage } from './rawKernel.unit.test';
 // tslint:disable: max-func-body-length
 suite('Data Science - RawSession', () => {
     let rawSession: RawSession;
+    let kernelProcess: IKernelProcess;
 
     suite('RawSession - basic JMP', () => {
         let jmpConnection: IJMPConnection;
@@ -19,7 +21,8 @@ suite('Data Science - RawSession', () => {
             jmpConnection = mock<IJMPConnection>();
             when(jmpConnection.connect(anything())).thenResolve();
             when(jmpConnection.subscribe(anything())).thenReturn();
-            rawSession = new RawSession(instance(jmpConnection));
+            kernelProcess = mock<IKernelProcess>();
+            rawSession = new RawSession(instance(jmpConnection), instance(kernelProcess));
         });
 
         test('RawSession construct', async () => {
@@ -52,7 +55,8 @@ suite('Data Science - RawSession', () => {
         let mockJmpConnection: MockJMPConnection;
         setup(() => {
             mockJmpConnection = new MockJMPConnection();
-            rawSession = new RawSession(mockJmpConnection);
+            kernelProcess = mock<IKernelProcess>();
+            rawSession = new RawSession(mockJmpConnection, kernelProcess);
         });
 
         test('RawSession status updates', async () => {

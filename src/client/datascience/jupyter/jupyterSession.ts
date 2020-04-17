@@ -12,14 +12,13 @@ import type {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
-import { Exception } from 'typemoq/_all';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
-import { sleep, waitForPromise } from '../../common/utils/async';
+import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
