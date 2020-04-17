@@ -325,13 +325,16 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         containerRef?: React.RefObject<HTMLDivElement>
     ): JSX.Element | null => {
         if (this.props.settings && this.props.editorOptions) {
+            const maxOutputSize = this.props.settings.maxOutputSize;
+            const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
                         <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
-                            maxTextSize={this.props.settings.maxOutputSize}
+                            maxTextSize={maxTextSize}
                             enableScroll={this.props.settings.enableScrollingForCellOutputs}
                             autoFocus={false}
                             testMode={this.props.testMode}

@@ -538,9 +538,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         // Create a scrollbar style if necessary
         if (transformedList.some((transformed) => transformed.output.renderWithScrollbars) && this.props.enableScroll) {
-            const textSize = this.props.maxTextSize ? this.props.maxTextSize : 400;
             style.overflowY = 'auto';
-            style.maxHeight = `${textSize}px`;
+            style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
         return (
