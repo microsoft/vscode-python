@@ -43,10 +43,10 @@ export function initialize() {
 
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
-    mockedVSCodeNamespaces.env?.setup(e => e.clipboard).returns(() => clipboard);
+    mockedVSCodeNamespaces.env?.setup((e) => e.clipboard).returns(() => clipboard);
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
-    Module._load = function(request: any, _parent: any) {
+    Module._load = function (request: any, _parent: any) {
         if (request === 'vscode') {
             return mockedVSCode;
         }
@@ -101,12 +101,12 @@ mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
-extensions.setup(e => e.all).returns(() => []);
+extensions.setup((e) => e.all).returns(() => []);
 const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
 const packageJson = TypeMoq.Mock.ofType<any>();
 const contributes = TypeMoq.Mock.ofType<any>();
-extension.setup(e => e.packageJSON).returns(() => packageJson.object);
-packageJson.setup(p => p.contributes).returns(() => contributes.object);
-contributes.setup(p => p.debuggers).returns(() => [{ aiKey: '' }]);
-extensions.setup(e => e.getExtension(TypeMoq.It.isAny())).returns(() => extension.object);
+extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
+packageJson.setup((p) => p.contributes).returns(() => contributes.object);
+contributes.setup((p) => p.debuggers).returns(() => [{ aiKey: '' }]);
+extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => extension.object);
 mockedVSCode.extensions = extensions.object;

@@ -35,7 +35,7 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should output print unicode characters', async function() {
+    test('exec should output print unicode characters', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2546. (unicode under Py2.7 is tough!)
         if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
@@ -52,7 +52,7 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should wait for completion of program with new lines', async function() {
+    test('exec should wait for completion of program with new lines', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
@@ -73,13 +73,13 @@ suite('ProcessService Observable', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(values).to.deep.equal(outputs, 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should wait for completion of program without new lines', async function() {
+    test('exec should wait for completion of program without new lines', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
@@ -100,13 +100,13 @@ suite('ProcessService Observable', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(values).to.deep.equal(outputs, 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should end when cancellationToken is cancelled', async function() {
+    test('exec should end when cancellationToken is cancelled', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
@@ -129,13 +129,13 @@ suite('ProcessService Observable', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(values).to.deep.equal(['1'], 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should stream stdout and stderr separately', async function() {
+    test('exec should stream stdout and stderr separately', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
@@ -167,17 +167,17 @@ suite('ProcessService Observable', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const stdouts = result.stdout
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(stdouts).to.deep.equal(expectedStdout, 'stdout values are incorrect');
         const stderrs = result
             .stderr!.split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(stderrs).to.deep.equal(expectedStderr, 'stderr values are incorrect');
     });
 
-    test('exec should merge stdout and stderr streams', async function() {
+    test('exec should merge stdout and stderr streams', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
@@ -208,8 +208,8 @@ suite('ProcessService Observable', () => {
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const outputs = result.stdout
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
         expect(outputs).to.deep.equal(expectedOutput, 'Output values are incorrect');
     });
 

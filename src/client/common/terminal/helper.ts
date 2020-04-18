@@ -125,10 +125,6 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[]
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
-        const activateEnvironment = settings.terminal.activateEnvironment;
-        if (!activateEnvironment) {
-            return;
-        }
 
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
@@ -145,7 +141,7 @@ export class TerminalHelper implements ITerminalHelper {
         }
 
         // Search from the list of providers.
-        const supportedProviders = providers.filter(provider => provider.isShellSupported(terminalShellType));
+        const supportedProviders = providers.filter((provider) => provider.isShellSupported(terminalShellType));
 
         for (const provider of supportedProviders) {
             const activationCommands = interpreter

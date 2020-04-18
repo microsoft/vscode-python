@@ -4,14 +4,14 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { OSType } from '../../client/common/utils/platform';
-import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
-import { getOSType, UseCustomEditor } from '../react-common/constants';
+import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -79,7 +79,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         }
 
         // Update the state controller with our new state
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
+        const progressBar = (this.props.busy || !this.props.loaded) && !this.props.testMode ? <Progress /> : undefined;
         const addCellLine =
             this.props.cellVMs.length === 0 ? null : (
                 <AddCellLine
@@ -187,21 +187,24 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.props.save();
-                    this.props.sendCommand(NativeCommandType.Save, 'keyboard');
+                    this.props.sendCommand(NativeKeyboardCommandTelemetry.Save);
                 }
                 break;
             }
             case 'z':
             case 'Z':
-                if (!getSelectedAndFocusedInfo(this.props).focusedCellId && !UseCustomEditor) {
+                if (
+                    !getSelectedAndFocusedInfo(this.props).focusedCellId &&
+                    !this.props.settings?.extraSettings.useCustomEditorApi
+                ) {
                     if (event.shiftKey && !event.ctrlKey && !event.altKey) {
                         event.stopPropagation();
                         this.props.redo();
-                        this.props.sendCommand(NativeCommandType.Redo, 'keyboard');
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
                     } else if (!event.shiftKey && !event.altKey && !event.ctrlKey) {
                         event.stopPropagation();
                         this.props.undo();
-                        this.props.sendCommand(NativeCommandType.Undo, 'keyboard');
+                        this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
                     }
                 }
                 break;
@@ -247,10 +250,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         if (!this.props.settings || !this.props.editorOptions) {
             return null;
         }
-
         const addNewCell = () => {
             setTimeout(() => this.props.insertBelow(cellVM.cell.id), 1);
-            this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+            this.props.sendCommand(NativeMouseCommandTelemetry.AddToEnd);
         };
         const firstLine = index === 0;
         const lastLine =
@@ -284,6 +286,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         // Focus pending does not apply to native editor.
                         focusPending={0}
                         busy={this.props.busy}
+                        useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
                     />
                 </ErrorBoundary>
                 {lastLine}

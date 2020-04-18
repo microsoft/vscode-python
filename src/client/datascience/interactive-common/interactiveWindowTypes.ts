@@ -4,8 +4,17 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
-import { CommonActionType, IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+
+import type { KernelMessage } from '@jupyterlab/services';
+import {
+    CommonActionType,
+    IAddCellAction,
+    ILoadIPyWidgetClassFailureAction,
+    LoadIPyWidgetClassLoadAction
+} from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
+import { WidgetScriptSource } from '../ipywidgets/types';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { IGetMonacoThemeResponse } from '../monacoMessages';
@@ -15,14 +24,15 @@ import {
     IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
     FinishCell = 'finish_cell',
-    UpdateCell = 'update_cell',
+    UpdateCellWithExecutionResults = 'UpdateCellWithExecutionResults',
     GotoCodeCell = 'gotocell_code',
     CopyCodeCell = 'copycell_code',
     NotebookExecutionActivated = 'notebook_execution_activated',
@@ -44,6 +54,8 @@ export enum InteractiveWindowMessages {
     DoSave = 'DoSave',
     SendInfo = 'send_info',
     Started = 'started',
+    ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
+    ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
     AddedSysInfo = 'added_sys_info',
     RemoteAddCode = 'remote_add_code',
     RemoteReexecuteCode = 'remote_reexecute_code',
@@ -74,12 +86,14 @@ export enum InteractiveWindowMessages {
     SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    GatherCodeRequest = 'gather_code',
+    GatherCode = 'gather_code',
+    GatherCodeToScript = 'gather_code_to_script',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
     ScrollToCell = 'scroll_to_cell',
     ReExecuteCells = 'reexecute_cells',
     NotebookIdentity = 'identity',
+    NotebookClose = 'close',
     NotebookDirty = 'dirty',
     NotebookClean = 'clean',
     SaveAll = 'save_all',
@@ -98,37 +112,36 @@ export enum InteractiveWindowMessages {
     SelectJupyterServer = 'select_jupyter_server',
     UpdateModel = 'update_model',
     ReceivedUpdateModel = 'received_update_model',
-    OpenSettings = 'open_settings'
+    OpenSettings = 'open_settings',
+    UpdateDisplayData = 'update_display_data',
+    IPyWidgetLoadSuccess = 'ipywidget_load_success',
+    IPyWidgetLoadFailure = 'ipywidget_load_failure',
+    IPyWidgetRenderFailure = 'ipywidget_render_failure'
 }
 
-export enum NativeCommandType {
-    AddToEnd = 0,
-    ArrowDown,
-    ArrowUp,
-    ChangeToCode,
-    ChangeToMarkdown,
-    CollapseInput,
-    CollapseOutput,
-    DeleteCell,
-    Save,
-    InsertAbove,
-    InsertBelow,
-    MoveCellDown,
-    MoveCellUp,
-    Redo,
-    Run,
-    RunAbove,
-    RunAll,
-    RunAndAdd,
-    RunAndMove,
-    RunBelow,
-    SelectKernel,
-    SelectServer,
-    ToggleLineNumbers,
-    ToggleOutput,
-    ToggleVariableExplorer,
-    Undo,
-    Unfocus
+export enum IPyWidgetMessages {
+    IPyWidgets_Ready = 'IPyWidgets_Ready',
+    IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
+    IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
+    IPyWidgets_updateRequireConfig = 'IPyWidgets_updateRequireConfig',
+    /**
+     * UI sends a request to extension to determine whether we have the source for any of the widgets.
+     */
+    IPyWidgets_WidgetScriptSourceRequest = 'IPyWidgets_WidgetScriptSourceRequest',
+    /**
+     * Extension sends response to the request with yes/no.
+     */
+    IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
+    IPyWidgets_msg = 'IPyWidgets_msg',
+    IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
+    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
+    IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
+    IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
+    IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
+    IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
+    IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
+    IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
+    IPyWidgets_mirror_execute = 'IPyWidgets_mirror_execute'
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -288,7 +301,8 @@ export interface IScrollToCell {
 }
 
 export interface INotebookIdentity {
-    resource: string;
+    resource: Uri;
+    type: 'interactive' | 'native';
 }
 
 export interface ISaveAll {
@@ -296,8 +310,7 @@ export interface ISaveAll {
 }
 
 export interface INativeCommand {
-    command: NativeCommandType;
-    source: 'keyboard' | 'mouse';
+    command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
 }
 
 export interface IRenderComplete {
@@ -448,9 +461,34 @@ export type NotebookModelChange =
 
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
+    public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
+    public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: { moduleName: string; moduleVersion: string };
+    public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: WidgetScriptSource;
+    public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
+    // tslint:disable-next-line: no-any
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
+    public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
+        requestId: string;
+        parentId: string;
+        msg: KernelMessage.IIOPubMessage;
+    };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResult]: {
+        requestId: string;
+        parentId: string;
+        msgType: string;
+        result: boolean;
+    };
+    public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;
-    public [InteractiveWindowMessages.UpdateCell]: ICell;
+    public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
     public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
@@ -506,12 +544,14 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.GatherCodeRequest]: ICell;
+    public [InteractiveWindowMessages.GatherCode]: ICell;
+    public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
     public [InteractiveWindowMessages.ReExecuteCells]: IReExecuteCells;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
+    public [InteractiveWindowMessages.NotebookClose]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
@@ -536,4 +576,10 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ReceivedUpdateModel]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
+    public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
+    public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;
+    public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
+    public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
+    public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
+    public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
 }

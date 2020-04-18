@@ -71,10 +71,10 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     });
     test('Returns false if do not show again is clicked', async () => {
         random
-            .setup(r => r.getRandomInt(0, 100))
+            .setup((r) => r.getRandomInt(0, 100))
             .returns(() => 10)
             .verifiable(TypeMoq.Times.never());
-        doNotShowAgain.setup(d => d.value).returns(() => true);
+        doNotShowAgain.setup((d) => d.value).returns(() => true);
 
         const result = extensionSurveyPrompt.shouldShowBanner();
 
@@ -93,11 +93,11 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     });
     test('Returns false if prompt is disabled for a while', async () => {
         random
-            .setup(r => r.getRandomInt(0, 100))
+            .setup((r) => r.getRandomInt(0, 100))
             .returns(() => 10)
             .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime.setup(d => d.value).returns(() => true);
-        doNotShowAgain.setup(d => d.value).returns(() => false);
+        disableSurveyForTime.setup((d) => d.value).returns(() => true);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
 
         const result = extensionSurveyPrompt.shouldShowBanner();
 
@@ -115,22 +115,22 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         random.verifyAll();
     });
     test('Returns false if user is not in the random sampling', async () => {
-        disableSurveyForTime.setup(d => d.value).returns(() => false);
-        doNotShowAgain.setup(d => d.value).returns(() => false);
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
         // Default sample size is 10
         for (let i = 10; i < 100; i = i + 1) {
-            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
+            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(false, 'Banner should not be shown');
         }
         random.verifyAll();
     });
     test('Returns true if user is in the random sampling', async () => {
-        disableSurveyForTime.setup(d => d.value).returns(() => false);
-        doNotShowAgain.setup(d => d.value).returns(() => false);
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
         // Default sample size is 10
         for (let i = 0; i < 10; i = i + 1) {
-            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
+            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(true, 'Banner should be shown');
         }
@@ -147,10 +147,10 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             platformService.object,
             100
         );
-        disableSurveyForTime.setup(d => d.value).returns(() => false);
-        doNotShowAgain.setup(d => d.value).returns(() => false);
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
         for (let i = 0; i < 100; i = i + 1) {
-            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
+            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(true, 'Banner should be shown');
         }
@@ -167,10 +167,10 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             platformService.object,
             0
         );
-        disableSurveyForTime.setup(d => d.value).returns(() => false);
-        doNotShowAgain.setup(d => d.value).returns(() => false);
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
         for (let i = 0; i < 100; i = i + 1) {
-            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
+            random.setup((r) => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(false, 'Banner should not be shown');
         }
@@ -229,35 +229,35 @@ suite('Extension survey prompt - showSurvey()', () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=machineId`;
         appEnvironment
-            .setup(a => a.packageJson)
+            .setup((a) => a.packageJson)
             .returns(() => packageJson)
             .verifiable(TypeMoq.Times.once());
         appEnvironment
-            .setup(a => a.vscodeVersion)
+            .setup((a) => a.vscodeVersion)
             .returns(() => 'vscodeVersion')
             .verifiable(TypeMoq.Times.once());
         appEnvironment
-            .setup(a => a.machineId)
+            .setup((a) => a.machineId)
             .returns(() => 'machineId')
             .verifiable(TypeMoq.Times.once());
         platformService
-            .setup(a => a.osType)
+            .setup((a) => a.osType)
             .returns(() => OSType.Windows)
             .verifiable(TypeMoq.Times.once());
         appShell
-            .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
             .returns(() => Promise.resolve(LanguageService.bannerLabelYes()))
             .verifiable(TypeMoq.Times.once());
         browserService
-            .setup(s => s.launch(expectedUrl))
+            .setup((s) => s.launch(expectedUrl))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
         disableSurveyForTime
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
         doNotShowAgain
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -283,21 +283,21 @@ suite('Extension survey prompt - showSurvey()', () => {
 
     test("Do nothing if 'Maybe later' option is clicked", async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        platformService.setup(p => p.osType).verifiable(TypeMoq.Times.never());
+        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
             .returns(() => Promise.resolve(ExtensionSurveyBanner.maybeLater()))
             .verifiable(TypeMoq.Times.once());
         browserService
-            .setup(s => s.launch(TypeMoq.It.isAny()))
+            .setup((s) => s.launch(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         disableSurveyForTime
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         doNotShowAgain
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -322,21 +322,21 @@ suite('Extension survey prompt - showSurvey()', () => {
 
     test('Do nothing if no option is clicked', async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        platformService.setup(p => p.osType).verifiable(TypeMoq.Times.never());
+        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         browserService
-            .setup(s => s.launch(TypeMoq.It.isAny()))
+            .setup((s) => s.launch(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         disableSurveyForTime
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         doNotShowAgain
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -361,21 +361,21 @@ suite('Extension survey prompt - showSurvey()', () => {
 
     test("Disable prompt if 'Do not show again' option is clicked", async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        platformService.setup(p => p.osType).verifiable(TypeMoq.Times.never());
+        platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
             .returns(() => Promise.resolve(Common.doNotShowAgain()))
             .verifiable(TypeMoq.Times.once());
         browserService
-            .setup(s => s.launch(TypeMoq.It.isAny()))
+            .setup((s) => s.launch(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         disableSurveyForTime
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
         doNotShowAgain
-            .setup(d => d.updateValue(true))
+            .setup((d) => d.updateValue(true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -440,11 +440,11 @@ suite('Extension survey prompt - activate()', () => {
             10
         );
         experiments
-            .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         experiments
-            .setup(exp => exp.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control))
+            .setup((exp) => exp.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         await extensionSurveyPrompt.activate();
@@ -474,11 +474,11 @@ suite('Extension survey prompt - activate()', () => {
             50
         );
         experiments
-            .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
         experiments
-            .setup(exp => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
+            .setup((exp) => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.never());
         await extensionSurveyPrompt.activate();
@@ -512,11 +512,11 @@ suite('Extension survey prompt - activate()', () => {
             50
         );
         experiments
-            .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
+            .setup((exp) => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
         experiments
-            .setup(exp => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
+            .setup((exp) => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.never());
         await extensionSurveyPrompt.activate();

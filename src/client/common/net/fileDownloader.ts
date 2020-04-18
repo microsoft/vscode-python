@@ -5,8 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
-import { Progress, ProgressLocation } from 'vscode';
+import { Progress } from 'vscode';
 import { IApplicationShell } from '../application/types';
+import { Octicons } from '../constants';
 import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
@@ -27,7 +28,7 @@ export class FileDownloader implements IFileDownloader {
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
             noop,
-            ex => {
+            (ex) => {
                 tempFile.dispose();
                 return Promise.reject(ex);
             }
@@ -40,12 +41,13 @@ export class FileDownloader implements IFileDownloader {
         progressMessage: string,
         tmpFilePath: string
     ): Promise<void> {
-        await this.appShell.withProgress({ location: ProgressLocation.Window }, async progress => {
+        await this.appShell.withProgressCustomIcon(Octicons.Downloading, async (progress) => {
             const req = await this.httpClient.downloadFile(uri);
             const fileStream = this.fs.createWriteStream(tmpFilePath);
             return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
         });
     }
+
     public async displayDownloadProgress(
         uri: string,
         progress: Progress<{ message?: string; increment?: number }>,
@@ -54,7 +56,7 @@ export class FileDownloader implements IFileDownloader {
         progressMessagePrefix: string
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            request.on('response', response => {
+            request.on('response', (response) => {
                 if (response.statusCode !== 200) {
                     reject(
                         new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
@@ -64,17 +66,8 @@ export class FileDownloader implements IFileDownloader {
             // tslint:disable-next-line: no-require-imports
             const requestProgress = require('request-progress');
             requestProgress(request)
-                // tslint:disable-next-line: no-any
-                .on('progress', (state: any) => {
-                    const received = Math.round(state.size.transferred / 1024);
-                    const total = Math.round(state.size.total / 1024);
-                    const percentage = Math.round(100 * state.percent);
-                    const message = Http.downloadingFileProgress().format(
-                        progressMessagePrefix,
-                        received.toString(),
-                        total.toString(),
-                        percentage.toString()
-                    );
+                .on('progress', (state: RequestProgressState) => {
+                    const message = formatProgressMessageWithState(progressMessagePrefix, state);
                     progress.report({ message });
                 })
                 // Handle errors from download.
@@ -85,4 +78,30 @@ export class FileDownloader implements IFileDownloader {
                 .on('close', resolve);
         });
     }
+}
+
+type RequestProgressState = {
+    percent: number;
+    speed: number;
+    size: {
+        total: number;
+        transferred: number;
+    };
+    time: {
+        elapsed: number;
+        remaining: number;
+    };
+};
+
+function formatProgressMessageWithState(progressMessagePrefix: string, state: RequestProgressState): string {
+    const received = Math.round(state.size.transferred / 1024);
+    const total = Math.round(state.size.total / 1024);
+    const percentage = Math.round(100 * state.percent);
+
+    return Http.downloadingFileProgress().format(
+        progressMessagePrefix,
+        received.toString(),
+        total.toString(),
+        percentage.toString()
+    );
 }

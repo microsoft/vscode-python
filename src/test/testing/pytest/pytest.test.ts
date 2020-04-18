@@ -45,6 +45,7 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 
@@ -56,12 +57,12 @@ suite('Unit Tests - pytest - discovery against actual python process', () => {
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_one.py'),
+            tests.testFiles.some((t) => t.name === 'test_one.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_root.py'),
+            tests.testFiles.some((t) => t.name === 'test_root.py'),
             true,
             'Test File not found'
         );

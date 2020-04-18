@@ -1,10 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
-import { CancellationToken, Uri, WorkspaceEdit } from 'vscode';
+import { CancellationToken, TextDocument, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
-import { Commands, EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { Commands, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
 import { createDeferred } from '../common/utils/async';
@@ -44,59 +45,16 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         if (document.lineCount <= 1) {
             return;
         }
-        const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
-        const settings = this.configurationService.getSettings(uri);
-        const isort = settings.sortImports.path;
 
-        // We pass the content of the file to be sorted via stdin. This avoids
-        // saving the file (as well as a potential temporary file), but does
-        // mean that we need another way to tell `isort` where to look for
-        // configuration. We do that by setting the working directory to the
-        // directory which contains the file.
-        const args = ['-', '--diff'].concat(settings.sortImports.args);
-        const spawnOptions = {
-            token,
-            throwOnStdErr: true,
-            cwd: path.dirname(uri.fsPath)
-        };
-
+        const execIsort = await this.getExecIsort(document, uri, token);
         if (token && token.isCancellationRequested) {
             return;
         }
+        const diffPatch = await execIsort(document.getText());
 
-        let result: ObservableExecutionResult<string>;
-
-        if (typeof isort === 'string' && isort.length > 0) {
-            // Lets just treat this as a standard tool.
-            const processService = await this.processServiceFactory.create(document.uri);
-            result = processService.execObservable(isort, args, spawnOptions);
-        } else {
-            const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
-            result = processExeService.execObservable([importScript].concat(args), spawnOptions);
-        }
-
-        // Configure our listening to the output from isort ...
-        let outputBuffer = '';
-        const isortOutput = createDeferred<string>();
-        result.out.subscribe({
-            next: output => {
-                if (output.source === 'stdout') {
-                    outputBuffer += output.out;
-                }
-            },
-            complete: () => {
-                isortOutput.resolve(outputBuffer);
-            }
-        });
-
-        // ... then send isort the document content ...
-        result.proc?.stdin.write(document.getText());
-        result.proc?.stdin.end();
-
-        // .. and finally wait for isort to do its thing
-        const diffPatch = await isortOutput.promise;
-
-        return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
+        return diffPatch
+            ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
+            : undefined;
     }
 
     public registerCommands() {
@@ -104,6 +62,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         const disposable = cmdManager.registerCommand(Commands.Sort_Imports, this.sortImports, this);
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(disposable);
     }
+
     public async sortImports(uri?: Uri): Promise<void> {
         if (!uri) {
             const activeEditor = this.documentManager.activeTextEditor;
@@ -142,4 +101,84 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             this.shell.showErrorMessage(message).then(noop, noop);
         }
     }
+
+    private async getExecIsort(
+        document: TextDocument,
+        uri: Uri,
+        token?: CancellationToken
+    ): Promise<(documentText: string) => Promise<string>> {
+        const settings = this.configurationService.getSettings(uri);
+        const _isort = settings.sortImports.path;
+        const isort = typeof _isort === 'string' && _isort.length > 0 ? _isort : undefined;
+        const isortArgs = settings.sortImports.args;
+
+        // We pass the content of the file to be sorted via stdin. This avoids
+        // saving the file (as well as a potential temporary file), but does
+        // mean that we need another way to tell `isort` where to look for
+        // configuration. We do that by setting the working directory to the
+        // directory which contains the file.
+        const filename = '-';
+
+        const spawnOptions = {
+            token,
+            throwOnStdErr: true,
+            cwd: path.dirname(uri.fsPath)
+        };
+
+        if (isort) {
+            const procService = await this.processServiceFactory.create(document.uri);
+            // Use isort directly instead of the internal script.
+            return async (documentText: string) => {
+                const args = getIsortArgs(filename, isortArgs);
+                const result = procService.execObservable(isort, args, spawnOptions);
+                return this.communicateWithIsortProcess(result, documentText);
+            };
+        } else {
+            const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
+            return async (documentText: string) => {
+                const [args, parse] = internalScripts.sortImports(filename, isortArgs);
+                const result = procService.execObservable(args, spawnOptions);
+                return parse(await this.communicateWithIsortProcess(result, documentText));
+            };
+        }
+    }
+
+    private async communicateWithIsortProcess(
+        observableResult: ObservableExecutionResult<string>,
+        inputText: string
+    ): Promise<string> {
+        // Configure our listening to the output from isort ...
+        let outputBuffer = '';
+        const isortOutput = createDeferred<string>();
+        observableResult.out.subscribe({
+            next: (output) => {
+                if (output.source === 'stdout') {
+                    outputBuffer += output.out;
+                }
+            },
+            complete: () => {
+                isortOutput.resolve(outputBuffer);
+            }
+        });
+
+        // ... then send isort the document content ...
+        observableResult.proc?.stdin.write(inputText);
+        observableResult.proc?.stdin.end();
+
+        // .. and finally wait for isort to do its thing
+        await isortOutput.promise;
+
+        return outputBuffer;
+    }
+}
+
+function getIsortArgs(filename: string, extraArgs?: string[]): string[] {
+    // We could just adapt internalScripts.sortImports().  However,
+    // the following is simpler and the alternative doesn't offer
+    // any signficant benefit.
+    const args = [filename, '--diff'];
+    if (extraArgs) {
+        args.push(...extraArgs);
+    }
+    return args;
 }

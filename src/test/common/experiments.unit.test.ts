@@ -7,12 +7,10 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { WorkspaceConfiguration } from 'vscode';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
-import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
-import { WorkspaceService } from '../../client/common/application/workspace';
+import { IApplicationEnvironment } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
@@ -43,7 +41,6 @@ import { noop } from '../core';
 // tslint:disable: max-func-body-length
 
 suite('A/B experiments', () => {
-    let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
     let appEnvironment: IApplicationEnvironment;
@@ -57,7 +54,6 @@ suite('A/B experiments', () => {
     let configurationService: ConfigurationService;
     let experiments: TypeMoq.IMock<IExperiments>;
     setup(() => {
-        workspaceService = mock(WorkspaceService);
         httpClient = mock(HttpClient);
         crypto = mock(CryptoUtils);
         appEnvironment = mock(ApplicationEnvironment);
@@ -70,8 +66,8 @@ suite('A/B experiments', () => {
         experiments = TypeMoq.Mock.ofType<IExperiments>();
         const settings = mock(PythonSettings);
         when(settings.experiments).thenReturn(experiments.object);
-        experiments.setup(e => e.optInto).returns(() => []);
-        experiments.setup(e => e.optOutFrom).returns(() => []);
+        experiments.setup((e) => e.optInto).returns(() => []);
+        experiments.setup((e) => e.optOutFrom).returns(() => []);
         when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
         fs = mock(FileSystem);
         when(
@@ -85,7 +81,6 @@ suite('A/B experiments', () => {
         ).thenReturn(downloadedExperimentsStorage.object);
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -119,7 +114,7 @@ suite('A/B experiments', () => {
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
 
@@ -131,15 +126,15 @@ suite('A/B experiments', () => {
     test('If storage has expired, initializing experiments downloads the experiments, but does not store them if they are invalid or incomplete', async () => {
         const abExperiments = [{ name: 'experiment1', salt: 'salt', max: 100 }];
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(abExperiments))
+            .setup((n) => n.updateValue(abExperiments))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -151,15 +146,15 @@ suite('A/B experiments', () => {
 
     test('If storage has expired, initializing experiments downloads the experiments, and stores them if they are valid', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -170,15 +165,15 @@ suite('A/B experiments', () => {
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(anything()))
+            .setup((n) => n.updateValue(anything()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -188,27 +183,6 @@ suite('A/B experiments', () => {
         verify(httpClient.getJSON(configUri, false)).once();
     });
 
-    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = { globalValue: false };
-
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-        downloadedExperimentsStorage
-            .setup(n => n.value)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
-
-        await expManager.activate();
-
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
-    });
-
     async function testEnablingExperiments(enabled: boolean) {
         const updateExperimentStorage = sinon.stub(ExperimentsManager.prototype, 'updateExperimentStorage');
         updateExperimentStorage.callsFake(() => Promise.resolve());
@@ -216,22 +190,13 @@ suite('A/B experiments', () => {
         populateUserExperiments.callsFake(() => Promise.resolve());
         const initializeInBackground = sinon.stub(ExperimentsManager.prototype, 'initializeInBackground');
         initializeInBackground.callsFake(() => Promise.resolve());
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
         experiments
-            .setup(e => e.enabled)
+            .setup((e) => e.enabled)
             .returns(() => enabled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -246,7 +211,6 @@ suite('A/B experiments', () => {
         assert.equal(populateUserExperiments.callCount, enabled ? 1 : 0);
         assert.equal(initializeInBackground.callCount, enabled ? 1 : 0);
 
-        workspaceConfig.verifyAll();
         experiments.verifyAll();
     }
     test('Ensure experiments are not initialized when it is disabled', async () => testEnablingExperiments(false));
@@ -256,14 +220,9 @@ suite('A/B experiments', () => {
     async function testEnablingExperimentsToCheckIfInExperiment(enabled: boolean) {
         const sendTelemetry = sinon.stub(ExperimentsManager.prototype, 'sendTelemetryIfInExperiment');
         sendTelemetry.callsFake((_: string) => noop());
-        experiments
-            .setup(e => e.enabled)
-            .returns(() => enabled)
-            .verifiable(TypeMoq.Times.atLeastOnce());
 
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -271,6 +230,8 @@ suite('A/B experiments', () => {
             instance(fs),
             instance(configurationService)
         );
+
+        expManager._enabled = enabled;
         expManager.userExperiments.push({ name: 'this should be in experiment', max: 0, min: 0, salt: '' });
 
         // If experiments are disabled, then `inExperiment` will return false & vice versa.
@@ -295,7 +256,6 @@ suite('A/B experiments', () => {
         initializeInBackground.callsFake(() => Promise.resolve());
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -303,33 +263,16 @@ suite('A/B experiments', () => {
             instance(fs),
             instance(configurationService)
         );
-        // Activate it twice and check
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
 
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
-
-        // First activation
+        assert.isFalse(expManager._activated());
         await expManager.activate();
 
-        resetCalls(workspaceService);
-
-        // Second activation
-        await expManager.activate();
-
-        verify(workspaceService.getConfiguration(anything())).never();
-
-        workspaceConfig.verifyAll();
+        // Ensure activated flag is set
+        assert.isTrue(expManager._activated());
     });
 
     test('Ensure experiments are reliably downloaded in the background', async () => {
         const experimentsDeferred = createDeferred<void>();
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
         const updateExperimentStorage = sinon.stub(ExperimentsManager.prototype, 'updateExperimentStorage');
         updateExperimentStorage.callsFake(() => Promise.resolve());
         const populateUserExperiments = sinon.stub(ExperimentsManager.prototype, 'populateUserExperiments');
@@ -338,7 +281,6 @@ suite('A/B experiments', () => {
         initializeInBackground.callsFake(() => experimentsDeferred.promise);
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -346,12 +288,6 @@ suite('A/B experiments', () => {
             instance(fs),
             instance(configurationService)
         );
-
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
 
         const promise = expManager.activate();
         const deferred = createDeferredFromPromise(promise);
@@ -363,22 +299,20 @@ suite('A/B experiments', () => {
         experimentsDeferred.resolve();
         await sleep(1);
 
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
         assert.ok(initializeInBackground.calledOnce);
     });
 
     test('Ensure experiment storage is updated to contain the latest downloaded experiments', async () => {
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
             .verifiable(TypeMoq.Times.atLeastOnce());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -396,7 +330,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -406,20 +339,20 @@ suite('A/B experiments', () => {
         );
 
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -438,7 +371,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(true));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -448,16 +380,16 @@ suite('A/B experiments', () => {
         );
 
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
 
@@ -476,7 +408,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -485,11 +416,11 @@ suite('A/B experiments', () => {
             instance(configurationService)
         );
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -504,11 +435,11 @@ suite('A/B experiments', () => {
         when(fs.readFile(anything())).thenResolve(fileContent);
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -528,7 +459,6 @@ suite('A/B experiments', () => {
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -537,11 +467,11 @@ suite('A/B experiments', () => {
             instance(configurationService)
         );
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -556,11 +486,11 @@ suite('A/B experiments', () => {
         when(fs.readFile(anything())).thenResolve(fileContent);
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -583,7 +513,6 @@ suite('A/B experiments', () => {
                 doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
                 expManager = new ExperimentsManager(
                     instance(persistentStateFactory),
-                    instance(workspaceService),
                     instance(httpClient),
                     instance(crypto),
                     instance(appEnvironment),
@@ -594,11 +523,11 @@ suite('A/B experiments', () => {
             });
             test('If checking the existence of config file fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -607,11 +536,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve('fileContent');
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -625,11 +554,11 @@ suite('A/B experiments', () => {
 
             test('If reading config file fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -638,11 +567,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenThrow(error);
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -656,11 +585,11 @@ suite('A/B experiments', () => {
 
             test('If config file does not exist', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -668,11 +597,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve('fileContent');
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -686,11 +615,11 @@ suite('A/B experiments', () => {
 
             test('If parsing file or updating storage fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -705,11 +634,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve(fileContent);
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.reject(error))
                     .verifiable(TypeMoq.Times.once());
 
@@ -745,7 +674,7 @@ suite('A/B experiments', () => {
         }
     ];
 
-    testsForInExperiment.forEach(testParams => {
+    testsForInExperiment.forEach((testParams) => {
         test(testParams.testName, async () => {
             expManager.userExperiments = testParams.userExperiments;
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(
@@ -787,7 +716,7 @@ suite('A/B experiments', () => {
     ];
 
     suite('Function IsUserInRange()', () => {
-        testsForIsUserInRange.forEach(testParams => {
+        testsForIsUserInRange.forEach((testParams) => {
             test(testParams.testName, async () => {
                 when(appEnvironment.machineId).thenReturn('101');
                 if (testParams.machineIdError) {
@@ -935,9 +864,9 @@ suite('A/B experiments', () => {
     ];
 
     suite('Function populateUserExperiments', async () => {
-        testsForPopulateUserExperiments.forEach(testParams => {
+        testsForPopulateUserExperiments.forEach((testParams) => {
             test(testParams.testName, async () => {
-                experimentStorage.setup(n => n.value).returns(() => testParams.experimentStorageValue);
+                experimentStorage.setup((n) => n.value).returns(() => testParams.experimentStorageValue);
                 when(appEnvironment.machineId).thenReturn('101');
                 if (testParams.hash) {
                     when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
@@ -1003,7 +932,7 @@ suite('A/B experiments', () => {
     ];
 
     suite('Function areExperimentsValid()', () => {
-        testsForAreExperimentsValid.forEach(testParams => {
+        testsForAreExperimentsValid.forEach((testParams) => {
             test(testParams.testName, () => {
                 expect(expManager.areExperimentsValid(testParams.experiments as any)).to.equal(
                     testParams.expectedResult
@@ -1022,7 +951,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => downloadExperimentsDeferred.promise);
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
@@ -1047,7 +975,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => downloadExperimentsDeferred.promise);
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
@@ -1070,7 +997,6 @@ suite('A/B experiments', () => {
             downloadAndStoreExperiments.callsFake(() => Promise.reject('Kaboom'));
             expManager = new ExperimentsManager(
                 instance(persistentStateFactory),
-                instance(workspaceService),
                 instance(httpClient),
                 instance(crypto),
                 instance(appEnvironment),
@@ -1087,15 +1013,15 @@ suite('A/B experiments', () => {
 
     test('If storage as parameter is passed in as argument to function downloadAndStoreExperiments(), download experiments into that storage', async () => {
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         when(httpClient.getJSON(configUri, false)).thenResolve([

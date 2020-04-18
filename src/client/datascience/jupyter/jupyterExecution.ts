@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
 import {
     IConnection,
@@ -27,10 +27,8 @@ import {
     INotebookServerOptions
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { JupyterSessionStartError } from './jupyterSession';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { JupyterZMQBinariesNotFoundError } from './jupyterZMQBinariesNotFoundError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
 
@@ -42,7 +40,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
-    private zmqError: Error | undefined;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -63,7 +60,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration(e => {
+            const disposable = workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
                     this.onSettingsChanged();
@@ -133,7 +130,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
-            const allowUI = !options || !options.disableUI;
+            const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
             if (cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -173,8 +170,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // In a remote situation, figure out a kernel spec too.
-                    if (!kernelSpecInterpreter.kernelSpec && connection) {
+                    // In a remote non quest situation, figure out a kernel spec too.
+                    if (!kernelSpecInterpreter.kernelSpec && connection && !options?.skipSearchingForKernel) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );
@@ -200,8 +197,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelSpec: kernelSpecInterpreter.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid(),
-                        enableDebugging: options ? options.enableDebugging : false
+                        purpose: options ? options.purpose : uuid()
                     };
 
                     // tslint:disable-next-line: no-constant-condition
@@ -283,17 +279,19 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
-                                throw new Error(
+                                throw new WrappedError(
                                     localize.DataScience.jupyterNotebookRemoteConnectFailed().format(
                                         connection.baseUrl,
                                         err
-                                    )
+                                    ),
+                                    err
                                 );
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                            throw new Error(
-                                localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err)
+                            throw new WrappedError(
+                                localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
+                                err
                             );
                         }
                     } else {
@@ -312,7 +310,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             if (allowUI) {
                 this.appShell
                     .showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel())
-                    .then(selection => {
+                    .then((selection) => {
                         if (selection === localize.Common.openOutputPanel()) {
                             this.jupyterOutputChannel.show();
                         }
@@ -334,39 +332,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
-    private async verifyZMQ() {
-        if (this.zmqError) {
-            throw this.zmqError;
-        }
-        try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Push();
-            const port = await portfinder.getPortPromise();
-
-            await sock.bind(`tcp://127.0.0.1:${port}`);
-            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-            await sleep(50);
-            sock.close();
-            traceInfo(`ZMQ connection to port ${port} verified.`);
-        } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this.zmqError = new JupyterZMQBinariesNotFoundError(e.toString());
-            throw this.zmqError;
-        }
-    }
     private async startOrConnect(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<IConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
-            // First verify we have ZMQ installed correctly (this might change when we don't 'launch' servers anymore)
-            await this.verifyZMQ();
-
             // If that works, then attempt to start the server
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
-            const useDefaultConfig = options && options.useDefaultConfig ? true : false;
+            const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
             const connection = await this.startNotebookServer(
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).datascience.jupyterCommandLineArguments,

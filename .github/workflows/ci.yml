@@ -248,12 +248,8 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        if: steps.pythonFiles-cache.outputs.cache-hit == false
-
-      - name: Install debugpy wheels if not cached
-        run: |
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
+          # We need to have debugpy available in wheels/ so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         if: steps.pythonFiles-cache.outputs.cache-hit == false
 
       - name: Install test requirements

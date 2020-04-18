@@ -8,13 +8,26 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
-import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
+import {
+    Range,
+    TextEditorCursorStyle,
+    TextEditorLineNumbersStyle,
+    TextEditorOptions,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    IProcessLogger,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -43,42 +56,44 @@ suite('Refactor Rename', () => {
     suiteSetup(initialize);
     setup(async () => {
         pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
+        pythonSettings.setup((p) => p.pythonPath).returns(() => PYTHON_PATH);
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(c => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
+        configService.setup((c) => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const condaService = typeMoq.Mock.ofType<ICondaService>();
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processServiceFactory
-            .setup(p => p.create(typeMoq.It.isAny()))
+            .setup((p) => p.create(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
         const interpreterService = typeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
+        interpreterService.setup((i) => i.hasInterpreters).returns(() => Promise.resolve(true));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((e) =>
+                e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny()))
             .returns(() => configService.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny()))
             .returns(() => processServiceFactory.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny()))
             .returns(() => interpreterService.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(
                 () =>
                     new PythonExecutionFactory(
@@ -93,17 +108,23 @@ suite('Refactor Rename', () => {
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
         processLogger
-            .setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((p) => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
                 return;
             });
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))
             .returns(() => processLogger.object);
         await initializeTest();
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
+    function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
+        return async () => {
+            const factory = serviceContainer.object.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: Uri.file(workspaceRoot) });
+        };
+    }
 
     test('Rename function in source without a trailing empty line', async () => {
         const sourceFile = path.join(
@@ -120,13 +141,9 @@ suite('Refactor Rename', () => {
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
+        const workspaceRoot = path.dirname(sourceFile);
 
-        const proxy = new RefactorProxy(
-            EXTENSION_ROOT_DIR,
-            pythonSettings.object,
-            path.dirname(sourceFile),
-            serviceContainer.object
-        );
+        const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 
@@ -157,13 +174,9 @@ suite('Refactor Rename', () => {
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
+        const workspaceRoot = path.dirname(sourceFile);
 
-        const proxy = new RefactorProxy(
-            EXTENSION_ROOT_DIR,
-            pythonSettings.object,
-            path.dirname(sourceFile),
-            serviceContainer.object
-        );
+        const proxy = new RefactorProxy(workspaceRoot, createPythonExecGetter(workspaceRoot));
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 

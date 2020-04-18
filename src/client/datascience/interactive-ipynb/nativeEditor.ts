@@ -42,25 +42,19 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import {
-    EditorContexts,
-    Identifiers,
-    NativeKeyboardCommandTelemetryLookup,
-    NativeMouseCommandTelemetryLookup,
-    Telemetry
-} from '../constants';
+import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
+    INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
     ISubmitNewCell,
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
     ICell,
@@ -78,16 +72,19 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
-    INotebookServerOptions,
+    INotebookProvider,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
 import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -152,7 +149,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -164,6 +160,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
@@ -171,18 +168,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
-            progressReporter,
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -201,6 +197,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             globalStorage,
             nativeEditorDir,
             [
+                path.join(nativeEditorDir, 'require.js'),
+                path.join(nativeEditorDir, 'ipywidgets.js'),
                 path.join(nativeEditorDir, 'monaco.bundle.js'),
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
                 path.join(nativeEditorDir, 'nativeEditor.js')
@@ -208,9 +206,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
             experimentsManager,
-            switcher
+            switcher,
+            notebookProvider,
+            useCustomEditorApi
         );
         asyncRegistry.push(this);
+
+        this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
     }
 
     public dispose(): Promise<void> {
@@ -231,22 +233,29 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
-
-        // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-        this.sendInitialCellsToWebView(model.cells)
-            .then(() => {
-                // May alread be dirty, if so send a message
-                if (model.isDirty) {
-                    this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
-                }
-            })
-            .catch(exc => traceError('Error loading cells: ', exc));
     }
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                if (this.model) {
+                    // Load our cells, but don't wait for this to finish, otherwise the window won't load.
+                    this.sendInitialCellsToWebView(this.model.cells)
+                        .then(() => {
+                            // May alread be dirty, if so send a message
+                            if (this.model?.isDirty) {
+                                this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
+                            }
+                        })
+                        .catch((exc) => traceError('Error loading cells: ', exc));
+                }
+                break;
+            case InteractiveWindowMessages.Sync:
+                this.synchronizer.notifyUserAction(payload, this);
+                break;
+
             case InteractiveWindowMessages.ReExecuteCells:
                 this.executedEvent.fire(this);
                 break;
@@ -285,17 +294,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        const options = await this.editorProvider.getNotebookOptions(await this.getOwningResource());
+    public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         await this.loadedPromise.promise;
         if (this.model) {
-            const metadata = (await this.model.getJson()).metadata;
-            return {
-                ...options,
-                metadata
-            };
-        } else {
-            return options;
+            return (await this.model.getJson()).metadata;
         }
     }
 
@@ -328,9 +330,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow, { newCellId: uuid() }).ignoreErrors();
     }
 
-    public getOwningResource(): Promise<Resource> {
+    public async getOwningResource(): Promise<Resource> {
         // Resource to use for loading and our identity are the same.
-        return this.getNotebookIdentity();
+        const identity = await this.getNotebookIdentity();
+        return identity.resource;
     }
 
     protected addSysInfo(reason: SysInfoReason): Promise<void> {
@@ -367,7 +370,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Activate the other side, and send as if came from a file
                 this.editorProvider
                     .show(this.file)
-                    .then(_v => {
+                    .then((_v) => {
                         this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                             code: info.code,
                             file: Identifiers.EmptyFileName,
@@ -398,7 +401,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const cellsExecuting = new Set<ICell>();
         try {
             for (let i = 0; i < info.cellIds.length && !tokenSource.token.isCancellationRequested; i += 1) {
-                const cell = this.model.cells.find(item => item.id === info.cellIds[i]);
+                const cell = this.model.cells.find((item) => item.id === info.cellIds[i]);
                 if (!cell) {
                     continue;
                 }
@@ -416,17 +419,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this.executeCancelTokens.delete(tokenSource);
 
             // Make sure everything is marked as finished or error after the final finished
-            cellsExecuting.forEach(cell => this.finishCell(cell));
+            cellsExecuting.forEach((cell) => this.finishCell(cell));
         }
     }
 
-    protected async getNotebookIdentity(): Promise<Uri> {
+    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
         if (this.loadedPromise) {
             await this.loadedPromise.promise;
         }
 
         // File should be set now
-        return this.file;
+        return {
+            resource: this.file,
+            type: 'native'
+        };
     }
 
     protected async setLaunchingFile(_file: string): Promise<void> {
@@ -439,12 +445,26 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected sendCellsToWebView(cells: ICell[]) {
         // Filter out sysinfo messages. Don't want to show those
-        const filtered = cells.filter(c => c.data.cell_type !== 'messages');
+        const filtered = cells.filter((c) => c.data.cell_type !== 'messages');
 
         // Update these cells in our storage only when cells are finished
-        const modified = filtered.filter(c => c.state === CellState.finished || c.state === CellState.error);
-        const unmodified = this.model?.cells.filter(c => modified.find(m => m.id === c.id));
+        const modified = filtered.filter((c) => c.state === CellState.finished || c.state === CellState.error);
+        const unmodified = this.model?.cells.filter((c) => modified.find((m) => m.id === c.id));
         if (modified.length > 0 && unmodified && this.model) {
+            // As this point, we're updating the model because of changes to the cell as a result of execution.
+            // The output and execution count change, however we're just going to update everything.
+            // But, we should not update the `source`. The only time source can change is when a request comes from the UI.
+            // Perhaps we need a finer grained update (update only output and execution count along with `source=execution`).
+            // For now retain source from previous model.
+            // E.g. user executes a cell, in the mean time they update the text. Now model contains new value.
+            // However once execution has completed, this code will update the model with results from previous execution (prior to edit).
+            // We now need to give preference to the text in the model, over the old one that was executed.
+            modified.forEach((modifiedCell) => {
+                const originalCell = unmodified.find((unmodifiedCell) => unmodifiedCell.id === modifiedCell.id);
+                if (originalCell) {
+                    modifiedCell.data.source = originalCell.data.source;
+                }
+            });
             this.model.update({
                 source: 'user',
                 kind: 'modify',
@@ -541,7 +561,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
     private interruptExecution() {
-        this.executeCancelTokens.forEach(t => t.cancel());
+        this.executeCancelTokens.forEach((t) => t.cancel());
     }
 
     private finishCell(cell: ICell) {
@@ -646,17 +666,26 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private logNativeCommand(args: INativeCommand) {
-        const telemetryEvent =
-            args.source === 'mouse'
-                ? NativeMouseCommandTelemetryLookup[args.command]
-                : NativeKeyboardCommandTelemetryLookup[args.command];
-        sendTelemetryEvent(telemetryEvent);
+        sendTelemetryEvent(args.command);
     }
 
-    private loadCellsComplete() {
+    private async loadCellsComplete() {
         if (!this.loadedAllCells) {
             this.loadedAllCells = true;
             sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        }
+
+        // If we don't have a server right now, at least show our kernel name (this seems to slow down tests
+        // too much though)
+        if (!isTestExecution()) {
+            const metadata = await this.getNotebookMetadata();
+            if (!this.notebook && metadata?.kernelspec) {
+                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: ServerStatus.NotStarted,
+                    localizedUri: '',
+                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name
+                }).ignoreErrors();
+            }
         }
     }
 }

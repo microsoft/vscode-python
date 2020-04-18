@@ -18,11 +18,11 @@ const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 const debuggerType = DebuggerTypeName;
 suite('Run without Debugging', () => {
     let debugClient: DebugClient;
-    setup(async function() {
+    setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         debugClient = await createDebugAdapter();
     });
     teardown(async () => {

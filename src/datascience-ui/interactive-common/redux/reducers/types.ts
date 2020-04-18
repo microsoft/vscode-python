@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../client/datascience/constants';
 import {
     IEditorContentChange,
     InteractiveWindowMessages,
-    IShowDataViewer,
-    NativeCommandType
+    IShowDataViewer
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
@@ -49,12 +49,16 @@ export enum CommonActionType {
     FOCUS_CELL = 'action.focus_cell',
     FOCUS_INPUT = 'action.focus_input',
     GATHER_CELL = 'action.gather_cell',
+    GATHER_CELL_TO_SCRIPT = 'action.gather_cell_to_script',
     GET_VARIABLE_DATA = 'action.get_variable_data',
     GOTO_CELL = 'action.goto_cell',
     INSERT_ABOVE = 'action.insert_above',
     INSERT_ABOVE_FIRST = 'action.insert_above_first',
     INSERT_BELOW = 'action.insert_below',
     INTERRUPT_KERNEL = 'action.interrupt_kernel_action',
+    IPYWIDGET_RENDER_FAILURE = 'action.ipywidget_render_failure',
+    LOAD_IPYWIDGET_CLASS_SUCCESS = 'action.load_ipywidget_class_success',
+    LOAD_IPYWIDGET_CLASS_FAILURE = 'action.load_ipywidget_class_failure',
     LOADED_ALL_CELLS = 'action.loaded_all_cells',
     LINK_CLICK = 'action.link_click',
     MOVE_CELL_DOWN = 'action.move_cell_down',
@@ -118,6 +122,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.COPY_CELL_CODE]: ICellAction;
     [CommonActionType.DELETE_CELL]: ICellAction;
     [CommonActionType.GATHER_CELL]: ICellAction;
+    [CommonActionType.GATHER_CELL_TO_SCRIPT]: ICellAction;
     [CommonActionType.EDITOR_LOADED]: never | undefined;
     [CommonActionType.LOADED_ALL_CELLS]: never | undefined;
     [CommonActionType.UNMOUNT]: never | undefined;
@@ -129,6 +134,9 @@ export type CommonActionTypeMapping = {
     [CommonActionType.REFRESH_VARIABLES]: never | undefined;
     [CommonActionType.OPEN_SETTINGS]: IOpenSettingsAction;
     [CommonActionType.FOCUS_INPUT]: never | undefined;
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: LoadIPyWidgetClassLoadAction;
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: ILoadIPyWidgetClassFailureAction;
+    [CommonActionType.IPYWIDGET_RENDER_FAILURE]: Error;
 };
 
 export interface IShowDataViewerAction extends IShowDataViewer {}
@@ -193,8 +201,7 @@ export interface IRefreshVariablesAction {
 export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ISendCommandAction {
-    commandType: 'mouse' | 'keyboard';
-    command: NativeCommandType;
+    command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
 }
 
 export interface IChangeCellTypeAction {
@@ -204,4 +211,26 @@ export interface IChangeCellTypeAction {
 export interface IOpenSettingsAction {
     setting: string | undefined;
 }
+
+export interface ILoadIPyWidgetClassFailureAction {
+    className: string;
+    moduleName: string;
+    moduleVersion: string;
+    cdnsUsed: boolean;
+    isOnline: boolean;
+    // tslint:disable-next-line: no-any
+    error: any;
+}
+export type LoadIPyWidgetClassDisabledAction = {
+    className: string;
+    moduleName: string;
+    moduleVersion: string;
+};
+
+export type LoadIPyWidgetClassLoadAction = {
+    className: string;
+    moduleName: string;
+    moduleVersion: string;
+};
+
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;

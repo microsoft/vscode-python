@@ -4,12 +4,12 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
@@ -17,7 +17,6 @@ import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService, PythonInterpreter } from '../contracts';
@@ -115,7 +114,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
 
     public dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
@@ -135,7 +134,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Cache only if successful, else keep trying & failing if necessary.
         const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(cacheDuration, '');
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then(vars => {
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
             cache.data = vars;
             this.activatedEnvVariablesCache.set(cacheKey, cache);
             return vars;
@@ -162,10 +161,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
-            isPossiblyCondaEnv = activationCommands
-                .join(' ')
-                .toLowerCase()
-                .includes('conda');
+            isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
@@ -182,8 +178,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             // In order to make sure we know where the environment output is,
             // put in a dummy echo we can look for
-            const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
-            const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
+            const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgument();
+            });
+            const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
@@ -211,7 +210,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = exc.toString();
-                    if (condaRetryMessages.find(m => excString.includes(m)) && tryCount < 10) {
+                    if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         tryCount += 1;
@@ -221,7 +220,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                 }
             }
-            const returnedEnv = this.parseEnvironmentOutput(result.stdout);
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
 
             // Put back the PYTHONWARNINGS value
             if (oldWarnings && returnedEnv) {
@@ -246,13 +245,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
     protected fixActivationCommands(commands: string[]): string[] {
         // Replace 'source ' with '. ' as that works in shell exec
-        return commands.map(cmd => cmd.replace(/^source\s+/, '. '));
+        return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
     }
     @traceDecorators.error('Failed to parse Environment variables')
     @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)
-    protected parseEnvironmentOutput(output: string): NodeJS.ProcessEnv | undefined {
+    protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         output = output.substring(output.indexOf(getEnvironmentPrefix) + getEnvironmentPrefix.length);
         const js = output.substring(output.indexOf('{')).trim();
-        return JSON.parse(js);
+        return parse(js);
     }
 }

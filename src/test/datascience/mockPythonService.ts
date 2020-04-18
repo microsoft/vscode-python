@@ -78,6 +78,6 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public getExecutionInfo(args: string[]) {
-        return { command: this.interpreter.path, args };
+        return { command: this.interpreter.path, args, python: [this.interpreter.path] };
     }
 }

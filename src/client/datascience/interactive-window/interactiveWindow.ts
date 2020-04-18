@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
@@ -12,6 +13,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
@@ -27,18 +29,18 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
+    INotebookIdentity,
     InteractiveWindowMessages,
     ISubmitNewCell,
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
     ICodeCssGenerator,
@@ -53,7 +55,7 @@ import {
     IJupyterKernelSpec,
     IJupyterVariables,
     INotebookExporter,
-    INotebookServerOptions,
+    INotebookProvider,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -87,7 +89,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IStatusProvider) statusProvider: IStatusProvider,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -106,17 +107,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
-            progressReporter,
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -135,6 +135,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             globalStorage,
             historyReactDir,
             [
+                path.join(historyReactDir, 'require.js'),
+                path.join(historyReactDir, 'ipywidgets.js'),
                 path.join(historyReactDir, 'monaco.bundle.js'),
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
                 path.join(historyReactDir, 'interactiveWindow.js')
@@ -142,14 +144,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
             experimentsManager,
-            switcher
+            switcher,
+            notebookProvider,
+            useCustomEditorApi
         );
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
 
         // Start the server as soon as we open
-        this.ensureServerAndNotebook().ignoreErrors();
+        this.ensureConnectionAndNotebook().ignoreErrors();
     }
 
     public dispose() {
@@ -171,7 +175,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
 
         // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
-        await this.ensureServerAndNotebook();
+        await this.ensureConnectionAndNotebook();
 
         // Make sure we have at least the initial sys info
         await this.addSysInfo(SysInfoReason.Start);
@@ -181,20 +185,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async addCode(code: string, file: string, line: number): Promise<boolean> {
-        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
-            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
-        }
-        // Save the last file we ran with.
-        this.lastFile = file;
-
-        // Make sure our web panel opens.
-        await this.show();
-
-        // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file));
-
-        // Call the internal method.
-        return this.submitCode(code, file, line);
+        return this.addOrDebugCode(code, file, line, false);
     }
 
     public exportCells() {
@@ -230,7 +221,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: string, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -240,7 +231,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // If that worked, we have to open the new document. It should be
             // the new entry in the list
             if (saved) {
-                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
+                const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
                     file = diff[0].fileName;
 
@@ -252,7 +243,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCode(code, file, line, undefined, undefined, true);
+            return this.addOrDebugCode(code, file, line, true);
         }
 
         return false;
@@ -283,6 +274,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
+    protected async addSysInfo(reason: SysInfoReason): Promise<void> {
+        await super.addSysInfo(reason);
+
+        // If `reason == Start`, then this means UI has been updated with the last
+        // pience of informaiotn (which was sys info), and now UI can be deemed as having been loaded.
+        // Marking a UI as having been loaded is done by sending a message `LoadAllCells`, even though we're not loading any cells.
+        // We're merely using existing messages (from NativeEditor).
+        if (reason === SysInfoReason.Start) {
+            this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells: [] }).ignoreErrors();
+        }
+    }
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         super.onViewStateChanged(args);
         this._onDidChangeViewState.fire();
@@ -299,7 +301,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
                 .getOrCreateActive()
-                .then(_v => {
+                .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,
                         file: Identifiers.EmptyFileName,
@@ -313,8 +315,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected async getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.interactiveWindowProvider.getNotebookOptions(await this.getOwningResource());
+    protected async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
+        return undefined;
     }
 
     protected async updateNotebookOptions(
@@ -324,9 +326,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // Do nothing as this data isn't stored in our options.
     }
 
-    protected async getNotebookIdentity(): Promise<Uri> {
+    protected async getNotebookIdentity(): Promise<INotebookIdentity> {
         // Always the same identity (for now)
-        return Uri.parse(Identifiers.InteractiveWindowIdentity);
+        return {
+            resource: Uri.parse(Identifiers.InteractiveWindowIdentity),
+            type: 'interactive'
+        };
     }
 
     protected updateContexts(info: IInteractiveWindowInfo | undefined) {
@@ -354,7 +359,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-    protected ensureServerAndNotebook(): Promise<void> {
+    protected ensureConnectionAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
         if (!this.trackedJupyterStart) {
@@ -362,7 +367,24 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
         }
-        return super.ensureServerAndNotebook();
+        return super.ensureConnectionAndNotebook();
+    }
+
+    private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
+        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
+        }
+        // Save the last file we ran with.
+        this.lastFile = file;
+
+        // Make sure our web panel opens.
+        await this.show();
+
+        // Tell the webpanel about the new directory.
+        this.updateCwd(path.dirname(file));
+
+        // Call the internal method.
+        return this.submitCode(code, file, line, undefined, undefined, debug);
     }
 
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
@@ -406,7 +428,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {
-            this.export(cells).catch(ex => traceError('Error exporting:', ex));
+            this.export(cells).catch((ex) => traceError('Error exporting:', ex));
         }
     }
 }

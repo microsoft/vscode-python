@@ -11,13 +11,11 @@ import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
@@ -26,7 +24,6 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
-import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
@@ -43,7 +40,7 @@ import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/se
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 
-// tslint:disable:no-any max-func-body-length
+// tslint:disable:no-any max-func-body-length chai-vague-errors
 
 const pythonInterpreter: PythonInterpreter = {
     path: '/foo/bar/python.exe',
@@ -79,7 +76,7 @@ suite('Process - PythonExecutionFactory', () => {
         { resource: undefined, interpreter: pythonInterpreter },
         { resource: Uri.parse('x'), interpreter: undefined },
         { resource: Uri.parse('x'), interpreter: pythonInterpreter }
-    ].forEach(item => {
+    ].forEach((item) => {
         const resource = item.resource;
         const interpreter = item.interpreter;
         suite(title(resource, interpreter), () => {
@@ -107,7 +104,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
-                    .setup(p =>
+                    .setup((p) =>
                         p.on('exec', () => {
                             return;
                         })
@@ -144,9 +141,9 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.create({ resource });
 
+                expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
-                expect(service).instanceOf(PythonExecutionService);
             });
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
                 const pythonPath = 'path/to/python';
@@ -202,11 +199,11 @@ suite('Process - PythonExecutionFactory', () => {
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
+                expect(service).to.not.equal(undefined);
                 verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
                 if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
                 }
-                expect(service).instanceOf(PythonExecutionService);
                 assert.equal(createInvoked, false);
             });
 
@@ -221,13 +218,13 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.create({ resource });
 
+                expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
-                expect(service).instanceOf(WindowsStorePythonProcess);
             });
 
-            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -247,15 +244,15 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.create({ resource });
 
+                expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
-                expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -269,15 +266,15 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.create({ resource });
 
+                expect(service).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
-                expect(service).instanceOf(PythonExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -299,6 +296,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
+                expect(service).to.not.equal(undefined);
                 verify(condaService.getCondaFile()).once();
                 if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
@@ -307,11 +305,9 @@ suite('Process - PythonExecutionFactory', () => {
                     // @ts-ignore
                     verify(condaService.getCondaEnvironment(interpreter.path)).once();
                 }
-
-                expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -333,6 +329,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
+                expect(service).to.not.equal(undefined);
                 verify(condaService.getCondaFile()).once();
                 verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
                 verify(condaService.getCondaVersion()).once();
@@ -340,7 +337,6 @@ suite('Process - PythonExecutionFactory', () => {
                     verify(pythonSettings.pythonPath).once();
                 }
 
-                expect(service).instanceOf(PythonExecutionService);
                 assert.equal(createInvoked, false);
             });
 
@@ -355,7 +351,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const result = await factory.createCondaExecutionService(pythonPath, processService.object, resource);
 
-                expect(result).instanceOf(CondaExecutionService);
+                expect(result).to.not.equal(undefined);
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
@@ -373,7 +369,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const result = await factory.createCondaExecutionService(pythonPath, undefined, resource);
 
-                expect(result).instanceOf(CondaExecutionService);
+                expect(result).to.not.equal(undefined);
                 verify(processFactory.create(resource)).once();
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();

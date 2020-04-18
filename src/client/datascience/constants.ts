@@ -5,7 +5,6 @@
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IVariableQuery } from '../common/types';
-import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
 // Identifier for the output panel that will display the output from the Jupyter Server.
@@ -81,6 +80,9 @@ export namespace Commands {
     export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
+    export const GatherQuality = 'python.datascience.gatherquality';
+    export const EnableLoadingWidgetsFrom3rdPartySource =
+        'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
 }
 
 export namespace CodeLensCommands {
@@ -214,7 +216,6 @@ export enum Telemetry {
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
     CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
-    ClassConstructionTime = 'DS_INTERNAL.CLASS_CONSTRUCTION_TIME',
     FindJupyterCommand = 'DS_INTERNAL.FIND_JUPYTER_COMMAND',
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
@@ -284,74 +285,58 @@ export enum Telemetry {
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
-    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
+    GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
+    GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
+    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING',
+    IPyWidgetLoadSuccess = 'DS_INTERNAL.IPYWIDGET_LOAD_SUCCESS',
+    IPyWidgetLoadFailure = 'DS_INTERNAL.IPYWIDGET_LOAD_FAILURE',
+    IPyWidgetLoadDisabled = 'DS_INTERNAL.IPYWIDGET_LOAD_DISABLED',
+    HashedIPyWidgetNameUsed = 'DS_INTERNAL.IPYWIDGET_USED_BY_USER',
+    HashedIPyWidgetNameDiscovered = 'DS_INTERNAL.IPYWIDGET_DISCOVERED',
+    HashedIPyWidgetScriptDiscoveryError = 'DS_INTERNAL.IPYWIDGET_DISCOVERY_ERRORED',
+    DiscoverIPyWidgetNamesLocalPerf = 'DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_LOCAL',
+    DiscoverIPyWidgetNamesCDNPerf = 'DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_CDN',
+    IPyWidgetPromptToUseCDN = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN',
+    IPyWidgetPromptToUseCDNSelection = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION',
+    IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
+    IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE'
 }
 
 export enum NativeKeyboardCommandTelemetry {
-    AddToEnd = 'DATASCIENCE.NATIVE.KEYBOARD.ADD_TO_END',
     ArrowDown = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_DOWN',
     ArrowUp = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP',
     ChangeToCode = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE',
     ChangeToMarkdown = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN',
-    CollapseInput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_INPUT',
-    CollapseOutput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_OUTPUT',
     DeleteCell = 'DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL',
     InsertAbove = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE',
     InsertBelow = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW',
-    MoveCellDown = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_DOWN',
-    MoveCellUp = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_UP',
+    Redo = 'DATASCIENCE.NATIVE.KEYBOARD.REDO',
     Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
     Save = 'DATASCIENCE.NATIVE.KEYBOARD.SAVE',
-    RunAbove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ABOVE',
-    RunAll = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ALL',
     RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
     RunAndMove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE',
-    RunBelow = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_BELOW',
     ToggleLineNumbers = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS',
     ToggleOutput = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT',
-    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_VARIABLE_EXPLORER',
     Undo = 'DATASCIENCE.NATIVE.KEYBOARD.UNDO',
     Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS'
 }
 
-export let NativeKeyboardCommandTelemetryLookup: { [id: number]: NativeKeyboardCommandTelemetry } = {};
-const keys = [...Object.keys(NativeCommandType)];
-const values1 = [...Object.values(NativeKeyboardCommandTelemetry)];
-for (let i = 0; i < keys.length; i += 1) {
-    NativeKeyboardCommandTelemetryLookup[i] = values1[i];
-}
-
 export enum NativeMouseCommandTelemetry {
     AddToEnd = 'DATASCIENCE.NATIVE.MOUSE.ADD_TO_END',
-    ArrowDown = 'DATASCIENCE.NATIVE.MOUSE.ARROW_DOWN',
-    ArrowUp = 'DATASCIENCE.NATIVE.MOUSE.ARROW_UP',
     ChangeToCode = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE',
     ChangeToMarkdown = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN',
-    CollapseInput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_INPUT',
-    CollapseOutput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_OUTPUT',
     DeleteCell = 'DATASCIENCE.NATIVE.MOUSE.DELETE_CELL',
-    InsertAbove = 'DATASCIENCE.NATIVE.MOUSE.INSERT_ABOVE',
     InsertBelow = 'DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW',
     MoveCellDown = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN',
     MoveCellUp = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP',
     Run = 'DATASCIENCE.NATIVE.MOUSE.RUN',
     RunAbove = 'DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE',
     RunAll = 'DATASCIENCE.NATIVE.MOUSE.RUN_ALL',
-    RunAndAdd = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_ADD',
-    RunAndMove = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_MOVE',
     RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
+    SelectKernel = 'DATASCIENCE.NATIVE.MOUSE.SELECT_KERNEL',
+    SelectServer = 'DATASCIENCE.NATIVE.MOUSE.SELECT_SERVER',
     Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
-    ToggleLineNumbers = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_LINE_NUMBERS',
-    ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
-    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER',
-    Undo = 'DATASCIENCE.NATIVE.MOUSE.UNDO',
-    Unfocus = 'DATASCIENCE.NATIVE.MOUSE.UNFOCUS'
-}
-
-export let NativeMouseCommandTelemetryLookup: { [id: number]: NativeMouseCommandTelemetry } = {};
-const values2 = [...Object.values(NativeMouseCommandTelemetry)];
-for (let i = 0; i < keys.length; i += 1) {
-    NativeMouseCommandTelemetryLookup[i] = values2[i];
+    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER'
 }
 
 export namespace HelpLinks {
@@ -380,6 +365,7 @@ export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const HistoryPurpose = 'history';
+    export const RawPurpose = 'raw';
     export const PingPurpose = 'ping';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
@@ -426,6 +412,7 @@ export namespace LiveShare {
     export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
     export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
+    export const RawNotebookProviderService = 'rawNotebookProviderSharedService';
     export const ResponseLifetime = 15000;
     export const ResponseRange = 1000; // Range of time alloted to check if a response matches or not
     export const InterruptDefaultTimeout = 10000;

@@ -9,10 +9,10 @@ import { IApplicationShell } from '../../../common/application/types';
 import { IConfigurationService, Resource } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
+import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
 import { IConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { JupyterSessionStartError } from '../jupyterSession';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
 
@@ -52,16 +52,18 @@ export class KernelSwitcher {
 
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
-            notebook.server.getConnectionInfo()?.localLaunch ??
+            notebook.connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
             kernel = await this.selectLocalJupyterKernel(notebook.resource, notebook?.getKernelSpec());
         } else if (notebook) {
-            const connInfo = notebook.server.getConnectionInfo();
+            const connInfo = notebook.connection;
             const currentKernel = notebook.getKernelSpec();
             if (connInfo) {
-                kernel = await this.selectRemoteJupyterKernel(notebook.resource, connInfo, currentKernel);
+                // Remote connection is always jupyter connection
+                const jupyterConnInfo = connInfo as IConnection;
+                kernel = await this.selectRemoteJupyterKernel(notebook.resource, jupyterConnInfo, currentKernel);
             }
         }
         return kernel;
@@ -86,7 +88,7 @@ export class KernelSwitcher {
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
-            notebook.server.getConnectionInfo()?.localLaunch ??
+            notebook.connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
         if (!isLocalConnection) {
             await this.switchToKernel(notebook, kernel);
@@ -127,12 +129,9 @@ export class KernelSwitcher {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
                 newKernel.kernelSpec || newKernel.kernelModel!,
-                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout
+                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout,
+                newKernel.interpreter
             );
-
-            if (newKernel.interpreter) {
-                notebook.setInterpreter(newKernel.interpreter);
-            }
         };
 
         const kernelDisplayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name;

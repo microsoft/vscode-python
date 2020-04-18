@@ -53,13 +53,13 @@ suite('Debugging - Configuration Service', () => {
         const expectedConfig = { yay: 1 };
 
         attachResolver
-            .setup(a =>
+            .setup((a) =>
                 a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny())
             )
             .returns(() => Promise.resolve(expectedConfig as any))
             .verifiable(typemoq.Times.once());
         launchResolver
-            .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .verifiable(typemoq.Times.never());
 
         const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
@@ -68,13 +68,13 @@ suite('Debugging - Configuration Service', () => {
         attachResolver.verifyAll();
         launchResolver.verifyAll();
     });
-    [{ request: 'launch' }, { request: undefined }].forEach(config => {
+    [{ request: 'launch' }, { request: undefined }].forEach((config) => {
         test(`Should use launch resolver when passing launch config with request=${config.request}`, async () => {
             const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
             const expectedConfig = { yay: 1 };
 
             launchResolver
-                .setup(a =>
+                .setup((a) =>
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
                         typemoq.It.isValue((config as any) as LaunchRequestArguments),
@@ -84,7 +84,7 @@ suite('Debugging - Configuration Service', () => {
                 .returns(() => Promise.resolve(expectedConfig as any))
                 .verifiable(typemoq.Times.once());
             attachResolver
-                .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+                .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .verifiable(typemoq.Times.never());
 
             const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
@@ -99,7 +99,7 @@ suite('Debugging - Configuration Service', () => {
         const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
-            .setup(i => i.showQuickPick(typemoq.It.isAny()))
+            .setup((i) => i.showQuickPick(typemoq.It.isAny()))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(typemoq.Times.once());
 
@@ -112,7 +112,7 @@ suite('Debugging - Configuration Service', () => {
         const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
-            .setup(i => i.showQuickPick(typemoq.It.isAny()))
+            .setup((i) => i.showQuickPick(typemoq.It.isAny()))
             .returns(() => Promise.resolve(undefined as any))
             .verifiable(typemoq.Times.once());
 
@@ -130,7 +130,7 @@ suite('Debugging - Configuration Service', () => {
             }
         };
         multiStepFactory
-            .setup(f => f.create())
+            .setup((f) => f.create())
             .returns(() => multiStepInput as any)
             .verifiable(typemoq.Times.once());
         configService.pickDebugConfiguration = (_, state) => {
@@ -148,7 +148,7 @@ suite('Debugging - Configuration Service', () => {
         };
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         multiStepFactory
-            .setup(f => f.create())
+            .setup((f) => f.create())
             .returns(() => multiStepInput as any)
             .verifiable(typemoq.Times.once());
         const config = await configService.resolveDebugConfiguration(folder, {} as any);

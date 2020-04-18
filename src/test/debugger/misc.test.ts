@@ -22,14 +22,14 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     let debugClient: DebugClient;
     // All tests in this suite are failed
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    setup(async function() {
+    setup(async function () {
         return this.skip();
 
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         debugClient = createDebugAdapter();
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
         await debugClient.start();
@@ -75,7 +75,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     }
 
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('Should run program to the end', async function() {
+    test('Should run program to the end', async function () {
         return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),
@@ -85,7 +85,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         ]);
     });
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('test stderr output for Python', async function() {
+    test('test stderr output for Python', async function () {
         return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),

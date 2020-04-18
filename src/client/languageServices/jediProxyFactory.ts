@@ -9,8 +9,8 @@ export class JediFactory implements Disposable {
     private jediProxyHandlers: Map<string, JediProxyHandler<ICommandResult>>;
 
     constructor(
-        private extensionRootPath: string,
         private interpreter: PythonInterpreter | undefined,
+        // This is passed through to JediProxy().
         private serviceContainer: IServiceContainer
     ) {
         this.disposables = [];
@@ -18,32 +18,33 @@ export class JediFactory implements Disposable {
     }
 
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
         this.disposables = [];
     }
-    public getJediProxyHandler<T extends ICommandResult>(resource?: Uri): JediProxyHandler<T> {
-        const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        let workspacePath = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
-        if (!workspacePath) {
-            if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
-                workspacePath = workspace.workspaceFolders[0].uri.fsPath;
-            } else {
-                workspacePath = __dirname;
-            }
-        }
 
+    public getJediProxyHandler<T extends ICommandResult>(resource?: Uri): JediProxyHandler<T> {
+        const workspacePath = this.getWorkspacePath(resource);
         if (!this.jediProxyHandlers.has(workspacePath)) {
-            const jediProxy = new JediProxy(
-                this.extensionRootPath,
-                workspacePath,
-                this.interpreter,
-                this.serviceContainer
-            );
+            const jediProxy = new JediProxy(workspacePath, this.interpreter, this.serviceContainer);
             const jediProxyHandler = new JediProxyHandler(jediProxy);
             this.disposables.push(jediProxy, jediProxyHandler);
             this.jediProxyHandlers.set(workspacePath, jediProxyHandler);
         }
-        // tslint:disable-next-line:no-non-null-assertion
         return this.jediProxyHandlers.get(workspacePath)! as JediProxyHandler<T>;
+    }
+
+    private getWorkspacePath(resource?: Uri): string {
+        if (resource) {
+            const workspaceFolder = workspace.getWorkspaceFolder(resource);
+            if (workspaceFolder) {
+                return workspaceFolder.uri.fsPath;
+            }
+        }
+
+        if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+            return workspace.workspaceFolders[0].uri.fsPath;
+        } else {
+            return __dirname;
+        }
     }
 }

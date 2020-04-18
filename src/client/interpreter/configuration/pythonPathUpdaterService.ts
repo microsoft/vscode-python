@@ -24,7 +24,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
     public async updatePythonPath(
-        pythonPath: string,
+        pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
         trigger: 'ui' | 'shebang' | 'load',
         wkspace?: Uri
@@ -33,7 +33,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);
         let failed = false;
         try {
-            await pythonPathUpdater.updatePythonPath(path.normalize(pythonPath));
+            await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
         } catch (reason) {
             failed = true;
             // tslint:disable-next-line:no-unsafe-any prefer-type-cast
@@ -42,7 +42,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch(ex =>
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch((ex) =>
             traceError('Python Extension: sendTelemetry', ex)
         );
     }
@@ -50,20 +50,20 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         duration: number,
         failed: boolean,
         trigger: 'ui' | 'shebang' | 'load',
-        pythonPath: string
+        pythonPath: string | undefined
     ) {
         const telemtryProperties: PythonInterpreterTelemetry = {
             failed,
             trigger
         };
-        if (!failed) {
+        if (!failed && pythonPath) {
             const processService = await this.executionFactory.create({ pythonPath });
             const infoPromise = processService
                 .getInterpreterInformation()
                 .catch<InterpreterInfomation | undefined>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService
                 .getPipVersion(pythonPath)
-                .then(value => (value.length === 0 ? undefined : value))
+                .then((value) => (value.length === 0 ? undefined : value))
                 .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
             if (info && info.version) {

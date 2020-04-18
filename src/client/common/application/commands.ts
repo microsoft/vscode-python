@@ -22,6 +22,8 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.SwitchToInsidersDaily]: [];
     [Commands.SwitchToInsidersWeekly]: [];
+    [Commands.ClearWorkspaceInterpreter]: [];
+    [Commands.ResetInterpreterSecurityStorage]: [];
     [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
@@ -161,4 +163,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
+    [DSCommands.GatherQuality]: [string];
+    [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [undefined | never];
 }

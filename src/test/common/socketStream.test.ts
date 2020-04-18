@@ -37,7 +37,7 @@ class MockSocket {
 // Defines a Mocha test suite to group tests of similar kind together
 // tslint:disable-next-line:max-func-body-length
 suite('SocketStream', () => {
-    test('Read Byte', done => {
+    test('Read Byte', (done) => {
         const buffer = new Buffer('X');
         const byteValue = buffer[0];
         const socket = new MockSocket();
@@ -47,7 +47,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadByte(), byteValue);
         done();
     });
-    test('Read Int32', done => {
+    test('Read Int32', (done) => {
         const num = 1234;
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
@@ -57,7 +57,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadInt32(), num);
         done();
     });
-    test('Read Int64', done => {
+    test('Read Int64', (done) => {
         const num = 9007199254740993;
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
@@ -67,7 +67,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadInt64(), num);
         done();
     });
-    test('Read Ascii String', done => {
+    test('Read Ascii String', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
         const buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
@@ -77,7 +77,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadString(), message);
         done();
     });
-    test('Read Unicode String', done => {
+    test('Read Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
         const socket = new MockSocket();
         const stringBuffer = new Buffer(message);
@@ -91,7 +91,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadString(), message);
         done();
     });
-    test('Read RollBackTransaction', done => {
+    test('Read RollBackTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
         let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
@@ -110,7 +110,7 @@ suite('SocketStream', () => {
         assert.equal(stream.ReadString(), message, 'First message not read properly after rolling back transaction');
         done();
     });
-    test('Read EndTransaction', done => {
+    test('Read EndTransaction', (done) => {
         const message = 'Hello World';
         const socket = new MockSocket();
         let buffer = Buffer.concat([new Buffer('A'), uint64be.encode(message.length), new Buffer(message)]);
@@ -130,7 +130,7 @@ suite('SocketStream', () => {
         assert.notEqual(stream.ReadString(), message, 'First message cannot be read after commit transaction');
         done();
     });
-    test('Write Buffer', done => {
+    test('Write Buffer', (done) => {
         const message = 'Hello World';
         const buffer = new Buffer('');
         const socket = new MockSocket();
@@ -141,7 +141,7 @@ suite('SocketStream', () => {
         assert.equal(socket.dataWritten, message);
         done();
     });
-    test('Write Int32', done => {
+    test('Write Int32', (done) => {
         const num = 1234;
         const buffer = new Buffer('');
         const socket = new MockSocket();
@@ -152,7 +152,7 @@ suite('SocketStream', () => {
         assert.equal(uint64be.decode(socket.rawDataWritten), num);
         done();
     });
-    test('Write Int64', done => {
+    test('Write Int64', (done) => {
         const num = 9007199254740993;
         const buffer = new Buffer('');
         const socket = new MockSocket();
@@ -163,7 +163,7 @@ suite('SocketStream', () => {
         assert.equal(uint64be.decode(socket.rawDataWritten), num);
         done();
     });
-    test('Write Ascii String', done => {
+    test('Write Ascii String', (done) => {
         const message = 'Hello World';
         const buffer = new Buffer('');
         const socket = new MockSocket();
@@ -174,7 +174,7 @@ suite('SocketStream', () => {
         assert.equal(socket.dataWritten, message);
         done();
     });
-    test('Write Unicode String', done => {
+    test('Write Unicode String', (done) => {
         const message = 'Hello World - Функция проверки ИНН и КПП - 说明';
         const buffer = new Buffer('');
         const socket = new MockSocket();

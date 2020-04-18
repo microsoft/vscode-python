@@ -106,8 +106,8 @@ suite('Interactive window command listener', async () => {
 
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
-        when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject(
-            'Unknown interpreter'
+        when(interpreterService.getInterpreterDetails(argThat((o) => !o.includes || !o.includes('python')))).thenReject(
+            ('Unknown interpreter' as any) as Error
         );
 
         // Service container needs logger, file system, and config service
@@ -141,7 +141,8 @@ suite('Interactive window command listener', async () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
+            widgetScriptSources: []
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -158,7 +159,7 @@ suite('Interactive window command listener', async () => {
         when(
             fileSystem.writeFile(
                 anything(),
-                argThat(o => {
+                argThat((o) => {
                     lastFileContents = o;
                     return true;
                 })
@@ -220,7 +221,7 @@ suite('Interactive window command listener', async () => {
 
     test('Import', async () => {
         createCommandListener();
-        when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(
+        when(applicationShell.showOpenDialog(argThat((o) => o.openLabel && o.openLabel.includes('Import')))).thenReturn(
             Promise.resolve([Uri.file('foo')])
         );
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
@@ -235,7 +236,7 @@ suite('Interactive window command listener', async () => {
         createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
+        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
             Promise.resolve(Uri.file('foo'))
         );
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
@@ -262,10 +263,10 @@ suite('Interactive window command listener', async () => {
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
         const notebook = createTypeMoq<INotebook>('jupyter notebook');
         server
-            .setup(s => s.createNotebook(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((s) => s.createNotebook(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(notebook.object));
         notebook
-            .setup(n =>
+            .setup((n) =>
                 n.execute(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
@@ -278,7 +279,7 @@ suite('Interactive window command listener', async () => {
                 return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
             });
 
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
+        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
             Promise.resolve(Uri.file('foo'))
         );
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
@@ -300,7 +301,7 @@ suite('Interactive window command listener', async () => {
     });
     test('Export skipped on no file', async () => {
         createCommandListener();
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
+        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
             Promise.resolve(Uri.file('foo'))
         );
         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
@@ -310,7 +311,7 @@ suite('Interactive window command listener', async () => {
         createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
+        when(applicationShell.showSaveDialog(argThat((o) => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(
             Promise.resolve(Uri.file('foo'))
         );
         await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);

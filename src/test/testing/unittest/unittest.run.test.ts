@@ -77,8 +77,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
 
     function buildTestCliSwitches(): ITestConfiguration[] {
         const switches: ITestConfiguration[] = [];
-        ['-p', '--pattern'].forEach(p => {
-            ['-s', '--start - directory'].forEach(s => {
+        ['-p', '--pattern'].forEach((p) => {
+            ['-s', '--start - directory'].forEach((s) => {
                 switches.push({
                     patternSwitch: p,
                     startDirSwitch: s
@@ -108,6 +108,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         ioc.registerTestsHelper();
         ioc.registerTestStorage();
         ioc.registerTestVisitors();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.add<IArgumentsService>(IArgumentsService, ArgumentsService, UNITTEST_PROVIDER);
         ioc.serviceManager.add<IArgumentsHelper>(IArgumentsHelper, ArgumentsHelper);
         ioc.serviceManager.add<ITestManagerRunner>(ITestManagerRunner, TestManagerRunner, UNITTEST_PROVIDER);
@@ -144,16 +145,17 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (
+                //args[0] is pyvsc-run-isolated.py.
                 args.length > 1 &&
-                args[0] === '-c' &&
-                args[1].includes('import unittest') &&
-                args[1].includes('loader = unittest.TestLoader()')
+                args[1] === '-c' &&
+                args[2].includes('import unittest') &&
+                args[2].includes('loader = unittest.TestLoader()')
             ) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed
                     out: output
                         .split(/\r?\n/g)
-                        .map(item => item.trim())
+                        .map((item) => item.trim())
                         .join(EOL),
                     source: 'stdout'
                 });
@@ -168,7 +170,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    cliSwitches.forEach(cfg => {
+    cliSwitches.forEach((cfg) => {
         test(`Run Tests [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
             await updateSetting(
                 'testing.unittestArgs',
@@ -396,7 +398,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
             // tslint:disable-next-line:no-non-null-assertion
-            const testFileToTest = tests.testFiles.find(f => f.name === 'test_unittest_one.py')!;
+            const testFileToTest = tests.testFiles.find((f) => f.name === 'test_unittest_one.py')!;
             const testFile: TestsToRun = {
                 testFile: [testFileToTest],
                 testFolder: [],
@@ -463,7 +465,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
             // tslint:disable-next-line:no-non-null-assertion
-            const testSuiteToTest = tests.testSuites.find(s => s.testSuite.name === 'Test_test_one_1')!.testSuite;
+            const testSuiteToTest = tests.testSuites.find((s) => s.testSuite.name === 'Test_test_one_1')!.testSuite;
             const testSuite: TestsToRun = {
                 testFile: [],
                 testFolder: [],

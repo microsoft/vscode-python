@@ -60,9 +60,9 @@ function sortProductsInOrderForInstallation(products: Product[]) {
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
     // Even though kernelspec cannot be installed, display it so user knows what is missing.
     const names = products
-        .map(product => ProductNames.get(product))
-        .filter(name => !!name)
-        .map(name => name as string);
+        .map((product) => ProductNames.get(product))
+        .filter((name) => !!name)
+        .map((name) => name as string);
 
     switch (names.length) {
         case 0:
@@ -160,7 +160,7 @@ export class JupyterInterpreterDependencyService {
                 if (missingProducts.includes(Product.kernelspec) && !missingProducts.includes(Product.jupyter)) {
                     missingProducts.push(Product.jupyter);
                 }
-                const productsToInstall = missingProducts.filter(product => product !== Product.kernelspec);
+                const productsToInstall = missingProducts.filter((product) => product !== Product.kernelspec);
                 // Install jupyter, then notebook, then others in that order.
                 sortProductsInOrderForInstallation(productsToInstall);
 
@@ -214,7 +214,7 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterConfigurationService
      */
     public async areDependenciesInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
-        return this.getDependenciesNotInstalled(interpreter, token).then(items => items.length === 0);
+        return this.getDependenciesNotInstalled(interpreter, token).then((items) => items.length === 0);
     }
 
     /**
@@ -230,7 +230,7 @@ export class JupyterInterpreterDependencyService {
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
             return true;
         }
-        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then(result => result === true);
+        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then((result) => result === true);
         if (installed) {
             this.nbconvertInstalledInInterpreter.add(interpreter.path);
         }
@@ -259,10 +259,10 @@ export class JupyterInterpreterDependencyService {
             Promise.all([
                 this.installer
                     .isInstalled(Product.jupyter, interpreter)
-                    .then(installed => (installed ? noop() : notInstalled.push(Product.jupyter))),
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
                 this.installer
                     .isInstalled(Product.notebook, interpreter)
-                    .then(installed => (installed ? noop() : notInstalled.push(Product.notebook)))
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
             ]),
             createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);
@@ -274,7 +274,7 @@ export class JupyterInterpreterDependencyService {
             return [];
         }
         // Perform this check only if jupyter & notebook modules are installed.
-        const products = await this.isKernelSpecAvailable(interpreter, token).then(installed =>
+        const products = await this.isKernelSpecAvailable(interpreter, token).then((installed) =>
             installed ? [] : [Product.kernelspec]
         );
         if (products.length === 0) {
@@ -303,7 +303,7 @@ export class JupyterInterpreterDependencyService {
         return command
             .exec(['--version'], { throwOnStdErr: true })
             .then(() => true)
-            .catch(e => {
+            .catch((e) => {
                 traceError(`Kernel spec not found: `, e);
                 sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                 return false;

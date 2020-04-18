@@ -153,7 +153,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
@@ -210,7 +210,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
@@ -260,7 +260,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 

@@ -15,7 +15,6 @@ import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, DebugSe
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
@@ -103,7 +102,6 @@ suite('Debugging - Adapter Factory', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const workspaceService = mock(WorkspaceService);
         const httpClient = mock(HttpClient);
         const crypto = mock(CryptoUtils);
         const appEnvironment = mock(ApplicationEnvironment);
@@ -117,7 +115,6 @@ suite('Debugging - Adapter Factory', () => {
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -477,57 +474,5 @@ suite('Debugging - Adapter Factory', () => {
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         assert.deepEqual(descriptor, debugExecutable);
-    });
-
-    test('Expected remote arguments are returned if in DebugAdapterNewPtvsd experiment', async () => {
-        const remoteDebugOptions = {
-            waitUntilDebuggerAttaches: true,
-            host: 'host',
-            port: 999
-        };
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
-
-        // tslint:disable-next-line:no-any
-        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
-
-        assert.deepEqual(args, [
-            '--listen',
-            `${remoteDebugOptions.host}:${remoteDebugOptions.port}`,
-            '--wait-for-client'
-        ]);
-    });
-
-    test('Expected remote arguments are returned if not in DebugAdapterNewPtvsd experiment', async () => {
-        const remoteDebugOptions = {
-            waitUntilDebuggerAttaches: true,
-            host: 'host',
-            port: 999
-        };
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
-
-        // tslint:disable-next-line:no-any
-        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
-
-        assert.deepEqual(args, [
-            '--host',
-            remoteDebugOptions.host,
-            '--port',
-            remoteDebugOptions.port.toString(),
-            '--wait'
-        ]);
-    });
-
-    test('Wait args is empty if `waitUntilDebuggerAttaches` is set to false', async () => {
-        const remoteDebugOptions = {
-            waitUntilDebuggerAttaches: false,
-            host: 'host',
-            port: 999
-        };
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
-
-        // tslint:disable-next-line:no-any
-        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
-
-        assert.deepEqual(args, ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString()]);
     });
 });

@@ -15,11 +15,9 @@ import { ProductInstaller } from '../../../../client/common/installer/productIns
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { JupyterCommandFinderInterpreterExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
@@ -52,9 +50,9 @@ suite('Data Science - KernelService', () => {
         sessionManager = mock(JupyterSessionManager);
         activationHelper = mock(EnvironmentActivationService);
         execFactory = mock(PythonExecutionFactory);
-        execService = mock(PythonExecutionService);
+        execService = mock<IPythonExecutionService>();
         installer = mock(ProductInstaller);
-        jupyterInterpreterExecutionService = mock(JupyterCommandFinderInterpreterExecutionService);
+        jupyterInterpreterExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
         (instance(execService) as any).then = undefined;

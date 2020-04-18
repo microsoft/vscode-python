@@ -3,9 +3,16 @@
 
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
+import { DeprecatePythonPath } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
-import { IConfigurationService, Resource } from './common/types';
+import {
+    IConfigurationService,
+    IExperimentsManager,
+    IInterpreterPathService,
+    InspectInterpreterSettingType,
+    Resource
+} from './common/types';
 import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
@@ -72,9 +79,17 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
     return currentPythonPath === globalInterpreter.path;
 }
 
-function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
+export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
+    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
+    const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+    let settings: InspectInterpreterSettingType;
+    if (abExperiments.inExperiment(DeprecatePythonPath.experiment)) {
+        settings = interpreterPathService.inspect(resource);
+    } else {
+        settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
+    }
+    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python')
@@ -111,7 +126,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const [condaVersion, interpreter, interpreters] = await Promise.all([
         condaLocator
             .getCondaVersion()
-            .then(ver => (ver ? ver.raw : ''))
+            .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
         interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
@@ -126,7 +141,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
         : false;
     const hasPython3 =
-        interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
+        interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,

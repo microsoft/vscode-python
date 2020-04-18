@@ -36,7 +36,7 @@ suite('Python CodeAction Provider', () => {
         }
 
         const organizeImportsCodeAction = codeActions.filter(
-            codeAction => codeAction.kind === CodeActionKind.SourceOrganizeImports
+            (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports
         );
         expect(organizeImportsCodeAction).to.have.length(1);
         expect(organizeImportsCodeAction[0].kind).to.eq(CodeActionKind.SourceOrganizeImports);

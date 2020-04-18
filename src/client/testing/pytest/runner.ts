@@ -39,16 +39,16 @@ export class TestManagerRunner implements ITestManagerRunner {
     ): Promise<Tests> {
         let testPaths: string[] = [];
         if (options.testsToRun && options.testsToRun.testFolder) {
-            testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFolder.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testFile) {
-            testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFile.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testSuite) {
-            testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testSuite.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testFunction) {
-            testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFunction.map((f) => f.nameToRun));
         }
 
         let deleteJUnitXmlFile: Function = noop;

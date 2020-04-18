@@ -30,7 +30,7 @@ suite('Multiroot Linting', () => {
     const flake8Setting = 'linting.flake8Enabled';
 
     let ioc: UnitTestIocContainer;
-    suiteSetup(function() {
+    suiteSetup(function () {
         if (!IS_MULTI_ROOT_TEST) {
             this.skip();
         }
@@ -55,6 +55,7 @@ suite('Multiroot Linting', () => {
         ioc.registerVariableTypes();
         ioc.registerFileSystemTypes();
         ioc.registerMockInterpreterTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
         ioc.serviceManager.addSingleton<IProductPathService>(
@@ -138,7 +139,7 @@ suite('Multiroot Linting', () => {
         ]);
         await testLinterInWorkspaceFolder(product, 'workspace1', wks);
         await Promise.all(
-            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map(configTarget =>
+            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map((configTarget) =>
                 config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget)
             )
         );

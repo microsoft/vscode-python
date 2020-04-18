@@ -49,7 +49,7 @@ export function splitMultilineString(source: nbformat.MultilineString): string[]
                 }
                 return s;
             })
-            .filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
+            .filter((s) => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
     }
     return [];
 }
@@ -90,8 +90,8 @@ export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
         str.splitLines({ trim: false, removeEmptyEntries: false }),
-        _s => noop,
-        s => (result = result.concat(`${s}\n`))
+        (_s) => noop,
+        (s) => (result = result.concat(`${s}\n`))
     );
     return result;
 }
@@ -231,8 +231,8 @@ function extractComments(lines: string[]): string[] {
     const result: string[] = [];
     parseForComments(
         lines,
-        s => result.push(s),
-        _s => noop()
+        (s) => result.push(s),
+        (_s) => noop()
     );
     return result;
 }

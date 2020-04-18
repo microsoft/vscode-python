@@ -11,6 +11,9 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { TerminalEnvironmentActivationService } from '../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
 import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
@@ -22,7 +25,10 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -111,6 +117,10 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
+            [IExtensionSingleActivationService, InterpreterSecurityStorage],
+            [IInterpreterEvaluation, InterpreterEvaluation],
+            [IInterpreterSecurityStorage, InterpreterSecurityStorage],
+            [IInterpreterSecurityService, InterpreterSecurityService],
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],
             [IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global'],
             [IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace'],
@@ -176,7 +186,7 @@ suite('Interpreters - Service Registry', () => {
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
             [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
-        ].forEach(mapping => {
+        ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });
         verify(

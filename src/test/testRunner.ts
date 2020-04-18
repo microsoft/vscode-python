@@ -15,7 +15,7 @@ import { initialize } from './initialize';
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function(): number[] {
+    tty.getWindowSize = function (): number[] {
         return [80, 75];
     };
 }
@@ -85,10 +85,10 @@ export async function run(): Promise<void> {
                     return reject(error);
                 }
                 try {
-                    files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                    files.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
                     initializationScript()
                         .then(() =>
-                            mocha.run(failures =>
+                            mocha.run((failures) =>
                                 failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve()
                             )
                         )

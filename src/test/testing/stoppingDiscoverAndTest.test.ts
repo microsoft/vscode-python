@@ -53,6 +53,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         ioc.registerTestStorage();
         ioc.registerTestsHelper();
         ioc.registerTestDiagnosticServices();
+        ioc.registerInterpreterStorageTypes();
     }
 
     test('Running tests should not stop existing discovery', async () => {
@@ -77,17 +78,17 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         // This promise should never resolve nor reject.
         runningPromise
             .then(() => Promise.reject("Debugger stopped when it shouldn't have"))
-            .catch(error => deferred.reject(error));
+            .catch((error) => deferred.reject(error));
 
         discoveryPromise
-            .then(result => {
+            .then((result) => {
                 if (result === EmptyTests) {
                     deferred.resolve('');
                 } else {
                     deferred.reject('tests not empty');
                 }
             })
-            .catch(error => deferred.reject(error));
+            .catch((error) => deferred.reject(error));
 
         await deferred.promise;
     });
@@ -109,7 +110,7 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         await mockTestManager.discoverTests(CommandSource.auto);
         const runPromise = mockTestManager.runTest(CommandSource.ui);
         // tslint:disable-next-line:no-string-based-set-timeout
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // User manually discovering tests will kill the existing test runner.
         await mockTestManager.discoverTests(CommandSource.ui, true, false, true);

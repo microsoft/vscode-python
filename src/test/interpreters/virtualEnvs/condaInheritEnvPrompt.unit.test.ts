@@ -13,7 +13,7 @@ import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
-import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../client/common/utils/localize';
+import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
 import {
     CondaInheritEnvPrompt,
@@ -68,11 +68,11 @@ suite('Conda Inherit Env Prompt', async () => {
             );
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             interpreterService
-                .setup(is => is.getActiveInterpreter(resource))
+                .setup((is) => is.getActiveInterpreter(resource))
                 .returns(() => Promise.resolve(undefined) as any)
                 .verifiable(TypeMoq.Times.never());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal', resource))
+                .setup((ws) => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
@@ -82,7 +82,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns false if on Windows', async () => {
             platformService
-                .setup(ps => ps.isWindows)
+                .setup((ps) => ps.isWindows)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
@@ -96,15 +96,15 @@ suite('Conda Inherit Env Prompt', async () => {
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
-                .setup(ps => ps.isWindows)
+                .setup((ps) => ps.isWindows)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.once());
             interpreterService
-                .setup(is => is.getActiveInterpreter(resource))
+                .setup((is) => is.getActiveInterpreter(resource))
                 .returns(() => Promise.resolve(interpreter) as any)
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal', resource))
+                .setup((ws) => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
@@ -115,15 +115,15 @@ suite('Conda Inherit Env Prompt', async () => {
         test('Returns false if no active interpreter is present', async () => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
-                .setup(ps => ps.isWindows)
+                .setup((ps) => ps.isWindows)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.once());
             interpreterService
-                .setup(is => is.getActiveInterpreter(resource))
+                .setup((is) => is.getActiveInterpreter(resource))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal', resource))
+                .setup((ws) => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
@@ -137,19 +137,19 @@ suite('Conda Inherit Env Prompt', async () => {
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
-                .setup(ps => ps.isWindows)
+                .setup((ps) => ps.isWindows)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.once());
             interpreterService
-                .setup(is => is.getActiveInterpreter(resource))
+                .setup((is) => is.getActiveInterpreter(resource))
                 .returns(() => Promise.resolve(interpreter) as any)
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal', resource))
+                .setup((ws) => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.once());
             workspaceConfig
-                .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                .setup((ws) => ws.inspect<boolean>('integrated.inheritEnv'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
@@ -182,26 +182,26 @@ suite('Conda Inherit Env Prompt', async () => {
                     workspaceFolderValue: false
                 }
             }
-        ].forEach(testParams => {
+        ].forEach((testParams) => {
             test(testParams.name, async () => {
                 const interpreter = {
                     type: InterpreterType.Conda
                 };
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 platformService
-                    .setup(ps => ps.isWindows)
+                    .setup((ps) => ps.isWindows)
                     .returns(() => false)
                     .verifiable(TypeMoq.Times.once());
                 interpreterService
-                    .setup(is => is.getActiveInterpreter(resource))
+                    .setup((is) => is.getActiveInterpreter(resource))
                     .returns(() => Promise.resolve(interpreter) as any)
                     .verifiable(TypeMoq.Times.once());
                 workspaceService
-                    .setup(ws => ws.getConfiguration('terminal', resource))
+                    .setup((ws) => ws.getConfiguration('terminal', resource))
                     .returns(() => workspaceConfig.object)
                     .verifiable(TypeMoq.Times.once());
                 workspaceConfig
-                    .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                    .setup((ws) => ws.inspect<boolean>('integrated.inheritEnv'))
                     .returns(() => testParams.settings as any);
                 const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
                 expect(result).to.equal(false, 'Prompt should not be shown');
@@ -220,18 +220,18 @@ suite('Conda Inherit Env Prompt', async () => {
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
-                .setup(ps => ps.isWindows)
+                .setup((ps) => ps.isWindows)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.once());
             interpreterService
-                .setup(is => is.getActiveInterpreter(resource))
+                .setup((is) => is.getActiveInterpreter(resource))
                 .returns(() => Promise.resolve(interpreter) as any)
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal', resource))
+                .setup((ws) => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.once());
-            workspaceConfig.setup(ws => ws.inspect<boolean>('integrated.inheritEnv')).returns(() => settings as any);
+            workspaceConfig.setup((ws) => ws.inspect<boolean>('integrated.inheritEnv')).returns(() => settings as any);
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
             expect(result).to.equal(true, 'Prompt should be shown');
             expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
@@ -348,11 +348,7 @@ suite('Conda Inherit Env Prompt', async () => {
     });
 
     suite('Method promptAndUpdate()', () => {
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.moreInfo()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.moreInfo()];
         setup(() => {
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -376,11 +372,11 @@ suite('Conda Inherit Env Prompt', async () => {
 
         test('Does not display prompt if it is disabled', async () => {
             notificationPromptEnabled
-                .setup(n => n.value)
+                .setup((n) => n.value)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.once());
             appShell
-                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .setup((a) => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -391,27 +387,27 @@ suite('Conda Inherit Env Prompt', async () => {
         test('Do nothing if no option is selected', async () => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             notificationPromptEnabled
-                .setup(n => n.value)
+                .setup((n) => n.value)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
             appShell
-                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .setup((a) => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal'))
+                .setup((ws) => ws.getConfiguration('terminal'))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             workspaceConfig
-                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .setup((wc) => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
             notificationPromptEnabled
-                .setup(n => n.updateValue(false))
+                .setup((n) => n.updateValue(false))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://aka.ms/AA66i8f'))
+                .setup((b) => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -424,27 +420,27 @@ suite('Conda Inherit Env Prompt', async () => {
         test('Update terminal settings if `Yes` is selected', async () => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             notificationPromptEnabled
-                .setup(n => n.value)
+                .setup((n) => n.value)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
             appShell
-                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelYes()))
+                .setup((a) => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(Common.bannerLabelYes()))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal'))
+                .setup((ws) => ws.getConfiguration('terminal'))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.once());
             workspaceConfig
-                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .setup((wc) => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
             notificationPromptEnabled
-                .setup(n => n.updateValue(false))
+                .setup((n) => n.updateValue(false))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://aka.ms/AA66i8f'))
+                .setup((b) => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -457,27 +453,27 @@ suite('Conda Inherit Env Prompt', async () => {
         test('Disable notification prompt if `No` is selected', async () => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             notificationPromptEnabled
-                .setup(n => n.value)
+                .setup((n) => n.value)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
             appShell
-                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
-                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelNo()))
+                .setup((a) => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(Common.bannerLabelNo()))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal'))
+                .setup((ws) => ws.getConfiguration('terminal'))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             workspaceConfig
-                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .setup((wc) => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
             notificationPromptEnabled
-                .setup(n => n.updateValue(false))
+                .setup((n) => n.updateValue(false))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             browserService
-                .setup(b => b.launch('https://aka.ms/AA66i8f'))
+                .setup((b) => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -490,27 +486,27 @@ suite('Conda Inherit Env Prompt', async () => {
         test('Launch browser if `More info` option is selected', async () => {
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             notificationPromptEnabled
-                .setup(n => n.value)
+                .setup((n) => n.value)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
             appShell
-                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .setup((a) => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
                 .returns(() => Promise.resolve(Common.moreInfo()))
                 .verifiable(TypeMoq.Times.once());
             workspaceService
-                .setup(ws => ws.getConfiguration('terminal'))
+                .setup((ws) => ws.getConfiguration('terminal'))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             workspaceConfig
-                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .setup((wc) => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
             notificationPromptEnabled
-                .setup(n => n.updateValue(false))
+                .setup((n) => n.updateValue(false))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://aka.ms/AA66i8f'))
+                .setup((b) => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             await condaInheritEnvPrompt.promptAndUpdate();

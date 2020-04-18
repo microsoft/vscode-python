@@ -65,6 +65,7 @@ suite('DataScience Interactive Panel', () => {
             focusPending: 0,
             font: { family: '', size: 1 },
             gatherCell: noopAny,
+            gatherCellToScript: noopAny,
             getVariableData: noopAny,
             gotoCell: noopAny,
             interruptKernel: noopAny,
@@ -90,6 +91,7 @@ suite('DataScience Interactive Panel', () => {
             undo: noopAny,
             undoStack: noopAny,
             unfocus: noopAny,
+            widgetFailed: noopAny,
             variableState: {
                 currentExecutionCount: 0,
                 pageSize: 0,

@@ -17,7 +17,7 @@ export class NugetRepository implements INugetRepository {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     public async getPackages(packageName: string): Promise<NugetPackage[]> {
         const versions = await this.getVersions(nugetPackageBaseAddress, packageName);
-        return versions.map(version => {
+        return versions.map((version) => {
             const uri = this.getNugetPackageUri(nugetPackageBaseAddress, packageName, version);
             return { version, uri, package: packageName };
         });
@@ -26,7 +26,7 @@ export class NugetRepository implements INugetRepository {
         const uri = `${packageBaseAddress}/${packageName.toLowerCase().trim()}/index.json`;
         const httpClient = this.serviceContainer.get<IHttpClient>(IHttpClient);
         const result = await httpClient.getJSON<{ versions: string[] }>(uri);
-        return result.versions.map(v => parse(v, true) || new SemVer('0.0.0'));
+        return result.versions.map((v) => parse(v, true) || new SemVer('0.0.0'));
     }
     public getNugetPackageUri(packageBaseAddress: string, packageName: string, version: SemVer): string {
         return `${packageBaseAddress}/${packageName}/${version.raw}/${packageName}.${version.raw}.nupkg`;

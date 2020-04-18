@@ -43,7 +43,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                 title: DebugConfigStrings.flask.enterAppPathOrNamePath.title(),
                 value: 'app.py',
                 prompt: DebugConfigStrings.flask.enterAppPathOrNamePath.prompt(),
-                validate: value =>
+                validate: (value) =>
                     Promise.resolve(
                         value && value.trim().length > 0
                             ? undefined

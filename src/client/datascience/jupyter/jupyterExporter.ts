@@ -96,19 +96,18 @@ export class JupyterExporter implements INotebookExporter {
         // Use this to build our metadata object
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
-                name: 'python',
                 codemirror_mode: {
                     name: 'ipython',
                     version: pythonNumber
-                }
+                },
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                name: 'python',
+                nbconvert_exporter: 'python',
+                pygments_lexer: `ipython${pythonNumber}`,
+                version: pythonNumber
             },
-            orig_nbformat: 2,
-            file_extension: '.py',
-            mimetype: 'text/x-python',
-            name: 'python',
-            npconvert_exporter: 'python',
-            pygments_lexer: `ipython${pythonNumber}`,
-            version: pythonNumber
+            orig_nbformat: 2
         };
 
         // Create an object for matching cell definitions
@@ -182,7 +181,7 @@ export class JupyterExporter implements INotebookExporter {
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
-        const haveChangeAlready = cells.find(c =>
+        const haveChangeAlready = cells.find((c) =>
             concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
         );
         if (!haveChangeAlready) {
@@ -221,9 +220,9 @@ export class JupyterExporter implements INotebookExporter {
         // First filter out sys info cells. Jupyter doesn't understand these
         return (
             cells
-                .filter(c => c.data.cell_type !== 'messages')
+                .filter((c) => c.data.cell_type !== 'messages')
                 // Then prune each cell down to just the cell data.
-                .map(c => this.pruneCell(c, cellMatcher))
+                .map((c) => this.pruneCell(c, cellMatcher))
         );
     };
 
@@ -245,7 +244,7 @@ export class JupyterExporter implements INotebookExporter {
             const array = source
                 .toString()
                 .split('\n')
-                .map(s => `${s}\n`);
+                .map((s) => `${s}\n`);
             if (array.length > 0 && cellMatcher.isCell(array[0])) {
                 return array.slice(1);
             }

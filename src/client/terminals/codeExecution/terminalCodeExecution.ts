@@ -47,7 +47,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             await this._terminalService!.show();
             return;
         }
-        this.replActive = new Promise<boolean>(async resolve => {
+        this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
             await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
@@ -60,15 +60,11 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = pythonSettings.pythonPath;
+        const command = this.platformService.isWindows
+            ? pythonSettings.pythonPath.replace(/\\/g, '/')
+            : pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
-
-        const isWindows = this.platformService.isWindows;
-
-        return {
-            command: isWindows ? command.replace(/\\/g, '/') : command,
-            args: [...launchArgs, ...args]
-        };
+        return { command, args: [...launchArgs, ...args], python: [command] };
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts

@@ -29,7 +29,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             return this.discoverTestsInTestDirectory(opts);
         }
         const results = await Promise.all(
-            testDirectories.map(testDir => {
+            testDirectories.map((testDir) => {
                 // Add test directory as a positional argument.
                 const opts = {
                     ...options,

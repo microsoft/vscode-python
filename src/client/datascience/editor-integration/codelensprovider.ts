@@ -75,7 +75,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private onDidCloseTextDocument(e: vscode.TextDocument) {
-        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === e.fileName);
+        const index = this.activeCodeWatchers.findIndex((item) => item.getFileName() === e.fileName);
         if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
         }
@@ -116,13 +116,13 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
             if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
                 // We are in the given debug file, so only return the code lens that contains the given line
-                const activeLenses = lenses.filter(lens => {
+                const activeLenses = lenses.filter((lens) => {
                     // -1 for difference between file system one based and debugger zero based
                     const pos = new vscode.Position(debugLocation.lineNumber - 1, debugLocation.column - 1);
                     return lens.range.contains(pos);
                 });
 
-                return activeLenses.filter(lens => {
+                return activeLenses.filter((lens) => {
                     if (lens.command) {
                         return debugCellList.includes(lens.command.command);
                     }
@@ -130,7 +130,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
                 });
             }
         } else {
-            return lenses.filter(lens => {
+            return lenses.filter((lens) => {
                 if (lens.command) {
                     return !debugCellList.includes(lens.command.command);
                 }
@@ -159,7 +159,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings): ICodeWatcher | undefined {
-        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === fileName);
+        const index = this.activeCodeWatchers.findIndex((item) => item.getFileName() === fileName);
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];
             if (item.getVersion() === version) {
@@ -176,7 +176,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Create a new watcher for this file if we can find a matching document
-        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === fileName);
+        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.fileName === fileName);
         if (possibleDocuments && possibleDocuments.length > 0) {
             return this.createNewCodeWatcher(possibleDocuments[0]);
         }

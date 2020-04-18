@@ -37,7 +37,7 @@ export function visitRecursive(tests: Tests, arg1: TestDataItem | Visitor, arg2?
     } else {
         children = tests.rootTestFolders;
     }
-    children.forEach(folder => visitRecursive(tests, folder, visitor));
+    children.forEach((folder) => visitRecursive(tests, folder, visitor));
 }
 
 /**

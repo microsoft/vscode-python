@@ -73,7 +73,7 @@ export async function initializeTokenizer(
 
             // Setup our registry of different
             const registry = new Registry({
-                getGrammarDefinition: async _scopeName => {
+                getGrammarDefinition: async (_scopeName) => {
                     return {
                         format: 'json',
                         content: tmlanguageJSON

@@ -375,6 +375,33 @@ export interface IApplicationShell {
     ): Thenable<R>;
 
     /**
+     * Show progress in the status bar with a custom icon instead of the default spinner.
+     * Progress is shown while running the given callback and while the promise it returned isn't resolved nor rejected.
+     * At the moment, progress can only be displayed in the status bar when using this method. If you want to
+     * display it elsewhere, use `withProgress`.
+     *
+     * @param icon A valid Octicon.
+     *
+     * @param task A callback returning a promise. Progress state can be reported with
+     * the provided [progress](#Progress)-object.
+     *
+     * To report discrete progress, use `increment` to indicate how much work has been completed. Each call with
+     * a `increment` value will be summed up and reflected as overall progress until 100% is reached (a value of
+     * e.g. `10` accounts for `10%` of work done).
+     * Note that currently only `ProgressLocation.Notification` is capable of showing discrete progress.
+     *
+     * To monitor if the operation has been cancelled by the user, use the provided [`CancellationToken`](#CancellationToken).
+     * Note that currently only `ProgressLocation.Notification` is supporting to show a cancel button to cancel the
+     * long running operation.
+     *
+     * @return The thenable the task-callback returned.
+     */
+    withProgressCustomIcon<R>(
+        icon: string,
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+    ): Thenable<R>;
+
+    /**
      * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
      * @param viewId Id of the view contributed using the extension point `views`.
      * @param options Options for creating the [TreeView](#TreeView)
@@ -468,7 +495,7 @@ export interface IDocumentManager {
      *
      * @readonly
      */
-    readonly textDocuments: TextDocument[];
+    readonly textDocuments: readonly TextDocument[];
     /**
      * The currently active editor or `undefined`. The active editor is the one
      * that currently has focus or, when none has focus, the one that has changed
@@ -638,7 +665,38 @@ export interface IWorkspaceService {
      *
      * @readonly
      */
-    readonly workspaceFolders: WorkspaceFolder[] | undefined;
+    readonly workspaceFolders: readonly WorkspaceFolder[] | undefined;
+
+    /**
+     * The location of the workspace file, for example:
+     *
+     * `file:///Users/name/Development/myProject.code-workspace`
+     *
+     * or
+     *
+     * `untitled:1555503116870`
+     *
+     * for a workspace that is untitled and not yet saved.
+     *
+     * Depending on the workspace that is opened, the value will be:
+     *  * `undefined` when no workspace or  a single folder is opened
+     *  * the path of the workspace file as `Uri` otherwise. if the workspace
+     * is untitled, the returned URI will use the `untitled:` scheme
+     *
+     * The location can e.g. be used with the `vscode.openFolder` command to
+     * open the workspace again after it has been closed.
+     *
+     * **Example:**
+     * ```typescript
+     * vscode.commands.executeCommand('vscode.openFolder', uriOfWorkspace);
+     * ```
+     *
+     * **Note:** it is not advised to use `workspace.workspaceFile` to write
+     * configuration data into the file. You can use `workspace.getConfiguration().update()`
+     * for that purpose which will work both when a single folder is opened as
+     * well as an untitled or saved workspace.
+     */
+    readonly workspaceFile: Resource;
 
     /**
      * An event that is emitted when a workspace folder is added or removed.
@@ -987,6 +1045,18 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
+    /**
+     * Convert a uri for the local file system to one that can be used inside webviews.
+     *
+     * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The
+     * `asWebviewUri` function takes a local `file:` uri and converts it into a uri that can be used inside of
+     * a webview to load the same resource:
+     *
+     * ```ts
+     * webview.html = `<img src="${webview.asWebviewUri(vscode.Uri.file('/Users/codey/workspace/cat.gif'))}">`
+     * ```
+     */
+    asWebviewUri(localResource: Uri): Uri;
     setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
@@ -1024,6 +1094,11 @@ export interface IWebPanelOptions {
     listener: IWebPanelMessageListener;
     title: string;
     rootPath: string;
+    /**
+     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
+     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
+     */
+    additionalPaths?: string[];
     scripts: string[];
     startHttpServer: boolean;
     cwd: string;
@@ -1096,85 +1171,242 @@ export interface IActiveResourceService {
 }
 
 // Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
+//#region Custom editors: https://github.com/microsoft/vscode/issues/77131
+
+// tslint:disable: interface-name
 /**
- * Defines the editing functionality of a webview editor. This allows the webview editor to hook into standard
+ * Defines the editing capability of a custom webview editor. This allows the webview editor to hook into standard
  * editor events such as `undo` or `save`.
  *
- * @param EditType Type of edits. Edit objects must be json serializable.
+ * @param EditType Type of edits.
  */
-// tslint:disable-next-line: interface-name
-export interface WebviewCustomEditorEditingDelegate<EditType> {
+export interface CustomEditorEditingDelegate<EditType = unknown> {
     /**
      * Event triggered by extensions to signal to VS Code that an edit has occurred.
      */
-    readonly onEdit: Event<{ readonly resource: Uri; readonly edit: EditType }>;
+    readonly onDidEdit: Event<CustomDocumentEditEvent<EditType>>;
     /**
-     * Save a resource.
+     * Save the resource.
      *
-     * @param resource Resource being saved.
+     * @param document Document to save.
+     * @param cancellation Token that signals the save is no longer required (for example, if another save was triggered).
      *
      * @return Thenable signaling that the save has completed.
      */
-    save(resource: Uri): Thenable<void>;
+    save(document: CustomDocument, cancellation: CancellationToken): Thenable<void>;
 
     /**
-     * Save an existing resource at a new path.
+     * Save the existing resource at a new path.
      *
-     * @param resource Resource being saved.
+     * @param document Document to save.
      * @param targetResource Location to save to.
      *
      * @return Thenable signaling that the save has completed.
      */
-    saveAs(resource: Uri, targetResource: Uri): Thenable<void>;
+    saveAs(document: CustomDocument, targetResource: Uri): Thenable<void>;
 
     /**
      * Apply a set of edits.
      *
-     * Note that is not invoked when `onEdit` is called as `onEdit` implies also updating the view to reflect the edit.
+     * Note that is not invoked when `onDidEdit` is called because `onDidEdit` implies also updating the view to reflect the edit.
      *
-     * @param resource Resource being edited.
+     * @param document Document to apply edits to.
      * @param edit Array of edits. Sorted from oldest to most recent.
      *
      * @return Thenable signaling that the change has completed.
      */
-    applyEdits(resource: Uri, edits: readonly EditType[]): Thenable<void>;
+    applyEdits(document: CustomDocument, edits: readonly EditType[]): Thenable<void>;
 
     /**
      * Undo a set of edits.
      *
-     * This is triggered when a user undoes an edit or when revert is called on a file.
+     * This is triggered when a user undoes an edit.
      *
-     * @param resource Resource being edited.
+     * @param document Document to undo edits from.
      * @param edit Array of edits. Sorted from most recent to oldest.
      *
      * @return Thenable signaling that the change has completed.
      */
-    undoEdits(resource: Uri, edits: readonly EditType[]): Thenable<void>;
+    undoEdits(document: CustomDocument, edits: readonly EditType[]): Thenable<void>;
+
+    /**
+     * Revert the file to its last saved state.
+     *
+     * @param document Document to revert.
+     * @param edits Added or applied edits.
+     *
+     * @return Thenable signaling that the change has completed.
+     */
+    revert(document: CustomDocument, edits: CustomDocumentRevert<EditType>): Thenable<void>;
+
+    /**
+     * Back up the resource in its current state.
+     *
+     * Backups are used for hot exit and to prevent data loss. Your `backup` method should persist the resource in
+     * its current state, i.e. with the edits applied. Most commonly this means saving the resource to disk in
+     * the `ExtensionContext.storagePath`. When VS Code reloads and your custom editor is opened for a resource,
+     * your extension should first check to see if any backups exist for the resource. If there is a backup, your
+     * extension should load the file contents from there instead of from the resource in the workspace.
+     *
+     * `backup` is triggered whenever an edit it made. Calls to `backup` are debounced so that if multiple edits are
+     * made in quick succession, `backup` is only triggered after the last one. `backup` is not invoked when
+     * `auto save` is enabled (since auto save already persists resource ).
+     *
+     * @param document Document to revert.
+     * @param cancellation Token that signals the current backup since a new backup is coming in. It is up to your
+     * extension to decided how to respond to cancellation. If for example your extension is backing up a large file
+     * in an operation that takes time to complete, your extension may decide to finish the ongoing backup rather
+     * than cancelling it to ensure that VS Code has some valid backup.
+     */
+    backup(document: CustomDocument, cancellation: CancellationToken): Thenable<void>;
 }
 
-// tslint:disable-next-line: interface-name
-export interface WebviewCustomEditorProvider {
+/**
+ * Event triggered by extensions to signal to VS Code that an edit has occurred on a CustomDocument``.
+ */
+export interface CustomDocumentEditEvent<EditType = unknown> {
     /**
-     * Controls the editing functionality of a webview editor. This allows the webview editor to hook into standard
-     * editor events such as `undo` or `save`.
-     *
-     * WebviewEditors that do not have `editingCapability` are considered to be readonly. Users can still interact
-     * with readonly editors, but these editors will not integrate with VS Code's standard editor functionality.
+     * Document the edit is for.
      */
-    readonly editingDelegate?: WebviewCustomEditorEditingDelegate<unknown>;
+    readonly document: CustomDocument;
+
+    /**
+     * Object that describes the edit.
+     *
+     * Edit objects are passed back to your extension in `undoEdits`, `applyEdits`, and `revert`.
+     */
+    readonly edit: EditType;
+
+    /**
+     * Display name describing the edit.
+     */
+    readonly label?: string;
+}
+
+/**
+ * Data about a revert for a `CustomDocument`.
+ */
+export interface CustomDocumentRevert<EditType = unknown> {
+    /**
+     * List of edits that were undone to get the document back to its on disk state.
+     */
+    readonly undoneEdits: readonly EditType[];
+
+    /**
+     * List of edits that were reapplied to get the document back to its on disk state.
+     */
+    readonly appliedEdits: readonly EditType[];
+}
+
+/**
+ * Represents a custom document used by a `CustomEditorProvider`.
+ *
+ * Custom documents are only used within a given `CustomEditorProvider`. The lifecycle of a
+ * `CustomDocument` is managed by VS Code. When no more references remain to a given `CustomDocument`,
+ * then it is disposed of.
+ *
+ * @param UserDataType Type of custom object that extensions can store on the document.
+ */
+export interface CustomDocument<UserDataType = unknown> {
+    /**
+     * The associated viewType for this document.
+     */
+    readonly viewType: string;
+
+    /**
+     * The associated uri for this document.
+     */
+    readonly uri: Uri;
+
+    /**
+     * Event fired when there are no more references to the `CustomDocument`.
+     */
+    readonly onDidDispose: Event<void>;
+
+    /**
+     * Custom data that an extension can store on the document.
+     */
+    userData?: UserDataType;
+}
+
+/**
+ * Provider for webview editors that use a custom data model.
+ *
+ * Custom webview editors use [`CustomDocument`](#CustomDocument) as their data model.
+ * This gives extensions full control over actions such as edit, save, and backup.
+ *
+ * You should use custom text based editors when dealing with binary files or more complex scenarios. For simple text
+ * based documents, use [`WebviewTextEditorProvider`](#WebviewTextEditorProvider) instead.
+ */
+export interface CustomEditorProvider {
+    /**
+     * Defines the editing capability of a custom webview document.
+     *
+     * When not provided, the document is considered readonly.
+     */
+    readonly editingDelegate?: CustomEditorEditingDelegate;
+    /**
+     * Resolve the model for a given resource.
+     *
+     * `resolveCustomDocument` is called when the first editor for a given resource is opened, and the resolve document
+     * is passed to `resolveCustomEditor`. The resolved `CustomDocument` is re-used for subsequent editor opens.
+     * If all editors for a given resource are closed, the `CustomDocument` is disposed of. Opening an editor at
+     * this point will trigger another call to `resolveCustomDocument`.
+     *
+     * @param document Document to resolve.
+     *
+     * @return The capabilities of the resolved document.
+     */
+    resolveCustomDocument(document: CustomDocument): Thenable<void>;
+
     /**
      * Resolve a webview editor for a given resource.
      *
-     * To resolve a webview editor, a provider must fill in its initial html content and hook up all
-     * the event listeners it is interested it. The provider should also take ownership of the passed in `WebviewPanel`.
+     * This is called when a user first opens a resource for a `CustomTextEditorProvider`, or if they reopen an
+     * existing editor using this `CustomTextEditorProvider`.
      *
-     * @param resource Resource being resolved.
-     * @param webview Webview being resolved. The provider should take ownership of this webview.
+     * To resolve a webview editor, the provider must fill in its initial html content and hook up all
+     * the event listeners it is interested it. The provider can also hold onto the `WebviewPanel` to use later,
+     * for example in a command. See [`WebviewPanel`](#WebviewPanel) for additional details
+     *
+     * @param document Document for the resource being resolved.
+     * @param webviewPanel Webview to resolve.
      *
      * @return Thenable indicating that the webview editor has been resolved.
      */
-    resolveWebviewEditor(resource: Uri, webview: WebviewPanel): Thenable<void>;
+    resolveCustomEditor(document: CustomDocument, webviewPanel: WebviewPanel): Thenable<void>;
 }
+
+/**
+ * Provider for text based webview editors.
+ *
+ * Text based webview editors use a [`TextDocument`](#TextDocument) as their data model. This considerably simplifies
+ * implementing a webview editor as it allows VS Code to handle many common operations such as
+ * undo and backup. The provider is responsible for synchronizing text changes between the webview and the `TextDocument`.
+ *
+ * You should use text based webview editors when dealing with text based file formats, such as `xml` or `json`.
+ * For binary files or more specialized use cases, see [CustomEditorProvider](#CustomEditorProvider).
+ */
+export interface CustomTextEditorProvider {
+    /**
+     * Resolve a webview editor for a given text resource.
+     *
+     * This is called when a user first opens a resource for a `CustomTextEditorProvider`, or if they reopen an
+     * existing editor using this `CustomTextEditorProvider`.
+     *
+     * To resolve a webview editor, the provider must fill in its initial html content and hook up all
+     * the event listeners it is interested it. The provider can also hold onto the `WebviewPanel` to use later,
+     * for example in a command. See [`WebviewPanel`](#WebviewPanel) for additional details.
+     *
+     * @param document Document for the resource to resolve.
+     * @param webviewPanel Webview to resolve.
+     *
+     * @return Thenable indicating that the webview editor has been resolved.
+     */
+    resolveCustomTextEditor(document: TextDocument, webviewPanel: WebviewPanel): Thenable<void>;
+}
+
+//#endregion
 
 export const ICustomEditorService = Symbol('ICustomEditorService');
 export interface ICustomEditorService {
@@ -1187,9 +1419,9 @@ export interface ICustomEditorService {
      *
      * @return Disposable that unregisters the `WebviewCustomEditorProvider`.
      */
-    registerWebviewCustomEditorProvider(
+    registerCustomEditorProvider(
         viewType: string,
-        provider: WebviewCustomEditorProvider,
+        provider: CustomEditorProvider,
         options?: WebviewPanelOptions
     ): Disposable;
     /**

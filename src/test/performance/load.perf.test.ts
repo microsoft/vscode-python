@@ -19,10 +19,7 @@ suite('Activation Times', () => {
     if (process.env.ACTIVATION_TIMES_LOG_FILE_PATH) {
         const logFile = process.env.ACTIVATION_TIMES_LOG_FILE_PATH;
         const sampleCounter = fs.existsSync(logFile)
-            ? fs
-                  .readFileSync(logFile, { encoding: 'utf8' })
-                  .toString()
-                  .split(/\r?\n/g).length
+            ? fs.readFileSync(logFile, { encoding: 'utf8' }).toString().split(/\r?\n/g).length
             : 1;
         if (sampleCounter > 5) {
             return;
@@ -56,10 +53,10 @@ suite('Activation Times', () => {
                     fs.readFileSync(file, { encoding: 'utf8' })
                         .toString()
                         .split(/\r?\n/g)
-                        .map(line => line.trim())
-                        .filter(line => line.length > 0)
-                        .map(line => parseInt(line, 10))
-                        .forEach(item => activationTimes.push(item));
+                        .map((line) => line.trim())
+                        .filter((line) => line.length > 0)
+                        .map((line) => parseInt(line, 10))
+                        .forEach((item) => activationTimes.push(item));
                 }
                 return activationTimes;
             }

@@ -50,43 +50,45 @@ suite('Unit Tests - Debug Launcher', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
 
         debugService = TypeMoq.Mock.ofType<IDebugService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDebugService))).returns(() => debugService.object);
 
         hasWorkspaceFolders = true;
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        workspaceService.setup(u => u.hasWorkspaceFolders).returns(() => hasWorkspaceFolders);
+        workspaceService.setup((u) => u.hasWorkspaceFolders).returns(() => hasWorkspaceFolders);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
 
         filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => filesystem.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => filesystem.object);
 
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>(undefined, TypeMoq.MockBehavior.Strict);
-        settings.setup(p => p.testing).returns(() => unitTestSettings.object);
+        settings.setup((p) => p.testing).returns(() => unitTestSettings.object);
 
         debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
             .returns(() => debugEnvHelper.object);
 
         configExperiment = TypeMoq.Mock.ofType<ILaunchDebugConfigurationResolverExperiment>(undefined);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ILaunchDebugConfigurationResolverExperiment)))
+            .setup((c) => c.get(TypeMoq.It.isValue(ILaunchDebugConfigurationResolverExperiment)))
             .returns(() => configExperiment.object);
 
         debugLauncher = new DebugLauncher(serviceContainer.object, getNewResolver(configService.object));
@@ -97,10 +99,10 @@ suite('Unit Tests - Debug Launcher', () => {
             TypeMoq.MockBehavior.Strict
         );
         validator
-            .setup(v => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((v) => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
         configExperiment
-            .setup(c => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
+            .setup((c) => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
             .returns(() => {
                 return;
             });
@@ -119,20 +121,20 @@ suite('Unit Tests - Debug Launcher', () => {
         expected: DebugConfiguration,
         testProvider: TestProvider
     ) {
-        platformService.setup(p => p.isWindows).returns(() => /^win/.test(process.platform));
-        settings.setup(p => p.pythonPath).returns(() => 'python');
-        settings.setup(p => p.envFile).returns(() => __filename);
+        platformService.setup((p) => p.isWindows).returns(() => /^win/.test(process.platform));
+        settings.setup((p) => p.pythonPath).returns(() => 'python');
+        settings.setup((p) => p.envFile).returns(() => __filename);
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
 
         debugEnvHelper
-            .setup(d => d.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .setup((d) => d.getEnvironmentVariables(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(expected.env));
 
         //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService
-            .setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
+            .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
                 return Promise.resolve(undefined as any);
             })
@@ -183,13 +185,13 @@ suite('Unit Tests - Debug Launcher', () => {
         const testLaunchScript = getTestLauncherScript(testProvider);
 
         const workspaceFolders = [createWorkspaceFolder(options.cwd), createWorkspaceFolder('five/six/seven')];
-        workspaceService.setup(u => u.workspaceFolders).returns(() => workspaceFolders);
-        workspaceService.setup(u => u.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolders[0]);
+        workspaceService.setup((u) => u.workspaceFolders).returns(() => workspaceFolders);
+        workspaceService.setup((u) => u.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolders[0]);
 
         if (!debugConfigs) {
-            filesystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+            filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
         } else {
-            filesystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+            filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
             if (typeof debugConfigs !== 'string') {
                 debugConfigs = JSON.stringify({
                     version: '0.1.0',
@@ -197,7 +199,7 @@ suite('Unit Tests - Debug Launcher', () => {
                 });
             }
             filesystem
-                .setup(fs => fs.readFile(TypeMoq.It.isAny()))
+                .setup((fs) => fs.readFile(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(debugConfigs as string));
         }
 
@@ -205,8 +207,8 @@ suite('Unit Tests - Debug Launcher', () => {
             expected = getDefaultDebugConfig();
         }
         expected.rules = [{ path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'), include: false }];
-        expected.program = testLaunchScript;
-        expected.args = options.args;
+        expected.program = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
+        expected.args = [testLaunchScript, ...options.args];
         if (!expected.cwd) {
             expected.cwd = workspaceFolders[0].uri.fsPath;
         }
@@ -245,7 +247,7 @@ suite('Unit Tests - Debug Launcher', () => {
 
     const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
     // tslint:disable-next-line:max-func-body-length
-    testProviders.forEach(testProvider => {
+    testProviders.forEach((testProvider) => {
         const testTitleSuffix = `(Test Framework '${testProvider}')`;
 
         test(`Must launch debugger ${testTitleSuffix}`, async () => {
@@ -274,7 +276,7 @@ suite('Unit Tests - Debug Launcher', () => {
         });
         test(`Must not launch debugger if cancelled ${testTitleSuffix}`, async () => {
             debugService
-                .setup(d => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined as any);
                 })
@@ -292,7 +294,7 @@ suite('Unit Tests - Debug Launcher', () => {
         test(`Must throw an exception if there are no workspaces ${testTitleSuffix}`, async () => {
             hasWorkspaceFolders = false;
             debugService
-                .setup(d => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined as any))
                 .verifiable(TypeMoq.Times.never());
 
@@ -432,10 +434,7 @@ suite('Unit Tests - Debug Launcher', () => {
             '
     ];
     for (const text of malformedFiles) {
-        const testID = text
-            .split('\n')[0]
-            .substring(3)
-            .trim();
+        const testID = text.split('\n')[0].substring(3).trim();
         test(`Handles malformed launch.json - ${testID}`, async () => {
             const options: LaunchOptions = {
                 cwd: 'one/two/three',
@@ -581,8 +580,8 @@ suite('Unit Tests - Debug Launcher', () => {
         const workspaceFolder = { name: 'abc', index: 0, uri: Uri.file(__filename) };
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         const jsonc = '{"version":"1234", "configurations":[1,2,],}';
-        filesystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
-        filesystem.setup(fs => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+        filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
+        filesystem.setup((fs) => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
 
         const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
 
@@ -593,8 +592,8 @@ suite('Unit Tests - Debug Launcher', () => {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
         const jsonc = '{"version":"1234"';
 
-        filesystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
-        filesystem.setup(fs => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+        filesystem.setup((fs) => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
+        filesystem.setup((fs) => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
 
         const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
 

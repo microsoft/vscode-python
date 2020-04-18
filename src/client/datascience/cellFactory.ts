@@ -110,7 +110,7 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
 }
 
 // CellRange is used as the basis for creating new ICells. We only use it in this file.
-interface ICellRange {
+export interface ICellRange {
     range: Range;
     title: string;
     cell_type: string;
@@ -151,7 +151,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
-        ...starts.map(s => {
+        ...starts.map((s) => {
             return generateCells(settings, s.code, '', s.startLine, false, uuid());
         })
     );
@@ -194,7 +194,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IDa
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
-        ...ranges.map(cr => {
+        ...ranges.map((cr) => {
             const code = document.getText(cr.range);
             return generateCells(settings, code, '', cr.range.start.line, false, uuid());
         })

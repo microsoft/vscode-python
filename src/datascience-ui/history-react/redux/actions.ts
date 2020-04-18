@@ -56,6 +56,8 @@ export const actionCreators = {
         createIncomingActionWithPayload(CommonActionType.COPY_CELL_CODE, { cellId }),
     gatherCell: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.GATHER_CELL, { cellId }),
+    gatherCellToScript: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.GATHER_CELL_TO_SCRIPT, { cellId }),
     clickCell: (cellId: string): CommonAction<ICellAction> =>
         createIncomingActionWithPayload(CommonActionType.CLICK_CELL, { cellId }),
     editCell: (cellId: string, e: IMonacoModelContentChangeEvent): CommonAction<IEditCellAction> =>
@@ -99,5 +101,7 @@ export const actionCreators = {
             sortAscending: true,
             startIndex,
             pageSize
-        })
+        }),
+    widgetFailed: (ex: Error): CommonAction<Error> =>
+        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex)
 };

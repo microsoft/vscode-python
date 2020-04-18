@@ -276,7 +276,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
         // Create message producers for output first.
         const outputs = this.cell.data.outputs as nbformat.IOutput[];
         const outputProducers = outputs.map(
-            o => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken)
+            (o) => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken)
         );
 
         // Then combine those into an array of producers for the rest of the messages
@@ -304,7 +304,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 // Produce the next message
                 producer
                     .produceNextMessage()
-                    .then(r => {
+                    .then((r) => {
                         // If there's a message, send it.
                         if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
                             this.onIOPub(r.message as KernelMessage.IIOPubMessage);
@@ -333,7 +333,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             );
             replyProducer
                 .produceNextMessage()
-                .then(r => {
+                .then((r) => {
                     this.onReply((<any>r.message) as KernelMessage.IShellMessage);
                 })
                 .ignoreErrors();
@@ -342,7 +342,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
             shellProducer
                 .produceNextMessage()
-                .then(r => {
+                .then((r) => {
                     this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
                 })
                 .ignoreErrors();

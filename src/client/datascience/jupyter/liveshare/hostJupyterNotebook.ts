@@ -17,9 +17,8 @@ import {
     ICell,
     IJupyterSession,
     INotebook,
+    INotebookExecutionInfo,
     INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo,
     InterruptResult
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
@@ -40,14 +39,13 @@ export class HostJupyterNotebook
     private localResponses: ResponseQueue = new ResponseQueue();
     private requestLog: Map<string, number> = new Map<string, number>();
     private catchupPendingCount: number = 0;
-    private disposed = false;
+    private isDisposed = false;
     constructor(
         liveShare: ILiveShareApi,
         session: IJupyterSession,
         configService: IConfigurationService,
         disposableRegistry: IDisposableRegistry,
-        owner: INotebookServer,
-        launchInfo: INotebookServerLaunchInfo,
+        executionInfo: INotebookExecutionInfo,
         loggers: INotebookExecutionLogger[],
         resource: Resource,
         identity: vscode.Uri,
@@ -61,8 +59,7 @@ export class HostJupyterNotebook
             session,
             configService,
             disposableRegistry,
-            owner,
-            launchInfo,
+            executionInfo,
             loggers,
             resource,
             identity,
@@ -74,8 +71,8 @@ export class HostJupyterNotebook
     }
 
     public dispose = async (): Promise<void> => {
-        if (!this.disposed) {
-            this.disposed = true;
+        if (!this.isDisposed) {
+            this.isDisposed = true;
             await super.dispose();
             const api = await this.api;
             return this.onDetach(api);
@@ -85,7 +82,7 @@ export class HostJupyterNotebook
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
-        if (api && !this.disposed) {
+        if (api && !this.isDisposed) {
             const service = await this.waitForService();
 
             // Attach event handlers to different requests
@@ -138,8 +135,8 @@ export class HostJupyterNotebook
 
         // Keep track of the number of guests that need to do a catchup request
         this.catchupPendingCount +=
-            ev.added.filter(e => e.role === vsls.Role.Guest).length -
-            ev.removed.filter(e => e.role === vsls.Role.Guest).length;
+            ev.added.filter((e) => e.role === vsls.Role.Guest).length -
+            ev.removed.filter((e) => e.role === vsls.Role.Guest).length;
     }
 
     public clear(id: string): void {
@@ -203,7 +200,7 @@ export class HostJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -316,12 +313,12 @@ export class HostJupyterNotebook
         id: string,
         responseQueues: ResponseQueue[]
     ): Observable<ICell[]> {
-        return new Observable(subscriber => {
+        return new Observable((subscriber) => {
             let pos = 0;
 
             // Listen to all of the events on the observable passed in.
             observable.subscribe(
-                cells => {
+                (cells) => {
                     // Forward to the next listener
                     subscriber.next(cells);
 
@@ -334,7 +331,7 @@ export class HostJupyterNotebook
                         this.postException(e, responseQueues);
                     }
                 },
-                e => {
+                (e) => {
                     subscriber.error(e);
                     this.postException(e, responseQueues);
                 },
@@ -377,7 +374,7 @@ export class HostJupyterNotebook
         this.postResult(
             ServerResponseType.Exception,
             { type: ServerResponseType.Exception, time: Date.now(), message: exc.toString() },
-            r => r,
+            (r) => r,
             responseQueues
         );
     }
@@ -394,7 +391,7 @@ export class HostJupyterNotebook
                 // Make a deep copy before we send. Don't want local copies being modified
                 const deepCopy = cloneDeep(typedResult);
                 this.waitForService()
-                    .then(s => {
+                    .then((s) => {
                         if (s) {
                             s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
                         }
@@ -402,7 +399,7 @@ export class HostJupyterNotebook
                     .ignoreErrors();
 
                 // Need to also save in memory for those guests that are in the middle of starting up
-                responseQueues.forEach(r => r.push(deepCopy));
+                responseQueues.forEach((r) => r.push(deepCopy));
             } catch (exc) {
                 traceError(exc);
             }

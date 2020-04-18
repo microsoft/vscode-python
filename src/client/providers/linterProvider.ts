@@ -46,9 +46,9 @@ export class LinterProvider implements IExtensionActivationService, Disposable {
         this.activatedOnce = true;
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
-        this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.disposables);
-        this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.disposables);
-        this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e), this.disposables);
+        this.documents.onDidOpenTextDocument((e) => this.onDocumentOpened(e), this.disposables);
+        this.documents.onDidCloseTextDocument((e) => this.onDocumentClosed(e), this.disposables);
+        this.documents.onDidSaveTextDocument((e) => this.onDocumentSaved(e), this.disposables);
 
         const disposable = this.workspaceService.onDidChangeConfiguration(this.lintSettingsChangedHandler.bind(this));
         this.disposables.push(disposable);
@@ -62,16 +62,16 @@ export class LinterProvider implements IExtensionActivationService, Disposable {
     }
 
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 
     private isDocumentOpen(uri: Uri): boolean {
-        return this.documents.textDocuments.some(document => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
+        return this.documents.textDocuments.some((document) => this.fs.arePathsSame(document.uri.fsPath, uri.fsPath));
     }
 
     private lintSettingsChangedHandler(e: ConfigurationChangeEvent) {
         // Look for python files that belong to the specified workspace folder.
-        workspace.textDocuments.forEach(document => {
+        workspace.textDocuments.forEach((document) => {
             if (e.affectsConfiguration('python.linting', document.uri)) {
                 this.engine.lintDocument(document, 'auto').ignoreErrors();
             }
@@ -91,9 +91,9 @@ export class LinterProvider implements IExtensionActivationService, Disposable {
 
         this.linterManager
             .getActiveLinters(false, document.uri)
-            .then(linters => {
+            .then((linters) => {
                 const fileName = path.basename(document.uri.fsPath).toLowerCase();
-                const watchers = linters.filter(info => info.configFileNames.indexOf(fileName) >= 0);
+                const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
                 if (watchers.length > 0) {
                     setTimeout(() => this.engine.lintOpenPythonFiles(), 1000);
                 }

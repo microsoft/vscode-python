@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
+import * as internalPython from '../../../common/process/internal/python';
 import { IServiceContainer } from '../../../ioc/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { Options } from '../../common/runner';
@@ -28,7 +29,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         const pythonScript = this.getDiscoveryScript(options);
         const unitTestOptions = this.translateOptions(options);
         const runOptions: Options = {
-            args: ['-c', pythonScript],
+            args: internalPython.execCode(pythonScript),
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token: options.token,

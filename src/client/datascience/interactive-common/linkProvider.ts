@@ -4,7 +4,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
+import { commands, Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -14,6 +14,13 @@ import { IInteractiveWindowListener } from '../types';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
 const LineQueryRegex = /line=(\d+)/;
+
+// The following list of commands represent those that can be executed
+// in a markdown cell using the syntax: https://command:[my.vscode.command].
+const linkCommandWhitelist = [
+    'python.datascience.gatherquality',
+    'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'
+];
 
 // tslint:disable: no-any
 @injectable()
@@ -40,9 +47,20 @@ export class LinkProvider implements IInteractiveWindowListener {
             case InteractiveWindowMessages.OpenLink:
                 if (payload) {
                     // Special case file URIs
-                    const href = payload.toString();
+                    const href: string = payload.toString();
                     if (href.startsWith('file')) {
                         this.openFile(href);
+                    } else if (href.startsWith('https://command:')) {
+                        const temp: string = href.split(':')[2];
+                        const params: string[] =
+                            temp.includes('/?') && temp.includes(',') ? temp.split('/?')[1].split(',') : [];
+                        let command = temp.split('/?')[0];
+                        if (command.endsWith('/')) {
+                            command = command.substring(0, command.length - 1);
+                        }
+                        if (linkCommandWhitelist.includes(command)) {
+                            commands.executeCommand(command, params);
+                        }
                     } else {
                         this.applicationShell.openUrl(href);
                     }
@@ -60,7 +78,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                             saveLabel: localize.DataScience.savePngTitle(),
                             filters: filtersObject
                         })
-                        .then(f => {
+                        .then((f) => {
                             if (f) {
                                 const buffer = new Buffer(payload.replace('data:image/png;base64', ''), 'base64');
                                 this.fileSystem.writeFile(f.fsPath, buffer).ignoreErrors();
@@ -89,20 +107,20 @@ export class LinkProvider implements IInteractiveWindowListener {
         }
 
         // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find(e =>
+        let editor = this.documentManager.visibleTextEditors.find((e) =>
             this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
         );
         if (editor) {
             this.documentManager
                 .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
-                .then(e => {
+                .then((e) => {
                     e.revealRange(selection, TextEditorRevealType.InCenter);
                 });
         } else {
             // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find(e =>
+                editor = this.documentManager.visibleTextEditors.find((e) =>
                     this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
                 );
                 if (editor) {

@@ -18,6 +18,16 @@ import {
     INotebookImporter,
     INotebookServer
 } from '../../client/datascience/types';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
+import {
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
+} from '../../client/interpreter/autoSelection/types';
+import { IInterpreterHelper } from '../../client/interpreter/contracts';
+import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
 import { TestContextService } from '../../client/testing/common/services/contextService';
@@ -131,7 +141,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagers() {
-        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
+        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
             return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -153,8 +163,15 @@ export class UnitTestIocContainer extends IocContainer {
         });
     }
 
+    public registerInterpreterStorageTypes() {
+        this.serviceManager.add<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
+        this.serviceManager.add<IInterpreterSecurityService>(IInterpreterSecurityService, InterpreterSecurityService);
+        this.serviceManager.add<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
+        this.serviceManager.add<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
+    }
+
     public registerTestManagerService() {
-        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
+        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
             return (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
                 const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

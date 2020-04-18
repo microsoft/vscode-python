@@ -46,8 +46,6 @@ import {
     IPlatformData,
     LanguageServerType
 } from '../../client/activation/types';
-import { ActiveResourceService } from '../../client/common/application/activeResource';
-import { IActiveResourceService } from '../../client/common/application/types';
 import { INugetRepository } from '../../client/common/nuget/types';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -213,9 +211,6 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
                 ILanguageServerOutputChannel,
                 LanguageServerOutputChannel
             )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService)
         ).once();
         verify(
             serviceManager.addSingleton<IExtensionSingleActivationService>(

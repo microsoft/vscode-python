@@ -45,24 +45,24 @@
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 50
+        "max": 0
     },
     {
         "name": "PtvsdWheels37 - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 50,
+        "min": 0,
         "max": 100
     },
     {
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
-        "min": 50,
-        "max": 60
+        "min": 0,
+        "max": 30
     },
     {
         "name": "Reload - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 90,
+        "min": 70,
         "max": 100
     },
     {
@@ -114,6 +114,18 @@
         "max": 100
     },
     {
+        "name": "LocalZMQKernel - experiment",
+        "salt": "LocalZMQKernel",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "LocalZMQKernel - control",
+        "salt": "LocalZMQKernel",
+        "min": 0,
+        "max": 100
+    },
+    {
         "name": "CollectLSRequestTiming - experiment",
         "salt": "CollectLSRequestTiming",
         "min": 0,
@@ -136,5 +148,29 @@
         "salt": "CollectNodeLSRequestTiming",
         "min": 0,
         "max": 0
+    },
+    {
+        "name": "EnableIPyWidgets - experiment",
+        "salt": "EnableIPyWidgets",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "EnableIPyWidgets - control",
+        "salt": "EnableIPyWidgets",
+        "min": 0,
+        "max": 0
+    },
+    {
+        "name": "DeprecatePythonPath - experiment",
+        "salt": "DeprecatePythonPath",
+        "min": 0,
+        "max": 0
+    },
+    {
+        "name": "DeprecatePythonPath - control",
+        "salt": "DeprecatePythonPath",
+        "min": 100,
+        "max": 100
     }
 ]

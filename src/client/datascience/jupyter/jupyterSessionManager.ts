@@ -32,7 +32,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
-        private config: IConfigurationService,
+        _config: IConfigurationService,
         private failOnPassword: boolean | undefined,
         private kernelSelector: KernelSelector,
         private outputChannel: IOutputChannel
@@ -51,12 +51,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
             // tslint:disable-next-line: no-any
             const sessionManager = this.sessionManager as any;
-            try {
-                await this.sessionManager.shutdownAll();
-            } finally {
-                this.sessionManager.dispose();
-                this.sessionManager = undefined;
-            }
+            this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
+            this.sessionManager = undefined;
 
             // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
             // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
@@ -110,7 +106,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // Remove duplicates.
         const dup = new Set<string>();
         return models
-            .map(m => {
+            .map((m) => {
                 return {
                     id: m.id,
                     name: m.name,
@@ -118,7 +114,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
                 };
             })
-            .filter(item => {
+            .filter((item) => {
                 if (dup.has(item.id)) {
                     return false;
                 }
@@ -168,7 +164,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     ? this.sessionManager.specs.kernelspecs
                     : {};
             const keys = Object.keys(kernelspecs);
-            return keys.map(k => {
+            return keys.map((k) => {
                 const spec = kernelspecs[k];
                 return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });
@@ -244,7 +240,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             ...serverSettings,
             init: requestInit,
             WebSocket: createJupyterWebSocket(
-                this.config.getSettings().datascience.verboseLogging,
                 cookieString,
                 allowUnauthorized
                 // tslint:disable-next-line:no-any

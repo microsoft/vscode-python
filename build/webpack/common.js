@@ -27,7 +27,7 @@ exports.nodeModulesToExternalize = [
     'node-stream-zip',
     'xml2js',
     'vsls/vscode',
-    'pdfkit',
+    'pdfkit/js/pdfkit.standalone',
     'crypto-js',
     'fontkit',
     'linebreak',
@@ -41,21 +41,24 @@ exports.nodeModulesToExternalize = [
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
-    plugins.push(
-        new webpack_bundle_analyzer.BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            reportFilename: `${name}.analyzer.html`,
-            generateStatsFile: true,
-            statsFilename: `${name}.stats.json`,
-            openAnalyzer: false // Open file manually if you want to see it :)
-        })
-    );
+    // Only run the analyzer on a local machine or if required
+    if (!constants.isCI || process.env.VSC_PYTHON_FORCE_ANALYZER) {
+        plugins.push(
+            new webpack_bundle_analyzer.BundleAnalyzerPlugin({
+                analyzerMode: 'static',
+                reportFilename: `${name}.analyzer.html`,
+                generateStatsFile: true,
+                statsFilename: `${name}.stats.json`,
+                openAnalyzer: false // Open file manually if you want to see it :)
+            })
+        );
+    }
     return plugins;
 }
 exports.getDefaultPlugins = getDefaultPlugins;
 function getListOfExistingModulesInOutDir() {
     const outDir = path.join(constants.ExtensionRootDir, 'out', 'client');
     const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
-    return files.map(filePath => `./${filePath.slice(0, -3)}`);
+    return files.map((filePath) => `./${filePath.slice(0, -3)}`);
 }
 exports.getListOfExistingModulesInOutDir = getListOfExistingModulesInOutDir;

@@ -46,7 +46,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         : vscode.ConfigurationTarget.Workspace;
 
     suiteSetup(async () => {
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -56,7 +56,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
     suiteTeardown(async () => {
         await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -78,6 +78,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         ioc.registerVariableTypes();
 
         ioc.registerMockProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
@@ -133,7 +134,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
         assert.equal(
-            tests.testSuites.every(t => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]),
+            tests.testSuites.every((t) => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]),
             true,
             'Suite name does not match class name'
         );

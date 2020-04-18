@@ -104,7 +104,7 @@ class Emitter<T> {
                     dispose: () => {
                         result.dispose = noop;
                         if (!this._disposed) {
-                            this._listeners = this._listeners.filter(l => l !== listener);
+                            this._listeners = this._listeners.filter((l) => l !== listener);
                         }
                     }
                 };
@@ -192,7 +192,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
     }
 
     public dispose() {
-        MockLiveShare.others = MockLiveShare.others.filter(o => o._id !== this._id);
+        MockLiveShare.others = MockLiveShare.others.filter((o) => o._id !== this._id);
     }
 
     public get session(): vsls.Session {
@@ -282,7 +282,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
         if (this._role === vsls.Role.Guest) {
             await this.stop();
         } else {
-            await Promise.all(MockLiveShare.others.map(p => p.stop()));
+            await Promise.all(MockLiveShare.others.map((p) => p.stop()));
         }
     }
     public shareService(name: string): Promise<vsls.SharedService> {

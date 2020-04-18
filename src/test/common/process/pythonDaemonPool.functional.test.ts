@@ -17,7 +17,6 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import {
     IProcessLogger,
     IPythonDaemonExecutionService,
@@ -67,14 +66,14 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async function() {
+    setup(async function () {
         if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
         logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
-        pythonExecutionService = mock(PythonExecutionService);
+        pythonExecutionService = mock<IPythonExecutionService>();
         when(
             pythonExecutionService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
         ).thenCall(() => {
@@ -101,14 +100,14 @@ suite('Daemon - Python Daemon Pool', () => {
     });
     teardown(() => {
         sinon.restore();
-        disposables.forEach(item => item.dispose());
+        disposables.forEach((item) => item.dispose());
         disposables = [];
     });
     async function getStdOutFromObservable(output: ObservableExecutionResult<string>) {
         return new Promise<string>((resolve, reject) => {
             const data: string[] = [];
             output.out.subscribe(
-                out => data.push(out.out.trim()),
+                (out) => data.push(out.out.trim()),
                 reject,
                 () => resolve(data.join(''))
             );
@@ -282,10 +281,10 @@ suite('Daemon - Python Daemon Pool', () => {
         const output = pythonDaemonPool.execObservable([fileToExecute], {});
         const outputsReceived: string[] = [];
         await new Promise((resolve, reject) => {
-            output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
+            output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         assert.deepEqual(
-            outputsReceived.filter(item => item.length > 0),
+            outputsReceived.filter((item) => item.length > 0),
             ['0', '1', '2', '3', '4']
         );
     }).timeout(5_000);
@@ -309,7 +308,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const output = pythonDaemonPool.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
         const promise = new Promise((resolve, reject) => {
-            output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
+            output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
     }).timeout(5_000);
@@ -323,7 +322,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const fileToExecute = await createPythonFile(source);
         // When using the python execution service, return a bogus value.
         when(pythonExecutionService.execObservable(deepEqual([fileToExecute]), anything())).thenCall(() => {
-            const observable = new Observable<Output<string>>(s => {
+            const observable = new Observable<Output<string>>((s) => {
                 s.next({ out: 'mypid', source: 'stdout' });
                 s.complete();
             });
@@ -399,8 +398,8 @@ suite('Daemon - Python Daemon Pool', () => {
         const fileToExecute1 = await createPythonFile(source1);
 
         let [pid1, pid2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim())
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim())
         ]);
 
         const processesUsedToRunCode = new Set<string>();
@@ -422,11 +421,11 @@ suite('Daemon - Python Daemon Pool', () => {
         [pid1, pid2] = await Promise.all([
             pythonDaemonPool
                 .exec([fileToExecute1], {})
-                .then(out => out.stdout.trim())
+                .then((out) => out.stdout.trim())
                 .catch(() => 'FAILED'),
             pythonDaemonPool
                 .exec([fileToExecute2], {})
-                .then(out => out.stdout.trim())
+                .then((out) => out.stdout.trim())
                 .catch(() => 'FAILED')
         ]);
 
@@ -447,8 +446,8 @@ suite('Daemon - Python Daemon Pool', () => {
         // Confirm we have two daemons by checking the Pids again.
         // One of them will be new.
         [pid1, pid2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim())
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim())
         ]);
 
         // Keep track of the pids.

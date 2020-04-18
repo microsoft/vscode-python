@@ -48,7 +48,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
     }
     public dispose() {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
@@ -62,6 +62,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
+
+        // Do we already have python file opened.
+        if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
+            this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
+        }
     }
 
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {

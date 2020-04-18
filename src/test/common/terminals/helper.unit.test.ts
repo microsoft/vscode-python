@@ -111,7 +111,7 @@ suite('Terminal Service helpers', () => {
             expect(args.name).to.be.deep.equal(theTitle);
         });
         test('Ensure spaces in command is quoted', async () => {
-            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((item) => {
                 const command = 'c:\\python 3.7.exe';
                 const args = ['1', '2'];
                 const commandPrefix =
@@ -126,7 +126,7 @@ suite('Terminal Service helpers', () => {
         });
 
         test('Ensure empty args are ignored', async () => {
-            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((item) => {
                 const command = 'python3.7.exe';
                 const args: string[] = [];
                 const commandPrefix =
@@ -141,7 +141,7 @@ suite('Terminal Service helpers', () => {
         });
 
         test('Ensure empty args are ignored with s in command', async () => {
-            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
+            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((item) => {
                 const command = 'c:\\python 3.7.exe';
                 const args: string[] = [];
                 const commandPrefix =
@@ -161,19 +161,11 @@ suite('Terminal Service helpers', () => {
     }
 
     suite('Activation', () => {
-        [undefined, Uri.parse('a')].forEach(resource => {
+        [undefined, Uri.parse('a')].forEach((resource) => {
             suite(title(resource), () => {
                 setup(() => {
                     doSetup();
                     when(configurationService.getSettings(resource)).thenReturn(instance(pythonSettings));
-                });
-                test('Activation command must be empty if activation of terminals is disabled', async () => {
-                    when(pythonSettings.terminal).thenReturn({ activateEnvironment: false } as any);
-
-                    const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
-
-                    expect(cmd).to.equal(undefined, 'Command must be undefined');
-                    verify(pythonSettings.terminal).once();
                 });
                 function ensureCondaIsSupported(
                     isSupported: boolean,
@@ -195,7 +187,6 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.equal(condaActivationCommands);
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(condaActivationProvider.getActivationCommands(resource, anything())).once();
@@ -215,7 +206,6 @@ suite('Terminal Service helpers', () => {
                     );
 
                     expect(cmd).to.equal(undefined, 'Command must be undefined');
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -238,7 +228,6 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -257,7 +246,7 @@ suite('Terminal Service helpers', () => {
                     );
                     when(pipenvActivationProvider.isShellSupported(anything())).thenReturn(true);
 
-                    [bashActivationProvider, cmdActivationProvider, pyenvActivationProvider].forEach(provider => {
+                    [bashActivationProvider, cmdActivationProvider, pyenvActivationProvider].forEach((provider) => {
                         when(provider.getActivationCommands(resource, anything())).thenResolve(['Something']);
                         when(provider.isShellSupported(anything())).thenReturn(true);
                     });
@@ -265,7 +254,6 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -290,7 +278,6 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -315,7 +302,6 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.terminal).once();
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -325,7 +311,7 @@ suite('Terminal Service helpers', () => {
                     verify(pipenvActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(cmdActivationProvider.isShellSupported(anything())).atLeast(1);
                 });
-                [undefined, pythonInterpreter].forEach(interpreter => {
+                [undefined, pythonInterpreter].forEach((interpreter) => {
                     test('Activation command for Shell must be empty for unknown os', async () => {
                         when(platformService.osType).thenReturn(OSType.Unknown);
 
@@ -339,8 +325,8 @@ suite('Terminal Service helpers', () => {
                         }
                     });
                 });
-                [undefined, pythonInterpreter].forEach(interpreter => {
-                    [OSType.Linux, OSType.OSX, OSType.Windows].forEach(osType => {
+                [undefined, pythonInterpreter].forEach((interpreter) => {
+                    [OSType.Linux, OSType.OSX, OSType.Windows].forEach((osType) => {
                         test(`Activation command for Shell must never use pipenv nor pyenv (${osType})`, async () => {
                             const pythonPath = 'some python Path value';
                             const shellToExpect =
@@ -359,7 +345,6 @@ suite('Terminal Service helpers', () => {
                             );
 
                             expect(cmd).to.equal(undefined, 'Command must be undefined');
-                            verify(pythonSettings.terminal).once();
                             verify(pythonSettings.pythonPath).times(interpreter ? 0 : 1);
                             verify(condaService.isCondaEnvironment(pythonPath)).times(interpreter ? 0 : 1);
                             verify(bashActivationProvider.isShellSupported(shellToExpect)).atLeast(1);

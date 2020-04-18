@@ -18,13 +18,13 @@ import {
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
 import {
     IConnection,
     IJupyterSession,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
@@ -38,7 +38,7 @@ export class JupyterServerBase implements INotebookServer {
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: Disposable | undefined;
     private serverExitCode: number | undefined;
-    private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
+    private notebooks = new Map<string, Promise<INotebook>>();
     private sessionManager: IJupyterSessionManager | undefined;
     private savedSession: IJupyterSession | undefined;
 
@@ -48,7 +48,7 @@ export class JupyterServerBase implements INotebookServer {
         private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,
         private sessionManagerFactory: IJupyterSessionManagerFactory,
-        private loggers: INotebookExecutionLogger[],
+        private serviceContainer: IServiceContainer,
         private jupyterOutputChannel: IOutputChannel
     ) {
         this.asyncRegistry.push(this);
@@ -67,7 +67,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
                 try {
                     this.serverExitCode = c;
                     traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
@@ -115,10 +115,10 @@ export class JupyterServerBase implements INotebookServer {
             savedSession,
             this.disposableRegistry,
             this.configService,
-            this.loggers,
+            this.serviceContainer,
             notebookMetadata,
             cancelToken
-        ).then(r => {
+        ).then((r) => {
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
             this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
             return r;
@@ -147,7 +147,8 @@ export class JupyterServerBase implements INotebookServer {
         }
 
         traceInfo(`Shutting down notebooks for ${this.id}`);
-        await Promise.all([...this.notebooks.values()].map(n => n.dispose()));
+        const notebooks = await Promise.all([...this.notebooks.values()]);
+        await Promise.all(notebooks.map((n) => n?.dispose()));
         traceInfo(`Shut down session manager`);
         if (this.sessionManager) {
             await this.sessionManager.dispose();
@@ -201,16 +202,26 @@ export class JupyterServerBase implements INotebookServer {
         return this.notebooks.get(identity.toString());
     }
 
-    protected getNotebooks(): INotebook[] {
+    protected getNotebooks(): Promise<INotebook>[] {
         return [...this.notebooks.values()];
     }
 
-    protected setNotebook(identity: Uri, notebook: INotebook) {
-        const oldDispose = notebook.dispose;
-        notebook.dispose = () => {
-            this.notebooks.delete(identity.toString());
-            return oldDispose();
+    protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+        const removeNotebook = () => {
+            if (this.notebooks.get(identity.toString()) === notebook) {
+                this.notebooks.delete(identity.toString());
+            }
         };
+
+        notebook
+            .then((nb) => {
+                const oldDispose = nb.dispose;
+                nb.dispose = () => {
+                    this.notebooks.delete(identity.toString());
+                    return oldDispose();
+                };
+            })
+            .catch(removeNotebook);
 
         // Save the notebook
         this.notebooks.set(identity.toString(), notebook);
@@ -223,7 +234,7 @@ export class JupyterServerBase implements INotebookServer {
         _savedSession: IJupyterSession | undefined,
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
-        _loggers: INotebookExecutionLogger[],
+        _serviceContainer: IServiceContainer,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {

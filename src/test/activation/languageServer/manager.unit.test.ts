@@ -16,8 +16,9 @@ import {
     ILanguageServerFolderService,
     ILanguageServerProxy
 } from '../../../client/activation/types';
+import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentsManager } from '../../../client/common/experiments';
-import { IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
+import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
@@ -37,6 +38,7 @@ suite('Language Server - Manager', () => {
     let surveyBanner: IPythonExtensionBanner;
     let folderService: ILanguageServerFolderService;
     let experimentsManager: IExperimentsManager;
+    let configService: IConfigurationService;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
@@ -46,17 +48,19 @@ suite('Language Server - Manager', () => {
         surveyBanner = mock(ProposeLanguageServerBanner);
         folderService = mock(DotNetLanguageServerFolderService);
         experimentsManager = mock(ExperimentsManager);
+        configService = mock(ConfigurationService);
         manager = new DotNetLanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension),
             instance(surveyBanner),
             instance(folderService),
-            instance(experimentsManager)
+            instance(experimentsManager),
+            instance(configService)
         );
     });
 
-    [undefined, Uri.file(__filename)].forEach(resource => {
+    [undefined, Uri.file(__filename)].forEach((resource) => {
         async function startLanguageServer() {
             let invoked = false;
             const lsExtensionChangeFn = (_handler: Function) => {

@@ -49,7 +49,7 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.virtualenvs',
             ...this.config.getSettings(resource).venvFolders
         ];
-        const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
+        const folders = [...new Set(venvFolders.map((item) => path.join(homedir, item)))];
 
         // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.
         const workonHomePath = this.currentProcess.env.WORKON_HOME;

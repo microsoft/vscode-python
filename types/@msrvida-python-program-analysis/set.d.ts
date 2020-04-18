@@ -2,14 +2,14 @@ export declare class Set<T> {
     private getIdentifier;
     private _items;
     constructor(getIdentifier: (item: T) => string, ...items: T[]);
-    readonly size: number;
+    get size(): number;
     add(...items: T[]): void;
     remove(item: T): void;
     pop(): T;
     has(item: T): boolean;
-    readonly items: T[];
+    get items(): T[];
     equals(that: Set<T>): boolean;
-    readonly empty: boolean;
+    get empty(): boolean;
     union(...those: Set<T>[]): Set<T>;
     intersect(that: Set<T>): Set<T>;
     filter(predicate: (item: T) => boolean): Set<T>;

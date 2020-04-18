@@ -4,14 +4,20 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { FileSettings, IInteractiveWindowListener, INotebookEditor, INotebookEditorProvider } from '../types';
+import {
+    FileSettings,
+    IInteractiveWindowListener,
+    INotebookEditor,
+    INotebookEditorProvider,
+    WebViewViewChangeEventArgs
+} from '../types';
 
 // tslint:disable: no-any
 
@@ -34,6 +40,8 @@ export class AutoSaveService implements IInteractiveWindowListener {
     private disposables: IDisposable[] = [];
     private notebookUri?: Uri;
     private timeout?: ReturnType<typeof setTimeout>;
+    private visible: boolean | undefined;
+    private active: boolean | undefined;
     constructor(
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
@@ -52,9 +60,10 @@ export class AutoSaveService implements IInteractiveWindowListener {
 
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
-            this.notebookUri = Uri.parse((payload as INotebookIdentity).resource);
-        }
-        if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
+            this.notebookUri = (payload as INotebookIdentity).resource;
+        } else if (message === InteractiveWindowMessages.NotebookClose) {
+            this.dispose();
+        } else if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
             const notebook = this.getNotebook();
             if (!notebook) {
                 traceError(
@@ -68,8 +77,25 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.disposables.push(notebook.saved(this.onNotebookSaved, this, this.disposables));
         }
     }
+    public onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        let changed = false;
+        if (this.visible !== args.current.visible) {
+            this.visible = args.current.visible;
+            changed = true;
+        }
+        if (this.active !== args.current.active) {
+            this.active = args.current.active;
+            changed = true;
+        }
+        if (changed) {
+            const settings = this.getAutoSaveSettings();
+            if (settings && settings.autoSave === 'onFocusChange') {
+                this.save();
+            }
+        }
+    }
     public dispose(): void | undefined {
-        this.disposables.filter(item => !!item).forEach(item => item.dispose());
+        this.disposables.filter((item) => !!item).forEach((item) => item.dispose());
         this.clearTimeout();
     }
     private onNotebookModified(_: INotebookEditor) {
@@ -89,7 +115,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (!uri) {
             return;
         }
-        return this.notebookEditorProvider.editors.find(item =>
+        return this.notebookEditorProvider.editors.find((item) =>
             this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath)
         );
     }
@@ -139,9 +165,9 @@ export class AutoSaveService implements IInteractiveWindowListener {
             this.setTimer();
         }
     }
-    private onDidChangeWindowState() {
+    private onDidChangeWindowState(_state: WindowState) {
         const settings = this.getAutoSaveSettings();
-        if (settings && settings.autoSave === 'onWindowChange') {
+        if (settings && (settings.autoSave === 'onWindowChange' || settings.autoSave === 'onFocusChange')) {
             this.save();
         }
     }

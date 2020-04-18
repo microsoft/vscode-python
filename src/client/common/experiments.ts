@@ -8,10 +8,10 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IConfigurationService, IHttpClient } from '../common/types';
-import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
+import { IConfigurationService, IHttpClient, IPythonSettings } from '../common/types';
+import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IApplicationEnvironment, IWorkspaceService } from './application/types';
+import { IApplicationEnvironment } from './application/types';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
@@ -53,11 +53,15 @@ export class ExperimentsManager implements IExperimentsManager {
     /**
      * Experiments user requested to opt into manually
      */
-    public _experimentsOptedInto: string[];
+    public _experimentsOptedInto: string[] = [];
     /**
      * Experiments user requested to opt out from manually
      */
-    public _experimentsOptedOutFrom: string[];
+    public _experimentsOptedOutFrom: string[] = [];
+    /**
+     * Returns `true` if experiments are enabled, else `false`.
+     */
+    public _enabled: boolean = true;
     /**
      * Keeps track of the experiments to be used in the current session
      */
@@ -75,25 +79,21 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
-     * Returns `true` if experiments are enabled, else `false`.
-     */
-    private readonly enabled: boolean;
-    /**
      * Keeps track if the storage needs updating or not.
      * Note this has to be separate from the actual storage as
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
      */
     private isDownloadedStorageValid: IPersistentState<boolean>;
     private activatedOnce: boolean = false;
+    private settings!: IPythonSettings;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(
@@ -108,19 +108,19 @@ export class ExperimentsManager implements IExperimentsManager {
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<
             ABExperiments | undefined
         >(downloadedExperimentStorageKey, undefined);
-        const settings = configurationService.getSettings(undefined);
-        this.enabled = settings.experiments.enabled;
-        this._experimentsOptedInto = settings.experiments.optInto;
-        this._experimentsOptedOutFrom = settings.experiments.optOutFrom;
     }
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
+        if (this.activatedOnce) {
             return;
         }
         this.activatedOnce = true;
-        if (!this.enabled) {
+        this.settings = this.configurationService.getSettings(undefined);
+        this._experimentsOptedInto = this.settings.experiments.optInto;
+        this._experimentsOptedOutFrom = this.settings.experiments.optOutFrom;
+        this._enabled = this.settings.experiments.enabled;
+        if (!this._enabled) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DISABLED);
             return;
         }
@@ -135,11 +135,11 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to identify if user is in experiment')
     public inExperiment(experimentName: string): boolean {
-        if (!this.enabled) {
+        if (!this._enabled) {
             return false;
         }
         this.sendTelemetryIfInExperiment(experimentName);
-        return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
+        return this.userExperiments.find((exp) => exp.name === experimentName) ? true : false;
     }
 
     /**
@@ -180,7 +180,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to send telemetry when user is in experiment')
     public sendTelemetryIfInExperiment(experimentName: string): void {
-        if (this.userExperiments.find(exp => exp.name === experimentName)) {
+        if (this.userExperiments.find((exp) => exp.name === experimentName)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
         }
     }
@@ -223,7 +223,7 @@ export class ExperimentsManager implements IExperimentsManager {
             throw new Error('Machine ID should be a string');
         }
         let hash: number;
-        if (oldExperimentSalts.find(oldSalt => oldSalt === salt)) {
+        if (oldExperimentSalts.find((oldSalt) => oldSalt === salt)) {
             hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'SHA512');
         } else {
             hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'FNV');
@@ -245,20 +245,22 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
-        // Step 1. Update experiment storage using downloaded experiments in the last session if any
-        if (Array.isArray(this.downloadedExperimentsStorage.value)) {
-            await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-            return this.downloadedExperimentsStorage.updateValue(undefined);
-        }
+        if (!process.env.VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE) {
+            // Step 1. Update experiment storage using downloaded experiments in the last session if any
+            if (Array.isArray(this.downloadedExperimentsStorage.value)) {
+                await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
+                return this.downloadedExperimentsStorage.updateValue(undefined);
+            }
 
-        if (Array.isArray(this.experimentStorage.value)) {
-            // Experiment storage already contains latest experiments, do not use the following techniques
-            return;
-        }
+            if (Array.isArray(this.experimentStorage.value)) {
+                // Experiment storage already contains latest experiments, do not use the following techniques
+                return;
+            }
 
-        // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
-        if ((await this.doBestEffortToPopulateExperiments()) === true) {
-            return;
+            // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
+            if ((await this.doBestEffortToPopulateExperiments()) === true) {
+                return;
+            }
         }
 
         // Step 3. Update experiment storage using local experiments file if available
@@ -319,6 +321,10 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
+    public _activated(): boolean {
+        return this.activatedOnce;
+    }
+
     /**
      * You can only opt in or out of experiment groups, not control groups. So remove requests for control groups.
      */
@@ -333,7 +339,7 @@ export class ExperimentsManager implements IExperimentsManager {
                 this._experimentsOptedOutFrom[i] = '';
             }
         }
-        this._experimentsOptedInto = this._experimentsOptedInto.filter(exp => exp !== '');
-        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter(exp => exp !== '');
+        this._experimentsOptedInto = this._experimentsOptedInto.filter((exp) => exp !== '');
+        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter((exp) => exp !== '');
     }
 }

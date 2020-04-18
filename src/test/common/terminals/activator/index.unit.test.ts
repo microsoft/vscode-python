@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { assert } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { TerminalActivator } from '../../../../client/common/terminal/activator';
@@ -11,6 +12,7 @@ import {
     ITerminalActivator,
     ITerminalHelper
 } from '../../../../client/common/terminal/types';
+import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../../client/common/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Activator', () => {
@@ -18,24 +20,37 @@ suite('Terminal Activator', () => {
     let baseActivator: TypeMoq.IMock<ITerminalActivator>;
     let handler1: TypeMoq.IMock<ITerminalActivationHandler>;
     let handler2: TypeMoq.IMock<ITerminalActivationHandler>;
-
+    let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
     setup(() => {
         baseActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
+        terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         handler1 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
         handler2 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        configService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns(() => {
+                return ({
+                    terminal: terminalSettings.object
+                } as unknown) as IPythonSettings;
+            });
         activator = new (class extends TerminalActivator {
             protected initialize() {
                 this.baseActivator = baseActivator.object;
             }
-        })(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object]);
+        })(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object], configService.object);
     });
     async function testActivationAndHandlers(activationSuccessful: boolean) {
+        terminalSettings
+            .setup((b) => b.activateEnvironment)
+            .returns(() => activationSuccessful)
+            .verifiable(TypeMoq.Times.once());
         baseActivator
-            .setup(b => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((b) => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activationSuccessful))
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
         handler1
-            .setup(h =>
+            .setup((h) =>
                 h.handleActivation(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
@@ -44,9 +59,9 @@ suite('Terminal Activator', () => {
                 )
             )
             .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
         handler2
-            .setup(h =>
+            .setup((h) =>
                 h.handleActivation(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
@@ -55,11 +70,14 @@ suite('Terminal Activator', () => {
                 )
             )
             .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(activationSuccessful ? 1 : 0));
 
         const terminal = TypeMoq.Mock.ofType<Terminal>();
-        await activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: activationSuccessful });
+        const activated = await activator.activateEnvironmentInTerminal(terminal.object, {
+            preserveFocus: activationSuccessful
+        });
 
+        assert.equal(activated, activationSuccessful);
         baseActivator.verifyAll();
         handler1.verifyAll();
         handler2.verifyAll();

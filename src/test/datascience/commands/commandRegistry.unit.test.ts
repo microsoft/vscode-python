@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { anything, instance, mock, verify } from 'ts-mockito';
+import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
+import { ConfigurationService } from '../../../client/common/configuration/service';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
@@ -31,6 +33,8 @@ suite('Data Science - Commands', () => {
         const debugService = mock(DebugService);
         const documentManager = mock(DocumentManager);
         commandManager = mock(CommandManager);
+        const configService = mock(ConfigurationService);
+        const appShell = mock(ApplicationShell);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -42,6 +46,8 @@ suite('Data Science - Commands', () => {
             instance(commandLineCommand),
             instance(notebookEditorProvider),
             instance(debugService),
+            instance(configService),
+            instance(appShell),
             new MockOutputChannel('Jupyter')
         );
     });
@@ -80,7 +86,7 @@ suite('Data Science - Commands', () => {
             Commands.DebugCurrentCellPalette,
             Commands.CreateNewNotebook,
             Commands.ViewJupyterOutput
-        ].forEach(command => {
+        ].forEach((command) => {
             test(`Should register Command ${command}`, () => {
                 // tslint:disable-next-line: no-any
                 verify(commandManager.registerCommand(command as any, anything(), commandRegistry)).once();

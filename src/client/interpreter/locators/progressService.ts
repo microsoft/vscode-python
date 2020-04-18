@@ -32,7 +32,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
         return this.refreshed.event;
     }
     public register(): void {
-        this.locators.forEach(locator => {
+        this.locators.forEach((locator) => {
             locator.onLocating(this.handleProgress, this, this.disposables);
         });
     }
@@ -57,14 +57,14 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
         if (this.areAllItemsComplete()) {
             return this.notifyCompleted();
         }
-        Promise.all(this.deferreds.map(item => item.promise))
+        Promise.all(this.deferreds.map((item) => item.promise))
             .catch(noop)
             .then(() => this.checkProgress())
             .ignoreErrors();
     }
     @traceDecorators.verbose('Checking whether locactors have completed locating')
     private areAllItemsComplete() {
-        this.deferreds = this.deferreds.filter(item => !item.completed);
+        this.deferreds = this.deferreds.filter((item) => !item.completed);
         return this.deferreds.length === 0;
     }
 }

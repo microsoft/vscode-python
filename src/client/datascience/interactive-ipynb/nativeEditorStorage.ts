@@ -3,7 +3,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
@@ -20,10 +20,12 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
 import { sendTelemetryEvent } from '../../telemetry';
+import { pruneCell } from '../common';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
-
 interface INativeEditorStorageState {
     file: Uri;
     cells: ICell[];
@@ -50,7 +52,12 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get cells(): ICell[] {
         return this._state.cells;
     }
+    public get onDidEdit(): Event<NotebookModelChange> {
+        return this._editEventEmitter.event;
+    }
+
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
+    private _editEventEmitter = new EventEmitter<NotebookModelChange>();
     private _state: INativeEditorStorageState = {
         file: Uri.file(''),
         changeCount: 0,
@@ -59,6 +66,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         notebookJson: {}
     };
     private indentAmount: string = ' ';
+    private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -79,11 +87,17 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         this.handleModelChange(change);
     }
 
-    public save(): Promise<INotebookModel> {
+    public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        edits.forEach((e) => this.update({ ...e, source: 'redo' }));
+    }
+    public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        edits.forEach((e) => this.update({ ...e, source: 'undo' }));
+    }
+    public save(): Promise<void> {
         return this.saveAs(this.file);
     }
 
-    public async saveAs(file: Uri): Promise<INotebookModel> {
+    public async saveAs(file: Uri): Promise<void> {
         const contents = await this.getContent();
         await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
         if (this.isDirty || file.fsPath !== this.file.fsPath) {
@@ -96,9 +110,11 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 oldDirty: this.isDirty
             });
         }
-        return this;
     }
-
+    public async backup(cancellation: CancellationToken): Promise<void> {
+        // Should send to extension context storage path
+        return this.storeContentsInHotExitFile(cancellation);
+    }
     public async getJson(): Promise<Partial<nbformat.INotebookContent>> {
         await this.ensureNotebookJson();
         return this._state.notebookJson;
@@ -113,7 +129,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
      * Also keep track of the current time. This way we can check whether changes were
      * made to the file since the last time uncommitted changes were stored.
      */
-    public async storeContentsInHotExitFile(): Promise<void> {
+    public async storeContentsInHotExitFile(cancelToken?: CancellationToken): Promise<void> {
         const contents = await this.getContent();
         const key = this.getStorageKey();
         const filePath = this.getHashedFileName(key);
@@ -123,15 +139,19 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
 
         // Write but debounced (wait at least 250 ms)
-        return this.writeToStorage(filePath, specialContents);
+        return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
     }
-    private async writeToStorage(filePath: string, contents?: string): Promise<void> {
+    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
-            if (contents) {
-                await this.fileSystem.createDirectory(path.dirname(filePath));
-                return this.fileSystem.writeFile(filePath, contents);
-            } else {
-                return this.fileSystem.deleteFile(filePath);
+            if (!cancelToken?.isCancellationRequested) {
+                if (contents) {
+                    await this.fileSystem.createDirectory(path.dirname(filePath));
+                    if (!cancelToken?.isCancellationRequested) {
+                        return this.fileSystem.writeFile(filePath, contents);
+                    }
+                } else {
+                    return this.fileSystem.deleteFile(filePath);
+                }
             }
         } catch (exc) {
             traceError(`Error writing storage for ${filePath}: `, exc);
@@ -178,6 +198,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
+        }
+        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
+        if (
+            (changed || this.isDirty !== oldDirty) &&
+            change.kind !== 'version' &&
+            change.kind !== 'file' &&
+            change.source === 'user'
+        ) {
+            this._editEventEmitter.fire(change);
         }
     }
 
@@ -282,7 +311,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         const normalized = change.text.replace(/\r/g, '');
 
         // Figure out which cell we're editing.
-        const index = this.cells.findIndex(c => c.id === id);
+        const index = this.cells.findIndex((c) => c.id === id);
         if (index >= 0) {
             // This is an actual edit.
             const contents = concatMultilineStringInput(this.cells[index].data.source);
@@ -304,15 +333,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     private editCell(changes: IEditorContentChange[], id: string): boolean {
         // Apply the changes to the visible cell list
         if (changes && changes.length) {
-            return changes.map(c => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
+            return changes.map((c) => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
         }
 
         return false;
     }
 
     private swapCells(firstCellId: string, secondCellId: string) {
-        const first = this.cells.findIndex(v => v.id === firstCellId);
-        const second = this.cells.findIndex(v => v.id === secondCellId);
+        const first = this.cells.findIndex((v) => v.id === firstCellId);
+        const second = this.cells.findIndex((v) => v.id === secondCellId);
         if (first >= 0 && second >= 0 && first !== second) {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
@@ -324,8 +353,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private modifyCells(cells: ICell[]): boolean {
         // Update these cells in our list
-        cells.forEach(c => {
-            const index = this.cells.findIndex(v => v.id === c.id);
+        cells.forEach((c) => {
+            const index = this.cells.findIndex((v) => v.id === c.id);
             this._state.cells[index] = this.asCell(c);
         });
         return true;
@@ -333,13 +362,13 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private changeCellType(cell: ICell): boolean {
         // Update the cell in our list.
-        const index = this.cells.findIndex(v => v.id === cell.id);
+        const index = this.cells.findIndex((v) => v.id === cell.id);
         this._state.cells[index] = this.asCell(cell);
         return true;
     }
 
     private removeCell(cell: ICell): boolean {
-        const index = this.cells.findIndex(c => c.id === cell.id);
+        const index = this.cells.findIndex((c) => c.id === cell.id);
         if (index >= 0) {
             this._state.cells.splice(index, 1);
             return true;
@@ -348,7 +377,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     private clearOutputs(): boolean {
-        const newCells = this.cells.map(c =>
+        const newCells = this.cells.map((c) =>
             this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } })
         );
         const result = !fastDeepEqual(newCells, this.cells);
@@ -512,26 +541,25 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             // Use these as the defaults unless we have been given some in the options.
             const metadata: nbformat.INotebookMetadata = {
                 language_info: {
-                    name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
                         version: pythonNumber
-                    }
+                    },
+                    file_extension: '.py',
+                    mimetype: 'text/x-python',
+                    name: 'python',
+                    nbconvert_exporter: 'python',
+                    pygments_lexer: `ipython${pythonNumber}`,
+                    version: pythonNumber
                 },
-                orig_nbformat: 2,
-                file_extension: '.py',
-                mimetype: 'text/x-python',
-                name: 'python',
-                npconvert_exporter: 'python',
-                pygments_lexer: `ipython${pythonNumber}`,
-                version: pythonNumber
+                orig_nbformat: 2
             };
 
             // Default notebook data.
             this._state.notebookJson = {
+                metadata: metadata,
                 nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
+                nbformat_minor: 2
             };
         }
     }
@@ -542,19 +570,12 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
         // Reuse our original json except for the cells.
         const json = {
-            ...(this._state.notebookJson as nbformat.INotebookContent),
-            cells: cells.map(c => this.fixupCell(c.data))
+            cells: cells.map((c) => pruneCell(c.data)),
+            metadata: this._state.notebookJson.metadata,
+            nbformat: this._state.notebookJson.nbformat,
+            nbformat_minor: this._state.notebookJson.nbformat_minor
         };
         return JSON.stringify(json, null, this.indentAmount);
-    }
-
-    private fixupCell(cell: nbformat.ICell): nbformat.ICell {
-        // Source is usually a single string on input. Convert back to an array
-        return ({
-            ...cell,
-            source: splitMultilineString(cell.source)
-            // tslint:disable-next-line: no-any
-        } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
     }
 
     private getStorageKey(): string {

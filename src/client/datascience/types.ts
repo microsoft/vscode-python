@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { Session } from '@jupyterlab/services';
-import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
+import type { Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import {
@@ -19,6 +19,7 @@ import {
     Uri,
     WebviewPanel
 } from 'vscode';
+import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -47,14 +48,29 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
-// Connection information for talking to a jupyter notebook process
-export interface IConnection extends Disposable {
+// Connection information for talking to a generic notebook provider
+export interface INotebookProviderConnection extends Disposable {
+    // What type of notebook provider are we connected to
+    readonly type: 'raw' | 'jupyter';
+    // Was this connection launched locally or not
+    readonly localLaunch: boolean;
+    // Is the connection still valid
+    readonly valid: boolean;
+    // Display name
+    readonly displayName: string;
+    // Called if whatever provides the notebook is disconnected
+    disconnected: Event<number>;
+}
+
+// Connection information for talking to a raw ZMQ provider
+export interface IRawConnection extends INotebookProviderConnection {}
+
+// Connection information for talking to a jupyter server process
+export interface IConnection extends INotebookProviderConnection {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
-    disconnected: Event<number>;
     allowUnauthorized?: boolean;
 }
 
@@ -63,6 +79,23 @@ export enum InterruptResult {
     TimedOut = 1,
     Restarted = 2
 }
+
+// Information used to execute a notebook
+export interface INotebookExecutionInfo {
+    // Connection to what has provided our notebook, such as a jupyter
+    // server or a raw ZMQ kernel
+    connectionInfo: INotebookProviderConnection;
+    /**
+     * The python interpreter associated with the kernel.
+     */
+    interpreter: PythonInterpreter | undefined;
+    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
+    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
+    workingDir: string | undefined;
+    purpose: string | undefined; // Purpose this server is for
+}
+
+// Information used to launch a jupyter notebook server
 
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
@@ -78,7 +111,6 @@ export interface INotebookServerLaunchInfo {
     kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
-    enableDebugging: boolean | undefined; // If we should enable debugging for this server
 }
 
 export interface INotebookCompletion {
@@ -107,13 +139,38 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
+// Provides notebooks that talk directly to kernels as opposed to a jupyter server
+export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
+export interface IRawNotebookProvider extends IAsyncDisposable {
+    connect(): Promise<IRawConnection>;
+    createNotebook(
+        identity: Uri,
+        resource: Resource,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook>;
+    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+}
+
+// Provides notebooks that talk to jupyter servers
+export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
+export interface IJupyterNotebookProvider {
+    connect(options: ConnectNotebookProviderOptions): Promise<IConnection | undefined>;
+    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
+    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
+}
+
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
+    readonly connection: INotebookProviderConnection | undefined;
+    kernelSocket: Observable<KernelSocketInformation | undefined>;
     readonly identity: Uri;
-    readonly server: INotebookServer;
     readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
+    onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
+    onKernelRestarted: Event<void>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -138,26 +195,60 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     getMatchingInterpreter(): PythonInterpreter | undefined;
     getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
-    setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
-    setInterpreter(interpeter: PythonInterpreter): void;
+    setKernelSpec(
+        spec: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void>;
     getLoggers(): INotebookExecutionLogger[];
+    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>): void;
+    registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void;
+    sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
+// Options for connecting to a notebook provider
+export type ConnectNotebookProviderOptions = {
+    getOnly?: boolean;
+    disableUI?: boolean;
+    localOnly?: boolean;
+};
+
 export interface INotebookServerOptions {
-    enableDebugging?: boolean;
     uri?: string;
     usingDarkTheme?: boolean;
-    useDefaultConfig?: boolean;
+    skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
     disableUI?: boolean;
+    skipSearchingForKernel?: boolean;
+    allowUI(): boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
+    onKernelRestarted(): void;
 }
 
 export const IGatherProvider = Symbol('IGatherProvider');
@@ -218,6 +309,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
+    readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -234,6 +326,27 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
     changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
+    registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void;
+    sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -311,12 +424,29 @@ export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
     getActive(): IInteractiveWindow | undefined;
     getOrCreateActive(): Promise<IInteractiveWindow>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
     handleError(err: Error): Promise<void>;
+}
+
+/**
+ * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
+ */
+export interface ILocalResourceUriConverter {
+    /**
+     * Convert a uri for the local file system to one that can be used inside webviews.
+     *
+     * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The
+     * `asWebviewUri` function takes a local `file:` uri and converts it into a uri that can be used inside of
+     * a webview to load the same resource:
+     *
+     * ```ts
+     * webview.html = `<img src="${webview.asWebviewUri(vscode.Uri.file('/Users/codey/workspace/cat.gif'))}">`
+     * ```
+     */
+    asWebviewUri(localResource: Uri): Promise<Uri>;
 }
 
 export interface IInteractiveBase extends Disposable {
@@ -370,7 +500,6 @@ export interface INotebookEditorProvider {
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -411,12 +540,22 @@ export interface IInteractiveWindowListener extends IDisposable {
     // tslint:disable-next-line: no-any
     postMessage: Event<{ message: string; payload: any }>;
     /**
+     * Fires this event when posting a message to the interactive base.
+     */
+    // tslint:disable-next-line: no-any
+    postInternalMessage?: Event<{ message: string; payload: any }>;
+    /**
      * Handles messages that the interactive window receives
      * @param message message type
      * @param payload message payload
      */
     // tslint:disable-next-line: no-any
     onMessage(message: string, payload?: any): void;
+    /**
+     * Fired when the view state of the interactive window changes
+     * @param args
+     */
+    onViewStateChanged?(args: WebViewViewChangeEventArgs): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -573,6 +712,7 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
             fontFamily: string;
         };
         theme: string;
+        useCustomEditorApi: boolean;
     };
     intellisenseOptions: {
         quickSuggestions: {
@@ -698,11 +838,6 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
-}
-
-export const ICellHashLogger = Symbol('ICellHashLogger');
-export interface ICellHashLogger extends INotebookExecutionLogger {
-    getCellHashProvider(): ICellHashProvider;
 }
 
 export interface IDebugLocation {
@@ -835,12 +970,156 @@ export interface INotebookModel {
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
+    readonly onDidEdit: Event<NotebookModelChange>;
+    save(cancellation: CancellationToken): Thenable<void>;
+    saveAs(targetResource: Uri): Thenable<void>;
+    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    backup(cancellation: CancellationToken): Thenable<void>;
     load(file: Uri, contents?: string): Promise<INotebookModel>;
-    save(): Promise<INotebookModel>;
-    saveAs(file: Uri): Promise<INotebookModel>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
+
+export const INotebookProvider = Symbol('INotebookProvider');
+
+export type GetServerOptions = {
+    getOnly?: boolean;
+    disableUI?: boolean;
+    localOnly?: boolean;
+};
+
+/**
+ * Options for getting a notebook
+ */
+export type GetNotebookOptions = {
+    identity: Uri;
+    getOnly?: boolean;
+    disableUI?: boolean;
+    metadata?: nbformat.INotebookMetadata;
+};
+
+export interface INotebookProvider {
+    /**
+     * Fired when a notebook has been created for a given Uri/Identity
+     */
+    onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+
+    /**
+     * List of all notebooks (active and ones that are being constructed).
+     */
+    activeNotebooks: Promise<INotebook>[];
+    /**
+     * Gets or creates a notebook, and manages the lifetime of notebooks.
+     */
+    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    /**
+     * Connect to a notebook provider to prepare its connection and to get connection information
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
+
+    /**
+     * Disconnect from a notebook provider connection
+     */
+    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
+}
+
+export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
+export interface IJupyterServerProvider {
+    /**
+     * Gets the server used for starting notebooks
+     */
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
+}
+
+export interface IKernelSocket {
+    // tslint:disable-next-line: no-any
+    send(data: any, cb?: (err?: Error) => void): void;
+    /**
+     * Adds a listener to a socket that will be called before the socket's onMessage is called. This
+     * allows waiting for a callback before processing messages
+     * @param listener
+     */
+    addReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Removes a listener for the socket. When no listeners are present, the socket no longer blocks
+     * @param listener
+     */
+    removeReceiveHook(hook: (data: WebSocketData) => Promise<void>): void;
+    /**
+     * Adds a hook to the sending of data from a websocket. Hooks can block sending so be careful.
+     * @param patch
+     */
+    // tslint:disable-next-line: no-any
+    addSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+    /**
+     * Removes a send hook from the socket.
+     * @param hook
+     */
+    // tslint:disable-next-line: no-any
+    removeSendHook(hook: (data: any, cb?: (err?: Error) => void) => Promise<void>): void;
+}
+
+export type KernelSocketOptions = {
+    /**
+     * Kernel Id.
+     */
+    readonly id: string;
+    /**
+     * Kernel ClientId.
+     */
+    readonly clientId: string;
+    /**
+     * Kernel UserName.
+     */
+    readonly userName: string;
+    /**
+     * Kernel model.
+     */
+    readonly model: {
+        /**
+         * Unique identifier of the kernel server session.
+         */
+        readonly id: string;
+        /**
+         * The name of the kernel.
+         */
+        readonly name: string;
+    };
+};
+export type KernelSocketInformation = {
+    /**
+     * Underlying socket used by jupyterlab/services to communicate with kernel.
+     * See jupyterlab/services/kernel/default.ts
+     */
+    readonly socket?: IKernelSocket;
+    /**
+     * Options used to clone a kernel.
+     */
+    readonly options: KernelSocketOptions;
+};
+
+// Connection info to connect to a kernel over JMP
+export interface IJMPConnectionInfo {
+    version: number;
+    iopub_port: number;
+    shell_port: number;
+    stdin_port: number;
+    control_port: number;
+    signature_scheme: string;
+    hb_port: number;
+    ip: string;
+    key: string;
+    transport: string;
+}
+
+export const IJMPConnection = Symbol('IJMPConnection');
+// A service to send and recieve messages over Jupyter messaging protocol
+export interface IJMPConnection extends IDisposable {
+    connect(connectInfo: IJMPConnectionInfo): Promise<void>;
+    sendMessage(message: KernelMessage.IMessage): void;
+    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void;
+}

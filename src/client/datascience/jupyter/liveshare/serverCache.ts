@@ -3,15 +3,14 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
+import { calculateWorkingDirectory } from '../../utils';
 
 interface IServerData {
     options: INotebookServerOptions;
@@ -49,15 +48,6 @@ export class ServerCache implements IAsyncDisposable {
         // Check to see if we already have a promise for this key
         data = this.cache.get(key);
 
-        // See if the old options had the same UI setting. If not,
-        // cancel the old
-        if (data && !data.resolved && data.options.disableUI !== fixedOptions.disableUI) {
-            traceInfo('Cancelling server create as UI state has changed');
-            data.cancelSource.cancel();
-            data = undefined;
-            this.cache.delete(key);
-        }
-
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
@@ -91,7 +81,7 @@ export class ServerCache implements IAsyncDisposable {
 
                 return server;
             })
-            .catch(e => {
+            .catch((e) => {
                 this.cache.delete(key);
                 throw e;
             });
@@ -107,7 +97,7 @@ export class ServerCache implements IAsyncDisposable {
 
     public async dispose(): Promise<void> {
         await Promise.all(
-            [...this.cache.values()].map(async d => {
+            [...this.cache.values()].map(async (d) => {
                 const server = await d.promise;
                 await server?.dispose();
             })
@@ -117,14 +107,16 @@ export class ServerCache implements IAsyncDisposable {
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
-            enableDebugging: options ? options.enableDebugging : false,
             uri: options ? options.uri : undefined,
-            useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
+            skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            workingDir:
+                options && options.workingDir
+                    ? options.workingDir
+                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fileSystem),
             metadata: options?.metadata,
-            disableUI: options?.disableUI
+            allowUI: options?.allowUI ? options.allowUI : () => false
         };
     }
 
@@ -134,45 +126,8 @@ export class ServerCache implements IAsyncDisposable {
         } else {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
-            const useFlag = options.useDefaultConfig ? 'true' : 'false';
-            const debug = options.enableDebugging ? 'true' : 'false';
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
+            const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
+            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
         }
-    }
-
-    private async calculateWorkingDirectory(): Promise<string | undefined> {
-        let workingDir: string | undefined;
-        // For a local launch calculate the working directory that we should switch into
-        const settings = this.configService.getSettings(undefined);
-        const fileRoot = settings.datascience.notebookFileRoot;
-
-        // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
-        // so only do this setting if we actually have a valid workspace open
-        if (fileRoot && this.workspace.hasWorkspaceFolders) {
-            const workspaceFolderPath = this.workspace.workspaceFolders![0].uri.fsPath;
-            if (path.isAbsolute(fileRoot)) {
-                if (await this.fileSystem.directoryExists(fileRoot)) {
-                    // User setting is absolute and exists, use it
-                    workingDir = fileRoot;
-                } else {
-                    // User setting is absolute and doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else if (!fileRoot.includes('${')) {
-                // fileRoot is a relative path, combine it with the workspace folder
-                const combinedPath = path.join(workspaceFolderPath, fileRoot);
-                if (await this.fileSystem.directoryExists(combinedPath)) {
-                    // combined path exists, use it
-                    workingDir = combinedPath;
-                } else {
-                    // Combined path doesn't exist, use workspace
-                    workingDir = workspaceFolderPath;
-                }
-            } else {
-                // fileRoot is a variable that hasn't been expanded
-                workingDir = fileRoot;
-            }
-        }
-        return workingDir;
     }
 }

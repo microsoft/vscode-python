@@ -66,6 +66,7 @@ export interface IMonacoEditorState {
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
 
 export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEditorState> {
+    private static lineHeight: number = 0;
     private containerRef: React.RefObject<HTMLDivElement>;
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
@@ -90,6 +91,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * Reference to parameter widget (used by monaco to display parameter docs).
      */
     private parameterWidget?: Element;
+    private insideLayout = false;
 
     constructor(props: IMonacoEditorProps) {
         super(props);
@@ -186,14 +188,17 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(
                 editor.onDidLayoutChange(() => {
                     this.windowResized();
-                    // Also recompute our visible line heights
+                    // Recompute visible line tops
                     this.debouncedComputeLineTops();
+
+                    // A layout change may be because of a new line
+                    this.throttledScrollCurrentPosition(editor);
                 })
             );
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(
-                editor.onContextMenu(e => {
+                editor.onContextMenu((e) => {
                     if (this.state.editor) {
                         const domNode = this.state.editor.getDomNode();
                         const contextMenuElement = domNode
@@ -241,7 +246,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(
                 editor.onDidChangeCursorPosition(() => {
                     this.throttledUpdateWidgetPosition();
-                    this.throttledScrollCurrentPosition(editor);
+
+                    // Do this after the cursor changes so the text has time to appear
+                    setTimeout(() => this.throttledScrollCurrentPosition(editor), 0);
                 })
             );
 
@@ -294,7 +301,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.widgetParent.remove();
         }
 
-        this.subscriptions.forEach(d => d.dispose());
+        this.subscriptions.forEach((d) => d.dispose());
         if (this.state.editor) {
             this.state.editor.dispose();
         }
@@ -313,11 +320,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             if (prevProps.theme !== this.props.theme && this.props.theme) {
                 monacoEditor.editor.setTheme(this.props.theme);
             }
-            if (prevProps.options !== this.props.options) {
+            if (!fastDeepEqual(prevProps.options, this.props.options)) {
                 if (prevProps.options.lineNumbers !== this.props.options.lineNumbers) {
                     this.updateMargin(this.state.editor);
                 }
                 this.state.editor.updateOptions(this.props.options);
+                MonacoEditor.lineHeight = 0; // Font size and family come from theoptions.
             }
             if (
                 prevProps.value !== this.props.value &&
@@ -543,7 +551,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private scrollToCurrentPosition(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
         // Unfortunately during functional tests we hack the line count and the like.
-        if (isTestExecution()) {
+        if (isTestExecution() || !this.props.hasFocus) {
             return;
         }
         // Scroll to the visible line that has our current line. Note: Visible lines are not sorted by monaco
@@ -581,7 +589,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
         }
-        this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
+        // If this was caused by a layout, don't bother updating again
+        if (!this.insideLayout) {
+            this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
+        }
     };
 
     private startUpdateWidgetPosition = () => {
@@ -632,6 +643,22 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
+    private computeLineHeight(): number {
+        if (MonacoEditor.lineHeight <= 0 && this.state.editor) {
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
+                if (container.firstChild && (container.firstChild as HTMLElement).style.height) {
+                    const lineHeightPx = (container.firstChild as HTMLElement).style.height;
+                    MonacoEditor.lineHeight = parseInt(lineHeightPx, 10);
+                } else {
+                    return LINE_HEIGHT;
+                }
+            }
+        }
+        return MonacoEditor.lineHeight;
+    }
+
     private updateEditorSize() {
         if (
             this.measureWidthRef.current &&
@@ -648,14 +675,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const grandParent = this.containerRef.current.parentElement.parentElement;
             const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
             const currLineCount = Math.max(container.childElementCount, this.state.model.getLineCount());
-            const lineHeightPx =
-                container.firstChild && (container.firstChild as HTMLElement).style.height
-                    ? (container.firstChild as HTMLElement).style.height
-                    : `${LINE_HEIGHT}px`;
-            const lineHeight =
-                lineHeightPx && lineHeightPx.endsWith('px')
-                    ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10)
-                    : LINE_HEIGHT;
+            const lineHeight = this.computeLineHeight();
             const height = currLineCount * lineHeight + 3; // Fudge factor
             const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
@@ -671,7 +691,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
                 this.setState({ visibleLineCount: currLineCount, attached: true });
-                this.state.editor.layout({ width, height });
+                try {
+                    this.insideLayout = true;
+                    this.state.editor.layout({ width, height });
+                } finally {
+                    this.insideLayout = false;
+                }
             }
         }
     }
@@ -770,13 +795,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         const parameterWidgetClasses = ['editor-widget', 'parameter-hints-widget', 'visible'];
 
         // Find the parameter widget the user is currently hovering over.
-        this.parameterWidget = hoverElements.find(item => {
+        this.parameterWidget = hoverElements.find((item) => {
             if (typeof item.className !== 'string') {
                 return false;
             }
             // Check if user is hovering over a parameter widget.
             const classes = item.className.split(' ');
-            if (!parameterWidgetClasses.every(cls => classes.indexOf(cls) >= 0)) {
+            if (!parameterWidgetClasses.every((cls) => classes.indexOf(cls) >= 0)) {
                 // Not all classes required in a parameter hint widget are in this element.
                 // Hence this is not a parameter widget.
                 return false;
@@ -786,7 +811,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Next, check whether this parameter widget belongs to this monaco editor.
             // We have a list of parameter widgets that belong to this editor, hence a simple lookup.
-            return knownParameterHintsWidgets.some(widget => widget === item);
+            return knownParameterHintsWidgets.some((widget) => widget === item);
         });
 
         if (this.parameterWidget) {
@@ -860,8 +885,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             root.querySelectorAll('div.monaco-editor-pretend-parent')
         );
         widgetParents
-            .filter(widgetParent => widgetParent !== this.widgetParent)
-            .forEach(widgetParent =>
+            .filter((widgetParent) => widgetParent !== this.widgetParent)
+            .forEach((widgetParent) =>
                 this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover])
             );
     }

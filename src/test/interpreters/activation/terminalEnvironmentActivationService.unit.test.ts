@@ -50,8 +50,8 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         );
     });
 
-    [undefined, Uri.file('some Resource')].forEach(resource => {
-        [undefined, mockInterpreter].forEach(interpreter => {
+    [undefined, Uri.file('some Resource')].forEach((resource) => {
+        [undefined, mockInterpreter].forEach((interpreter) => {
             suite(resource ? 'With a resource' : 'Without a resource', () => {
                 suite(interpreter ? 'With an interpreter' : 'Without an interpreter', () => {
                     test('Should create a terminal with user defined custom env vars', async () => {
@@ -95,6 +95,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                     });
                     test('Should execute python file in terminal (that is what dumps variables into json)', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);
+                        const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
                         const pyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariablesToFile.py');
 
                         await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
@@ -103,7 +104,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         verify(
                             terminal.sendCommand(
                                 cmd,
-                                deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]),
+                                deepEqual([isolated, pyFile, jsonFile.fileToCommandArgument()]),
                                 anything(),
                                 false
                             )

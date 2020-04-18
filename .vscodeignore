@@ -1,5 +1,6 @@
 **/*.map
 **/*.analyzer.html
+!out/datascience-ui/common/node_modules/**/*
 !out/datascience-ui/notebook/commons.initial.bundle.js.map
 !out/datascience-ui/notebook/interactiveWindow.js.map
 !out/datascience-ui/notebook/nativeEditor.js.map
@@ -65,6 +66,7 @@ data/**
 debug_coverage*/**
 images/**/*.gif
 images/**/*.png
+ipywidgets/**
 news/**
 node_modules/**
 obj/**

@@ -56,7 +56,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         }
 
         return this.getInterpreterFromPipenv(pipenvCwd)
-            .then(item => (item ? [item] : []))
+            .then((item) => (item ? [item] : []))
             .catch(() => []);
     }
 

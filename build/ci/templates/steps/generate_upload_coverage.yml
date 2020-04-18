@@ -1,24 +1,23 @@
 steps:
-    # Generate the coverage reports.
-    - bash: npm run test:cover:report
-      displayName: 'run test:cover:report'
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
-      failOnStderr: false
+  # Generate the coverage reports.
+  - bash: npm run test:cover:report
+    displayName: 'run test:cover:report'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    failOnStderr: false
 
+  # Publish Code Coverage Results
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish test:unittests coverage results'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    inputs:
+      codeCoverageTool: 'cobertura'
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/coverage'
 
-    # Publish Code Coverage Results
-    - task: PublishCodeCoverageResults@1
-      displayName: 'Publish test:unittests coverage results'
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
-      inputs:
-        codeCoverageTool: 'cobertura'
-        summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
-        reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
-
-    - bash: cat ./coverage/cobertura-coverage.xml | ./node_modules/.bin/codecov --pipe
-      displayName: 'Upload coverage to codecov'
-      continueOnError: true
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
-      failOnStderr: false
-      env:
-          CODECOV_TOKEN: $(CODECOV_TOKEN)
+  - bash: cat ./coverage/cobertura-coverage.xml | ./node_modules/.bin/codecov --pipe
+    displayName: 'Upload coverage to codecov'
+    continueOnError: true
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    failOnStderr: false
+    env:
+      CODECOV_TOKEN: $(CODECOV_TOKEN)

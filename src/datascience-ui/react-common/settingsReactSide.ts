@@ -46,7 +46,8 @@ export function getDefaultSettings() {
                 fontSize: 14,
                 fontFamily: "Consolas, 'Courier New', monospace"
             },
-            theme: 'Default Dark+'
+            theme: 'Default Dark+',
+            useCustomEditorApi: false
         },
         intellisenseOptions: {
             quickSuggestions: {
@@ -66,7 +67,8 @@ export function getDefaultSettings() {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: []
+        jupyterCommandLineArguments: [],
+        widgetScriptSources: []
     };
 
     return result;

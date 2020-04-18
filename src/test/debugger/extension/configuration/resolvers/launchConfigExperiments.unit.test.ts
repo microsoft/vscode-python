@@ -8,7 +8,6 @@ import * as assert from 'assert';
 import rewiremock from 'rewiremock';
 import { instance, mock, spy, when } from 'ts-mockito';
 import { ApplicationEnvironment } from '../../../../../client/common/application/applicationEnvironment';
-import { WorkspaceService } from '../../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experimentGroups';
@@ -60,7 +59,6 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const workspaceService = mock(WorkspaceService);
         const httpClient = mock(HttpClient);
         const crypto = mock(CryptoUtils);
         const appEnvironment = mock(ApplicationEnvironment);
@@ -75,7 +73,6 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
             instance(persistentStateFactory),
-            instance(workspaceService),
             instance(httpClient),
             instance(crypto),
             instance(appEnvironment),
@@ -126,14 +123,14 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
     function createTestConfigurations() {
         const testConfigs: TestConfiguration[] = [];
-        newDebuggerExperiment.forEach(newDbgExp => {
-            reloadExperiment.forEach(reloadExp => {
-                subProcessValues.forEach(subProcessValue => {
-                    noReloadSwitches.forEach(noReloadSwitch => {
-                        webFramework.forEach(framework => {
+        newDebuggerExperiment.forEach((newDbgExp) => {
+            reloadExperiment.forEach((reloadExp) => {
+                subProcessValues.forEach((subProcessValue) => {
+                    noReloadSwitches.forEach((noReloadSwitch) => {
+                        webFramework.forEach((framework) => {
                             const usingReloadSwitch = ['run', noReloadSwitch, '--other-switch'];
                             const withoutUsingReloadSwitch = ['run', '--other-switch'];
-                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach(args => {
+                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach((args) => {
                                 testConfigs.push({
                                     newDebuggerExperiment: newDbgExp,
                                     reloadExperiment: reloadExp,

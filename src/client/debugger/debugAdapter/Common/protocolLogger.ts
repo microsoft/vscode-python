@@ -42,7 +42,7 @@ export class ProtocolLogger implements IProtocolLogger {
     };
     private logMessages(messages: string[]) {
         if (this.logger) {
-            messages.forEach(message => this.logger!.verbose(`${message}`));
+            messages.forEach((message) => this.logger!.verbose(`${message}`));
         } else {
             this.messagesToLog.push(...messages);
         }

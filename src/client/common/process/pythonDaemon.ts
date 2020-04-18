@@ -49,6 +49,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
+    private disposed = false;
     constructor(
         protected readonly pythonExecutionService: IPythonExecutionService,
         protected readonly pythonPath: string,
@@ -64,13 +65,14 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     }
     public dispose() {
         try {
+            this.disposed = true;
             // The daemon should die as a result of this.
             this.connection.sendNotification(new NotificationType('exit'));
             this.proc.kill();
         } catch {
             noop();
         }
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         try {
@@ -114,8 +116,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.getExecutablePath();
         }
     }
-    public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        return this.pythonExecutionService.getExecutionInfo(args);
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         try {
@@ -223,7 +225,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             'extraVariables'
         ];
         // tslint:disable-next-line: no-any
-        return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
+        return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     private sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
         return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
@@ -346,7 +348,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         let stdErr = '';
         this.proc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
-        const subscription = this.outputObservale.subscribe(out => {
+        const subscription = this.outputObservale.subscribe((out) => {
             if (out.source === 'stderr' && options.throwOnStdErr) {
                 subject.error(new StdErrError(out.out));
             } else if (out.source === 'stderr' && options.mergeStdOutErr) {
@@ -356,7 +358,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             }
         });
         start()
-            .catch(ex => {
+            .catch((ex) => {
                 const errorMsg = `Failed to run ${
                     'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName
                 } as observable with args ${args.join(' ')}`;
@@ -382,26 +384,28 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     private monitorConnection() {
         // tslint:disable-next-line: no-any
         const logConnectionStatus = (msg: string, ex?: any) => {
-            this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
-            this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
-            traceWarning(msg);
-            if (ex) {
-                traceError('Connection errored', ex);
+            if (!this.disposed) {
+                this.connectionClosedMessage += msg + (ex ? `, With Error: ${util.format(ex)}` : '');
+                this.connectionClosedDeferred.reject(new ConnectionClosedError(this.connectionClosedMessage));
+                traceWarning(msg);
+                if (ex) {
+                    traceError('Connection errored', ex);
+                }
             }
         };
         this.disposables.push(this.connection.onClose(() => logConnectionStatus('Daemon Connection Closed')));
         this.disposables.push(this.connection.onDispose(() => logConnectionStatus('Daemon Connection disposed')));
-        this.disposables.push(this.connection.onError(ex => logConnectionStatus('Daemon Connection errored', ex)));
+        this.disposables.push(this.connection.onError((ex) => logConnectionStatus('Daemon Connection errored', ex)));
         // this.proc.on('error', error => logConnectionStatus('Daemon Processed died with error', error));
-        this.proc.on('exit', code => logConnectionStatus('Daemon Processed died with exit code', code));
+        this.proc.on('exit', (code) => logConnectionStatus('Daemon Processed died with exit code', code));
         // Wire up stdout/stderr.
         const OuputNotification = new NotificationType<Output<string>, void>('output');
-        this.connection.onNotification(OuputNotification, output => this.outputObservale.next(output));
+        this.connection.onNotification(OuputNotification, (output) => this.outputObservale.next(output));
         const logNotification = new NotificationType<
             { level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string },
             void
         >('log');
-        this.connection.onNotification(logNotification, output => {
+        this.connection.onNotification(logNotification, (output) => {
             const msg = `Python Daemon: ${output.msg}`;
             if (output.level === 'DEBUG' || output.level === 'NOTSET') {
                 traceVerbose(msg);

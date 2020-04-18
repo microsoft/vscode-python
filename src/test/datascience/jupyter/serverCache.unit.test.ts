@@ -50,7 +50,8 @@ suite('Data Science - ServerCache', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
+            widgetScriptSources: []
         };
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));
@@ -58,7 +59,8 @@ suite('Data Science - ServerCache', () => {
 
     test('Cache works on second get', async () => {
         const options: INotebookServerOptions = {
-            purpose: 'test'
+            purpose: 'test',
+            allowUI: () => false
         };
         const func = () => {
             return Promise.resolve(server);
@@ -69,11 +71,15 @@ suite('Data Science - ServerCache', () => {
         assert.equal(result, r2, 'Second get did not work');
     });
 
-    test('Cache with UI will cancel original get', async () => {
+    test('Cache with UI will not cancel original get', async () => {
         let token: CancellationToken | undefined;
+        let allowUI = false;
+        const callback = () => {
+            return allowUI;
+        };
         const options: INotebookServerOptions = {
             purpose: 'test',
-            disableUI: true
+            allowUI: callback
         };
         serverCache
             .getOrCreate(async (_o, t) => {
@@ -82,11 +88,11 @@ suite('Data Science - ServerCache', () => {
                 return Promise.resolve(server);
             }, options)
             .ignoreErrors();
-        const options2 = { ...options, disableUI: false };
+        allowUI = true;
         const result2 = await serverCache.getOrCreate(async () => {
             return Promise.resolve(server);
-        }, options2);
+        }, options);
         assert.ok(result2, 'Second did not work');
-        assert.equal(token?.isCancellationRequested, true, 'First request was not canceled');
+        assert.notOk(token?.isCancellationRequested, 'First request should not be canceled');
     });
 });

@@ -14,6 +14,10 @@ export class GatherLogger implements IGatherLogger {
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
+    public onKernelRestarted() {
+        noop();
+    }
+
     public async preExecute(_vscCell: IVscCell, _silent: boolean): Promise<void> {
         // This function is just implemented here for compliance with the INotebookExecutionLogger interface
         noop();

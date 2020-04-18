@@ -11,6 +11,8 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
+import * as internalPython from '../common/process/internal/python';
+import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
     BANNER_NAME_PROPOSE_LS,
@@ -160,7 +162,6 @@ export class JediProxy implements Disposable {
     private timer?: NodeJS.Timer | number;
 
     public constructor(
-        private extensionRootDir: string,
         workspacePath: string,
         interpreter: PythonInterpreter | undefined,
         private serviceContainer: IServiceContainer
@@ -234,7 +235,7 @@ export class JediProxy implements Disposable {
 
     // keep track of the directory so we can re-spawn the process.
     private initialize(): Promise<void> {
-        return this.spawnProcess(path.join(this.extensionRootDir, 'pythonFiles')).catch(ex => {
+        return this.spawnProcess().catch((ex) => {
             if (this.languageServerStarted) {
                 this.languageServerStarted.reject(ex);
             }
@@ -344,7 +345,7 @@ export class JediProxy implements Disposable {
 
     private clearPendingRequests() {
         this.commandQueue = [];
-        this.commands.forEach(item => {
+        this.commands.forEach((item) => {
             if (item.deferred !== undefined) {
                 item.deferred.resolve();
             }
@@ -367,7 +368,7 @@ export class JediProxy implements Disposable {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    private async spawnProcess(cwd: string) {
+    private async spawnProcess() {
         if (this.languageServerStarted && !this.languageServerStarted.completed) {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
@@ -379,18 +380,14 @@ export class JediProxy implements Disposable {
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
         }
-        const args = ['completion.py'];
-        if (typeof this.pythonSettings.jediPath === 'string' && this.pythonSettings.jediPath.length > 0) {
-            args.push('custom');
-            args.push(this.pythonSettings.jediPath);
-        }
-        const result = pythonProcess.execObservable(args, { cwd });
+        const [args, parse] = internalScripts.completion(this.pythonSettings.jediPath);
+        const result = pythonProcess.execObservable(args, {});
         this.proc = result.proc;
         this.languageServerStarted.resolve();
-        this.proc!.on('end', end => {
+        this.proc!.on('end', (end) => {
             traceError('spawnProcess.end', `End - ${end}`);
         });
-        this.proc!.on('error', error => {
+        this.proc!.on('error', (error) => {
             this.handleError('error', `${error}`);
             this.spawnRetryAttempts += 1;
             if (
@@ -399,7 +396,7 @@ export class JediProxy implements Disposable {
                 error.message &&
                 error.message.indexOf('This socket has been ended by the other party') >= 0
             ) {
-                this.spawnProcess(cwd).catch(ex => {
+                this.spawnProcess().catch((ex) => {
                     if (this.languageServerStarted) {
                         this.languageServerStarted.reject(ex);
                     }
@@ -408,7 +405,7 @@ export class JediProxy implements Disposable {
             }
         });
         result.out.subscribe(
-            output => {
+            (output) => {
                 if (output.source === 'stderr') {
                     this.handleError('stderr', output.out);
                 } else {
@@ -419,7 +416,7 @@ export class JediProxy implements Disposable {
                     // tslint:disable-next-line:no-any
                     let responses: any[];
                     try {
-                        responses = dataStr.splitLines().map(resp => JSON.parse(resp));
+                        responses = parse(dataStr);
                         this.previousData = '';
                     } catch (ex) {
                         // Possible we've only received part of the data, hence don't clear previousData.
@@ -434,7 +431,7 @@ export class JediProxy implements Disposable {
                         return;
                     }
 
-                    responses.forEach(response => {
+                    responses.forEach((response) => {
                         if (!response) {
                             return;
                         }
@@ -473,7 +470,7 @@ export class JediProxy implements Disposable {
                     });
                 }
             },
-            error => this.handleError('subscription.error', `${error}`)
+            (error) => this.handleError('subscription.error', `${error}`)
         );
     }
     private getCommandHandler(
@@ -499,7 +496,7 @@ export class JediProxy implements Disposable {
     private onCompletion(command: IExecutionCommand<ICommandResult>, response: object): void {
         let results = JediProxy.getProperty<IAutoCompleteItem[]>(response, 'results');
         results = Array.isArray(results) ? results : [];
-        results.forEach(item => {
+        results.forEach((item) => {
             // tslint:disable-next-line:no-any
             const originalType = <string>(<any>item.type);
             item.type = getMappedVSCodeType(originalType);
@@ -521,7 +518,7 @@ export class JediProxy implements Disposable {
             definitions: []
         };
         if (defs.length > 0) {
-            defResult.definitions = defs.map(def => {
+            defResult.definitions = defs.map((def) => {
                 const originalType = def.type as string;
                 return {
                     fileName: def.fileName,
@@ -547,7 +544,7 @@ export class JediProxy implements Disposable {
         const defs = JediProxy.getProperty<any[]>(response, 'results');
         const defResult: IHoverResult = {
             requestId: command.id,
-            items: defs.map(def => {
+            items: defs.map((def) => {
                 return {
                     kind: getMappedVSCodeSymbol(def.type),
                     description: def.description,
@@ -568,7 +565,7 @@ export class JediProxy implements Disposable {
             requestId: command.id,
             definitions: []
         };
-        defResults.definitions = defs.map<IDefinition>(def => {
+        defResults.definitions = defs.map<IDefinition>((def) => {
             const originalType = def.type as string;
             return {
                 fileName: def.fileName,
@@ -594,7 +591,7 @@ export class JediProxy implements Disposable {
         defs = Array.isArray(defs) ? defs : [];
         const refResult: IReferenceResult = {
             requestId: command.id,
-            references: defs.map(item => {
+            references: defs.map((item) => {
                 return {
                     columnIndex: item.column,
                     fileName: item.fileName,
@@ -620,7 +617,7 @@ export class JediProxy implements Disposable {
     private checkQueueLength(): void {
         if (this.commandQueue.length > 10) {
             const items = this.commandQueue.splice(0, this.commandQueue.length - 10);
-            items.forEach(id => {
+            items.forEach((id) => {
                 if (this.commands.has(id)) {
                     const cmd1 = this.commands.get(id);
                     try {
@@ -656,13 +653,14 @@ export class JediProxy implements Disposable {
         return payload;
     }
 
-    private async getPathFromPythonCommand(args: string[]): Promise<string> {
+    private async getPathFromPython(getArgs = internalPython.getExecutable): Promise<string> {
+        const [args, parse] = getArgs();
         try {
             const pythonProcess = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
                 .create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
             const result = await pythonProcess.exec(args, { cwd: this.workspacePath });
-            const lines = result.stdout.trim().splitLines();
+            const lines = parse(result.stdout).splitLines();
             if (lines.length === 0) {
                 return '';
             }
@@ -676,43 +674,38 @@ export class JediProxy implements Disposable {
     private async buildAutoCompletePaths(): Promise<string[]> {
         const filePathPromises = [
             // Sysprefix.
-            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.prefix)']).catch(() => ''),
+            this.getPathFromPython(internalPython.getSysPrefix).catch(() => ''),
             // exeucutable path.
-            this.getPathFromPythonCommand(['-c', 'import sys;print(sys.executable)'])
-                .then(execPath => path.dirname(execPath))
+            this.getPathFromPython(internalPython.getExecutable)
+                .then((execPath) => path.dirname(execPath))
                 .catch(() => ''),
             // Python specific site packages.
-            // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
-            // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
-            this.getPathFromPythonCommand([
-                '-c',
-                'from distutils.sysconfig import get_python_lib; print(get_python_lib())'
-            ])
-                .then(libPath => {
+            this.getPathFromPython(internalPython.getSitePackages)
+                .then((libPath) => {
                     // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
                     // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
                     return IS_WINDOWS && libPath.length > 0 ? path.join(libPath, '..') : libPath;
                 })
                 .catch(() => ''),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
-            this.getPathFromPythonCommand(['-m', 'site', '--user-site']).catch(() => '')
+            this.getPathFromPython(internalPython.getUserSitePackages).catch(() => '')
         ];
 
         try {
             const pythonPaths = await this.getEnvironmentVariablesProvider()
                 .getEnvironmentVariables(Uri.file(this.workspacePath))
-                .then(customEnvironmentVars =>
+                .then((customEnvironmentVars) =>
                     customEnvironmentVars ? JediProxy.getProperty<string>(customEnvironmentVars, 'PYTHONPATH') : ''
                 )
-                .then(pythonPath =>
+                .then((pythonPath) =>
                     typeof pythonPath === 'string' && pythonPath.trim().length > 0 ? pythonPath.trim() : ''
                 )
-                .then(pythonPath => pythonPath.split(path.delimiter).filter(item => item.trim().length > 0));
+                .then((pythonPath) => pythonPath.split(path.delimiter).filter((item) => item.trim().length > 0));
             const resolvedPaths = pythonPaths
-                .filter(pythonPath => !path.isAbsolute(pythonPath))
-                .map(pythonPath => path.resolve(this.workspacePath, pythonPath));
+                .filter((pythonPath) => !path.isAbsolute(pythonPath))
+                .map((pythonPath) => path.resolve(this.workspacePath, pythonPath));
             const filePaths = await Promise.all(filePathPromises);
-            return filePaths.concat(...pythonPaths, ...resolvedPaths).filter(p => p.length > 0);
+            return filePaths.concat(...pythonPaths, ...resolvedPaths).filter((p) => p.length > 0);
         } catch (ex) {
             traceError('Python Extension: jediProxy.filePaths', ex);
             return [];
@@ -732,7 +725,7 @@ export class JediProxy implements Disposable {
     private getConfig() {
         // Add support for paths relative to workspace.
         const extraPaths = this.pythonSettings.autoComplete
-            ? this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
+            ? this.pythonSettings.autoComplete.extraPaths.map((extraPath) => {
                   if (path.isAbsolute(extraPath)) {
                       return extraPath;
                   }
@@ -750,7 +743,7 @@ export class JediProxy implements Disposable {
 
         const distinctExtraPaths = extraPaths
             .concat(this.additionalAutoCompletePaths)
-            .filter(value => value.length > 0)
+            .filter((value) => value.length > 0)
             .filter((value, index, self) => self.indexOf(value) === index);
 
         return {
@@ -902,7 +895,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         this.commandCancellationTokenSources.set(cmd.command, cancellation);
         executionCmd.token = cancellation.token;
 
-        return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
+        return this.jediProxy.sendCommand<R>(executionCmd).catch((reason) => {
             traceError(reason);
             return undefined;
         });
@@ -915,7 +908,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
             executionCmd.token = token;
         }
 
-        return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
+        return this.jediProxy.sendCommand<R>(executionCmd).catch((reason) => {
             traceError(reason);
             return undefined;
         });

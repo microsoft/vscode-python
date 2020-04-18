@@ -3,12 +3,12 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -36,10 +36,10 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             code = code.replace(new RegExp('\\r', 'g'), '');
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
-            const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
+            const [args, parse] = internalScripts.normalizeForInterpreter(code);
             const proc = await processService.exec(interpreter?.path || 'python', args, { throwOnStdErr: true });
 
-            return proc.stdout;
+            return parse(proc.stdout);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
@@ -82,7 +82,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         return code;
     }
     public async saveFileIfDirty(file: Uri): Promise<void> {
-        const docs = this.documentManager.textDocuments.filter(d => d.uri.path === file.path);
+        const docs = this.documentManager.textDocuments.filter((d) => d.uri.path === file.path);
         if (docs.length === 1 && docs[0].isDirty) {
             await docs[0].save();
         }

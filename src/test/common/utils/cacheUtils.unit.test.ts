@@ -123,7 +123,7 @@ suite('Common Utils - CacheUtils', () => {
                 const pythonPath = 'Some Python Path';
                 const vsc = createMockVSC(pythonPath);
                 const resource = Uri.parse('a');
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
 
@@ -136,7 +136,7 @@ suite('Common Utils - CacheUtils', () => {
                 const pythonPath = 'Some Python Path';
                 const vsc = createMockVSC(pythonPath);
                 const resource = Uri.parse('a');
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
 
@@ -153,7 +153,7 @@ suite('Common Utils - CacheUtils', () => {
                 const pythonPath = 'Some Python Path';
                 const vsc = createMockVSC(pythonPath);
                 const resource = Uri.parse('a');
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
 
@@ -170,7 +170,7 @@ suite('Common Utils - CacheUtils', () => {
                 const pythonPath = 'Some Python Path';
                 const vsc = createMockVSC(pythonPath);
                 const resource = Uri.parse('a');
-                const cache = new TestInMemoryInterpreterSpecificCache('Something', 100, [resource], vsc);
+                const cache = new TestInMemoryInterpreterSpecificCache('Something', 100, [resource], undefined, vsc);
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data before caching.');
                 cache.data = scenario.dataToStore;
@@ -204,7 +204,7 @@ suite('Common Utils - CacheUtils', () => {
                 const resource = Uri.parse('a');
                 (vsc.workspace as any).workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
                 vsc.workspace.getWorkspaceFolder = () => vsc.workspace.workspaceFolders![0];
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
 
@@ -218,8 +218,14 @@ suite('Common Utils - CacheUtils', () => {
                 const vsc = createMockVSC(pythonPath);
                 const resource = Uri.parse('a');
                 const anotherResource = Uri.parse('b');
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
-                const cache2 = new InMemoryInterpreterSpecificCache('Something', 10000, [anotherResource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
+                const cache2 = new InMemoryInterpreterSpecificCache(
+                    'Something',
+                    10000,
+                    [anotherResource],
+                    undefined,
+                    vsc
+                );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
                 expect(cache2.hasData).to.be.equal(false, 'Must not have any data');
@@ -238,8 +244,14 @@ suite('Common Utils - CacheUtils', () => {
                 const anotherResource = Uri.parse('b');
                 (vsc.workspace as any).workspaceFolders = [{ index: 0, name: '1', uri: Uri.parse('wkfolder') }];
                 vsc.workspace.getWorkspaceFolder = () => vsc.workspace.workspaceFolders![0];
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
-                const cache2 = new InMemoryInterpreterSpecificCache('Something', 10000, [anotherResource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
+                const cache2 = new InMemoryInterpreterSpecificCache(
+                    'Something',
+                    10000,
+                    [anotherResource],
+                    undefined,
+                    vsc
+                );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
                 expect(cache2.hasData).to.be.equal(false, 'Must not have any data');
@@ -260,12 +272,18 @@ suite('Common Utils - CacheUtils', () => {
                     { index: 0, name: '1', uri: Uri.parse('wkfolder1') },
                     { index: 1, name: '2', uri: Uri.parse('wkfolder2') }
                 ];
-                vsc.workspace.getWorkspaceFolder = res => {
+                vsc.workspace.getWorkspaceFolder = (res) => {
                     const index = res.fsPath === resource.fsPath ? 0 : 1;
                     return vsc.workspace.workspaceFolders![index];
                 };
-                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], vsc);
-                const cache2 = new InMemoryInterpreterSpecificCache('Something', 10000, [anotherResource], vsc);
+                const cache = new InMemoryInterpreterSpecificCache('Something', 10000, [resource], undefined, vsc);
+                const cache2 = new InMemoryInterpreterSpecificCache(
+                    'Something',
+                    10000,
+                    [anotherResource],
+                    undefined,
+                    vsc
+                );
 
                 expect(cache.hasData).to.be.equal(false, 'Must not have any data');
                 expect(cache2.hasData).to.be.equal(false, 'Must not have any data');

@@ -35,6 +35,8 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 
+const ISOLATED = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
+
 suite('Import Sort Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let shell: TypeMoq.IMock<IApplicationShell>;
@@ -56,22 +58,21 @@ suite('Import Sort Provider', () => {
         processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
-        serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
-        serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
-        serviceContainer.setup(c => c.get(IApplicationShell)).returns(() => shell.object);
-        serviceContainer.setup(c => c.get(IConfigurationService)).returns(() => configurationService.object);
-        serviceContainer.setup(c => c.get(IPythonExecutionFactory)).returns(() => pythonExecFactory.object);
-        serviceContainer.setup(c => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
-        serviceContainer.setup(c => c.get(IEditorUtils)).returns(() => editorUtils.object);
-        serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => []);
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-
+        serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
+        serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
+        serviceContainer.setup((c) => c.get(IApplicationShell)).returns(() => shell.object);
+        serviceContainer.setup((c) => c.get(IConfigurationService)).returns(() => configurationService.object);
+        serviceContainer.setup((c) => c.get(IPythonExecutionFactory)).returns(() => pythonExecFactory.object);
+        serviceContainer.setup((c) => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
+        serviceContainer.setup((c) => c.get(IEditorUtils)).returns(() => editorUtils.object);
+        serviceContainer.setup((c) => c.get(IDisposableRegistry)).returns(() => []);
+        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
     });
 
     test('Ensure command is registered', () => {
         commandManager
-            .setup(c =>
+            .setup((c) =>
                 c.registerCommand(
                     TypeMoq.It.isValue(Commands.Sort_Imports),
                     TypeMoq.It.isAny(),
@@ -85,11 +86,11 @@ suite('Import Sort Provider', () => {
     });
     test("Ensure message is displayed when no doc is opened and uri isn't provided", async () => {
         documentManager
-            .setup(d => d.activeTextEditor)
+            .setup((d) => d.activeTextEditor)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await sortProvider.sortImports();
@@ -101,20 +102,20 @@ suite('Import Sort Provider', () => {
         const mockEditor = TypeMoq.Mock.ofType<TextEditor>();
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         mockDoc
-            .setup(d => d.languageId)
+            .setup((d) => d.languageId)
             .returns(() => 'xyz')
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockEditor
-            .setup(d => d.document)
+            .setup((d) => d.document)
             .returns(() => mockDoc.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         documentManager
-            .setup(d => d.activeTextEditor)
+            .setup((d) => d.activeTextEditor)
             .returns(() => mockEditor.object)
             .verifiable(TypeMoq.Times.once());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isValue('Please open a Python file to sort the imports.')))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await sortProvider.sortImports();
@@ -127,10 +128,12 @@ suite('Import Sort Provider', () => {
     test('Ensure document is opened', async () => {
         const uri = Uri.file('TestDoc');
 
-        documentManager.setup(d => d.openTextDocument(TypeMoq.It.isValue(uri))).verifiable(TypeMoq.Times.atLeastOnce());
-        documentManager.setup(d => d.activeTextEditor).verifiable(TypeMoq.Times.never());
+        documentManager
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        documentManager.setup((d) => d.activeTextEditor).verifiable(TypeMoq.Times.never());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         await sortProvider.sortImports(uri).catch(noop);
@@ -144,15 +147,15 @@ suite('Import Sort Provider', () => {
         // tslint:disable-next-line:no-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 1)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         const edit = await sortProvider.sortImports(uri);
@@ -167,15 +170,15 @@ suite('Import Sort Provider', () => {
         // tslint:disable-next-line:no-any
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 0)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         const edit = await sortProvider.sortImports(uri);
@@ -189,35 +192,35 @@ suite('Import Sort Provider', () => {
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 10)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         const lastLine = TypeMoq.Mock.ofType<TextLine>();
         let editApplied: WorkspaceEdit | undefined;
         lastLine
-            .setup(l => l.text)
+            .setup((l) => l.text)
             .returns(() => '1234')
             .verifiable(TypeMoq.Times.atLeastOnce());
         lastLine
-            .setup(l => l.range)
+            .setup((l) => l.range)
             .returns(() => new Range(1, 0, 10, 1))
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc
-            .setup(d => d.lineAt(TypeMoq.It.isValue(9)))
+            .setup((d) => d.lineAt(TypeMoq.It.isValue(9)))
             .returns(() => lastLine.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.applyEdit(TypeMoq.It.isAny()))
-            .callback(e => (editApplied = e))
+            .setup((d) => d.applyEdit(TypeMoq.It.isAny()))
+            .callback((e) => (editApplied = e))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -236,15 +239,15 @@ suite('Import Sort Provider', () => {
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 1)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
@@ -258,15 +261,15 @@ suite('Import Sort Provider', () => {
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 0)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         shell
-            .setup(s => s.showErrorMessage(TypeMoq.It.isAny()))
+            .setup((s) => s.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
@@ -275,63 +278,63 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure stdin is used for sorting', async () => {
+    test('Ensure stdin is used for sorting (with custom isort path)', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
         processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 10)
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc
-            .setup(d => d.getText(TypeMoq.It.isAny()))
+            .setup((d) => d.getText(TypeMoq.It.isAny()))
             .returns(() => 'Hello')
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc
-            .setup(d => d.isDirty)
+            .setup((d) => d.isDirty)
             .returns(() => true)
             .verifiable(TypeMoq.Times.never());
         mockDoc
-            .setup(d => d.uri)
+            .setup((d) => d.uri)
             .returns(() => uri)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         pythonSettings
-            .setup(s => s.sortImports)
+            .setup((s) => s.sortImports)
             .returns(() => {
                 return ({ path: 'CUSTOM_ISORT', args: ['1', '2'] } as any) as ISortImportSettings;
             })
             .verifiable(TypeMoq.Times.once());
         processServiceFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
+            .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processService.object))
             .verifiable(TypeMoq.Times.once());
 
         let actualSubscriber: Subscriber<Output<string>>;
         const stdinStream = TypeMoq.Mock.ofType<Writable>();
-        stdinStream.setup(s => s.write('Hello')).verifiable(TypeMoq.Times.once());
+        stdinStream.setup((s) => s.write('Hello')).verifiable(TypeMoq.Times.once());
         stdinStream
-            .setup(s => s.end())
+            .setup((s) => s.end())
             .callback(() => {
                 actualSubscriber.next({ source: 'stdout', out: 'DIFF' });
                 actualSubscriber.complete();
             })
             .verifiable(TypeMoq.Times.once());
         const childProcess = TypeMoq.Mock.ofType<ChildProcess>();
-        childProcess.setup(p => p.stdin).returns(() => stdinStream.object);
+        childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
         const executionResult = {
             proc: childProcess.object,
-            out: new Observable<Output<string>>(subscriber => (actualSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
             dispose: noop
         };
         const expectedArgs = ['-', '--diff', '1', '2'];
         processService
-            .setup(p =>
+            .setup((p) =>
                 p.execObservable(
                     TypeMoq.It.isValue('CUSTOM_ISORT'),
                     TypeMoq.It.isValue(expectedArgs),
@@ -342,7 +345,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
-            .setup(e =>
+            .setup((e) =>
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),
@@ -359,34 +362,34 @@ suite('Import Sort Provider', () => {
         mockDoc.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure stdin is used for sorting (with custom isort path)', async () => {
+    test('Ensure stdin is used for sorting', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
         const processService = TypeMoq.Mock.ofType<ProcessService>();
         processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
         mockDoc
-            .setup(d => d.lineCount)
+            .setup((d) => d.lineCount)
             .returns(() => 10)
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc
-            .setup(d => d.getText(TypeMoq.It.isAny()))
+            .setup((d) => d.getText(TypeMoq.It.isAny()))
             .returns(() => 'Hello')
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc
-            .setup(d => d.isDirty)
+            .setup((d) => d.isDirty)
             .returns(() => true)
             .verifiable(TypeMoq.Times.never());
         mockDoc
-            .setup(d => d.uri)
+            .setup((d) => d.uri)
             .returns(() => uri)
             .verifiable(TypeMoq.Times.atLeastOnce());
         documentManager
-            .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
+            .setup((d) => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
         pythonSettings
-            .setup(s => s.sortImports)
+            .setup((s) => s.sortImports)
             .returns(() => {
                 return ({ args: ['1', '2'] } as any) as ISortImportSettings;
             })
@@ -395,31 +398,31 @@ suite('Import Sort Provider', () => {
         const processExeService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         processExeService.setup((p: any) => p.then).returns(() => undefined);
         pythonExecFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
+            .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(processExeService.object))
             .verifiable(TypeMoq.Times.once());
 
         let actualSubscriber: Subscriber<Output<string>>;
         const stdinStream = TypeMoq.Mock.ofType<Writable>();
-        stdinStream.setup(s => s.write('Hello')).verifiable(TypeMoq.Times.once());
+        stdinStream.setup((s) => s.write('Hello')).verifiable(TypeMoq.Times.once());
         stdinStream
-            .setup(s => s.end())
+            .setup((s) => s.end())
             .callback(() => {
                 actualSubscriber.next({ source: 'stdout', out: 'DIFF' });
                 actualSubscriber.complete();
             })
             .verifiable(TypeMoq.Times.once());
         const childProcess = TypeMoq.Mock.ofType<ChildProcess>();
-        childProcess.setup(p => p.stdin).returns(() => stdinStream.object);
+        childProcess.setup((p) => p.stdin).returns(() => stdinStream.object);
         const executionResult = {
             proc: childProcess.object,
-            out: new Observable<Output<string>>(subscriber => (actualSubscriber = subscriber)),
+            out: new Observable<Output<string>>((subscriber) => (actualSubscriber = subscriber)),
             dispose: noop
         };
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
-        const expectedArgs = [importScript, '-', '--diff', '1', '2'];
+        const expectedArgs = [ISOLATED, importScript, '-', '--diff', '1', '2'];
         processExeService
-            .setup(p =>
+            .setup((p) =>
                 p.execObservable(
                     TypeMoq.It.isValue(expectedArgs),
                     TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, cwd: path.sep })
@@ -429,7 +432,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
-            .setup(e =>
+            .setup((e) =>
                 e.getWorkspaceEditsFromPatch(
                     TypeMoq.It.isValue('Hello'),
                     TypeMoq.It.isValue('DIFF'),

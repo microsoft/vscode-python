@@ -9,13 +9,13 @@ import { ILiveShareApi, IWorkspaceService } from '../../../common/application/ty
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
     IDataScience,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -29,7 +29,7 @@ export class GuestJupyterServer
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private _id = uuid();
-    private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
+    private notebooks = new Map<string, Promise<INotebook>>();
 
     constructor(
         private liveShare: ILiveShareApi,
@@ -39,7 +39,7 @@ export class GuestJupyterServer
         private configService: IConfigurationService,
         _sessionManager: IJupyterSessionManagerFactory,
         _workspaceService: IWorkspaceService,
-        _loggers: INotebookExecutionLogger[]
+        _serviceContainer: IServiceContainer
     ) {
         super(liveShare);
     }
@@ -55,6 +55,13 @@ export class GuestJupyterServer
     }
 
     public async createNotebook(resource: Resource, identity: Uri): Promise<INotebook> {
+        // Remember we can have multiple native editors opened against the same ipynb file.
+        if (this.notebooks.get(identity.toString())) {
+            return this.notebooks.get(identity.toString())!;
+        }
+
+        const deferred = createDeferred<INotebook>();
+        this.notebooks.set(identity.toString(), deferred.promise);
         // Tell the host side to generate a notebook for this uri
         const service = await this.waitForService();
         if (service) {
@@ -70,10 +77,10 @@ export class GuestJupyterServer
             this.configService,
             resource,
             identity,
-            this,
+            this.launchInfo,
             this.dataScience.activationStartTime
         );
-        this.notebooks.set(identity.toString(), result);
+        deferred.resolve(result);
         const oldDispose = result.dispose.bind(result);
         result.dispose = () => {
             this.notebooks.delete(identity.toString());
@@ -86,8 +93,8 @@ export class GuestJupyterServer
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.notebooks.forEach(async notebook => {
-            const guestNotebook = notebook as GuestJupyterNotebook;
+        this.notebooks.forEach(async (notebook) => {
+            const guestNotebook = (await notebook) as GuestJupyterNotebook;
             if (guestNotebook) {
                 await guestNotebook.onSessionChange(api);
             }

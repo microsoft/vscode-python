@@ -29,18 +29,18 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         // Perform these validation checks in the foreground.
         await this.runDiagnostics(
-            services.filter(item => !item.runInBackground),
+            services.filter((item) => !item.runInBackground),
             resource
         );
         // Perform these validation checks in the background.
         this.runDiagnostics(
-            services.filter(item => item.runInBackground),
+            services.filter((item) => item.runInBackground),
             resource
         ).ignoreErrors();
     }
     private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void> {
         await Promise.all(
-            diagnosticServices.map(async diagnosticService => {
+            diagnosticServices.map(async (diagnosticService) => {
                 const diagnostics = await diagnosticService.diagnose(resource);
                 if (diagnostics.length > 0) {
                     this.log(diagnostics);
@@ -50,7 +50,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         );
     }
     private log(diagnostics: IDiagnostic[]): void {
-        diagnostics.forEach(item => {
+        diagnostics.forEach((item) => {
             const message = `Diagnostic Code: ${item.code}, Message: ${item.message}`;
             switch (item.severity) {
                 case DiagnosticSeverity.Error: {

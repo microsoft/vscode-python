@@ -26,7 +26,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     @traceDecorators.error('Failed to update test settings')
     public async updateTestSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
-        await Promise.all(filesToBeFixed.map(file => this.fixSettingInFile(file)));
+        await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
     }
     public getSettingsFiles(resource: Resource) {
         const settingsFiles: string[] = [];
@@ -42,12 +42,12 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     public async getFilesToBeFixed(resource: Resource) {
         const files = this.getSettingsFiles(resource);
         const result = await Promise.all(
-            files.map(async file => {
+            files.map(async (file) => {
                 const needsFixing = await this.doesFileNeedToBeFixed(file);
                 return { file, needsFixing };
             })
         );
-        return result.filter(item => item.needsFixing).map(item => item.file);
+        return result.filter((item) => item.needsFixing).map((item) => item.file);
     }
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string) {

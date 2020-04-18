@@ -86,8 +86,8 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 
-    [undefined, Uri.parse('a')].forEach(resource =>
-        [undefined, pythonInterpreter].forEach(interpreter => {
+    [undefined, Uri.parse('a')].forEach((resource) =>
+        [undefined, pythonInterpreter].forEach((interpreter) => {
             suite(title(resource, interpreter), () => {
                 setup(initSetup);
                 test('Unknown os will return empty variables', async () => {
@@ -98,9 +98,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                     expect(env).to.equal(undefined, 'Should not have any variables');
                 });
 
-                const osTypes = getNamesAndValues<OSType>(OSType).filter(osType => osType.value !== OSType.Unknown);
+                const osTypes = getNamesAndValues<OSType>(OSType).filter((osType) => osType.value !== OSType.Unknown);
 
-                osTypes.forEach(osType => {
+                osTypes.forEach((osType) => {
                     suite(osType.name, () => {
                         setup(initSetup);
                         test('getEnvironmentActivationShellCommands will be invoked', async () => {
@@ -140,10 +140,13 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             const shellCmd = capture(processService.shellExec).first()[0];
 
+                            const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
                             const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
-                            const expectedCommand = `${cmd.join(
-                                ' && '
-                            )} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
+                            const expectedCommand = [
+                                ...cmd,
+                                `echo '${getEnvironmentPrefix}'`,
+                                `python ${isolated} ${printEnvPyFile.fileToCommandArgument()}`
+                            ].join(' && ');
 
                             expect(shellCmd).to.equal(expectedCommand);
                         });
@@ -279,9 +282,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             expect(env).to.deep.equal(varsFromEnv);
                             // All same objects.
-                            expect(env)
-                                .to.equal(env2)
-                                .to.equal(env3);
+                            expect(env).to.equal(env2).to.equal(env3);
 
                             // All methods invoked only once.
                             verify(

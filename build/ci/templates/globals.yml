@@ -6,6 +6,7 @@ variables:
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
+  VSC_PYTHON_WEBVIEW_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc_webview.log'
   CI_BRANCH_NAME: ${Build.SourceBranchName}
   npm_config_cache: $(Pipeline.Workspace)/.npm
   vmImageMacOS: 'macOS-10.15'

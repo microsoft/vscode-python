@@ -10,7 +10,7 @@ import {
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
 import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
-import { postActionToExtension } from '../helpers';
+import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
 import {
     CommonActionType,
@@ -25,7 +25,7 @@ import {
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
     export function exportCells(arg: CommonReducerArg): IMainState {
-        const cellContents = arg.prevState.cellVMs.map(v => v.cell);
+        const cellContents = arg.prevState.cellVMs.map((v) => v.cell);
         postActionToExtension(arg, InteractiveWindowMessages.Export, cellContents);
 
         // Indicate busy
@@ -40,7 +40,7 @@ export namespace Transfer {
 
         // Actually waiting for save results before marking as not dirty, so don't do it here.
         postActionToExtension(arg, InteractiveWindowMessages.SaveAll, {
-            cells: arg.prevState.cellVMs.map(cvm => cvm.cell)
+            cells: arg.prevState.cellVMs.map((cvm) => cvm.cell)
         });
         return arg.prevState;
     }
@@ -55,8 +55,7 @@ export namespace Transfer {
 
     export function sendCommand(arg: CommonReducerArg<CommonActionType, ISendCommandAction>): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.NativeCommand, {
-            command: arg.payload.data.command,
-            source: arg.payload.data.commandType
+            command: arg.payload.data.command
         });
         return arg.prevState;
     }
@@ -80,13 +79,13 @@ export namespace Transfer {
     }
 
     export function getAllCells(arg: CommonReducerArg): IMainState {
-        const cells = arg.prevState.cellVMs.map(c => c.cell);
+        const cells = arg.prevState.cellVMs.map((c) => c.cell);
         postActionToExtension(arg, InteractiveWindowMessages.ReturnAllCells, cells);
         return arg.prevState;
     }
 
     export function gotoCell(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
+        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (cellVM && cellVM.cell.data.cell_type === 'code') {
             postActionToExtension(arg, InteractiveWindowMessages.GotoCodeCell, {
                 file: cellVM.cell.file,
@@ -97,7 +96,7 @@ export namespace Transfer {
     }
 
     export function copyCellCode(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
-        let cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
+        let cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (!cellVM && arg.prevState.editCellVM && arg.payload.data.cellId === arg.prevState.editCellVM.cell.id) {
             cellVM = arg.prevState.editCellVM;
         }
@@ -113,9 +112,17 @@ export namespace Transfer {
     }
 
     export function gather(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
+        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (cellVM) {
-            postActionToExtension(arg, InteractiveWindowMessages.GatherCodeRequest, cellVM.cell);
+            postActionToExtension(arg, InteractiveWindowMessages.GatherCode, cellVM.cell);
+        }
+        return arg.prevState;
+    }
+
+    export function gatherToScript(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
+        if (cellVM) {
+            postActionToExtension(arg, InteractiveWindowMessages.GatherCodeToScript, cellVM.cell);
         }
         return arg.prevState;
     }
@@ -186,7 +193,22 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             newDirty: true,
             // tslint:disable-next-line: no-any
-            oldCells: arg.prevState.cellVMs.map(c => c.cell as any) as ICell[]
+            oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[]
+        });
+    }
+
+    export function postModelCellUpdate<T>(
+        arg: CommonReducerArg<CommonActionType, T>,
+        newCells: ICell[],
+        oldCells: ICell[]
+    ) {
+        postModelUpdate(arg, {
+            source: 'user',
+            kind: 'modify',
+            newCells,
+            oldCells,
+            oldDirty: arg.prevState.dirty,
+            newDirty: true
         });
     }
 
@@ -197,7 +219,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             newDirty: true,
             // tslint:disable-next-line: no-any
-            oldCells: arg.prevState.cellVMs.map(c => c.cell as any) as ICell[],
+            oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[],
             newCellId
         });
     }
@@ -221,7 +243,7 @@ export namespace Transfer {
         const cellVM =
             arg.payload.data.cellId === Identifiers.EditCellId
                 ? arg.prevState.editCellVM
-                : arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
+                : arg.prevState.cellVMs.find((c) => c.cell.id === arg.payload.data.cellId);
         if (cellVM) {
             // Tell the underlying model on the extension side
             postModelEdit(arg, arg.payload.data.forward, arg.payload.data.reverse, cellVM.cell.id);
@@ -229,9 +251,13 @@ export namespace Transfer {
             // Update the uncommitted text on the cell view model
             // We keep this saved here so we don't re-render and we put this code into the input / code data
             // when focus is lost
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
-            if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
+            // If this is the focused cell, then user is editing it, hence it needs to be updated.
+            const isThisTheFocusedCell = selectionInfo.focusedCellId === arg.payload.data.cellId;
+            // If this edit is part of a sycning comging from another notebook, then we need to update it again.
+            const isSyncFromAnotherNotebook = isSyncingMessage(arg.payload.messageType);
+            if (index >= 0 && (isThisTheFocusedCell || isSyncFromAnotherNotebook)) {
                 const newVMs = [...arg.prevState.cellVMs];
                 const current = arg.prevState.cellVMs[index];
                 const newCell = {
@@ -272,7 +298,7 @@ export namespace Transfer {
 
     export function loadedAllCells(arg: CommonReducerArg): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
-            cells: arg.prevState.cellVMs.map(c => c.cell)
+            cells: arg.prevState.cellVMs.map((c) => c.cell)
         });
         return arg.prevState;
     }

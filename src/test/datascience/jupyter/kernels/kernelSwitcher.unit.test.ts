@@ -13,19 +13,18 @@ import { ConfigurationService } from '../../../../client/common/configuration/se
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { Commands } from '../../../../client/datascience/constants';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
-import { JupyterServerWrapper } from '../../../../client/datascience/jupyter/jupyterServerWrapper';
-import { JupyterSessionStartError } from '../../../../client/datascience/jupyter/jupyterSession';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import {
+    IConnection,
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookServer
+    INotebook
 } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { noop } from '../../../core';
@@ -38,14 +37,14 @@ suite('Data Science - Kernel Switcher', () => {
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
     let notebook: INotebook;
-    let notebookServer: INotebookServer;
+    let connection: IConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedKernel: LiveKernelModel;
     let selectedKernelSecondTime: LiveKernelModel;
     let selectedInterpreter: PythonInterpreter;
     let settings: IPythonSettings;
     setup(() => {
-        notebookServer = mock(JupyterServerWrapper);
+        connection = mock<IConnection>();
         settings = mock(PythonSettings);
         currentKernel = {
             lastActivityTime: new Date(),
@@ -83,7 +82,7 @@ suite('Data Science - Kernel Switcher', () => {
 
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);
-        when(notebook.server).thenReturn(instance(notebookServer));
+        when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelSwitcher = new KernelSwitcher(
             instance(configService),
@@ -96,29 +95,33 @@ suite('Data Science - Kernel Switcher', () => {
         });
     });
 
-    [true, false].forEach(isLocalConnection => {
+    [true, false].forEach((isLocalConnection) => {
         // tslint:disable-next-line: max-func-body-length
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
-                when(notebookServer.getConnectionInfo()).thenReturn({
+                const jupyterConnection: IConnection = {
+                    type: 'jupyter',
                     localLaunch: isLocalConnection,
                     baseUrl: '',
                     disconnected: new EventEmitter<number>().event,
                     hostName: '',
                     token: '',
                     localProcExitCode: 0,
+                    valid: true,
+                    displayName: '',
                     dispose: noop
-                });
+                };
+                when(notebook.connection).thenReturn(jupyterConnection);
             });
             teardown(() => {
                 // We should have checked if it was a local connection.
-                verify(notebookServer.getConnectionInfo()).atLeast(1);
+                verify(notebook.connection).atLeast(1);
             });
 
             [
                 { title: 'Without an existing kernel', currentKernel: undefined },
                 { title: 'With an existing kernel', currentKernel }
-            ].forEach(currentKernelInfo => {
+            ].forEach((currentKernelInfo) => {
                 suite(currentKernelInfo.title, () => {
                     setup(() => {
                         when(notebook.getKernelSpec()).thenReturn(currentKernelInfo.currentKernel);
@@ -204,8 +207,7 @@ suite('Data Science - Kernel Switcher', () => {
                         });
 
                         test('Switch to the selected kernel', async () => {
-                            when(notebook.setKernelSpec(anything(), anything())).thenResolve();
-                            when(notebook.setInterpreter(selectedInterpreter)).thenReturn();
+                            when(notebook.setKernelSpec(anything(), anything(), anything())).thenResolve();
 
                             const selection = await kernelSwitcher.switchKernel(instance(notebook));
 
@@ -213,20 +215,18 @@ suite('Data Science - Kernel Switcher', () => {
                             assert.deepEqual(selection?.kernelModel, selectedKernel);
                             assert.deepEqual(selection?.interpreter, selectedInterpreter);
                             assert.deepEqual(selection?.kernelSpec, undefined);
-                            verify(notebook.setKernelSpec(anything(), anything())).once();
-                            verify(notebook.setInterpreter(selectedInterpreter)).once();
+                            verify(notebook.setKernelSpec(anything(), anything(), anything())).once();
                         });
                         test('Re-throw errors when switching to the selected kernel', async () => {
                             const ex = new Error('Kaboom');
-                            when(notebook.setKernelSpec(anything(), anything())).thenReject(ex);
+                            when(notebook.setKernelSpec(anything(), anything(), anything())).thenReject(ex);
 
                             const selection = kernelSwitcher.switchKernel(instance(notebook));
 
                             await assert.isRejected(selection, ex.message);
-                            verify(notebook.setInterpreter(selectedInterpreter)).never();
                         });
                         suite('Display error if `JupyterSessionStartError` is throw and retry', () => {
-                            setup(function() {
+                            setup(function () {
                                 if (!isLocalConnection) {
                                     // tslint:disable-next-line: no-invalid-this
                                     this.skip();
@@ -234,13 +234,12 @@ suite('Data Science - Kernel Switcher', () => {
                             });
                             test('Display error', async () => {
                                 const ex = new JupyterSessionStartError(new Error('Kaboom'));
-                                when(notebook.setKernelSpec(anything(), anything())).thenReject(ex);
+                                when(notebook.setKernelSpec(anything(), anything(), anything())).thenReject(ex);
                                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
                                 const selection = kernelSwitcher.switchKernel(instance(notebook));
 
                                 await assert.isRejected(selection, ex.message);
-                                verify(notebook.setInterpreter(selectedInterpreter)).never();
                                 const message = DataScience.sessionStartFailedWithKernel().format(
                                     selectedKernel.name,
                                     Commands.ViewJupyterOutput
@@ -255,13 +254,12 @@ suite('Data Science - Kernel Switcher', () => {
                             });
                             test('Re-throw error if nothing is selected from prompt', async () => {
                                 const ex = new JupyterSessionStartError(new Error('Kaboom'));
-                                when(notebook.setKernelSpec(anything(), anything())).thenReject(ex);
+                                when(notebook.setKernelSpec(anything(), anything(), anything())).thenReject(ex);
                                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
                                 const selection = kernelSwitcher.switchKernel(instance(notebook));
 
                                 await assert.isRejected(selection, ex.message);
-                                verify(notebook.setInterpreter(selectedInterpreter)).never();
                                 const message = DataScience.sessionStartFailedWithKernel().format(
                                     selectedKernel.name,
                                     Commands.ViewJupyterOutput
@@ -276,7 +274,7 @@ suite('Data Science - Kernel Switcher', () => {
                             });
                             test('Re-throw error if cancel is selected from prompt', async () => {
                                 const ex = new JupyterSessionStartError(new Error('Kaboom'));
-                                when(notebook.setKernelSpec(anything(), anything())).thenReject(ex);
+                                when(notebook.setKernelSpec(anything(), anything(), anything())).thenReject(ex);
                                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
                                     // tslint:disable-next-line: no-any
                                     Common.cancel() as any
@@ -285,7 +283,6 @@ suite('Data Science - Kernel Switcher', () => {
                                 const selection = kernelSwitcher.switchKernel(instance(notebook));
 
                                 await assert.isRejected(selection, ex.message);
-                                verify(notebook.setInterpreter(selectedInterpreter)).never();
                                 const message = DataScience.sessionStartFailedWithKernel().format(
                                     selectedKernel.name,
                                     Commands.ViewJupyterOutput
@@ -302,7 +299,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 let firstTimeSelectingAKernel = true;
                                 let firstTimeSettingAKernel = true;
                                 const ex = new JupyterSessionStartError(new Error('Kaboom'));
-                                when(notebook.setKernelSpec(anything(), anything())).thenCall(() => {
+                                when(notebook.setKernelSpec(anything(), anything(), anything())).thenCall(() => {
                                     // If we're setting it the first time, then throw an error.
                                     if (firstTimeSettingAKernel) {
                                         firstTimeSettingAKernel = false;
@@ -342,8 +339,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 assert.deepEqual(selection?.kernelModel, selectedKernelSecondTime);
                                 assert.deepEqual(selection?.interpreter, selectedInterpreter);
                                 assert.deepEqual(selection?.kernelSpec, undefined);
-                                verify(notebook.setKernelSpec(anything(), anything())).twice();
-                                verify(notebook.setInterpreter(selectedInterpreter)).once();
+                                verify(notebook.setKernelSpec(anything(), anything(), anything())).twice();
                                 verify(
                                     appShell.showErrorMessage(
                                         anything(),

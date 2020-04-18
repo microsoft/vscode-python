@@ -120,7 +120,7 @@ suite('Shell Detectors', () => {
             );
         });
     });
-    getNamesAndValues<OSType>(OSType).forEach(os => {
+    getNamesAndValues<OSType>(OSType).forEach((os) => {
         test(`Get shell path from settings (OS ${os.name})`, async () => {
             const shellPathInSettings = 'some value';
             const shellDetector = new SettingsShellDetector(instance(workspaceService), instance(platformService));
@@ -190,7 +190,7 @@ suite('Shell Detectors', () => {
 
         expect(shellPath).to.equal('hello.exe');
     });
-    [OSType.OSX, OSType.Linux].forEach(osType => {
+    [OSType.OSX, OSType.Linux].forEach((osType) => {
         test(`Default shell on ${osType} is /bin/bash`, () => {
             const shellDetector = new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService));
             when(platformService.osType).thenReturn(OSType.OSX);

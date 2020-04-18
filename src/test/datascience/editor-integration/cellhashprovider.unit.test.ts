@@ -8,12 +8,7 @@ import { Position, Range, Uri } from 'vscode';
 import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
-import { CellHashLogger } from '../../../client/datascience/editor-integration/cellhashLogger';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import {
-    InteractiveWindowMessages,
-    SysInfoReason
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -28,7 +23,6 @@ class HashListener implements ICellHashListener {
 // tslint:disable-next-line: max-func-body-length
 suite('CellHashProvider Unit Tests', () => {
     let hashProvider: CellHashProvider;
-    let hashLogger: CellHashLogger;
     let documentManager: MockDocumentManager;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
@@ -42,11 +36,11 @@ suite('CellHashProvider Unit Tests', () => {
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        dataScienceSettings.setup(d => d.enabled).returns(() => true);
-        pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
-        fileSystem.setup(d => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+        dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+        pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
+        fileSystem.setup((d) => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         documentManager = new MockDocumentManager();
         hashProvider = new CellHashProvider(
             documentManager,
@@ -55,7 +49,6 @@ suite('CellHashProvider Unit Tests', () => {
             fileSystem.object,
             [hashListener]
         );
-        hashLogger = new CellHashLogger(hashProvider);
     });
 
     function addSingleChange(file: string, range: Range, newText: string) {
@@ -76,7 +69,7 @@ suite('CellHashProvider Unit Tests', () => {
             id: '1',
             state: CellState.init
         };
-        return hashLogger.preExecute(cell, false);
+        return hashProvider.preExecute(cell, false);
     }
 
     test('Add a cell and edit it', async () => {
@@ -287,8 +280,8 @@ suite('CellHashProvider Unit Tests', () => {
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 2, 'Wrong number of hashes');
-        const fooHash = hashes.find(h => h.file === Uri.file('foo.py').fsPath);
-        const barHash = hashes.find(h => h.file === Uri.file('bar.py').fsPath);
+        const fooHash = hashes.find((h) => h.file === Uri.file('foo.py').fsPath);
+        const barHash = hashes.find((h) => h.file === Uri.file('bar.py').fsPath);
         assert.ok(fooHash, 'No hash for foo.py');
         assert.ok(barHash, 'No hash for bar.py');
         assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');
@@ -534,7 +527,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Restart the kernel
-        hashProvider.onMessage(InteractiveWindowMessages.AddedSysInfo, { type: SysInfoReason.Restart });
+        hashProvider.onKernelRestarted();
 
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 0, 'Restart should have cleared');

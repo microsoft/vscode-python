@@ -1,9 +1,11 @@
 import { inject, injectable } from 'inversify';
+import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -18,12 +20,11 @@ import {
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
     INotebookExecutionLogger,
-    INotebookExporter
+    INotebookExporter,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -42,8 +43,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(INotebookEditorProvider) private ipynbProvider: INotebookEditorProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IFileSystem) private fileSystem: IFileSystem
@@ -65,8 +65,12 @@ export class GatherListener implements IInteractiveWindowListener {
                 this.handleMessage(message, payload, this.doInitGather);
                 break;
 
-            case InteractiveWindowMessages.GatherCodeRequest:
+            case InteractiveWindowMessages.GatherCode:
                 this.handleMessage(message, payload, this.doGather);
+                break;
+
+            case InteractiveWindowMessages.GatherCodeToScript:
+                this.handleMessage(message, payload, this.doGatherToScript);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -97,20 +101,10 @@ export class GatherListener implements IInteractiveWindowListener {
     private async initGather(notebookUri: string) {
         this.notebookUri = Uri.parse(notebookUri);
 
-        // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(this.notebookUri)
-        );
-
-        let nb: INotebook | undefined;
-        // If that works, see if there's a matching notebook running
-        if (activeServer) {
-            nb = await activeServer.getNotebook(this.notebookUri);
-
-            // If we have an executing notebook, get its gather execution service.
-            if (nb) {
-                this.gatherProvider = this.getGatherProvider(nb);
-            }
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: this.notebookUri, getOnly: true });
+        // If we have an executing notebook, get its gather execution service.
+        if (nb) {
+            this.gatherProvider = this.getGatherProvider(nb);
         }
     }
 
@@ -125,12 +119,20 @@ export class GatherListener implements IInteractiveWindowListener {
     }
 
     private doGather(payload: ICell): void {
-        this.gatherCodeInternal(payload).catch(err => {
+        this.gatherCodeInternal(payload).catch((err) => {
+            traceError(`Gather to Notebook error: ${err}`);
             this.applicationShell.showErrorMessage(err);
         });
     }
 
-    private gatherCodeInternal = async (cell: ICell) => {
+    private doGatherToScript(payload: ICell): void {
+        this.gatherCodeInternal(payload, true).catch((err) => {
+            traceError(`Gather to Script error: ${err}`);
+            this.applicationShell.showErrorMessage(err);
+        });
+    }
+
+    private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {
         this.gatherTimer = new StopWatch();
 
         const slicedProgram = this.gatherProvider ? this.gatherProvider.gatherCode(cell) : 'Gather internal error';
@@ -138,7 +140,7 @@ export class GatherListener implements IInteractiveWindowListener {
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
         } else {
-            const gatherToScript: boolean | undefined = this.configService.getSettings().datascience.gatherToScript;
+            const gatherToScript: boolean = this.configService.getSettings().datascience.gatherToScript || toScript;
 
             if (gatherToScript) {
                 await this.showFile(slicedProgram, cell.file);
@@ -173,21 +175,56 @@ export class GatherListener implements IInteractiveWindowListener {
 
             const notebook = await this.jupyterExporter.translateToNotebook(cells);
             if (notebook) {
-                notebook.metadata.gatheredNotebook = true;
                 const contents = JSON.stringify(notebook);
-                await this.ipynbProvider.createNew(contents);
+                const editor = await this.ipynbProvider.createNew(contents);
+
+                let disposableNotebookSaved: IDisposable;
+                let disposableNotebookClosed: IDisposable;
+
+                const savedHandler = () => {
+                    sendTelemetryEvent(Telemetry.GatheredNotebookSaved);
+                    if (disposableNotebookSaved) {
+                        disposableNotebookSaved.dispose();
+                    }
+                    if (disposableNotebookClosed) {
+                        disposableNotebookClosed.dispose();
+                    }
+                };
+
+                const closedHandler = () => {
+                    if (disposableNotebookSaved) {
+                        disposableNotebookSaved.dispose();
+                    }
+                    if (disposableNotebookClosed) {
+                        disposableNotebookClosed.dispose();
+                    }
+                };
+
+                disposableNotebookSaved = editor.saved(savedHandler);
+                disposableNotebookClosed = editor.closed(closedHandler);
             }
         }
     }
 
     private async showFile(slicedProgram: string, filename: string) {
+        const defaultCellMarker =
+            this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+
+        if (slicedProgram) {
+            // Remove all cell definitions and newlines
+            const re = new RegExp(`^(${defaultCellMarker}.*|\\s*)\n`, 'gm');
+            slicedProgram = slicedProgram.replace(re, '');
+        }
+
+        const annotatedScript = `${localize.DataScience.gatheredScriptDescription()}${defaultCellMarker}\n${slicedProgram}`;
+
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
-        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor =>
+        const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
             this.fileSystem.arePathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
-            textEditor => textEditor.viewColumn !== undefined
+            (textEditor) => textEditor.viewColumn !== undefined
         );
         if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
             // Original file is visible
@@ -202,13 +239,13 @@ export class GatherListener implements IInteractiveWindowListener {
 
         // Create a new open editor with the returned program in the right panel
         const doc = await this.documentManager.openTextDocument({
-            content: slicedProgram,
+            content: annotatedScript,
             language: PYTHON_LANGUAGE
         });
         const editor = await this.documentManager.showTextDocument(doc, viewColumn);
 
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit(editBuilder => {
+        editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
     }

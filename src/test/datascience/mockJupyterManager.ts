@@ -60,7 +60,7 @@ export enum SupportedCommands {
 
 function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Record<string, any> {
     const models: Record<string, any> = {};
-    specs.forEach(spec => {
+    specs.forEach((spec) => {
         models[spec.name] = {
             resource_dir: spec.resourceDir,
             spec: {
@@ -96,20 +96,22 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
-        this.processServiceFactory.setup(p => p.create()).returns(() => Promise.resolve(this.processService));
+        this.processServiceFactory.setup((p) => p.create()).returns(() => Promise.resolve(this.processService));
         this.productInstaller = mock(ProductInstaller);
         // Setup our interpreter service
-        this.interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => this.changedInterpreterEvent.event);
         this.interpreterService
-            .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .setup((i) => i.onDidChangeInterpreter)
+            .returns(() => this.changedInterpreterEvent.event);
+        this.interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.activeInterpreter));
         this.interpreterService
-            .setup(i => i.getInterpreters(TypeMoq.It.isAny()))
+            .setup((i) => i.getInterpreters(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.installedInterpreters));
         this.interpreterService
-            .setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
-            .returns(p => {
-                const found = this.installedInterpreters.find(i => i.path === p);
+            .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
+            .returns((p) => {
+                const found = this.installedInterpreters.find((i) => i.path === p);
                 if (found) {
                     return Promise.resolve(found);
                 }
@@ -220,7 +222,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public setProcessDelay(timeout: number | undefined) {
         this.processService.setDelay(timeout);
-        this.pythonServices.forEach(p => p.setDelay(timeout));
+        this.pythonServices.forEach((p) => p.setDelay(timeout));
     }
 
     public addInterpreter(
@@ -235,27 +237,27 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const pythonService = new MockPythonService(interpreter);
         this.pythonServices.push(pythonService);
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.create(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
                     })
                 )
             )
             .returns(() => Promise.resolve(pythonService));
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createDaemon(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
                     })
                 )
             )
             .returns(() => Promise.resolve(pythonService));
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createActivatedEnvironment(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
                     })
                 )
@@ -287,10 +289,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
-            const key = concatMultilineStringInput(c.data.source)
-                .replace(LineFeedRegEx, '')
-                .toLowerCase();
+        cells.forEach((c) => {
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'generator'
@@ -332,10 +332,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         mimeType?: string
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
-            const key = concatMultilineStringInput(c.data.source)
-                .replace(LineFeedRegEx, '')
-                .toLowerCase();
+        cells.forEach((c) => {
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'input'
@@ -373,7 +371,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         mimeType?: string | string[]
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
+        cells.forEach((c) => {
             const cellMatcher = new CellMatcher();
             const key = cellMatcher
                 .stripFirstMarker(concatMultilineStringInput(c.data.source))
@@ -458,7 +456,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private onConfigChanged(configService: IConfigurationService) {
         const pythonPath = configService.getSettings().pythonPath;
         if (this.activeInterpreter === undefined || pythonPath !== this.activeInterpreter.path) {
-            this.activeInterpreter = this.installedInterpreters.filter(f => f.path === pythonPath)[0];
+            this.activeInterpreter = this.installedInterpreters.filter((f) => f.path === pythonPath)[0];
             if (!this.activeInterpreter) {
                 this.activeInterpreter = this.installedInterpreters[0];
             }
@@ -587,9 +585,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     ) {
         const result = {
             proc,
-            out: new Observable<Output<string>>(subscriber => {
-                stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
-                stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
+            out: new Observable<Output<string>>((subscriber) => {
+                stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+                stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
             }),
             dispose: () => {
                 noop();
@@ -619,9 +617,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
         service.addExecObservableResult(file, args, () => {
             return {
                 proc: undefined,
-                out: new Observable<Output<string>>(subscriber => {
-                    stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
-                    stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
+                out: new Observable<Output<string>>((subscriber) => {
+                    stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+                    stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
                 }),
                 dispose: () => {
                     noop();
@@ -709,7 +707,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 Promise.resolve({ stdout: '1.1.1.1' })
             );
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', 'list', '--json'], () => {
-                const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                 return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
             });
         } else {
@@ -736,7 +734,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 workingPython.path,
                 ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
                 () => {
-                    const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                    const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                     return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
                 }
             );
@@ -813,7 +811,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 workingPython.path,
                 ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
                 () => {
-                    const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                    const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                     return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
                 }
             );

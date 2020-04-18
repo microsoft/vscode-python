@@ -104,7 +104,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
         const data = properties as any;
-        Object.getOwnPropertyNames(data).forEach(prop => {
+        Object.getOwnPropertyNames(data).forEach((prop) => {
             if (data[prop] === undefined || data[prop] === null) {
                 return;
             }
@@ -141,10 +141,10 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -160,12 +160,12 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
-                    .then(data => {
+                    .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
-                    .catch(ex => {
+                    .catch((ex) => {
                         // tslint:disable-next-line:no-any
                         properties = properties || ({} as any);
                         (properties as any).failed = true;
@@ -198,13 +198,13 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     if (typeof promise.then === 'function') {
         // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>).then(
-            data => {
+            (data) => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
                 // tslint:disable-next-line:promise-function-async
             },
-            ex => {
+            (ex) => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
@@ -644,6 +644,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
+     * Telemetry event sent when an environment file is detected in the workspace.
+     */
+    [EventName.ENVFILE_WORKSPACE]: {
+        /**
+         * If there's a custom path specified in the python.envFile workspace settings.
+         */
+        hasCustomEnvPath: boolean;
+    };
+    /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
@@ -1015,6 +1024,19 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+     */
+    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `Learn more` When 'More Info' option is selected
+         * `Do not show again` When 'Do not show again' option is selected
+         */
+        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */
@@ -1082,6 +1104,11 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+
+        /**
+         * Name of LS downloaded
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
@@ -1112,6 +1139,10 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+        /**
+         * Package name of LS extracted
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent if azure blob packages are being listed
@@ -1199,23 +1230,23 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_NODE_SERVER_ENABLED]: never | undefined;
+    [EventName.LANGUAGE_SERVER_ENABLED]: never | undefined;
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.PYTHON_NODE_SERVER_READY]: never | undefined;
+    [EventName.LANGUAGE_SERVER_READY]: never | undefined;
     /**
      * Telemetry event sent when starting Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_STARTUP]: never | undefined;
+    [EventName.LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    [EventName.LANGUAGE_SERVER_TELEMETRY]: any;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      */
-    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
+    [EventName.LANGUAGE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */
@@ -1485,7 +1516,6 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
-    [Telemetry.ClassConstructionTime]: { class: string };
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
@@ -1647,54 +1677,37 @@ export interface IEventNamePropertyMapping {
          */
         result?: 'notSelected' | 'selected' | 'installationCancelled';
     };
-    [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
     [NativeKeyboardCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.CollapseInput]: never | undefined;
-    [NativeKeyboardCommandTelemetry.CollapseOutput]: never | undefined;
     [NativeKeyboardCommandTelemetry.DeleteCell]: never | undefined;
     [NativeKeyboardCommandTelemetry.InsertAbove]: never | undefined;
     [NativeKeyboardCommandTelemetry.InsertBelow]: never | undefined;
-    [NativeKeyboardCommandTelemetry.MoveCellDown]: never | undefined;
-    [NativeKeyboardCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Redo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Run]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAbove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunAll]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
-    [NativeKeyboardCommandTelemetry.RunBelow]: never | undefined;
     [NativeKeyboardCommandTelemetry.Save]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
-    [NativeKeyboardCommandTelemetry.ToggleVariableExplorer]: never | undefined;
     [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
     [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
-    [NativeMouseCommandTelemetry.ArrowUp]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
     [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
-    [NativeMouseCommandTelemetry.CollapseInput]: never | undefined;
-    [NativeMouseCommandTelemetry.CollapseOutput]: never | undefined;
     [NativeMouseCommandTelemetry.DeleteCell]: never | undefined;
-    [NativeMouseCommandTelemetry.InsertAbove]: never | undefined;
     [NativeMouseCommandTelemetry.InsertBelow]: never | undefined;
     [NativeMouseCommandTelemetry.MoveCellDown]: never | undefined;
     [NativeMouseCommandTelemetry.MoveCellUp]: never | undefined;
     [NativeMouseCommandTelemetry.Run]: never | undefined;
     [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
     [NativeMouseCommandTelemetry.RunAll]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAndAdd]: never | undefined;
-    [NativeMouseCommandTelemetry.RunAndMove]: never | undefined;
     [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
     [NativeMouseCommandTelemetry.Save]: never | undefined;
-    [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
-    [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.SelectKernel]: never | undefined;
+    [NativeMouseCommandTelemetry.SelectServer]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
-    [NativeMouseCommandTelemetry.Undo]: never | undefined;
-    [NativeMouseCommandTelemetry.Unfocus]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
     mem_use - Memory usage of Process in kb.
@@ -1894,10 +1907,98 @@ export interface IEventNamePropertyMapping {
         /**
          * result indicates whether the gather was completed to a script, notebook or suffered an internal error.
          */
-        result: 'err' | 'script' | 'notebook';
+        result: 'err' | 'script' | 'notebook' | 'unavailable';
     };
+    /**
+     * Telemetry event sent when a gathered notebook has been saved by the user.
+     */
+    [Telemetry.GatheredNotebookSaved]: undefined | never;
+    /**
+     * Telemetry event sent when the user reports whether Gathered notebook was good or not
+     */
+    [Telemetry.GatherQualityReport]: { result: 'yes' | 'no' };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
+    /**
+     * Telemetry event sent with name of a Widget that is used.
+     */
+    [Telemetry.HashedIPyWidgetNameUsed]: {
+        /**
+         * Hash of the widget
+         */
+        hashedName: string;
+        /**
+         * Where did we find the hashed name (CDN or user environment or remote jupyter).
+         */
+        source?: 'cdn' | 'local' | 'remote';
+    };
+    /**
+     * Telemetry event sent with name of a Widget found.
+     */
+    [Telemetry.HashedIPyWidgetNameDiscovered]: {
+        /**
+         * Hash of the widget
+         */
+        hashedName: string;
+        /**
+         * Where did we find the hashed name (CDN or user environment or remote jupyter).
+         */
+        source?: 'cdn' | 'local' | 'remote';
+    };
+    /**
+     * Total time taken to discover all IPyWidgets on disc.
+     * This is how long it takes to discover a single widget on disc (from python environment).
+     */
+    [Telemetry.DiscoverIPyWidgetNamesLocalPerf]: never | undefined;
+    /**
+     * Something went wrong in looking for a widget.
+     */
+    [Telemetry.HashedIPyWidgetScriptDiscoveryError]: never | undefined;
+    /**
+     * Telemetry event sent when an ipywidget module loads. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadSuccess]: { moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
+    /**
+     * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
+     */
+    [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
+    /**
+     * Total time taken to discover a widget script on CDN.
+     */
+    [Telemetry.DiscoverIPyWidgetNamesCDNPerf]: {
+        // The CDN we were testing.
+        cdn: string;
+        // Whether we managed to find the widget on the CDN or not.
+        exists: boolean;
+    };
+    /**
+     * Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
+     * This is always sent when we display a prompt.
+     */
+    [Telemetry.IPyWidgetPromptToUseCDN]: never | undefined;
+    /**
+     * Telemetry sent when user does somethign with the prompt displsyed to user about using CDN for IPyWidget scripts.
+     */
+    [Telemetry.IPyWidgetPromptToUseCDNSelection]: {
+        selection: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain';
+    };
+    /**
+     * Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
+     */
+    [Telemetry.IPyWidgetOverhead]: {
+        totalOverheadInMs: number;
+        numberOfMessagesWaitedOn: number;
+        averageWaitTime: number;
+        numberOfRegisteredHooks: number;
+    };
+    /**
+     * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
+     */
+    [Telemetry.IPyWidgetRenderFailure]: never | undefined;
 }

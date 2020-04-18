@@ -130,7 +130,7 @@ export class ArgumentsService implements IArgumentsService {
         // So if we want to run a specific test, then remove positional args.
         let removePositionalArgs = false;
         if (Array.isArray(argumentToRemoveOrFilter)) {
-            argumentToRemoveOrFilter.forEach(item => {
+            argumentToRemoveOrFilter.forEach((item) => {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
                     optionsWithArgsToRemove.push(item);
                 }
@@ -154,10 +154,10 @@ export class ArgumentsService implements IArgumentsService {
                             '-x',
                             '--stop',
                             '--with-coverage',
-                            ...OptionsWithoutArguments.filter(item => item.startsWith('--cover')),
-                            ...OptionsWithoutArguments.filter(item => item.startsWith('--logging')),
-                            ...OptionsWithoutArguments.filter(item => item.startsWith('--pdb')),
-                            ...OptionsWithoutArguments.filter(item => item.indexOf('xunit') >= 0)
+                            ...OptionsWithoutArguments.filter((item) => item.startsWith('--cover')),
+                            ...OptionsWithoutArguments.filter((item) => item.startsWith('--logging')),
+                            ...OptionsWithoutArguments.filter((item) => item.startsWith('--pdb')),
+                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0)
                         ]
                     );
                     optionsWithArgsToRemove.push(
@@ -166,9 +166,9 @@ export class ArgumentsService implements IArgumentsService {
                             '-l',
                             '--debug',
                             '--cover-package',
-                            ...OptionsWithoutArguments.filter(item => item.startsWith('--cover')),
-                            ...OptionsWithArguments.filter(item => item.startsWith('--logging')),
-                            ...OptionsWithoutArguments.filter(item => item.indexOf('xunit') >= 0)
+                            ...OptionsWithoutArguments.filter((item) => item.startsWith('--cover')),
+                            ...OptionsWithArguments.filter((item) => item.startsWith('--logging')),
+                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0)
                         ]
                     );
                     break;
@@ -195,7 +195,7 @@ export class ArgumentsService implements IArgumentsService {
                 OptionsWithArguments,
                 OptionsWithoutArguments
             );
-            filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
+            filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
     }

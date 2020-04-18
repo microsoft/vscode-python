@@ -15,7 +15,8 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Identifiers, Settings } from '../constants';
+import { captureTelemetry } from '../../telemetry';
+import { Identifiers, Settings, Telemetry } from '../constants';
 import {
     ICell,
     IJupyterVariable,
@@ -48,6 +49,7 @@ interface INotebookState {
 export class JupyterVariables implements IJupyterVariables {
     private fetchDataFrameInfoScript?: string;
     private fetchDataFrameRowsScript?: string;
+    private fetchVariableShapeScript?: string;
     private filesLoaded: boolean = false;
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
@@ -58,6 +60,7 @@ export class JupyterVariables implements IJupyterVariables {
     ) {}
 
     // IJupyterVariables implementation
+    @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
     public async getVariables(
         notebook: INotebook,
         request: IJupyterVariablesRequest
@@ -102,6 +105,9 @@ export class JupyterVariables implements IJupyterVariables {
         );
         this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
 
+        file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterVariableShape.py');
+        this.fetchVariableShapeScript = await this.fileSystem.readFile(file);
+
         file = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
@@ -138,7 +144,7 @@ export class JupyterVariables implements IJupyterVariables {
         const regexPattern =
             extraReplacements.length === 0
                 ? '_VSCode_JupyterTestValue'
-                : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
+                : ['_VSCode_JupyterTestValue', ...extraReplacements.map((v) => v.key)].join('|');
         const replaceRegex = new RegExp(regexPattern, 'g');
 
         // Replace the test value with our current value. Replace start and end as well
@@ -146,7 +152,7 @@ export class JupyterVariables implements IJupyterVariables {
             if (match === '_VSCode_JupyterTestValue') {
                 return variableString;
             } else {
-                const index = extraReplacements.findIndex(v => v.key === match);
+                const index = extraReplacements.findIndex((v) => v.key === match);
                 if (index >= 0) {
                     return extraReplacements[index].value;
                 }
@@ -234,7 +240,7 @@ export class JupyterVariables implements IJupyterVariables {
         if (!result) {
             let query = this.configService
                 .getSettings(notebook.resource)
-                .datascience.variableQueries.find(v => v.language === language);
+                .datascience.variableQueries.find((v) => v.language === language);
             if (!query) {
                 query = Settings.DefaultVariableQuery;
             }
@@ -277,7 +283,7 @@ export class JupyterVariables implements IJupyterVariables {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
+                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => {
                     return {
                         name: n,
                         value: undefined,
@@ -361,7 +367,7 @@ export class JupyterVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         notebook: INotebook
     ): Promise<IJupyterVariable> {
-        const result = { ...targetVariable };
+        let result = { ...targetVariable };
         if (notebook) {
             const output = await notebook.inspect(targetVariable.name);
 
@@ -409,6 +415,26 @@ export class JupyterVariables implements IJupyterVariables {
             if (DataViewableTypes.has(result.type)) {
                 result.supportsDataExplorer = true;
             }
+        }
+
+        // For a python kernel, we might be able to get a better shape. It seems the 'inspect' request doesn't always return it.
+        // Do this only when necessary as this is a LOT slower than an inspect request. Like 4 or 5 times as slow
+        if (
+            result.type &&
+            result.count &&
+            !result.shape &&
+            notebook.getKernelSpec()?.language === 'python' &&
+            result.supportsDataExplorer &&
+            result.type !== 'list' // List count is good enough
+        ) {
+            const computedShape = await this.runScript<IJupyterVariable>(
+                notebook,
+                result,
+                result,
+                () => this.fetchVariableShapeScript
+            );
+            // Only want shape and count from the request. Other things might have been destroyed
+            result = { ...result, shape: computedShape.shape, count: computedShape.count };
         }
 
         return result;

@@ -9,7 +9,7 @@ function replaceModule(contents, moduleName, quotes) {
 }
 // tslint:disable:no-default-export no-invalid-this
 function default_1(source) {
-    common.nodeModulesToReplacePaths.forEach(moduleName => {
+    common.nodeModulesToReplacePaths.forEach((moduleName) => {
         if (source.indexOf(moduleName) > 0) {
             source = replaceModule(source, moduleName, '"');
             source = replaceModule(source, moduleName, "'");

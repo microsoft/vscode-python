@@ -29,11 +29,11 @@ suite('Terminal Activation Powershell Failed Handler', () => {
         shellType: TerminalShellType,
         cmdPromptHasActivationCommands: boolean
     ) {
-        platform.setup(p => p.isWindows).returns(() => isWindows);
-        helper.setup(p => p.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => shellType);
+        platform.setup((p) => p.isWindows).returns(() => isWindows);
+        helper.setup((p) => p.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => shellType);
         const cmdPromptCommands = cmdPromptHasActivationCommands ? ['a'] : [];
         helper
-            .setup(h =>
+            .setup((h) =>
                 h.getEnvironmentActivationCommands(
                     TypeMoq.It.isValue(TerminalShellType.commandPrompt),
                     TypeMoq.It.isAny()
@@ -42,7 +42,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
             .returns(() => Promise.resolve(cmdPromptCommands));
 
         diagnosticService
-            .setup(d => d.handle(TypeMoq.It.isAny()))
+            .setup((d) => d.handle(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.exactly(mustHandleDiagnostics ? 1 : 0));
         await psHandler.handleActivation(
@@ -53,11 +53,11 @@ suite('Terminal Activation Powershell Failed Handler', () => {
         );
     }
 
-    [true, false].forEach(isWindows => {
+    [true, false].forEach((isWindows) => {
         suite(`OS is ${isWindows ? 'Windows' : 'Non-Widows'}`, () => {
-            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shell => {
+            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((shell) => {
                 suite(`Shell is ${shell.name}`, () => {
-                    [true, false].forEach(hasCommandPromptActivations => {
+                    [true, false].forEach((hasCommandPromptActivations) => {
                         hasCommandPromptActivations =
                             isWindows && hasCommandPromptActivations && shell.value !== TerminalShellType.commandPrompt;
                         suite(
@@ -67,7 +67,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
                                     : "Can't activate with Command Prompt"
                             }`,
                             () => {
-                                [true, false].forEach(activatedSuccessfully => {
+                                [true, false].forEach((activatedSuccessfully) => {
                                     suite(
                                         `Terminal Activation is ${activatedSuccessfully ? 'successful' : 'has failed'}`,
                                         () => {

@@ -39,7 +39,7 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
     const pathVariableName = IS_WINDOWS ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
@@ -53,6 +53,7 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
@@ -91,7 +92,8 @@ suite('Multiroot Environment Variables Provider', () => {
             new PlatformService(),
             workspaceService,
             cfgService,
-            mockProcess
+            mockProcess,
+            ioc.serviceContainer
         );
     }
 
@@ -131,7 +133,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
         expect(vars).to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
 
-        Object.keys(processVariables).forEach(variable => {
+        Object.keys(processVariables).forEach((variable) => {
             expect(vars).to.have.property(variable);
             // On CI, it was seen that processVariable[variable] can contain spaces at the end, which causes tests to fail. So trim the strings before comparing.
             expect(vars[variable]?.trim()).to.equal(
@@ -189,7 +191,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
-    test('PATH from process variables should be included in in variables returned', async function() {
+    test('PATH from process variables should be included in in variables returned', async function () {
         // this test is flaky on windows (likely the value of the path property
         // has incorrect path separator chars). Tracked by GH #4756
         if (isOs(OSType.Windows)) {
@@ -336,7 +338,7 @@ suite('Multiroot Environment Variables Provider', () => {
         await settings.update('envFile', '${workspaceRoot}/.env2', ConfigurationTarget.WorkspaceFolder);
 
         // Wait for settings to get refreshed.
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const newVars = await envProvider.getEnvironmentVariables(workspace4PyFile);
         expect(newVars).to.not.equal(undefined, 'Variables is is undefiend');

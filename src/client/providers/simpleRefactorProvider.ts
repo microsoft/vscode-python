@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
 import { getTextEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IInstaller, Product } from '../common/types';
+import { IPythonExecutionFactory } from '../common/process/types';
+import { IInstaller, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -24,7 +25,6 @@ export function activateSimplePythonRefactorProvider(
     let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
         const stopWatch = new StopWatch();
         const promise = extractVariable(
-            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
@@ -38,7 +38,6 @@ export function activateSimplePythonRefactorProvider(
     disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Method, () => {
         const stopWatch = new StopWatch();
         const promise = extractMethod(
-            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
             outputChannel,
@@ -52,7 +51,6 @@ export function activateSimplePythonRefactorProvider(
 
 // Exported for unit testing
 export function extractVariable(
-    extensionDir: string,
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
@@ -68,13 +66,13 @@ export function extractVariable(
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = serviceContainer
-        .get<IConfigurationService>(IConfigurationService)
-        .getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newvariable${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
+        const proxy = new RefactorProxy(workspaceRoot, async () => {
+            const factory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: vscode.Uri.file(workspaceRoot) });
+        });
         const rename = proxy
             .extractVariable<RenameResponse>(
                 textEditor.document,
@@ -83,7 +81,7 @@ export function extractVariable(
                 range,
                 textEditor.options
             )
-            .then(response => {
+            .then((response) => {
                 return response.results[0].diff;
             });
 
@@ -93,7 +91,6 @@ export function extractVariable(
 
 // Exported for unit testing
 export function extractMethod(
-    extensionDir: string,
     textEditor: vscode.TextEditor,
     range: vscode.Range,
     outputChannel: vscode.OutputChannel,
@@ -109,13 +106,13 @@ export function extractMethod(
         workspaceFolder = vscode.workspace.workspaceFolders[0];
     }
     const workspaceRoot = workspaceFolder ? workspaceFolder.uri.fsPath : __dirname;
-    const pythonSettings = serviceContainer
-        .get<IConfigurationService>(IConfigurationService)
-        .getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
     return validateDocumentForRefactor(textEditor).then(() => {
         const newName = `newmethod${new Date().getMilliseconds().toString()}`;
-        const proxy = new RefactorProxy(extensionDir, pythonSettings, workspaceRoot, serviceContainer);
+        const proxy = new RefactorProxy(workspaceRoot, async () => {
+            const factory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            return factory.create({ resource: vscode.Uri.file(workspaceRoot) });
+        });
         const rename = proxy
             .extractMethod<RenameResponse>(
                 textEditor.document,
@@ -124,7 +121,7 @@ export function extractMethod(
                 range,
                 textEditor.options
             )
-            .then(response => {
+            .then((response) => {
                 return response.results[0].diff;
             });
 
@@ -140,7 +137,7 @@ function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any
 
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
-        vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then(item => {
+        vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then((item) => {
             if (item === 'Save') {
                 textEditor.document.save().then(resolve, reject);
             } else {
@@ -159,15 +156,15 @@ function extractName(
 ): Promise<any> {
     let changeStartsAtLine = -1;
     return renameResponse
-        .then(diff => {
+        .then((diff) => {
             if (diff.length === 0) {
                 return [];
             }
             return getTextEditsFromPatch(textEditor.document.getText(), diff);
         })
-        .then(edits => {
-            return textEditor.edit(editBuilder => {
-                edits.forEach(edit => {
+        .then((edits) => {
+            return textEditor.edit((editBuilder) => {
+                edits.forEach((edit) => {
                     if (changeStartsAtLine === -1 || changeStartsAtLine > edit.range.start.line) {
                         changeStartsAtLine = edit.range.start.line;
                     }
@@ -175,7 +172,7 @@ function extractName(
                 });
             });
         })
-        .then(done => {
+        .then((done) => {
             if (done && changeStartsAtLine >= 0) {
                 let newWordPosition: vscode.Position | undefined;
                 for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber += 1) {
@@ -203,7 +200,7 @@ function extractName(
             }
             return null;
         })
-        .then(newWordPosition => {
+        .then((newWordPosition) => {
             if (newWordPosition) {
                 return textEditor.document.save().then(() => {
                     // Now that we have selected the new variable, lets invoke the rename command
@@ -211,11 +208,11 @@ function extractName(
                 });
             }
         })
-        .catch(error => {
+        .catch((error) => {
             if (error === 'Not installed') {
                 installer
                     .promptToInstall(Product.rope, textEditor.document.uri)
-                    .catch(ex => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
+                    .catch((ex) => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
                 return Promise.reject('');
             }
             let errorMessage = `${error}`;

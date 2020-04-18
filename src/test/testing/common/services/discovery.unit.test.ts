@@ -46,8 +46,7 @@ suite('Unit Tests - Common Discovery', () => {
         };
         const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
         const parsedResult = ({ done: true } as any) as Tests;
-        const json = JSON.stringify(discoveredTests);
-        discovery.exec = () => Promise.resolve({ stdout: json });
+        discovery.exec = () => Promise.resolve(discoveredTests);
         when(parser.parse(options.workspaceFolder, deepEqual(discoveredTests))).thenResolve(parsedResult as any);
 
         const tests = await discovery.discoverTests(options);
@@ -78,15 +77,15 @@ suite('Unit Tests - Common Discovery', () => {
         };
 
         when(executionFactory.createActivatedEnvironment(deepEqual(creationOptions))).thenResolve(execService.object);
-        const executionResult = { stdout: discoveredTests };
+        const executionResult = { stdout: JSON.stringify(discoveredTests) };
         execService
-            .setup(e => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
+            .setup((e) => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
             .returns(() => Promise.resolve(executionResult));
 
         const result = await discovery.exec(options);
 
         execService.verifyAll();
-        assert.deepEqual(result, executionResult);
+        assert.deepEqual(result, discoveredTests);
     });
 });
 

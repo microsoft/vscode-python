@@ -50,7 +50,7 @@ suite('Localization', () => {
         localeFiles.push(filename);
     }
 
-    test('keys', done => {
+    test('keys', (done) => {
         const val = localize.LanguageService.bannerMessage();
         assert.equal(
             val,
@@ -60,7 +60,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('keys italian', done => {
+    test('keys italian', (done) => {
         // Force a config change
         setLocale('it');
 
@@ -69,7 +69,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('key found for locale', done => {
+    test('key found for locale', (done) => {
         addLocale('spam', {
             'debug.selectConfigurationTitle': '???',
             'Common.gotIt': '!!!'
@@ -84,7 +84,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('key not found for locale (default used)', done => {
+    test('key not found for locale (default used)', (done) => {
         addLocale('spam', {
             'debug.selectConfigurationTitle': '???'
         });
@@ -96,7 +96,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('keys exist', done => {
+    test('keys exist', (done) => {
         // Read in the JSON object for the package.nls.json
         const nlsCollection = getDefaultCollection();
 
@@ -126,7 +126,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('all keys used', function(done) {
+    test('all keys used', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Unused keys need to be cleaned up.
         // tslint:disable-next-line:no-invalid-this

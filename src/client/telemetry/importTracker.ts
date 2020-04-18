@@ -54,10 +54,13 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
-        this.documentManager.onDidOpenTextDocument(t => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument(t => this.onOpenedOrSavedDocument(t));
-        this.notebookEditorProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
-        this.notebookEditorProvider.onDidCloseNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
+        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
+        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+        this.notebookEditorProvider.onDidCloseNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+    }
+    public onKernelRestarted() {
+        // Do nothing on restarted
     }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
@@ -71,8 +74,8 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
 
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
-        this.notebookEditorProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
+        this.documentManager.textDocuments.forEach((d) => this.onOpenedOrSavedDocument(d));
+        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
     }
 
     private getDocumentLines(document: TextDocument): (string | undefined)[] {
@@ -92,8 +95,8 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         let result: (string | undefined)[] = [];
         if (e.model) {
             e.model.cells
-                .filter(c => c.data.cell_type === 'code')
-                .forEach(c => {
+                .filter((c) => c.data.cell_type === 'code')
+                .forEach((c) => {
                     const cellArray = this.getCellLines(c);
                     if (result.length < MAX_DOCUMENT_LINES) {
                         result = [...result, ...cellArray];
@@ -105,7 +108,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
 
     private getCellLines(cell: ICell): (string | undefined)[] {
         // Split into multiple lines removing line feeds on the end.
-        return splitMultilineString(cell.data.source).map(s => s.replace(/\n/g, ''));
+        return splitMultilineString(cell.data.source).map((s) => s.replace(/\n/g, ''));
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -177,9 +180,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn()
-            .update(packageName)
-            .digest('hex');
+        const hash = this.hashFn().update(packageName).digest('hex');
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 
@@ -195,9 +196,9 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
                         // `import pkg1, pkg2, ...`
                         const packageNames = match.groups.importImport
                             .split(',')
-                            .map(rawPackageName => rawPackageName.trim());
+                            .map((rawPackageName) => rawPackageName.trim());
                         // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
-                        packageNames.forEach(p => this.sendTelemetry(p));
+                        packageNames.forEach((p) => this.sendTelemetry(p));
                     }
                 }
             }

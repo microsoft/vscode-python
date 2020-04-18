@@ -34,7 +34,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         this.startedDef = createDeferred<number>();
         this.server = net.createServer(this.connectionListener.bind(this));
         this.server!.maxConnections = MaxConnections;
-        this.server!.on('error', err => {
+        this.server!.on('error', (err) => {
             if (this.startedDef) {
                 this.startedDef.reject(err);
                 this.startedDef = undefined;
@@ -61,11 +61,11 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             this.ipcBuffer = '';
             this.onCloseSocket();
         });
-        socket.on('error', err => {
+        socket.on('error', (err) => {
             this.log('server socket error', err);
             this.emit('error', err);
         });
-        socket.on('data', data => {
+        socket.on('data', (data) => {
             const sock = socket;
             // Assume we have just one client socket connection
             let dataStr = (this.ipcBuffer += data);

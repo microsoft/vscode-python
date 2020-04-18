@@ -5,11 +5,13 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { Observable } from 'rxjs/Observable';
+import { noop } from '../../client/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
+import { ICell, IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -18,6 +20,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 export class MockJupyterSession implements IJupyterSession {
+    public readonly kernelSocket = new Observable<KernelSocketInformation | undefined>();
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
@@ -56,7 +59,7 @@ export class MockJupyterSession implements IJupyterSession {
     public async restart(_timeout: number): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
-        requests.forEach(r => r.cancel());
+        requests.forEach((r) => r.cancel());
 
         if (this.forceRestartTimeout) {
             throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
@@ -66,7 +69,7 @@ export class MockJupyterSession implements IJupyterSession {
     }
     public interrupt(_timeout: number): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
-        requests.forEach(r => r.cancel());
+        requests.forEach((r) => r.cancel());
         return sleep(this.timedelay);
     }
     public waitForIdle(_timeout: number): Promise<void> {
@@ -99,7 +102,7 @@ export class MockJupyterSession implements IJupyterSession {
 
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
-            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter((f) => f !== tokenSource);
             if (this.lastRequest === request) {
                 this.lastRequest = undefined;
             }
@@ -165,7 +168,8 @@ export class MockJupyterSession implements IJupyterSession {
                 version: '1',
                 session: '1',
                 msg_id: '1',
-                msg_type: 'complete'
+                msg_type: 'complete' as any,
+                date: ''
             },
             parent_header: {},
             metadata: {}
@@ -190,6 +194,80 @@ export class MockJupyterSession implements IJupyterSession {
             return Promise.reject(new JupyterInvalidKernelError(kernel));
         }
         return Promise.resolve();
+    }
+
+    public registerCommTarget(
+        _targetName: string,
+        _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        noop();
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+            // tslint:disable-next-line: no-any
+            msgType: 'comm_msg',
+            channel: 'shell',
+            buffers,
+            content,
+            metadata,
+            msgId,
+            session: '1',
+            username: '1'
+        });
+
+        return {
+            done: Promise.resolve(undefined),
+            msg: shellMessage,
+            onReply: noop,
+            onIOPub: noop,
+            onStdin: noop,
+            registerMessageHook: noop,
+            removeMessageHook: noop,
+            sendInputReply: noop,
+            isDisposed: false,
+            dispose: noop
+        };
+    }
+
+    public requestCommInfo(
+        _content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+            msgType: 'comm_info_reply',
+            channel: 'shell',
+            content: {
+                status: 'ok'
+                // tslint:disable-next-line: no-any
+            } as any,
+            metadata: {},
+            session: '1',
+            username: '1'
+        });
+
+        return Promise.resolve(shellMessage);
+    }
+    public registerMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+    public removeMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
     }
 
     private findCell = (code: string): ICell => {

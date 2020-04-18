@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
+import { WrappedError } from '../../common/errors/errorUtils';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
@@ -68,7 +69,7 @@ export class NotebookStarter implements Disposable {
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
-            tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
+            tempDirPromise.then((dir) => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(useDefaultConfig, customCommandLine, tempDirPromise);
 
@@ -92,7 +93,7 @@ export class NotebookStarter implements Disposable {
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.out.subscribe(out => this.jupyterOutputChannel.append(out.out));
+                launchResult.out.subscribe((out) => this.jupyterOutputChannel.append(out.out));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
@@ -149,7 +150,7 @@ export class NotebookStarter implements Disposable {
             if (exitCode !== 0) {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
-                throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
+                throw new WrappedError(localize.DataScience.jupyterNotebookFailure().format(err), err);
             }
         } finally {
             starter?.dispose();
@@ -253,7 +254,7 @@ export class NotebookStarter implements Disposable {
             args.push('127.0.0.1');
 
             // Now see if we need --allow-root.
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 cp.exec('id', { encoding: 'utf-8' }, (_, stdout: string | Buffer) => {
                     if (stdout && stdout.toString().includes('(root)')) {
                         args.push('--allow-root');

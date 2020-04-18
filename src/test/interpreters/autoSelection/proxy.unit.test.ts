@@ -47,7 +47,7 @@ suite('Interpreters - Auto Selection Proxy', () => {
         expect(eventRaised).to.be.equal(true, 'Change event not fired');
     });
 
-    [undefined, Uri.parse('one')].forEach(resource => {
+    [undefined, Uri.parse('one')].forEach((resource) => {
         const suffix = resource ? '(with a resource)' : '(without a resource)';
 
         test(`getAutoSelectedInterpreter should return undefined when instance isn't registered ${suffix}`, () => {

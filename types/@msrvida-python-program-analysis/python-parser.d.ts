@@ -41,7 +41,7 @@ export interface From extends Locatable {
     type: typeof FROM;
     base: string;
     imports: {
-        path: string;
+        name: string;
         alias: string;
         location: Location;
     }[];

@@ -5,7 +5,6 @@ import '../../extensions';
 
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
-
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';
@@ -29,11 +28,12 @@ export class WebPanel implements IWebPanel {
         private disposableRegistry: IDisposableRegistry,
         private port: number | undefined,
         private token: string | undefined,
-        private options: IWebPanelOptions
+        private options: IWebPanelOptions,
+        additionalRootPaths: Uri[] = []
     ) {
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd), ...additionalRootPaths],
             portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
         };
         if (options.webViewPanel) {
@@ -72,6 +72,12 @@ export class WebPanel implements IWebPanel {
             this.panel.dispose();
         }
     }
+    public asWebviewUri(localResource: Uri) {
+        if (!this.panel) {
+            throw new Error('WebView not initialized, too early to get a Uri');
+        }
+        return this.panel?.webview.asWebviewUri(localResource);
+    }
 
     public isVisible(): boolean {
         return this.panel ? this.panel.visible : false;
@@ -97,8 +103,8 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private async load() {
         if (this.panel) {
-            const localFilesExist = await Promise.all(this.options.scripts.map(s => this.fs.fileExists(s)));
-            if (localFilesExist.every(exists => exists === true)) {
+            const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.fileExists(s)));
+            if (localFilesExist.every((exists) => exists === true)) {
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
                 this.panel.webview.html = this.options.startHttpServer
@@ -114,14 +120,14 @@ export class WebPanel implements IWebPanel {
                 );
 
                 this.disposableRegistry.push(
-                    this.panel.webview.onDidReceiveMessage(message => {
+                    this.panel.webview.onDidReceiveMessage((message) => {
                         // Pass the message onto our listener
                         this.options.listener.onMessage(message.type, message.payload);
                     })
                 );
 
                 this.disposableRegistry.push(
-                    this.panel.onDidChangeViewState(_e => {
+                    this.panel.onDidChangeViewState((_e) => {
                         // Pass the state change onto our listener
                         this.options.listener.onChangeViewState(this);
                     })
@@ -140,14 +146,14 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private async generateLocalReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
-        const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        const uris = this.options.scripts.map((script) => webView.asWebviewUri(Uri.file(script)));
         const testFiles = await this.fs.getFiles(this.options.rootPath);
 
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
         testFiles
-            .filter(f => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
-            .forEach(f => webView.asWebviewUri(Uri.file(f)));
+            .filter((f) => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
+            .forEach((f) => webView.asWebviewUri(Uri.file(f)));
 
         const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
         return `<!doctype html>
@@ -160,9 +166,10 @@ export class WebPanel implements IWebPanel {
                 }; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
-                <title>React App</title>
+                <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
-            </head>
+                <link rel="stylesheet" href="${rootPath}/../common/node_modules/font-awesome/css/font-awesome.min.css">
+                </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <div id="root"></div>
@@ -177,7 +184,7 @@ export class WebPanel implements IWebPanel {
                         return "${uriBase}" + relativePath;
                     }
                 </script>
-                ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
+                ${uris.map((uri) => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
             </body>
         </html>`;
     }
@@ -185,8 +192,8 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
-        const relativeScripts = this.options.scripts.map(s => `.${s.substr(this.options.rootPath.length)}`);
-        const encoded = relativeScripts.map(s =>
+        const relativeScripts = this.options.scripts.map((s) => `.${s.substr(this.options.rootPath.length)}`);
+        const encoded = relativeScripts.map((s) =>
             encodeURIComponent(s.replace(/\\/g, '/').replace('index_bundle.js', 'index_chunked_bundle.js'))
         );
 
@@ -198,7 +205,7 @@ export class WebPanel implements IWebPanel {
                 <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
-                <title>React App</title>
+                <title>VS Code Python React UI</title>
                 <base href="${uriBase}"/>
             </head>
             <body>

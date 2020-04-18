@@ -7,6 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { traceDecorators } from '../../common/logger';
 import {
     BANNER_NAME_LS_SURVEY,
+    IConfigurationService,
     IDisposable,
     IExperimentsManager,
     IPythonExtensionBanner,
@@ -41,14 +42,15 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @named(BANNER_NAME_LS_SURVEY)
         private readonly surveyBanner: IPythonExtensionBanner,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     public dispose() {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public get languageProxy() {
@@ -92,7 +94,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
 
-    @captureTelemetry(EventName.PYTHON_NODE_SERVER_STARTUP, undefined, true)
+    @captureTelemetry(EventName.LANGUAGE_SERVER_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
@@ -103,6 +105,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.surveyBanner,
             this.experimentsManager,
+            this.configService,
             LanguageServerType.Node,
             versionPair?.version.format()
         );

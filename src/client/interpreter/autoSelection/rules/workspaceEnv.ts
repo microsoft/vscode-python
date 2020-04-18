@@ -6,12 +6,12 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { DeprecatePythonPath } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../common/types';
+import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
-import { IPythonPathUpdaterServiceManager } from '../../configuration/types';
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
@@ -30,14 +30,14 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPythonPathUpdaterServiceManager)
-        private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService)
         @named(PIPENV_SERVICE)
         private readonly pipEnvInterpreterLocator: IInterpreterLocatorService,
         @inject(IInterpreterLocatorService)
         @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
-        private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService
+        private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService,
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
     ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
@@ -51,9 +51,12 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         }
 
         const pythonConfig = this.workspaceService.getConfiguration('python', workspacePath.folderUri)!;
-        const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath')!;
+        const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
+            ? this.interpreterPathService.inspect(workspacePath.folderUri)
+            : pythonConfig.inspect<string>('pythonPath')!;
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // If user has defined custom values in settings for this workspace folder, then use that.
-        if (pythonPathInConfig.workspaceFolderValue) {
+        if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
         }
         const pipEnvPromise = createDeferredFromPromise(
@@ -76,7 +79,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             bestInterpreter = this.helper.getBestInterpreter(pipEnvList.concat(virtualEnvList));
         }
         if (bestInterpreter && manager) {
-            await this.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
+            await super.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
             await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
         }
 
@@ -102,28 +105,10 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
                 ? workspaceFolder.uri.fsPath.toUpperCase()
                 : workspaceFolder.uri.fsPath;
 
-        return interpreters.filter(interpreter => {
+        return interpreters.filter((interpreter) => {
             const fsPath = Uri.file(interpreter.path).fsPath;
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);
         });
-    }
-    protected async cacheSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
-        // We should never clear settings in user settings.json.
-        if (!interpreter) {
-            await super.cacheSelectedInterpreter(resource, interpreter);
-            return;
-        }
-        const activeWorkspace = this.helper.getActiveWorkspaceUri(resource);
-        if (!activeWorkspace) {
-            return;
-        }
-        await this.pythonPathUpdaterService.updatePythonPath(
-            interpreter.path,
-            activeWorkspace.configTarget,
-            'load',
-            activeWorkspace.folderUri
-        );
-        await super.cacheSelectedInterpreter(resource, interpreter);
     }
 }

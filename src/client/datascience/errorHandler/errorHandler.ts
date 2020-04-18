@@ -39,7 +39,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         const selectNewServer = localize.DataScience.selectNewServer();
         this.applicationShell
             .showErrorMessage(localize.DataScience.nativeDependencyFail().format(err.toString()), selectNewServer)
-            .then(selection => {
+            .then((selection) => {
                 if (selection === selectNewServer) {
                     this.serverSelector.selectJupyterURI(false).ignoreErrors();
                 }

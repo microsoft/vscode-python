@@ -293,7 +293,7 @@ suite('Data Science - Native Editor Storage', () => {
         const settingsChangedEvent = new EventEmitter<void>();
 
         context
-            .setup(c => c.globalStoragePath)
+            .setup((c) => c.globalStoragePath)
             .returns(() => path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir'));
 
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
@@ -338,7 +338,7 @@ suite('Data Science - Native Editor Storage', () => {
         lastWriteFileValue = baseFile;
         wroteToFileEvent = new EventEmitter<string>();
         fileSystem
-            .setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((f) => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((a1, a2) => {
                 if (a1.includes(`${testIndex}.ipynb`)) {
                     lastWriteFileValue = a2;
@@ -347,8 +347,8 @@ suite('Data Science - Native Editor Storage', () => {
                 return Promise.resolve();
             });
         fileSystem
-            .setup(f => f.readFile(typemoq.It.isAny()))
-            .returns(_a1 => {
+            .setup((f) => f.readFile(typemoq.It.isAny()))
+            .returns((_a1) => {
                 return Promise.resolve(lastWriteFileValue);
             });
 
@@ -365,7 +365,7 @@ suite('Data Science - Native Editor Storage', () => {
     teardown(() => {
         globalMemento.clear();
         sinon.reset();
-        disposables.forEach(d => d.dispose());
+        disposables.forEach((d) => d.dispose());
     });
 
     function insertCell(index: number, code: string) {
@@ -501,7 +501,7 @@ suite('Data Science - Native Editor Storage', () => {
     test('Opening file with global storage but no global file will still open with old contents', async () => {
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
-        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+        fileSystem.setup((f) => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
         // Initially nothing in memento
         expect(globalMemento.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -524,7 +524,7 @@ suite('Data Science - Native Editor Storage', () => {
 
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
-        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+        fileSystem.setup((f) => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
         // Initially nothing in memento
         expect(globalMemento.get(`notebook-storage-${file.toString()}`)).to.be.undefined;

@@ -91,9 +91,9 @@ export abstract class BaseInstaller {
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
         await installer
             .installModule(moduleName, resource, cancel)
-            .catch(ex => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
-        return this.isInstalled(product, resource).then(isInstalled =>
+        return this.isInstalled(product, resource).then((isInstalled) =>
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
@@ -164,7 +164,7 @@ export class CTagsInstaller extends BaseInstaller {
                 .getTerminalService(resource);
             terminalService
                 .sendCommand(CTagsInsllationScript, [])
-                .catch(ex => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
+                .catch((ex) => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }
@@ -191,10 +191,10 @@ export class FormatterInstaller extends BaseInstaller {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
         const formatters = [Product.autopep8, Product.black, Product.yapf];
-        const formatterNames = formatters.map(formatter => ProductNames.get(formatter)!);
+        const formatterNames = formatters.map((formatter) => ProductNames.get(formatter)!);
         const productName = ProductNames.get(product)!;
         formatterNames.splice(formatterNames.indexOf(productName), 1);
-        const useOptions = formatterNames.map(name => `Use ${name}`);
+        const useOptions = formatterNames.map((name) => `Use ${name}`);
         const yesChoice = 'Yes';
 
         const options = [...useOptions];

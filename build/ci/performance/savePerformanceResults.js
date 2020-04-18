@@ -10,6 +10,15 @@ const xmlFile = path.join(constants.ExtensionRootDir, 'xunit-test-results.xml');
 const jsonFile = path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json');
 let performanceData = [];
 
+function getTime(testcase) {
+    if (testcase.failure) {
+        return 'F';
+    } else if (testcase.skipped === '') {
+        return 'S';
+    }
+    return parseFloat(testcase.time);
+}
+
 fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
     if (xmlReadError) {
         throw xmlReadError;
@@ -25,10 +34,10 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
-                jsonObj.testsuite.testcase.forEach(testcase => {
+                jsonObj.testsuite.testcase.forEach((testcase) => {
                     const test = {
                         name: testcase.classname + ' ' + testcase.name,
-                        times: [testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)]
+                        times: [getTime(testcase)]
                     };
 
                     performanceData.push(test);
@@ -36,9 +45,9 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             } else {
                 performanceData = JSON.parse(data);
 
-                jsonObj.testsuite.testcase.forEach(testcase => {
-                    let test = performanceData.find(x => x.name === testcase.classname + ' ' + testcase.name);
-                    let time = testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time);
+                jsonObj.testsuite.testcase.forEach((testcase) => {
+                    let test = performanceData.find((x) => x.name === testcase.classname + ' ' + testcase.name);
+                    let time = getTime(testcase);
 
                     if (test) {
                         // if the test name is already there, we add the new time
@@ -58,7 +67,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             fs.writeFile(
                 path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json'),
                 JSON.stringify(performanceData, null, 2),
-                writeResultsError => {
+                (writeResultsError) => {
                     if (writeResultsError) {
                         throw writeResultsError;
                     }

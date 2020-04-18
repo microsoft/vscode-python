@@ -7,8 +7,10 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { createPythonEnv } from '../../../client/common/process/pythonEnvironment';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
+import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IBufferDecoder,
@@ -93,7 +95,19 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             const procService = (await ioc.serviceContainer
                 .get<IProcessServiceFactory>(IProcessServiceFactory)
                 .create()) as MockProcessService;
-            return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
+            const fileSystem = this._serviceContainer.get<IFileSystem>(IFileSystem);
+            const env = createPythonEnv(pythonPath, procService, fileSystem);
+            const procs = createPythonProcessService(procService, env);
+            return {
+                getInterpreterInformation: () => env.getInterpreterInformation(),
+                getExecutablePath: () => env.getExecutablePath(),
+                isModuleInstalled: (m) => env.isModuleInstalled(m),
+                getExecutionInfo: (a) => env.getExecutionInfo(a),
+                execObservable: (a, o) => procs.execObservable(a, o),
+                execModuleObservable: (m, a, o) => procs.execModuleObservable(m, a, o),
+                exec: (a, o) => procs.exec(a, o),
+                execModule: (m, a, o) => procs.execModule(m, a, o)
+            };
         }
     }
     suiteSetup(async () => {
@@ -117,6 +131,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
         // Mocks.
         ioc.registerMockProcessTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(
             IInterpreterService,
@@ -239,7 +254,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const diagnosticCollectionUris: vscode.Uri[] = [];
-        testManager.diagnosticCollection.forEach(uri => {
+        testManager.diagnosticCollection.forEach((uri) => {
             diagnosticCollectionUris.push(uri);
         });
         assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
@@ -247,12 +262,12 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_one.py'),
+            tests.testFiles.some((t) => t.name === 'test_one.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_root.py'),
+            tests.testFiles.some((t) => t.name === 'test_root.py'),
             true,
             'Test File not found'
         );
@@ -649,7 +664,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const diagnosticCollectionUris: vscode.Uri[] = [];
-        testManager.diagnosticCollection.forEach(uri => {
+        testManager.diagnosticCollection.forEach((uri) => {
             diagnosticCollectionUris.push(uri);
         });
         assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
@@ -657,37 +672,37 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 33, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 11, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_foreign_nested_tests.py'),
+            tests.testFiles.some((t) => t.name === 'test_foreign_nested_tests.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_unittest_one.py'),
+            tests.testFiles.some((t) => t.name === 'test_unittest_one.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_unittest_two.py'),
+            tests.testFiles.some((t) => t.name === 'test_unittest_two.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'unittest_three_test.py'),
+            tests.testFiles.some((t) => t.name === 'unittest_three_test.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_pytest.py'),
+            tests.testFiles.some((t) => t.name === 'test_pytest.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_another_pytest.py'),
+            tests.testFiles.some((t) => t.name === 'test_another_pytest.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_root.py'),
+            tests.testFiles.some((t) => t.name === 'test_root.py'),
             true,
             'Test File not found'
         );
@@ -746,7 +761,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const diagnosticCollectionUris: vscode.Uri[] = [];
-        testManager.diagnosticCollection.forEach(uri => {
+        testManager.diagnosticCollection.forEach((uri) => {
             diagnosticCollectionUris.push(uri);
         });
         assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
@@ -754,7 +769,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'unittest_three_test.py'),
+            tests.testFiles.some((t) => t.name === 'unittest_three_test.py'),
             true,
             'Test File not found'
         );
@@ -930,7 +945,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const diagnosticCollectionUris: vscode.Uri[] = [];
-        testManager.diagnosticCollection.forEach(uri => {
+        testManager.diagnosticCollection.forEach((uri) => {
             diagnosticCollectionUris.push(uri);
         });
         assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');
@@ -938,12 +953,12 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 14, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 4, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_unittest_one.py'),
+            tests.testFiles.some((t) => t.name === 'test_unittest_one.py'),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_pytest.py'),
+            tests.testFiles.some((t) => t.name === 'test_pytest.py'),
             true,
             'Test File not found'
         );
@@ -996,7 +1011,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
 
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const diagnosticCollectionUris: vscode.Uri[] = [];
-        testManager.diagnosticCollection.forEach(uri => {
+        testManager.diagnosticCollection.forEach((uri) => {
             diagnosticCollectionUris.push(uri);
         });
         assert.equal(diagnosticCollectionUris.length, 0, 'Should not have diagnostics yet');

@@ -188,7 +188,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
                 >
                     <AdazzleReactDataGrid
-                        columns={this.gridColumns.map(c => {
+                        columns={this.gridColumns.map((c) => {
                             return { ...defaultColumnProperties, ...c };
                         })}
                         // tslint:disable-next-line: react-this-binding-issue
@@ -272,7 +272,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         const haveValue = this.props.variables[index]?.value;
         const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
         // tslint:disable-next-line: restrict-plus-operands
-        const notRequested = !this.requestedPages.find(n => n <= index && index < n + pageSize);
+        const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.
             let pageIndex = index;

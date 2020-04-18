@@ -186,6 +186,10 @@ body, html {
     margin: 3px;
 }
 
+.cell-output-ipywidget-background {
+    background:white !important;
+}
+
 .cell-output-plot-background * {
     margin: 0px;
 }
@@ -466,15 +470,15 @@ body, html {
 }
 
 .kernel-status {
-    margin-top: 2px;
-    flex: 1;
     display: flex;
     margin-left: auto;
 }
 
 .kernel-status-section {
-    padding: 2px 5px 2px 5px;
-    flex: 1;
+    padding: 0px 5px;
+    align-self: center;
+    margin-top: 1px;
+    margin-bottom: 2px;
 }
 
 .kernel-status-section-hoverable:hover {
@@ -510,6 +514,8 @@ body, html {
 .kernel-status-icon {
     width: 16px;
     height: 0px;
+    padding: 1px;
+    margin-top: 2px;
 }
 
 .image-button-image {
@@ -525,7 +531,10 @@ body, html {
 }
 
 .toolbar-menu-bar .image-button {
-    margin-right: 12px;
+    margin-top: 8px;
+    margin-bottom: 9px;
+    margin-left: 7px;
+    margin-right: 7px;
 }
 
 .image-button:focus {

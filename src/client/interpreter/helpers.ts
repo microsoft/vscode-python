@@ -1,8 +1,9 @@
 import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
-import { ConfigurationTarget } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
+import { FileSystemPaths } from '../common/platform/fs-paths';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -19,9 +20,16 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     }
     const lines = stdout
         .split(/\r?\n/g)
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
     return lines.length > 0 ? lines[0] : '';
+}
+
+export function isInterpreterLocatedInWorkspace(interpreter: PythonInterpreter, activeWorkspaceUri: Uri) {
+    const fileSystemPaths = FileSystemPaths.withDefaults();
+    const interpreterPath = fileSystemPaths.normCase(interpreter.path);
+    const resourcePath = fileSystemPaths.normCase(activeWorkspaceUri.fsPath);
+    return interpreterPath.startsWith(resourcePath);
 }
 
 @injectable()
@@ -60,8 +68,8 @@ export class InterpreterHelper implements IInterpreterHelper {
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
         const fileHash = await this.hashProviderFactory
             .create({ pythonPath })
-            .then(provider => provider.getInterpreterHash(pythonPath))
-            .catch(ex => {
+            .then((provider) => provider.getInterpreterHash(pythonPath))
+            .catch((ex) => {
                 traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
                 return '';
             });

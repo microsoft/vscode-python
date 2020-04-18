@@ -19,6 +19,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
+import { getJupyterConnectionDisplayName } from '../jupyterConnection';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { NotebookStarter } from '../notebookStarter';
@@ -147,12 +148,15 @@ export class HostJupyterExecution
             const connectionInfo = localServer.getConnectionInfo();
             if (connectionInfo) {
                 return {
+                    type: 'jupyter',
                     baseUrl: connectionInfo.baseUrl,
                     token: connectionInfo.token,
                     hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
-                    disconnected: _l => {
+                    valid: true,
+                    displayName: getJupyterConnectionDisplayName(connectionInfo.token, connectionInfo.baseUrl),
+                    disconnected: (_l) => {
                         return { dispose: noop };
                     },
                     dispose: noop

@@ -33,7 +33,7 @@ export class RemoteDebugServerV2 extends BaseDebugServer {
             try {
                 let connected = false;
                 const socket = new Socket();
-                socket.on('error', ex => {
+                socket.on('error', (ex) => {
                     if (connected) {
                         return;
                     }

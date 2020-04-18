@@ -17,7 +17,7 @@ const filePep484 = path.join(autoCompPath, 'pep484.py');
 suite('Autocomplete PEP 484', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         await initialize();
         initializeDI();
         isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
@@ -50,9 +50,9 @@ suite('Autocomplete PEP 484', () => {
             textDocument.uri,
             position
         );
-        assert.notEqual(list!.items.filter(item => item.label === 'capitalize').length, 0, 'capitalize not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'upper').length, 0, 'upper not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
+        assert.notEqual(list!.items.filter((item) => item.label === 'capitalize').length, 0, 'capitalize not found');
+        assert.notEqual(list!.items.filter((item) => item.label === 'upper').length, 0, 'upper not found');
+        assert.notEqual(list!.items.filter((item) => item.label === 'lower').length, 0, 'lower not found');
     });
 
     test('return value', async () => {
@@ -65,7 +65,7 @@ suite('Autocomplete PEP 484', () => {
             textDocument.uri,
             position
         );
-        assert.notEqual(list!.items.filter(item => item.label === 'bit_length').length, 0, 'bit_length not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'from_bytes').length, 0, 'from_bytes not found');
+        assert.notEqual(list!.items.filter((item) => item.label === 'bit_length').length, 0, 'bit_length not found');
+        assert.notEqual(list!.items.filter((item) => item.label === 'from_bytes').length, 0, 'from_bytes not found');
     });
 });

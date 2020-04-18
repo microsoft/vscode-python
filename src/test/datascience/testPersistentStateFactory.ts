@@ -33,7 +33,7 @@ export class TestPersistentStateFactory implements IPersistentStateFactory {
         defaultValue?: T | undefined,
         expiryDurationMs?: number | undefined
     ): IPersistentState<T> {
-        if (PrefixesToStore.find(p => key.startsWith(p))) {
+        if (PrefixesToStore.find((p) => key.startsWith(p))) {
             return new TestPersistentState(key, defaultValue);
         }
 
@@ -44,7 +44,7 @@ export class TestPersistentStateFactory implements IPersistentStateFactory {
         defaultValue?: T | undefined,
         expiryDurationMs?: number | undefined
     ): IPersistentState<T> {
-        if (PrefixesToStore.find(p => key.startsWith(p))) {
+        if (PrefixesToStore.find((p) => key.startsWith(p))) {
             return new TestPersistentState(key, defaultValue);
         }
 

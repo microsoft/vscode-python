@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -21,9 +22,11 @@ import {
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
+    INotebookExecutionInfo,
     INotebookExecutionLogger,
-    INotebookServer,
-    InterruptResult
+    INotebookProviderConnection,
+    InterruptResult,
+    KernelSocketInformation
 } from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -33,22 +36,12 @@ import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } fr
 export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
-    private responseQueue: ResponseQueue = new ResponseQueue();
-    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-
-    constructor(
-        liveShare: ILiveShareApi,
-        private disposableRegistry: IDisposableRegistry,
-        private configService: IConfigurationService,
-        private _resource: Resource,
-        private _identity: Uri,
-        private _owner: INotebookServer,
-        private startTime: number
-    ) {
-        super(liveShare);
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (!this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        }
+        return this._jupyterLab;
     }
 
     public get identity(): Uri {
@@ -59,8 +52,41 @@ export class GuestJupyterNotebook
         return this._resource;
     }
 
-    public get server(): INotebookServer {
-        return this._owner;
+    public get connection(): INotebookProviderConnection | undefined {
+        return this._executionInfo?.connectionInfo;
+    }
+    public kernelSocket = new Observable<KernelSocketInformation | undefined>();
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
+    }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
+    public onKernelRestarted = new EventEmitter<void>().event;
+    public onDisposed = new EventEmitter<void>().event;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
+    private responseQueue: ResponseQueue = new ResponseQueue();
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+
+    constructor(
+        liveShare: ILiveShareApi,
+        private disposableRegistry: IDisposableRegistry,
+        private configService: IConfigurationService,
+        private _resource: Resource,
+        private _identity: Uri,
+        private _executionInfo: INotebookExecutionInfo | undefined,
+        private startTime: number
+    ) {
+        super(liveShare);
     }
 
     public shutdown(): Promise<void> {
@@ -83,17 +109,6 @@ export class GuestJupyterNotebook
         noop();
     }
 
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
-        return this.onStatusChangedEvent.event;
-    }
-
-    public get status(): ServerStatus {
-        return ServerStatus.Idle;
-    }
-
     public async execute(
         code: string,
         file: string,
@@ -112,7 +127,7 @@ export class GuestJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -147,7 +162,7 @@ export class GuestJupyterNotebook
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService()
-            .then(s => {
+            .then((s) => {
                 if (s) {
                     s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
                 }
@@ -226,10 +241,6 @@ export class GuestJupyterNotebook
         return;
     }
 
-    public setInterpreter(_spec: PythonInterpreter) {
-        noop();
-    }
-
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
         return;
     }
@@ -239,6 +250,86 @@ export class GuestJupyterNotebook
     }
     public getLoggers(): INotebookExecutionLogger[] {
         return [];
+    }
+
+    public registerCommTarget(
+        _targetName: string,
+        _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        noop();
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        const shellMessage = this.jupyterLab?.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+            // tslint:disable-next-line: no-any
+            msgType: 'comm_msg',
+            channel: 'shell',
+            buffers,
+            content,
+            metadata,
+            msgId,
+            session: '1',
+            username: '1'
+        });
+
+        return {
+            done: Promise.resolve(undefined),
+            msg: shellMessage!, // NOSONAR
+            onReply: noop,
+            onIOPub: noop,
+            onStdin: noop,
+            registerMessageHook: noop,
+            removeMessageHook: noop,
+            sendInputReply: noop,
+            isDisposed: false,
+            dispose: noop
+        };
+    }
+
+    public requestCommInfo(
+        _content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+            msgType: 'comm_info_reply',
+            channel: 'shell',
+            content: {
+                status: 'ok'
+                // tslint:disable-next-line: no-any
+            } as any,
+            metadata: {},
+            session: '1',
+            username: '1'
+        });
+
+        return Promise.resolve(shellMessage);
+    }
+    public registerMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+    public removeMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
     }
 
     private onServerResponse = (args: Object) => {

@@ -42,13 +42,13 @@ export class LocalDebugServerV2 extends BaseDebugServer {
         const socketServer = (this.socketServer = this.serviceContainer.get<ISocketServer>(ISocketServer));
         const port = await socketServer.Start({ port: this.args.port, host });
         socketServer.client
-            .then(socket => {
+            .then((socket) => {
                 // This is required to prevent the launcher from aborting if the PTVSD process spits out any errors in stderr stream.
                 this.isRunning = true;
                 this.debugClientConnected.resolve(true);
                 this.clientSocket.resolve(socket);
             })
-            .catch(ex => {
+            .catch((ex) => {
                 this.debugClientConnected.reject(ex);
                 this.clientSocket.reject(ex);
             });

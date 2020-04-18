@@ -95,6 +95,7 @@ stages:
     jobs:
       - job: 'Py3x'
         dependsOn: []
+        timeoutInMinutes: 90
         strategy:
           matrix:
             # This gives us our best functional coverage for the OS.

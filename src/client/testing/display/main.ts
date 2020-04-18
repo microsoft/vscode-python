@@ -60,7 +60,7 @@ export class TestResultDisplay implements ITestResultDisplay {
             constants.Commands.Tests_Ask_To_Stop_Test
         );
         testRunResult
-            .then(tests => this.updateTestRunWithSuccess(tests, debug))
+            .then((tests) => this.updateTestRunWithSuccess(tests, debug))
             .catch(this.updateTestRunWithFailure.bind(this))
             // We don't care about any other exceptions returned by updateTestRunWithFailure
             .catch(noop);
@@ -72,11 +72,11 @@ export class TestResultDisplay implements ITestResultDisplay {
             constants.Commands.Tests_Ask_To_Stop_Discovery
         );
         return testDiscovery
-            .then(tests => {
+            .then((tests) => {
                 this.updateWithDiscoverSuccess(tests, quietMode);
                 return tests;
             })
-            .catch(reason => {
+            .catch((reason) => {
                 this.updateWithDiscoverFailure(reason);
                 return Promise.reject(reason);
             });
@@ -187,9 +187,9 @@ export class TestResultDisplay implements ITestResultDisplay {
                     Testing.disableTests(),
                     Testing.configureTests()
                 )
-                .then(item => {
+                .then((item) => {
                     if (item === Testing.disableTests()) {
-                        this.disableTests().catch(ex => traceError('Python Extension: disableTests', ex));
+                        this.disableTests().catch((ex) => traceError('Python Extension: disableTests', ex));
                     } else if (item === Testing.configureTests()) {
                         this.cmdManager
                             .executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined)

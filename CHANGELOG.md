@@ -1,6 +1,285 @@
 # Changelog
 
-## 2020.3.0-rc (9 March 2020)
+## 2020.4.0-rc (9 April 2020)
+
+### Enhancements
+
+1. Add support for `ipywidgets`.
+   ([#3429](https://github.com/Microsoft/vscode-python/issues/3429))
+1. Support output and interact ipywidgets.
+   ([#9524](https://github.com/Microsoft/vscode-python/issues/9524))
+1. Support using 'esc' or 'ctrl+u' to clear the contents of the interactive window input box.
+   ([#10198](https://github.com/Microsoft/vscode-python/issues/10198))
+1. Use new interpreter storage supporting multiroot workspaces when in Deprecate PythonPath experiment.
+   ([#10325](https://github.com/Microsoft/vscode-python/issues/10325))
+1. Modified `Select interpreter` command to support setting interpreter at workspace level.
+   ([#10372](https://github.com/Microsoft/vscode-python/issues/10372))
+1. Added a command `Clear Workspace Interpreter Setting` to clear value of Python interpreter from workspace settings.
+   ([#10374](https://github.com/Microsoft/vscode-python/issues/10374))
+1. Support reverse connection ("listen" in launch.json) from debug adapter to VSCode.
+   ([#10437](https://github.com/Microsoft/vscode-python/issues/10437))
+1. Use specific icons when downloading MPLS and Insiders instead of the spinner.
+   ([#10495](https://github.com/Microsoft/vscode-python/issues/10495))
+1. Notebook metadata is now initialized in alphabetical order.
+   ([#10571](https://github.com/Microsoft/vscode-python/issues/10571))
+1. Added command translations for Hindi Language.
+   (thanks [Pai026](https://github.com/Pai026/))
+   ([#10711](https://github.com/Microsoft/vscode-python/issues/10711))
+1. Prompt when an "untrusted" workspace Python environment is to be auto selected when in Deprecate PythonPath experiment.
+   ([#10879](https://github.com/Microsoft/vscode-python/issues/10879))
+1. Added a command `Reset stored info for untrusted Interpreters` to reset "untrusted" interpreters storage when in Deprecate PythonPath experiment.
+   ([#10912](https://github.com/Microsoft/vscode-python/issues/10912))
+1. Added a user setting `python.defaultInterpreterPath` to set up the default interpreter path when in Deprecate PythonPath experiment.
+   ([#11021](https://github.com/Microsoft/vscode-python/issues/11021))
+1. Hide "untrusted" interpreters from 'Select interpreter' dropdown list when in DeprecatePythonPath Experiment.
+   ([#11046](https://github.com/Microsoft/vscode-python/issues/11046))
+
+### Fixes
+
+1. Ensure plot fits within the page of the `PDF`.
+   ([#9403](https://github.com/Microsoft/vscode-python/issues/9403))
+1. Fix typing in output of cells to not delete or modify any cells.
+   ([#9519](https://github.com/Microsoft/vscode-python/issues/9519))
+1. Show an error when ipywidgets cannot be found.
+   ([#9523](https://github.com/Microsoft/vscode-python/issues/9523))
+1. Experiments no longer block on telemetry.
+   ([#10008](https://github.com/Microsoft/vscode-python/issues/10008))
+1. Fix interactive window debugging after running cells in a notebook.
+   ([#10206](https://github.com/Microsoft/vscode-python/issues/10206))
+1. Fix problem with Data Viewer not working when builtin functions are overridden (like max).
+   ([#10280](https://github.com/Microsoft/vscode-python/issues/10280))
+1. Fix interactive window debugging when debugging the first cell to be run.
+   ([#10395](https://github.com/Microsoft/vscode-python/issues/10395))
+1. Fix interactive window debugging for extra lines in a function.
+   ([#10396](https://github.com/Microsoft/vscode-python/issues/10396))
+1. Notebook metadata is now initialized in the correct place.
+   ([#10544](https://github.com/Microsoft/vscode-python/issues/10544))
+1. Fix save button not working on notebooks.
+   ([#10647](https://github.com/Microsoft/vscode-python/issues/10647))
+1. Fix toolbars on 3rd party widgets to show correct icons.
+   ([#10734](https://github.com/Microsoft/vscode-python/issues/10734))
+1. Clicking or double clicking in output of a cell selects or gives focus to a cell. It should only affect the controls in the output.
+   ([#10749](https://github.com/Microsoft/vscode-python/issues/10749))
+1. Fix for notebooks not becoming dirty when changing a kernel.
+   ([#10795](https://github.com/Microsoft/vscode-python/issues/10795))
+1. Auto save for focusChange is not respected when switching to non text documents. Menu focus will still not cause a save (no callback from VS code for this), but should work for switching to other apps and non text documents.
+   ([#10853](https://github.com/Microsoft/vscode-python/issues/10853))
+1. Handle display.update inside of cells.
+   ([#10873](https://github.com/Microsoft/vscode-python/issues/10873))
+1. ZMQ should not cause local server to fail.
+   ([#10877](https://github.com/Microsoft/vscode-python/issues/10877))
+1. Fixes issue with spaces in debugger paths when using `getRemoteLauncherCommand`.
+   ([#10905](https://github.com/Microsoft/vscode-python/issues/10905))
+1. Fix output and interact widgets to work again.
+   ([#10915](https://github.com/Microsoft/vscode-python/issues/10915))
+1. Make sure the same python is used for the data viewer as the notebook so that pandas can be found.
+   ([#10926](https://github.com/Microsoft/vscode-python/issues/10926))
+1. Ensure user code in cell is preserved between cell execution and cell edits.
+   ([#10949](https://github.com/Microsoft/vscode-python/issues/10949))
+1. Make sure the interpreter in the notebook matches the kernel.
+   ([#10953](https://github.com/Microsoft/vscode-python/issues/10953))
+1. Jupyter notebooks and interactive window crashing on startup.
+   ([#11035](https://github.com/Microsoft/vscode-python/issues/11035))
+
+### Code Health
+
+1. Add conda environments to nightly test runs.
+   ([#10134](https://github.com/Microsoft/vscode-python/issues/10134))
+1. Refactor the extension activation code to split on phases.
+   ([#10454](https://github.com/Microsoft/vscode-python/issues/10454))
+1. Added a kernel launcher to spawn python kernels without Jupyter.
+   ([#10479](https://github.com/Microsoft/vscode-python/issues/10479))
+1. Add ZMQ library to extension.
+   ([#10483](https://github.com/Microsoft/vscode-python/issues/10483))
+1. Added test harness for `ipywidgets` in `notebooks`.
+   ([#10655](https://github.com/Microsoft/vscode-python/issues/10655))
+1. Run internal modules and scripts in isolated manner.
+   This helps avoid problems like shadowing stdlib modules.
+   ([#10681](https://github.com/Microsoft/vscode-python/issues/10681))
+1. Add telemetry for .env files.
+   ([#10780](https://github.com/Microsoft/vscode-python/issues/10780))
+1. Update prettier to latest version.
+   ([#10837](https://github.com/Microsoft/vscode-python/issues/10837))
+1. Update typescript to `3.8`.
+   ([#10839](https://github.com/Microsoft/vscode-python/issues/10839))
+1. Add telemetry around ipywidgets usage, failures, and overhead.
+   ([#11027](https://github.com/Microsoft/vscode-python/issues/11027))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.3.2 (2 April 2020)
+
+### Fixes
+
+1. Update `debugpy` to latest (v1.0.0b5). Fixes issue with connections with multi-process.
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.3.1 (31 March 2020)
+
+### Fixes
+
+1. Update `debugpy` to latest (v1.0.0b4). Fixes issue with locale.
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.3.0 (19 March 2020)
 
 ### Enhancements
 
@@ -25,6 +304,8 @@
 
 ### Fixes
 
+1. Jupyter autocompletion will only show magic commands on empty lines, preventing them of appearing in functions.
+   ([#10023](https://github.com/Microsoft/vscode-python/issues/10023))
 1. Remove extra lines at the end of the file when formatting with Black.
    ([#1877](https://github.com/Microsoft/vscode-python/issues/1877))
 1. Capitalize `Activate.ps1` in code for PowerShell Core on Linux.
@@ -112,6 +393,8 @@
    ([#10311](https://github.com/Microsoft/vscode-python/issues/10311))
 1. When you install missing dependencies for Jupyter successfully in an active interpreter also set that interpreter as the Jupyter selected interpreter.
    ([#10359](https://github.com/Microsoft/vscode-python/issues/10359))
+1. Ensure default `host` is not set, if `connect` or `listen` settings are available.
+   ([#10597](https://github.com/Microsoft/vscode-python/issues/10597))
 
 ### Code Health
 
@@ -133,8 +416,6 @@
    ([#10182](https://github.com/Microsoft/vscode-python/issues/10182))
 1. Use debugpy in the core extension instead of ptvsd.
    ([#10184](https://github.com/Microsoft/vscode-python/issues/10184))
-1. Remove UI Tests.
-   ([#10192](https://github.com/Microsoft/vscode-python/issues/10192))
 1. Add telemetry for imports in notebooks.
    ([#10209](https://github.com/Microsoft/vscode-python/issues/10209))
 1. Update data science component to use `debugpy`.

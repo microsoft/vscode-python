@@ -12,6 +12,7 @@ import { IApplicationShell } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
+import * as internalPython from '../process/internal/python';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { Products } from '../utils/localize';
@@ -38,18 +39,18 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             if (executionInfo.moduleName) {
                 const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
                 const settings = configService.getSettings(uri);
-                const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
 
                 const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
                 const interpreter = isResource(resource)
                     ? await interpreterService.getActiveInterpreter(resource)
                     : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
+                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch(_err => true)) {
+                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);
@@ -112,7 +113,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     }
     protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
-        const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
+        const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
             return args;
         }

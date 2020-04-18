@@ -5,6 +5,7 @@
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import {
     IConfigurationService,
     IDataScienceSettings,
@@ -90,61 +91,21 @@ suite('DataScience code gathering unit tests', () => {
     const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
     const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
     const dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
-    const gatherRules = [
-        {
-            objectName: 'df',
-            functionName: 'head',
-            doesNotModify: ['OBJECT']
-        },
-        {
-            objectName: 'df',
-            functionName: 'tail',
-            doesNotModify: ['OBJECT']
-        },
-        {
-            objectName: 'df',
-            functionName: 'describe',
-            doesNotModify: ['OBJECT']
-        },
-        {
-            functionName: 'print',
-            doesNotModify: ['ARGUMENTS']
-        },
-        {
-            functionName: 'KMeans',
-            doesNotModify: ['ARGUMENTS']
-        },
-        {
-            functionName: 'scatter',
-            doesNotModify: ['ARGUMENTS']
-        },
-        {
-            functionName: 'fit',
-            doesNotModify: ['ARGUMENTS']
-        },
-        {
-            functionName: 'sum',
-            doesNotModify: ['ARGUMENTS']
-        },
-        {
-            functionName: 'len',
-            doesNotModify: ['ARGUMENTS']
-        }
-    ];
+    const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
-    dataScienceSettings.setup(d => d.gatherRules).returns(() => gatherRules);
-    dataScienceSettings.setup(d => d.enabled).returns(() => true);
-    dataScienceSettings.setup(d => d.defaultCellMarker).returns(() => '# %%');
-    pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-    configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+    dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+    dataScienceSettings.setup((d) => d.defaultCellMarker).returns(() => '# %%');
+    pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+    configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     appShell
-        .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
         .returns(() => Promise.resolve(''));
     const gatherProvider = new GatherProvider(
         configurationService.object,
         appShell.object,
         disposableRegistry.object,
-        commandManager.object
+        commandManager.object,
+        fileSystem.object
     );
 
     if (gatherProvider) {

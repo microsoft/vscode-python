@@ -16,7 +16,7 @@ import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
-import { noop } from './core';
+import { noop, sleep } from './core';
 
 const StreamZip = require('node-stream-zip');
 
@@ -118,6 +118,24 @@ export async function restorePythonPathInWorkspaceRoot() {
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
 }
 
+export async function setGlobalInterpreterPath(pythonPath: string) {
+    return retryAsync(setGlobalPathToInterpreter)(pythonPath);
+}
+
+export const resetGlobalInterpreterPathSetting = async () => retryAsync(restoreGlobalInterpreterPathSetting)();
+
+async function restoreGlobalInterpreterPathSetting(): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('defaultInterpreterPath', undefined, true);
+    await disposePythonSettings();
+}
+async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
+    await disposePythonSettings();
+}
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
@@ -222,7 +240,10 @@ async function setPythonPathInWorkspace(
 async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('pythonPath', undefined, true);
+    await Promise.all([
+        pythonConfig.update('pythonPath', undefined, true),
+        pythonConfig.update('defaultInterpreterPath', undefined, true)
+    ]);
     await disposePythonSettings();
 }
 
@@ -245,12 +266,14 @@ export async function deleteFiles(globPattern: string) {
         glob(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
     });
 
-    return Promise.all(items.map(item => fs.remove(item).catch(noop)));
+    return Promise.all(items.map((item) => fs.remove(item).catch(noop)));
 }
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO(gh-10910): Change this to python3.
     return 'python';
 }
 
@@ -315,8 +338,8 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
 
     return pythonProcRunner
         .exec(PYTHON_PATH, pyVerArgs)
-        .then(strVersion => new SemVer(strVersion.stdout.trim()))
-        .catch(err => {
+        .then((strVersion) => new SemVer(strVersion.stdout.trim()))
+        .catch((err) => {
             // if the call fails this should make it loudly apparent.
             console.error('Failed to get Python Version in getPythonSemVer', err);
             return undefined;
@@ -343,7 +366,7 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
  */
 export function isVersionInList(version: SemVer, ...searchVersions: string[]): boolean {
     // see if the major/minor version matches any member of the skip-list.
-    const isPresent = searchVersions.findIndex(ver => {
+    const isPresent = searchVersions.findIndex((ver) => {
         const semverChecker = coerce(ver);
         if (semverChecker) {
             if (semverChecker.compare(version) === 0) {
@@ -498,6 +521,29 @@ export async function waitForCondition(
     });
 }
 
+/**
+ * Execute a method until it executes without any exceptions.
+ */
+export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 60_000): Promise<T> {
+    let lastEx: Error | undefined;
+    const started = new Date().getTime();
+    while (timeoutMs > new Date().getTime() - started) {
+        try {
+            // tslint:disable-next-line: no-unnecessary-local-variable
+            const result = await fn();
+            // Capture result, if no exceptions return that.
+            return result;
+        } catch (ex) {
+            lastEx = ex;
+        }
+        await sleep(10);
+    }
+    if (lastEx) {
+        throw lastEx;
+    }
+    throw new Error('Timeout waiting for function to complete without any errors');
+}
+
 export async function openFile(file: string): Promise<TextDocument> {
     const vscode = require('vscode') as typeof import('vscode');
     const textDocument = await vscode.workspace.openTextDocument(file);
@@ -558,7 +604,7 @@ export class FakeClock {
         while (this.clock.countTimers() === 0) {
             // Relinquish control to event loop, so other timer code will run.
             // We want to wait for `setTimeout` to kick in.
-            await new Promise(resolve => process.nextTick(resolve));
+            await new Promise((resolve) => process.nextTick(resolve));
         }
     }
     /**

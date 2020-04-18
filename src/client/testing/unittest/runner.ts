@@ -1,9 +1,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceError } from '../../common/logger';
+import * as internalScripts from '../../common/process/internal/scripts';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -73,13 +72,12 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.passed = 0;
         options.tests.summary.skipped = 0;
         let failFast = false;
-        const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
         this.server.on('error', (message: string, ...data: string[]) => traceError(`${message} ${data.join(' ')}`));
         this.server.on('log', noop);
         this.server.on('connect', noop);
         this.server.on('start', noop);
         this.server.on('result', (data: ITestData) => {
-            const test = options.tests.testFunctions.find(t => t.testFunction.nameToRun === data.test);
+            const test = options.tests.testFunctions.find((t) => t.testFunction.nameToRun === data.test);
             const statusDetails = outcomeMapping.get(data.outcome)!;
             if (test) {
                 test.testFunction.status = statusDetails.status;
@@ -123,7 +121,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         const runTestInternal = async (testFile: string = '', testId: string = '') => {
             let testArgs = this.buildTestArgs(options.args);
             failFast = testArgs.indexOf('--uf') >= 0;
-            testArgs = testArgs.filter(arg => arg !== '--uf');
+            testArgs = testArgs.filter((arg) => arg !== '--uf');
 
             testArgs.push(`--result-port=${port}`);
             if (testId.length > 0) {
@@ -144,8 +142,10 @@ export class TestManagerRunner implements ITestManagerRunner {
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
+                const args = internalScripts.visualstudio_py_testlauncher(testArgs);
+
                 const runOptions: Options = {
-                    args: [testLauncherFile].concat(testArgs),
+                    args: args,
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
@@ -168,7 +168,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 }
                 if (Array.isArray(options.testsToRun.testSuite)) {
                     for (const testSuite of options.testsToRun.testSuite) {
-                        const item = options.tests.testSuites.find(t => t.testSuite === testSuite);
+                        const item = options.tests.testSuites.find((t) => t.testSuite === testSuite);
                         if (item) {
                             const testFileName = item.parentTestFile.fullPath;
                             await runTestInternal(testFileName, testSuite.nameToRun);
@@ -177,7 +177,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 }
                 if (Array.isArray(options.testsToRun.testFunction)) {
                     for (const testFn of options.testsToRun.testFunction) {
-                        const item = options.tests.testFunctions.find(t => t.testFunction === testFn);
+                        const item = options.tests.testFunctions.find((t) => t.testFunction === testFn);
                         if (item) {
                             const testFileName = item.parentTestFile.fullPath;
                             await runTestInternal(testFileName, testFn.nameToRun);
@@ -201,7 +201,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after
             .then(() => this.server.removeAllListeners())
-            .catch(err => {
+            .catch((err) => {
                 this.server.removeAllListeners();
                 throw err; // keep propagating this downward
             });
@@ -217,8 +217,8 @@ export class TestManagerRunner implements ITestManagerRunner {
         } else if (typeof longValueValue === 'string') {
             pattern = longValueValue;
         }
-        const failFast = args.some(arg => arg.trim() === '-f' || arg.trim() === '--failfast');
-        const verbosity = args.some(arg => arg.trim().indexOf('-v') === 0) ? 2 : 1;
+        const failFast = args.some((arg) => arg.trim() === '-f' || arg.trim() === '--failfast');
+        const verbosity = args.some((arg) => arg.trim().indexOf('-v') === 0) ? 2 : 1;
         const testArgs = [`--us=${startTestDiscoveryDirectory}`, `--up=${pattern}`, `--uvInt=${verbosity}`];
         if (failFast) {
             testArgs.push('--uf');

@@ -15,6 +15,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
@@ -27,12 +28,10 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -45,11 +44,13 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
+    INotebookProvider,
     IStatusProvider,
     IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
 enum AskForSaveResult {
     Yes,
@@ -73,7 +74,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -85,6 +85,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(NativeEditorSynchronizer) synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
@@ -92,17 +93,17 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(INotebookImporter) importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(INotebookProvider) notebookProvider: INotebookProvider,
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -114,6 +115,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             commandManager,
             jupyterExporter,
             workspaceService,
+            synchronizer,
             editorProvider,
             dataExplorerProvider,
             jupyterVariables,
@@ -121,12 +123,15 @@ export class NativeEditorOldWebView extends NativeEditor {
             importer,
             errorHandler,
             globalStorage,
-            progressReporter,
             experimentsManager,
             asyncRegistry,
-            switcher
+            switcher,
+            notebookProvider,
+            useCustomEditorApi
         );
         asyncRegistry.push(this);
+        // No ui syncing in old notebooks.
+        synchronizer.disable();
     }
     public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
         await super.load(model, webViewPanel);

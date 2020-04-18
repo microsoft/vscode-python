@@ -42,10 +42,7 @@ export function extractBetweenDelimiters(content: string, startDelimiter: string
 
 export function convertFileToPackage(filePath: string): string {
     const lastIndex = filePath.lastIndexOf('.');
-    return filePath
-        .substring(0, lastIndex)
-        .replace(/\//g, '.')
-        .replace(/\\/g, '.');
+    return filePath.substring(0, lastIndex).replace(/\//g, '.').replace(/\\/g, '.');
 }
 
 @injectable()
@@ -114,7 +111,7 @@ export class TestsHelper implements ITestsHelper {
         }
     }
     public flattenTestFiles(testFiles: TestFile[], workspaceFolder: string): Tests {
-        testFiles.forEach(testFile => this.flatteningVisitor.visitTestFile(testFile));
+        testFiles.forEach((testFile) => this.flatteningVisitor.visitTestFile(testFile));
 
         // tslint:disable-next-line:no-object-literal-type-assertion
         const tests = <Tests>{
@@ -133,7 +130,7 @@ export class TestsHelper implements ITestsHelper {
     public placeTestFilesIntoFolders(tests: Tests, workspaceFolder: string): void {
         // First get all the unique folders
         const folders: string[] = [];
-        tests.testFiles.forEach(file => {
+        tests.testFiles.forEach((file) => {
             const relativePath = path.relative(workspaceFolder, file.fullPath);
             const dir = path.dirname(relativePath);
             if (folders.indexOf(dir) === -1) {
@@ -145,7 +142,7 @@ export class TestsHelper implements ITestsHelper {
         const folderMap = new Map<string, TestFolder>();
         folders.sort();
         const resource = Uri.file(workspaceFolder);
-        folders.forEach(dir => {
+        folders.forEach((dir) => {
             dir.split(path.sep).reduce((parentPath, currentName, _index, _values) => {
                 let newPath = currentName;
                 let parentFolder: TestFolder | undefined;
@@ -172,8 +169,8 @@ export class TestsHelper implements ITestsHelper {
                         tests.rootTestFolders.push(testFolder);
                     }
                     tests.testFiles
-                        .filter(fl => path.dirname(path.relative(workspaceFolder, fl.fullPath)) === newPath)
-                        .forEach(testFile => {
+                        .filter((fl) => path.dirname(path.relative(workspaceFolder, fl.fullPath)) === newPath)
+                        .forEach((testFile) => {
                             testFolder.testFiles.push(testFile);
                         });
                     tests.testFolders.push(testFolder);
@@ -192,22 +189,22 @@ export class TestsHelper implements ITestsHelper {
         }
         const absolutePath = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
         const testFolders = tests.testFolders.filter(
-            folder => folder.nameToRun === name || folder.name === name || folder.name === absolutePath
+            (folder) => folder.nameToRun === name || folder.name === name || folder.name === absolutePath
         );
         if (testFolders.length > 0) {
             return { testFolder: testFolders };
         }
 
         const testFiles = tests.testFiles.filter(
-            file => file.nameToRun === name || file.name === name || file.fullPath === absolutePath
+            (file) => file.nameToRun === name || file.name === name || file.fullPath === absolutePath
         );
         if (testFiles.length > 0) {
             return { testFile: testFiles };
         }
 
         const testFns = tests.testFunctions
-            .filter(fn => fn.testFunction.nameToRun === name || fn.testFunction.name === name)
-            .map(fn => fn.testFunction);
+            .filter((fn) => fn.testFunction.nameToRun === name || fn.testFunction.name === name)
+            .map((fn) => fn.testFunction);
         if (testFns.length > 0) {
             return { testFunction: testFns };
         }
@@ -232,7 +229,7 @@ export class TestsHelper implements ITestsHelper {
         };
     }
     public displayTestErrorMessage(message: string) {
-        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
+        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then((action) => {
             if (action === constants.Button_Text_Tests_View_Output) {
                 this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
             }
@@ -347,28 +344,28 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
             const suite = data as TestSuite;
             if (isSubtestsParent(suite)) {
                 const fn = suite.functions[0];
-                const parent = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
+                const parent = tests.testSuites.find((item) => item.testSuite.functions.indexOf(fn) >= 0);
                 if (parent) {
                     return parent.testSuite;
                 }
-                return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
+                return tests.testFiles.find((item) => item.functions.indexOf(fn) >= 0);
             }
-            const parentSuite = tests.testSuites.find(item => item.testSuite.suites.indexOf(suite) >= 0);
+            const parentSuite = tests.testSuites.find((item) => item.testSuite.suites.indexOf(suite) >= 0);
             if (parentSuite) {
                 return parentSuite.testSuite;
             }
-            return tests.testFiles.find(item => item.suites.indexOf(suite) >= 0);
+            return tests.testFiles.find((item) => item.suites.indexOf(suite) >= 0);
         }
         case TestDataItemType.function: {
             const fn = data as TestFunction;
             if (fn.subtestParent) {
                 return fn.subtestParent.asSuite;
             }
-            const parentSuite = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
+            const parentSuite = tests.testSuites.find((item) => item.testSuite.functions.indexOf(fn) >= 0);
             if (parentSuite) {
                 return parentSuite.testSuite;
             }
-            return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
+            return tests.testFiles.find((item) => item.functions.indexOf(fn) >= 0);
         }
         default: {
             throw new Error('Unknown test type');
@@ -434,7 +431,7 @@ export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): T
  * @returns {(TestFolder | undefined)}
  */
 function getParentTestFolderForFile(tests: Tests, file: TestFile): TestFolder | undefined {
-    return tests.testFolders.find(folder => folder.testFiles.some(item => item === file));
+    return tests.testFolders.find((folder) => folder.testFiles.some((item) => item === file));
 }
 
 /**
@@ -448,7 +445,7 @@ function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFol
     if (tests.rootTestFolders.indexOf(folder) >= 0) {
         return;
     }
-    return tests.testFolders.find(item => item.folders.some(child => child === folder));
+    return tests.testFolders.find((item) => item.folders.some((child) => child === folder));
 }
 
 /**
@@ -460,7 +457,7 @@ function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFol
  * @returns {(FlattenedTestFunction | undefined)}
  */
 export function findFlattendTestFunction(tests: Tests, func: TestFunction): FlattenedTestFunction | undefined {
-    return tests.testFunctions.find(f => f.testFunction === func);
+    return tests.testFunctions.find((f) => f.testFunction === func);
 }
 
 /**
@@ -472,7 +469,7 @@ export function findFlattendTestFunction(tests: Tests, func: TestFunction): Flat
  * @returns {(FlattenedTestSuite | undefined)}
  */
 export function findFlattendTestSuite(tests: Tests, suite: TestSuite): FlattenedTestSuite | undefined {
-    return tests.testSuites.find(f => f.testSuite === suite);
+    return tests.testSuites.find((f) => f.testSuite === suite);
 }
 
 /**
@@ -512,7 +509,7 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
 function divideSubtests(mixed: TestFunction[]): [TestSuite[], TestFunction[]] {
     const suites: TestSuite[] = [];
     const functions: TestFunction[] = [];
-    mixed.forEach(func => {
+    mixed.forEach((func) => {
         if (!func.subtestParent) {
             functions.push(func);
             return;
@@ -542,9 +539,9 @@ export function copyDesiredTestResults(source: Tests, target: Tests): void {
 }
 
 function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void {
-    source.forEach(sourceFolder => {
+    source.forEach((sourceFolder) => {
         const targetFolder = target.find(
-            folder => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun
+            (folder) => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun
         );
         if (!targetFolder) {
             return;
@@ -556,8 +553,8 @@ function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void
     });
 }
 function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
-    source.forEach(sourceFile => {
-        const targetFile = target.find(file => file.name === sourceFile.name);
+    source.forEach((sourceFile) => {
+        const targetFile = target.find((file) => file.name === sourceFile.name);
         if (!targetFile) {
             return;
         }
@@ -570,8 +567,8 @@ function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
 }
 
 function copyResultsForFunctions(source: TestFunction[], target: TestFunction[]): void {
-    source.forEach(sourceFn => {
-        const targetFn = target.find(fn => fn.name === sourceFn.name && fn.nameToRun === sourceFn.nameToRun);
+    source.forEach((sourceFn) => {
+        const targetFn = target.find((fn) => fn.name === sourceFn.name && fn.nameToRun === sourceFn.nameToRun);
         if (!targetFn) {
             return;
         }
@@ -580,9 +577,9 @@ function copyResultsForFunctions(source: TestFunction[], target: TestFunction[])
 }
 
 function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
-    source.forEach(sourceSuite => {
+    source.forEach((sourceSuite) => {
         const targetSuite = target.find(
-            suite =>
+            (suite) =>
                 suite.name === sourceSuite.name &&
                 suite.nameToRun === sourceSuite.nameToRun &&
                 suite.xmlName === sourceSuite.xmlName
@@ -599,7 +596,7 @@ function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
 }
 
 function copyValueTypes<T>(source: T, target: T): void {
-    Object.keys(source).forEach(key => {
+    Object.keys(source).forEach((key) => {
         // tslint:disable-next-line:no-any
         const value = (source as any)[key];
         if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {

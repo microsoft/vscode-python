@@ -63,7 +63,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
             this.state = {
-                gridColumns: data.columns.map(c => {
+                gridColumns: data.columns.map((c) => {
                     return { ...c, formatter: cellFormatterFunc };
                 }),
                 gridRows: [],

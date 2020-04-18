@@ -5,17 +5,12 @@ import { inject, injectable } from 'inversify';
 import { Event } from 'vscode';
 
 import { ILiveShareApi } from '../../client/common/application/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    Resource
-} from '../../client/common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry } from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions } from '../../client/datascience/types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
@@ -28,16 +23,9 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IConfigurationService) configService: IConfigurationService
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        this.realProvider = new InteractiveWindowProvider(
-            liveShare,
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            configService
-        );
+        this.realProvider = new InteractiveWindowProvider(liveShare, serviceContainer, asyncRegistry, disposables);
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too
         // so just hook the 'create' function to fix all callers.
@@ -70,9 +58,5 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
 
     public async getOrCreateActive(): Promise<IInteractiveWindow> {
         return this.realProvider.getOrCreateActive();
-    }
-
-    public getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
-        return this.realProvider.getNotebookOptions(resource);
     }
 }

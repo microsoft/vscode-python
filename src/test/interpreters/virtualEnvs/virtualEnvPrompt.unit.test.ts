@@ -10,7 +10,7 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { IApplicationShell } from '../../../client/common/application/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
-import { Common, InteractiveShiftEnterBanner } from '../../../client/common/utils/localize';
+import { Common } from '../../../client/common/utils/localize';
 import { PythonPathUpdaterService } from '../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/configuration/types';
 import {
@@ -67,11 +67,7 @@ suite('Virtual Environment Prompt', () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const interpreter2 = { path: 'path/to/interpreter2' };
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         // tslint:disable:no-any
         when(locator.getInterpreters(resource)).thenResolve([interpreter1, interpreter2] as any);
@@ -79,7 +75,7 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve();
 
         await environmentPrompt.handleNewEnvironment(resource);
@@ -93,16 +89,12 @@ suite('Virtual Environment Prompt', () => {
     test("If user selects 'Yes', python path is updated", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -130,16 +122,12 @@ suite('Virtual Environment Prompt', () => {
     test("If user selects 'No', no operation is performed", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -150,7 +138,7 @@ suite('Virtual Environment Prompt', () => {
             )
         ).thenResolve();
         notificationPromptEnabled
-            .setup(n => n.updateValue(false))
+            .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -172,19 +160,15 @@ suite('Virtual Environment Prompt', () => {
     test("If user selects 'Do not show again', prompt is disabled", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
         notificationPromptEnabled
-            .setup(n => n.updateValue(false))
+            .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -198,16 +182,12 @@ suite('Virtual Environment Prompt', () => {
     test('If prompt is disabled, no notification is shown', async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
-        const prompts = [
-            InteractiveShiftEnterBanner.bannerLabelYes(),
-            InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
-        ];
+        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.doNotShowAgain()];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => false);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => false);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
 
         await environmentPrompt.notifyUser(interpreter1 as any, resource);

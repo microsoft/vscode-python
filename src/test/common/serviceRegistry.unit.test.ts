@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -17,6 +18,7 @@ import { Extensions } from '../../client/common/application/extensions';
 import { LanguageService } from '../../client/common/application/languageService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
+    IActiveResourceService,
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
@@ -49,6 +51,7 @@ import {
     IInsiderExtensionPrompt
 } from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
+import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { NugetService } from '../../client/common/nuget/nugetService';
@@ -91,6 +94,7 @@ import {
     IFeatureDeprecationManager,
     IHttpClient,
     IInstaller,
+    IInterpreterPathService,
     IPathUtils,
     IPersistentStateFactory,
     IRandom
@@ -107,6 +111,8 @@ suite('Common - Service Registry', () => {
         const serviceManager = typemoq.Mock.ofType<IServiceManager>();
 
         [
+            [IActiveResourceService, ActiveResourceService],
+            [IInterpreterPathService, InterpreterPathService],
             [IExtensions, Extensions],
             [IRandom, Random],
             [IPersistentStateFactory, PersistentStateFactory],
@@ -156,19 +162,19 @@ suite('Common - Service Registry', () => {
             [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
             [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
-        ].forEach(mapping => {
+        ].forEach((mapping) => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             typemoq.It.isValue(mapping[0] as any),
-                            typemoq.It.is(value => mapping[1] === value)
+                            typemoq.It.is((value) => mapping[1] === value)
                         )
                     )
                     .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             typemoq.It.isValue(mapping[0] as any),
                             typemoq.It.isAny(),

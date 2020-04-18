@@ -27,16 +27,18 @@ suite('Nuget Azure Storage Repository', () => {
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
         cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
-        cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => true);
+        cfg.setup((c) => c.get('proxyStrictSSL', true)).returns(() => true);
         workspace = typeMoq.Mock.ofType<IWorkspaceService>();
-        workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
+        workspace.setup((w) => w.getConfiguration('http', undefined)).returns(() => cfg.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
 
         const nugetService = typeMoq.Mock.ofType<INugetService>();
-        nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
+        nugetService
+            .setup((n) => n.getVersionFromPackageFileName(typeMoq.It.isAny()))
+            .returns(() => new SemVer('1.1.1'));
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
         const defaultStorageChannel = 'python-language-server-stable';
 
         repo = new AzureBlobStoreNugetRepository(
@@ -47,13 +49,13 @@ suite('Nuget Azure Storage Repository', () => {
         );
     });
 
-    test('Get all packages', async function() {
+    test('Get all packages', async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
         const packageJson = { languageServerVersion: '0.0.1' };
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        appEnv.setup(e => e.packageJson).returns(() => packageJson);
+        appEnv.setup((e) => e.packageJson).returns(() => packageJson);
         const lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
             appEnv.object,

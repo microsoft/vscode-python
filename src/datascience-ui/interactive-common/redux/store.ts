@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
+import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
+
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
@@ -81,13 +84,13 @@ function generateMainReducer<M>(
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
 
         // If the action is part of a sync message, then do not send it to the extension.
-        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.userAction;
+        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.other;
         const isSyncMessage =
             (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks &&
             (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncWithLiveShare;
@@ -114,11 +117,25 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     };
 }
 
+function createTestLogger() {
+    const logFileEnv = process.env.VSC_PYTHON_WEBVIEW_LOG_FILE;
+    if (logFileEnv) {
+        // tslint:disable-next-line: no-require-imports
+        const log4js = require('log4js') as typeof import('log4js');
+        const logFilePath = path.isAbsolute(logFileEnv) ? logFileEnv : path.join(EXTENSION_ROOT_DIR, logFileEnv);
+        log4js.configure({
+            appenders: { reduxLogger: { type: 'file', filename: logFilePath } },
+            categories: { default: { appenders: ['reduxLogger'], level: 'debug' } }
+        });
+        return log4js.getLogger();
+    }
+}
+
 function createTestMiddleware(): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
     const transformPromise = forceLoad();
 
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
@@ -172,17 +189,17 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
 
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         const afterFinished = afterState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         if (
             afterFinished.length > prevFinished.length ||
             (afterFinished.length !== prevFinished.length &&
                 afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
         ) {
-            const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
+            const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
@@ -203,7 +220,11 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const updateContext = createSendInfoMiddleware();
 
     // Create the test middle ware. It sends messages that are used for testing only
-    const testMiddleware = testMode ? createTestMiddleware() : undefined;
+    // Or if testing in UI Test.
+    // tslint:disable-next-line: no-any
+    const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
+    const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
+    const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
@@ -243,16 +264,14 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
                 return { ...action, payload: reduceLogMessage };
             }
             return action;
-        }
+        },
+        logger: testMode ? createTestLogger() : window.console
     });
-    // On CI we might want to disable logging, as its a big wall of text.
-    // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
     const loggerMiddleware =
-        !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING &&
-        (process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode))
+        process.env.VSC_PYTHON_FORCE_LOGGING !== undefined && !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING
             ? logger
             : undefined;
-    // tslint:disable-next-line: no-console
+
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);
@@ -280,7 +299,7 @@ export interface IMainWithVariables extends IMainState {
 /**
  * Middleware that will ensure all actions have `messageDirection` property.
  */
-const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+const addMessageDirectionMiddleware: Redux.Middleware = (_store) => (next) => (action: Redux.AnyAction) => {
     if (isAllowedAction(action)) {
         // Ensure all dispatched messages have been flagged as `incoming`.
         const payload: BaseReduxActionPayload<{}> = action.payload || {};
@@ -297,12 +316,9 @@ export function createStore<M>(
     baseTheme: string,
     testMode: boolean,
     editable: boolean,
-    reducerMap: M
+    reducerMap: M,
+    postOffice: PostOffice
 ) {
-    // Create a post office to listen to store dispatches and allow reducers to
-    // send messages
-    const postOffice = new PostOffice();
-
     // Create reducer for the main react UI
     const mainReducer = generateMainReducer(skipDefault, testMode, baseTheme, editable, reducerMap);
 
@@ -341,15 +357,16 @@ export function createStore<M>(
                     // This is a message that has been sent from extension purely for synchronization purposes.
                     // Unwrap the message.
                     message = payload.type;
+                    // This is a message that came in as a result of an outgoing message from another view.
+                    basePayload.messageDirection = 'outgoing';
                     basePayload.messageType = payload.payload.messageType ?? MessageType.syncAcrossSameNotebooks;
                     basePayload.data = payload.payload.data;
                 } else {
                     // Messages result of some user action.
-                    basePayload.messageType = basePayload.messageType ?? MessageType.userAction;
+                    basePayload.messageType = basePayload.messageType ?? MessageType.other;
                 }
                 store.dispatch({ type: message, payload: basePayload });
             }
-
             return true;
         }
     });

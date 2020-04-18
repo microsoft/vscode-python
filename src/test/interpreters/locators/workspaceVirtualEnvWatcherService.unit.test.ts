@@ -20,13 +20,13 @@ import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/l
 
 suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     let disposables: Disposable[] = [];
-    setup(function() {
+    setup(function () {
         if (!isUnitTestExecution()) {
             return this.skip();
         }
     });
     teardown(() => {
-        disposables.forEach(d => {
+        disposables.forEach((d) => {
             try {
                 d.dispose();
             } catch {

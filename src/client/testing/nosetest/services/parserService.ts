@@ -26,7 +26,7 @@ export class TestsParser implements ITestsParser {
     public parse(content: string, options: ParserOptions): Tests {
         let testFiles = this.getTestFiles(content, options);
         // Exclude tests that don't have any functions or test suites.
-        testFiles = testFiles.filter(testFile => testFile.suites.length > 0 || testFile.functions.length > 0);
+        testFiles = testFiles.filter((testFile) => testFile.suites.length > 0 || testFile.functions.length > 0);
         return this.testsHelper.flattenTestFiles(testFiles, options.cwd);
     }
 
@@ -82,7 +82,7 @@ export class TestsParser implements ITestsParser {
         let testFile: TestFile;
         const resource = Uri.file(rootDirectory);
         // tslint:disable-next-line: max-func-body-length
-        lines.forEach(line => {
+        lines.forEach((line) => {
             if (line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) {
                 fileName = line.substring(NOSE_WANT_FILE_PREFIX.length);
                 fileName = fileName.substring(0, fileName.lastIndexOf(NOSE_WANT_FILE_SUFFIX_WITHOUT_EXT));
@@ -165,7 +165,7 @@ export class TestsParser implements ITestsParser {
                     functionsPassed: 0
                 };
 
-                const cls = testFile.suites.find(suite => suite.name === clsName);
+                const cls = testFile.suites.find((suite) => suite.name === clsName);
                 if (cls) {
                     cls.functions.push(fn);
                 }

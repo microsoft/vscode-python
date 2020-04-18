@@ -30,22 +30,27 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
     [CommonActionType.COPY_CELL_CODE]: Transfer.copyCellCode,
     [CommonActionType.GATHER_CELL]: Transfer.gather,
+    [CommonActionType.GATHER_CELL_TO_SCRIPT]: Transfer.gatherToScript,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,
     [CommonActionType.SUBMIT_INPUT]: Execution.submitInput,
     [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
+    [InteractiveWindowMessages.LoadAllCells]: Creation.loaded,
     [CommonActionType.SCROLL]: Effects.scrolled,
     [CommonActionType.CLICK_CELL]: Effects.clickCell,
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
     [CommonActionType.UNMOUNT]: Creation.unmount,
     [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
+    [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
+    [CommonActionType.IPYWIDGET_RENDER_FAILURE]: CommonEffects.handleIPyWidgetRenderFailure,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.Undo]: Execution.undo,
     [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.UpdateCellWithExecutionResults]: Creation.updateCell,
     [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: CommonEffects.handleCss,
@@ -62,5 +67,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
     [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
-    [SharedMessages.LocInit]: CommonEffects.handleLocInit
+    [SharedMessages.LocInit]: CommonEffects.handleLocInit,
+    [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData
 };

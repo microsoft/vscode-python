@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 suite('Smoke Test: Debug file', () => {
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }

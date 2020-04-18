@@ -18,7 +18,11 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     private sentMimeTypes: Set<string> = new Set<string>();
 
     constructor(@inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider) {
-        this.notebookEditorProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+        this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
+    }
+
+    public onKernelRestarted() {
+        // Do nothing on restarted
     }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
@@ -30,7 +34,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     }
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.notebookEditorProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
+        this.notebookEditorProvider.editors.forEach((e) => this.onOpenedOrClosedNotebook(e));
     }
 
     private onOpenedOrClosedNotebook(e: INotebookEditor) {
@@ -116,9 +120,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.sentMimeTypes.add(mimeType);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hashedName = sha256()
-            .update(mimeType)
-            .digest('hex');
+        const hashedName = sha256().update(mimeType).digest('hex');
 
         const lowerMimeType = mimeType.toLowerCase();
         // The following gives us clues of the mimetype.

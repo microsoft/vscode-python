@@ -40,6 +40,7 @@ export interface ICellViewModel {
     hasBeenRun: boolean;
     runDuringDebug?: boolean;
     codeVersion?: number;
+    uiSideError?: string;
 }
 
 export type IMainState = {
@@ -224,7 +225,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
         }
         // Eliminate the lines to hide if we're debugging
         if (inputCell.extraLines) {
-            inputCell.extraLines.forEach(i => source.splice(i, 1));
+            inputCell.extraLines.forEach((i) => source.splice(i, 1));
             inputCell.extraLines = undefined;
         }
     }

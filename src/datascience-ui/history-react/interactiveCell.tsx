@@ -82,7 +82,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private scrollAndFlash() {
         if (this.wrapperRef && this.wrapperRef.current) {
-            if (this.wrapperRef.current.scrollIntoView) {
+            // tslint:disable-next-line: no-any
+            if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
             this.wrapperRef.current.classList.add('flash');
@@ -104,7 +105,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
-            if (this.wrapperRef.current.scrollIntoView) {
+            // tslint:disable-next-line: no-any
+            if ((this.wrapperRef.current as any).scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }
@@ -130,7 +132,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
         const themeMatplotlibPlots = this.props.settings.themeMatplotlibPlots ? true : false;
-
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
@@ -154,6 +155,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
+                                        widgetFailed={this.props.widgetFailed}
                                     />
                                 </div>
                             </div>
@@ -173,7 +175,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const gotoCode = () => this.props.gotoCell(cellId);
         const deleteCode = () => this.props.deleteCell(cellId);
         const copyCode = () => this.props.copyCellCode(cellId);
-        const gatherCode = () => this.props.gatherCell(cellId);
+        const gatherCode = () => this.props.gatherCellToScript(cellId);
         const hasNoSource = !cell || !cell.file || cell.file === Identifiers.EmptyFileName;
 
         return (
@@ -181,7 +183,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 <ImageButton
                     baseTheme={this.props.baseTheme}
                     onClick={gatherCode}
-                    hidden={!this.props.settings.enableGather}
+                    hidden={
+                        this.props.cellVM.cell.state === CellState.error ||
+                        this.props.cellVM.cell.data.cell_type === 'markdown' ||
+                        !this.props.settings.enableGather
+                    }
                     tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')}
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.GatherCode} />
@@ -219,10 +225,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive a click, propagate upwards. Might change our state
-        if (this.props.clickCell) {
-            ev.stopPropagation();
-            this.props.clickCell(this.props.cellVM.cell.id);
-        }
+        ev.stopPropagation();
+        this.props.clickCell(this.props.cellVM.cell.id);
     };
 
     private renderControls = () => {

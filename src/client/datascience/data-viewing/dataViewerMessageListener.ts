@@ -39,8 +39,6 @@ export class DataViewerMessageListener implements IWebPanelMessageListener {
 
     public onChangeViewState(panel: IWebPanel) {
         // Forward this onto our callback
-        if (this.viewChanged) {
-            this.viewChanged(panel);
-        }
+        this.viewChanged(panel);
     }
 }

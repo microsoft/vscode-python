@@ -44,7 +44,7 @@ suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
 
-    setup(async function() {
+    setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -82,7 +82,7 @@ suite('Debugging - Attach Debugger', () => {
             fileToDebug.fileToCommandArgument()
         ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
-        const exited = new Promise(resolve => proc.once('close', resolve));
+        const exited = new Promise((resolve) => proc.once('close', resolve));
         await sleep(3000);
 
         // Send initialize, attach
@@ -107,15 +107,17 @@ suite('Debugging - Attach Debugger', () => {
             debugOptions: [DebugOptions.RedirectOutput]
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        platformService.setup(p => p.isWindows).returns(() => isLocalHostWindows);
+        platformService.setup((p) => p.isWindows).returns(() => isLocalHostWindows);
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(IPlatformService, TypeMoq.It.isAny())).returns(() => platformService.object);
+        serviceContainer
+            .setup((c) => c.get(IPlatformService, TypeMoq.It.isAny()))
+            .returns(() => platformService.object);
 
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experiments.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
+        experiments.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         const attachResolver = new AttachConfigurationResolver(
@@ -166,7 +168,7 @@ suite('Debugging - Attach Debugger', () => {
         await continueDebugging(debugClient);
         await exited;
     }
-    test('Confirm we are able to attach to a running program', async function() {
+    test('Confirm we are able to attach to a running program', async function () {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         this.skip();

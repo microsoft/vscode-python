@@ -94,7 +94,7 @@ export namespace Creation {
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        let position = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
@@ -119,7 +119,7 @@ export namespace Creation {
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        let position = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (position >= 0) {
             position += 1;
             newList.splice(position, 0, newVM);
@@ -205,10 +205,10 @@ export namespace Creation {
     export function applyCellEdit(
         arg: NativeEditorReducerArg<{ id: string; changes: IEditorContentChange[] }>
     ): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.id);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.id);
         if (index >= 0) {
             const newVM = { ...arg.prevState.cellVMs[index] };
-            arg.payload.data.changes.forEach(c => {
+            arg.payload.data.changes.forEach((c) => {
                 const source = newVM.inputBlockText;
                 const before = source.slice(0, c.rangeOffset);
                 // tslint:disable-next-line: restrict-plus-operands
@@ -259,13 +259,13 @@ export namespace Creation {
             };
         } else if (arg.payload.data.cellId) {
             // Otherwise just a straight delete
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             if (index >= 0) {
                 Transfer.postModelRemove(arg, 0, cells[index].cell);
 
                 // Recompute select/focus if this item has either
                 const previousSelection = getSelectedAndFocusedInfo(arg.prevState);
-                const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.data.cellId)];
+                const newVMs = [...arg.prevState.cellVMs.filter((c) => c.cell.id !== arg.payload.data.cellId)];
                 const nextOrPrev = index === arg.prevState.cellVMs.length - 1 ? index - 1 : index;
                 if (
                     previousSelection.selectedCellId === arg.payload.data.cellId ||
@@ -293,7 +293,7 @@ export namespace Creation {
     }
 
     export function loadAllCells(arg: NativeEditorReducerArg<ILoadAllCells>): IMainState {
-        const vms = arg.payload.data.cells.map(c => prepareCellVM(c, false, arg.prevState.settings));
+        const vms = arg.payload.data.cells.map((c) => prepareCellVM(c, false, arg.prevState.settings));
         return {
             ...arg.prevState,
             busy: false,
@@ -355,13 +355,16 @@ export namespace Creation {
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId }
+                        data: {
+                            firstCellId: arg.payload.data.secondCellId,
+                            secondCellId: arg.payload.data.firstCellId
+                        }
                     }
                 });
             case 'modify':
                 // Undo for modify should reapply the outputs. Go through each and apply the update
                 let result = arg.prevState;
-                arg.payload.data.oldCells.forEach(c => {
+                arg.payload.data.oldCells.forEach((c) => {
                     result = updateCell({
                         ...disabledQueueArg,
                         prevState: result,
@@ -414,13 +417,16 @@ export namespace Creation {
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId }
+                        data: {
+                            firstCellId: arg.payload.data.secondCellId,
+                            secondCellId: arg.payload.data.firstCellId
+                        }
                     }
                 });
             case 'modify':
                 // Redo for modify should reapply the outputs. Go through each and apply the update
                 let result = arg.prevState;
-                arg.payload.data.newCells.forEach(c => {
+                arg.payload.data.newCells.forEach((c) => {
                     result = updateCell({
                         ...disabledQueueArg,
                         prevState: result,

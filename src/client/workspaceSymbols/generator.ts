@@ -32,7 +32,7 @@ export class Generator implements Disposable {
     }
 
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     public async generateWorkspaceTags(): Promise<void> {
         if (!this.pythonSettings.workspaceSymbols.enabled) {
@@ -42,7 +42,7 @@ export class Generator implements Disposable {
     }
     private buildCmdArgs(): string[] {
         const exclusions = this.pythonSettings.workspaceSymbols.exclusionPatterns;
-        const excludes = exclusions.length === 0 ? [] : exclusions.map(pattern => `--exclude=${pattern}`);
+        const excludes = exclusions.length === 0 ? [] : exclusions.map((pattern) => `--exclude=${pattern}`);
 
         return [`--options=${this.optionsFile}`, '--languages=Python'].concat(excludes);
     }
@@ -72,7 +72,7 @@ export class Generator implements Disposable {
                 const result = processService.execObservable(cmd, args, { cwd: source.directory });
                 let errorMsg = '';
                 result.out.subscribe(
-                    output => {
+                    (output) => {
                         if (output.source === 'stderr') {
                             errorMsg += output.out;
                         }

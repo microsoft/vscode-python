@@ -7,8 +7,7 @@ import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IExperimentsManager } from './common/types';
-import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
-import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
+import { getDebugpyLauncherArgs, getPtvsdLauncherScriptArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -44,11 +43,9 @@ export function buildApi(
     serviceContainer: IServiceContainer
 ) {
     const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    const debugFactory = serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory);
-
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
-        ready: ready.catch(ex => {
+        ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
@@ -61,12 +58,14 @@ export function buildApi(
                 const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
                 if (useNewDADebugger) {
-                    // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
-                    const args = debugFactory.getRemoteDebuggerArgs({ host, port, waitUntilDebuggerAttaches });
-                    return [debugFactory.getDebuggerPath(), ...args];
+                    return getDebugpyLauncherArgs({
+                        host,
+                        port,
+                        waitUntilDebuggerAttaches
+                    });
                 }
 
-                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
+                return getPtvsdLauncherScriptArgs({
                     host,
                     port,
                     waitUntilDebuggerAttaches

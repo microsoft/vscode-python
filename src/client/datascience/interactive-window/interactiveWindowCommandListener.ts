@@ -322,7 +322,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // Try starting a server. Purpose should be unique so we
             // create a brand new one.
             server = await this.jupyterExecution.connectToNotebookServer(
-                { useDefaultConfig, purpose: uuid() },
+                { skipUsingDefaultConfig: !useDefaultConfig, purpose: uuid(), allowUI: () => false },
                 cancelToken
             );
             const notebook = server
@@ -332,7 +332,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(
-                    ranges.map(r => {
+                    ranges.map((r) => {
                         const code = document.getText(r.range);
                         return notebook
                             ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
@@ -486,7 +486,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         const editor = await this.documentManager.showTextDocument(doc, ViewColumn.One);
 
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit(editBuilder => {
+        editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
     };

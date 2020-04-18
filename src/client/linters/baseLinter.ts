@@ -176,7 +176,7 @@ export abstract class BaseLinter implements ILinter {
         } else {
             this.errorHandler
                 .handleError(error, resource, execInfo)
-                .catch(ex => traceError('Error in errorHandler.handleError', ex))
+                .catch((ex) => traceError('Error in errorHandler.handleError', ex))
                 .ignoreErrors();
         }
     }

@@ -29,34 +29,34 @@ suite('Interpreters from Windows Registry (unit)', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         windowsStoreInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
-        windowsStoreInterpreter.setup(w => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
-        windowsStoreInterpreter.setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
+        windowsStoreInterpreter.setup((w) => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
+        windowsStoreInterpreter.setup((w) => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPersistentStateFactory)))
             .returns(() => stateFactory.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterHelper.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         pathUtils
-            .setup(p => p.basename(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.basename(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p: string) => p.split(/[\\,\/]/).reverse()[0]);
         // So effectively these are functional tests...
-        fs.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(filename => {
+        fs.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns((filename) => {
             return fsextra.pathExists(filename);
         });
         const state = new MockState(undefined);
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             // tslint:disable-next-line:no-empty no-any
             .returns(() => Promise.resolve({} as any));
         stateFactory
-            .setup(s => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((s) => s.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => state);
     });
     function setup64Bit(is64Bit: boolean) {
-        platformService.setup(ps => ps.is64bit).returns(() => is64Bit);
+        platformService.setup((ps) => ps.is64bit).returns(() => is64Bit);
         return platformService.object;
     }
     test('Must return an empty list (x86)', async () => {
@@ -144,7 +144,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
@@ -192,7 +192,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
@@ -270,7 +270,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
@@ -314,16 +314,16 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
         windowsStoreInterpreter.reset();
         const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
         windowsStoreInterpreter
-            .setup(w => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .setup((w) => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
         windowsStoreInterpreter
-            .setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .setup((w) => w.isWindowsStoreInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
             .returns(() => true)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -365,12 +365,12 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
         windowsStoreInterpreter.reset();
         const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
         windowsStoreInterpreter
-            .setup(w => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .setup((w) => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
             .returns(() => true)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -414,7 +414,12 @@ suite('Interpreters from Windows Registry (unit)', () => {
                 values: ['\\Software\\Python\\Company Three\\6.0.0']
             },
             { key: '\\Software\\Python', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['7.0.0'] },
-            { key: '\\Software\\Python\\Company A', hive: RegistryHive.HKLM, arch: Architecture.x86, values: ['8.0.0'] }
+            {
+                key: '\\Software\\Python\\Company A',
+                hive: RegistryHive.HKLM,
+                arch: Architecture.x86,
+                values: ['8.0.0']
+            }
         ];
         const registryValues = [
             {
@@ -524,7 +529,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
@@ -737,7 +742,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
@@ -950,7 +955,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         );
         interpreterHelper.reset();
         interpreterHelper
-            .setup(h => h.getInterpreterInformation(TypeMoq.It.isAny()))
+            .setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
         const interpreters = await winRegistry.getInterpreters();
