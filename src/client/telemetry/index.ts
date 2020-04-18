@@ -1933,6 +1933,10 @@ export interface IEventNamePropertyMapping {
          * Where did we find the hashed name (CDN or user environment or remote jupyter).
          */
         source?: 'cdn' | 'local' | 'remote';
+        /**
+         * Whether we searched CDN or not.
+         */
+        cdnSearched: boolean;
     };
     /**
      * Telemetry event sent with name of a Widget found.

@@ -152,6 +152,7 @@
     "Common.ok": "Ok",
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
+    "Common.reportThisIssue": "Report this issue",
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
@@ -471,5 +472,6 @@
     "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.",
     "DataScience.useCDNForWidgets": "Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
     "DataScience.loadThirdPartyWidgetScriptsPostEnabled": "Please restart the Kernel when changing the setting 'python.dataScience.widgetScriptSources'.",
-    "DataScience.enableCDNForWidgetsSetting": "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
+    "DataScience.enableCDNForWidgetsSetting": "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1}).",
+    "DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork": "Unable to load a compatible version of the widget '{0}'. Expected behavior may be affected."
 }
