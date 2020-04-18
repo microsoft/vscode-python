@@ -3,13 +3,11 @@
 
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
-import type * as serialize from '@jupyterlab/services/lib/kernel/serialize';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
-import type { Data as WebSocketData } from 'ws';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -29,13 +27,7 @@ import {
     InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../interactive-common/interactiveWindowTypes';
-import {
-    IInteractiveWindowListener,
-    ILocalResourceUriConverter,
-    INotebook,
-    INotebookProvider,
-    KernelSocketInformation
-} from '../types';
+import { IInteractiveWindowListener, ILocalResourceUriConverter, INotebook, INotebookProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { WidgetScriptSource } from './types';
 // tslint:disable: no-var-requires no-require-imports
@@ -50,13 +42,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     // tslint:disable-next-line: no-any
     public get postInternalMessage(): Event<{ message: string; payload: any }> {
         return this.postInternalMessageEmitter.event;
-    }
-    private get deserialize(): typeof serialize.deserialize {
-        if (!this.jupyterSerialize) {
-            // tslint:disable-next-line: no-require-imports
-            this.jupyterSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof serialize;
-        }
-        return this.jupyterSerialize.deserialize;
     }
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private notebookIdentity?: Uri;
@@ -75,13 +60,10 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private disposables: IDisposable[] = [];
     private interpreterForWhichWidgetSourcesWereFetched?: PythonInterpreter;
-    private kernelSocketInfo?: KernelSocketInformation;
-    private subscribedToKernelSocket: boolean = false;
     /**
      * Key value pair of widget modules along with the version that needs to be loaded.
      */
-    private pendingModuleRequests = new Map<string, string>();
-    private jupyterSerialize?: typeof serialize;
+    private pendingModuleRequests = new Map<string, string | undefined>();
     private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
     private readonly targetWidgetScriptsFolder: string;
     private readonly createTargetWidgetScriptsFolder: Promise<string>;
@@ -195,9 +177,9 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      * Send the widget script source for a specific widget module & version.
      * This is a request made when a widget is certainly used in a notebook.
      */
-    private async sendWidgetSource(moduleName: string, moduleVersion: string) {
+    private async sendWidgetSource(moduleName?: string, moduleVersion: string = '*') {
         // Standard widgets area already available, hence no need to look for them.
-        if (moduleName.startsWith('@jupyter')) {
+        if (!moduleName || moduleName.startsWith('@jupyter')) {
             return;
         }
         if (!this.notebook || !this.scriptProvider) {
@@ -264,7 +246,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         if (!this.notebook) {
             return;
         }
-        this.subscribeToKernelSocket();
         this.notebook.onDisposed(() => this.dispose());
         // When changing a kernel, we might have a new interpreter.
         this.notebook.onKernelChanged(
@@ -284,64 +265,6 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             this.disposables
         );
         this.handlePendingRequests();
-    }
-    private subscribeToKernelSocket() {
-        if (this.subscribedToKernelSocket || !this.notebook) {
-            return;
-        }
-        this.subscribedToKernelSocket = true;
-        // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
-        this.notebook.kernelSocket.subscribe((info) => {
-            // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeReceiveHook(this.onKernelSocketMessage.bind(this)); // NOSONAR
-
-            if (!info || !info.socket) {
-                // No kernel socket information, hence nothing much we can do.
-                this.kernelSocketInfo = undefined;
-                return;
-            }
-
-            this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addReceiveHook(this.onKernelSocketMessage.bind(this)); // NOSONAR
-        });
-    }
-    /**
-     * If we get a comm open message, then we know a widget will be displayed.
-     * In this case get hold of the name and send it up (pre-fetch it before UI makes a request for it).
-     */
-    private async onKernelSocketMessage(message: WebSocketData): Promise<void> {
-        // tslint:disable-next-line: no-any
-        const msg = this.deserialize(message as any);
-        if (this.jupyterLab?.KernelMessage.isCommOpenMsg(msg) && msg.content.target_module) {
-            this.sendWidgetSource(msg.content.target_module, '').catch(
-                traceError.bind('Failed to pre-load Widget Script')
-            );
-        } else if (
-            this.jupyterLab?.KernelMessage.isCommOpenMsg(msg) &&
-            msg.content.data &&
-            msg.content.data.state &&
-            // tslint:disable-next-line: no-any
-            ((msg.content.data.state as any)._view_module || (msg.content.data.state as any)._model_module)
-        ) {
-            // tslint:disable-next-line: no-any
-            const viewModule: string = (msg.content.data.state as any)._view_module;
-            // tslint:disable-next-line: no-any
-            const viewModuleVersion: string = (msg.content.data.state as any)._view_module_version;
-            // tslint:disable-next-line: no-any
-            const modelModule = (msg.content.data.state as any)._model_module;
-            // tslint:disable-next-line: no-any
-            const modelModuleVersion = (msg.content.data.state as any)._model_module_version;
-            if (viewModule) {
-                this.sendWidgetSource(viewModule, modelModuleVersion || '').catch(
-                    traceError.bind('Failed to pre-load Widget Script')
-                );
-            }
-            if (modelModule) {
-                this.sendWidgetSource(viewModule, viewModuleVersion || '').catch(
-                    traceError.bind('Failed to pre-load Widget Script')
-                );
-            }
-        }
     }
     private handlePendingRequests() {
         const pendingModuleNames = Array.from(this.pendingModuleRequests.keys());
