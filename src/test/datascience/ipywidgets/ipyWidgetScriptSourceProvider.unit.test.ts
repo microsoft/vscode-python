@@ -272,6 +272,47 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
                 assert.deepEqual(values, { moduleName: 'module1', scriptUri: '1', source: 'cdn' });
                 assert.isFalse(localOrRemoteSource.calledOnce);
                 assert.isTrue(cdnSource.calledOnce);
+                verify(appShell.showWarningMessage(anything(), anything(), anything(), anything())).never();
+            });
+            test('When CDN is turned on and widget script is not found, then display a warning about script not found on CDN', async () => {
+                settings.datascience.widgetScriptSources = ['jsdelivr.com', 'unpkg.com'];
+                const localOrRemoteSource = localLaunch
+                    ? sinon.stub(LocalWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource')
+                    : sinon.stub(RemoteWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
+                const cdnSource = sinon.stub(CDNWidgetScriptSourceProvider.prototype, 'getWidgetScriptSource');
+
+                localOrRemoteSource.resolves({ moduleName: 'module1' });
+                cdnSource.resolves({ moduleName: 'module1' });
+
+                scriptSourceProvider.initialize();
+                let values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
+
+                assert.deepEqual(values, { moduleName: 'module1' });
+                assert.isTrue(localOrRemoteSource.calledOnce);
+                assert.isTrue(cdnSource.calledOnce);
+                verify(
+                    appShell.showWarningMessage(
+                        DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format('module1'),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
+                ).once();
+
+                // Ensure message is not displayed more than once.
+                values = await scriptSourceProvider.getWidgetScriptSource('module1', '1');
+
+                assert.deepEqual(values, { moduleName: 'module1' });
+                assert.isTrue(localOrRemoteSource.calledTwice);
+                assert.isTrue(cdnSource.calledTwice);
+                verify(
+                    appShell.showWarningMessage(
+                        DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format('module1'),
+                        anything(),
+                        anything(),
+                        anything()
+                    )
+                ).once();
             });
         });
     });

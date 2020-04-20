@@ -6,6 +6,7 @@
 import { sha256 } from 'hash.js';
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
@@ -17,6 +18,7 @@ import {
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, DataScience } from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -27,6 +29,7 @@ import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProv
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';
+const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
 
 /**
  * This class decides where to get widget scripts from.
@@ -35,6 +38,7 @@ const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigu
  * If user has not configured antying, user will be presented with a prompt.
  */
 export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
+    private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();
     private scriptProviders?: IWidgetScriptSourceProvider[];
     private configurationPromise?: Deferred<void>;
     private get configuredScriptSources(): readonly WidgetCDNs[] {
@@ -42,6 +46,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return settings.datascience.widgetScriptSources;
     }
     private readonly userConfiguredCDNAtLeastOnce: IPersistentState<boolean>;
+    private readonly neverWarnAboutScriptsNotFoundOnCDN: IPersistentState<boolean>;
     constructor(
         private readonly notebook: INotebook,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
@@ -55,6 +60,10 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ) {
         this.userConfiguredCDNAtLeastOnce = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce,
+            false
+        );
+        this.neverWarnAboutScriptsNotFoundOnCDN = this.stateFactory.createGlobalPersistentState<boolean>(
+            GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN,
             false
         );
     }
@@ -94,16 +103,46 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         sendTelemetryEvent(Telemetry.HashedIPyWidgetNameUsed, undefined, {
             hashedName: sha256().update(found.moduleName).digest('hex'),
-            source: found.source
+            source: found.source,
+            cdnSearched: this.configuredScriptSources.length > 0
         });
 
         if (!found.scriptUri) {
             traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
         }
+        this.handleWidgetSourceNotFoundOnCDN(found).ignoreErrors();
         return found;
     }
+    private async handleWidgetSourceNotFoundOnCDN(widgetSource: WidgetScriptSource) {
+        // if widget exists nothing to do.
+        if (widgetSource.source === 'cdn' || this.neverWarnAboutScriptsNotFoundOnCDN.value === true) {
+            return;
+        }
+        if (
+            this.notifiedUserAboutWidgetScriptNotFound.has(widgetSource.moduleName) ||
+            this.configuredScriptSources.length === 0
+        ) {
+            return;
+        }
+        this.notifiedUserAboutWidgetScriptNotFound.add(widgetSource.moduleName);
+        const selection = await this.appShell.showWarningMessage(
+            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(widgetSource.moduleName),
+            Common.ok(),
+            Common.doNotShowAgain(),
+            Common.reportThisIssue()
+        );
+        switch (selection) {
+            case Common.doNotShowAgain():
+                return this.neverWarnAboutScriptsNotFoundOnCDN.updateValue(true);
+            case Common.reportThisIssue():
+                return this.appShell.openUrl('https://aka.ms/CreatePVSCDataScienceIssue');
+            default:
+                noop();
+        }
+    }
+
     private onSettingsChagned(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('dataScience.widgetScriptSources')) {
+        if (e.affectsConfiguration('python.dataScience.widgetScriptSources')) {
             this.rebuildProviders();
         }
     }

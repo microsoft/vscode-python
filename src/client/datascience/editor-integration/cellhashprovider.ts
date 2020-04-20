@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { KernelMessage } from '@jupyterlab/services';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
+import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
 
 import { splitMultilineString } from '../../../datascience-ui/common';
@@ -23,12 +25,18 @@ import {
     INotebookExecutionLogger
 } from '../types';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
+const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)/g;
+
 interface IRangedCellHash extends ICellHash {
     code: string;
     startOffset: number;
     endOffset: number;
     deleted: boolean;
     realCode: string;
+    trimmedRightCode: string;
+    firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
 }
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
@@ -45,6 +53,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
     private executionCount: number = 0;
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private traceBackRegexes = new Map<string, RegExp>();
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -59,6 +68,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
     public dispose() {
         this.hashes.clear();
+        this.traceBackRegexes.clear();
     }
 
     public get updated(): Event<void> {
@@ -83,6 +93,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
     public onKernelRestarted() {
         this.hashes.clear();
+        this.traceBackRegexes.clear();
         this.executionCount = 0;
         this.updateEventEmitter.fire();
     }
@@ -110,6 +121,21 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
     public async postExecute(_cell: ICell, _silent: boolean): Promise<void> {
         noop();
+    }
+
+    public preHandleIOPub(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage {
+        // When an error message comes, rewrite the traceback so we can jump back to the correct
+        // cell. For now this only works with the interactive window
+        if (msg.header.msg_type === 'error') {
+            return {
+                ...msg,
+                content: {
+                    ...msg.content,
+                    traceback: this.modifyTraceback(msg as KernelMessage.IErrorMsg) // NOSONAR
+                }
+            };
+        }
+        return msg;
     }
 
     public extractExecutableLines(cell: ICell): string[] {
@@ -143,6 +169,12 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             }
             const line = doc.lineAt(trueStartLine);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
+
+            // Find the first non blank line
+            let firstNonBlankIndex = 0;
+            while (firstNonBlankIndex < stripped.length && stripped[firstNonBlankIndex].trim().length === 0) {
+                firstNonBlankIndex += 1;
+            }
 
             // Use the original values however to track edits. This is what we need
             // to move around
@@ -180,11 +212,13 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
                 line: line.lineNumber + 1,
                 endLine: endLine.lineNumber + 1,
+                firstNonBlankLineIndex: firstNonBlankIndex + trueStartLine,
                 executionCount: expectedCount,
                 startOffset,
                 endOffset,
                 deleted: false,
                 code: hashedCode,
+                trimmedRightCode: stripped.map((s) => s.replace(/[ \t\r]+\n$/g, '\n')).join(''),
                 realCode,
                 runtimeLine,
                 id: cell.id
@@ -216,6 +250,15 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 list.push(hash);
             }
             this.hashes.set(cell.file, list);
+
+            // Save a regex to find this file later when looking for
+            // exceptions in output
+            if (!this.traceBackRegexes.has(cell.file)) {
+                const fileDisplayName = this.fileSystem.getDisplayName(cell.file);
+                const escaped = _escapeRegExp(fileDisplayName);
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
+                this.traceBackRegexes.set(cell.file, fileMatchRegex);
+            }
 
             // Tell listeners we have new hashes.
             if (this.listeners) {
@@ -305,5 +348,61 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         }
         // No breakpoint necessary, start on the first line
         return 1;
+    }
+
+    // This function will modify a traceback from an error message.
+    // Tracebacks take a form like so:
+    // "[1;31m---------------------------------------------------------------------------[0m"
+    // "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
+    // "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+    // "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+    // "[1;31mZeroDivisionError[0m: division by zero"
+    // Each item in the array being a stack frame.
+    private modifyTraceback(msg: KernelMessage.IErrorMsg): string[] {
+        // Do one frame at a time.
+        return msg.content.traceback ? msg.content.traceback.map(this.modifyTracebackFrame.bind(this)) : [];
+    }
+
+    private findCellOffset(hashes: IRangedCellHash[] | undefined, codeLines: string): number | undefined {
+        if (hashes) {
+            // Go through all cell code looking for these code lines exactly
+            // (although with right side trimmed as that's what a stack trace does)
+            for (const hash of hashes) {
+                const index = hash.trimmedRightCode.indexOf(codeLines);
+                if (index >= 0) {
+                    // Jupyter isn't counting blank lines at the top so use our
+                    // first non blank line
+                    return hash.firstNonBlankLineIndex;
+                }
+            }
+        }
+        // No hash found
+        return undefined;
+    }
+
+    private modifyTracebackFrame(traceFrame: string): string {
+        // See if this item matches any of our cell files
+        const regexes = [...this.traceBackRegexes.entries()];
+        const match = regexes.find((e) => e[1].test(traceFrame));
+        if (match) {
+            // We have a match, pull out the source lines
+            let sourceLines = '';
+            const regex = /(;32m[ ->]*?)(\d+)(.*)/g;
+            for (let l = regex.exec(traceFrame); l && l.length > 3; l = regex.exec(traceFrame)) {
+                const newLine = stripAnsi(l[3]).substr(1); // Seem to have a space on the front
+                sourceLines = `${sourceLines}${newLine}\n`;
+            }
+
+            // Now attempt to find a cell that matches these source lines
+            const offset = this.findCellOffset(this.hashes.get(match[0]), sourceLines);
+            if (offset !== undefined) {
+                return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num) => {
+                    const n = parseInt(num, 10);
+                    const newLine = offset + n - 1;
+                    return `${prefix}<a href='file://${match[0]}?line=${newLine}'>${newLine + 1}</a>`;
+                });
+            }
+        }
+        return traceFrame;
     }
 }

@@ -551,7 +551,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private scrollToCurrentPosition(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
         // Unfortunately during functional tests we hack the line count and the like.
-        if (isTestExecution()) {
+        if (isTestExecution() || !this.props.hasFocus) {
             return;
         }
         // Scroll to the visible line that has our current line. Note: Visible lines are not sorted by monaco
