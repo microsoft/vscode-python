@@ -73,32 +73,6 @@ export interface IJupyterConnection extends Disposable {
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
 
-//// Connection information for talking to a generic notebook provider
-//export interface INotebookProviderConnection extends Disposable {
-//// What type of notebook provider are we connected to
-//readonly type: 'raw' | 'jupyter';
-//// Was this connection launched locally or not
-//readonly localLaunch: boolean;
-//// Is the connection still valid
-//readonly valid: boolean;
-//// Display name
-//readonly displayName: string;
-//// Called if whatever provides the notebook is disconnected
-//disconnected: Event<number>;
-//}
-
-//// Connection information for talking to a raw ZMQ provider
-//export interface IRawConnection extends INotebookProviderConnection {}
-
-//// Connection information for talking to a jupyter server process
-//export interface IJupyterConnection extends INotebookProviderConnection {
-//readonly baseUrl: string;
-//readonly token: string;
-//readonly hostName: string;
-//localProcExitCode: number | undefined;
-//allowUnauthorized?: boolean;
-//}
-
 export enum InterruptResult {
     Success = 0,
     TimedOut = 1,
