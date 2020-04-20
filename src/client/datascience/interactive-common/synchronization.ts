@@ -87,6 +87,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.FOCUS_INPUT]: MessageType.other,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: MessageType.other,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: MessageType.other,
+    [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: MessageType.other,
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: MessageType.other,
 
     // Types from InteractiveWindowMessages
@@ -117,6 +118,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetRenderFailure]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,

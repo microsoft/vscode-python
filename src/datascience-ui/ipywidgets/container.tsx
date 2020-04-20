@@ -19,10 +19,12 @@ import {
     CommonAction,
     CommonActionType,
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassLoadAction
+    LoadIPyWidgetClassLoadAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../interactive-common/redux/reducers/types';
 import { IStore } from '../interactive-common/redux/store';
 import { PostOffice } from '../react-common/postOffice';
+import { warnAboutWidgetVersionsThatAreNotSupported } from './incompatibleWidgetHandler';
 import { WidgetManager } from './manager';
 import { registerScripts } from './requirejsRegistry';
 
@@ -38,6 +40,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         string,
         { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
     >();
+    private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private widgetsCanLoadFromCDN: boolean = false;
     private readonly loaderSettings = {
@@ -78,6 +81,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     // This happens when we have restarted a kernel.
                     // If user changed the kernel, then some widgets might exist now and some might now.
                     this.widgetSourceRequests.clear();
+                    this.registeredWidgetSources.clear();
                 }
                 return true;
             }
@@ -108,6 +112,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
 
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
         sources.forEach((source) => {
+            this.registeredWidgetSources.set(source.moduleName, source);
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
             let request = this.widgetSourceRequests.get(source.moduleName);
@@ -163,6 +168,21 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     timedout,
                     error,
                     cdnsUsed: this.widgetsCanLoadFromCDN
+                }
+            }
+        };
+    }
+    private createWidgetVersionNotSupportedErrorAction(
+        moduleName: 'qgrid',
+        moduleVersion: string
+    ): CommonAction<NotifyIPyWidgeWidgetVersionNotSupportedAction> {
+        return {
+            type: CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED,
+            payload: {
+                messageDirection: 'incoming',
+                data: {
+                    moduleName,
+                    moduleVersion
                 }
             }
         };
@@ -233,10 +253,25 @@ export class WidgetManagerComponent extends React.Component<Props> {
             { moduleName, moduleVersion }
         );
 
-        return request.deferred.promise.catch((ex) =>
-            // tslint:disable-next-line: no-console
-            console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
-        );
+        return request.deferred.promise
+            .then(() => {
+                const widgetSource = this.registeredWidgetSources.get(moduleName);
+                if (widgetSource) {
+                    warnAboutWidgetVersionsThatAreNotSupported(
+                        widgetSource,
+                        moduleVersion,
+                        this.widgetsCanLoadFromCDN,
+                        (info) =>
+                            this.props.store.dispatch(
+                                this.createWidgetVersionNotSupportedErrorAction(info.moduleName, info.moduleVersion)
+                            )
+                    );
+                }
+            })
+            .catch((ex) =>
+                // tslint:disable-next-line: no-console
+                console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
+            );
     }
 
     private handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
