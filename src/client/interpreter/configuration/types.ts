@@ -44,3 +44,5 @@ export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
     compare(a: PythonInterpreter, b: PythonInterpreter): number;
 }
+
+export type InterpreterStateArgs = { path?: string; workspace: Resource };

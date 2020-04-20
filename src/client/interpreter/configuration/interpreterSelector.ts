@@ -24,10 +24,10 @@ import {
     IInterpreterComparer,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
+    InterpreterStateArgs,
     IPythonPathUpdaterServiceManager
 } from './types';
 
-type InterpreterStateArgs = { path?: string; workspace: Resource };
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
     private disposables: Disposable[] = [];
@@ -105,10 +105,10 @@ export class InterpreterSelector implements IInterpreterSelector {
 
         if (selection === undefined) {
             return;
-        } else if (selection !== enterInterpreterPathSuggestion) {
-            state.path = (selection as IInterpreterQuickPickItem).path;
+        } else if (selection.label === enterInterpreterPathSuggestion.label) {
+            return this._enterOrBrowseInterpreterPath(input, state);
         } else {
-            return this._enterOrBrowseInterpreterPath.bind(this);
+            state.path = (selection as IInterpreterQuickPickItem).path;
         }
     }
 
@@ -132,7 +132,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         if (typeof selection === 'string') {
             // User entered text in the filter box to enter path to python, store it
             state.path = selection;
-        } else if (selection.label === 'Browse...') {
+        } else if (selection && selection.label === InterpreterQuickPickList.browsePath.label()) {
             const filtersKey = 'Executables';
             const filtersObject: { [name: string]: string[] } = {};
             filtersObject[filtersKey] = ['exe'];
