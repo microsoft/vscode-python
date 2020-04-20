@@ -142,7 +142,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
 
     private onSettingsChagned(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('dataScience.widgetScriptSources')) {
+        if (e.affectsConfiguration('python.dataScience.widgetScriptSources')) {
             this.rebuildProviders();
         }
     }
