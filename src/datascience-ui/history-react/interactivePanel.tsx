@@ -379,7 +379,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private getMaxTextSize(maxOutputSize: number): number | undefined {
-        return maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+        const outputSizeLimit = 10000;
+        return maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
     }
 }
 

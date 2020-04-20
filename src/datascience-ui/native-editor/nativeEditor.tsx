@@ -266,7 +266,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             ) : null;
 
         const maxOutputSize = this.props.settings.maxOutputSize;
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+        const outputSizeLimit = 10000;
+        const maxTextSize =
+            maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
 
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>
