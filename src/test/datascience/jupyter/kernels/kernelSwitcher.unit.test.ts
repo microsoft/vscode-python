@@ -21,7 +21,7 @@ import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/k
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import {
-    IConnection,
+    IJupyterConnection,
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
     INotebook
@@ -37,14 +37,14 @@ suite('Data Science - Kernel Switcher', () => {
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
     let notebook: INotebook;
-    let connection: IConnection;
+    let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedKernel: LiveKernelModel;
     let selectedKernelSecondTime: LiveKernelModel;
     let selectedInterpreter: PythonInterpreter;
     let settings: IPythonSettings;
     setup(() => {
-        connection = mock<IConnection>();
+        connection = mock<IJupyterConnection>();
         settings = mock(PythonSettings);
         currentKernel = {
             lastActivityTime: new Date(),
@@ -99,7 +99,7 @@ suite('Data Science - Kernel Switcher', () => {
         // tslint:disable-next-line: max-func-body-length
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
-                const jupyterConnection: IConnection = {
+                const jupyterConnection: IJupyterConnection = {
                     type: 'jupyter',
                     localLaunch: isLocalConnection,
                     baseUrl: '',

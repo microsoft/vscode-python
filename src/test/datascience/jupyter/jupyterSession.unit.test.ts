@@ -23,7 +23,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import { IConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
+import { IJupyterConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
@@ -49,7 +49,7 @@ suite('Data Science - JupyterSession', () => {
 
     let jupyterSession: JupyterSession;
     let kernelSelector: KernelSelector;
-    let connection: typemoq.IMock<IConnection>;
+    let connection: typemoq.IMock<IJupyterConnection>;
     let serverSettings: typemoq.IMock<ServerConnection.ISettings>;
     let kernelSpec: typemoq.IMock<IJupyterKernelSpec | LiveKernelModel>;
     let sessionManager: SessionManager;
@@ -61,7 +61,7 @@ suite('Data Science - JupyterSession', () => {
 
     setup(() => {
         kernelSelector = mock(KernelSelector);
-        connection = typemoq.Mock.ofType<IConnection>();
+        connection = typemoq.Mock.ofType<IJupyterConnection>();
         serverSettings = typemoq.Mock.ofType<ServerConnection.ISettings>();
         kernelSpec = typemoq.Mock.ofType<IJupyterKernelSpec | LiveKernelModel>();
         session = mock(DefaultSession);

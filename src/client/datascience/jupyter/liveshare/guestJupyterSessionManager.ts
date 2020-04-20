@@ -5,11 +5,17 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import type { Session } from '@jupyterlab/services';
 import { noop } from '../../../common/utils/misc';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
+import {
+    IJupyterConnection,
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterSession,
+    IJupyterSessionManager
+} from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
-    private connInfo: IConnection | undefined;
+    private connInfo: IJupyterConnection | undefined;
 
     public constructor(private realSessionManager: IJupyterSessionManager) {
         noop();
@@ -39,11 +45,11 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         noop();
     }
 
-    public async initialize(_connInfo: IConnection): Promise<void> {
+    public async initialize(_connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = _connInfo;
     }
 
-    public getConnInfo(): IConnection {
+    public getConnInfo(): IJupyterConnection {
         return this.connInfo!;
     }
 }

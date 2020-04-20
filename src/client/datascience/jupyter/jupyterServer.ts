@@ -20,7 +20,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import {
-    IConnection,
+    IJupyterConnection,
     IJupyterSession,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
@@ -176,7 +176,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     // Return a copy of the connection information that this server used to connect with
-    public getConnectionInfo(): IConnection | undefined {
+    public getConnectionInfo(): IJupyterConnection | undefined {
         if (!this.launchInfo) {
             return undefined;
         }

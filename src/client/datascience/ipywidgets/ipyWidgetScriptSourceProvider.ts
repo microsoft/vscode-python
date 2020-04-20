@@ -20,7 +20,7 @@ import { Common, DataScience } from '../../common/utils/localize';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IConnection, ILocalResourceUriConverter, INotebook } from '../types';
+import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
@@ -136,7 +136,10 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         } else {
             if (this.notebook.connection) {
                 scriptProviders.push(
-                    new RemoteWidgetScriptSourceProvider(this.notebook.connection as IConnection, this.httpClient)
+                    new RemoteWidgetScriptSourceProvider(
+                        this.notebook.connection as IJupyterConnection,
+                        this.httpClient
+                    )
                 );
             }
         }

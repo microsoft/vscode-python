@@ -26,7 +26,7 @@ import { BaseJupyterSession, ISession, JupyterSessionStartError } from '../baseJ
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IConnection, IJupyterKernelSpec } from '../types';
+import { IJupyterConnection, IJupyterKernelSpec } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector } from './kernels/kernelSelector';
@@ -35,7 +35,7 @@ import { LiveKernelModel } from './kernels/types';
 export class JupyterSession extends BaseJupyterSession {
     private notebookFiles: Contents.IModel[] = [];
     constructor(
-        private connInfo: IConnection,
+        private connInfo: IJupyterConnection,
         private serverSettings: ServerConnection.ISettings,
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         private sessionManager: SessionManager,

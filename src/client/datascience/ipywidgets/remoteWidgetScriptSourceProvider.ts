@@ -5,7 +5,7 @@
 
 import { traceWarning } from '../../common/logger';
 import { IHttpClient } from '../../common/types';
-import { IConnection } from '../types';
+import { IJupyterConnection } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
@@ -14,7 +14,7 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
  */
 export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     public static validUrls = new Map<string, boolean>();
-    constructor(private readonly connection: IConnection, private readonly httpClient: IHttpClient) {}
+    constructor(private readonly connection: IJupyterConnection, private readonly httpClient: IHttpClient) {}
     public dispose() {
         // Noop.
     }

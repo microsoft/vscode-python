@@ -11,7 +11,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { IConnection, INotebook } from '../../../client/datascience/types';
+import { IJupyterConnection, INotebook } from '../../../client/datascience/types';
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
@@ -36,7 +36,7 @@ suite('Data Science - ipywidget - CDN', () => {
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
-                const connection: IConnection = {
+                const connection: IJupyterConnection = {
                     type: 'jupyter',
                     baseUrl: '',
                     localProcExitCode: undefined,

@@ -21,8 +21,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
-    IConnection,
     IDataScience,
+    IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
@@ -137,7 +137,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
     }
 
     // Return a copy of the connection information that this server used to connect with
-    public getConnectionInfo(): IConnection | undefined {
+    public getConnectionInfo(): IJupyterConnection | undefined {
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;
         }

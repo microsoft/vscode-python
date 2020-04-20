@@ -17,7 +17,7 @@ import * as localize from '../../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IConnection, INotebookServer, INotebookServerOptions } from '../../types';
+import { IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -87,7 +87,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
-            const connection: IConnection = await service.request(
+            const connection: IJupyterConnection = await service.request(
                 LiveShareCommands.connectToNotebookServer,
                 [options],
                 cancelToken

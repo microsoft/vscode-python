@@ -11,7 +11,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
-import { IConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
+import { IJupyterConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
@@ -62,7 +62,7 @@ export class KernelSwitcher {
             const currentKernel = notebook.getKernelSpec();
             if (connInfo) {
                 // Remote connection is always jupyter connection
-                const jupyterConnInfo = connInfo as IConnection;
+                const jupyterConnInfo = connInfo as IJupyterConnection;
                 kernel = await this.selectRemoteJupyterKernel(notebook.resource, jupyterConnInfo, currentKernel);
             }
         }
@@ -78,7 +78,7 @@ export class KernelSwitcher {
 
     private async selectRemoteJupyterKernel(
         resource: Resource,
-        connInfo: IConnection,
+        connInfo: IJupyterConnection,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         const stopWatch = new StopWatch();

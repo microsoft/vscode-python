@@ -12,8 +12,8 @@ import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
-    IConnection,
     IDataScience,
+    IJupyterConnection,
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
@@ -118,7 +118,7 @@ export class GuestJupyterServer
     }
 
     // Return a copy of the connection information that this server used to connect with
-    public getConnectionInfo(): IConnection | undefined {
+    public getConnectionInfo(): IJupyterConnection | undefined {
         if (this.launchInfo) {
             return this.launchInfo.connectionInfo;
         }

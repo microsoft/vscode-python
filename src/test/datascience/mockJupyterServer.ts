@@ -4,7 +4,12 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { TemporaryFile } from '../../client/common/platform/types';
 import { noop } from '../../client/common/utils/misc';
-import { IConnection, INotebook, INotebookServer, INotebookServerLaunchInfo } from '../../client/datascience/types';
+import {
+    IJupyterConnection,
+    INotebook,
+    INotebookServer,
+    INotebookServerLaunchInfo
+} from '../../client/datascience/types';
 import { MockJupyterNotebook } from './mockJupyterNotebook';
 
 export class MockJupyterServer implements INotebookServer {
@@ -42,7 +47,7 @@ export class MockJupyterServer implements INotebookServer {
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
         noop();
     }
-    public getConnectionInfo(): IConnection | undefined {
+    public getConnectionInfo(): IJupyterConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
     public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {

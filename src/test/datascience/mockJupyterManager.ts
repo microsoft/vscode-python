@@ -30,7 +30,7 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
-    IConnection,
+    IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
@@ -89,7 +89,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
-    private connInfo: IConnection | undefined;
+    private connInfo: IJupyterConnection | undefined;
     private cleanTemp: (() => void) | undefined;
     private pendingSessionFailure = false;
     private pendingKernelChangeFailure = false;
@@ -192,7 +192,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell('import sys\nsys.path[0]', `'${path.join(EXTENSION_ROOT_DIR)}'`);
     }
 
-    public getConnInfo(): IConnection {
+    public getConnInfo(): IJupyterConnection {
         return this.connInfo!;
     }
 
@@ -404,7 +404,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public async initialize(connInfo: IConnection): Promise<void> {
+    public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
     }
 

@@ -14,7 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
-import { IConnection } from '../types';
+import { IJupyterConnection } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
@@ -34,7 +34,7 @@ export type JupyterServerInfo = {
 };
 
 export class JupyterConnectionWaiter implements IDisposable {
-    private startPromise: Deferred<IConnection>;
+    private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
     private fileSystem: IFileSystem;
@@ -57,7 +57,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
 
         // Setup our start promise
-        this.startPromise = createDeferred<IConnection>();
+        this.startPromise = createDeferred<IJupyterConnection>();
 
         // We want to reject our Jupyter connection after a specific timeout
         const settings = this.configService.getSettings(undefined);
@@ -94,7 +94,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         clearTimeout(this.launchTimeout as any);
     }
 
-    public waitForConnection(): Promise<IConnection> {
+    public waitForConnection(): Promise<IJupyterConnection> {
         return this.startPromise.promise;
     }
 
@@ -215,7 +215,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 }
 
 // Represents an active connection to a running jupyter notebook
-class JupyterConnection implements IConnection {
+class JupyterConnection implements IJupyterConnection {
     public readonly localLaunch: boolean = true;
     public readonly type = 'jupyter';
     public valid: boolean = true;

@@ -5,7 +5,12 @@ import { inject, injectable, named } from 'inversify';
 
 import { IConfigurationService, IOutputChannel } from '../../common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import { IConnection, IJupyterPasswordConnect, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
+import {
+    IJupyterConnection,
+    IJupyterPasswordConnect,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory
+} from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
 import { KernelSelector } from './kernels/kernelSelector';
 
@@ -23,7 +28,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
      * @param connInfo - connection information to the server that's already running.
      * @param failOnPassword - whether or not to fail the creation if a password is required.
      */
-    public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
+    public async create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
         const result = new JupyterSessionManager(
             this.jupyterPasswordConnect,
             this.config,

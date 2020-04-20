@@ -19,7 +19,7 @@ import { IPyWidgetScriptSourceProvider } from '../../../client/datascience/ipywi
 import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/remoteWidgetScriptSourceProvider';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { IConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
+import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 
 // tslint:disable: no-any no-invalid-this
@@ -72,7 +72,7 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
             setup(() => {
-                const connection: IConnection = {
+                const connection: IJupyterConnection = {
                     type: 'jupyter',
                     valid: true,
                     displayName: '',

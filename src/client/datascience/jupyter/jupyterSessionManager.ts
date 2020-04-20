@@ -10,7 +10,7 @@ import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
-    IConnection,
+    IJupyterConnection,
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
@@ -27,7 +27,7 @@ import { LiveKernelModel } from './kernels/types';
 export class JupyterSessionManager implements IJupyterSessionManager {
     private sessionManager: SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
-    private connInfo: IConnection | undefined;
+    private connInfo: IJupyterConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
 
     constructor(
@@ -71,11 +71,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    public getConnInfo(): IConnection {
+    public getConnInfo(): IJupyterConnection {
         return this.connInfo!;
     }
 
-    public async initialize(connInfo: IConnection): Promise<void> {
+    public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
         this.serverSettings = await this.getServerConnectSettings(connInfo);
         this.sessionManager = new SessionManager({ serverSettings: this.serverSettings });
@@ -187,7 +187,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
     }
 
-    private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
+    private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',

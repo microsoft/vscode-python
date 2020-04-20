@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { noop } from '../../../common/utils/misc';
-import { IConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
+import { IJupyterConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
 import { GuestJupyterSessionManager } from './guestJupyterSessionManager';
 
 export class GuestJupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
@@ -10,7 +10,7 @@ export class GuestJupyterSessionManagerFactory implements IJupyterSessionManager
         noop();
     }
 
-    public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
+    public async create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
         return new GuestJupyterSessionManager(await this.realSessionManager.create(connInfo, failOnPassword));
     }
 }

@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../client/datascience/types';
+import {
+    IJupyterConnection,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory
+} from '../../client/datascience/types';
 import { IServiceManager } from '../../client/ioc/types';
 import { MockJupyterManager } from './mockJupyterManager';
 
@@ -17,7 +21,7 @@ export class MockJupyterManagerFactory implements IJupyterSessionManagerFactory 
         this.mockJupyterManager = new MockJupyterManager(serviceManager);
     }
 
-    public create(_connInfo: IConnection, _failOnPassword?: boolean): Promise<IJupyterSessionManager> {
+    public create(_connInfo: IJupyterConnection, _failOnPassword?: boolean): Promise<IJupyterSessionManager> {
         return Promise.resolve(this.mockJupyterManager);
     }
 

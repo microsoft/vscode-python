@@ -18,7 +18,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
+import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -134,7 +134,7 @@ export class HostJupyterExecution
     private onRemoteConnectToNotebookServer = async (
         args: any[],
         cancellation: CancellationToken
-    ): Promise<IConnection | undefined> => {
+    ): Promise<IJupyterConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
         const localServer = await this.connectToNotebookServer(
             args[0] as INotebookServerOptions | undefined,

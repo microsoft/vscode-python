@@ -66,7 +66,7 @@ export interface INotebookProviderConnection extends Disposable {
 export interface IRawConnection extends INotebookProviderConnection {}
 
 // Connection information for talking to a jupyter server process
-export interface IConnection extends INotebookProviderConnection {
+export interface IJupyterConnection extends INotebookProviderConnection {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
@@ -99,7 +99,7 @@ export interface INotebookExecutionInfo {
 
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
-    connectionInfo: IConnection;
+    connectionInfo: IJupyterConnection;
     /**
      * The python interpreter associated with the kernel.
      *
@@ -134,7 +134,7 @@ export interface INotebookServer extends IAsyncDisposable {
     ): Promise<INotebook>;
     getNotebook(identity: Uri): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
-    getConnectionInfo(): IConnection | undefined;
+    getConnectionInfo(): IJupyterConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     shutdown(): Promise<void>;
 }
@@ -155,7 +155,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
-    connect(options: ConnectNotebookProviderOptions): Promise<IConnection | undefined>;
+    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
     createNotebook(options: GetNotebookOptions): Promise<INotebook>;
     getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
@@ -351,7 +351,7 @@ export interface IJupyterSession extends IAsyncDisposable {
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
-    create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
+    create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
@@ -360,7 +360,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         cancelToken?: CancellationToken
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
-    getConnInfo(): IConnection;
+    getConnInfo(): IJupyterConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;
 }

@@ -18,7 +18,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
 import {
-    IConnection,
+    IJupyterConnection,
     IJupyterExecution,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
@@ -126,7 +126,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // tslint:disable-next-line: max-func-body-length
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            let connection: IConnection | undefined;
+            let connection: IJupyterConnection | undefined;
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
@@ -335,7 +335,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private async startOrConnect(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
-    ): Promise<IConnection> {
+    ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
             // If that works, then attempt to start the server
@@ -367,7 +367,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         useDefaultConfig: boolean,
         customCommandLine: string[],
         cancelToken?: CancellationToken
-    ): Promise<IConnection> {
+    ): Promise<IJupyterConnection> {
         return this.notebookStarter.start(useDefaultConfig, customCommandLine, cancelToken);
     }
     private onSettingsChanged() {

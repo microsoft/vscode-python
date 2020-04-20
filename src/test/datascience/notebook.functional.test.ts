@@ -34,7 +34,7 @@ import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/
 import {
     CellState,
     ICell,
-    IConnection,
+    IJupyterConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
     INotebook,
@@ -1227,7 +1227,7 @@ plt.show()`,
             assert.ok(notebook, 'Server should have started on port 9975');
             const hs = notebook as HostJupyterNotebook;
             // Check port number. Should have at least started with the one specified.
-            const jupyterConnectionInfo = hs.connection as IConnection;
+            const jupyterConnectionInfo = hs.connection as IJupyterConnection;
             assert.ok(jupyterConnectionInfo.baseUrl.startsWith('http://localhost:99'), 'Port was not used');
 
             await verifySimple(hs, `a=1${os.EOL}a`, 1);
@@ -1239,7 +1239,7 @@ plt.show()`,
             // Make a dummy class that will fail during launch
             class FailedKernelSpec extends JupyterExecutionFactory {
                 protected async getMatchingKernelSpec(
-                    _connection?: IConnection,
+                    _connection?: IJupyterConnection,
                     _cancelToken?: CancellationToken
                 ): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);

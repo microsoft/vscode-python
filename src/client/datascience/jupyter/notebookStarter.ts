@@ -21,7 +21,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IConnection, IJupyterSubCommandExecutionService } from '../types';
+import { IJupyterConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
 
@@ -61,7 +61,7 @@ export class NotebookStarter implements Disposable {
         useDefaultConfig: boolean,
         customCommandLine: string[],
         cancelToken?: CancellationToken
-    ): Promise<IConnection> {
+    ): Promise<IJupyterConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it
         let exitCode: number | null = 0;

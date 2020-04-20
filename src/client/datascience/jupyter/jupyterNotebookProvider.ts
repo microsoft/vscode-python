@@ -8,7 +8,7 @@ import * as localize from '../../common/utils/localize';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
-    IConnection,
+    IJupyterConnection,
     IJupyterNotebookProvider,
     IJupyterServerProvider,
     INotebook
@@ -25,7 +25,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         return server?.dispose();
     }
 
-    public async connect(options: ConnectNotebookProviderOptions): Promise<IConnection | undefined> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
         const server = await this.serverProvider.getOrCreateServer(options);
         return server?.getConnectionInfo();
     }

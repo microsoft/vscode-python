@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { Identifiers } from '../constants';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
-import { IConnection } from '../types';
+import { IJupyterConnection } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
@@ -31,7 +31,7 @@ export function expandWorkingDir(
     return path.dirname(launchingFile);
 }
 
-export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSettings): IConnection {
+export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSettings): IJupyterConnection {
     let url: URL;
     try {
         url = new URL(uri);
