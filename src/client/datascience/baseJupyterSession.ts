@@ -191,7 +191,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
         }
 
         // Update our kernel spec
