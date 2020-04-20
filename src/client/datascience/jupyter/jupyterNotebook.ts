@@ -27,7 +27,6 @@ import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
-    IJupyterConnection,
     IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
@@ -996,10 +995,9 @@ export class JupyterNotebookBase implements INotebook {
     private checkForExit(): Error | undefined {
         if (this._executionInfo && this._executionInfo.connectionInfo && !this._executionInfo.connectionInfo.valid) {
             if (this._executionInfo.connectionInfo.type === 'jupyter') {
-                const jupyterConnection = this._executionInfo.connectionInfo as IJupyterConnection;
                 // Not running, just exit
-                if (jupyterConnection.localProcExitCode) {
-                    const exitCode = jupyterConnection.localProcExitCode;
+                if (this._executionInfo.connectionInfo.localProcExitCode) {
+                    const exitCode = this._executionInfo.connectionInfo.localProcExitCode;
                     traceError(`Jupyter crashed with code ${exitCode}`);
                     return new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
                 }

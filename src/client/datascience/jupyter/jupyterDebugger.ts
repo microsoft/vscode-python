@@ -176,9 +176,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Connect local or remote based on what type of notebook we're talking to
         const connectionInfo = notebook.connection;
         if (connectionInfo && !connectionInfo.localLaunch) {
-            // Remote connections are always jupyter
-            const jupyterConnection = connectionInfo as IJupyterConnection;
-            result = await this.connectToRemote(notebook, jupyterConnection);
+            result = await this.connectToRemote(notebook, connectionInfo);
         } else {
             result = await this.connectToLocal(notebook);
         }

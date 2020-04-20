@@ -60,10 +60,8 @@ export class KernelSwitcher {
         } else if (notebook) {
             const connInfo = notebook.connection;
             const currentKernel = notebook.getKernelSpec();
-            if (connInfo) {
-                // Remote connection is always jupyter connection
-                const jupyterConnInfo = connInfo as IJupyterConnection;
-                kernel = await this.selectRemoteJupyterKernel(notebook.resource, jupyterConnInfo, currentKernel);
+            if (connInfo && connInfo.type === 'jupyter') {
+                kernel = await this.selectRemoteJupyterKernel(notebook.resource, connInfo, currentKernel);
             }
         }
         return kernel;
