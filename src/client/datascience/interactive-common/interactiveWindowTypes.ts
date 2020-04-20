@@ -10,7 +10,8 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassLoadAction
+    LoadIPyWidgetClassLoadAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
@@ -117,7 +118,8 @@ export enum InteractiveWindowMessages {
     IPyWidgetLoadSuccess = 'ipywidget_load_success',
     IPyWidgetLoadFailure = 'ipywidget_load_failure',
     IPyWidgetRenderFailure = 'ipywidget_render_failure',
-    IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message'
+    IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message',
+    IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported'
 }
 
 export enum IPyWidgetMessages {
@@ -580,6 +582,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
     public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
+    public [InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported]: NotifyIPyWidgeWidgetVersionNotSupportedAction;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;

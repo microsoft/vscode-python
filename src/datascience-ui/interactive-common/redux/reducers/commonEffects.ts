@@ -18,7 +18,8 @@ import {
     CommonReducerArg,
     ILoadIPyWidgetClassFailureAction,
     IOpenSettingsAction,
-    LoadIPyWidgetClassLoadAction
+    LoadIPyWidgetClassLoadAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from './types';
 
 export namespace CommonEffects {
@@ -249,6 +250,42 @@ export namespace CommonEffects {
 
             // Make sure to tell the extension so it can log telemetry.
             postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetLoadFailure, arg.payload.data);
+
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs
+            };
+        } else {
+            return arg.prevState;
+        }
+    }
+    export function notifyAboutUnsupportedWidgetVersions(
+        arg: CommonReducerArg<CommonActionType, NotifyIPyWidgeWidgetVersionNotSupportedAction>
+    ): IMainState {
+        // Find the first currently executing cell and add an error to its output
+        let index = arg.prevState.cellVMs.findIndex((c) => c.cell.state === CellState.executing);
+
+        // If there isn't one, then find the latest that matches the current execution count.
+        if (index < 0) {
+            index = arg.prevState.cellVMs.findIndex(
+                (c) => c.cell.data.execution_count === arg.prevState.currentExecutionCount
+            );
+        }
+        if (index >= 0 && arg.prevState.cellVMs[index].cell.data.cell_type === 'code') {
+            const newVMs = [...arg.prevState.cellVMs];
+            const current = arg.prevState.cellVMs[index];
+
+            const errorMessage = getLocString(
+                'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
+                "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
+            );
+            newVMs[index] = Helpers.asCellViewModel({
+                ...current,
+                uiSideError: errorMessage
+            });
+
+            // Make sure to tell the extension so it can log telemetry.
+            postActionToExtension(arg, InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported, arg.payload.data);
 
             return {
                 ...arg.prevState,

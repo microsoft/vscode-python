@@ -59,6 +59,7 @@ export enum CommonActionType {
     IPYWIDGET_RENDER_FAILURE = 'action.ipywidget_render_failure',
     LOAD_IPYWIDGET_CLASS_SUCCESS = 'action.load_ipywidget_class_success',
     LOAD_IPYWIDGET_CLASS_FAILURE = 'action.load_ipywidget_class_failure',
+    IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED = 'action.ipywidget_widget_version_not_supported',
     LOADED_ALL_CELLS = 'action.loaded_all_cells',
     LINK_CLICK = 'action.link_click',
     MOVE_CELL_DOWN = 'action.move_cell_down',
@@ -136,6 +137,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.FOCUS_INPUT]: never | undefined;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: LoadIPyWidgetClassLoadAction;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: ILoadIPyWidgetClassFailureAction;
+    [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: NotifyIPyWidgeWidgetVersionNotSupportedAction;
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: Error;
 };
 
@@ -231,6 +233,10 @@ export type LoadIPyWidgetClassDisabledAction = {
 export type LoadIPyWidgetClassLoadAction = {
     className: string;
     moduleName: string;
+    moduleVersion: string;
+};
+export type NotifyIPyWidgeWidgetVersionNotSupportedAction = {
+    moduleName: 'qgrid';
     moduleVersion: string;
 };
 

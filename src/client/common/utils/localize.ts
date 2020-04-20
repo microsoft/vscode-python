@@ -876,6 +876,10 @@ export namespace DataScience {
         'DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork',
         "Unable to load a compatible version of the widget '{0}'. Expected behavior may be affected."
     );
+    export const qgridWidgetScriptVersionCompatibilityWarning = localize(
+        'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
+        "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
+    );
 }
 
 export namespace DebugConfigStrings {

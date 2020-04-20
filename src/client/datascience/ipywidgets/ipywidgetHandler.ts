@@ -9,7 +9,8 @@ import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
     ILoadIPyWidgetClassFailureAction,
-    LoadIPyWidgetClassLoadAction
+    LoadIPyWidgetClassLoadAction,
+    NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { EnableIPyWidgets } from '../../common/experimentGroups';
 import { traceError, traceInfo } from '../../common/logger';
@@ -75,6 +76,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             this.sendLoadSucceededTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
             this.sendLoadFailureTelemetry(payload);
+        } else if (message === InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported) {
+            this.sendUnsupportedWidgetVersionFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
             this.sendRenderFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
@@ -106,6 +109,16 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
                 moduleHash: this.hash(payload.moduleName),
                 moduleVersion: payload.moduleVersion,
                 timedout: payload.timedout
+            });
+        } catch {
+            // do nothing on failure
+        }
+    }
+    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
+        try {
+            sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
+                moduleHash: this.hash(payload.moduleName),
+                moduleVersion: payload.moduleVersion
             });
         } catch {
             // do nothing on failure

@@ -1975,6 +1975,10 @@ export interface IEventNamePropertyMapping {
         timedout: boolean;
     };
     /**
+     * Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
+     */
+    [Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure]: { moduleHash: string; moduleVersion: string };
+    /**
      * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
      */
     [Telemetry.IPyWidgetLoadDisabled]: { moduleHash: string; moduleVersion: string };
