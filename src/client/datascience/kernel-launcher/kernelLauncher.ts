@@ -14,7 +14,7 @@ import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { isResource, noop } from '../../common/utils/misc';
+import { noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
 
@@ -50,17 +50,13 @@ class KernelProcess implements IKernelProcess {
         private executionFactory: IPythonExecutionFactory,
         private file: IFileSystem,
         private _connection: IKernelConnection,
-        private _kernelSpec: IJupyterKernelSpec,
-        private _interpreter: InterpreterUri
+        private _kernelSpec: IJupyterKernelSpec
     ) {
         this.readyPromise = createDeferred<void>();
     }
 
     public async launch(): Promise<void> {
         this.connectionFile = await this.file.createTemporaryFile('.json');
-
-        const resource = isResource(this._interpreter) ? this._interpreter : undefined;
-        const pythonPath = isResource(this._interpreter) ? undefined : this._interpreter.path;
 
         const args = [...this._kernelSpec.argv];
         await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
@@ -72,7 +68,10 @@ class KernelProcess implements IKernelProcess {
         args[4] = this.connectionFile.filePath;
         args.splice(0, 1);
 
-        const executionService = await this.executionFactory.create({ resource, pythonPath });
+        const executionService = await this.executionFactory.create({
+            resource: undefined,
+            pythonPath: this._kernelSpec.path
+        });
         const exeObs = executionService.execObservable(args, {});
 
         if (exeObs.proc) {
@@ -139,13 +138,7 @@ export class KernelLauncher implements IKernelLauncher {
         }
 
         const connection = await this.getKernelConnection();
-        const kernelProcess = new KernelProcess(
-            this.executionFactory,
-            this.file,
-            connection,
-            kernelSpec,
-            interpreterUri
-        );
+        const kernelProcess = new KernelProcess(this.executionFactory, this.file, connection, kernelSpec);
         await kernelProcess.launch();
         return kernelProcess;
     }
