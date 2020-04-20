@@ -98,7 +98,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             sendTelemetryEvent(Telemetry.IPyWidgetLoadFailure, 0, {
                 isOnline: payload.isOnline,
                 moduleHash: this.hash(payload.moduleName),
-                moduleVersion: payload.moduleVersion
+                moduleVersion: payload.moduleVersion,
+                timedout: payload.timedout
             });
         } catch {
             // do nothing on failure

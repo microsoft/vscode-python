@@ -137,7 +137,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
         moduleVersion: string,
         isOnline: boolean,
         // tslint:disable-next-line: no-any
-        error: any
+        error: any,
+        timedout: boolean
     ): CommonAction<ILoadIPyWidgetClassFailureAction> {
         return {
             type: CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE,
@@ -148,16 +149,25 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     moduleName,
                     moduleVersion,
                     isOnline,
+                    timedout,
                     error,
                     cdnsUsed: this.widgetsCanLoadFromCDN
                 }
             }
         };
     }
-    // tslint:disable-next-line: no-any
-    private async handleLoadError(className: string, moduleName: string, moduleVersion: string, error: any) {
+    private async handleLoadError(
+        className: string,
+        moduleName: string,
+        moduleVersion: string,
+        // tslint:disable-next-line: no-any
+        error: any,
+        timedout: boolean = false
+    ) {
         const isOnline = await isonline.default({ timeout: 1000 });
-        this.props.store.dispatch(this.createLoadErrorAction(className, moduleName, moduleVersion, isOnline, error));
+        this.props.store.dispatch(
+            this.createLoadErrorAction(className, moduleName, moduleVersion, isOnline, error, timedout)
+        );
     }
 
     /**
@@ -188,6 +198,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             setTimeout(() => {
                 // tslint:disable-next-line: no-console
                 console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
+                this.handleLoadError('<class>', moduleName, moduleVersion, new Error('Timeout'), true).ignoreErrors();
                 if (deferred) {
                     deferred.resolve();
                 }
