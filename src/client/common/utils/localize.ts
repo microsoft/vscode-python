@@ -175,7 +175,7 @@ export namespace InterpreterQuickPickList {
             'InterpreterQuickPickList.browsePath.detail',
             'Browse your file system to select a Python Interpreter.'
         ),
-        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Intepreter')
+        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
     };
 }
 export namespace ExtensionChannels {
