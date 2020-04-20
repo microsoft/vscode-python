@@ -92,6 +92,13 @@ export class RawJupyterSession extends BaseJupyterSession {
         throw new Error('Not implemented');
     }
 
+    public async createNewKernelSession(
+        _kernel: IJupyterKernelSpec | LiveKernelModel,
+        _timeoutMS: number
+    ): Promise<ISession> {
+        throw new Error('Not implemented');
+    }
+
     protected startRestartSession() {
         if (!this.restartSessionPromise && this.session) {
             this.restartSessionPromise = this.createRestartSession(this.kernelSpec, this.session);

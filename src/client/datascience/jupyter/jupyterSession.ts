@@ -103,13 +103,11 @@ export class JupyterSession extends BaseJupyterSession {
         this.connected = true;
     }
 
-    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
+    public async createNewKernelSession(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number
+    ): Promise<ISession> {
         let newSession: ISession | undefined;
-
-        // If we are already using this kernel in an active session just return back
-        if (this.kernelSpec?.name === kernel.name && this.session) {
-            return;
-        }
 
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
@@ -129,23 +127,7 @@ export class JupyterSession extends BaseJupyterSession {
             throw new JupyterInvalidKernelError(kernel);
         }
 
-        // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
-        if (this.session) {
-            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors();
-        }
-
-        // Update our kernel spec
-        this.kernelSpec = kernel;
-
-        // Save the new session
-        this.session = newSession;
-
-        // Listen for session status changes
-        this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
-
-        // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernel, this.session);
+        return newSession;
     }
 
     protected async createRestartSession(
