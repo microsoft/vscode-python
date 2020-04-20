@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.4.0-rc (9 April 2020)
+## 2020.4.0 (20 April 2020)
 
 ### Enhancements
 
@@ -97,11 +97,13 @@
 1. Fix perf problems after running the interactive window for an extended period of time.
    ([#10971](https://github.com/Microsoft/vscode-python/issues/10971))
 1. Fix problem with opening a notebook in jupyter after saving in VS code.
-   ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))   
+   ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))
 1. Fix CTRL+Z and Z for undo on notebooks.
    ([#11160](https://github.com/Microsoft/vscode-python/issues/11160))
 1. Fix saving to PDF for viewed plots.
    ([#11157](https://github.com/Microsoft/vscode-python/issues/11157))
+1. Fix scrolling in a notebook whenever resizing or opening.
+   ([#11238](https://github.com/Microsoft/vscode-python/issues/11238))
 
 ### Code Health
 
