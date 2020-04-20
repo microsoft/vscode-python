@@ -14,7 +14,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
@@ -280,9 +280,16 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 return;
             }
 
+            traceInfo(`Registering commtarget ${targetName}`);
             this.commTargetsRegistered.add(targetName);
             this.pendingTargetNames.delete(targetName);
-            notebook.registerCommTarget(targetName, noop);
+
+            // Skip the predefined target. It should have been registered
+            // inside the kernel on startup. However we
+            // still need to track it here.
+            if (targetName !== Identifiers.DefaultCommTarget) {
+                notebook.registerCommTarget(targetName, noop);
+            }
         }
     }
 
