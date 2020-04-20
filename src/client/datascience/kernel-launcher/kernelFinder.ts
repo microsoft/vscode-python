@@ -80,7 +80,7 @@ export class KernelFinder implements IKernelFinder {
 
     private async getKernelSpecFromActiveInterpreter(
         resource: Resource,
-        kernelName?: string
+        kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
         this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
 
@@ -92,47 +92,33 @@ export class KernelFinder implements IKernelFinder {
         }
     }
 
-    private async getKernelSpec(kernelPath: string, kernelName?: string): Promise<IJupyterKernelSpec | undefined> {
+    private async getKernelSpec(kernelPath: string, kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         try {
-            const kernels = await this.file.getSubDirectories(kernelPath);
+            const paths = await this.file.getSubDirectories(kernelPath);
 
-            if (kernels.length === 0) {
+            if (paths.length === 0) {
                 return undefined;
             }
 
-            // If no kernel name is included, return the first kernel
-            if (!kernelName) {
-                try {
-                    const kernelSpec: IJupyterKernelSpec = JSON.parse(
-                        await this.file.readFile(path.join(kernels[0], 'kernel.json'))
-                    );
-                    this.cache.push(kernelSpec);
-                    return kernelSpec;
-                } catch (e) {
-                    traceError('Invalid kernel.json', e);
-                    return undefined;
+            const promises = paths.map((kp) => this.file.search(kernelName, kp));
+            const searchResults = await Promise.all(promises);
+
+            // tslint:disable-next-line: prefer-for-of
+            for (let i = 0; i < searchResults.length; i += 1) {
+                if (searchResults[i].length > 0) {
+                    try {
+                        const kernelSpec: IJupyterKernelSpec = JSON.parse(
+                            await this.file.readFile(path.join(paths[i], searchResults[i][0], 'kernel.json'))
+                        );
+                        kernelSpec.name = searchResults[i][0];
+                        this.cache.push(kernelSpec);
+                        return kernelSpec;
+                    } catch (e) {
+                        traceError('Invalid kernel.json', e);
+                        return undefined;
+                    }
                 }
             }
-
-            let spec: IJupyterKernelSpec | undefined;
-            const promises = kernels.map(async (kernel) => {
-                try {
-                    const kernelSpec: IJupyterKernelSpec = JSON.parse(
-                        await this.file.readFile(path.join(kernel, 'kernel.json'))
-                    );
-                    this.cache.push(kernelSpec);
-                    if (kernelSpec.name === kernelName) {
-                        spec = kernelSpec;
-                    }
-                    return kernelSpec;
-                } catch (e) {
-                    traceError('Invalid kernel.json', e);
-                    return undefined;
-                }
-            });
-
-            await Promise.all(promises);
-            return spec;
         } catch {
             traceInfo(`The path ${kernelPath} does not exist.`);
             return undefined;
