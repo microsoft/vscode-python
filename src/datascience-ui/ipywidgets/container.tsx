@@ -6,6 +6,7 @@
 import * as isonline from 'is-online';
 import * as React from 'react';
 import { Store } from 'redux';
+import '../../client/common/extensions';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import {
     IInteractiveWindowMapping,
