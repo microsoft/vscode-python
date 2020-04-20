@@ -3,17 +3,20 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import type { KernelMessage } from '@jupyterlab/services';
+import { inject, injectable, named } from 'inversify';
+import stripAnsi from 'strip-ansi';
 import { Event, EventEmitter, Uri } from 'vscode';
 import {
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { EnableIPyWidgets } from '../../common/experimentGroups';
-import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { traceError, traceInfo } from '../../common/logger';
+import { IDisposableRegistry, IExperimentsManager, IOutputChannel } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -46,7 +49,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IPyWidgetMessageDispatcherFactory)
         private readonly widgetMessageDispatcherFactory: IPyWidgetMessageDispatcherFactory,
-        @inject(IExperimentsManager) readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) readonly experimentsManager: IExperimentsManager,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
     ) {
         disposables.push(
             notebookProvider.onNotebookCreated(async (e) => {
@@ -73,6 +77,8 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             this.sendLoadFailureTelemetry(payload);
         } else if (message === InteractiveWindowMessages.IPyWidgetRenderFailure) {
             this.sendRenderFailureTelemetry(payload);
+        } else if (message === InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage) {
+            this.handleUnhandledMessage(payload);
         }
         // tslint:disable-next-line: no-any
         this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
@@ -110,6 +116,26 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             sendTelemetryEvent(Telemetry.IPyWidgetRenderFailure);
         } catch {
             // Do nothing on a failure
+        }
+    }
+
+    private handleUnhandledMessage(msg: KernelMessage.IMessage) {
+        // Skip status messages
+        if (msg.header.msg_type !== 'status') {
+            try {
+                // Special case errors, strip ansi codes from tracebacks so they print better.
+                if (msg.header.msg_type === 'error') {
+                    const errorMsg = msg as KernelMessage.IErrorMsg;
+                    errorMsg.content.traceback = errorMsg.content.traceback.map(stripAnsi);
+                }
+                traceInfo(`Unhandled widget kernel message: ${msg.header.msg_type} ${msg.content}`);
+                this.jupyterOutput.appendLine(
+                    localize.DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
+                );
+                sendTelemetryEvent(Telemetry.IPyWidgetUnhandledMessage, undefined, { msg_type: msg.header.msg_type });
+            } catch {
+                // Don't care if this doesn't get logged
+            }
         }
     }
     private getIPyWidgetMessageDispatcher() {

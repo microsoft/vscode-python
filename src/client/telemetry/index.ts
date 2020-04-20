@@ -2001,4 +2001,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: never | undefined;
+    /**
+     * Telemetry event sent when the widget tries to send a kernel message but nothing was listening
+     */
+    [Telemetry.IPyWidgetUnhandledMessage]: {
+        msg_type: string;
+    };
 }

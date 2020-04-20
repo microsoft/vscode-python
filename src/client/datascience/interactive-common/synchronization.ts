@@ -118,6 +118,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.IPyWidgetLoadSuccess]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetLoadFailure]: MessageType.other,
     [InteractiveWindowMessages.IPyWidgetRenderFailure]: MessageType.other,
+    [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCells]: MessageType.other,
     [InteractiveWindowMessages.LoadAllCellsComplete]: MessageType.other,
     [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: MessageType.other,

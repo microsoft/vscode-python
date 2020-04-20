@@ -95,6 +95,10 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // This throws errors if enabled, can be added later.
     }
 
+    public get onUnhandledIOPubMessage() {
+        return super.onUnhandledIOPubMessage;
+    }
+
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);

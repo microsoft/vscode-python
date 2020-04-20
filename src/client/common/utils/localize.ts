@@ -865,6 +865,11 @@ export namespace DataScience {
         'DataScience.enableCDNForWidgetsSetting',
         "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
     );
+
+    export const unhandledMessage = localize(
+        'DataScience.unhandledMessage',
+        'Unhandled kernel message from a widget: {0} : {1}'
+    );
 }
 
 export namespace DebugConfigStrings {

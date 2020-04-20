@@ -116,7 +116,8 @@ export enum InteractiveWindowMessages {
     UpdateDisplayData = 'update_display_data',
     IPyWidgetLoadSuccess = 'ipywidget_load_success',
     IPyWidgetLoadFailure = 'ipywidget_load_failure',
-    IPyWidgetRenderFailure = 'ipywidget_render_failure'
+    IPyWidgetRenderFailure = 'ipywidget_render_failure',
+    IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message'
 }
 
 export enum IPyWidgetMessages {
@@ -582,4 +583,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
+    public [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: KernelMessage.IMessage;
 }

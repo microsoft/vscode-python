@@ -15,6 +15,7 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import {
     IInteractiveWindowMapping,
+    InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
@@ -161,6 +162,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             // Listen for display data messages so we can prime the model for a display data
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
+            // Listen for unhandled IO pub so we can forward to the extension
+            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhanldedIOPubMessage.bind(this));
+
             // Tell the observable about our new manager
             WidgetManager._instance.next(this);
         } catch (ex) {
@@ -203,5 +207,13 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
                 deferred.resolve();
             }
         }
+    }
+
+    private handleUnhanldedIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
+        // Send this to the other side
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(
+            InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage,
+            msg
+        );
     }
 }
