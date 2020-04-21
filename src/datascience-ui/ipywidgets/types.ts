@@ -6,6 +6,7 @@
 import * as jupyterlab from '@jupyter-widgets/base/lib';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import { ISignal } from '@phosphor/signaling';
 import { Widget } from '@phosphor/widgets';
 import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
@@ -25,6 +26,10 @@ export type IJupyterLabWidgetManagerCtor = new (
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {
+    /**
+     * Signal emitted when a view emits an IO Pub message but nothing handles it.
+     */
+    readonly onUnhandledIOPubMessage: ISignal<this, KernelMessage.IIOPubMessage>;
     dispose(): void;
     /**
      * Close all widgets and empty the widget state.

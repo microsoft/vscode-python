@@ -24,6 +24,7 @@ export function getDefaultSettings() {
         showCellInputCode: true,
         collapseCellInputCodeByDefault: true,
         maxOutputSize: 400,
+        enableScrollingForCellOutputs: true,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',

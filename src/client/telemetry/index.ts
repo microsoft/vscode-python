@@ -1967,7 +1967,17 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
      */
-    [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
+    [Telemetry.IPyWidgetLoadFailure]: {
+        isOnline: boolean;
+        moduleHash: string;
+        moduleVersion: string;
+        // Whether we timedout getting the source of the script (fetching script source in extension code).
+        timedout: boolean;
+    };
+    /**
+     * Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
+     */
+    [Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure]: { moduleHash: string; moduleVersion: string };
     /**
      * Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
      */
@@ -2005,4 +2015,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
      */
     [Telemetry.IPyWidgetRenderFailure]: never | undefined;
+    /**
+     * Telemetry event sent when the widget tries to send a kernel message but nothing was listening
+     */
+    [Telemetry.IPyWidgetUnhandledMessage]: {
+        msg_type: string;
+    };
 }

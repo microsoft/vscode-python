@@ -1753,7 +1753,13 @@
                 "python.dataScience.maxOutputSize": {
                     "type": "number",
                     "default": 400,
-                    "description": "Maximum size (in pixels) of text output in the Python Interactive window before a scrollbar appears. Set to -1 for infinity.",
+                    "description": "Maximum size (in pixels) of text output in the Python Interactive window and Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableScrollingForCellOutputs": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables scrolling for large cell outputs.",
                     "scope": "resource"
                 },
                 "python.dataScience.errorBackgroundColor": {

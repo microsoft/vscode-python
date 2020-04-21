@@ -88,8 +88,16 @@ export class RawJupyterSession extends BaseJupyterSession {
         return this.session.process?.kernelSpec;
     }
 
-    public async changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
-        throw new Error('Not implemented');
+    public async createNewKernelSession(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        _timeoutMS: number
+    ): Promise<ISession> {
+        if (!this.resource || !kernel || 'session' in kernel) {
+            // Don't allow for connecting to a LiveKernelModel
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+
+        return this.startRawSession(this.resource, kernel);
     }
 
     protected startRestartSession() {

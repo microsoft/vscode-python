@@ -136,7 +136,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this.shutdown();
     }
     // Abstracts for each Session type to implement
-    public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     public abstract async waitForIdle(timeout: number): Promise<void>;
 
     public async shutdown(): Promise<void> {
@@ -177,6 +176,35 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 localize.DataScience.interruptingKernelFailed()
             );
         }
+    }
+
+    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
+        let newSession: ISession | undefined;
+
+        // If we are already using this kernel in an active session just return back
+        if (this.kernelSpec?.name === kernel.name && this.session) {
+            return;
+        }
+
+        newSession = await this.createNewKernelSession(kernel, timeoutMS);
+
+        // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
+        if (this.session) {
+            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
+        }
+
+        // Update our kernel spec
+        this.kernelSpec = kernel;
+
+        // Save the new session
+        this.session = newSession;
+
+        // Listen for session status changes
+        this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
+
+        // Start the restart session promise too.
+        this.restartSessionPromise = this.createRestartSession(kernel, this.session);
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -331,6 +359,12 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         session: ISession,
         cancelToken?: CancellationToken
+    ): Promise<ISession>;
+
+    // Sub classes need to implement their own kernel change specific code
+    protected abstract createNewKernelSession(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number
     ): Promise<ISession>;
 
     protected async shutdownSession(

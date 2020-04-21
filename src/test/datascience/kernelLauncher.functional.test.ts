@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import { Uri } from 'vscode';
 
-import { ChildProcess } from 'child_process';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Resource } from '../../client/common/types';
@@ -14,7 +13,7 @@ import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyte
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { PYTHON_PATH, sleep } from '../common';
+import { PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Kernel Launcher', () => {
@@ -50,13 +49,25 @@ suite('Kernel Launcher', () => {
             this.skip();
         } else {
             const kernel = await kernelLauncher.launch(resource, kernelName);
+            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
-            assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
 
+            // It should not exit.
+            assert.isRejected(
+                waitForCondition(() => exited, 5_000, 'Timeout'),
+                'Timeout'
+            );
+
+            // Upon disposing, we should get an exit event within 100ms or less.
+            // If this happens, then we know a process existed.
             kernel.dispose();
+            assert.isRejected(
+                waitForCondition(() => exited, 100, 'Timeout'),
+                'Timeout'
+            );
         }
-    });
+    }).timeout(10_000);
 
     test('Launch from PythonInterpreter', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING) {
@@ -64,11 +75,23 @@ suite('Kernel Launcher', () => {
             this.skip();
         } else {
             const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
+            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
+
+            // It should not exit.
+            assert.isRejected(
+                waitForCondition(() => exited, 5_000, 'Timeout'),
+                'Timeout'
+            );
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
-            assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
 
+            // Upon disposing, we should get an exit event within 100ms or less.
+            // If this happens, then we know a process existed.
             kernel.dispose();
+            assert.isRejected(
+                waitForCondition(() => exited, 100, 'Timeout'),
+                'Timeout'
+            );
         }
     });
 

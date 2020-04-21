@@ -8,7 +8,7 @@ import { EventEmitter } from 'vscode';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
-import { IJMPConnection } from '../../../client/datascience/types';
+import { IJMPConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable:no-any
@@ -86,6 +86,26 @@ suite('Data Science - RawJupyterSession', () => {
         verify(kernelLauncher.launch(anything(), anything())).thrice();
 
         // Dispose should have been called for the first process
+        kernelProcess.verifyAll();
+    });
+
+    test('RawJupyterSession - changeKernel', async () => {
+        kernelProcess.setup((kp) => kp.dispose).verifiable(typemoq.Times.exactly(2));
+
+        await rawJupyterSession.connect({} as any, 60_000);
+
+        const newKernel: IJupyterKernelSpec = {
+            argv: [],
+            display_name: 'new kernel',
+            language: 'python',
+            name: 'newkernel',
+            path: 'path'
+        };
+
+        await rawJupyterSession.changeKernel(newKernel, 60_000);
+
+        // Four connects and two processes disposed
+        verify(kernelLauncher.launch(anything(), anything())).times(4);
         kernelProcess.verifyAll();
     });
 

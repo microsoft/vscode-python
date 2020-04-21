@@ -44,6 +44,7 @@ interface INativeCellBaseProps {
     codeTheme: string;
     testMode?: boolean;
     maxTextSize?: number;
+    enableScroll?: boolean;
     monacoTheme: string | undefined;
     lastCell: boolean;
     firstCell: boolean;
@@ -716,6 +717,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         baseTheme={this.props.baseTheme}
                         expandImage={this.props.showPlot}
                         maxTextSize={this.props.maxTextSize}
+                        enableScroll={this.props.enableScroll}
                         themeMatplotlibPlots={themeMatplotlibPlots}
                         widgetFailed={this.props.widgetFailed}
                     />

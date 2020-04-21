@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ChildProcess } from 'child_process';
 import { IDisposable } from 'monaco-editor';
 import { Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
@@ -27,7 +26,6 @@ export interface IKernelConnection {
 }
 
 export interface IKernelProcess extends IDisposable {
-    process: ChildProcess | undefined;
     readonly connection: Readonly<IKernelConnection>;
     ready: Promise<void>;
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
