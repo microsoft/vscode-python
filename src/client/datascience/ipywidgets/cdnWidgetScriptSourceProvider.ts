@@ -83,7 +83,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly fileSystem: IFileSystem
     ) {}
     public dispose() {
-        // Noop.
+        this.cache.clear();
     }
     public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
         // First see if we already have it downloaded.

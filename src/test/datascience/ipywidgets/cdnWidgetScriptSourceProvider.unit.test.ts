@@ -156,6 +156,8 @@ suite('DataScience - ipywidget - CDN', () => {
                     });
                     teardown(() => {
                         clearDiskCache();
+                        scriptSourceProvider.dispose();
+                        nock.cleanAll();
                     });
                     test('Ensure widget script is downloaded once and cached', async () => {
                         updateCDNSettings(cdn);
@@ -186,11 +188,68 @@ suite('DataScience - ipywidget - CDN', () => {
 
                         assert.equal(downloadCount, 1, 'Downloaded more than once');
                     });
-                    test('No script source if package does not exist on CDN', async () => {});
-                    test('No script source if package does not exist on both CDNs', async () => {});
-                    test('Get Script from unpk if jsdelivr fails', async () => {});
-                    test('Get Script from jsdelivr if unpkg fails', async () => {});
-                    test('No script source if downloading from both CDNs fail', async () => {});
+                    test('No script source if package does not exist on CDN', async () => {
+                        updateCDNSettings(cdn);
+                        nock(baseUrl)
+                            .get(`/${getUrl}`)
+                            .reply(200, () => {
+                                return createStreamFromString('foo');
+                            });
+                        when(httpClient.exists(anything())).thenResolve(false);
+
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld'
+                        });
+                    });
+                    test('Script source if package does not exist on both CDNs', async () => {
+                        // Add the other cdn (the opposite of the working one)
+                        const cdns =
+                            cdn === 'unpkg.com'
+                                ? ([cdn, 'jsdelivr.com'] as WidgetCDNs[])
+                                : ([cdn, 'unpkg.com'] as WidgetCDNs[]);
+                        updateCDNSettings(cdns[0], cdns[1]);
+                        // Make only one cdn available
+                        when(httpClient.exists(anything())).thenCall((a) => {
+                            if (a.includes(cdn[0])) {
+                                return true;
+                            }
+                            return false;
+                        });
+                        nock(baseUrl)
+                            .get(`/${getUrl}`)
+                            .reply(200, () => {
+                                return createStreamFromString('foo');
+                            });
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        });
+                    });
+
+                    test('Script source if package already on disk', async () => {
+                        updateCDNSettings(cdn);
+                        // Make nobody available
+                        when(httpClient.exists(anything())).thenResolve(false);
+
+                        // Write to where the file should eventually end up
+                        const filePath = Uri.parse(scriptUri).fsPath;
+                        await fs.createFile(filePath);
+                        await fs.writeFile(filePath, 'foo');
+
+                        // Then see if we can get it still.
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        });
+                    });
                 });
             });
         });
