@@ -20,7 +20,8 @@ const kernelPaths = new Map([
     ['kernel', path.join('share', 'jupyter', 'kernels')]
 ]);
 
-const connectionFilePlaceholder = '<connection_file>';
+// https://jupyter-client.readthedocs.io/en/stable/kernels.html
+const connectionFilePlaceholder = '{connection_file}';
 
 export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpec>): number {
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
