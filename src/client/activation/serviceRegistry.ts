@@ -24,7 +24,7 @@ import { LanguageServerDownloadChannel } from './common/packageRepository';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
 import { JediExtensionActivator } from './jedi';
 import { DotNetLanguageServerActivator } from './languageServer/activator';
-import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
+import { DotNetLanguageServerAnalysisOptions } from './languageServer/analysisOptions';
 import { DotNetLanguageClientFactory } from './languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
@@ -40,6 +40,7 @@ import { DotNetLanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
 import { NodeLanguageServerActivator } from './node/activator';
+import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
 import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
 import {
@@ -84,7 +85,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         JediExtensionActivator,
         LanguageServerType.Jedi
     );
-    serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
 
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
@@ -108,6 +108,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     );
 
     if (languageServerType === LanguageServerType.Microsoft) {
+        serviceManager.add<ILanguageServerAnalysisOptions>(
+            ILanguageServerAnalysisOptions,
+            DotNetLanguageServerAnalysisOptions,
+            LanguageServerType.Microsoft
+        );
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             DotNetLanguageServerActivator,
@@ -146,6 +151,11 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         );
         registerDotNetTypes(serviceManager);
     } else if (languageServerType === LanguageServerType.Node) {
+        serviceManager.add<ILanguageServerAnalysisOptions>(
+            ILanguageServerAnalysisOptions,
+            NodeLanguageServerAnalysisOptions,
+            LanguageServerType.Node
+        );
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
             NodeLanguageServerActivator,

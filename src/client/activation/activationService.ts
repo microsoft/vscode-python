@@ -322,6 +322,12 @@ export class LanguageServerExtensionActivationService
         }
     }
     private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const serverType = configurationService.getSettings(this.resource).languageServer;
+        if (serverType === LanguageServerType.Node) {
+            return 'shared-ls';
+        }
+
         const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(
             resource,
             workspacePathNameForGlobalWorkspaces
