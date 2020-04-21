@@ -6,7 +6,6 @@ import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
 import { DocumentFilter } from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { isTestExecution } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -73,13 +72,11 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
             throw Error('did not find an active interpreter');
         }
 
-        // tslint:disable-next-line:no-string-literal
-        properties['InterpreterPath'] = interpreterInfo.path;
+        properties.InterpreterPath = interpreterInfo.path;
 
         const version = interpreterInfo.version;
         if (version) {
-            // tslint:disable-next-line:no-string-literal
-            properties['Version'] = `${version.major}.${version.minor}.${version.patch}`;
+            properties.Version = `${version.major}.${version.minor}.${version.patch}`;
         } else {
             traceError('Unable to determine Python version. Analysis may be limited.');
         }
@@ -106,21 +103,10 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
             interpreter: {
                 properties
             },
-            displayOptions: {
-                preferredFormat: 'markdown',
-                trimDocumentationLines: false,
-                maxDocumentationLineLength: 0,
-                trimDocumentationText: false,
-                maxDocumentationTextLength: 0
-            },
             searchPaths,
             typeStubSearchPaths: this.typeshedPaths,
             cacheFolderPath: this.getCacheFolderPath(),
-            excludeFiles: this.excludedFiles,
-            testEnvironment: isTestExecution(),
-            analysisUpdates: true,
-            traceLogging: true, // Max level, let LS decide through settings actual level of logging.
-            asyncStartup: true
+            excludeFiles: this.excludedFiles
         };
     }
 

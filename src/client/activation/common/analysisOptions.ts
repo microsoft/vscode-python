@@ -17,13 +17,13 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     protected disposables: Disposable[] = [];
     protected readonly didChange = new EventEmitter<void>();
     private envPythonPath: string = '';
-    private output: IOutputChannel;
+    private readonly output: IOutputChannel;
 
     protected constructor(
         private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        protected readonly lsOutputChannel: ILanguageServerOutputChannel
+        lsOutputChannel: ILanguageServerOutputChannel
     ) {
-        this.output = this.lsOutputChannel.channel;
+        this.output = lsOutputChannel.channel;
     }
 
     public async initialize(_resource: Resource, _interpreter: PythonInterpreter | undefined) {
