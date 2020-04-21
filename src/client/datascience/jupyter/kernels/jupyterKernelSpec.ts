@@ -15,6 +15,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
+    public env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
     // tslint:disable-next-line: no-any
@@ -27,6 +28,8 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.specFile = file;
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
+        // tslint:disable-next-line: no-any
+        this.env = specModel.env as any; // JSONObject, but should match
     }
 }
 

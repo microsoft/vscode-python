@@ -40,7 +40,8 @@ suite('Data Science - KernelSelector', () => {
         dispose: async () => noop(),
         language: PYTHON_LANGUAGE,
         name: 'SomeName',
-        path: 'somePath'
+        path: 'somePath',
+        env: {}
     };
     const interpreter: PythonInterpreter = {
         displayName: 'Something',
@@ -630,14 +631,16 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'foo',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
+                    env: {}
                 },
                 {
                     name: 'foo',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
+                    env: {}
                 }
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
@@ -676,21 +679,24 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'foo',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
+                    env: {}
                 },
                 {
                     name: 'foo',
                     display_name: 'zip',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
+                    env: undefined
                 },
                 {
                     name: 'foo',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
+                    env: undefined
                 }
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
@@ -728,21 +734,24 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'fod',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
+                    env: {}
                 },
                 {
                     name: 'python2',
                     display_name: 'zip',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
+                    env: undefined
                 },
                 {
                     name: 'python3',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
+                    env: undefined
                 }
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);

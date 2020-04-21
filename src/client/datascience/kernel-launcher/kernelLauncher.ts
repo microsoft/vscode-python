@@ -15,6 +15,7 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
 
@@ -45,6 +46,7 @@ class KernelProcess implements IKernelProcess {
 
     constructor(
         private executionFactory: IPythonExecutionFactory,
+        private interpreterService: IInterpreterService,
         private file: IFileSystem,
         private _connection: IKernelConnection,
         private _kernelSpec: IJupyterKernelSpec
@@ -61,13 +63,16 @@ class KernelProcess implements IKernelProcess {
             flag: 'w'
         });
 
+        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(this._kernelSpec.path);
+
         // Inclide the conenction file in the arguments and remove the first argument which should be python
         args[4] = this.connectionFile.filePath;
         args.splice(0, 1);
 
-        const executionService = await this.executionFactory.create({
+        const executionService = await this.executionFactory.createActivatedEnvironment({
             resource: undefined,
-            pythonPath: this._kernelSpec.path
+            interpreter: matchingInterpreter,
+            extraVars: this._kernelSpec.env
         });
         const exeObs = executionService.execObservable(args, {});
 
@@ -118,6 +123,7 @@ export class KernelLauncher implements IKernelLauncher {
     constructor(
         @inject(IKernelFinder) private kernelFinder: IKernelFinder,
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
@@ -135,7 +141,13 @@ export class KernelLauncher implements IKernelLauncher {
         }
 
         const connection = await this.getKernelConnection();
-        const kernelProcess = new KernelProcess(this.executionFactory, this.file, connection, kernelSpec);
+        const kernelProcess = new KernelProcess(
+            this.executionFactory,
+            this.interpreterService,
+            this.file,
+            connection,
+            kernelSpec
+        );
         await kernelProcess.launch();
         return kernelProcess;
     }

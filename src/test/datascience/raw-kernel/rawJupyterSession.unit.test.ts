@@ -99,7 +99,8 @@ suite('Data Science - RawJupyterSession', () => {
             display_name: 'new kernel',
             language: 'python',
             name: 'newkernel',
-            path: 'path'
+            path: 'path',
+            env: undefined
         };
 
         await rawJupyterSession.changeKernel(newKernel, 60_000);

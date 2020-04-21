@@ -26,6 +26,8 @@ import {
 } from '../../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
+import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
+import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import {
@@ -59,11 +61,12 @@ async function verifyCreateActivated(
     factory: PythonExecutionFactory,
     activationHelper: IEnvironmentActivationService,
     resource?: Uri,
-    interpreter?: PythonInterpreter
+    interpreter?: PythonInterpreter,
+    extraVars?: NodeJS.ProcessEnv
 ): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 
-    const service = await factory.createActivatedEnvironment({ resource, interpreter });
+    const service = await factory.createActivatedEnvironment({ resource, interpreter, extraVars });
 
     verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
 
@@ -91,6 +94,7 @@ suite('Process - PythonExecutionFactory', () => {
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
             let interpreterService: IInterpreterService;
             let executionService: typemoq.IMock<IPythonExecutionService>;
+            let envService: IEnvironmentVariablesService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -99,6 +103,7 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+                envService = mock(EnvironmentVariablesService);
                 executionService = typemoq.Mock.ofType<IPythonExecutionService>();
                 executionService.setup((p: any) => p.then).returns(() => undefined);
                 when(processLogger.logProcess('', [], {})).thenReturn();
@@ -124,6 +129,7 @@ suite('Process - PythonExecutionFactory', () => {
                 factory = new PythonExecutionFactory(
                     instance(serviceContainer),
                     instance(activationHelper),
+                    instance(envService),
                     instance(processFactory),
                     instance(configService),
                     instance(condaService),

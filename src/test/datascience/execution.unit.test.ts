@@ -957,7 +957,8 @@ suite('Jupyter Execution', async () => {
             display_name: 'hello',
             language: PYTHON_LANGUAGE,
             name: 'hello',
-            path: ''
+            path: '',
+            env: undefined
         };
         when(
             kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything(), anything())

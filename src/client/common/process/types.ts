@@ -107,6 +107,10 @@ export type ExecutionFactoryCreateWithEnvironmentOptions = {
      * @type {boolean}
      */
     bypassCondaExecution?: boolean;
+    /**
+     * Vars to merge with the activated environment
+     */
+    extraVars?: NodeJS.ProcessEnv;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
