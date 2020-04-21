@@ -9,7 +9,7 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { isResource } from '../../common/utils/misc';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelFinder } from './types';
 
@@ -31,6 +31,7 @@ export class KernelFinder implements IKernelFinder {
 
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IInterpreterLocatorService) private interpreterLocator: IInterpreterLocatorService,
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IFileSystem) private file: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
@@ -55,20 +56,24 @@ export class KernelFinder implements IKernelFinder {
             }
 
             if (kernelSpec) {
+                // tslint:disable-next-line: no-floating-promises
+                this.writeCache(this.cache);
                 return kernelSpec;
             }
 
-            const kernelSearches = [
-                this.interpreterService.getInterpreters(resource).then((interpreters) => {
-                    const interpreterPaths = interpreters.map((interp) => interp.path);
-                    return this.findInterpreterPath(interpreterPaths, kernelName);
-                }),
-                this.findDiskPath(kernelName)
-            ];
+            const diskSearch = this.findDiskPath(kernelName);
+            const interpreterSearch = this.interpreterLocator.getInterpreters(resource, false).then((interpreters) => {
+                const interpreterPaths = interpreters.map((interp) => interp.path);
+                return this.findInterpreterPath(interpreterPaths, kernelName);
+            });
 
-            const result = await Promise.all(kernelSearches);
-            const spec = result.find((sp) => sp?.name === kernelName);
-            foundKernel = spec ? spec : await this.getDefaultKernelSpec(resource);
+            let result = await Promise.race([diskSearch, interpreterSearch]);
+            if (!result) {
+                const both = await Promise.all([diskSearch, interpreterSearch]);
+                result = both[0] ? both[0] : both[1];
+            }
+
+            foundKernel = result ? result : await this.getDefaultKernelSpec(resource);
         } else {
             foundKernel = await this.getDefaultKernelSpec(resource);
         }
