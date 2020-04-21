@@ -112,25 +112,7 @@ export class KernelFinder implements IKernelFinder {
                 return undefined;
             }
 
-            const promises = paths.map((kp) => this.file.search(kernelName, kp));
-            const searchResults = await Promise.all(promises);
-
-            // tslint:disable-next-line: prefer-for-of
-            for (let i = 0; i < searchResults.length; i += 1) {
-                if (searchResults[i].length > 0) {
-                    try {
-                        const kernelSpec: IJupyterKernelSpec = JSON.parse(
-                            await this.file.readFile(path.join(paths[i], searchResults[i][0], 'kernel.json'))
-                        );
-                        kernelSpec.name = searchResults[i][0];
-                        this.cache.push(kernelSpec);
-                        return kernelSpec;
-                    } catch (e) {
-                        traceError('Invalid kernel.json', e);
-                        return undefined;
-                    }
-                }
-            }
+            return this.getKernelSpecFromDisk(paths, kernelName);
         } catch {
             traceInfo(`The path ${kernelPath} does not exist.`);
             return undefined;
