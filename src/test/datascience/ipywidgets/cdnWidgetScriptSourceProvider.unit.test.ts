@@ -104,8 +104,12 @@ suite('DataScience - ipywidget - CDN', () => {
     }
 
     function clearDiskCache() {
-        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'));
-        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'tempfile_loc'));
+        try {
+            fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'));
+            fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'tempfile_loc'));
+        } catch {
+            // Swallow any errors here
+        }
     }
 
     [true, false].forEach((localLaunch) => {
@@ -232,14 +236,13 @@ suite('DataScience - ipywidget - CDN', () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
                         when(httpClient.exists(anything())).thenResolve(true);
+                        nock(baseUrl).get(`/${getUrl}`).twice().replyWithError('Not found');
                         nock(baseUrl)
                             .get(`/${getUrl}`)
-                            .reply(() => {
-                                retryCount += 1;
-                                if (retryCount > 2) {
-                                    return createStreamFromString('foo');
-                                }
-                                return null;
+                            .thrice()
+                            .reply(200, () => {
+                                retryCount = 3;
+                                return createStreamFromString('foo');
                             });
 
                         // Then see if we can get it still.
@@ -250,6 +253,7 @@ suite('DataScience - ipywidget - CDN', () => {
                             scriptUri,
                             source: 'cdn'
                         });
+                        assert.equal(retryCount, 3, 'Did not actually retry');
                     });
                     test('Script source already on disk', async () => {
                         updateCDNSettings(cdn);

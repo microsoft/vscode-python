@@ -66,7 +66,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     private pendingModuleRequests = new Map<string, string | undefined>();
     private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
     private readonly targetWidgetScriptsFolder: string;
-    private readonly rootScriptsFolder: string;
+    private readonly _rootScriptFolder: string;
     private readonly createTargetWidgetScriptsFolder: Promise<string>;
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -80,8 +80,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
-        this.rootScriptsFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
-        this.targetWidgetScriptsFolder = path.join(this.rootScriptsFolder, 'nbextensions');
+        this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
+        this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
             .directoryExists(this.targetWidgetScriptsFolder)
             .then(async (exists) => {
@@ -111,7 +111,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
-        if (!localResource.fsPath.startsWith(this.rootScriptsFolder)) {
+        if (!localResource.fsPath.startsWith(this._rootScriptFolder)) {
             if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
                 const deferred = createDeferred<Uri>();
                 this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
@@ -151,7 +151,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     }
 
     public get rootScriptFolder(): Uri {
-        return Uri.file(this.rootScriptsFolder);
+        return Uri.file(this._rootScriptFolder);
     }
 
     public dispose() {

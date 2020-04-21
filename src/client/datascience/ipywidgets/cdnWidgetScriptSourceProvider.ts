@@ -90,6 +90,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const key = this.getModuleKey(moduleName, moduleVersion);
         const diskPath = path.join(this.localResourceUriConverter.rootScriptFolder.fsPath, key, 'index.js');
         let cached = this.cache.get(key);
+        let tempFile: TemporaryFile | undefined;
 
         // Might be on disk, try there first.
         if (!cached) {
@@ -102,15 +103,15 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         // If still not found, download it.
         if (!cached) {
-            // Make sure the disk path directory exists. We'll be downloading it to there.
-            await this.fileSystem.createDirectory(path.dirname(diskPath));
-
-            // Then get the first one that returns.
-            const file = await this.downloadFastestCDN(moduleName, moduleVersion);
             try {
-                if (file) {
+                // Make sure the disk path directory exists. We'll be downloading it to there.
+                await this.fileSystem.createDirectory(path.dirname(diskPath));
+
+                // Then get the first one that returns.
+                tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
+                if (tempFile) {
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                    await fs.copyFile(file.filePath, diskPath);
+                    await fs.copyFile(tempFile.filePath, diskPath);
 
                     // Now we can generate the script URI so the local converter doesn't try to copy it.
                     const scriptUri = (
@@ -124,8 +125,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 traceError('Error downloading from CDN: ', exc);
                 cached = { moduleName };
             } finally {
-                if (file) {
-                    file.dispose();
+                if (tempFile) {
+                    tempFile.dispose();
                 }
             }
             this.cache.set(key, cached);
@@ -183,8 +184,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (cdnBaseUrl) {
             // May have already been validated.
             const url = moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
-            if (CDNWidgetScriptSourceProvider.validUrls.has(url)) {
+            const checkResult = CDNWidgetScriptSourceProvider.validUrls.get(url);
+            if (checkResult) {
                 return url;
+            } else if (checkResult !== undefined) {
+                return undefined;
             }
 
             // Try pinging first.
@@ -201,12 +205,32 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
     }
 
-    private async downloadFile(downloadUrl: string | undefined): Promise<TemporaryFile | undefined> {
-        // Download URL should not be undefined (we validated in a filter above)
-        if (!downloadUrl) {
-            throw new Error('Cannot download from an undefined CDN');
-        }
+    private handleResponse(req: request.Request, filePath: string): Promise<boolean> {
+        const deferred = createDeferred<boolean>();
+        // tslint:disable-next-line: no-any
+        const errorHandler = (e: any) => {
+            traceError('Error downloading from CDN', e);
+            deferred.resolve(false);
+        };
+        req.on('response', (r) => {
+            if (r.statusCode === 200) {
+                const ws = this.fileSystem.createWriteStream(filePath);
+                r.on('error', errorHandler)
+                    .pipe(ws)
+                    .on('close', () => deferred.resolve(true));
+            } else if (r.statusCode === 429) {
+                // Special case busy. Sleep for 500 milliseconds
+                sleep(500)
+                    .then(() => deferred.resolve(false))
+                    .ignoreErrors();
+            } else {
+                deferred.resolve(false);
+            }
+        }).on('error', errorHandler);
+        return deferred.promise;
+    }
 
+    private async downloadFile(downloadUrl: string): Promise<TemporaryFile | undefined> {
         // Create a temp file to download the results to
         const tempFile = await this.fileSystem.createTemporaryFile('.js');
 
@@ -217,35 +241,12 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             let req: request.Request;
             try {
                 req = await this.httpClient.downloadFile(downloadUrl);
+                success = await this.handleResponse(req, tempFile.filePath);
+                retryCount -= 1;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
                 retryCount -= 1;
-
-                // CDN may be busy, give it a break.
-                await sleep(500);
                 continue;
-            }
-
-            try {
-                if (req) {
-                    // Write to our temp file.
-                    const tempWriteStream = this.fileSystem.createWriteStream(tempFile.filePath);
-                    const deferred = createDeferred();
-                    req.on('error', (e) => {
-                        traceError(`Error downloading from CDN: `, e);
-                        deferred.reject(e);
-                    })
-                        .pipe(tempWriteStream)
-                        .on('close', () => {
-                            deferred.resolve();
-                        });
-                    await deferred.promise;
-                    success = true;
-                }
-            } catch (exc) {
-                // Don't do anything if we fail to write it.
-                traceError(`Error writing CDN download to disk: `, exc);
-                break;
             }
         }
 
