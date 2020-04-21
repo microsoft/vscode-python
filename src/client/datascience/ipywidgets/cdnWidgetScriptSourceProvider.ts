@@ -248,11 +248,10 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             try {
                 req = await this.httpClient.downloadFile(downloadUrl);
                 success = await this.handleResponse(req, tempFile.filePath);
-                retryCount -= 1;
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
+            } finally {
                 retryCount -= 1;
-                continue;
             }
         }
 
