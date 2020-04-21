@@ -198,7 +198,8 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(
             serviceManager.add<ILanguageServerAnalysisOptions>(
                 ILanguageServerAnalysisOptions,
-                DotNetLanguageServerAnalysisOptions
+                DotNetLanguageServerAnalysisOptions,
+                LanguageServerType.Microsoft
             )
         ).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy)).once();

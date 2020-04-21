@@ -17,31 +17,52 @@ import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../t
 
 @injectable()
 export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsBase {
+    private resource: Resource;
+    private interpreter: PythonInterpreter | undefined;
+    private languageServerFolder: string = '';
     private excludedFiles: string[] = [];
     private typeshedPaths: string[] = [];
-    private languageServerFolder: string = '';
-    private interpreter: PythonInterpreter | undefined;
 
     constructor(
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
     ) {
-        super(envVarsProvider, workspace, lsOutputChannel);
+        super(envVarsProvider, lsOutputChannel);
     }
 
     public async initialize(resource: Resource, interpreter: PythonInterpreter | undefined) {
         await super.initialize(resource, interpreter);
 
+        this.resource = resource;
         this.interpreter = interpreter;
         this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
 
         const disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
         this.disposables.push(disposable);
+    }
+
+    protected getWorkspaceFolder(): WorkspaceFolder | undefined {
+        return this.workspace.getWorkspaceFolder(this.resource);
+    }
+
+    protected getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
+        const filters = super.getDocumentFilters(workspaceFolder);
+
+        // Set the document selector only when in a multi-root workspace scenario.
+        if (
+            workspaceFolder &&
+            Array.isArray(this.workspace.workspaceFolders) &&
+            this.workspace.workspaceFolders!.length > 1
+        ) {
+            filters[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+        }
+
+        return filters;
     }
 
     protected async getInitializationOptions() {
@@ -101,21 +122,6 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
             traceLogging: true, // Max level, let LS decide through settings actual level of logging.
             asyncStartup: true
         };
-    }
-
-    protected getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        const filters = super.getDocumentFilters(workspaceFolder);
-
-        // Set the document selector only when in a multi-root workspace scenario.
-        if (
-            workspaceFolder &&
-            Array.isArray(this.workspace.workspaceFolders) &&
-            this.workspace.workspaceFolders!.length > 1
-        ) {
-            filters[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
-        }
-
-        return filters;
     }
 
     protected getExcludedFiles(): string[] {

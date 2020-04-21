@@ -4,7 +4,6 @@ import { injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
 
-import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
@@ -20,22 +19,18 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     }
 
     protected disposables: Disposable[] = [];
-    protected resource: Resource;
     protected readonly didChange = new EventEmitter<void>();
     private envPythonPath: string = '';
     private output: IOutputChannel;
 
     protected constructor(
         private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        protected readonly workspace: IWorkspaceService,
         protected readonly lsOutputChannel: ILanguageServerOutputChannel
     ) {
         this.output = this.lsOutputChannel.channel;
     }
 
-    public async initialize(resource: Resource, _interpreter: PythonInterpreter | undefined) {
-        this.resource = resource;
-
+    public async initialize(_resource: Resource, _interpreter: PythonInterpreter | undefined) {
         const disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
     }
@@ -47,11 +42,10 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
 
     @traceDecorators.error('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
-        const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
+        const workspaceFolder = this.getWorkspaceFolder();
         const documentSelector = this.getDocumentFilters(workspaceFolder);
-        // Options to control the language client.
+
         return {
-            // Register the server for Python documents.
             documentSelector,
             workspaceFolder,
             synchronize: {
@@ -63,8 +57,9 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         };
     }
 
-    // tslint:disable-next-line: no-any
-    protected abstract async getInitializationOptions(): Promise<any>;
+    protected getWorkspaceFolder(): WorkspaceFolder | undefined {
+        return undefined;
+    }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
         return [
@@ -73,7 +68,12 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         ];
     }
 
-    protected async getEnvPythonPath() {
+    // tslint:disable-next-line: no-any
+    protected async getInitializationOptions(): Promise<any> {
+        return undefined;
+    }
+
+    protected async getEnvPythonPath(): Promise<string> {
         const vars = await this.envVarsProvider.getEnvironmentVariables();
         this.envPythonPath = vars.PYTHONPATH || '';
         return this.envPythonPath;
