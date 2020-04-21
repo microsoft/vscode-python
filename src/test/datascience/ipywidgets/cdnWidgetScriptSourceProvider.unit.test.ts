@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
+import { sha256 } from 'hash.js';
+import { shutdown } from 'log4js';
 import * as nock from 'nock';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { HttpClient } from '../../../client/common/net/httpClient';
@@ -15,6 +17,7 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSource } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSource';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
@@ -23,6 +26,7 @@ import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../..
 
 // tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
 const request = require('request');
+const sanitize = require('sanitize-filename');
 
 const unpgkUrl = 'https://unpkg.com/';
 const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/';
@@ -51,6 +55,10 @@ suite('DataScience - ipywidget - CDN', () => {
         when(fileSystem.createTemporaryFile(anything())).thenCall(createTemporaryFile);
         when(fileSystem.createWriteStream(anything())).thenCall((p) => fs.createWriteStream(p));
         when(fileSystem.createDirectory(anything())).thenCall((d) => fs.ensureDir(d));
+        when(webviewUriConverter.rootScriptFolder).thenReturn(
+            Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'))
+        );
+        when(webviewUriConverter.asWebviewUri(anything())).thenCall((u) => u);
         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
             instance(configService),
@@ -58,6 +66,10 @@ suite('DataScience - ipywidget - CDN', () => {
             instance(webviewUriConverter),
             instance(fileSystem)
         );
+    });
+
+    shutdown(() => {
+        clearDiskCache();
     });
 
     function createStreamFromString(str: string) {
@@ -70,13 +82,31 @@ suite('DataScience - ipywidget - CDN', () => {
 
     function createTemporaryFile(ext: string) {
         tempFileCount += 1;
-        const filePath = path.join(os.tmpdir(), `tempfile_for_test${tempFileCount}.${ext}`);
+
+        // Put temp files next to extension so we can clean them up later
+        const filePath = path.join(
+            EXTENSION_ROOT_DIR,
+            'tmp',
+            'tempfile_loc',
+            `tempfile_for_test${tempFileCount}.${ext}`
+        );
+        fs.createFileSync(filePath);
         return {
             filePath,
             dispose: () => {
                 fs.removeSync(filePath);
             }
         };
+    }
+
+    function generateScriptName(moduleName: string, moduleVersion: string) {
+        const hash = sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
+        return Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hash, 'index.js')).toString();
+    }
+
+    function clearDiskCache() {
+        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'));
+        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'tmp', 'tempfile_loc'));
     }
 
     [true, false].forEach((localLaunch) => {
@@ -113,6 +143,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     let expectedSource = '';
                     let baseUrl = '';
                     let getUrl = '';
+                    let scriptUri = '';
                     setup(() => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
                         getUrl =
@@ -120,33 +151,28 @@ suite('DataScience - ipywidget - CDN', () => {
                                 ? `${moduleName}@${moduleVersion}/dist/index`
                                 : `${moduleName}@${moduleVersion}/dist/index.js`;
                         expectedSource = `${baseUrl}${getUrl}`;
+                        scriptUri = generateScriptName(moduleName, moduleVersion);
                         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
                     });
-                    test('Get widget source from CDN', async () => {
-                        updateCDNSettings(cdn);
-
-                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-
-                        assert.deepEqual(value, {
-                            moduleName: 'HelloWorld',
-                            scriptUri: expectedSource,
-                            source: 'cdn'
-                        });
+                    teardown(() => {
+                        clearDiskCache();
                     });
                     test('Ensure widget script is downloaded once and cached', async () => {
+                        updateCDNSettings(cdn);
                         let downloadCount = 0;
                         nock(baseUrl)
-                            .get(getUrl)
+                            .get(`/${getUrl}`)
                             .reply(200, () => {
                                 downloadCount += 1;
                                 return createStreamFromString('foo');
                             });
+                        when(httpClient.exists(anything())).thenResolve(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
                         assert.deepEqual(value, {
                             moduleName: 'HelloWorld',
-                            scriptUri: expectedSource,
+                            scriptUri,
                             source: 'cdn'
                         });
 
@@ -154,7 +180,7 @@ suite('DataScience - ipywidget - CDN', () => {
 
                         assert.deepEqual(value2, {
                             moduleName: 'HelloWorld',
-                            scriptUri: expectedSource,
+                            scriptUri,
                             source: 'cdn'
                         });
 
