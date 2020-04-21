@@ -58,7 +58,6 @@ suite('DataScience - ipywidget - CDN', () => {
             Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'))
         );
         when(webviewUriConverter.asWebviewUri(anything())).thenCall((u) => u);
-        CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
             instance(configService),
             instance(httpClient),
@@ -153,7 +152,6 @@ suite('DataScience - ipywidget - CDN', () => {
                                 ? `${moduleName}@${moduleVersion}/dist/index`
                                 : `${moduleName}@${moduleVersion}/dist/index.js`;
                         scriptUri = generateScriptName(moduleName, moduleVersion);
-                        CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
                     });
                     teardown(() => {
                         clearDiskCache();
@@ -169,7 +167,6 @@ suite('DataScience - ipywidget - CDN', () => {
                                 downloadCount += 1;
                                 return createStreamFromString('foo');
                             });
-                        when(httpClient.exists(anything())).thenResolve(true);
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -191,12 +188,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl)
-                            .get(`/${getUrl}`)
-                            .reply(200, () => {
-                                return createStreamFromString('foo');
-                            });
-                        when(httpClient.exists(anything())).thenResolve(false);
+                        nock(baseUrl).get(`/${getUrl}`).replyWithError('404');
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 

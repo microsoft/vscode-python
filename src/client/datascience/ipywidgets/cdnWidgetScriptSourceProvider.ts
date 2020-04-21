@@ -12,9 +12,6 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { ILocalResourceUriConverter } from '../types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
@@ -74,7 +71,6 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.datascience.widgetScriptSources;
     }
-    public static validUrls = new Map<string, boolean>();
     private cache = new Map<string, WidgetScriptSource>();
     constructor(
         private readonly configurationSettings: IConfigurationService,
@@ -188,21 +184,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<string | undefined> {
         const cdnBaseUrl = getCDNPrefix(cdn);
         if (cdnBaseUrl) {
-            // May have already been validated.
-            const url = moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
-            const checkResult = CDNWidgetScriptSourceProvider.validUrls.get(url);
-            if (checkResult) {
-                return url;
-            } else if (checkResult !== undefined) {
-                return undefined;
-            }
-
-            // Try pinging first.
-            const stopWatch = new StopWatch();
-            const exists = await this.httpClient.exists(url);
-            sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesCDNPerf, stopWatch.elapsedTime, { cdn, exists });
-            CDNWidgetScriptSourceProvider.validUrls.set(url, exists);
-            return exists ? url : undefined;
+            return moduleNameToCDNUrl(cdnBaseUrl, moduleName, moduleVersion);
         }
         return undefined;
     }
