@@ -6,7 +6,7 @@
 import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
-import { IExperimentsManager } from './common/types';
+import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getPtvsdLauncherScriptArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
@@ -34,6 +34,17 @@ export interface IExtensionApi {
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
     };
+    /**
+     * Return internal settings within the extension stored in VSCode storage
+     */
+    settings: {
+        /**
+         * Return the currently selected interpreter path.
+         * @param {Resource} [resource]
+         * @returns {string}
+         */
+        getInterpreterPath(resource?: Resource): string;
+    };
 }
 
 export function buildApi(
@@ -41,8 +52,9 @@ export function buildApi(
     ready: Promise<any>,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
-) {
+): IExtensionApi {
     const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -70,6 +82,11 @@ export function buildApi(
                     port,
                     waitUntilDebuggerAttaches
                 });
+            }
+        },
+        settings: {
+            getInterpreterPath(resource?: Resource) {
+                return configurationService.getSettings(resource).pythonPath;
             }
         }
     };
