@@ -139,7 +139,6 @@ suite('DataScience - ipywidget - CDN', () => {
                 suite(cdn, () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
-                    let expectedSource = '';
                     let baseUrl = '';
                     let getUrl = '';
                     let scriptUri = '';
@@ -149,7 +148,6 @@ suite('DataScience - ipywidget - CDN', () => {
                             cdn === 'unpkg.com'
                                 ? `${moduleName}@${moduleVersion}/dist/index`
                                 : `${moduleName}@${moduleVersion}/dist/index.js`;
-                        expectedSource = `${baseUrl}${getUrl}`;
                         scriptUri = generateScriptName(moduleName, moduleVersion);
                         CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
                     });
