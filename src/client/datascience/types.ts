@@ -376,6 +376,10 @@ export interface IDataScienceErrorHandler {
  */
 export interface ILocalResourceUriConverter {
     /**
+     * Root folder that scripts should be copied to.
+     */
+    readonly rootScriptFolder: Uri;
+    /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
      * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The

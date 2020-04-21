@@ -55,7 +55,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
         const validFiles = files.filter((file) => {
             // Should be of the form `<widget module>/index.js`
-            const parts = file.split(path.sep);
+            const parts = file.split('/'); // On windows this uses the unix separator too.
             if (parts.length !== 2) {
                 traceError('Incorrect file found when searching for nnbextension entrypoints');
                 return false;
@@ -65,7 +65,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
         const mappedFiles = validFiles.map(async (file) => {
             // Should be of the form `<widget module>/index.js`
-            const parts = file.split(path.sep);
+            const parts = file.split('/');
             const moduleName = parts[0];
 
             const fileUri = Uri.file(path.join(nbextensionsPath, file));

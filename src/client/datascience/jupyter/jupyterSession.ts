@@ -26,7 +26,7 @@ import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IConnection, IJupyterKernelSpec, IJupyterSession, KernelSocketInformation } from '../types';
@@ -505,6 +505,10 @@ export class JupyterSession implements IJupyterSession {
 
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {
+                // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+                // Restart sessions and retries might make this hard to do correctly otherwise.
+                session.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
                 return;
             }
 

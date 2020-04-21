@@ -66,6 +66,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
     private pendingModuleRequests = new Map<string, string | undefined>();
     private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
     private readonly targetWidgetScriptsFolder: string;
+    private readonly _rootScriptFolder: string;
     private readonly createTargetWidgetScriptsFolder: Promise<string>;
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -79,7 +80,8 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
-        this.targetWidgetScriptsFolder = path.join(extensionContext.extensionPath, 'tmp', 'nbextensions');
+        this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
+        this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
             .directoryExists(this.targetWidgetScriptsFolder)
             .then(async (exists) => {
@@ -108,30 +110,34 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      * Copying into global workspace folder would also work, but over time this folder size could grow (in an unmanaged way).
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
-        if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
-            const deferred = createDeferred<Uri>();
-            this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
-            try {
-                // Create a file name such that it will be unique and consistent across VSC reloads.
-                // Only if original file has been modified should we create a new copy of the sam file.
-                const fileHash: string = await this.fs.getFileHash(localResource.fsPath);
-                const uniqueFileName = sanitize(sha256().update(`${localResource.fsPath}${fileHash}`).digest('hex'));
-                const targetFolder = await this.createTargetWidgetScriptsFolder;
-                const mappedResource = Uri.file(
-                    path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
-                );
-                if (!(await this.fs.fileExists(mappedResource.fsPath))) {
-                    await this.fs.copyFile(localResource.fsPath, mappedResource.fsPath);
+        // Make a copy of the local file if not already in the correct location
+        if (!localResource.fsPath.startsWith(this._rootScriptFolder)) {
+            if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
+                const deferred = createDeferred<Uri>();
+                this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
+                try {
+                    // Create a file name such that it will be unique and consistent across VSC reloads.
+                    // Only if original file has been modified should we create a new copy of the sam file.
+                    const fileHash: string = await this.fs.getFileHash(localResource.fsPath);
+                    const uniqueFileName = sanitize(
+                        sha256().update(`${localResource.fsPath}${fileHash}`).digest('hex')
+                    );
+                    const targetFolder = await this.createTargetWidgetScriptsFolder;
+                    const mappedResource = Uri.file(
+                        path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
+                    );
+                    if (!(await this.fs.fileExists(mappedResource.fsPath))) {
+                        await this.fs.copyFile(localResource.fsPath, mappedResource.fsPath);
+                    }
+                    traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);
+                    deferred.resolve(mappedResource);
+                } catch (ex) {
+                    traceError(`Failed to map widget Script file ${localResource.fsPath}`);
+                    deferred.reject(ex);
                 }
-                traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);
-                deferred.resolve(mappedResource);
-            } catch (ex) {
-                traceError(`Failed to map widget Script file ${localResource.fsPath}`);
-                deferred.reject(ex);
             }
+            localResource = await this.resourcesMappedToExtensionFolder.get(localResource.fsPath)!;
         }
-        localResource = await this.resourcesMappedToExtensionFolder.get(localResource.fsPath)!;
-
         const key = localResource.toString();
         if (!this.uriConversionPromises.has(key)) {
             this.uriConversionPromises.set(key, createDeferred<Uri>());
@@ -142,6 +148,10 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
             });
         }
         return this.uriConversionPromises.get(key)!.promise;
+    }
+
+    public get rootScriptFolder(): Uri {
+        return Uri.file(this._rootScriptFolder);
     }
 
     public dispose() {
