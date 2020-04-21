@@ -141,7 +141,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             // For each CDN, try to download it.
             this.cdnProviders.map((cdn) =>
                 this.downloadFromCDN(moduleName, moduleVersion, cdn).then((t) => {
-                    // First one to get here wins.
+                    // First one to get here wins. Meaning the first one that
+                    // returns a valid temporary file. If a request doesn't download it will
+                    // return undefined.
                     if (!deferred.resolved && t) {
                         deferred.resolve(t);
                     }
@@ -149,7 +151,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             )
         )
             .then((_a) => {
-                // If still not resolved, then return empty
+                // If after running all requests, we're still not resolved, then return empty.
+                // This would happen if both unpkg.com and jsdelivr failed.
                 if (!deferred.resolved) {
                     deferred.resolve(undefined);
                 }
