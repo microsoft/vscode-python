@@ -5,7 +5,6 @@ import * as fs from 'fs-extra';
 import { sha256 } from 'hash.js';
 import { shutdown } from 'log4js';
 import * as nock from 'nock';
-import * as os from 'os';
 import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -20,7 +19,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSource } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSource';
-import { IWidgetScriptSourceProvider, WidgetScriptSource } from '../../../client/datascience/ipywidgets/types';
+import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 
@@ -231,10 +230,33 @@ suite('DataScience - ipywidget - CDN', () => {
                         });
                     });
 
-                    test('Script source if package already on disk', async () => {
+                    test('Retry if busy', async () => {
+                        let retryCount = 0;
+                        updateCDNSettings(cdn);
+                        when(httpClient.exists(anything())).thenResolve(true);
+                        nock(baseUrl)
+                            .get(`/${getUrl}`)
+                            .reply(() => {
+                                retryCount += 1;
+                                if (retryCount > 2) {
+                                    return createStreamFromString('foo');
+                                }
+                                return null;
+                            });
+
+                        // Then see if we can get it still.
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+
+                        assert.deepEqual(value, {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        });
+                    });
+                    test('Script source already on disk', async () => {
                         updateCDNSettings(cdn);
                         // Make nobody available
-                        when(httpClient.exists(anything())).thenResolve(false);
+                        when(httpClient.exists(anything())).thenResolve(true);
 
                         // Write to where the file should eventually end up
                         const filePath = Uri.parse(scriptUri).fsPath;
