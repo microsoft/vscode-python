@@ -158,6 +158,9 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 }
             })
             .ignoreErrors();
+
+        // Note, we only wait until one download finishes. We don't need to wait
+        // for everybody (hence the use of the deferred)
         return deferred.promise;
     }
 
