@@ -12,10 +12,16 @@ import { Architecture } from '../../client/common/utils/platform';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    IInterpreterService,
+    InterpreterType,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
+    let interpreterLocator: typemoq.IMock<IInterpreterLocatorService>;
     let fileSystem: typemoq.IMock<IFileSystem>;
     let platformService: typemoq.IMock<IPlatformService>;
     let pathUtils: typemoq.IMock<IPathUtils>;
@@ -39,16 +45,21 @@ suite('Kernel Finder', () => {
             .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
         fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
+        fileSystem
+            .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+            .returns((param: string) => Promise.resolve([param]));
     }
 
     setup(() => {
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
-            .setup((is) => is.getInterpreters(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(interpreters));
-        interpreterService
             .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
             .returns(() => Promise.resolve(activeInterpreter));
+
+        interpreterLocator = typemoq.Mock.ofType<IInterpreterLocatorService>();
+        interpreterLocator
+            .setup((il) => il.getInterpreters(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve(interpreters));
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
         platformService = typemoq.Mock.ofType<IPlatformService>();
@@ -84,6 +95,7 @@ suite('Kernel Finder', () => {
 
         kernelFinder = new KernelFinder(
             interpreterService.object,
+            interpreterLocator.object,
             platformService.object,
             fileSystem.object,
             pathUtils.object,

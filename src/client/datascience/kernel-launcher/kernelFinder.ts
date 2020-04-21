@@ -2,14 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { InterpreterUri } from '../../common/installer/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { isResource } from '../../common/utils/misc';
-import { IInterpreterLocatorService, IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    IInterpreterService,
+    KNOWN_PATH_SERVICE,
+    PythonInterpreter
+} from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelFinder } from './types';
 
@@ -31,7 +36,9 @@ export class KernelFinder implements IKernelFinder {
 
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IInterpreterLocatorService) private interpreterLocator: IInterpreterLocatorService,
+        @inject(IInterpreterLocatorService)
+        @named(KNOWN_PATH_SERVICE)
+        private readonly interpreterLocator: IInterpreterLocatorService,
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IFileSystem) private file: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
