@@ -35,7 +35,7 @@ export interface IExtensionApi {
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
     };
     /**
-     * Return internal settings within the extension stored in VSCode storage
+     * Return internal settings within the extension which are stored in VSCode storage
      */
     settings: {
         /**
