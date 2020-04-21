@@ -16,6 +16,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
+import { findIndexOfConnectionFile } from './kernelFinder';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
@@ -54,7 +55,6 @@ class KernelProcess implements IKernelProcess {
 
     public async launch(): Promise<void> {
         this.connectionFile = await this.file.createTemporaryFile('.json');
-
         const args = [...this._kernelSpec.argv];
         await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
             encoding: 'utf-8',
@@ -62,7 +62,11 @@ class KernelProcess implements IKernelProcess {
         });
 
         // Inclide the conenction file in the arguments and remove the first argument which should be python
-        args[4] = this.connectionFile.filePath;
+        const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
+        if (indexOfConnectionFile === -1) {
+            throw new Error(`Connection file not found in kernelspec json args, ${args.join(' ')}`);
+        }
+        args[indexOfConnectionFile] = this.connectionFile.filePath;
         args.splice(0, 1);
 
         const executionService = await this.executionFactory.create({
