@@ -14,10 +14,6 @@ import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '..
 
 @injectable()
 export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServerAnalysisOptions {
-    public get onDidChange(): Event<void> {
-        return this.didChange.event;
-    }
-
     protected disposables: Disposable[] = [];
     protected readonly didChange = new EventEmitter<void>();
     private envPythonPath: string = '';
@@ -33,6 +29,10 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     public async initialize(_resource: Resource, _interpreter: PythonInterpreter | undefined) {
         const disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
+    }
+
+    public get onDidChange(): Event<void> {
+        return this.didChange.event;
     }
 
     public dispose(): void {
