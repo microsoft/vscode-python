@@ -32,6 +32,7 @@ interface ICellOutputProps {
     cellVM: ICellViewModel;
     baseTheme: string;
     maxTextSize?: number;
+    enableScroll?: boolean;
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
@@ -536,7 +537,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const style: React.CSSProperties = {};
 
         // Create a scrollbar style if necessary
-        if (transformedList.some((transformed) => transformed.output.renderWithScrollbars) && this.props.maxTextSize) {
+        if (transformedList.some((transformed) => transformed.output.renderWithScrollbars) && this.props.enableScroll) {
             style.overflowY = 'auto';
             style.maxHeight = `${this.props.maxTextSize}px`;
         }

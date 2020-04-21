@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
@@ -41,6 +41,7 @@ export class GuestRawNotebookProvider
     public async createNotebook(
         _identity: Uri,
         _resource: Resource,
+        _disableUI: boolean,
         _notebookMetadata: nbformat.INotebookMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook> {

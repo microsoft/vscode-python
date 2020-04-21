@@ -596,6 +596,7 @@ class JediCompletion(object):
             line=request["line"] + 1,
             column=request["column"],
             path=request.get("path", ""),
+            project=jedi.get_default_project(os.path.dirname(path)),
             sys_path=sys.path,
         )
 

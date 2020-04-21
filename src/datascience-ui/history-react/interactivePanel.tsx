@@ -248,8 +248,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             return null;
         }
 
-        const maxOutputSize = this.props.settings.maxOutputSize;
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
         const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
@@ -259,7 +257,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     <InteractiveCellComponent
                         role="form"
                         editorOptions={this.props.editorOptions}
-                        maxTextSize={maxTextSize}
+                        maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
+                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         autoFocus={document.hasFocus()}
                         testMode={this.props.testMode}
                         cellVM={this.props.editCellVM}
@@ -330,7 +329,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
-                            maxTextSize={this.props.settings.maxOutputSize}
+                            maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
+                            enableScroll={this.props.settings.enableScrollingForCellOutputs}
                             autoFocus={false}
                             testMode={this.props.testMode}
                             cellVM={cellVM}
@@ -377,6 +377,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private linkClick = (ev: MouseEvent) => {
         handleLinkClick(ev, this.props.linkClick);
     };
+
+    private getMaxTextSize(maxOutputSize: number): number | undefined {
+        const outputSizeLimit = 10000;
+        return maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
+    }
 }
 
 // Main export, return a redux connected editor

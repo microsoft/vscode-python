@@ -346,8 +346,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 [[project]]
 name = "Jedi"
-version = "0.13.3"
-url = "https://github.com/davidhalter/jedi/tree/v0.13.3"
+version = "0.17.0"
+url = "https://github.com/davidhalter/jedi/tree/v0.17.0"
 purpose = "PyPI"
 license = """
 All contributions towards Jedi are MIT licensed.

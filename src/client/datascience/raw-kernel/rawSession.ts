@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
-import { ISignal, Signal } from '@phosphor/signaling';
+import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
+import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IJMPConnection } from '../types';
@@ -21,10 +21,13 @@ export class RawSession implements Session.ISession {
     private _id: string;
     private _clientID: string;
     private _kernel: RawKernel;
-    private _statusChanged = new Signal<this, Kernel.Status>(this);
+    private readonly _statusChanged: Signal<this, Kernel.Status>;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(connection: IJMPConnection, private kernelProcess: IKernelProcess) {
+        // tslint:disable-next-line: no-require-imports
+        const singalling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._statusChanged = new singalling.Signal<this, Kernel.Status>(this);
         // Unique ID for this session instance
         this._id = uuid();
 

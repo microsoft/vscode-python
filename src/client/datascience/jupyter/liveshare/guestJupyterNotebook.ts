@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -36,12 +36,12 @@ import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } fr
 export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
-    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+    private get jupyterLab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
             // tslint:disable-next-line:no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
-        return this._jupyterLab;
+        return this._jupyterLab!;
     }
 
     public get identity(): Uri {
@@ -299,7 +299,7 @@ export class GuestJupyterNotebook
     public requestCommInfo(
         _content: KernelMessage.ICommInfoRequestMsg['content']
     ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+        const shellMessage = this.jupyterLab?.KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
             msgType: 'comm_info_reply',
             channel: 'shell',
             content: {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONArray } from '@phosphor/coreutils';
+import type { JSONArray } from '@phosphor/coreutils';
 import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
