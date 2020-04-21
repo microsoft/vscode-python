@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';

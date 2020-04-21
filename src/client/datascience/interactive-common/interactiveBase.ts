@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';

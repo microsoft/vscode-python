@@ -79,7 +79,7 @@ import {
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import type { ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -29,7 +29,14 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private contentsManager: ContentsManager | undefined;
     private connInfo: IJupyterConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
-
+    private _jupyterlab?: typeof import('@jupyterlab/services');
+    private get jupyterlab(): typeof import('@jupyterlab/services') {
+        if (!this._jupyterlab) {
+            // tslint:disable-next-line: no-require-imports
+            this._jupyterlab = require('@jupyterlab/services');
+        }
+        return this._jupyterlab!;
+    }
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         _config: IConfigurationService,
@@ -78,8 +85,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async initialize(connInfo: IJupyterConnection): Promise<void> {
         this.connInfo = connInfo;
         this.serverSettings = await this.getServerConnectSettings(connInfo);
-        this.sessionManager = new SessionManager({ serverSettings: this.serverSettings });
-        this.contentsManager = new ContentsManager({ serverSettings: this.serverSettings });
+        this.sessionManager = new this.jupyterlab.SessionManager({ serverSettings: this.serverSettings });
+        this.contentsManager = new this.jupyterlab.ContentsManager({ serverSettings: this.serverSettings });
     }
 
     public async getRunningSessions(): Promise<Session.IModel[]> {
@@ -102,7 +109,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
-        const models = await Kernel.listRunning(this.serverSettings);
+        const models = await this.jupyterlab.Kernel.listRunning(this.serverSettings);
         // Remove duplicates.
         const dup = new Set<string>();
         return models
@@ -246,6 +253,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             ) as any
         };
 
-        return ServerConnection.makeSettings(serverSettings);
+        return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 }

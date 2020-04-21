@@ -10,8 +10,8 @@ import type {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Slot } from '@phosphor/signaling';
+import type { JSONObject } from '@phosphor/coreutils';
+import type { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';

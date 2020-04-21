@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Slot } from '@phosphor/signaling';
+import type { JSONObject } from '@phosphor/coreutils';
+import type { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';

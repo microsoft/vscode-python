@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONArray, JSONObject } from '@phosphor/coreutils';
+import type { JSONArray, JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';

@@ -1,5 +1,5 @@
-import { KernelMessage } from '@jupyterlab/services';
-import { Channels } from '@nteract/messaging';
+import type { KernelMessage } from '@jupyterlab/services';
+import type { Channels } from '@nteract/messaging';
 import { injectable } from 'inversify';
 import { IJMPConnection, IJMPConnectionInfo } from '../types';
 

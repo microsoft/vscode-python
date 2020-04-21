@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
-import { JSONObject } from '@phosphor/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
+import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import stripAnsi from 'strip-ansi';

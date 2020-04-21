@@ -1,4 +1,4 @@
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';

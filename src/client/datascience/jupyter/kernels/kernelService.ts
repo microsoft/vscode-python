@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
-import { Kernel } from '@jupyterlab/services';
+import type { nbformat } from '@jupyterlab/coreutils';
+import type { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
