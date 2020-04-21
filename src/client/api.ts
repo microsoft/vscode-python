@@ -39,8 +39,11 @@ export interface IExtensionApi {
      */
     settings: {
         /**
-         * Return the currently selected interpreter path.
-         * @param {Resource} [resource]
+         * Returns the Python interpreter path corresponding to the specified resource, taking into account
+         * any workspace-specific settings for the workspace to which this resource belongs.
+         * @param {Resource} [resource] A resource for which the setting is asked for.
+         * * When no resource is provided, the setting scoped to the first workspace folder is returned.
+         * * If no folder is present, it returns the global setting.
          * @returns {string}
          */
         getInterpreterPath(resource?: Resource): string;
