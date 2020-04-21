@@ -135,6 +135,7 @@
     "DataScience.importingFormat": "Importing {0}",
     "DataScience.startingJupyter": "Starting Jupyter server",
     "DataScience.connectingToJupyter": "Connecting to Jupyter server",
+    "DataScience.connectingToIPyKernel": "Connecting to IPython kernel",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.entireWorkspace": "Entire workspace",

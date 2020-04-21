@@ -15,6 +15,7 @@ import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
+import { ProgressReporter } from '../progress/progressReporter';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
@@ -33,7 +34,8 @@ type RawNotebookProviderClassType = {
         fs: IFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
-        kernelSelector: KernelSelector
+        kernelSelector: KernelSelector,
+        progressReporter: ProgressReporter
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -54,7 +56,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
-        @inject(KernelSelector) kernelSelector: KernelSelector
+        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(ProgressReporter) progressReporter: ProgressReporter
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -71,7 +74,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             fs,
             serviceContainer,
             kernelLauncher,
-            kernelSelector
+            kernelSelector,
+            progressReporter
         );
     }
 
@@ -87,11 +91,12 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
     public async createNotebook(
         identity: Uri,
         resource: Resource,
+        disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
         cancelToken: CancellationToken
     ): Promise<INotebook> {
         const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.createNotebook(identity, resource, notebookMetadata, cancelToken);
+        return notebookProvider.createNotebook(identity, resource, disableUI, notebookMetadata, cancelToken);
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {

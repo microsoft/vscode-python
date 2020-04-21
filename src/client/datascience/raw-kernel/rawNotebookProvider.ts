@@ -48,10 +48,11 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     public async createNotebook(
         identity: Uri,
         resource: Resource,
+        disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
         cancelToken: CancellationToken
     ): Promise<INotebook> {
-        return this.createNotebookInstance(resource, identity, notebookMetadata, cancelToken);
+        return this.createNotebookInstance(resource, identity, disableUI, notebookMetadata, cancelToken);
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
@@ -97,6 +98,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     protected createNotebookInstance(
         _resource: Resource,
         _identity: Uri,
+        _disableUI?: boolean,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {

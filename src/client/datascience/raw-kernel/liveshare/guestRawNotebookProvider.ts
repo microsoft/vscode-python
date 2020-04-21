@@ -41,6 +41,7 @@ export class GuestRawNotebookProvider
     public async createNotebook(
         _identity: Uri,
         _resource: Resource,
+        _disableUI: boolean,
         _notebookMetadata: nbformat.INotebookMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook> {
