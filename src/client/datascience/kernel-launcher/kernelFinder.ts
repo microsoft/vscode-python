@@ -20,6 +20,13 @@ const kernelPaths = new Map([
     ['kernel', path.join('share', 'jupyter', 'kernels')]
 ]);
 
+// https://jupyter-client.readthedocs.io/en/stable/kernels.html
+const connectionFilePlaceholder = '{connection_file}';
+
+export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpec>): number {
+    return kernelSpec.argv.indexOf(connectionFilePlaceholder);
+}
+
 // This class searches for a kernel that matches the given kernel name.
 // First it seraches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
@@ -212,7 +219,13 @@ export class KernelFinder implements IKernelFinder {
             path: this.activeInterpreter?.path!,
             display_name: this.activeInterpreter?.displayName ? this.activeInterpreter.displayName : 'Python 3',
             metadata: {},
-            argv: [this.activeInterpreter?.path || 'python', '-m', 'ipykernel_launcher', '-f', '<connection_file>'],
+            argv: [
+                this.activeInterpreter?.path || 'python',
+                '-m',
+                'ipykernel_launcher',
+                '-f',
+                connectionFilePlaceholder
+            ],
             env: {}
         };
 

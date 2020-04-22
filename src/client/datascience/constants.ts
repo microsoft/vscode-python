@@ -375,6 +375,7 @@ export namespace Identifiers {
     export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
     export const InteractiveWindowIdentityScheme = 'history';
     export const DefaultCodeCellMarker = '# %%';
+    export const DefaultCommTarget = 'jupyter.widget';
 }
 
 export namespace CodeSnippits {

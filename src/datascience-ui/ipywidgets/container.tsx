@@ -213,7 +213,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             // Possible user has ignored some UI prompt and things are now in a state of limbo.
             // This way thigns will fall over sooner due to missing widget sources.
             const timeoutTime = this.timedoutWaitingForWidgetsToGetLoaded
-                ? 1_000
+                ? 10_000
                 : this.loaderSettings.timeoutWaitingForScriptToLoad;
 
             setTimeout(() => {

@@ -405,6 +405,10 @@ export interface IJupyterKernelSpec {
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
     readonly argv: string[];
+    /**
+     * A dictionary of environment variables to set for the kernel.
+     */
+    readonly env?: JSONObject;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -437,6 +441,10 @@ export interface IDataScienceErrorHandler {
  * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
  */
 export interface ILocalResourceUriConverter {
+    /**
+     * Root folder that scripts should be copied to.
+     */
+    readonly rootScriptFolder: Uri;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
