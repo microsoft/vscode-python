@@ -53,7 +53,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Notebook Provider level will handle the thrown error
             const newSession = await waitForPromise(
                 Promise.race([
-                    this.startRawSession(resource, kernelName),
+                    this.startRawSession(resource, kernelName, cancelToken),
                     createPromiseFromCancellation({
                         cancelAction: 'reject',
                         defaultValue: new CancellationError(),
@@ -108,13 +108,13 @@ export class RawJupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         _session: ISession,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<ISession> {
         if (!this.resource || !kernelSpec || 'session' in kernelSpec) {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        const startPromise = this.startRawSession(this.resource, kernelSpec);
+        const startPromise = this.startRawSession(this.resource, kernelSpec, cancelToken);
         return startPromise.then((session) => {
             this.kernelSelector.addKernelToIgnoreList(session.kernel);
             return session;
@@ -126,7 +126,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         kernelName?: string | IJupyterKernelSpec,
         cancelToken?: CancellationToken
     ): Promise<ISession> {
-        const process = await this.kernelLauncher.launch(resource, kernelName);
+        const process = await this.kernelLauncher.launch(resource, kernelName, cancelToken);
 
         if (!process.connection) {
             traceError('KernelProcess launched without connection info');

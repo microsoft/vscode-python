@@ -150,7 +150,7 @@ export class KernelLauncher implements IKernelLauncher {
         }
 
         // Make sure that we have a valid interpreter with ipykernel installed
-        const kernelInterpreter = await this.getKernelInterpreter(kernelSpec);
+        const kernelInterpreter = await this.getKernelInterpreter(kernelSpec, cancelToken);
 
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(

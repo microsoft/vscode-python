@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
-import { Resource } from '../../client/common/types';
+import { IInstaller, Resource } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
@@ -36,7 +36,8 @@ suite('DataScience - Kernel Launcher', () => {
         const executionFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         const interpreterService = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        kernelLauncher = new KernelLauncher(kernelFinder, executionFactory, interpreterService, file);
+        const installerService = ioc.serviceContainer.get<IInstaller>(IInstaller);
+        kernelLauncher = new KernelLauncher(kernelFinder, executionFactory, interpreterService, installerService, file);
 
         pythonInterpreter = await ioc.getJupyterCapableInterpreter();
         resource = Uri.file(PYTHON_PATH);
