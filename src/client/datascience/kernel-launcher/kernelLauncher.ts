@@ -8,10 +8,10 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
-import { InterpreterUri } from '../../common/installer/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -136,14 +136,11 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
-    public async launch(
-        interpreterUri: InterpreterUri,
-        kernelName?: string | IJupyterKernelSpec
-    ): Promise<IKernelProcess> {
+    public async launch(resource: Resource, kernelName?: string | IJupyterKernelSpec): Promise<IKernelProcess> {
         let kernelSpec: IJupyterKernelSpec;
         if (!kernelName || typeof kernelName === 'string') {
             // string or undefined
-            kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
+            kernelSpec = await this.kernelFinder.findKernelSpec(resource, kernelName);
         } else {
             // IJupyterKernelSpec
             kernelSpec = kernelName;
