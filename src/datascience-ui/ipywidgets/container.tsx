@@ -36,7 +36,10 @@ type Props = {
 
 export class WidgetManagerComponent extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
-    private readonly widgetSourceRequests = new Map<string, Deferred<void>>();
+    private readonly widgetSourceRequests = new Map<
+        string,
+        { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
+    >();
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private widgetsCanLoadFromCDN: boolean = false;
@@ -112,12 +115,19 @@ export class WidgetManagerComponent extends React.Component<Props> {
             this.registeredWidgetSources.set(source.moduleName, source);
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
-            let deferred = this.widgetSourceRequests.get(source.moduleName);
-            if (!deferred) {
-                deferred = createDeferred();
-                this.widgetSourceRequests.set(source.moduleName, deferred);
+            let request = this.widgetSourceRequests.get(source.moduleName);
+            if (!request) {
+                request = {
+                    deferred: createDeferred(),
+                    timer: undefined
+                };
+                this.widgetSourceRequests.set(source.moduleName, request);
             }
-            deferred.resolve();
+            request.deferred.resolve();
+            if (request.timer !== undefined) {
+                // tslint:disable-next-line: no-any
+                clearTimeout(request.timer as any); // This is to make this work on Node and Browser
+            }
         });
     }
     private registerScriptSourceInRequirejs(source?: WidgetScriptSource) {
@@ -200,10 +210,12 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
         // tslint:disable-next-line: no-console
         console.log(`Fetch IPyWidget source for ${moduleName}`);
-        let deferred = this.widgetSourceRequests.get(moduleName);
-        if (!deferred) {
-            deferred = createDeferred<void>();
-            this.widgetSourceRequests.set(moduleName, deferred);
+        let request = this.widgetSourceRequests.get(moduleName);
+        if (!request) {
+            request = {
+                deferred: createDeferred<void>(),
+                timer: undefined
+            };
 
             // If we timeout, then resolve this promise.
             // We don't want the calling code to unnecessary wait for too long.
@@ -213,24 +225,26 @@ export class WidgetManagerComponent extends React.Component<Props> {
             // Possible user has ignored some UI prompt and things are now in a state of limbo.
             // This way thigns will fall over sooner due to missing widget sources.
             const timeoutTime = this.timedoutWaitingForWidgetsToGetLoaded
-                ? 10_000
+                ? 5_000
                 : this.loaderSettings.timeoutWaitingForScriptToLoad;
 
-            setTimeout(() => {
-                // tslint:disable-next-line: no-console
-                console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
-                this.handleLoadError(
-                    '<class>',
-                    moduleName,
-                    moduleVersion,
-                    new Error(`Timeout getting ${moduleName}:${moduleVersion}`),
-                    true
-                ).ignoreErrors();
-                if (deferred) {
-                    deferred.resolve();
+            request.timer = setTimeout(() => {
+                if (request && !request.deferred.resolved) {
+                    // tslint:disable-next-line: no-console
+                    console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
+                    this.handleLoadError(
+                        '<class>',
+                        moduleName,
+                        moduleVersion,
+                        new Error(`Timeout getting source for ${moduleName}:${moduleVersion}`),
+                        true
+                    ).ignoreErrors();
+                    request.deferred.resolve();
+                    this.timedoutWaitingForWidgetsToGetLoaded = true;
                 }
-                this.timedoutWaitingForWidgetsToGetLoaded = true;
             }, timeoutTime);
+
+            this.widgetSourceRequests.set(moduleName, request);
         }
         // Whether we have the scripts or not, send message to extension.
         // Useful telemetry and also we know it was explicity requestd by ipywidgest.
@@ -239,7 +253,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             { moduleName, moduleVersion }
         );
 
-        return deferred.promise
+        return request.deferred.promise
             .then(() => {
                 const widgetSource = this.registeredWidgetSources.get(moduleName);
                 if (widgetSource) {

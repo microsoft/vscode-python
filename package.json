@@ -3,6 +3,9 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2020.5.0-dev",
+    "featureFlags": {
+        "usingNewInterpreterStorage": true
+    },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
     "enableProposedApi": false,

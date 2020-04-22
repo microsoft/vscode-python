@@ -11,7 +11,7 @@ import { LanguageServerDownloadChannel } from '../../client/activation/common/pa
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
-import { LanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
+import { DotNetLanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
 import { DotNetLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
@@ -198,7 +198,8 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(
             serviceManager.add<ILanguageServerAnalysisOptions>(
                 ILanguageServerAnalysisOptions,
-                LanguageServerAnalysisOptions
+                DotNetLanguageServerAnalysisOptions,
+                LanguageServerType.Microsoft
             )
         ).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy)).once();

@@ -9,11 +9,10 @@ import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { wrapCancellationTokens } from '../../common/cancellation';
-import { InterpreterUri } from '../../common/installer/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IInstaller, InstallerResponse, Product } from '../../common/types';
+import { IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -136,14 +135,14 @@ export class KernelLauncher implements IKernelLauncher {
     ) {}
 
     public async launch(
-        interpreterUri: InterpreterUri,
+        resource: Resource,
         kernelName?: string | IJupyterKernelSpec,
         cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
         let kernelSpec: IJupyterKernelSpec;
         if (!kernelName || typeof kernelName === 'string') {
             // string or undefined
-            kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
+            kernelSpec = await this.kernelFinder.findKernelSpec(resource, kernelName);
         } else {
             // IJupyterKernelSpec
             kernelSpec = kernelName;
