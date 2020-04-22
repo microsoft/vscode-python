@@ -1881,6 +1881,14 @@ export interface IEventNamePropertyMapping {
         source: 'cli' | 'connection';
     };
     /**
+     * Total time taken to Launch a raw kernel.
+     */
+    [Telemetry.KernelLauncherPerf]: undefined | never;
+    /**
+     * Total time taken to find a kernel on disc.
+     */
+    [Telemetry.KernelFinderPerf]: undefined | never;
+    /**
      * Telemetry event sent if there's an error installing a jupyter required dependency
      *
      * @type { product: string }

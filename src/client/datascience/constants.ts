@@ -279,6 +279,8 @@ export enum Telemetry {
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
+    KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
+    KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',

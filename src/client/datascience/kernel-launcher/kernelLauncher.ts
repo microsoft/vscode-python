@@ -16,6 +16,8 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
 import { findIndexOfConnectionFile } from './kernelFinder';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
@@ -136,6 +138,7 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
+    @captureTelemetry(Telemetry.KernelLauncherPerf)
     public async launch(resource: Resource, kernelName?: string | IJupyterKernelSpec): Promise<IKernelProcess> {
         let kernelSpec: IJupyterKernelSpec;
         if (!kernelName || typeof kernelName === 'string') {
