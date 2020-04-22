@@ -69,32 +69,6 @@ suite('DataScience - Kernel Launcher', () => {
         }
     }).timeout(10_000);
 
-    test('Launch from PythonInterpreter', async function () {
-        if (!process.env.VSCODE_PYTHON_ROLLING) {
-            // tslint:disable-next-line: no-invalid-this
-            this.skip();
-        } else {
-            const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
-            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
-
-            // It should not exit.
-            assert.isRejected(
-                waitForCondition(() => exited, 5_000, 'Timeout'),
-                'Timeout'
-            );
-
-            assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
-
-            // Upon disposing, we should get an exit event within 100ms or less.
-            // If this happens, then we know a process existed.
-            kernel.dispose();
-            assert.isRejected(
-                waitForCondition(() => exited, 100, 'Timeout'),
-                'Timeout'
-            );
-        }
-    });
-
     function createExecutionMessage(code: string, sessionId: string): KernelMessage.IExecuteRequestMsg {
         return {
             channel: 'shell',
@@ -182,7 +156,7 @@ suite('DataScience - Kernel Launcher', () => {
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
 
-            const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
+            const kernel = await kernelLauncher.launch(resource, kernelName);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             // It should not exit.
