@@ -41,7 +41,7 @@ suite('Extension API', () => {
         when(serviceContainer.get<IExperimentsManager>(IExperimentsManager)).thenReturn(instance(experimentsManager));
     });
 
-    test('Test interpreter path settings API', async () => {
+    test('Execution command settings API returns expected array if interpreter is set', async () => {
         const resource = Uri.parse('a');
         when(configurationService.getSettings(resource)).thenReturn({ pythonPath: 'settingValue' } as any);
 
@@ -49,9 +49,22 @@ suite('Extension API', () => {
             Promise.resolve(),
             instance(serviceManager),
             instance(serviceContainer)
-        ).settings.getInterpreterPath(resource);
+        ).settings.getExecutionCommand(resource);
 
-        expect(interpreterPath).to.equal('settingValue');
+        expect(interpreterPath).to.equal(['settingValue']);
+    });
+
+    test('Execution command settings API returns `undefined` if interpreter is set', async () => {
+        const resource = Uri.parse('a');
+        when(configurationService.getSettings(resource)).thenReturn({ pythonPath: '' } as any);
+
+        const interpreterPath = buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).settings.getExecutionCommand(resource);
+
+        expect(interpreterPath).to.equal(undefined, '');
     });
 
     test('Test debug launcher args (no-wait and not in experiment)', async () => {

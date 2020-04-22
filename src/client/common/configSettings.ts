@@ -630,6 +630,7 @@ export class PythonSettings implements IPythonSettings {
             }
         }
         if (inExperiment && this.pythonPath === DEFAULT_INTERPRETER_SETTING) {
+            // If no interpreter is selected, set pythonPath to an empty string.
             // This is to ensure that we ask users to select an interpreter in case auto selected interpreter is not safe to select
             this.pythonPath = '';
         }
