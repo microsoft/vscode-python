@@ -12,12 +12,11 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Resource } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { Architecture } from '../../client/common/utils/platform';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJMPConnection, IJupyterKernelSpec } from '../../client/datascience/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockKernelFinder } from './mockKernelFinder';
@@ -25,12 +24,12 @@ import { MockKernelFinder } from './mockKernelFinder';
 suite('Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
-    let pythonInterpreter: PythonInterpreter;
+    let pythonInterpreter: PythonInterpreter | undefined;
     let resource: Resource;
     let kernelName: string;
     let kernelFinder: MockKernelFinder;
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
@@ -39,14 +38,7 @@ suite('Kernel Launcher', () => {
         const interpreterService = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
         kernelLauncher = new KernelLauncher(kernelFinder, executionFactory, interpreterService, file);
 
-        pythonInterpreter = {
-            path: PYTHON_PATH,
-            sysPrefix: '1',
-            envName: '1',
-            sysVersion: '3.1.1.1',
-            architecture: Architecture.x64,
-            type: InterpreterType.Unknown
-        };
+        pythonInterpreter = await ioc.getJupyterCapableInterpreter();
         resource = Uri.file(PYTHON_PATH);
         kernelName = 'Python 3';
     });
@@ -174,7 +166,7 @@ suite('Kernel Launcher', () => {
     }
 
     test('Launch with environment', async function () {
-        if (!process.env.VSCODE_PYTHON_ROLLING) {
+        if (!process.env.VSCODE_PYTHON_ROLLING || !pythonInterpreter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
@@ -183,7 +175,7 @@ suite('Kernel Launcher', () => {
                 language: 'python',
                 path: pythonInterpreter.path,
                 display_name: pythonInterpreter.displayName || 'foo',
-                argv: [pythonInterpreter.path, '-m', 'ipkernel_launcher', '-f', '{connection_file}'],
+                argv: [pythonInterpreter.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
                 env: {
                     TEST_VAR: '1'
                 }
@@ -214,7 +206,10 @@ suite('Kernel Launcher', () => {
                 createExecutionMessage('import os\nprint(os.getenv("TEST_VAR"))', sessionId)
             );
             assert.ok(result, 'No result returned');
-            assert.equal(result[0].content, '1', 'Wrong content found on message');
+            // Should have a stream output message
+            const output = result.find((r) => r.header.msg_type === 'stream') as KernelMessage.IStreamMsg;
+            assert.ok(output, 'no stream output');
+            assert.equal(output.content.text, '1\n', 'Wrong content found on message');
 
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
