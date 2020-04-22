@@ -219,7 +219,13 @@ export class WidgetManagerComponent extends React.Component<Props> {
             setTimeout(() => {
                 // tslint:disable-next-line: no-console
                 console.error(`Timeout waiting to get widget source for ${moduleName}, ${moduleVersion}`);
-                this.handleLoadError('<class>', moduleName, moduleVersion, new Error('Timeout'), true).ignoreErrors();
+                this.handleLoadError(
+                    '<class>',
+                    moduleName,
+                    moduleVersion,
+                    new Error(`Timeout getting ${moduleName}:${moduleVersion}`),
+                    true
+                ).ignoreErrors();
                 if (deferred) {
                     deferred.resolve();
                 }

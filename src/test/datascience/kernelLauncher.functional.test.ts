@@ -21,7 +21,7 @@ import { PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockKernelFinder } from './mockKernelFinder';
 
-suite('Kernel Launcher', () => {
+suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
     let pythonInterpreter: PythonInterpreter | undefined;
