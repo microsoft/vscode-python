@@ -3,13 +3,17 @@
 'use strict';
 
 import { IDisposable } from 'monaco-editor';
-import { Event } from 'vscode';
+import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri, kernelName?: string | IJupyterKernelSpec): Promise<IKernelProcess>;
+    launch(
+        interpreterUri: InterpreterUri,
+        kernelName?: string | IJupyterKernelSpec,
+        cancelToken?: CancellationToken
+    ): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {

@@ -7,15 +7,17 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { wrapCancellationTokens } from '../../common/cancellation';
 import { InterpreterUri } from '../../common/installer/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
+import { IInstaller, InstallerResponse, Product } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { findIndexOfConnectionFile } from './kernelFinder';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
@@ -47,7 +49,7 @@ class KernelProcess implements IKernelProcess {
 
     constructor(
         private executionFactory: IPythonExecutionFactory,
-        private interpreterService: IInterpreterService,
+        private interpreter: PythonInterpreter,
         private file: IFileSystem,
         private _connection: IKernelConnection,
         private _kernelSpec: IJupyterKernelSpec
@@ -69,18 +71,14 @@ class KernelProcess implements IKernelProcess {
             throw new Error(`Connection file not found in kernelspec json args, ${args.join(' ')}`);
         }
         args[indexOfConnectionFile] = this.connectionFile.filePath;
-        // First part of argument is always the executable.
-        const pythonPath = this._kernelSpec.metadata?.interpreter?.path || args[0];
-        args.shift();
 
-        // Use that to find the matching interpeter.
-        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
-
-        // Use that to create an execution service with the correct environment.
         const executionService = await this.executionFactory.createActivatedEnvironment({
             resource: undefined,
-            interpreter: matchingInterpreter
+            interpreter: this.interpreter
         });
+
+        // First part of argument is always the executable. We don't need it, so remove
+        args.shift();
 
         // Then launch that process, also merging in the environment in the kernelspec
         const exeObs = executionService.execObservable(args, { extraVariables: this._kernelSpec.env });
@@ -133,12 +131,14 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IKernelFinder) private kernelFinder: IKernelFinder,
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IInstaller) private installer: IInstaller,
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
     public async launch(
         interpreterUri: InterpreterUri,
-        kernelName?: string | IJupyterKernelSpec
+        kernelName?: string | IJupyterKernelSpec,
+        cancelToken?: CancellationToken
     ): Promise<IKernelProcess> {
         let kernelSpec: IJupyterKernelSpec;
         if (!kernelName || typeof kernelName === 'string') {
@@ -149,16 +149,58 @@ export class KernelLauncher implements IKernelLauncher {
             kernelSpec = kernelName;
         }
 
+        // Make sure that we have a valid interpreter with ipykernel installed
+        const kernelInterpreter = await this.getKernelInterpreter(kernelSpec);
+
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.executionFactory,
-            this.interpreterService,
+            kernelInterpreter,
             this.file,
             connection,
             kernelSpec
         );
         await kernelProcess.launch();
         return kernelProcess;
+    }
+
+    private async getKernelInterpreter(
+        kernelSpec: IJupyterKernelSpec,
+        cancelToken?: CancellationToken
+    ): Promise<PythonInterpreter> {
+        // First part of argument is always the executable.
+        const args = [...kernelSpec.argv];
+        const pythonPath = kernelSpec.metadata?.interpreter?.path || args[0];
+
+        // Use that to find the matching interpeter.
+        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
+
+        if (!matchingInterpreter) {
+            throw new Error(`Failed to find interpreter for kernelspec ${kernelSpec.display_name}`);
+        }
+
+        return this.interpreterSupportsIPyKernel(matchingInterpreter, cancelToken);
+    }
+
+    private async interpreterSupportsIPyKernel(
+        interpreter: PythonInterpreter,
+        cancelToken?: CancellationToken
+    ): Promise<PythonInterpreter> {
+        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
+            return interpreter;
+        } else {
+            const token = new CancellationTokenSource();
+            const response = await this.installer.promptToInstall(
+                Product.ipykernel,
+                interpreter,
+                wrapCancellationTokens(cancelToken, token.token)
+            );
+            if (response === InstallerResponse.Installed) {
+                return interpreter;
+            }
+        }
+
+        throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
     }
 
     private async getKernelConnection(): Promise<IKernelConnection> {

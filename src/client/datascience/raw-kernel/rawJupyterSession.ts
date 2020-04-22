@@ -121,7 +121,11 @@ export class RawJupyterSession extends BaseJupyterSession {
         });
     }
 
-    private async startRawSession(resource: Resource, kernelName?: string | IJupyterKernelSpec): Promise<ISession> {
+    private async startRawSession(
+        resource: Resource,
+        kernelName?: string | IJupyterKernelSpec,
+        cancelToken?: CancellationToken
+    ): Promise<ISession> {
         const process = await this.kernelLauncher.launch(resource, kernelName);
 
         if (!process.connection) {
