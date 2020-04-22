@@ -75,10 +75,9 @@ class KernelProcess implements IKernelProcess {
 
         const executionService = await this.executionFactory.createActivatedEnvironment({
             resource: undefined,
-            interpreter: matchingInterpreter,
-            extraVars: this._kernelSpec.env
+            interpreter: matchingInterpreter
         });
-        const exeObs = executionService.execObservable(args, {});
+        const exeObs = executionService.execObservable(args, { extraVariables: this._kernelSpec.env });
 
         if (exeObs.proc) {
             exeObs.proc!.on('exit', (exitCode) => {

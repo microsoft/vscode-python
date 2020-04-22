@@ -19,7 +19,6 @@ import {
     IPythonExecutionService
 } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -71,7 +70,6 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         constructor(
             @inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
             @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
-            @inject(IEnvironmentVariablesService) envService: IEnvironmentVariablesService,
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
@@ -81,7 +79,6 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             super(
                 _serviceContainer,
                 activationHelper,
-                envService,
                 processServiceFactory,
                 _configService,
                 condaService,

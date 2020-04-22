@@ -24,7 +24,6 @@ import {
     IPythonToolExecutionService
 } from '../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
-import { EnvironmentVariablesService } from '../../client/common/variables/environment';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -711,11 +710,9 @@ class TestFixture extends BaseTestFixture {
             disposableRegistry
         );
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
-        const envService = mock(EnvironmentVariablesService);
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
-            instance(envService),
             procServiceFactory,
             configService,
             condaService.object,

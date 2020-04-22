@@ -29,7 +29,6 @@ import {
     IPythonExecutionService
 } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
-import { EnvironmentVariablesService } from '../../client/common/variables/environment';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
@@ -93,7 +92,6 @@ suite('Refactor Rename', () => {
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
-        const envService = mock(EnvironmentVariablesService);
 
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
@@ -102,7 +100,6 @@ suite('Refactor Rename', () => {
                     new PythonExecutionFactory(
                         serviceContainer.object,
                         undefined as any,
-                        instance(envService),
                         processServiceFactory.object,
                         configService.object,
                         condaService.object,

@@ -14,7 +14,6 @@ import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { IEnvironmentVariablesService } from '../variables/types';
 import { ProcessService } from './proc';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
 import { createCondaEnv, createPythonEnv, createWindowsStoreEnv } from './pythonEnvironment';
@@ -41,7 +40,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IEnvironmentVariablesService) private readonly envService: IEnvironmentVariablesService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(ICondaService) private readonly condaService: ICondaService,
@@ -123,12 +121,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createActivatedEnvironment(
         options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {
-        const activatedVars = await this.activationHelper.getActivatedEnvironmentVariables(
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
             options.resource,
             options.interpreter,
             options.allowEnvironmentFetchExceptions
         );
-        const envVars = this.mergeEnvironmentVariables(activatedVars, options.extraVars);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
@@ -181,16 +178,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
 
         return Promise.resolve(undefined);
-    }
-
-    private mergeEnvironmentVariables(
-        env1: NodeJS.ProcessEnv | undefined,
-        env2: NodeJS.ProcessEnv | undefined
-    ): NodeJS.ProcessEnv {
-        const source = env1 || {};
-        const target = env2 || {};
-        this.envService.mergeVariables(source, target);
-        return target;
     }
 }
 
