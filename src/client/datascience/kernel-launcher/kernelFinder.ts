@@ -72,8 +72,7 @@ export class KernelFinder implements IKernelFinder {
             }
 
             if (kernelSpec) {
-                // tslint:disable-next-line: no-floating-promises
-                this.writeCache(this.cache);
+                this.writeCache(this.cache).ignoreErrors();
                 return kernelSpec;
             }
 
@@ -94,8 +93,7 @@ export class KernelFinder implements IKernelFinder {
             foundKernel = await this.getDefaultKernelSpec(resource);
         }
 
-        // tslint:disable-next-line: no-floating-promises
-        this.writeCache(this.cache);
+        this.writeCache(this.cache).ignoreErrors();
         return foundKernel;
     }
 
