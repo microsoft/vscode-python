@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any max-func-body-length
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import { anyString, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -51,7 +51,7 @@ suite('Extension API', () => {
             instance(serviceContainer)
         ).settings.getExecutionCommand(resource);
 
-        expect(interpreterPath).to.equal(['settingValue']);
+        assert.deepEqual(interpreterPath, ['settingValue']);
     });
 
     test('Execution command settings API returns `undefined` if interpreter is set', async () => {
