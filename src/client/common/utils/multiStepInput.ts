@@ -99,9 +99,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         try {
             return await new Promise<MultiStepInputQuickPicResponseType<T, P>>((resolve, reject) => {
                 const input = this.shell.createQuickPick<T>();
-                if (title !== undefined) {
-                    input.title = title;
-                }
+                input.title = title;
                 input.step = step;
                 input.totalSteps = totalSteps;
                 input.placeholder = placeholder;
