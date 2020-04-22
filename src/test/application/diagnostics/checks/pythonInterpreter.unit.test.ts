@@ -225,6 +225,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([{ prompt: 'Download', command: cmd }]);
+            expect(messagePrompt!.onClose).to.not.be.equal(undefined, 'onClose handler should be set.');
         });
         test('Handling no currently selected interpreter diagnostic should show select interpreter message', async () => {
             const diagnostic = new InvalidPythonInterpreterDiagnostic(
@@ -255,6 +256,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.onClose).be.equal(undefined, 'onClose handler should not be set.');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: 'Select Python Interpreter', command: cmd }
             ]);
@@ -288,6 +290,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
+            expect(messagePrompt!.onClose).be.equal(undefined, 'onClose handler should not be set.');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: 'Select Python Interpreter', command: cmd }
             ]);

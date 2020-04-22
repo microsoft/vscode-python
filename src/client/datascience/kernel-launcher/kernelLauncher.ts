@@ -63,20 +63,26 @@ class KernelProcess implements IKernelProcess {
             flag: 'w'
         });
 
-        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(this._kernelSpec.path);
-
         // Inclide the conenction file in the arguments and remove the first argument which should be python
         const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
         if (indexOfConnectionFile === -1) {
             throw new Error(`Connection file not found in kernelspec json args, ${args.join(' ')}`);
         }
         args[indexOfConnectionFile] = this.connectionFile.filePath;
-        args.splice(0, 1);
+        // First part of argument is always the executable.
+        const pythonPath = this._kernelSpec.metadata?.interpreter?.path || args[0];
+        args.shift();
 
+        // Use that to find the matching interpeter.
+        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
+
+        // Use that to create an execution service with the correct environment.
         const executionService = await this.executionFactory.createActivatedEnvironment({
             resource: undefined,
             interpreter: matchingInterpreter
         });
+
+        // Then launch that process, also merging in the environment in the kernelspec
         const exeObs = executionService.execObservable(args, { extraVariables: this._kernelSpec.env });
 
         if (exeObs.proc) {

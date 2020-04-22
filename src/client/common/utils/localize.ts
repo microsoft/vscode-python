@@ -26,6 +26,18 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.'
     );
+    export const removePythonPathSettingsJson = localize(
+        'diagnostics.removePythonPathSettingsJson',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json.'
+    );
+    export const removePythonPathCodeWorkspace = localize(
+        'diagnostics.removePythonPathCodeWorkspace',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your .code-workspace file.'
+    );
+    export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
+        'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and .code-workspace file.'
+    );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
         'You need to select a Python interpreter before you start debugging.\n\nTip: click on "Select Python Interpreter" in the status bar.'
@@ -61,6 +73,7 @@ export namespace Diagnostics {
 export namespace Common {
     export const bannerLabelYes = localize('Common.bannerLabelYes', 'Yes');
     export const bannerLabelNo = localize('Common.bannerLabelNo', 'No');
+    export const yesPlease = localize('Common.yesPlease', 'Yes, please');
     export const canceled = localize('Common.canceled', 'Canceled');
     export const cancel = localize('Common.cancel', 'Cancel');
     export const ok = localize('Common.ok', 'Ok');
