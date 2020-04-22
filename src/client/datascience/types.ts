@@ -390,6 +390,7 @@ export interface IJupyterKernelSpec {
     name: string;
     language: string;
     path: string;
+    env: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
      *
@@ -404,10 +405,6 @@ export interface IJupyterKernelSpec {
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
     readonly argv: string[];
-    /**
-     * A dictionary of environment variables to set for the kernel.
-     */
-    readonly env?: JSONObject;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

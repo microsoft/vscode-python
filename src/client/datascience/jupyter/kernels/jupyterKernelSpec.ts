@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
@@ -16,9 +15,9 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
+    public readonly env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
-    public readonly env?: JSONObject;
 
     // tslint:disable-next-line: no-any
     public metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
@@ -31,7 +30,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
         // tslint:disable-next-line: no-any
-        this.env = specModel.env as any;
+        this.env = specModel.env as any; // JSONObject, but should match
     }
 }
 

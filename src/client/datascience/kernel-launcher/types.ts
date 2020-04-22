@@ -31,7 +31,6 @@ export interface IKernelProcess extends IDisposable {
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
     exited: Event<number | null>;
     dispose(): void;
-    launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }
 
 export const IKernelFinder = Symbol('IKernelFinder');

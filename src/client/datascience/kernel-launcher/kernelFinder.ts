@@ -207,6 +207,7 @@ export class KernelFinder implements IKernelFinder {
                 '-f',
                 connectionFilePlaceholder
             ],
+            env: {},
             resources: {}
         };
         const kernelSpec = new JupyterKernelSpec(defaultSpec);
