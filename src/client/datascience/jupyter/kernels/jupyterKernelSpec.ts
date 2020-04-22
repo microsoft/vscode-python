@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
