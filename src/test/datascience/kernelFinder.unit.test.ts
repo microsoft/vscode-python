@@ -39,7 +39,7 @@ suite('Kernel Finder', () => {
         display_name: 'Python 3',
         metadata: {},
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '<connection_file>'],
-        env: undefined
+        env: {}
     };
 
     function setupFileSystem() {
