@@ -38,7 +38,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
     private readonly widgetSourceRequests = new Map<
         string,
-        { deferred: Deferred<void>; timer: NodeJS.Timeout | number }
+        { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
     >();
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
@@ -119,13 +119,15 @@ export class WidgetManagerComponent extends React.Component<Props> {
             if (!request) {
                 request = {
                     deferred: createDeferred(),
-                    timer: 0
+                    timer: undefined
                 };
                 this.widgetSourceRequests.set(source.moduleName, request);
             }
             request.deferred.resolve();
-            // tslint:disable-next-line: no-any
-            clearTimeout(request.timer as any); // This is to make this work on Node and Browser
+            if (request.timer !== undefined) {
+                // tslint:disable-next-line: no-any
+                clearTimeout(request.timer as any); // This is to make this work on Node and Browser
+            }
         });
     }
     private registerScriptSourceInRequirejs(source?: WidgetScriptSource) {
@@ -212,7 +214,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
         if (!request) {
             request = {
                 deferred: createDeferred<void>(),
-                timer: 0
+                timer: undefined
             };
 
             // If we timeout, then resolve this promise.
