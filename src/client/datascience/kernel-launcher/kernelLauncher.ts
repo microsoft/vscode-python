@@ -67,11 +67,13 @@ class KernelProcess implements IKernelProcess {
             throw new Error(`Connection file not found in kernelspec json args, ${args.join(' ')}`);
         }
         args[indexOfConnectionFile] = this.connectionFile.filePath;
-        args.splice(0, 1);
+        // First part of argument is always the executable.
+        const pythonPath = this._kernelSpec.metadata?.interpreter?.path || args[0];
+        args.shift();
 
         const executionService = await this.executionFactory.create({
             resource: undefined,
-            pythonPath: this._kernelSpec.path
+            pythonPath
         });
         const exeObs = executionService.execObservable(args, {});
 

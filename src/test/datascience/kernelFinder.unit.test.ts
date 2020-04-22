@@ -3,6 +3,7 @@
 'use strict';
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
@@ -34,9 +35,8 @@ suite('Kernel Finder', () => {
     const kernel: IJupyterKernelSpec = {
         name: 'testKernel',
         language: 'python',
-        path: '',
+        path: '<python path>',
         display_name: 'Python 3',
-        metadata: {},
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '<connection_file>']
     };
 
@@ -124,7 +124,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(resource, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -142,7 +142,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -160,7 +160,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -209,7 +209,7 @@ suite('Kernel Finder', () => {
 
         // get the same kernel, but from cache
         const spec2 = await kernelFinder.findKernelSpec(resource, spec.name);
-        assert.deepEqual(spec, spec2);
+        expect(spec).to.deep.include(spec2);
 
         fileSystem.verifyAll();
         fileSystem.reset();
