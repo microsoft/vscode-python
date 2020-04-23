@@ -64,8 +64,9 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
     test('Invoke next rule if there are no interpreters in the current path', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
+        const options = { onActivation: true };
         let setGlobalInterpreterInvoked = false;
-        when(interpreterService.getInterpreters(resource)).thenResolve([]);
+        when(interpreterService.getInterpreters(resource, deepEqual(options))).thenResolve([]);
         when(helper.getBestInterpreter(deepEqual([]))).thenReturn(undefined);
         rule.setGlobalInterpreter = async (res: any) => {
             setGlobalInterpreterInvoked = true;
@@ -75,16 +76,17 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
 
         const nextAction = await rule.onAutoSelectInterpreter(resource, manager);
 
-        verify(interpreterService.getInterpreters(resource)).once();
+        verify(interpreterService.getInterpreters(resource, deepEqual(options))).once();
         expect(nextAction).to.be.equal(NextAction.runNextRule);
         expect(setGlobalInterpreterInvoked).to.be.equal(true, 'setGlobalInterpreter not invoked');
     });
     test('Invoke next rule if there interpreters in the current path but update fails', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
+        const options = { onActivation: true };
         let setGlobalInterpreterInvoked = false;
         const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
-        when(interpreterService.getInterpreters(resource)).thenResolve([interpreterInfo]);
+        when(interpreterService.getInterpreters(resource, deepEqual(options))).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
         rule.setGlobalInterpreter = async (res: any) => {
             setGlobalInterpreterInvoked = true;
@@ -94,16 +96,17 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
 
         const nextAction = await rule.onAutoSelectInterpreter(resource, manager);
 
-        verify(interpreterService.getInterpreters(resource)).once();
+        verify(interpreterService.getInterpreters(resource, deepEqual(options))).once();
         expect(nextAction).to.be.equal(NextAction.runNextRule);
         expect(setGlobalInterpreterInvoked).to.be.equal(true, 'setGlobalInterpreter not invoked');
     });
     test('Do not Invoke next rule if there interpreters in the current path and update does not fail', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
+        const options = { onActivation: true };
         let setGlobalInterpreterInvoked = false;
         const interpreterInfo = { path: '1', version: new SemVer('1.0.0') } as any;
-        when(interpreterService.getInterpreters(resource)).thenResolve([interpreterInfo]);
+        when(interpreterService.getInterpreters(resource, deepEqual(options))).thenResolve([interpreterInfo]);
         when(helper.getBestInterpreter(deepEqual([interpreterInfo]))).thenReturn(interpreterInfo);
         rule.setGlobalInterpreter = async (res: any) => {
             setGlobalInterpreterInvoked = true;
@@ -113,7 +116,7 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
 
         const nextAction = await rule.onAutoSelectInterpreter(resource, manager);
 
-        verify(interpreterService.getInterpreters(resource)).once();
+        verify(interpreterService.getInterpreters(resource, deepEqual(options))).once();
         expect(nextAction).to.be.equal(NextAction.exit);
         expect(setGlobalInterpreterInvoked).to.be.equal(true, 'setGlobalInterpreter not invoked');
     });
