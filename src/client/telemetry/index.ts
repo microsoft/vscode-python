@@ -2035,4 +2035,18 @@ export interface IEventNamePropertyMapping {
     [Telemetry.IPyWidgetUnhandledMessage]: {
         msg_type: string;
     };
+
+    // Telemetry send when we create a notebook for a raw kernel or jupyter
+    [Telemetry.RawKernelCreatingNotebook]: never | undefined;
+    [Telemetry.JupyterCreatingNotebook]: never | undefined;
+
+    // Raw kernel timing events
+    [Telemetry.RawKernelSessionConnect]: never | undefined;
+    [Telemetry.RawKernelStartRawSession]: never | undefined;
+
+    // Raw kernel single events
+    [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
+    [Telemetry.RawKernelSessionStartException]: never | undefined;
+    [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
+    [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
 }

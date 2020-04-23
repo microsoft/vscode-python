@@ -8,7 +8,9 @@ import { Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession, ISession } from '../baseJupyterSession';
+import { Telemetry } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelConnection, IKernelLauncher } from '../kernel-launcher/types';
@@ -40,6 +42,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         // RawKernels are good to go right away
     }
 
+    @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
     public async connect(
         resource: Resource,
         timeout: number,
@@ -65,17 +68,21 @@ export class RawJupyterSession extends BaseJupyterSession {
 
             // Only connect our session if we didn't cancel or timeout
             if (newSession instanceof CancellationError) {
+                sendTelemetryEvent(Telemetry.RawKernelSessionStartUserCancel);
                 traceInfo('Starting of raw session cancelled by user');
                 throw newSession;
             } else if (newSession === null) {
+                sendTelemetryEvent(Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
                 throw new Error(localize.DataScience.sessionDisposed());
             } else {
+                sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
                 traceInfo('Raw session started and connected');
                 this.session = newSession;
                 this.kernelSpec = newSession.process?.kernelSpec;
             }
         } catch (error) {
+            sendTelemetryEvent(Telemetry.RawKernelSessionStartException);
             traceError(`Failed to connect raw kernel session: ${error}`);
             this.connected = false;
             throw error;
@@ -121,13 +128,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         });
     }
 
+    @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(resource: Resource, kernelName?: string | IJupyterKernelSpec): Promise<ISession> {
         const process = await this.kernelLauncher.launch(resource, kernelName);
-
-        if (!process.connection) {
-            traceError('KernelProcess launched without connection info');
-            throw new Error(localize.DataScience.sessionDisposed());
-        }
 
         // Wait for the process to actually be ready to connect to
         await process.ready;
