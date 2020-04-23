@@ -18,6 +18,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
+import { getKernelInterpreter } from './helpers';
 import { findIndexOfConnectionFile } from './kernelFinder';
 import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
 
@@ -127,29 +128,45 @@ class KernelProcess implements IKernelProcess {
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     constructor(
-        @inject(IKernelFinder) private kernelFinder: IKernelFinder,
+        //@inject(IKernelFinder) private kernelFinder: IKernelFinder,
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IInstaller) private installer: IInstaller,
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
-    public async launch(
-        resource: Resource,
-        kernelName?: string | IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<IKernelProcess> {
-        let kernelSpec: IJupyterKernelSpec;
-        if (!kernelName || typeof kernelName === 'string') {
-            // string or undefined
-            kernelSpec = await this.kernelFinder.findKernelSpec(resource, kernelName);
-        } else {
-            // IJupyterKernelSpec
-            kernelSpec = kernelName;
-        }
+    //public async launch(
+    //resource: Resource,
+    //kernelName?: string | IJupyterKernelSpec,
+    //cancelToken?: CancellationToken
+    //): Promise<IKernelProcess> {
+    //let kernelSpec: IJupyterKernelSpec;
+    //if (!kernelName || typeof kernelName === 'string') {
+    //// string or undefined
+    //kernelSpec = await this.kernelFinder.findKernelSpec(resource, kernelName);
+    //} else {
+    //// IJupyterKernelSpec
+    //kernelSpec = kernelName;
+    //}
 
+    //// Make sure that we have a valid interpreter with ipykernel installed
+    //const kernelInterpreter = await this.getKernelInterpreter(kernelSpec, cancelToken);
+
+    //const connection = await this.getKernelConnection();
+    //const kernelProcess = new KernelProcess(
+    //this.executionFactory,
+    //kernelInterpreter,
+    //this.file,
+    //connection,
+    //kernelSpec
+    //);
+    //await kernelProcess.launch();
+    //return kernelProcess;
+    //}
+
+    public async launch(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IKernelProcess> {
         // Make sure that we have a valid interpreter with ipykernel installed
-        const kernelInterpreter = await this.getKernelInterpreter(kernelSpec, cancelToken);
+        const kernelInterpreter = await getKernelInterpreter(kernelSpec, this.interpreterService);
 
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
@@ -163,44 +180,45 @@ export class KernelLauncher implements IKernelLauncher {
         return kernelProcess;
     }
 
-    private async getKernelInterpreter(
-        kernelSpec: IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<PythonInterpreter> {
-        // First part of argument is always the executable.
-        const args = [...kernelSpec.argv];
-        const pythonPath = kernelSpec.metadata?.interpreter?.path || args[0];
+    //private async getKernelInterpreter(
+    //kernelSpec: IJupyterKernelSpec,
+    //cancelToken?: CancellationToken
+    //): Promise<PythonInterpreter> {
+    //// First part of argument is always the executable.
+    //const args = [...kernelSpec.argv];
+    //const pythonPath = kernelSpec.metadata?.interpreter?.path || args[0];
 
-        // Use that to find the matching interpeter.
-        const matchingInterpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
+    //// Use that to find the matching interpeter.
+    //const matchingInterpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
 
-        if (!matchingInterpreter) {
-            throw new Error(`Failed to find interpreter for kernelspec ${kernelSpec.display_name}`);
-        }
+    //if (!matchingInterpreter) {
+    //throw new Error(`Failed to find interpreter for kernelspec ${kernelSpec.display_name}`);
+    //}
 
-        return this.interpreterSupportsIPyKernel(matchingInterpreter, cancelToken);
-    }
+    //return matchingInterpreter;
+    ////return this.interpreterSupportsIPyKernel(matchingInterpreter, cancelToken);
+    //}
 
-    private async interpreterSupportsIPyKernel(
-        interpreter: PythonInterpreter,
-        cancelToken?: CancellationToken
-    ): Promise<PythonInterpreter> {
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return interpreter;
-        } else {
-            const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
-                interpreter,
-                wrapCancellationTokens(cancelToken, token.token)
-            );
-            if (response === InstallerResponse.Installed) {
-                return interpreter;
-            }
-        }
+    //private async interpreterSupportsIPyKernel(
+    //interpreter: PythonInterpreter,
+    //cancelToken?: CancellationToken
+    //): Promise<PythonInterpreter> {
+    //if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
+    //return interpreter;
+    //} else {
+    //const token = new CancellationTokenSource();
+    //const response = await this.installer.promptToInstall(
+    //Product.ipykernel,
+    //interpreter,
+    //wrapCancellationTokens(cancelToken, token.token)
+    //);
+    //if (response === InstallerResponse.Installed) {
+    //return interpreter;
+    //}
+    //}
 
-        throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
-    }
+    //throw new Error(`IPyKernel not installed into interpreter ${interpreter.displayName}`);
+    //}
 
     private async getKernelConnection(): Promise<IKernelConnection> {
         const getPorts = promisify(portfinder.getPorts);

@@ -9,11 +9,12 @@ import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(
-        interpreterUri: InterpreterUri,
-        kernelName?: string | IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<IKernelProcess>;
+    //launch(
+    //interpreterUri: InterpreterUri,
+    //kernelName?: string | IJupyterKernelSpec,
+    //cancelToken?: CancellationToken
+    //): Promise<IKernelProcess>;
+    launch(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -39,5 +40,9 @@ export interface IKernelProcess extends IDisposable {
 
 export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
-    findKernelSpec(interpreterUri: InterpreterUri, kernelName?: string): Promise<IJupyterKernelSpec>;
+    findKernelSpec(
+        interpreterUri: InterpreterUri,
+        kernelName?: string,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec>;
 }
