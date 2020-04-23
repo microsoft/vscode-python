@@ -243,9 +243,11 @@ export namespace CommonEffects {
                     "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:python.datascience.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
                 ).format(arg.payload.data.moduleName, arg.payload.data.moduleVersion);
             }
+            // Preserve existing error messages.
+            const existingErrorMessage = current.uiSideError ? `${current.uiSideError}\n` : '';
             newVMs[index] = Helpers.asCellViewModel({
                 ...current,
-                uiSideError: errorMessage
+                uiSideError: `${existingErrorMessage}${errorMessage}`
             });
 
             // Make sure to tell the extension so it can log telemetry.
