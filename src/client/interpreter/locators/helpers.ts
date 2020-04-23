@@ -1,7 +1,6 @@
-import * as fsapi from 'fs';
+import * as fsapi from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { promisify } from 'util';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
@@ -16,8 +15,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
     try {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO https://github.com/microsoft/vscode-python/issues/11338
-        const readdir = promisify(fsapi.readdir);
-        const files = await readdir(pathToCheck);
+        const files = await fsapi.readdir(pathToCheck);
         return files
             .map((filename) => path.join(pathToCheck, filename))
             .filter((fileName) => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
