@@ -41,12 +41,12 @@ export class RawSocket implements IWebSocketLike {
         return true;
     }
     public send(data: any, _a2: any): void {
-        this.jmpConnection.sendMessage(this.deserialize(data));
+        this.jmpConnection.sendMessage(data);
     }
 
     private onIncomingMessage(message: KernelMessage.IMessage<KernelMessage.MessageType>) {
         try {
-            this.emit('message', this.serialize(message)); // We can probably rework enchannel to not deserialize first
+            this.emit('message', message);
         } catch (exc) {
             this.onCommError(exc);
         }

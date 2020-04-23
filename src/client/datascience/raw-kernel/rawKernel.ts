@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import { serialize } from '@jupyterlab/services/lib/kernel/serialize';
 import * as uuid from 'uuid/v4';
 import { IWebSocketLike, KernelSocketWrapper } from '../kernelSocketWrapper';
 import { IJMPConnection, IKernelSocket } from '../types';
 import { RawSocket } from './rawSocket';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const rewire = require('rewire') as typeof import('rewire');
 
 // tslint:disable: no-any
 /*
@@ -195,6 +198,8 @@ export class RawKernel implements Kernel.IKernel {
     }
 }
 
+let defaultImport: any;
+
 export function createRawKernel(connection: IJMPConnection, name: string, clientId: string): RawKernel {
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
@@ -210,12 +215,16 @@ export function createRawKernel(connection: IJMPConnection, name: string, client
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
     const settings = jupyterLab.ServerConnection.makeSettings({
         WebSocket: RawSocketWrapper as any,
-        wsUrl: 'BOGUS_PVSC'
+        wsUrl: 'RAW'
     });
 
     // Then create the real kernel
     // tslint:disable-next-line: no-require-imports
-    const defaultImport = require('@jupyterlab/services/lib/kernel/default') as typeof import('@jupyterlab/services/lib/kernel/default');
+    if (!defaultImport) {
+        defaultImport = rewire('@jupyterlab/services/lib/kernel/default');
+        defaultImport.__set__('serialize.serialize', (a: any) => a);
+        defaultImport.__set__('serialize.deserialize', (a: any) => a);
+    }
     const realKernel = new defaultImport.DefaultKernel(
         {
             name,

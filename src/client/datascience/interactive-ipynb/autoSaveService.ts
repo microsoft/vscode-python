@@ -66,11 +66,6 @@ export class AutoSaveService implements IInteractiveWindowListener {
         } else if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
             const notebook = this.getNotebook();
             if (!notebook) {
-                traceError(
-                    `Received message ${message}, but there is no notebook for ${
-                        this.notebookUri ? this.notebookUri.fsPath : undefined
-                    }`
-                );
                 return;
             }
             this.disposables.push(notebook.modified(this.onNotebookModified, this, this.disposables));
