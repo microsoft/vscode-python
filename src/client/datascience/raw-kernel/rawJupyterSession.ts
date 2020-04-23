@@ -37,13 +37,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         // RawKernels are good to go right away
     }
 
-    //public async connect(
-    //resource: Resource,
-    //timeout: number,
-    //kernelName?: string,
-    //cancelToken?: CancellationToken
-    //): Promise<IJupyterKernelSpec | undefined> {
-
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     public async connect(
         kernelSpec: IJupyterKernelSpec,
@@ -122,13 +115,8 @@ export class RawJupyterSession extends BaseJupyterSession {
         });
     }
 
-    //private async startRawSession(
-    //resource: Resource,
-    //kernelName?: string | IJupyterKernelSpec,
-    //cancelToken?: CancellationToken
-    //): Promise<ISession> {
-    private async startRawSession(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<ISession> {
-        const process = await this.kernelLauncher.launch(kernelSpec, cancelToken);
+    private async startRawSession(kernelSpec: IJupyterKernelSpec, _cancelToken?: CancellationToken): Promise<ISession> {
+        const process = await this.kernelLauncher.launch(kernelSpec);
 
         if (!process.connection) {
             traceError('KernelProcess launched without connection info');
