@@ -11,7 +11,9 @@ import sys
 
 log = logging.getLogger(__name__)
 
-LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
+LOG_FORMAT = (
+    "%(asctime)s UTC - %(levelname)s - (PID: %(process)d) - %(name)s - %(message)s"
+)
 queue_handler = None
 
 
@@ -62,7 +64,11 @@ class TemporaryQueueHandler(logging.Handler):
         self.queue = []
 
     def emit(self, record):
-        data = {"level": record.levelname, "msg": self.format(record)}
+        data = {
+            "level": record.levelname,
+            "msg": self.format(record),
+            "pid": os.getpid(),
+        }
         # If we don't have the server, then queue it and send it later.
         if self.server is None:
             self.queue.append(data)

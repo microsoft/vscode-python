@@ -16,6 +16,8 @@ import {
     KNOWN_PATH_SERVICE,
     PythonInterpreter
 } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
@@ -57,6 +59,7 @@ export class KernelFinder implements IKernelFinder {
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
+    @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
         kernelName?: string,

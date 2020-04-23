@@ -19,6 +19,8 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import {
     IJupyterConnection,
     IJupyterSession,
@@ -94,6 +96,7 @@ export class JupyterServerBase implements INotebookServer {
         this.savedSession = session;
     }
 
+    @captureTelemetry(Telemetry.JupyterCreatingNotebook, undefined, true)
     public createNotebook(
         resource: Resource,
         identity: Uri,

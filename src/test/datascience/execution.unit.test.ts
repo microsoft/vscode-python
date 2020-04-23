@@ -27,6 +27,7 @@ import {
     ExecutionResult,
     IProcessService,
     IProcessServiceFactory,
+    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
@@ -814,19 +815,19 @@ suite('Jupyter Execution', async () => {
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))
-        ).thenResolve(workingService.object);
+        ).thenResolve((workingService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
-        ).thenResolve(missingKernelService.object);
+        ).thenResolve((missingKernelService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
-        ).thenResolve(missingNotebookService.object);
+        ).thenResolve((missingNotebookService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
-        ).thenResolve(missingNotebookService2.object);
+        ).thenResolve((missingNotebookService2.object as unknown) as IPythonDaemonExecutionService);
 
         let activeService = workingService;
         if (activeInterpreter === missingKernelPython) {
