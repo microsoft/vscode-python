@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
+import { IDisposable } from '../../common/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
@@ -16,7 +17,7 @@ to a raw IPython kernel running on the local machine. RawKernel is in charge of 
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
 export class RawKernel implements Kernel.IKernel {
-    public socket: IKernelSocket;
+    public socket: IKernelSocket & IDisposable;
     public get terminated() {
         return this.realKernel.terminated as any;
     }
@@ -68,7 +69,7 @@ export class RawKernel implements Kernel.IKernel {
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
-    constructor(private realKernel: Kernel.IKernel, socket: IKernelSocket & IWebSocketLike) {
+    constructor(private realKernel: Kernel.IKernel, socket: IKernelSocket & IWebSocketLike & IDisposable) {
         // Save this raw socket as our kernel socket. It will be
         // used to watch and respond to kernel messages.
         this.socket = socket;
@@ -182,7 +183,8 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
     public dispose(): void {
-        return this.realKernel.dispose();
+        this.realKernel.dispose();
+        this.socket.dispose();
     }
     public registerMessageHook(
         msgId: string,

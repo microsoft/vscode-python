@@ -3,6 +3,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as Events from 'events';
+import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
@@ -48,7 +49,7 @@ class SocketEventEmitter extends Events.EventEmitter {
  * This class creates a WebSocket front end on a ZMQ set of connections. It is special in that
  * it does all serialization/deserialization itself.
  */
-export class RawSocket implements IWebSocketLike, IKernelSocket {
+export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     public onopen: (event: { target: any }) => void = noop;
     public onerror: (event: { error: any; message: string; type: string; target: any }) => void = noop;
     public onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void = noop;
@@ -68,6 +69,19 @@ export class RawSocket implements IWebSocketLike, IKernelSocket {
 
         // Setup our ZMQ connections now
         this.generateZMQConnections(connection);
+    }
+
+    public dispose() {
+        // When the socket is completed / disposed, close all the event
+        // listeners and shutdown the socket
+        const closer = (closable: { close(): void }) => {
+            try {
+                closable.close();
+            } catch (ex) {
+                traceError(`Error during socket shutdown`, ex);
+            }
+        };
+        this.zmqSockets.forEach(closer);
     }
 
     public emit(event: string | symbol, ...args: any[]): boolean {
