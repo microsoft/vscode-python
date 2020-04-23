@@ -31,7 +31,10 @@ import {
     IInterpreterSecurityStorage
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
-import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
+import { ResetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
+import { SetInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
+import { SetShebangInterpreterCommand } from '../../client/interpreter/configuration/interpreterSelector/commands/setShebangInterpreter';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import {
@@ -117,6 +120,9 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
+            [IExtensionSingleActivationService, SetInterpreterCommand],
+            [IExtensionSingleActivationService, ResetInterpreterCommand],
+            [IExtensionSingleActivationService, SetShebangInterpreterCommand],
             [IExtensionSingleActivationService, InterpreterSecurityStorage],
             [IInterpreterEvaluation, InterpreterEvaluation],
             [IInterpreterSecurityStorage, InterpreterSecurityStorage],

@@ -13,7 +13,7 @@ import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IDataScienceSettings, IPathUtils } from '../../../../client/common/types';
 import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
 import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
-import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector';
+import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 
 suite('Data Science - Jupyter Interpreter Picker', () => {

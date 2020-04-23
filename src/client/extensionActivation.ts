@@ -38,7 +38,6 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
@@ -120,9 +119,6 @@ async function activateLegacy(
 
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
-    const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
-    selector.initialize();
-    context.subscriptions.push(selector);
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();

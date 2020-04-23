@@ -30,7 +30,10 @@ import {
     IInterpreterSecurityStorage
 } from './autoSelection/types';
 import { InterpreterComparer } from './configuration/interpreterComparer';
-import { InterpreterSelector } from './configuration/interpreterSelector';
+import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
+import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
+import { SetShebangInterpreterCommand } from './configuration/interpreterSelector/commands/setShebangInterpreter';
+import { InterpreterSelector } from './configuration/interpreterSelector/interpreterSelector';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
 import {
@@ -114,6 +117,18 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InterpreterSecurityStorage
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        SetInterpreterCommand
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ResetInterpreterCommand
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        SetShebangInterpreterCommand
     );
     serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
     serviceManager.addSingleton<IInterpreterSecurityStorage>(IInterpreterSecurityStorage, InterpreterSecurityStorage);
