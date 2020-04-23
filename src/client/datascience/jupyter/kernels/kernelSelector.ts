@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IInstaller, Product, Resource } from '../../../common/types';
+import { IInstaller, InstallerResponse, Product, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -45,7 +45,7 @@ export type KernelSpecInterpreter = {
 @injectable()
 export class KernelSelector {
     /**
-     * List of ids of kernels that should be hiddenn from the kernel picker.
+     * List of ids of kernels that should be hidden from the kernel picker.
      *
      * @private
      * @type {new Set<string>}
@@ -402,6 +402,11 @@ export class KernelSelector {
                 return { kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
+        } else {
+            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
+            if (response === InstallerResponse.Installed) {
+                return { kernelSpec, interpreter };
+            }
         }
 
         // Try an install this interpreter as a kernel.
