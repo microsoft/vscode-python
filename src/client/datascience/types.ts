@@ -1050,7 +1050,7 @@ export interface IJupyterServerProvider {
 
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
-    send(data: any, cb?: (err?: Error) => void): void;
+    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages

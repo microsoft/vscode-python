@@ -4,7 +4,7 @@ import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterl
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { IKernelProcess } from '../kernel-launcher/types';
-import { IJMPConnection, ISessionWithSocket, KernelSocketInformation } from '../types';
+import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
 
 /*
@@ -24,7 +24,7 @@ export class RawSession implements ISessionWithSocket {
     private readonly _statusChanged: Signal<this, Kernel.Status>;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(connection: IJMPConnection, public kernelProcess: IKernelProcess) {
+    constructor(public kernelProcess: IKernelProcess) {
         // tslint:disable-next-line: no-require-imports
         const singaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
         this._statusChanged = new singaling.Signal<this, Kernel.Status>(this);
@@ -35,7 +35,7 @@ export class RawSession implements ISessionWithSocket {
         this._clientID = uuid();
 
         // Connect our kernel and hook up status changes
-        this._kernel = createRawKernel(connection, kernelProcess.kernelSpec.name, this._clientID);
+        this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
     }
 

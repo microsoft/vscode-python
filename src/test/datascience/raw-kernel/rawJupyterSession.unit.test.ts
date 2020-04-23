@@ -8,8 +8,7 @@ import { EventEmitter } from 'vscode';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
-import { IJMPConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IJupyterKernelSpec } from '../../../client/datascience/types';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -26,23 +25,15 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 // tslint:disable: max-func-body-length
 suite('Data Science - RawJupyterSession', () => {
     let rawJupyterSession: RawJupyterSession;
-    let serviceContainer: IServiceContainer;
     let kernelLauncher: IKernelLauncher;
     let kernelSelector: KernelSelector;
-    let jmpConnection: typemoq.IMock<IJMPConnection>;
     let kernelProcess: typemoq.IMock<IKernelProcess>;
     let processExitEvent: EventEmitter<number | null>;
     const fakeSpec = { name: 'testspec' };
 
     setup(() => {
-        serviceContainer = mock<IServiceContainer>();
         kernelLauncher = mock<IKernelLauncher>();
         kernelSelector = mock(KernelSelector);
-
-        // Fake out our jmp connection
-        jmpConnection = createTypeMoq<IJMPConnection>('jmp connection');
-        jmpConnection.setup((jmp) => jmp.connect(typemoq.It.isAny())).returns(() => Promise.resolve());
-        when(serviceContainer.get<IJMPConnection>(IJMPConnection)).thenReturn(jmpConnection.object);
 
         // Set up a fake kernel process for the launcher to return
         processExitEvent = new EventEmitter<number | null>();
@@ -57,11 +48,7 @@ suite('Data Science - RawJupyterSession', () => {
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
         when(kernelLauncher.launch(anything(), anything())).thenResolve(kernelProcess.object);
 
-        rawJupyterSession = new RawJupyterSession(
-            instance(kernelLauncher),
-            instance(serviceContainer),
-            instance(kernelSelector)
-        );
+        rawJupyterSession = new RawJupyterSession(instance(kernelLauncher), instance(kernelSelector));
     });
 
     test('RawJupyterSession - shutdown on dispose', async () => {

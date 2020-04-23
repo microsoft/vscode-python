@@ -7,15 +7,14 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
 import { BaseJupyterSession } from '../baseJupyterSession';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { IKernelConnection, IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
-import { IJMPConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
+import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
 
 /* 
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -28,11 +27,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     private resource?: Resource;
     private processExitHandler: IDisposable | undefined;
 
-    constructor(
-        private readonly kernelLauncher: IKernelLauncher,
-        private readonly serviceContainer: IServiceContainer,
-        kernelSelector: KernelSelector
-    ) {
+    constructor(private readonly kernelLauncher: IKernelLauncher, kernelSelector: KernelSelector) {
         super(kernelSelector);
     }
 
@@ -163,18 +158,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         // Wait for the process to actually be ready to connect to
         await process.ready;
 
-        const connection = await this.jmpConnection(process.connection);
-
         // Create our raw session, it will own the process lifetime
-        return new RawSession(connection, process);
-    }
-
-    // Create and connect our JMP (Jupyter Messaging Protocol) for talking to the raw kernel
-    private async jmpConnection(kernelConnection: IKernelConnection): Promise<IJMPConnection> {
-        const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
-
-        await connection.connect(kernelConnection);
-
-        return connection;
+        return new RawSession(process);
     }
 }

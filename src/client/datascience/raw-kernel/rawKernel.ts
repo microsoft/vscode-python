@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { serialize } from '@jupyterlab/services/lib/kernel/serialize';
 import * as uuid from 'uuid/v4';
-import { IWebSocketLike, KernelSocketWrapper } from '../kernelSocketWrapper';
-import { IJMPConnection, IKernelSocket } from '../types';
+import { IKernelProcess } from '../kernel-launcher/types';
+import { IWebSocketLike } from '../kernelSocketWrapper';
+import { IKernelSocket } from '../types';
 import { RawSocket } from './rawSocket';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const rewire = require('rewire') as typeof import('rewire');
@@ -200,12 +200,12 @@ export class RawKernel implements Kernel.IKernel {
 
 let defaultImport: any;
 
-export function createRawKernel(connection: IJMPConnection, name: string, clientId: string): RawKernel {
+export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
-    class RawSocketWrapper extends KernelSocketWrapper(RawSocket) {
+    class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(connection, clientId);
+            super(kernelProcess.connection);
             socketInstance = this;
         }
     }
@@ -218,7 +218,8 @@ export function createRawKernel(connection: IJMPConnection, name: string, client
         wsUrl: 'RAW'
     });
 
-    // Then create the real kernel
+    // Then create the real kernel. We will remap its serialize/deserialize functions
+    // to do nothing so that we can control serialization at our socket layer.
     // tslint:disable-next-line: no-require-imports
     if (!defaultImport) {
         defaultImport = rewire('@jupyterlab/services/lib/kernel/default');
@@ -227,7 +228,7 @@ export function createRawKernel(connection: IJMPConnection, name: string, client
     }
     const realKernel = new defaultImport.DefaultKernel(
         {
-            name,
+            name: kernelProcess.kernelSpec.name,
             serverSettings: settings,
             clientId,
             handleComms: true

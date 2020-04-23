@@ -93,7 +93,7 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer, this.kernelSelector);
+        const rawSession = new RawJupyterSession(this.kernelLauncher, this.kernelSelector);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
             const launchedKernelSpec = await rawSession.connect(
