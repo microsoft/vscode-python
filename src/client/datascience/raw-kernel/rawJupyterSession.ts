@@ -40,20 +40,25 @@ export class RawJupyterSession extends BaseJupyterSession {
         // RawKernels are good to go right away
     }
 
+    //public async connect(
+    //resource: Resource,
+    //timeout: number,
+    //kernelName?: string,
+    //cancelToken?: CancellationToken
+    //): Promise<IJupyterKernelSpec | undefined> {
+
+    // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     public async connect(
-        resource: Resource,
+        kernelSpec: IJupyterKernelSpec,
         timeout: number,
-        kernelName?: string,
         cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined> {
-        // Save the resource that we connect with
-        this.resource = resource;
+    ): Promise<void> {
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
             const newSession = await waitForPromise(
                 Promise.race([
-                    this.startRawSession(resource, kernelName, cancelToken),
+                    this.startRawSession(kernelSpec, cancelToken),
                     createPromiseFromCancellation({
                         cancelAction: 'reject',
                         defaultValue: new CancellationError(),
@@ -85,7 +90,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.startRestartSession();
 
         this.connected = true;
-        return this.session.process?.kernelSpec;
     }
 
     public async createNewKernelSession(
@@ -97,7 +101,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        return this.startRawSession(this.resource, kernel);
+        return this.startRawSession(kernel);
     }
 
     protected startRestartSession() {
@@ -114,19 +118,20 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
-        const startPromise = this.startRawSession(this.resource, kernelSpec, cancelToken);
+        const startPromise = this.startRawSession(kernelSpec, cancelToken);
         return startPromise.then((session) => {
             this.kernelSelector.addKernelToIgnoreList(session.kernel);
             return session;
         });
     }
 
-    private async startRawSession(
-        resource: Resource,
-        kernelName?: string | IJupyterKernelSpec,
-        cancelToken?: CancellationToken
-    ): Promise<ISession> {
-        const process = await this.kernelLauncher.launch(resource, kernelName, cancelToken);
+    //private async startRawSession(
+    //resource: Resource,
+    //kernelName?: string | IJupyterKernelSpec,
+    //cancelToken?: CancellationToken
+    //): Promise<ISession> {
+    private async startRawSession(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<ISession> {
+        const process = await this.kernelLauncher.launch(kernelSpec, cancelToken);
 
         if (!process.connection) {
             traceError('KernelProcess launched without connection info');

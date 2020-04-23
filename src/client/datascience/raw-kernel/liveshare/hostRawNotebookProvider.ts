@@ -20,7 +20,7 @@ import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelFinder, IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterKernelSpec,
@@ -50,6 +50,7 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
+        private kernelFinder: IKernelFinder,
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter
     ) {
@@ -96,15 +97,18 @@ export class HostRawNotebookProvider
         const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer, this.kernelSelector);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
-            const launchedKernelSpec = await rawSession.connect(
+
+            // Before we try to connect we need to find a kernel and install ipykernel
+            const kernelSpec = await this.kernelFinder.findKernelSpec(
                 resource,
-                launchTimeout,
                 notebookMetadata?.kernelspec?.name,
                 cancelToken
             );
 
+            await rawSession.connect(kernelSpec, launchTimeout, cancelToken);
+
             // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(launchedKernelSpec);
+            const info = await this.getExecutionInfo(kernelSpec);
 
             if (rawSession.isConnected) {
                 // Create our notebook
