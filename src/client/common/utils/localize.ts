@@ -159,7 +159,7 @@ export namespace Interpreters {
 export namespace InterpreterQuickPickList {
     export const quickPickListPlaceholder = localize(
         'InterpreterQuickPickList.quickPickListPlaceholder',
-        'current: {0}'
+        'Current: {0}'
     );
     export const enterPath = {
         detail: localize(

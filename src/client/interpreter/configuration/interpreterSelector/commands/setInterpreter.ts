@@ -8,7 +8,7 @@ import { QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IPathUtils } from '../../../../common/types';
+import { IConfigurationService, IPathUtils, Resource } from '../../../../common/types';
 import { InterpreterQuickPickList } from '../../../../common/utils/localize';
 import {
     IMultiStepInput,
@@ -16,14 +16,10 @@ import {
     InputStep,
     IQuickPickParameters
 } from '../../../../common/utils/multiStepInput';
-import {
-    IInterpreterQuickPickItem,
-    IInterpreterSelector,
-    InterpreterStateArgs,
-    IPythonPathUpdaterServiceManager
-} from '../../types';
+import { IInterpreterQuickPickItem, IInterpreterSelector, IPythonPathUpdaterServiceManager } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
+export type InterpreterStateArgs = { path?: string; workspace: Resource };
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand {
     constructor(

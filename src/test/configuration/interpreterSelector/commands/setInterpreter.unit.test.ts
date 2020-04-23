@@ -13,11 +13,13 @@ import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { InterpreterQuickPickList, Interpreters } from '../../../../client/common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
-import { SetInterpreterCommand } from '../../../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
+import {
+    InterpreterStateArgs,
+    SetInterpreterCommand
+} from '../../../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import {
     IInterpreterQuickPickItem,
     IInterpreterSelector,
-    InterpreterStateArgs,
     IPythonPathUpdaterServiceManager
 } from '../../../../client/interpreter/configuration/types';
 
