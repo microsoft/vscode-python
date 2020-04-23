@@ -65,7 +65,8 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
-export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
+// This daemon will belong to a daemon pool (i.e it goes back into a pool for re-use).
+export type PooledDaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
     /**
      * Python file that implements the daemon.
      *
@@ -96,6 +97,26 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      */
     observableDaemonCount?: number;
 };
+// This daemon will not belong to a daemon pool (i.e its a dedicated daemon and cannot be re-used).
+export type DedicatedDaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
+    /**
+     * Python file that implements the daemon.
+     */
+    daemonModule?: string;
+    /**
+     * Typescript Daemon class (client) that maps to the Python daemon.
+     * Defaults to `PythonDaemonExecutionService`.
+     * Any other class provided must extend `PythonDaemonExecutionService`.
+     */
+    daemonClass?: Newable<IPythonDaemonExecutionService>;
+    /**
+     * This flag indicates it is a dedicated daemon.
+     */
+    dedicated: true;
+};
+export type DaemonExecutionFactoryCreationOptions =
+    | PooledDaemonExecutionFactoryCreationOptions
+    | DedicatedDaemonExecutionFactoryCreationOptions;
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
     interpreter?: PythonInterpreter;
@@ -117,10 +138,12 @@ export interface IPythonExecutionFactory {
      * Note: The returned execution service is always using an activated environment.
      *
      * @param {ExecutionFactoryCreationOptions} options
-     * @returns {(Promise<IPythonExecutionService & IDisposable>)}
+     * @returns {(Promise<IPythonDaemonExecutionService>)}
      * @memberof IPythonExecutionFactory
      */
-    createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
+    createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
+        options: DaemonExecutionFactoryCreationOptions
+    ): Promise<T>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
     createCondaExecutionService(
         pythonPath: string,

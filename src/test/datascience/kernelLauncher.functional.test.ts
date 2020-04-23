@@ -54,7 +54,7 @@ suite('DataScience - Kernel Launcher', () => {
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
             // It should not exit.
-            assert.isRejected(
+            await assert.isRejected(
                 waitForCondition(() => exited, 5_000, 'Timeout'),
                 'Timeout'
             );
@@ -160,7 +160,7 @@ suite('DataScience - Kernel Launcher', () => {
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             // It should not exit.
-            assert.isRejected(
+            await assert.isRejected(
                 waitForCondition(() => exited, 5_000, 'Timeout'),
                 'Timeout'
             );
@@ -193,7 +193,7 @@ suite('DataScience - Kernel Launcher', () => {
                 'Timeout'
             );
         }
-    });
+    }).timeout(10_000);
 
     test('Bind with ZMQ', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING) {

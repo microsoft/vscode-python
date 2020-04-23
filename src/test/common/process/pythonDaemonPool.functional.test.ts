@@ -31,7 +31,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { PythonDaemonModule } from '../../../client/datascience/constants';
+import { JupyterDaemonModule } from '../../../client/datascience/constants';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
@@ -50,12 +50,12 @@ suite('Daemon - Python Daemon Pool', () => {
     let pythonDaemonPool: PythonDaemonExecutionServicePool;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
-    let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService>>;
+    let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService | IDisposable>>;
     let logger: IProcessLogger;
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // tslint:disable-next-line: no-unnecessary-override
-        public createDaemonServices(): Promise<IPythonDaemonExecutionService> {
-            return super.createDaemonServices();
+        public createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
+            return super.createDaemonService();
         }
     }
     suiteSetup(() => {
@@ -72,7 +72,7 @@ suite('Daemon - Python Daemon Pool', () => {
             return this.skip();
         }
         logger = mock(ProcessLogger);
-        createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
+        createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonService');
         pythonExecutionService = mock<IPythonExecutionService>();
         when(
             pythonExecutionService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
@@ -90,7 +90,7 @@ suite('Daemon - Python Daemon Pool', () => {
         });
         const options = {
             pythonPath: fullyQualifiedPythonPath,
-            daemonModule: PythonDaemonModule,
+            daemonModule: JupyterDaemonModule,
             daemonCount: 2,
             observableDaemonCount: 1
         };

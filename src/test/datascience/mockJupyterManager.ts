@@ -20,6 +20,7 @@ import { ProductInstaller } from '../../client/common/installer/productInstaller
 import {
     ExecutionResult,
     IProcessServiceFactory,
+    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     Output
 } from '../../client/common/process/types';
@@ -253,7 +254,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     })
                 )
             )
-            .returns(() => Promise.resolve(pythonService));
+            .returns(() => Promise.resolve((pythonService as unknown) as IPythonDaemonExecutionService));
         this.pythonExecutionFactory
             .setup((f) =>
                 f.createActivatedEnvironment(
