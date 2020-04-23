@@ -4,11 +4,12 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
+import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
@@ -27,6 +28,7 @@ suite('Kernel Finder', () => {
     let platformService: typemoq.IMock<IPlatformService>;
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
+    let installer: IInstaller;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonInterpreter;
     const interpreters: PythonInterpreter[] = [];
@@ -57,6 +59,9 @@ suite('Kernel Finder', () => {
         interpreterService
             .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
             .returns(() => Promise.resolve(activeInterpreter));
+        interpreterService
+            .setup((is) => is.getInterpreterDetails(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(activeInterpreter));
 
         interpreterLocator = typemoq.Mock.ofType<IInterpreterLocatorService>();
         interpreterLocator
@@ -73,6 +78,9 @@ suite('Kernel Finder', () => {
 
         context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => './');
+
+        installer = mock<IInstaller>();
+        when(installer.isInstalled(anything(), anything())).thenResolve(true);
 
         activeInterpreter = {
             path: context.object.globalStoragePath,
@@ -101,6 +109,7 @@ suite('Kernel Finder', () => {
             platformService.object,
             fileSystem.object,
             pathUtils.object,
+            instance(installer),
             context.object
         );
     });

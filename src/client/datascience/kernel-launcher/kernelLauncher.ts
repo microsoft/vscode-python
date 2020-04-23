@@ -7,12 +7,10 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
-import { wrapCancellationTokens } from '../../common/cancellation';
+import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IInstaller, InstallerResponse, Product, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -20,7 +18,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
 import { findIndexOfConnectionFile } from './kernelFinder';
-import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
+import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -128,10 +126,8 @@ class KernelProcess implements IKernelProcess {
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     constructor(
-        //@inject(IKernelFinder) private kernelFinder: IKernelFinder,
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IInstaller) private installer: IInstaller,
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 

@@ -5,7 +5,7 @@
 import { Kernel } from '@jupyterlab/services';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -99,7 +99,7 @@ export class KernelFinder implements IKernelFinder {
         this.writeCache(this.cache).ignoreErrors();
 
         // Verify that ipykernel is installed into the given kernelspec interpreter
-        return this.verifyIpyKernel(foundKernel);
+        return this.verifyIpyKernel(foundKernel, cancelToken);
     }
 
     // For the given kernelspec return back the kernelspec with ipykernel installed into it or error

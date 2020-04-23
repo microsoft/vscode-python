@@ -55,7 +55,7 @@ suite('Data Science - RawJupyterSession', () => {
         kernelProcess.setup((kp) => kp.connection).returns(() => 'testconnection' as any);
         kernelProcess.setup((kp) => kp.ready).returns(() => Promise.resolve());
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
-        when(kernelLauncher.launch(anything(), anything(), anything())).thenResolve(kernelProcess.object);
+        when(kernelLauncher.launch(anything(), anything())).thenResolve(kernelProcess.object);
 
         rawJupyterSession = new RawJupyterSession(
             instance(kernelLauncher),
@@ -83,7 +83,7 @@ suite('Data Science - RawJupyterSession', () => {
         await rawJupyterSession.restart(60_000);
 
         // Three calls to launch (connect, first restart session, second restart session)
-        verify(kernelLauncher.launch(anything(), anything(), anything())).thrice();
+        verify(kernelLauncher.launch(anything(), anything())).thrice();
 
         // Dispose should have been called for the first process
         kernelProcess.verifyAll();
@@ -106,7 +106,7 @@ suite('Data Science - RawJupyterSession', () => {
         await rawJupyterSession.changeKernel(newKernel, 60_000);
 
         // Four connects and two processes disposed
-        verify(kernelLauncher.launch(anything(), anything(), anything())).times(4);
+        verify(kernelLauncher.launch(anything(), anything())).times(4);
         kernelProcess.verifyAll();
     });
 
@@ -114,9 +114,8 @@ suite('Data Science - RawJupyterSession', () => {
         const shutdown = sinon.stub(rawJupyterSession, 'shutdown');
         shutdown.resolves();
 
-        const kernelSpec = await rawJupyterSession.connect({} as any, 60_000);
+        await rawJupyterSession.connect({} as any, 60_000);
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
-        expect(kernelSpec).to.equal(fakeSpec);
 
         // Kill the process, we should shutdown
         processExitEvent.fire(0);

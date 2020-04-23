@@ -4,7 +4,6 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -25,8 +24,6 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
-    private resource?: Resource;
-
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         private readonly serviceContainer: IServiceContainer,
@@ -96,7 +93,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         kernel: IJupyterKernelSpec | LiveKernelModel,
         _timeoutMS: number
     ): Promise<ISession> {
-        if (!this.resource || !kernel || 'session' in kernel) {
+        if (!kernel || 'session' in kernel) {
             // Don't allow for connecting to a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -114,7 +111,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         _session: ISession,
         cancelToken?: CancellationToken
     ): Promise<ISession> {
-        if (!this.resource || !kernelSpec || 'session' in kernelSpec) {
+        if (!kernelSpec || 'session' in kernelSpec) {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
