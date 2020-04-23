@@ -275,7 +275,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // tslint:disable: react-no-dangerous-html
             if (this.props.cellVM.uiSideError) {
                 outputs.push(
-                    <div key={0} className="cell-output-uiSideError">
+                    <div key={'uiError'} className="cell-output-uiSideError">
                         <div dangerouslySetInnerHTML={{ __html: this.props.cellVM.uiSideError }} />
                     </div>
                 );
