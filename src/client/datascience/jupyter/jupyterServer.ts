@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -19,6 +19,8 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import {
     IJupyterConnection,
     IJupyterSession,
@@ -94,6 +96,7 @@ export class JupyterServerBase implements INotebookServer {
         this.savedSession = session;
     }
 
+    @captureTelemetry(Telemetry.JupyterCreatingNotebook, undefined, true)
     public createNotebook(
         resource: Resource,
         identity: Uri,

@@ -97,7 +97,12 @@ export class NotebookProvider implements INotebookProvider {
 
         // Finally create if needed
         const promise = rawKernel
-            ? this.rawNotebookProvider.createNotebook(options.identity, options.identity, options.metadata)
+            ? this.rawNotebookProvider.createNotebook(
+                  options.identity,
+                  options.identity,
+                  options.disableUI,
+                  options.metadata
+              )
             : this.jupyterNotebookProvider.createNotebook(options);
 
         this.cacheNotebookPromise(options.identity, promise);

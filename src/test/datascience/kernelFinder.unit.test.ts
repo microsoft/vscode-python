@@ -3,23 +3,32 @@
 'use strict';
 
 import * as assert from 'assert';
+import { expect } from 'chai';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
 import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IExtensionContext, IPathUtils, Resource } from '../../client/common/types';
+import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    IInterpreterService,
+    InterpreterType,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
+    let interpreterLocator: typemoq.IMock<IInterpreterLocatorService>;
     let fileSystem: typemoq.IMock<IFileSystem>;
     let platformService: typemoq.IMock<IPlatformService>;
     let pathUtils: typemoq.IMock<IPathUtils>;
     let context: typemoq.IMock<IExtensionContext>;
+    let installer: IInstaller;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonInterpreter;
     const interpreters: PythonInterpreter[] = [];
@@ -28,10 +37,11 @@ suite('Kernel Finder', () => {
     const kernel: IJupyterKernelSpec = {
         name: 'testKernel',
         language: 'python',
-        path: '',
+        path: '<python path>',
         display_name: 'Python 3',
         metadata: {},
-        argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '<connection_file>']
+        env: {},
+        argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
     };
 
     function setupFileSystem() {
@@ -39,16 +49,24 @@ suite('Kernel Finder', () => {
             .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
         fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
+        fileSystem
+            .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+            .returns((param: string) => Promise.resolve([param]));
     }
 
     setup(() => {
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
-            .setup((is) => is.getInterpreters(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(interpreters));
-        interpreterService
             .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
             .returns(() => Promise.resolve(activeInterpreter));
+        interpreterService
+            .setup((is) => is.getInterpreterDetails(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(activeInterpreter));
+
+        interpreterLocator = typemoq.Mock.ofType<IInterpreterLocatorService>();
+        interpreterLocator
+            .setup((il) => il.getInterpreters(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve(interpreters));
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
         platformService = typemoq.Mock.ofType<IPlatformService>();
@@ -60,6 +78,9 @@ suite('Kernel Finder', () => {
 
         context = typemoq.Mock.ofType<IExtensionContext>();
         context.setup((c) => c.globalStoragePath).returns(() => './');
+
+        installer = mock<IInstaller>();
+        when(installer.isInstalled(anything(), anything())).thenResolve(true);
 
         activeInterpreter = {
             path: context.object.globalStoragePath,
@@ -84,9 +105,11 @@ suite('Kernel Finder', () => {
 
         kernelFinder = new KernelFinder(
             interpreterService.object,
+            interpreterLocator.object,
             platformService.object,
             fileSystem.object,
             pathUtils.object,
+            instance(installer),
             context.object
         );
     });
@@ -112,7 +135,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(resource, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -130,7 +153,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -148,7 +171,7 @@ suite('Kernel Finder', () => {
                 return Promise.resolve(JSON.stringify(kernel));
             });
         const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
-        assert.deepEqual(spec, kernel);
+        expect(spec).to.deep.include(kernel);
         fileSystem.reset();
     });
 
@@ -197,7 +220,7 @@ suite('Kernel Finder', () => {
 
         // get the same kernel, but from cache
         const spec2 = await kernelFinder.findKernelSpec(resource, spec.name);
-        assert.deepEqual(spec, spec2);
+        expect(spec).to.deep.include(spec2);
 
         fileSystem.verifyAll();
         fileSystem.reset();

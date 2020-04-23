@@ -71,8 +71,24 @@ suite('Data Science - KernelService', () => {
 
     test('Should not return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '1',
+                path: '',
+                display_name: '1',
+                metadata: {},
+                env: undefined
+            },
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '2',
+                path: '',
+                display_name: '2',
+                metadata: {},
+                env: undefined
+            }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -86,8 +102,24 @@ suite('Data Science - KernelService', () => {
     });
     test('Should not return a matching spec from a session for a given interpeter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '1',
+                path: '',
+                display_name: '1',
+                metadata: {},
+                env: undefined
+            },
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '2',
+                path: '',
+                display_name: '2',
+                metadata: {},
+                env: undefined
+            }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         const interpreter: PythonInterpreter = {
@@ -127,8 +159,24 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '1',
+                path: 'Path1',
+                display_name: 'Disp1',
+                metadata: {},
+                env: undefined
+            },
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '2',
+                path: 'Path2',
+                display_name: 'Disp2',
+                metadata: {},
+                env: undefined
+            }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -146,14 +194,23 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given interpreter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
+            {
+                argv: [],
+                language: PYTHON_LANGUAGE,
+                name: '1',
+                path: 'Path1',
+                display_name: 'Disp1',
+                metadata: {},
+                env: undefined
+            },
             {
                 argv: [],
                 language: PYTHON_LANGUAGE,
                 name: '2',
                 path: 'Path2',
                 display_name: 'Disp2',
-                metadata: { interpreter: { path: 'myPath2' } }
+                metadata: { interpreter: { path: 'myPath2' } },
+                env: undefined
             },
             {
                 argv: [],
@@ -161,7 +218,8 @@ suite('Data Science - KernelService', () => {
                 name: '3',
                 path: 'Path3',
                 display_name: 'Disp3',
-                metadata: { interpreter: { path: 'myPath3' } }
+                metadata: { interpreter: { path: 'myPath3' } },
+                env: undefined
             }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);

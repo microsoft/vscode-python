@@ -80,6 +80,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',

@@ -45,7 +45,8 @@ suite('Data Science - KernelSelections', () => {
         language: PYTHON_LANGUAGE,
         name: 'py1',
         path: 'somePath',
-        metadata: {}
+        metadata: {},
+        env: {}
     };
     const python3KernelSpecModel = {
         argv: [],
@@ -53,7 +54,8 @@ suite('Data Science - KernelSelections', () => {
         language: PYTHON_LANGUAGE,
         name: 'py3',
         path: 'somePath3',
-        metadata: {}
+        metadata: {},
+        env: {}
     };
     const juliaKernelSpecModel = {
         argv: [],
@@ -61,9 +63,18 @@ suite('Data Science - KernelSelections', () => {
         language: 'julia',
         name: 'julia',
         path: 'j',
-        metadata: {}
+        metadata: {},
+        env: {}
     };
-    const rKernelSpecModel = { argv: [], display_name: 'R', language: 'r', name: 'r', path: 'r', metadata: {} };
+    const rKernelSpecModel = {
+        argv: [],
+        display_name: 'R',
+        language: 'r',
+        name: 'r',
+        path: 'r',
+        metadata: {},
+        env: {}
+    };
 
     const allSpecs: IJupyterKernelSpec[] = [
         python1KernelSpecModel,

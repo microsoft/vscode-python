@@ -92,6 +92,7 @@ suite('Refactor Rename', () => {
             .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+
         serviceContainer
             .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(

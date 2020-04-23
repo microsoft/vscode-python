@@ -299,6 +299,7 @@ suite('Python Settings', async () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',

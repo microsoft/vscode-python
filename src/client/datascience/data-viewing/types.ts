@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@phosphor/coreutils';
 
 import { SharedMessages } from '../messages';
 import { IJupyterVariable } from '../types';

@@ -54,7 +54,6 @@ suite('Data Science - ipywidget - Widget Script Source Provider', () => {
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
-        CDNWidgetScriptSourceProvider.validUrls = new Map<string, boolean>();
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
             instance(notebook),
             instance(resourceConverter),

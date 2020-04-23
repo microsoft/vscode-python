@@ -37,7 +37,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     private connected: boolean = false;
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
+        @inject(ILanguageServerAnalysisOptions)
+        @named(LanguageServerType.Node)
+        private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_LS_SURVEY)
         private readonly surveyBanner: IPythonExtensionBanner,

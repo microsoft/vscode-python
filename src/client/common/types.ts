@@ -348,6 +348,7 @@ export interface IDataScienceSettings {
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
+    enableScrollingForCellOutputs: boolean;
     enableGather?: boolean;
     gatherToScript?: boolean;
     gatherSpecPath?: string;

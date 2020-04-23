@@ -2,15 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { ChildProcess } from 'child_process';
 import { IDisposable } from 'monaco-editor';
-import { Event } from 'vscode';
+import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri, kernelName?: string | IJupyterKernelSpec): Promise<IKernelProcess>;
+    launch(kernelSpec: IJupyterKernelSpec): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -27,16 +26,18 @@ export interface IKernelConnection {
 }
 
 export interface IKernelProcess extends IDisposable {
-    process: ChildProcess | undefined;
     readonly connection: Readonly<IKernelConnection>;
     ready: Promise<void>;
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
     exited: Event<number | null>;
     dispose(): void;
-    launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }
 
 export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
-    findKernelSpec(interpreterUri: InterpreterUri, kernelName?: string): Promise<IJupyterKernelSpec>;
+    findKernelSpec(
+        interpreterUri: InterpreterUri,
+        kernelName?: string,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec>;
 }

@@ -208,7 +208,8 @@ suite('Data Science - JupyterSession', () => {
                     },
                     kernel: {
                         status: 'idle',
-                        restart: () => (restartCount = restartCount + 1)
+                        restart: () => (restartCount = restartCount + 1),
+                        registerCommTarget: noop
                     },
                     shutdown: () => Promise.resolve(),
                     isRemoteSession: false
@@ -225,6 +226,7 @@ suite('Data Science - JupyterSession', () => {
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
+                when(remoteKernel.registerCommTarget(anything(), anything())).thenReturn();
                 when(sessionManager.startNew(anything())).thenCall(() => {
                     return Promise.resolve(instance(remoteSession));
                 });
@@ -315,7 +317,8 @@ suite('Data Science - JupyterSession', () => {
                     display_name: 'new kernel',
                     language: 'python',
                     name: 'newkernel',
-                    path: 'path'
+                    path: 'path',
+                    env: undefined
                 };
 
                 await jupyterSession.changeKernel(newKernel, 10000);

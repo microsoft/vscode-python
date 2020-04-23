@@ -7,19 +7,21 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
+import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelFinder, IKernelLauncher } from '../../kernel-launcher/types';
+import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterKernelSpec,
     INotebook,
@@ -48,7 +50,9 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelSelector: KernelSelector
+        private kernelFinder: IKernelFinder,
+        private kernelSelector: KernelSelector,
+        private progressReporter: ProgressReporter
     ) {
         super(liveShare, asyncRegistry);
     }
@@ -79,24 +83,32 @@ export class HostRawNotebookProvider
     protected async createNotebookInstance(
         resource: Resource,
         identity: vscode.Uri,
+        disableUI?: boolean,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         const notebookPromise = createDeferred<INotebook>();
         this.setNotebook(identity, notebookPromise.promise);
 
+        const progressReporter = !disableUI
+            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
+            : undefined;
+
         const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer, this.kernelSelector);
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
-            const launchedKernelSpec = await rawSession.connect(
+
+            // Before we try to connect we need to find a kernel and install ipykernel
+            const kernelSpec = await this.kernelFinder.findKernelSpec(
                 resource,
-                launchTimeout,
                 notebookMetadata?.kernelspec?.name,
                 cancelToken
             );
 
+            await rawSession.connect(kernelSpec, launchTimeout, cancelToken);
+
             // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(launchedKernelSpec);
+            const info = await this.getExecutionInfo(kernelSpec);
 
             if (rawSession.isConnected) {
                 // Create our notebook
@@ -132,6 +144,8 @@ export class HostRawNotebookProvider
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             notebookPromise.reject(ex);
+        } finally {
+            progressReporter?.dispose(); // NOSONAR
         }
 
         return notebookPromise.promise;

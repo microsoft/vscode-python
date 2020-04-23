@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { isTestExecution } from '../../../common/constants';
 import { traceInfo } from '../../../common/logger';

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { ISignal, Signal } from '@phosphor/signaling';
+import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
+import type { JSONObject } from '@phosphor/coreutils';
+import type { ISignal, Signal } from '@phosphor/signaling';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
@@ -94,7 +94,9 @@ export class RawKernel implements Kernel.IKernel {
         this._clientId = clientId;
         this._id = uuid();
         this._status = 'unknown';
-        this._statusChanged = new Signal<this, Kernel.Status>(this);
+        // tslint:disable-next-line: no-require-imports
+        const signalling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._statusChanged = new signalling.Signal<this, Kernel.Status>(this);
 
         // Subscribe to messages coming in from our JMP channel
         this.jmpConnection = jmpConnection;
@@ -438,7 +440,7 @@ export class RawKernel implements Kernel.IKernel {
         return false;
     }
 
-    /* 
+    /*
     Messages are handled async so there is a possibility that the kernel might be
     disposed or restarted during handling. Throw an error here if our message that
     we are handling is no longer valid.

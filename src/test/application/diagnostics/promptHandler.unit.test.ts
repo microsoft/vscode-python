@@ -5,6 +5,7 @@
 
 // tslint:disable:insecure-random max-func-body-length no-any
 
+import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DiagnosticSeverity } from 'vscode';
 import {
@@ -68,6 +69,70 @@ suite('Application Diagnostics - PromptHandler', () => {
 
             await promptHandler.handle(diagnostic);
             appShell.verifyAll();
+        });
+        test(`Handling a diagnositic of severity '${severity.name}' should invoke the onClose handler`, async () => {
+            const diagnostic: IDiagnostic = {
+                code: '1' as any,
+                message: 'one',
+                scope: DiagnosticScope.Global,
+                severity: severity.value,
+                resource: undefined,
+                invokeHandler: 'default'
+            };
+            let onCloseHandlerInvoked = false;
+            const options: MessageCommandPrompt = {
+                commandPrompts: [{ prompt: 'Yes' }, { prompt: 'No' }],
+                message: 'Custom Message',
+                onClose: () => {
+                    onCloseHandlerInvoked = true;
+                }
+            };
+
+            switch (severity.value) {
+                case DiagnosticSeverity.Error: {
+                    appShell
+                        .setup((a) =>
+                            a.showErrorMessage(
+                                typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue('Yes'),
+                                typemoq.It.isValue('No')
+                            )
+                        )
+                        .returns(() => Promise.resolve('Yes'))
+                        .verifiable(typemoq.Times.once());
+                    break;
+                }
+                case DiagnosticSeverity.Warning: {
+                    appShell
+                        .setup((a) =>
+                            a.showWarningMessage(
+                                typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue('Yes'),
+                                typemoq.It.isValue('No')
+                            )
+                        )
+                        .returns(() => Promise.resolve('Yes'))
+                        .verifiable(typemoq.Times.once());
+                    break;
+                }
+                default: {
+                    appShell
+                        .setup((a) =>
+                            a.showInformationMessage(
+                                typemoq.It.isValue(options.message!),
+                                typemoq.It.isValue('Yes'),
+                                typemoq.It.isValue('No')
+                            )
+                        )
+                        .returns(() => Promise.resolve('Yes'))
+                        .verifiable(typemoq.Times.once());
+                    break;
+                }
+            }
+
+            await promptHandler.handle(diagnostic, options);
+            appShell.verifyAll();
+            expect(onCloseHandlerInvoked).to.equal(true, 'onClose handler should be called.');
         });
         test(`Handling a diagnositic of severity '${severity.name}' should display a custom message with buttons`, async () => {
             const diagnostic: IDiagnostic = {

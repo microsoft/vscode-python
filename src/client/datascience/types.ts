@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import type { Session } from '@jupyterlab/services';
 import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
-import { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import {
     CancellationToken,
@@ -145,6 +145,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
     createNotebook(
         identity: Uri,
         resource: Resource,
+        disableUI?: boolean,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
@@ -389,6 +390,7 @@ export interface IJupyterKernelSpec {
     name: string;
     language: string;
     path: string;
+    env: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.
      *
@@ -435,6 +437,10 @@ export interface IDataScienceErrorHandler {
  * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
  */
 export interface ILocalResourceUriConverter {
+    /**
+     * Root folder that scripts should be copied to.
+     */
+    readonly rootScriptFolder: Uri;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *

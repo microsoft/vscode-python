@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Slot } from '@phosphor/signaling';
+import type { JSONObject } from '@phosphor/coreutils';
+import type { Slot } from '@phosphor/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
@@ -75,7 +75,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (session && oldSession !== session) {
             const socket = JupyterWebSockets.get(session.kernel.id);
             if (!socket) {
-                traceError(`Unable to find WebSocket connetion assocated with kerne ${session.kernel.id}`);
+                traceError(`Unable to find WebSocket connetion assocated with kernel ${session.kernel.id}`);
                 this._kernelSocket.next(undefined);
                 return;
             }

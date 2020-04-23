@@ -10,8 +10,8 @@ import type {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Slot } from '@phosphor/signaling';
+import type { JSONObject } from '@phosphor/coreutils';
+import type { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
@@ -23,7 +23,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, ISession, JupyterSessionStartError } from '../baseJupyterSession';
-import { Telemetry } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IJupyterConnection, IJupyterKernelSpec } from '../types';
@@ -235,6 +235,10 @@ export class JupyterSession extends BaseJupyterSession {
 
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {
+                // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+                // Restart sessions and retries might make this hard to do correctly otherwise.
+                session.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
                 return;
             }
 

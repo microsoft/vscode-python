@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
@@ -1419,7 +1419,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             name: kernel.name,
             language: kernel.language ?? 'python',
             display_name: kernel.display_name ?? kernel.name,
-            argv: kernel.argv ?? []
+            argv: kernel.argv ?? [],
+            env: kernel.env
         };
         return this.updateNotebookOptions(kernelSpec, this._notebook?.getMatchingInterpreter());
     }

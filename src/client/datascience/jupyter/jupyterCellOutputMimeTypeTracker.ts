@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';

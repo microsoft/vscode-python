@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -11,6 +11,8 @@ import { traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
 class RawConnection implements IRawConnection {
@@ -45,13 +47,15 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         return Promise.resolve(this.rawConnection);
     }
 
+    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
         identity: Uri,
         resource: Resource,
+        disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
         cancelToken: CancellationToken
     ): Promise<INotebook> {
-        return this.createNotebookInstance(resource, identity, notebookMetadata, cancelToken);
+        return this.createNotebookInstance(resource, identity, disableUI, notebookMetadata, cancelToken);
     }
 
     public async getNotebook(identity: Uri): Promise<INotebook | undefined> {
@@ -97,6 +101,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     protected createNotebookInstance(
         _resource: Resource,
         _identity: Uri,
+        _disableUI?: boolean,
         _notebookMetadata?: nbformat.INotebookMetadata,
         _cancelToken?: CancellationToken
     ): Promise<INotebook> {

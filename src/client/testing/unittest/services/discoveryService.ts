@@ -29,7 +29,9 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         const pythonScript = this.getDiscoveryScript(options);
         const unitTestOptions = this.translateOptions(options);
         const runOptions: Options = {
-            args: internalPython.execCode(pythonScript),
+            // unittest needs to load modules in the workspace
+            // isolating it breaks unittest discovery
+            args: internalPython.execCode(pythonScript, false),
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token: options.token,

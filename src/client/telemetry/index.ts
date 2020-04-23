@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
-import { JSONObject } from '@phosphor/coreutils';
+import type { JSONObject } from '@phosphor/coreutils';
 import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
@@ -1051,6 +1051,20 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'Ignore' | undefined;
     };
     /**
+     * Telemetry event sent with details when the user clicks a button in the "Python is not installed" prompt.
+     * * `Prompt message` :- 'Python is not installed. Please download and install Python before using the extension.'
+     */
+    [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
+        /**
+         * `Download` When the 'Download' option is clicked
+         * `Ignore` When the prompt is dismissed
+         *
+         * @type {('Download' | 'Ignore' | undefined)}
+         */
+        selection: 'Download' | 'Ignore' | undefined;
+    };
+
+    /**
      * Telemetry event sent with details when user clicks a button in the following prompt
      * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
      */
@@ -1867,6 +1881,14 @@ export interface IEventNamePropertyMapping {
         source: 'cli' | 'connection';
     };
     /**
+     * Total time taken to Launch a raw kernel.
+     */
+    [Telemetry.KernelLauncherPerf]: undefined | never;
+    /**
+     * Total time taken to find a kernel on disc.
+     */
+    [Telemetry.KernelFinderPerf]: undefined | never;
+    /**
      * Telemetry event sent if there's an error installing a jupyter required dependency
      *
      * @type { product: string }
@@ -2021,4 +2043,18 @@ export interface IEventNamePropertyMapping {
     [Telemetry.IPyWidgetUnhandledMessage]: {
         msg_type: string;
     };
+
+    // Telemetry send when we create a notebook for a raw kernel or jupyter
+    [Telemetry.RawKernelCreatingNotebook]: never | undefined;
+    [Telemetry.JupyterCreatingNotebook]: never | undefined;
+
+    // Raw kernel timing events
+    [Telemetry.RawKernelSessionConnect]: never | undefined;
+    [Telemetry.RawKernelStartRawSession]: never | undefined;
+
+    // Raw kernel single events
+    [Telemetry.RawKernelSessionStartSuccess]: never | undefined;
+    [Telemetry.RawKernelSessionStartException]: never | undefined;
+    [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
+    [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
 }

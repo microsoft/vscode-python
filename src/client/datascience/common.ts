@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
+import type { nbformat } from '@jupyterlab/coreutils';
 import { Memento } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { noop } from '../common/utils/misc';

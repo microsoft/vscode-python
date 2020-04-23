@@ -8,15 +8,19 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
-import { InterpreterUri } from '../../common/installer/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
-import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
+import { getKernelInterpreter } from './helpers';
+import { findIndexOfConnectionFile } from './kernelFinder';
+import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -39,15 +43,13 @@ class KernelProcess implements IKernelProcess {
     public get kernelSpec(): Readonly<IJupyterKernelSpec> {
         return this._kernelSpec;
     }
-    public get process(): ChildProcess | undefined {
-        return this._process;
-    }
     public get connection(): Readonly<IKernelConnection> {
         return this._connection;
     }
 
     constructor(
         private executionFactory: IPythonExecutionFactory,
+        private interpreter: PythonInterpreter,
         private file: IFileSystem,
         private _connection: IKernelConnection,
         private _kernelSpec: IJupyterKernelSpec
@@ -57,7 +59,6 @@ class KernelProcess implements IKernelProcess {
 
     public async launch(): Promise<void> {
         this.connectionFile = await this.file.createTemporaryFile('.json');
-
         const args = [...this._kernelSpec.argv];
         await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
             encoding: 'utf-8',
@@ -65,14 +66,22 @@ class KernelProcess implements IKernelProcess {
         });
 
         // Inclide the conenction file in the arguments and remove the first argument which should be python
-        args[4] = this.connectionFile.filePath;
-        args.splice(0, 1);
+        const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
+        if (indexOfConnectionFile === -1) {
+            throw new Error(`Connection file not found in kernelspec json args, ${args.join(' ')}`);
+        }
+        args[indexOfConnectionFile] = this.connectionFile.filePath;
 
-        const executionService = await this.executionFactory.create({
+        const executionService = await this.executionFactory.createActivatedEnvironment({
             resource: undefined,
-            pythonPath: this._kernelSpec.path
+            interpreter: this.interpreter
         });
-        const exeObs = executionService.execObservable(args, {});
+
+        // First part of argument is always the executable. We don't need it, so remove
+        args.shift();
+
+        // Then launch that process, also merging in the environment in the kernelspec
+        const exeObs = executionService.execObservable(args, { extraVariables: this._kernelSpec.env });
 
         if (exeObs.proc) {
             exeObs.proc!.on('exit', (exitCode) => {
@@ -119,26 +128,24 @@ class KernelProcess implements IKernelProcess {
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     constructor(
-        @inject(IKernelFinder) private kernelFinder: IKernelFinder,
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
-    public async launch(
-        interpreterUri: InterpreterUri,
-        kernelName?: string | IJupyterKernelSpec
-    ): Promise<IKernelProcess> {
-        let kernelSpec: IJupyterKernelSpec;
-        if (!kernelName || typeof kernelName === 'string') {
-            // string or undefined
-            kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
-        } else {
-            // IJupyterKernelSpec
-            kernelSpec = kernelName;
-        }
+    @captureTelemetry(Telemetry.KernelLauncherPerf)
+    public async launch(kernelSpec: IJupyterKernelSpec): Promise<IKernelProcess> {
+        // Make sure that we have a valid interpreter with ipykernel installed
+        const kernelInterpreter = await getKernelInterpreter(kernelSpec, this.interpreterService);
 
         const connection = await this.getKernelConnection();
-        const kernelProcess = new KernelProcess(this.executionFactory, this.file, connection, kernelSpec);
+        const kernelProcess = new KernelProcess(
+            this.executionFactory,
+            kernelInterpreter,
+            this.file,
+            connection,
+            kernelSpec
+        );
         await kernelProcess.launch();
         return kernelProcess;
     }

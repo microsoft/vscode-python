@@ -239,7 +239,8 @@ suite('DataScience Native Editor', () => {
                                 display_name: 'foobar',
                                 language: 'python',
                                 path: '/foo/bar/python',
-                                argv: []
+                                argv: [],
+                                env: undefined
                             };
 
                             // Allow the invalid kernel to be used

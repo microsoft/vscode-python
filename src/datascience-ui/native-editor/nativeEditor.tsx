@@ -265,12 +265,18 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 />
             ) : null;
 
+        const maxOutputSize = this.props.settings.maxOutputSize;
+        const outputSizeLimit = 10000;
+        const maxTextSize =
+            maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
+
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>
                 <ErrorBoundary>
                     <ConnectedNativeCell
                         role="listitem"
-                        maxTextSize={this.props.settings.maxOutputSize}
+                        maxTextSize={maxTextSize}
+                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
                         baseTheme={this.props.baseTheme}

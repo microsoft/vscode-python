@@ -1,3 +1,4 @@
+import * as fsapi from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../common/logger';
@@ -8,13 +9,15 @@ import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
-export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IFileSystem): Promise<string[]> {
+export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFileSystem): Promise<string[]> {
     // Technically, we should be able to use fs.getFiles().  However,
     // that breaks some tests.  So we stick with the broader behavior.
     try {
-        const subDirs = await fs.listdir(pathToCheck);
-        return subDirs
-            .map(([filename, _ft]) => filename)
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO https://github.com/microsoft/vscode-python/issues/11338
+        const files = await fsapi.readdir(pathToCheck);
+        return files
+            .map((filename) => path.join(pathToCheck, filename))
             .filter((fileName) => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
     } catch (err) {
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);

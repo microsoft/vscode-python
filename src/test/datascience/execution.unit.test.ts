@@ -27,6 +27,7 @@ import {
     ExecutionResult,
     IProcessService,
     IProcessServiceFactory,
+    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
@@ -814,19 +815,19 @@ suite('Jupyter Execution', async () => {
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === workingPython.path))
-        ).thenResolve(workingService.object);
+        ).thenResolve((workingService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingKernelPython.path))
-        ).thenResolve(missingKernelService.object);
+        ).thenResolve((missingKernelService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython.path))
-        ).thenResolve(missingNotebookService.object);
+        ).thenResolve((missingNotebookService.object as unknown) as IPythonDaemonExecutionService);
 
         when(
             executionFactory.createDaemon(argThat((o) => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
-        ).thenResolve(missingNotebookService2.object);
+        ).thenResolve((missingNotebookService2.object as unknown) as IPythonDaemonExecutionService);
 
         let activeService = workingService;
         if (activeInterpreter === missingKernelPython) {
@@ -894,6 +895,7 @@ suite('Jupyter Execution', async () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
+            enableScrollingForCellOutputs: true,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
@@ -956,7 +958,8 @@ suite('Jupyter Execution', async () => {
             display_name: 'hello',
             language: PYTHON_LANGUAGE,
             name: 'hello',
-            path: ''
+            path: '',
+            env: undefined
         };
         when(
             kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything(), anything())

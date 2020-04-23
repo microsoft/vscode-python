@@ -1,7 +1,7 @@
 // This code was copied from https://github.com/nteract/enchannel-zmq-backend/blob/master/src/index.ts
 // and modified to work with zeromq-beta-6
 
-import { Channels, JupyterMessage } from '@nteract/messaging';
+import type { Channels, JupyterMessage } from '@nteract/messaging';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as Events from 'events';
 import * as rxjs from 'rxjs';
