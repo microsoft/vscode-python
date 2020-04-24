@@ -55,9 +55,13 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
         const validFiles = files.filter((file) => {
             // Should be of the form `<widget module>/index.js`
-            const parts = file.split('/'); // On windows this uses the unix separator too.
+            let parts = file.split('/'); // On windows this uses the unix separator too.
+            if (parts.length === 1) {
+                // Fall back if search API changes and returns results with OS path sep.
+                parts = file.split('\\');
+            }
             if (parts.length !== 2) {
-                traceError('Incorrect file found when searching for nnbextension entrypoints');
+                traceError(`Incorrect file found when searching for nnbextension entrypoints ${file}`);
                 return false;
             }
             return true;
@@ -65,10 +69,14 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
 
         const mappedFiles = validFiles.map(async (file) => {
             // Should be of the form `<widget module>/index.js`
-            const parts = file.split('/');
+            let parts = file.split('/'); // On windows this uses the unix separator too.
+            if (parts.length === 1) {
+                // Fall back if search API changes and returns results with OS path sep.
+                parts = file.split('\\');
+            }
             const moduleName = parts[0];
 
-            const fileUri = Uri.file(path.join(nbextensionsPath, file));
+            const fileUri = Uri.file(path.join(nbextensionsPath, moduleName, parts[1]));
             const scriptUri = (await this.localResourceUriConverter.asWebviewUri(fileUri)).toString();
             // tslint:disable-next-line: no-unnecessary-local-variable
             const widgetScriptSource: WidgetScriptSource = { moduleName, scriptUri, source: 'local' };

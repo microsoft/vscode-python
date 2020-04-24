@@ -24,7 +24,7 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 
 // tslint:disable: no-any no-invalid-this
 
-suite('xxxData Science - ipywidget - Widget Script Source Provider', () => {
+suite('Data Science - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let notebook: INotebook;
     let configService: IConfigurationService;
