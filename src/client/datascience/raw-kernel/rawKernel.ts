@@ -7,10 +7,8 @@ import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
 import { RawSocket } from './rawSocket';
-// tslint:disable-next-line: no-var-requires no-require-imports
-const rewire = require('rewire') as typeof import('rewire');
 
-// tslint:disable: no-any
+// tslint:disable: no-any no-require-imports
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
 to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
@@ -200,21 +198,22 @@ export class RawKernel implements Kernel.IKernel {
     }
 }
 
-let defaultImport: any;
+let nonSerializingKernel: any;
 
 export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection);
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
             socketInstance = this;
         }
     }
 
     // Remap the server settings for the real kernel to use our dummy websocket
-    // tslint:disable-next-line: no-require-imports
-    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
     const settings = jupyterLab.ServerConnection.makeSettings({
         WebSocket: RawSocketWrapper as any,
         wsUrl: 'RAW'
@@ -222,13 +221,10 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
 
     // Then create the real kernel. We will remap its serialize/deserialize functions
     // to do nothing so that we can control serialization at our socket layer.
-    // tslint:disable-next-line: no-require-imports
-    if (!defaultImport) {
-        defaultImport = rewire('@jupyterlab/services/lib/kernel/default');
-        defaultImport.__set__('serialize.serialize', (a: any) => a);
-        defaultImport.__set__('serialize.deserialize', (a: any) => a);
+    if (!nonSerializingKernel) {
+        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
     }
-    const realKernel = new defaultImport.DefaultKernel(
+    const realKernel = new nonSerializingKernel.DefaultKernel(
         {
             name: kernelProcess.kernelSpec.name,
             serverSettings: settings,

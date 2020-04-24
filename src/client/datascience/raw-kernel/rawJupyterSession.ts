@@ -7,7 +7,9 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { BaseJupyterSession } from '../baseJupyterSession';
+import { Identifiers } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
@@ -159,6 +161,12 @@ export class RawJupyterSession extends BaseJupyterSession {
         await process.ready;
 
         // Create our raw session, it will own the process lifetime
-        return new RawSession(process);
+        const result = new RawSession(process);
+
+        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+        // Restart sessions and retries might make this hard to do correctly otherwise.
+        result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+        return result;
     }
 }
