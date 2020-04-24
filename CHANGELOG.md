@@ -10,6 +10,8 @@
    ([#11334](https://github.com/Microsoft/vscode-python/issues/11334))
 1. Show unhandled widget messages in the jupyter output window.
    ([#11239](https://github.com/Microsoft/vscode-python/issues/11239))
+1. Warn when using a version of the widget `qgrid` greater than `1.1.1` with the recommendation to downgrade to `1.1.1`.
+   ([#11245](https://github.com/Microsoft/vscode-python/issues/11245))
 
 ### Thanks
 
