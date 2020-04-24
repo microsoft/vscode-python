@@ -17,5 +17,6 @@ export enum DiagnosticCodes {
     PythonPathDeprecatedDiagnostic = 'PythonPathDeprecatedDiagnostic',
     JustMyCodeDiagnostic = 'JustMyCodeDiagnostic',
     ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic',
-    ConfigPythonPathDiagnostic = 'ConfigPythonPathDiagnostic'
+    ConfigPythonPathDiagnostic = 'ConfigPythonPathDiagnostic',
+    UpgradeCodeRunnerDiagnostic = 'UpgradeCodeRunnerDiagnostic'
 }
