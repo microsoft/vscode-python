@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IInstaller, InstallerResponse, Product, Resource } from '../../../common/types';
+import { IInstaller, Product, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -379,30 +379,29 @@ export class KernelSelector {
         let kernelSpec: IJupyterKernelSpec | undefined;
 
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            const kernelSpecInterpreter = await this.getKernelSpecInterpreter(
-                interpreter,
-                displayNameOfKernelNotFound,
-                session,
-                disableUI,
-                cancelToken
-            );
-            if (kernelSpecInterpreter) {
-                return kernelSpecInterpreter;
-            }
-        } else {
-            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
-            if (response === InstallerResponse.Installed) {
-                const kernelSpecInterpreter = await this.getKernelSpecInterpreter(
-                    interpreter,
-                    displayNameOfKernelNotFound,
-                    session,
-                    disableUI,
-                    cancelToken
-                );
-                if (kernelSpecInterpreter) {
-                    return kernelSpecInterpreter;
+            // Find the kernel associated with this interpter.
+            kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
+
+            if (kernelSpec) {
+                traceVerbose(`ipykernel installed in ${interpreter.path}, and matching kernelspec found.`);
+                // Make sure the environment matches.
+                await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
+
+                // Notify the UI that we didn't find the initially requested kernel and are just using the active interpreter
+                if (displayNameOfKernelNotFound && !disableUI) {
+                    this.applicationShell
+                        .showInformationMessage(
+                            localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(
+                                displayNameOfKernelNotFound
+                            )
+                        )
+                        .then(noop, noop);
                 }
+
+                sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
+                return { kernelSpec, interpreter };
             }
+            traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
         }
 
         // Try an install this interpreter as a kernel.
@@ -430,37 +429,6 @@ export class KernelSelector {
         this.selectionProvider.getKernelSelectionsForLocalSession(resource, session, cancelToken).ignoreErrors();
 
         return { kernelSpec, interpreter };
-    }
-
-    private async getKernelSpecInterpreter(
-        interpreter: PythonInterpreter,
-        displayNameOfKernelNotFound?: string,
-        session?: IJupyterSessionManager,
-        disableUI?: boolean,
-        cancelToken?: CancellationToken
-    ) {
-        let kernelSpec: IJupyterKernelSpec | undefined;
-        // Find the kernel associated with this interpter.
-        kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
-
-        if (kernelSpec) {
-            traceVerbose(`ipykernel installed in ${interpreter.path}, and matching kernelspec found.`);
-            // Make sure the environment matches.
-            await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
-
-            // Notify the UI that we didn't find the initially requested kernel and are just using the active interpreter
-            if (displayNameOfKernelNotFound && !disableUI) {
-                this.applicationShell
-                    .showInformationMessage(
-                        localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound)
-                    )
-                    .then(noop, noop);
-            }
-
-            sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
-            return { kernelSpec, interpreter };
-        }
-        traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
     }
 
     private computeLanguage(language: string | undefined): string {

@@ -894,6 +894,7 @@ export namespace DataScience {
         'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
         "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
     );
+    export const ipykernelNotInstalled = localize('DataScience.ipykernelNotInstalled', 'Ipykernel is not installed.');
 }
 
 export namespace DebugConfigStrings {
