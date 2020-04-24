@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationTokenSource, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceVerbose } from '../../../common/logger';
 import { IConfigurationService, IInstaller, InstallerResponse, Product, Resource } from '../../../common/types';
@@ -130,7 +130,8 @@ export class KernelSwitcher {
             notebook.connection?.type === 'raw' &&
             !(await this.installer.isInstalled(Product.ipykernel, kernel.interpreter))
         ) {
-            const response = await this.installer.promptToInstall(Product.ipykernel, kernel.interpreter);
+            const token = new CancellationTokenSource();
+            const response = await this.installer.promptToInstall(Product.ipykernel, kernel.interpreter, token.token);
             if (response === InstallerResponse.Installed) {
                 traceVerbose(`ipykernel installed in ${kernel.interpreter!.path}.`);
             } else {
