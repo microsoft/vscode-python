@@ -44,6 +44,13 @@ class SocketEventEmitter extends Events.EventEmitter {
     }
 }
 
+interface IChannels {
+    shell: Dealer;
+    control: Dealer;
+    stdin: Dealer;
+    iopub: Subscriber;
+}
+
 // tslint:disable: no-any
 /**
  * This class creates a WebSocket front end on a ZMQ set of connections. It is special in that
@@ -54,21 +61,20 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     public onerror: (event: { error: any; message: string; type: string; target: any }) => void = noop;
     public onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void = noop;
     public onmessage: (event: { data: WebSocketWS.Data; type: string; target: any }) => void = noop;
-    private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage;
     private receiveHooks: ((data: WebSocketWS.Data) => Promise<void>)[] = [];
     private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[] = [];
     private msgChain: Promise<any> = Promise.resolve();
     private sendChain: Promise<any> = Promise.resolve();
-    private zmqSockets: Map<string, Subscriber | Dealer> = new Map<string, Subscriber | Dealer>();
+    private channels: IChannels;
     private zmqEmitters: Map<string, SocketEventEmitter> = new Map<string, SocketEventEmitter>();
 
-    constructor(private connection: IKernelConnection) {
-        // tslint:disable-next-line: no-require-imports
-        const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-        this.deserialize = jupyterLabSerialize.deserialize;
-
-        // Setup our ZMQ connections now
-        this.generateZMQConnections(connection);
+    constructor(
+        private connection: IKernelConnection,
+        private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
+        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
+    ) {
+        // Setup our ZMQ channels now
+        this.channels = this.generateChannels(connection);
     }
 
     public dispose() {
@@ -81,7 +87,20 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 traceError(`Error during socket shutdown`, ex);
             }
         };
-        this.zmqSockets.forEach(closer);
+        closer(this.channels.control);
+        closer(this.channels.iopub);
+        closer(this.channels.shell);
+        closer(this.channels.stdin);
+
+        // Also clear the event emitters
+        const clearEmitter = (emitter: SocketEventEmitter) => {
+            try {
+                emitter.removeAllListeners('message');
+            } catch (ex) {
+                traceError(`Error during socket event cleanup`, ex);
+            }
+        };
+        this.zmqEmitters.forEach(clearEmitter);
     }
 
     public emit(event: string | symbol, ...args: any[]): boolean {
@@ -132,35 +151,48 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         this.sendHooks = this.sendHooks.filter((p) => p !== hook);
     }
 
-    private generateChannelConnection<T extends Subscriber | Dealer>(
+    private generateChannel<T extends Subscriber | Dealer>(
         connection: IKernelConnection,
-        channel: string,
+        channel: 'iopub' | 'shell' | 'control' | 'stdin',
         ctor: () => T
-    ) {
+    ): T {
         const result = ctor();
         result.connect(formConnectionString(connection, channel));
-        this.zmqSockets.set(channel, result);
         const emitter = new SocketEventEmitter(result);
         emitter.on('message', this.onIncomingMessage.bind(this, channel));
         this.zmqEmitters.set(channel, emitter);
+        return result;
     }
 
-    private generateZMQConnections(connection: IKernelConnection) {
+    private generateChannels(connection: IKernelConnection): IChannels {
         // tslint:disable-next-line: no-require-imports
         const zmq = require('zeromq') as typeof import('zeromq');
 
-        // Wire up all of the different channels.
-        this.generateChannelConnection(connection, 'iopub', () => new zmq.Subscriber());
-        this.generateChannelConnection(connection, 'shell', () => new zmq.Dealer({ routingId: uuid() }));
-        this.generateChannelConnection(connection, 'control', () => new zmq.Dealer({ routingId: uuid() }));
-        this.generateChannelConnection(connection, 'stdin', () => new zmq.Dealer({ routingId: uuid() }));
+        // Need a routing id for them to share.
+        const routingId = uuid();
 
+        // Wire up all of the different channels.
+        const result: IChannels = {
+            iopub: this.generateChannel(connection, 'iopub', () => new zmq.Subscriber()),
+            shell: this.generateChannel(connection, 'shell', () => new zmq.Dealer({ routingId })),
+            control: this.generateChannel(connection, 'control', () => new zmq.Dealer({ routingId })),
+            stdin: this.generateChannel(connection, 'stdin', () => new zmq.Dealer({ routingId }))
+        };
         // What about hb port? Enchannel didn't use this one.
+
+        // Make sure to subscribe to general iopub messages (this is stuff like status changes)
+        result.iopub.subscribe();
+
+        return result;
     }
 
     private onIncomingMessage(channel: string, data: any) {
-        // Data is in an array buffer format. We need to keep it that way for message hooks, but not for the real
-        // kernel.
+        // Decode the message
+        const message = wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any;
+
+        // Make sure it has a channel on it
+        message.channel = channel;
+
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
             // to ensure that:
@@ -168,22 +200,15 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             // b) Event fires
             // c) Next message happens after this one (so this side can handle the message before another event goes through)
             this.msgChain = this.msgChain
-                .then(() => Promise.all(this.receiveHooks.map((p) => p(data))))
-                .then(() => this.postIncomingMessage(channel, data));
+                .then(() => {
+                    // Hooks expect serialized data as this normally comes from a WebSocket
+                    const serialized = this.serialize(message);
+                    return Promise.all(this.receiveHooks.map((p) => p(serialized)));
+                })
+                .then(() => this.onmessage({ data: message, type: 'message', target: this }));
         } else {
-            this.msgChain = this.msgChain.then(() => this.postIncomingMessage(channel, data));
+            this.msgChain = this.msgChain.then(() => this.onmessage({ data: message, type: 'message', target: this }));
         }
-    }
-
-    private postIncomingMessage(channel: string, data: any) {
-        // Decode the message and send it to the jupyterlab kernel. Since its deserialize function has
-        // been removed, deserialize it here.
-        const message = wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any;
-
-        // Make sure it has a channel on it. Note: Does this need to be on the ipywidgets version too?
-        message.channel = channel;
-
-        this.onmessage({ data: message, type: 'message', target: this });
     }
 
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
@@ -192,8 +217,11 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
+            // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
+            const hookData = this.serialize(msg);
+
             this.sendChain = this.sendChain
-                .then(() => Promise.all(this.sendHooks.map((s) => s(data, noop))))
+                .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
                 .then(() => this.postToSocket(msg.channel, data));
         } else {
             this.sendChain = this.sendChain.then(() => {
@@ -203,11 +231,13 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private postToSocket(channel: string, data: any) {
-        const socket = this.zmqSockets.get(channel);
+        const socket = (this.channels as any)[channel];
         if (socket) {
             (socket as Dealer).send(data).catch((exc) => {
                 traceError(`Error communicating with the kernel`, exc);
             });
+        } else {
+            traceError(`Attempting to send message on invalid channel: ${channel}`);
         }
     }
 }
