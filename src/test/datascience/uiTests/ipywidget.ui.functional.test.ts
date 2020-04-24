@@ -21,6 +21,7 @@ import { addMockData } from '../testHelpersCore';
 import { waitTimeForUIToUpdate } from './helpers';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
+import { LocalZMQKernel } from '../../../client/common/experimentGroups';
 
 const sanitize = require('sanitize-filename');
 // Include default timeout.
@@ -28,9 +29,9 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false].forEach((useCustomEditorApi) => {
+[false, true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
-    suite(`DataScience IPyWidgets (${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API)`, () => {
+    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
@@ -43,9 +44,16 @@ use(chaiAsPromised);
                 this.skip();
             }
         });
-        setup(async () => {
+        setup(async function () {
             ioc = new DataScienceIocContainer(true);
-            ioc.registerDataScienceTypes(useCustomEditorApi);
+            if (ioc.mockJupyter && useRawKernel) {
+                // tslint:disable-next-line: no-invalid-this
+                this.skip();
+            } else {
+                ioc.setExperimentState(LocalZMQKernel.experiment, useRawKernel);
+            }
+
+            ioc.registerDataScienceTypes();
             await ioc.activate();
         });
         teardown(async () => {

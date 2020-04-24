@@ -570,7 +570,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
         // Reuse our original json except for the cells.
         const json = {
-            cells: cells.map((c) => pruneCell(c.data)),
+            cells: cells && cells.length > 0 ? cells.map((c) => pruneCell(c.data)) : [],
             metadata: this._state.notebookJson.metadata,
             nbformat: this._state.notebookJson.nbformat,
             nbformat_minor: this._state.notebookJson.nbformat_minor
