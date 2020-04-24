@@ -85,8 +85,6 @@ class KernelProcess implements IKernelProcess {
             interpreter: matchingInterpreter
         });
 
-        this.outputChannel.appendLine(localize.DataScience.connectingIPyKernel());
-
         // Then launch that process, also merging in the environment in the kernelspec
         const exeObs = executionService.execObservable(args, { extraVariables: this._kernelSpec.env });
 
@@ -116,7 +114,6 @@ class KernelProcess implements IKernelProcess {
                 // Is this going to work with non-python?
                 if (!this.readyPromise.completed && output.out.includes('--existing')) {
                     this.readyPromise.resolve();
-                    this.outputChannel.appendLine(localize.DataScience.connectedToIPyKernel());
                 } else if (this.readyPromise.resolved) {
                     this.outputChannel.appendLine(output.out);
                 }

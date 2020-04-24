@@ -895,6 +895,8 @@ export namespace DataScience {
         'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
         "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
     );
+
+    export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
 }
 
 export namespace DebugConfigStrings {

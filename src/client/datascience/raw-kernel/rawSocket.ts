@@ -30,7 +30,6 @@ class SocketEventEmitter extends Events.EventEmitter {
 
     private waitForReceive(socket: Dealer | Subscriber) {
         if (!socket.closed) {
-            // tslint:disable-next-line: no-floating-promises
             socket
                 .receive()
                 .then((b) => {

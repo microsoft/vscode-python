@@ -9,6 +9,7 @@ import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kern
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
+import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -34,6 +35,7 @@ suite('Data Science - RawJupyterSession', () => {
     setup(() => {
         kernelLauncher = mock<IKernelLauncher>();
         kernelSelector = mock(KernelSelector);
+        const mockOutput = new MockOutputChannel('JUPYTER_OUTPUT_CHANNEL');
 
         // Set up a fake kernel process for the launcher to return
         processExitEvent = new EventEmitter<number | null>();
@@ -48,7 +50,7 @@ suite('Data Science - RawJupyterSession', () => {
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
         when(kernelLauncher.launch(anything(), anything())).thenResolve(kernelProcess.object);
 
-        rawJupyterSession = new RawJupyterSession(instance(kernelLauncher), instance(kernelSelector));
+        rawJupyterSession = new RawJupyterSession(instance(kernelLauncher), instance(kernelSelector), mockOutput);
     });
 
     test('RawJupyterSession - shutdown on dispose', async () => {

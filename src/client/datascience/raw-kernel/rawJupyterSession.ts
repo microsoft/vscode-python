@@ -4,7 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IDisposable, Resource } from '../../common/types';
+import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -29,7 +29,11 @@ export class RawJupyterSession extends BaseJupyterSession {
     private resource?: Resource;
     private processExitHandler: IDisposable | undefined;
 
-    constructor(private readonly kernelLauncher: IKernelLauncher, kernelSelector: KernelSelector) {
+    constructor(
+        private readonly kernelLauncher: IKernelLauncher,
+        kernelSelector: KernelSelector,
+        private readonly outputChannel: IOutputChannel
+    ) {
         super(kernelSelector);
     }
 
@@ -81,6 +85,9 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceInfo('Raw session started and connected');
                 this.setSession(newSession);
                 this.kernelSpec = newSession.kernelProcess?.kernelSpec;
+                this.outputChannel.appendLine(
+                    localize.DataScience.kernelStarted().format(this.kernelSpec.display_name || this.kernelSpec.name)
+                );
             }
         } catch (error) {
             traceError(`Failed to connect raw kernel session: ${error}`);
@@ -103,6 +110,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Don't allow for connecting to a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
+
+        this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(kernel.display_name || kernel.name));
 
         return this.startRawSession(this.resource, kernel);
     }
