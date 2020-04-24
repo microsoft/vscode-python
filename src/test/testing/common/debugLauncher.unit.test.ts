@@ -207,8 +207,14 @@ suite('Unit Tests - Debug Launcher', () => {
             expected = getDefaultDebugConfig();
         }
         expected.rules = [{ path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'), include: false }];
-        expected.program = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
-        expected.args = [testLaunchScript, ...options.args];
+        if (testProvider === 'unittest') {
+            expected.program = testLaunchScript;
+            expected.args = options.args;
+        } else {
+            expected.program = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
+            expected.args = [testLaunchScript, ...options.args];
+        }
+
         if (!expected.cwd) {
             expected.cwd = workspaceFolders[0].uri.fsPath;
         }
