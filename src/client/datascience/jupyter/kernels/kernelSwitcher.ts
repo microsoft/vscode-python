@@ -13,13 +13,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 // import * as localize from '../../common/utils/localize';
 import { Commands, Settings } from '../../constants';
-import {
-    IJupyterConnection,
-    IJupyterKernelSpec,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    IRawConnection
-} from '../../types';
+import { IJupyterConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
@@ -133,7 +127,7 @@ export class KernelSwitcher {
     }
     private async switchToKernel(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         if (
-            (notebook.connection as IRawConnection).type &&
+            notebook.connection?.type === 'raw' &&
             !(await this.installer.isInstalled(Product.ipykernel, kernel.interpreter))
         ) {
             const response = await this.installer.promptToInstall(Product.ipykernel, kernel.interpreter);
