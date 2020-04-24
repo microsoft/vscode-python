@@ -39,8 +39,9 @@ export class RawSession implements ISessionWithSocket {
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
     }
 
-    public dispose() {
+    public async dispose() {
         if (!this.isDisposed) {
+            await this._kernel.shutdown();
             this._kernel.dispose();
             this.kernelProcess.dispose();
         }
@@ -77,10 +78,7 @@ export class RawSession implements ISessionWithSocket {
 
     // Shutdown our session and kernel
     public shutdown(): Promise<void> {
-        this.dispose();
-        // Normally the server session has to shutdown here with an await on a rest call
-        // but we just have a local connection, so dispose and resolve
-        return Promise.resolve();
+        return this.dispose();
     }
 
     // Not Implemented ISession

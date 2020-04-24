@@ -12,6 +12,7 @@ export type IWebSocketLike = {
     onmessage: (event: { data: WebSocketWS.Data; type: string; target: any }) => void;
     emit(event: string | symbol, ...args: any[]): boolean;
     send(data: any, a2: any): void;
+    close(): void;
 };
 
 /**

@@ -2,13 +2,37 @@
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
+import { isTestExecution } from '../../common/constants';
 import { IDisposable } from '../../common/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
 import { RawSocket } from './rawSocket';
-
 // tslint:disable: no-any no-require-imports
+
+export function suppressShutdownErrors(realKernel: any) {
+    // When running under a test, mark all futures as done so we
+    // don't hit this problem:
+    // https://github.com/jupyterlab/jupyterlab/issues/4252
+    // tslint:disable:no-any
+    if (isTestExecution()) {
+        const defaultKernel = realKernel as any;
+        if (defaultKernel && defaultKernel._futures) {
+            const futures = defaultKernel._futures as Map<any, any>;
+            if (futures) {
+                futures.forEach((f) => {
+                    if (f._status !== undefined) {
+                        f._status |= 4;
+                    }
+                });
+            }
+        }
+        if (defaultKernel && defaultKernel._reconnectLimit) {
+            defaultKernel._reconnectLimit = 0;
+        }
+    }
+}
+
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
 to a raw IPython kernel running on the local machine. RawKernel is in charge of taking
@@ -77,6 +101,7 @@ export class RawKernel implements Kernel.IKernel {
     }
 
     public shutdown(): Promise<void> {
+        suppressShutdownErrors(this.realKernel);
         return this.realKernel.shutdown();
     }
     public getSpec(): Promise<Kernel.ISpecModel> {

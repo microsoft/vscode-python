@@ -66,6 +66,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendChain: Promise<any> = Promise.resolve();
     private channels: IChannels;
     private zmqEmitters: Map<string, SocketEventEmitter> = new Map<string, SocketEventEmitter>();
+    private closed = false;
 
     constructor(
         private connection: IKernelConnection,
@@ -77,6 +78,13 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     public dispose() {
+        if (!this.closed) {
+            this.close();
+        }
+    }
+
+    public close(): void {
+        this.closed = true;
         // When the socket is completed / disposed, close all the event
         // listeners and shutdown the socket
         const closer = (closable: { close(): void }) => {

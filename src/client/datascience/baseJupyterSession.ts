@@ -9,7 +9,6 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
-import { isTestExecution } from '../common/constants';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -19,6 +18,7 @@ import { Telemetry } from './constants';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from './jupyter/kernels/types';
+import { suppressShutdownErrors } from './raw-kernel/rawKernel';
 import { IJupyterKernelSpec, IJupyterSession, ISessionWithSocket, KernelSocketInformation } from './types';
 
 /**
@@ -347,30 +347,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                     return;
                 }
                 try {
-                    // When running under a test, mark all futures as done so we
-                    // don't hit this problem:
-                    // https://github.com/jupyterlab/jupyterlab/issues/4252
-                    // tslint:disable:no-any
-                    if (isTestExecution()) {
-                        const defaultKernel = session.kernel as any;
-                        if (defaultKernel && defaultKernel._futures) {
-                            const futures = defaultKernel._futures as Map<any, any>;
-                            if (futures) {
-                                futures.forEach((f) => {
-                                    if (f._status !== undefined) {
-                                        f._status |= 4;
-                                    }
-                                });
-                            }
-                        }
-                        if (defaultKernel && defaultKernel._reconnectLimit) {
-                            defaultKernel._reconnectLimit = 0;
-                        }
-                        await waitForPromise(session.shutdown(), 1000);
-                    } else {
-                        // Shutdown may fail if the process has been killed
-                        await waitForPromise(session.shutdown(), 1000);
-                    }
+                    suppressShutdownErrors(session.kernel);
+                    // Shutdown may fail if the process has been killed
+                    await waitForPromise(session.shutdown(), 1000);
                 } catch {
                     noop();
                 }

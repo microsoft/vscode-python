@@ -457,6 +457,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
     private disposed = false;
+    private experimentState = new Map<string, boolean>();
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -826,10 +827,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Turn off experiments.
         const experimentManager = mock(ExperimentsManager);
         when(experimentManager.inExperiment(anything())).thenCall((exp) => {
-            if (exp === LocalZMQKernel.experiment) {
-                return false;
+            const setState = this.experimentState.get(exp);
+            if (setState === undefined) {
+                // Default to true if not the zmq kernel
+                return exp !== LocalZMQKernel.experiment;
             }
-            return true;
+            return setState;
         });
         when(experimentManager.activate()).thenResolve();
         this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
@@ -1112,6 +1115,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
         appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything()))
+            .returns(() => Promise.resolve(''));
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything(), anything()))
+            .returns(() => Promise.resolve(''));
+        appShell
             .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
         appShell
@@ -1328,6 +1337,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.configMap.set(key, result);
         }
         return result;
+    }
+
+    public setExperimentState(experimentName: string, enabled: boolean) {
+        this.experimentState.set(experimentName, enabled);
     }
 
     private createWebPanel(): IWebPanel {
