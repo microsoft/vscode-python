@@ -2750,13 +2750,13 @@
                     "default": "",
                     "deprecationMessage": "This setting has been deprecated in favor of 'runStartupCommands'.",
                     "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads.",
-                    "scope": "resource"
+                    "scope": "application"
                 },
                 "python.dataScience.runStartupCommands": {
                     "type": "string",
                     "default": "",
                     "description": "A series of Python instructions or iPython magic commands separated by '\\n' that will be executed when the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
-                    "scope": "resource"
+                    "scope": "application"
                 },
                 "python.dataScience.debugJustMyCode": {
                     "type": "boolean",
