@@ -105,12 +105,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
                 input.items = items;
-                if (matchOnDescription !== undefined) {
-                    input.matchOnDescription = matchOnDescription;
-                }
-                if (matchOnDetail !== undefined) {
-                    input.matchOnDetail = matchOnDetail;
-                }
+                input.matchOnDescription = matchOnDescription || false;
+                input.matchOnDetail = matchOnDetail || false;
                 if (activeItem) {
                     input.activeItems = [activeItem];
                 } else {
