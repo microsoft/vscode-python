@@ -1366,11 +1366,15 @@ plt.show()`,
                         // Do nothing on restarted
                     }
 
-                    public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
-                        cellInputs.push(concatMultilineStringInput(cell.data.source));
+                    public async preExecute(cell: ICell, silent: boolean): Promise<void> {
+                        if (!silent) {
+                            cellInputs.push(concatMultilineStringInput(cell.data.source));
+                        }
                     }
-                    public async postExecute(cell: ICell, _silent: boolean): Promise<void> {
-                        outputs.push(extractDataOutput(cell));
+                    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
+                        if (!silent) {
+                            outputs.push(extractDataOutput(cell));
+                        }
                     }
                 }
                 ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);
@@ -1378,9 +1382,9 @@ plt.show()`,
                 const server = await createNotebook();
                 assert.ok(server, 'Server not created in logging case');
                 await server!.execute(`a=1${os.EOL}a`, path.join(srcDirectory(), 'foo.py'), 2, uuid());
-                assert.equal(cellInputs.length, 2, 'Not enough cell inputs');
+                assert.equal(cellInputs.length, 1, 'Not enough cell inputs');
                 assert.ok(outputs.length >= 1, 'Not enough cell outputs');
-                assert.equal(cellInputs[1], 'a=1\na', 'Cell inputs not captured');
+                assert.equal(cellInputs[0], 'a=1\na', 'Cell inputs not captured');
                 assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
             });
 
