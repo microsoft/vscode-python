@@ -4,6 +4,7 @@ import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/servic
 import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
 import { IDisposable } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
@@ -102,7 +103,9 @@ export class RawKernel implements Kernel.IKernel {
 
     public shutdown(): Promise<void> {
         suppressShutdownErrors(this.realKernel);
-        return this.realKernel.shutdown();
+        return this.realKernel.shutdown().catch((_exc) => {
+            noop();
+        });
     }
     public getSpec(): Promise<Kernel.ISpecModel> {
         return this.realKernel.getSpec();

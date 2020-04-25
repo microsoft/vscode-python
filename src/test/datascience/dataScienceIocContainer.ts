@@ -458,6 +458,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private kernelServiceMock = mock(KernelService);
     private disposed = false;
     private experimentState = new Map<string, boolean>();
+    private extensionRootPath: string | undefined;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -632,7 +633,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
-        mockExtensionContext.setup((m) => m.extensionPath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         const mockServerSelector = mock(JupyterServerSelector);
@@ -1231,6 +1232,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 return true;
             }
         });
+    }
+
+    public setExtensionRootPath(newRoot: string) {
+        this.extensionRootPath = newRoot;
     }
 
     public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
