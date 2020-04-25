@@ -12,6 +12,8 @@
    ([#11239](https://github.com/Microsoft/vscode-python/issues/11239))
 1. Warn when using a version of the widget `qgrid` greater than `1.1.1` with the recommendation to downgrade to `1.1.1`.
    ([#11245](https://github.com/Microsoft/vscode-python/issues/11245))
+1. Change "python.dataScience.runStartupCommands" commands to be a global setting, not a workspace setting.
+   ([#11352](https://github.com/Microsoft/vscode-python/issues/11352))
 
 ### Thanks
 
