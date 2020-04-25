@@ -4,14 +4,18 @@
 
 ### Fixes
 
-1. Fix issue where downloading ipywidgets from the CDN might be busy.
-   ([#11274](https://github.com/Microsoft/vscode-python/issues/11274))
-1. Error: Timeout is shown after running any widget more than once.
-   ([#11334](https://github.com/Microsoft/vscode-python/issues/11334))
+1. Use node FS APIs when searching for python. This is a temporary change until VSC FS APIs are fixed.
+   ([#10850](https://github.com/Microsoft/vscode-python/issues/10850))
 1. Show unhandled widget messages in the jupyter output window.
    ([#11239](https://github.com/Microsoft/vscode-python/issues/11239))
 1. Warn when using a version of the widget `qgrid` greater than `1.1.1` with the recommendation to downgrade to `1.1.1`.
    ([#11245](https://github.com/Microsoft/vscode-python/issues/11245))
+1. Allow user modules import when discovering tests.
+   ([#11264](https://github.com/Microsoft/vscode-python/issues/11264))
+1. Fix issue where downloading ipywidgets from the CDN might be busy.
+   ([#11274](https://github.com/Microsoft/vscode-python/issues/11274))
+1. Error: Timeout is shown after running any widget more than once.
+   ([#11334](https://github.com/Microsoft/vscode-python/issues/11334))
 1. Change "python.dataScience.runStartupCommands" commands to be a global setting, not a workspace setting.
    ([#11352](https://github.com/Microsoft/vscode-python/issues/11352))
 
