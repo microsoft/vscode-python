@@ -134,24 +134,35 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
+export function captureTelemetry<T, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
     captureDuration: boolean = true,
-    failureEventName?: E
+    failureEventName?: E,
+    lazyProperties?: (obj: T) => P[E]
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
+    return function (
+        _target: Object,
+        _propertyKey: string | symbol,
+        descriptor: TypedPropertyDescriptor<(this: T, ...args: any[]) => any>
+    ) {
+        const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
-            if (!captureDuration) {
-                sendTelemetryEvent(eventName, undefined, properties);
-                // tslint:disable-next-line:no-invalid-this
-                return originalMethod.apply(this, args);
+        descriptor.value = function (this: T, ...args: any[]) {
+            const props = () => {
+                if (lazyProperties) {
+                    return { ...properties, ...lazyProperties(this) };
+                }
+                return properties;
+            };
+
+            let stopWatch: StopWatch | undefined;
+
+            if (captureDuration) {
+                stopWatch = new StopWatch();
             }
 
-            const stopWatch = new StopWatch();
             // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
@@ -161,23 +172,23 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then((data) => {
-                        sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
                     .catch((ex) => {
                         // tslint:disable-next-line:no-any
-                        properties = properties || ({} as any);
-                        (properties as any).failed = true;
+                        const failedProps: P[E] = props() || ({} as any);
+                        (failedProps as any).failed = true;
                         sendTelemetryEvent(
                             failureEventName ? failureEventName : eventName,
-                            stopWatch.elapsedTime,
-                            properties,
+                            stopWatch?.elapsedTime,
+                            failedProps,
                             ex
                         );
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
             }
 
             return result;
@@ -1127,7 +1138,9 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent with details when downloading or extracting LS fails
      */
@@ -1182,11 +1195,15 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is ready to start
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when starting LS
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when user specified None to the language server and jediEnabled is false.
      */
@@ -1244,15 +1261,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.LANGUAGE_SERVER_ENABLED]: never | undefined;
+    [EventName.LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.LANGUAGE_SERVER_READY]: never | undefined;
+    [EventName.LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when starting Node.js server
      */
-    [EventName.LANGUAGE_SERVER_STARTUP]: never | undefined;
+    [EventName.LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
