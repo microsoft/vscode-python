@@ -99,6 +99,9 @@ export class DotNetLanguageServerAnalysisOptions extends LanguageServerAnalysisO
 
         searchPaths = searchPaths.map((p) => path.normalize(p));
 
+        this.excludedFiles = this.getExcludedFiles();
+        this.typeshedPaths = this.getTypeshedPaths();
+
         return {
             interpreter: {
                 properties
