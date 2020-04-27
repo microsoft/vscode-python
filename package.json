@@ -1210,8 +1210,8 @@
                             },
                             "pythonPath": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "default": "${config:python.interpreterPath}"
                             },
                             "args": {
                                 "type": "array",
@@ -1348,8 +1348,8 @@
                         "properties": {
                             "pythonPath": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "default": "${config:python.interpreterPath}"
                             },
                             "stopOnEntry": {
                                 "type": "boolean",

@@ -485,7 +485,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
-        test('Ensure `${config:python.pythonPath}` is replaced with actual pythonPath', async () => {
+        test('Ensure `${config:python.interpreterPath}` is replaced with actual pythonPath', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -495,7 +495,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                pythonPath: '${config:python.pythonPath}'
+                pythonPath: '${config:python.interpreterPath}'
             } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('pythonPath', pythonPath);

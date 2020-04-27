@@ -16,5 +16,6 @@ export enum DiagnosticCodes {
     LSNotSupportedDiagnostic = 'LSNotSupportedDiagnostic',
     PythonPathDeprecatedDiagnostic = 'PythonPathDeprecatedDiagnostic',
     JustMyCodeDiagnostic = 'JustMyCodeDiagnostic',
-    ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic'
+    ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic',
+    ConfigPythonPathDiagnostic = 'ConfigPythonPathDiagnostic'
 }

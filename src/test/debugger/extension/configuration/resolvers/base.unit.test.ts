@@ -195,9 +195,9 @@ suite('Debugging - Config Resolver', () => {
 
         expect(config).to.have.property('pythonPath', pythonPath);
     });
-    test('Python path in debug config must point to pythonpath in settings  if pythonPath in config is ${config:python.pythonPath}', () => {
+    test('Python path in debug config must point to pythonpath in settings  if pythonPath in config is ${config:python.interpreterPath}', () => {
         const config = {
-            pythonPath: '${config:python.pythonPath}'
+            pythonPath: '${config:python.interpreterPath}'
         };
         const pythonPath = path.join('1', '2', '3');
 
