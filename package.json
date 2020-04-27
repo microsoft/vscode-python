@@ -1192,7 +1192,8 @@
                 "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
                 "variables": {
-                    "pickProcess": "python.pickLocalProcess"
+                    "pickProcess": "python.pickLocalProcess",
+                    "pythonPath": "python.getActiveInterpreter"
                 },
                 "configurationSnippets": [],
                 "configurationAttributes": {
@@ -1209,9 +1210,20 @@
                                 "default": "${file}"
                             },
                             "pythonPath": {
-                                "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "anyOf": [
+                                    {
+                                        "type": "string",
+                                        "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
+                                        "default": "${config:python.pythonPath}"
+                                    },
+                                    {
+                                        "enum": [
+                                            "${command:activeInterpreter}"
+                                        ],
+                                        "description": "Use to get the (fully qualified) path to Active interpreter which appears on the status bar",
+                                        "default": "${command:activeInterpreter}"
+                                    }
+                                ]
                             },
                             "args": {
                                 "type": "array",
@@ -1347,9 +1359,20 @@
                     "test": {
                         "properties": {
                             "pythonPath": {
-                                "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "anyOf": [
+                                    {
+                                        "type": "string",
+                                        "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
+                                        "default": "${config:python.pythonPath}"
+                                    },
+                                    {
+                                        "enum": [
+                                            "${command:activeInterpreter}"
+                                        ],
+                                        "description": "Use to get the Active interpreter path which appears on the status bar",
+                                        "default": "${command:activeInterpreter}"
+                                    }
+                                ]
                             },
                             "stopOnEntry": {
                                 "type": "boolean",
