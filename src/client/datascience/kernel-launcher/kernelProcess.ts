@@ -9,8 +9,6 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 import { findIndexOfConnectionFile } from './kernelFinder';
@@ -23,9 +21,6 @@ import cloneDeep = require('lodash/cloneDeep');
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
 export class KernelProcess implements IKernelProcess {
-    public get ready(): Promise<void> {
-        return this.readyPromise.promise;
-    }
     public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
@@ -40,7 +35,6 @@ export class KernelProcess implements IKernelProcess {
     }
     private _process?: ChildProcess;
     private connectionFile?: TemporaryFile;
-    private readyPromise: Deferred<void>;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
     private launchedOnce?: boolean;
@@ -57,7 +51,6 @@ export class KernelProcess implements IKernelProcess {
     ) {
         this.originalKernelSpec = kernelSpec;
         this._kernelSpec = cloneDeep(kernelSpec);
-        this.readyPromise = createDeferred<void>();
     }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
@@ -73,12 +66,6 @@ export class KernelProcess implements IKernelProcess {
         await this.createAndUpdateConnectionFile();
 
         const exeObs = await this.launchAsObservable();
-
-        // Jupyter does the same thing. Spawn the kernel process and try to connect.
-        // Unfortunately on windows it doesn't write to stdout such that we can read from it.
-        // Hence we must assume it has started and try to connect to it.
-        // If the kernel process dies we'll communiate that via the `exited` event.
-        this.readyPromise.resolve();
 
         let stdout = '';
         let stderr = '';
@@ -155,16 +142,12 @@ export class KernelProcess implements IKernelProcess {
         }
 
         if (exeObs.proc) {
-            exeObs.proc!.on('exit', (exitCode) => {
+            exeObs.proc.on('exit', (exitCode) => {
                 traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
-                if (!this.readyPromise.completed) {
-                    this.readyPromise.reject(new Error(localize.DataScience.rawKernelProcessExitBeforeConnect()));
-                }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
         } else {
-            traceInfo('KernelProcess failed to launch');
-            this.readyPromise.reject(new Error(localize.DataScience.rawKernelProcessNotStarted()));
+            throw new Error('KernelProcess failed to launch');
         }
 
         this._process = exeObs.proc;
