@@ -140,6 +140,15 @@ type TypedMethodDescriptor<T> = (
     descriptor: TypedPropertyDescriptor<T>
 ) => TypedPropertyDescriptor<T> | void;
 
+/**
+ * Decorates a method, sending a telemetry event with the given properties.
+ * @param eventName The event name to send.
+ * @param properties Properties to send with the event; must be valid for the event.
+ * @param captureDuration True if the method's execution duration should be captured.
+ * @param failureEventName If the decorated method returns a Promise and fails, send this event instead of eventName.
+ * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
+ * This can be used to provide properties which are only known at runtime (after the decorator has executed).
+ */
 // tslint:disable-next-line:no-any function-name
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
