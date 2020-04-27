@@ -125,17 +125,6 @@ export class JupyterSession extends BaseJupyterSession {
             throw new JupyterInvalidKernelError(kernel);
         }
 
-        // Add on the kernel sock information
-        newSession.kernelSocketInformation = {
-            socket: JupyterWebSockets.get(newSession.id),
-            options: {
-                clientId: newSession.kernel.clientId,
-                id: newSession.kernel.id,
-                model: { ...newSession.kernel.model },
-                userName: newSession.kernel.username
-            }
-        };
-
         return newSession;
     }
 
@@ -281,6 +270,19 @@ export class JupyterSession extends BaseJupyterSession {
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
                         );
+
+                        // Add on the kernel sock information
+                        // tslint:disable-next-line: no-any
+                        (session as any).kernelSocketInformation = {
+                            socket: JupyterWebSockets.get(session.kernel.id),
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
+                            }
+                        };
+
                         return session;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),

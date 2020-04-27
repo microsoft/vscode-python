@@ -315,7 +315,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         // If we have a new session, then emit the new kernel connection information.
         if (session && oldSession !== session) {
             if (!session.kernelSocketInformation) {
-                traceError(`Unable to find WebSocket connection assocated with kerne ${session.kernel.id}`);
+                traceError(`Unable to find WebSocket connection assocated with kernel ${session.kernel.id}`);
                 this._kernelSocket.next(undefined);
             } else {
                 this._kernelSocket.next({
