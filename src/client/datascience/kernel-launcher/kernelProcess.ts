@@ -5,12 +5,11 @@
 import { ChildProcess } from 'child_process';
 import { Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
@@ -27,7 +26,7 @@ export class KernelProcess implements IKernelProcess {
     public get ready(): Promise<void> {
         return this.readyPromise.promise;
     }
-    public get exited(): Event<number | null> {
+    public get exited(): Event<{ exitCode?: number; reason?: string }> {
         return this.exitEvent.event;
     }
     public get kernelSpec(): Readonly<IJupyterKernelSpec> {
@@ -42,9 +41,10 @@ export class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private connectionFile?: TemporaryFile;
     private readyPromise: Deferred<void>;
-    private exitEvent: EventEmitter<number | null> = new EventEmitter<number | null>();
+    private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
     private launchedOnce?: boolean;
+    private disposed?: boolean;
     private kernelDaemon?: IPythonKernelDaemon;
     private readonly _kernelSpec: IJupyterKernelSpec;
     private readonly originalKernelSpec: IJupyterKernelSpec;
@@ -74,11 +74,11 @@ export class KernelProcess implements IKernelProcess {
 
         const exeObs = await this.launchAsObservable();
 
-        sleep(1_000)
-            .then(() => {
-                this.readyPromise.resolve();
-            })
-            .catch(noop);
+        // Jupyter does the same thing. Spawn the kernel process and try to connect.
+        // Unfortunately on windows it doesn't write to stdout such that we can read from it.
+        // Hence we must assume it has started and try to connect to it.
+        // If the kernel process dies we'll communiate that via the `exited` event.
+        this.readyPromise.resolve();
 
         let stdout = '';
         let stderr = '';
@@ -90,38 +90,29 @@ export class KernelProcess implements IKernelProcess {
                     traceWarning(`StdErr from Kernel Process ${output.out}`);
                 } else {
                     stdout += output.out;
-                    // Search for --existing this is the message that will indicate that our kernel is actually
-                    // up and started from stdout
-                    //    To connect another client to this kernel, use:
-                    //    --existing /var/folders/q7/cn8fg6s94fgdcl0h7rbxldf00000gn/T/tmp-16231TOL2dgBoWET1.json
-                    if (!this.readyPromise.completed && stdout.includes('--existing')) {
-                        this.readyPromise.resolve();
-                    }
-                    traceInfo(output.out);
+                    traceInfo(`Kernel Output: ${stdout}`);
                 }
             },
             (error) => {
-                if (this.readyPromise.completed) {
-                    traceInfo('KernelProcess Error', error, stderr);
-                } else {
-                    traceError('Kernel died before it could start', error, stderr);
-                    // Include original error and stderr in error thrown.
-                    const errorMessage = `${localize.DataScience.rawKernelProcessExitBeforeConnect()}. Error = ${error}, stderr = ${stderr}`;
-                    const errorToWrap = error instanceof Error ? error : new Error(error);
-                    this.readyPromise.reject(new WrappedError(errorMessage, errorToWrap));
+                if (this.disposed) {
+                    traceInfo('Kernel died', error, stderr);
+                    return;
                 }
+                traceError('Kernel died', error, stderr);
                 if (error instanceof PythonKernelDiedError) {
-                    traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}`);
-                    this.exitEvent.fire(error.exitCode);
-
-                    // As the kernel has died, kill the daemon.
-                    this.kernelDaemon?.kill().catch(noop); // NOSONAR
+                    if (this.disposed) {
+                        traceInfo('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
+                    } else {
+                        traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
+                    }
+                    this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
                 }
             }
         );
     }
 
     public async dispose(): Promise<void> {
+        this.disposed = true;
         if (this.kernelDaemon) {
             await this.kernelDaemon.kill().catch(noop);
             swallowExceptions(() => this.kernelDaemon?.dispose());
@@ -169,7 +160,7 @@ export class KernelProcess implements IKernelProcess {
                 if (!this.readyPromise.completed) {
                     this.readyPromise.reject(new Error(localize.DataScience.rawKernelProcessExitBeforeConnect()));
                 }
-                this.exitEvent.fire(exitCode);
+                this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
         } else {
             traceInfo('KernelProcess failed to launch');

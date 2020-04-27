@@ -39,13 +39,15 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         options: SpawnOptions
     ): Promise<ObservableExecutionResult<string>> {
         const subject = new Subject<Output<string>>();
+        let stdErr = '';
         // Message from daemon when kernel dies.
         const KernelDiedNotification = new NotificationType<{ exit_code: string; reason?: string }, void>(
             'kernel_died'
         );
         this.connection.onNotification(KernelDiedNotification, (output) => {
+            // If we don't have a reason why things failed, then just include the stderr.
             subject.error(
-                new PythonKernelDiedError({ exitCode: parseInt(output.exit_code, 10), reason: output.reason })
+                new PythonKernelDiedError({ exitCode: parseInt(output.exit_code, 10), reason: output.reason || stdErr })
             );
         });
 
@@ -55,6 +57,7 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         this.outputObservale.subscribe(
             (out) => {
                 if (out.source === 'stderr' && options.throwOnStdErr) {
+                    stdErr += out.out;
                     subject.error(new StdErrError(out.out));
                 } else if (out.source === 'stderr' && options.mergeStdOutErr) {
                     subject.next({ source: 'stdout', out: out.out });

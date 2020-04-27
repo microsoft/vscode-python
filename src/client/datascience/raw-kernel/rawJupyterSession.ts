@@ -4,15 +4,16 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { waitForPromise } from '../../common/utils/async';
+import { createDeferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { BaseJupyterSession, ISession } from '../baseJupyterSession';
 import { Telemetry } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { IKernelConnection, IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
@@ -20,7 +21,7 @@ import { IJMPConnection, IJupyterKernelSpec } from '../types';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
-connecting to JupyterLab services it instead connects to a kernel directly
+connecting to JupyterLab services it instead connect    s to a kernel directly
 through ZMQ.
 It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
@@ -125,25 +126,58 @@ export class RawJupyterSession extends BaseJupyterSession {
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(kernelSpec: IJupyterKernelSpec, _cancelToken?: CancellationToken): Promise<ISession> {
         const process = await this.kernelLauncher.launch(kernelSpec);
+        const processExited = createDeferred<{ exitCode?: number; reason?: string }>();
+        const exitedHandler = process.exited((e) => processExited.resolve(e));
+        let sessionCreated = false;
 
-        // Wait for the process to actually be ready to connect to
-        await process.ready;
+        const throwErrorIfProcessExited = async () => {
+            const exitInfo = await new Promise<{
+                exitCode?: number | undefined;
+                reason?: string | undefined;
+            }>((resolve) => process.exited(resolve));
 
-        const connection = await this.jmpConnection(process.connection);
+            if (sessionCreated) {
+                return;
+            }
+            throw new Error(
+                `${localize.DataScience.rawKernelProcessExitBeforeConnect()}, exit code: ${
+                    exitInfo.exitCode
+                }, reason: ${exitInfo.reason}`
+            );
+        };
+
+        const processExitedPromise = throwErrorIfProcessExited();
+        // We don't want any dangling promises.
+        // tslint:disable-next-line: no-console
+        processExitedPromise.catch(noop);
+
+        try {
+            const connectPromise = this.jmpConnection(process.connection, process);
+            const promise = Promise.race([connectPromise, processExitedPromise]);
+            // Track whether we created a session.
+            promise.then(() => (sessionCreated = true)).catch(noop);
+            // Safe as `connectPromise` when resolved will only return a session.
+            // tslint:disable-next-line: no-any
+            return promise as any;
+        } catch (ex) {
+            // If there is an error in connecting to the kernel, then ensure we dispose the kernel.
+            await process.dispose();
+            throw ex;
+        } finally {
+            exitedHandler.dispose();
+        }
+    }
+
+    // Create and connect our JMP (Jupyter Messaging Protocol) for talking to the raw kernel
+    private async jmpConnection(kernelConnection: IKernelConnection, process: IKernelProcess) {
+        const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
+
+        await connection.connect(kernelConnection);
 
         // Create our raw session, it will own the process lifetime
         const session: ISession = new RawSession(connection, process);
         session.isRemoteSession = false;
         session.process = process;
         return session;
-    }
-
-    // Create and connect our JMP (Jupyter Messaging Protocol) for talking to the raw kernel
-    private async jmpConnection(kernelConnection: IKernelConnection): Promise<IJMPConnection> {
-        const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
-
-        await connection.connect(kernelConnection);
-
-        return connection;
     }
 }

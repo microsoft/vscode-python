@@ -29,15 +29,11 @@ export interface IKernelConnection {
 
 export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    /**
-     * This promise is resolved when the launched process is ready to get JMP messages
-     */
-    readonly ready: Promise<void>;
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
     /**
      * This event is triggered if the process is exited
      */
-    readonly exited: Event<number | null>;
+    readonly exited: Event<{ exitCode?: number; reason?: string }>;
     interrupt(): Promise<void>;
 }
 

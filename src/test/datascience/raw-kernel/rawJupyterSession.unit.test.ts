@@ -5,6 +5,8 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
+import { sleep } from '../../../client/common/utils/async';
+import { DataScience } from '../../../client/common/utils/localize';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
@@ -31,7 +33,7 @@ suite('Data Science - RawJupyterSession', () => {
     let kernelSelector: KernelSelector;
     let jmpConnection: typemoq.IMock<IJMPConnection>;
     let kernelProcess: typemoq.IMock<IKernelProcess>;
-    let processExitEvent: EventEmitter<number | null>;
+    let processExitEvent: EventEmitter<{ exitCode?: number; reason?: string }>;
     const fakeSpec = { name: 'testspec' };
 
     setup(() => {
@@ -45,7 +47,7 @@ suite('Data Science - RawJupyterSession', () => {
         when(serviceContainer.get<IJMPConnection>(IJMPConnection)).thenReturn(jmpConnection.object);
 
         // Set up a fake kernel process for the launcher to return
-        processExitEvent = new EventEmitter<number | null>();
+        processExitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
         kernelProcess = createTypeMoq<IKernelProcess>('kernel process');
         kernelProcess
             .setup((kp) => kp.kernelSpec)
@@ -53,7 +55,6 @@ suite('Data Science - RawJupyterSession', () => {
                 return fakeSpec as any;
             });
         kernelProcess.setup((kp) => kp.connection).returns(() => 'testconnection' as any);
-        kernelProcess.setup((kp) => kp.ready).returns(() => Promise.resolve());
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
         when(kernelLauncher.launch(anything())).thenResolve(kernelProcess.object);
 
@@ -118,9 +119,37 @@ suite('Data Science - RawJupyterSession', () => {
         expect(rawJupyterSession.isConnected).to.equal(true, 'RawJupyterSession not connected');
 
         // Kill the process, we should shutdown
-        processExitEvent.fire(0);
+        processExitEvent.fire({ exitCode: 0 });
 
         // Was the session shutdown?
         assert.isTrue(shutdown.calledOnce);
+    });
+
+    test('Do not allow connecting to live Jupyter Sessions', async () => {
+        // Pass in a live jupyter kernel session.
+        const promise = rawJupyterSession.createNewKernelSession({ session: {} } as any, 5);
+
+        await assert.isRejected(promise);
+    });
+
+    test('Throw exception if kernel dies before connecting', async () => {
+        jmpConnection.reset();
+        // Do not connect to sockets.
+        jmpConnection
+            .setup((jmp) => jmp.connect(typemoq.It.isAny()))
+            .returns(async () => {
+                await sleep(10_000);
+                return;
+            });
+        // As soon as kernel is launched kill it.
+        when(kernelLauncher.launch(anything())).thenCall(() => {
+            setTimeout(() => processExitEvent.fire({ exitCode: 1, reason: 'DieDieDie' }));
+            return kernelProcess.object;
+        });
+
+        const promise = rawJupyterSession.connect({} as any, 60_000);
+
+        const expectedMessage = `${DataScience.rawKernelProcessExitBeforeConnect()}, exit code: 1, reason: DieDieDie`;
+        await assert.isRejected(promise, expectedMessage);
     });
 });
