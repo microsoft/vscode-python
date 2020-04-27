@@ -11,7 +11,7 @@ export const DefaultTheme = 'Default Light+';
 export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
-export const PythonDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
+export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
@@ -279,6 +279,8 @@ export enum Telemetry {
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
+    KernelLauncherPerf = 'DS_INTERNAL.KERNEL_LAUNCHER_PERF',
+    KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
@@ -301,7 +303,15 @@ export enum Telemetry {
     IPyWidgetPromptToUseCDNSelection = 'DS_INTERNAL.IPYWIDGET_PROMPT_TO_USE_CDN_SELECTION',
     IPyWidgetOverhead = 'DS_INTERNAL.IPYWIDGET_OVERHEAD',
     IPyWidgetRenderFailure = 'DS_INTERNAL.IPYWIDGET_RENDER_FAILURE',
-    IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE'
+    IPyWidgetUnhandledMessage = 'DS_INTERNAL.IPYWIDGET_UNHANDLED_MESSAGE',
+    RawKernelCreatingNotebook = 'DS_INTERNAL.RAWKERNEL_CREATING_NOTEBOOK',
+    JupyterCreatingNotebook = 'DS_INTERNAL.JUPYTER_CREATING_NOTEBOOK',
+    RawKernelSessionConnect = 'DS_INTERNAL.RAWKERNEL_SESSION_CONNECT',
+    RawKernelStartRawSession = 'DS_INTERNAL.RAWKERNEL_START_RAW_SESSION',
+    RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
+    RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
+    RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
+    RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION'
 }
 
 export enum NativeKeyboardCommandTelemetry {

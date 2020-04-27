@@ -169,6 +169,29 @@ export namespace Interpreters {
     );
     export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
 }
+
+export namespace InterpreterQuickPickList {
+    export const quickPickListPlaceholder = localize(
+        'InterpreterQuickPickList.quickPickListPlaceholder',
+        'Current: {0}'
+    );
+    export const enterPath = {
+        detail: localize(
+            'InterpreterQuickPickList.enterPath.detail',
+            'Enter or browse the path to an existing Python Interpreter'
+        ),
+        label: localize('InterpreterQuickPickList.enterPath.label', 'Enter Interpreter Path...'),
+        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python Interpreter.')
+    };
+    export const browsePath = {
+        label: localize('InterpreterQuickPickList.browsePath.label', 'Browse...'),
+        detail: localize(
+            'InterpreterQuickPickList.browsePath.detail',
+            'Browse your file system to select a Python Interpreter.'
+        ),
+        openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
+    };
+}
 export namespace ExtensionChannels {
     export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
     export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');

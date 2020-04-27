@@ -25,7 +25,9 @@ export class WorkspaceService implements IWorkspaceService {
         return workspace.onDidChangeConfiguration;
     }
     public get rootPath(): string | undefined {
-        return Array.isArray(workspace.workspaceFolders) ? workspace.workspaceFolders[0].uri.fsPath : undefined;
+        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0
+            ? workspace.workspaceFolders[0].uri.fsPath
+            : undefined;
     }
     public get workspaceFolders(): readonly WorkspaceFolder[] | undefined {
         return workspace.workspaceFolders;

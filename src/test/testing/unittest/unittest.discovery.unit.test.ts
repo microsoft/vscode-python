@@ -71,8 +71,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.contain(dir);
-                expect(opts.args[2]).to.not.contain('loader.discover("."');
+                expect(opts.args[1]).to.contain(dir);
+                expect(opts.args[1]).to.not.contain('loader.discover("."');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -117,8 +117,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.contain(dir);
-                expect(opts.args[2]).to.not.contain('loader.discover("."');
+                expect(opts.args[1]).to.contain(dir);
+                expect(opts.args[1]).to.not.contain('loader.discover("."');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -163,8 +163,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.not.contain(dir);
-                expect(opts.args[2]).to.contain('loader.discover("."');
+                expect(opts.args[1]).to.not.contain(dir);
+                expect(opts.args[1]).to.contain('loader.discover("."');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -205,8 +205,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.contain(pattern);
-                expect(opts.args[2]).to.not.contain('test*.py');
+                expect(opts.args[1]).to.contain(pattern);
+                expect(opts.args[1]).to.not.contain('test*.py');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -251,8 +251,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.contain(pattern);
-                expect(opts.args[2]).to.not.contain('test*.py');
+                expect(opts.args[1]).to.contain(pattern);
+                expect(opts.args[1]).to.not.contain('test*.py');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -297,8 +297,8 @@ suite('Unit Tests - Unittest - Discovery', () => {
             .setup((r) => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
-                expect(opts.args[2]).to.not.contain(pattern);
-                expect(opts.args[2]).to.contain('test*.py');
+                expect(opts.args[1]).to.not.contain(pattern);
+                expect(opts.args[1]).to.contain('test*.py');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());

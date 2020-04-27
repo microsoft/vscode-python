@@ -331,5 +331,5 @@ export function testlauncher(testArgs: string[]): string[] {
 export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
     // There is no output to parse, so we do not return a function.
-    return [ISOLATED, script, ...testArgs];
+    return [script, ...testArgs];
 }

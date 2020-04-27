@@ -5,7 +5,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
-import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
+import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
@@ -42,7 +42,7 @@ suite('Language Server - Manager', () => {
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
-        analysisOptions = mock(LanguageServerAnalysisOptions);
+        analysisOptions = mock(DotNetLanguageServerAnalysisOptions);
         languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);

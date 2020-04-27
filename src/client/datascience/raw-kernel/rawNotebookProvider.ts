@@ -11,6 +11,8 @@ import { traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
 class RawConnection implements IRawConnection {
@@ -45,6 +47,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         return Promise.resolve(this.rawConnection);
     }
 
+    @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
         identity: Uri,
         resource: Resource,

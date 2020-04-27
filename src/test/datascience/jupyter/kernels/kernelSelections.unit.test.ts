@@ -17,7 +17,7 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
-import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector';
+import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
 import { InterpreterType } from '../../../../client/interpreter/contracts';
 

@@ -200,6 +200,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (nextProps.cellVM.cell.data.outputs !== this.props.cellVM.cell.data.outputs) {
             return true;
         }
+        if (nextProps.cellVM.uiSideError !== this.props.cellVM.uiSideError) {
+            return true;
+        }
         if (
             !this.isCodeCell() &&
             nextProps.cellVM.cell.id !== Identifiers.EditCellId &&
@@ -272,7 +275,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // tslint:disable: react-no-dangerous-html
             if (this.props.cellVM.uiSideError) {
                 outputs.push(
-                    <div className="cell-output-uiSideError">
+                    <div key={'uiError'} className="cell-output-uiSideError">
                         <div dangerouslySetInnerHTML={{ __html: this.props.cellVM.uiSideError }} />
                     </div>
                 );

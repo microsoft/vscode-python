@@ -289,7 +289,7 @@ import {
     IInterpreterSecurityStorage
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
-import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import {

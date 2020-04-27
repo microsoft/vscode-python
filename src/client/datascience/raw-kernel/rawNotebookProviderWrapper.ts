@@ -21,7 +21,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
-import { IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelFinder, IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
@@ -41,6 +41,7 @@ type RawNotebookProviderClassType = {
         fs: IFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
+        kernelFinder: IKernelFinder,
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel
@@ -64,6 +65,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
+        @inject(IKernelFinder) kernelFinder: IKernelFinder,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel
@@ -83,6 +85,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             fs,
             serviceContainer,
             kernelLauncher,
+            kernelFinder,
             kernelSelector,
             progressReporter,
             outputChannel

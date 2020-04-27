@@ -4,9 +4,9 @@ import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
-import { DocumentSelector } from 'vscode-languageclient';
+import { DocumentFilter } from 'vscode-languageclient';
 
-import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
+import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -28,9 +28,9 @@ import { sleep } from '../../core';
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
 
 suite('Language Server - Analysis Options', () => {
-    class TestClass extends LanguageServerAnalysisOptions {
-        public getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
-            return super.getDocumentSelector(workspaceFolder);
+    class TestClass extends DotNetLanguageServerAnalysisOptions {
+        public getDocumentFilters(workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
+            return super.getDocumentFilters(workspaceFolder);
         }
         public getExcludedFiles(): string[] {
             return super.getExcludedFiles();
@@ -213,7 +213,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
 
-        const selector = analysisOptions.getDocumentSelector();
+        const selector = analysisOptions.getDocumentFilters();
 
         expect(selector).to.deep.equal(expectedSelector);
     });
@@ -226,7 +226,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
 
-        const selector = analysisOptions.getDocumentSelector(workspaceFolder);
+        const selector = analysisOptions.getDocumentFilters(workspaceFolder);
 
         expect(selector).to.deep.equal(expectedSelector);
     });
@@ -240,7 +240,7 @@ suite('Language Server - Analysis Options', () => {
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
 
-        const selector = analysisOptions.getDocumentSelector(workspaceFolder1);
+        const selector = analysisOptions.getDocumentFilters(workspaceFolder1);
 
         expect(selector).to.deep.equal(expectedSelector);
     });

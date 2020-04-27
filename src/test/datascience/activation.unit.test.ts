@@ -10,7 +10,7 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { sleep } from '../../client/common/utils/async';
 import { Activation } from '../../client/datascience/activation';
-import { PythonDaemonModule } from '../../client/datascience/constants';
+import { JupyterDaemonModule } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
@@ -69,7 +69,9 @@ suite('Data Science - Activation', () => {
 
         verify(executionFactory.createDaemon(anything())).once();
         verify(
-            executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))
+            executionFactory.createDaemon(
+                deepEqual({ daemonModule: JupyterDaemonModule, pythonPath: interpreter.path })
+            )
         ).once();
     }
 
@@ -85,7 +87,9 @@ suite('Data Science - Activation', () => {
         await fakeTimer.wait();
 
         verify(
-            executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))
+            executionFactory.createDaemon(
+                deepEqual({ daemonModule: JupyterDaemonModule, pythonPath: interpreter.path })
+            )
         ).twice();
     });
     test('Changing interpreter without opening a notebook does not result in a daemon being created', async () => {

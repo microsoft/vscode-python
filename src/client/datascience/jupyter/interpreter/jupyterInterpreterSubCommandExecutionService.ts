@@ -9,14 +9,19 @@ import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
+import {
+    IPythonDaemonExecutionService,
+    IPythonExecutionFactory,
+    ObservableExecutionResult,
+    SpawnOptions
+} from '../../../common/process/types';
 import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, PythonDaemonModule, Telemetry } from '../../constants';
+import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -110,8 +115,8 @@ export class JupyterInterpreterSubCommandExecutionService
                 notebookArgs.join(' ')
             )
         );
-        const executionService = await this.pythonExecutionFactory.createDaemon({
-            daemonModule: PythonDaemonModule,
+        const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
         });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
@@ -119,8 +124,8 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const daemon = await this.pythonExecutionFactory.createDaemon({
-            daemonModule: PythonDaemonModule,
+        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
         });
 
@@ -145,8 +150,8 @@ export class JupyterInterpreterSubCommandExecutionService
             throw new Error(DataScience.jupyterNbConvertNotSupported());
         }
 
-        const daemon = await this.pythonExecutionFactory.createDaemon({
-            daemonModule: PythonDaemonModule,
+        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
         });
         // Wait for the nbconvert to finish
@@ -177,8 +182,8 @@ export class JupyterInterpreterSubCommandExecutionService
 
     public async getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        const daemon = await this.pythonExecutionFactory.createDaemon({
-            daemonModule: PythonDaemonModule,
+        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
+            daemonModule: JupyterDaemonModule,
             pythonPath: interpreter.path
         });
         if (Cancellation.isCanceled(token)) {
