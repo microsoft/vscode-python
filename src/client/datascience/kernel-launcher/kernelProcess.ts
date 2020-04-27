@@ -53,7 +53,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly file: IFileSystem,
         private readonly _connection: IKernelConnection,
-        kernelSpec: IJupyterKernelSpec
+        kernelSpec: IJupyterKernelSpec,
+        private readonly resource: Resource
     ) {
         this.originalKernelSpec = kernelSpec;
         this._kernelSpec = cloneDeep(kernelSpec);
@@ -148,16 +149,18 @@ export class KernelProcess implements IKernelProcess {
 
     private async launchAsObservable() {
         let exeObs: ObservableExecutionResult<string>;
-        const resource: Resource = undefined;
         if (this.isPythonKernel) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.pythonExecutionFactory);
-            const { observableResult, daemon } = await this.pythonKernelLauncher.launch(resource, this._kernelSpec);
+            const { observableResult, daemon } = await this.pythonKernelLauncher.launch(
+                this.resource,
+                this._kernelSpec
+            );
             this.kernelDaemon = daemon;
             exeObs = observableResult;
         } else {
             // First part of argument is always the executable.
             const executable = this._kernelSpec.argv[0];
-            const executionService = await this.processExecutionFactory.create(resource);
+            const executionService = await this.processExecutionFactory.create(this.resource);
             exeObs = executionService.execObservable(executable, this._kernelSpec.argv.slice(1), {
                 env: this._kernelSpec.env
             });

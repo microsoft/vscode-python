@@ -51,7 +51,7 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -159,7 +159,7 @@ suite('DataScience - Kernel Launcher', () => {
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
 
-            const kernel = await kernelLauncher.launch(spec);
+            const kernel = await kernelLauncher.launch(spec, undefined);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             // It should not exit.
@@ -203,7 +203,7 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
 
             try {
                 const zmq = await import('zeromq');

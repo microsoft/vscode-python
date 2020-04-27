@@ -4,6 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
+import { Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -29,7 +30,8 @@ export class RawJupyterSession extends BaseJupyterSession {
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         private readonly serviceContainer: IServiceContainer,
-        kernelSelector: KernelSelector
+        kernelSelector: KernelSelector,
+        private readonly resource: Resource
     ) {
         super(kernelSelector);
     }
@@ -124,7 +126,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(kernelSpec: IJupyterKernelSpec, _cancelToken?: CancellationToken): Promise<ISession> {
-        const process = await this.kernelLauncher.launch(kernelSpec);
+        const process = await this.kernelLauncher.launch(kernelSpec, this.resource);
 
         // Wait for the process to actually be ready to connect to
         await process.ready;
