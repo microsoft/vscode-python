@@ -133,6 +133,13 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
 }
 
+// Type-parameterized form of MethodDecorator in lib.es5.d.ts.
+type TypedMethodDescriptor<T> = (
+    target: Object,
+    propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<T>
+) => TypedPropertyDescriptor<T> | void;
+
 // tslint:disable-next-line:no-any function-name
 export function captureTelemetry<T, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
@@ -140,7 +147,7 @@ export function captureTelemetry<T, P extends IEventNamePropertyMapping, E exten
     captureDuration: boolean = true,
     failureEventName?: E,
     lazyProperties?: (obj: T) => P[E]
-) {
+): TypedMethodDescriptor<(this: T, ...args: any[]) => any> {
     // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
@@ -151,6 +158,7 @@ export function captureTelemetry<T, P extends IEventNamePropertyMapping, E exten
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (this: T, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
+            // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
