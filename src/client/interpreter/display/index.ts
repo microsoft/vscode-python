@@ -12,6 +12,10 @@ import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, PythonInt
 // tslint:disable-next-line:completed-docs
 @injectable()
 export class InterpreterDisplay implements IInterpreterDisplay {
+    public get interpreterPath(): string | undefined {
+        return this._interpreterPath;
+    }
+    public _interpreterPath: string | undefined;
     private readonly statusBar: StatusBarItem;
     private readonly helper: IInterpreterHelper;
     private readonly workspaceService: IWorkspaceService;
@@ -20,8 +24,6 @@ export class InterpreterDisplay implements IInterpreterDisplay {
     private currentlySelectedInterpreterPath?: string;
     private currentlySelectedWorkspaceFolder: Resource;
     private readonly autoSelection: IInterpreterAutoSelectionService;
-    private interpreterPath: string | undefined;
-
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -42,6 +44,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             disposableRegistry
         );
     }
+
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
         if (resource && this.workspaceService.getWorkspaceFolder(resource)) {
@@ -65,14 +68,14 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         if (interpreter) {
             this.statusBar.color = '';
             this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
-            if (this.interpreterPath !== interpreter.path) {
+            if (this._interpreterPath !== interpreter.path) {
                 const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
                 output.appendLine(
                     Interpreters.pythonInterpreterPath().format(
                         this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath)
                     )
                 );
-                this.interpreterPath = interpreter.path;
+                this._interpreterPath = interpreter.path;
             }
             this.statusBar.text = interpreter.displayName!;
             this.currentlySelectedInterpreterPath = interpreter.path;

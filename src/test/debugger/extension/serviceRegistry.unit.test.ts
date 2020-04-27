@@ -16,6 +16,7 @@ import { IAttachProcessProviderFactory } from '../../../client/debugger/extensio
 import { DebuggerBanner } from '../../../client/debugger/extension/banner';
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from '../../../client/debugger/extension/configuration/launch.json/completionProvider';
+import { InterpreterPathCommand } from '../../../client/debugger/extension/configuration/launch.json/interpreterPathCommand';
 import { LaunchJsonUpdaterService } from '../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/djangoLaunch';
 import { FileLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fileLaunch';
@@ -59,6 +60,12 @@ suite('Debugging - Service Registry', () => {
     test('Registrations', () => {
         registerTypes(instance(serviceManager));
 
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                InterpreterPathCommand
+            )
+        ).once();
         verify(
             serviceManager.addSingleton<IDebugConfigurationService>(
                 IDebugConfigurationService,

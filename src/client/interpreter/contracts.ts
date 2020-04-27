@@ -101,6 +101,7 @@ export interface IInterpreterService {
 
 export const IInterpreterDisplay = Symbol('IInterpreterDisplay');
 export interface IInterpreterDisplay {
+    readonly interpreterPath: string | undefined;
     refresh(resource?: Uri): Promise<void>;
 }
 

@@ -19,7 +19,6 @@ import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import {
-    IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterService,
     InterpreterType,
@@ -54,7 +53,7 @@ suite('Interpreters Display', () => {
     let statusBar: TypeMoq.IMock<StatusBarItem>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
-    let interpreterDisplay: IInterpreterDisplay;
+    let interpreterDisplay: InterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let output: TypeMoq.IMock<IOutputChannel>;
@@ -261,5 +260,10 @@ suite('Interpreters Display', () => {
         interpreterService.verifyAll();
         statusBar.verify((s) => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
         statusBar.verify((s) => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
+    });
+    test('Get interpreter path returns the correct path', async () => {
+        interpreterDisplay._interpreterPath = 'path/to/interpreter';
+        const result = interpreterDisplay.interpreterPath;
+        expect(result).to.equal('path/to/interpreter');
     });
 });
