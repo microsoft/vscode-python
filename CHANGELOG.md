@@ -18,6 +18,8 @@
    ([#11334](https://github.com/Microsoft/vscode-python/issues/11334))
 1. Change "python.dataScience.runStartupCommands" commands to be a global setting, not a workspace setting.
    ([#11352](https://github.com/Microsoft/vscode-python/issues/11352))
+1. Closing the interactive window shuts down other active notebook sessions.
+   ([#11404](https://github.com/Microsoft/vscode-python/issues/11404))
 
 ### Thanks
 
