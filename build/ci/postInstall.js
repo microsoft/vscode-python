@@ -66,6 +66,9 @@ function createJupyterKernelWithoutSerialization() {
         /^const serialize =.*$/gm,
         'const serialize = { serialize: (a) => a, deserialize: (a) => a };'
     );
+    if (replacedContents === fileContents) {
+        throw new Error('Jupyter lab default kernel cannot be made non serializing');
+    }
     var destPath = path.join(path.dirname(filePath), 'nonSerializingKernel.js');
     fs.writeFileSync(destPath, replacedContents);
     console.log(colors.green(destPath + ' file generated (by Python VSC)'));

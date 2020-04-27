@@ -135,7 +135,7 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.sendControlMessage(msg, expectReply, disposeOnDone);
     }
     public reconnect(): Promise<void> {
-        return this.realKernel.reconnect();
+        throw new Error('Reconnect is not supported.');
     }
     public interrupt(): Promise<void> {
         // Send this directly to our kernel process. Don't send it through the real kernel. The
@@ -143,7 +143,7 @@ export class RawKernel implements Kernel.IKernel {
         return this.kernelProcess.interrupt();
     }
     public restart(): Promise<void> {
-        return this.realKernel.restart();
+        throw new Error('This method should not be called. Restart is implemented at a higher level');
     }
     public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
         return this.realKernel.requestKernelInfo();
