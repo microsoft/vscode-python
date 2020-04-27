@@ -4,7 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IDisposable, IOutputChannel, Resource } from '../../common/types';
+import { IDisposable, IOutputChannel } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -19,7 +19,7 @@ import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
 
-/* 
+/*
 RawJupyterSession is the implementation of IJupyterSession that instead of
 connecting to JupyterLab services it instead connects to a kernel directly
 through ZMQ.

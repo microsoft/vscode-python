@@ -3,6 +3,7 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
+import { noop } from '../../common/utils/misc';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
@@ -43,9 +44,8 @@ export class RawSession implements ISessionWithSocket {
         if (!this.isDisposed) {
             await this._kernel.shutdown();
             this._kernel.dispose();
-            this.kernelProcess.dispose();
+            this.kernelProcess.dispose().catch(noop);
         }
-
         this.isDisposed = true;
     }
 

@@ -3,7 +3,6 @@
 'use strict';
 import * as cors from 'cors';
 import * as express from 'express';
-import * as fs from 'fs-extra';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
 import * as path from 'path';

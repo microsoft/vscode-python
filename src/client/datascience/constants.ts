@@ -12,6 +12,7 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
+export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [

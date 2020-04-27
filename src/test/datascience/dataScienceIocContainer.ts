@@ -155,6 +155,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IPythonExtensionBanner,
+    IPythonSettings,
     IsWindows,
     ProductType,
     Resource,
@@ -1202,7 +1203,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
-    public getSettings(resource?: Uri) {
+    public getSettings(resource?: Uri): IPythonSettings {
         const key = this.getResourceKey(resource);
         let setting = this.settingsMap.get(key);
         if (!setting && !this.disposed) {
@@ -1221,7 +1222,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
-        const settings = this.getSettings(resource);
+        const settings = this.getSettings(resource) as any;
         settings.pythonPath = newPath;
         settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
 

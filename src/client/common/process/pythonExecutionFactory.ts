@@ -29,7 +29,8 @@ import {
     IProcessServiceFactory,
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
+    isDaemonPoolCreationOption
 } from './types';
 
 // Minimum version number of conda required to be able to use 'conda run'
@@ -87,7 +88,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return (activatedProcPromise! as unknown) as T;
         }
 
-        const createDedicatedDaemon = 'dedicated' in options && options.dedicated;
         // Ensure we do not start multiple daemons for the same interpreter.
         // Cache the promise.
         const start = async (): Promise<T> => {
@@ -96,7 +96,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            if (createDedicatedDaemon) {
+            if (isDaemonPoolCreationOption(options)) {
+                const daemon = new PythonDaemonExecutionServicePool(
+                    logger,
+                    disposables,
+                    { ...options, pythonPath },
+                    activatedProc!,
+                    activatedEnvVars
+                );
+                await daemon.initialize();
+                disposables.push(daemon);
+                return (daemon as unknown) as T;
+            } else {
                 const factory = new PythonDaemonFactory(
                     disposables,
                     { ...options, pythonPath },
@@ -105,29 +116,19 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 );
                 return factory.createDaemonService<T>();
             }
-            const daemon = new PythonDaemonExecutionServicePool(
-                logger,
-                disposables,
-                { ...options, pythonPath },
-                activatedProc!,
-                activatedEnvVars
-            );
-            await daemon.initialize();
-            disposables.push(daemon);
-            return (daemon as unknown) as T;
         };
 
         let promise: Promise<T>;
 
-        if (createDedicatedDaemon) {
-            promise = start();
-        } else {
+        if (isDaemonPoolCreationOption(options)) {
             // Ensure we do not create multiple daemon pools for the same python interpreter.
             promise = (this.daemonsPerPythonService.get(daemonPoolKey) as unknown) as Promise<T>;
             if (!promise) {
                 promise = start();
                 this.daemonsPerPythonService.set(daemonPoolKey, promise as Promise<IPythonDaemonExecutionService>);
             }
+        } else {
+            promise = start();
         }
         return promise.catch((ex) => {
             // Ok, we failed to create the daemon (or failed to start).
