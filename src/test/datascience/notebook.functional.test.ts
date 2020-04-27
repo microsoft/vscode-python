@@ -74,9 +74,10 @@ suite('DataScience notebook tests', () => {
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
                 ioc = new DataScienceIocContainer();
-                if (ioc.mockJupyter && useRawKernel) {
+                if (ioc.shouldMockJupyter && useRawKernel) {
                     // tslint:disable-next-line: no-invalid-this
                     this.skip();
+                    return;
                 } else {
                     ioc.setExperimentState(LocalZMQKernel.experiment, useRawKernel);
                 }

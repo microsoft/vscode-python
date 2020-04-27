@@ -417,6 +417,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
+    public shouldMockJupyter: boolean;
     private missedMessages: any[] = [];
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
@@ -425,7 +426,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         value: boolean;
     }>();
     private jupyterMock: MockJupyterManagerFactory | undefined;
-    private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();

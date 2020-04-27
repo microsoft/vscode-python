@@ -45,7 +45,22 @@ suite('Data Science - RawJupyterSession', () => {
             .returns(() => {
                 return fakeSpec as any;
             });
-        kernelProcess.setup((kp) => kp.connection).returns(() => 'testconnection' as any);
+        kernelProcess
+            .setup((kp) => kp.connection)
+            .returns(() => {
+                return {
+                    version: 1,
+                    stdin_port: 1,
+                    shell_port: 2,
+                    hb_port: 3,
+                    iopub_port: 4,
+                    control_port: 5,
+                    signature_scheme: 'hmac-sha256',
+                    key: '444',
+                    transport: 'tcp',
+                    ip: '0.0.0.0'
+                };
+            });
         kernelProcess.setup((kp) => kp.ready).returns(() => Promise.resolve());
         kernelProcess.setup((kp) => kp.exited).returns(() => processExitEvent.event);
         when(kernelLauncher.launch(anything())).thenResolve(kernelProcess.object);

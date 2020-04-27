@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { Kernel } from '@jupyterlab/services';
+import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
@@ -118,6 +120,17 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(kernel.display_name || kernel.name));
 
         return this.startRawSession(kernel);
+    }
+
+    protected shutdownSession(
+        session: ISessionWithSocket | undefined,
+        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
+    ): Promise<void> {
+        return super.shutdownSession(session, statusHandler).then(() => {
+            if (session) {
+                return (session as RawSession).kernelProcess.dispose();
+            }
+        });
     }
 
     protected setSession(session: ISessionWithSocket | undefined) {
