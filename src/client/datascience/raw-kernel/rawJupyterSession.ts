@@ -22,7 +22,7 @@ import { IJMPConnection, IJupyterKernelSpec } from '../types';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
-connecting to JupyterLab services it instead connect    s to a kernel directly
+connecting to JupyterLab services it instead connects to a kernel directly
 through ZMQ.
 It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
