@@ -63,7 +63,8 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             [
                 DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
                 DiagnosticCodes.JustMyCodeDiagnostic,
-                DiagnosticCodes.ConsoleTypeDiagnostic
+                DiagnosticCodes.ConsoleTypeDiagnostic,
+                DiagnosticCodes.ConfigPythonPathDiagnostic
             ],
             serviceContainer,
             disposableRegistry,
