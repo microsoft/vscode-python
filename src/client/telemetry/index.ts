@@ -141,22 +141,22 @@ type TypedMethodDescriptor<T> = (
 ) => TypedPropertyDescriptor<T> | void;
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<T, P extends IEventNamePropertyMapping, E extends keyof P>(
+export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
     captureDuration: boolean = true,
     failureEventName?: E,
-    lazyProperties?: (obj: T) => P[E]
-): TypedMethodDescriptor<(this: T, ...args: any[]) => any> {
+    lazyProperties?: (obj: This) => P[E]
+): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
-        descriptor: TypedPropertyDescriptor<(this: T, ...args: any[]) => any>
+        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (this: T, ...args: any[]) {
+        descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
