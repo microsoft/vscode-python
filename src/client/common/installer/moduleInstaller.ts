@@ -45,7 +45,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     ? await interpreterService.getActiveInterpreter(resource)
                     : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
-                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs);
+                const args = internalPython.execModule(executionInfo.moduleName, executionInfoArgs, true, true);
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
