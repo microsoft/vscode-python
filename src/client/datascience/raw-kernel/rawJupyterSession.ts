@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
-import { createDeferred, sleep, waitForPromise } from '../../common/utils/async';
+import { createDeferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -98,37 +97,14 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number
+        _timeoutMS: number
     ): Promise<ISession> {
         if (!kernel || 'session' in kernel) {
             // Don't allow for connecting to a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        let sessionCreated = false;
-        const cancellation = new CancellationTokenSource();
-        const timeoutPromise = createDeferred<never>();
-
-        // tslint:disable-next-line: no-any
-        const timer: any = setTimeout(() => {
-            // const timeoutPromise = sleep(timeoutMS).then(() => {
-            // To ignore dangling promises failing and not being handled.
-            if (sessionCreated) {
-                return;
-            }
-            // tslint:disable-next-line: no-any
-            const cancelTimer: any = setTimeout(() => cancellation.cancel(), 0);
-            this._disposables.push({ dispose: () => clearTimeout(cancelTimer) });
-            timeoutPromise.reject(new Error('Timeout waiting to create a new Kernel'));
-        }, timeoutMS);
-
-        // No dangling resources.
-        this._disposables.push({ dispose: cancellation.cancel.bind(cancellation) });
-        this._disposables.push({ dispose: () => clearTimeout(timer) });
-
-        const promise = Promise.race([this.startRawSession(kernel, cancellation.token), timeoutPromise.promise]);
-        promise.then(() => (sessionCreated = true)).catch(noop);
-        return promise;
+        return this.startRawSession(kernel);
     }
 
     protected startRestartSession() {

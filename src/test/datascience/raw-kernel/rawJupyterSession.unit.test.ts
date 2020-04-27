@@ -159,20 +159,5 @@ suite('Data Science - RawJupyterSession', () => {
         const expectedMessage = `${DataScience.rawKernelProcessExitBeforeConnect()}, exit code: 1, reason: DieDieDie`;
         await assert.isRejected(promise, expectedMessage);
         deferred.resolve();
-    // });
-    test('Throw exception if we timeout waiting for session to get created', async () => {
-        jmpConnection.reset();
-        const deferred = createDeferred();
-        // Do not connect to sockets.
-        jmpConnection
-            .setup((jmp) => jmp.connect(typemoq.It.isAny()))
-            .returns(async () => {
-                await deferred.promise;
-                return;
-            });
-        const promise = rawJupyterSession.createNewKernelSession({} as any, 1_0);
-
-        await assert.isRejected(promise, 'Timeout waiting to create a new Kernel');
-        deferred.resolve();
     });
 });
