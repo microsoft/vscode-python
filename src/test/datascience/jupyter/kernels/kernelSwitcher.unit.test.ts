@@ -10,8 +10,8 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { PythonSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
-import { Common, DataScience } from '../../../../client/common/utils/localize';
+import { IConfigurationService, IInstaller, IPythonSettings } from '../../../../client/common/types';
+import { Common, DataScience, Installer } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { Commands } from '../../../../client/datascience/constants';
@@ -36,6 +36,7 @@ suite('Data Science - Kernel Switcher', () => {
     let sessionManagerFactory: IJupyterSessionManagerFactory;
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
+    let installer: IInstaller;
     let notebook: INotebook;
     let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
@@ -79,6 +80,7 @@ suite('Data Science - Kernel Switcher', () => {
         sessionManagerFactory = mock(JupyterSessionManagerFactory);
         kernelSelector = mock(KernelSelector);
         appShell = mock(ApplicationShell);
+        installer = mock(Installer);
 
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);
@@ -88,7 +90,8 @@ suite('Data Science - Kernel Switcher', () => {
             instance(configService),
             instance(sessionManagerFactory),
             instance(kernelSelector),
-            instance(appShell)
+            instance(appShell),
+            instance(installer)
         );
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();

@@ -4,12 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationTokenSource, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { IConfigurationService, Resource } from '../../../common/types';
+import { traceVerbose } from '../../../common/logger';
+import { IConfigurationService, IInstaller, InstallerResponse, Product, Resource } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
+// import * as localize from '../../common/utils/localize';
 import { Commands, Settings } from '../../constants';
 import { IJupyterConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
@@ -22,7 +24,8 @@ export class KernelSwitcher {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(KernelSelector) private kernelSelector: KernelSelector,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IInstaller) private readonly installer: IInstaller
     ) {}
 
     public async switchKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
@@ -123,6 +126,21 @@ export class KernelSwitcher {
         }
     }
     private async switchToKernel(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
+        if (
+            notebook.connection?.type === 'raw' &&
+            !(await this.installer.isInstalled(Product.ipykernel, kernel.interpreter))
+        ) {
+            const token = new CancellationTokenSource();
+            const response = await this.installer.promptToInstall(Product.ipykernel, kernel.interpreter, token.token);
+            if (response === InstallerResponse.Installed) {
+                traceVerbose(`ipykernel installed in ${kernel.interpreter!.path}.`);
+            } else {
+                this.appShell.showErrorMessage(DataScience.ipykernelNotInstalled());
+                traceVerbose(`ipykernel is not installed in ${kernel.interpreter!.path}.`);
+                return;
+            }
+        }
+
         const switchKernel = async (newKernel: KernelSpecInterpreter) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(

@@ -920,6 +920,7 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
+    export const ipykernelNotInstalled = localize('DataScience.ipykernelNotInstalled', 'Ipykernel is not installed.');
 }
 
 export namespace DebugConfigStrings {

@@ -45,7 +45,7 @@ export type KernelSpecInterpreter = {
 @injectable()
 export class KernelSelector {
     /**
-     * List of ids of kernels that should be hiddenn from the kernel picker.
+     * List of ids of kernels that should be hidden from the kernel picker.
      *
      * @private
      * @type {new Set<string>}
