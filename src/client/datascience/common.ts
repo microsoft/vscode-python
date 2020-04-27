@@ -93,7 +93,7 @@ export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
         delete result.execution_count;
     } else {
         // Clean outputs from code cells
-        result.outputs = (result.outputs as nbformat.IOutput[]).map(fixupOutput);
+        result.outputs = result.outputs ? (result.outputs as nbformat.IOutput[]).map(fixupOutput) : [];
     }
 
     return result;
