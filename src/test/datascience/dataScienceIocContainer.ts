@@ -1167,6 +1167,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 const list = await this.getJupyterInterpreters();
                 this.forceSettingsChanged(undefined, list[0].path);
 
+                // Log this all the time. Useful in determining why a test may not pass.
+                // tslint:disable-next-line: no-console
+                console.log(`Setting interpreter to ${list[0].displayName || list[0].path}`);
+
                 // Also set this as the interpreter to use for jupyter
                 await this.serviceManager
                     .get<JupyterInterpreterService>(JupyterInterpreterService)

@@ -111,7 +111,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
-        if (!localResource.fsPath.startsWith(this._rootScriptFolder)) {
+        if (!localResource.fsPath.toLocaleLowerCase().startsWith(this._rootScriptFolder.toLocaleLowerCase())) {
             if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
                 const deferred = createDeferred<Uri>();
                 this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
