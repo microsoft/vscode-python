@@ -412,7 +412,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public async interruptKernel(): Promise<void> {
         if (this._notebook && !this.restartingKernel) {
             this.restartingKernel = true;
-            this.startProgress();
 
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -448,7 +447,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.applicationShell.showErrorMessage(err);
             } finally {
                 this.restartingKernel = false;
-                this.stopProgress();
             }
         }
     }
