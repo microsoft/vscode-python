@@ -5,13 +5,14 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter } from 'vscode';
-import { sleep } from '../../../client/common/utils/async';
+import { createDeferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { IKernelLauncher, IKernelProcess } from '../../../client/datascience/kernel-launcher/types';
 import { RawJupyterSession } from '../../../client/datascience/raw-kernel/rawJupyterSession';
 import { IJMPConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { noop } from '../../core';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
@@ -63,6 +64,10 @@ suite('Data Science - RawJupyterSession', () => {
             instance(serviceContainer),
             instance(kernelSelector)
         );
+    });
+    teardown(async () => {
+        processExitEvent.fire({ exitCode: 0 });
+        await rawJupyterSession.dispose().catch(noop);
     });
 
     test('RawJupyterSession - shutdown on dispose', async () => {
@@ -134,11 +139,13 @@ suite('Data Science - RawJupyterSession', () => {
 
     test('Throw exception if kernel dies before connecting', async () => {
         jmpConnection.reset();
+
         // Do not connect to sockets.
+        const deferred = createDeferred();
         jmpConnection
             .setup((jmp) => jmp.connect(typemoq.It.isAny()))
             .returns(async () => {
-                await sleep(10_000);
+                await deferred.promise;
                 return;
             });
         // As soon as kernel is launched kill it.
@@ -151,5 +158,21 @@ suite('Data Science - RawJupyterSession', () => {
 
         const expectedMessage = `${DataScience.rawKernelProcessExitBeforeConnect()}, exit code: 1, reason: DieDieDie`;
         await assert.isRejected(promise, expectedMessage);
+        deferred.resolve();
+    // });
+    test('Throw exception if we timeout waiting for session to get created', async () => {
+        jmpConnection.reset();
+        const deferred = createDeferred();
+        // Do not connect to sockets.
+        jmpConnection
+            .setup((jmp) => jmp.connect(typemoq.It.isAny()))
+            .returns(async () => {
+                await deferred.promise;
+                return;
+            });
+        const promise = rawJupyterSession.createNewKernelSession({} as any, 1_0);
+
+        await assert.isRejected(promise, 'Timeout waiting to create a new Kernel');
+        deferred.resolve();
     });
 });
