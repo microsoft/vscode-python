@@ -92,7 +92,11 @@ export class RawKernel implements Kernel.IKernel {
     public get isDisposed(): boolean {
         return this.realKernel.isDisposed;
     }
-    constructor(private realKernel: Kernel.IKernel, socket: IKernelSocket & IWebSocketLike & IDisposable) {
+    constructor(
+        private realKernel: Kernel.IKernel,
+        socket: IKernelSocket & IWebSocketLike & IDisposable,
+        private kernelProcess: IKernelProcess
+    ) {
         // Save this raw socket as our kernel socket. It will be
         // used to watch and respond to kernel messages.
         this.socket = socket;
@@ -134,7 +138,9 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.reconnect();
     }
     public interrupt(): Promise<void> {
-        return this.realKernel.interrupt();
+        // Send this directly to our kernel process. Don't send it through the real kernel. The
+        // real kernel will send a goofy API request to the websocket.
+        return this.kernelProcess.interrupt();
     }
     public restart(): Promise<void> {
         return this.realKernel.restart();
@@ -263,5 +269,5 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     );
 
     // Use this real kernel in result.
-    return new RawKernel(realKernel, socketInstance);
+    return new RawKernel(realKernel, socketInstance, kernelProcess);
 }
