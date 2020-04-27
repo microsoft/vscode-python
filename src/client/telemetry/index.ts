@@ -150,7 +150,7 @@ export function captureTelemetry<T, P extends IEventNamePropertyMapping, E exten
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (this: T, ...args: any[]) {
-            // Legacy case; fast path sent before method executes.
+            // Legacy case; fast path that sends event before method executes.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
