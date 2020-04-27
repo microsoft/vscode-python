@@ -66,6 +66,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     public get languageProxy() {
         return this.languageServerProxy;
     }
+
     @traceDecorators.error('Failed to start Language Server')
     public async start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.languageProxy) {
