@@ -17,9 +17,9 @@ export function suppressShutdownErrors(realKernel: any) {
     // https://github.com/jupyterlab/jupyterlab/issues/4252
     // tslint:disable:no-any
     if (isTestExecution()) {
-        const defaultKernel = realKernel as any;
+        const defaultKernel = realKernel as any; // NOSONAR
         if (defaultKernel && defaultKernel._futures) {
-            const futures = defaultKernel._futures as Map<any, any>;
+            const futures = defaultKernel._futures as Map<any, any>; // NOSONAR
             if (futures) {
                 futures.forEach((f) => {
                     if (f._status !== undefined) {
@@ -42,19 +42,19 @@ input request, translating them, sending them to an IPython kernel over ZMQ, the
 export class RawKernel implements Kernel.IKernel {
     public socket: IKernelSocket & IDisposable;
     public get terminated() {
-        return this.realKernel.terminated as any;
+        return this.realKernel.terminated as any; // NOSONAR
     }
     public get statusChanged() {
-        return this.realKernel.statusChanged as any;
+        return this.realKernel.statusChanged as any; // NOSONAR
     }
     public get iopubMessage() {
-        return this.realKernel.iopubMessage as any;
+        return this.realKernel.iopubMessage as any; // NOSONAR
     }
     public get unhandledMessage() {
-        return this.realKernel.unhandledMessage as any;
+        return this.realKernel.unhandledMessage as any; // NOSONAR
     }
     public get anyMessage() {
-        return this.realKernel.anyMessage as any;
+        return this.realKernel.anyMessage as any; // NOSONAR
     }
     public get serverSettings(): ServerConnection.ISettings {
         return this.realKernel.serverSettings;
@@ -235,7 +235,7 @@ export class RawKernel implements Kernel.IKernel {
 let nonSerializingKernel: any;
 
 export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
-    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
     // Dummy websocket we give to the underlying real kernel
@@ -249,14 +249,14 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
 
     // Remap the server settings for the real kernel to use our dummy websocket
     const settings = jupyterLab.ServerConnection.makeSettings({
-        WebSocket: RawSocketWrapper as any,
+        WebSocket: RawSocketWrapper as any, // NOSONAR
         wsUrl: 'RAW'
     });
 
     // Then create the real kernel. We will remap its serialize/deserialize functions
     // to do nothing so that we can control serialization at our socket layer.
     if (!nonSerializingKernel) {
-        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default');
+        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
     const realKernel = new nonSerializingKernel.DefaultKernel(
         {

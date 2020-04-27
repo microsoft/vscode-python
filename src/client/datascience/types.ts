@@ -354,7 +354,7 @@ export type ISessionWithSocket = Session.ISession & {
     // Whether this is a remote session that we attached to.
     isRemoteSession?: boolean;
     // Socket information used for hooking messages to the kernel
-    kernelSocketInformation?: KernelSocketInformation | undefined;
+    kernelSocketInformation?: KernelSocketInformation;
 };
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
