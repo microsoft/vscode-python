@@ -117,7 +117,9 @@ suite('DataScience - ipywidget - CDN', () => {
 
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
-            setup(() => {
+            setup(function () {
+                // tslint:disable-next-line: no-invalid-this
+                this.skip();
                 const connection: IConnection = {
                     baseUrl: '',
                     localProcExitCode: undefined,
