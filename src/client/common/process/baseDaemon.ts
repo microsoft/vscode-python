@@ -21,8 +21,8 @@ import {
     StdErrError
 } from './types';
 
-type ErrorResponse = { error?: string };
-
+export type ErrorResponse = { error?: string };
+export type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
 export class ConnectionClosedError extends Error {
     constructor(public readonly message: string) {
         super();
@@ -181,7 +181,6 @@ export abstract class BasePythonDaemon {
     ): ObservableExecutionResult<string> {
         const subject = new Subject<Output<string>>();
         const start = async () => {
-            type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
                 const request = new RequestType<
@@ -282,7 +281,6 @@ export abstract class BasePythonDaemon {
         args: string[],
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
-        type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
         const request = new RequestType<
             // tslint:disable-next-line: no-any
             { file_name: string; args: string[]; cwd?: string; env?: any },
@@ -304,7 +302,6 @@ export abstract class BasePythonDaemon {
         args: string[],
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
-        type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
         const request = new RequestType<
             // tslint:disable-next-line: no-any
             { module_name: string; args: string[]; cwd?: string; env?: any },

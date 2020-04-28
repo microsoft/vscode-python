@@ -6,12 +6,11 @@
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
 import { IDisposable } from 'monaco-editor';
-import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
+import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { KernelLauncherDaemonModule } from '../constants';
 import { IJupyterKernelSpec } from '../types';
-import { PythonKernelDaemon } from './kernelDaemon';
+import { KernelDaemonPool } from './kernelDaemonPool';
 import { IPythonKernelDaemon } from './types';
 
 /**
@@ -22,19 +21,14 @@ import { IPythonKernelDaemon } from './types';
 @injectable()
 export class PythonKernelLauncherDaemon implements IDisposable {
     private readonly processesToDispose: ChildProcess[] = [];
-    constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) {}
+    constructor(@inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool) {}
     public async launch(
         resource: Resource,
         kernelSpec: IJupyterKernelSpec
     ): Promise<{ observableResult: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
         const pythonPath = kernelSpec.argv[0];
-        const daemon = await this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
-            daemonModule: KernelLauncherDaemonModule,
-            pythonPath: pythonPath,
-            daemonClass: PythonKernelDaemon,
-            dedicated: true,
-            resource
-        });
+        await this.daemonPool.preWarmKernelDaemons();
+        const daemon = await this.daemonPool.get(resource, pythonPath);
         const args = kernelSpec.argv.slice();
         args.shift(); // Remove executable.
         args.shift(); // Remove `-m`.

@@ -7,10 +7,11 @@ import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
+import { IProcessServiceFactory } from '../../common/process/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
+import { KernelDaemonPool } from './kernelDaemonPool';
 import { KernelProcess } from './kernelProcess';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
@@ -23,18 +24,18 @@ const PortToStartFrom = 9_000;
 export class KernelLauncher implements IKernelLauncher {
     private static nextFreePortToTryAndUse = PortToStartFrom;
     constructor(
-        @inject(IPythonExecutionFactory) private pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
-        @inject(IFileSystem) private file: IFileSystem
+        @inject(IFileSystem) private file: IFileSystem,
+        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool
     ) {}
 
     @captureTelemetry(Telemetry.KernelLauncherPerf)
     public async launch(kernelSpec: IJupyterKernelSpec): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
-            this.pythonExecutionFactory,
             this.processExecutionFactory,
             this.file,
+            this.daemonPool,
             connection,
             kernelSpec
         );

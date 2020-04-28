@@ -8,7 +8,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
+import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -20,6 +20,7 @@ import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDie
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { KernelDaemonPool } from './kernelDaemonPool';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -49,9 +50,9 @@ export class KernelProcess implements IKernelProcess {
     private readonly _kernelSpec: IJupyterKernelSpec;
     private readonly originalKernelSpec: IJupyterKernelSpec;
     constructor(
-        private readonly pythonExecutionFactory: IPythonExecutionFactory,
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly file: IFileSystem,
+        private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec
     ) {
@@ -150,7 +151,7 @@ export class KernelProcess implements IKernelProcess {
         let exeObs: ObservableExecutionResult<string>;
         const resource: Resource = undefined;
         if (this.isPythonKernel) {
-            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.pythonExecutionFactory);
+            this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
             const { observableResult, daemon } = await this.pythonKernelLauncher.launch(resource, this._kernelSpec);
             this.kernelDaemon = daemon;
             exeObs = observableResult;
