@@ -10,6 +10,7 @@ import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { findIndexOfConnectionFile } from './kernelFinder';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
@@ -48,7 +49,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly file: IFileSystem,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec,
-        private readonly resource: Resource
+        private readonly resource: Resource,
+        private readonly interpreter?: PythonInterpreter
     ) {
         this.originalKernelSpec = kernelSpec;
         this._kernelSpec = cloneDeep(kernelSpec);
@@ -131,7 +133,8 @@ export class KernelProcess implements IKernelProcess {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.pythonExecutionFactory);
             const { observableResult, daemon } = await this.pythonKernelLauncher.launch(
                 this.resource,
-                this._kernelSpec
+                this._kernelSpec,
+                this.interpreter
             );
             this.kernelDaemon = daemon;
             exeObs = observableResult;
