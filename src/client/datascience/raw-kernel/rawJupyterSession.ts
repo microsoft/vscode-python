@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
-import { createDeferred, waitForPromise } from '../../common/utils/async';
+import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -196,52 +196,14 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.kernelLauncher.launch(kernelSpec, this.resource),
             cancellationPromise
         ]);
-        const processExited = createDeferred<{ exitCode?: number; reason?: string }>();
-        const exitedHandler = process.exited((e) => processExited.resolve(e));
-        this._disposables.push(exitedHandler);
-        const sessionCreated = false;
 
-        const throwErrorIfProcessExited = async () => {
-            const exitInfo = await new Promise<{
-                exitCode?: number | undefined;
-                reason?: string | undefined;
-            }>((resolve) => process.exited(resolve));
+        // Create our raw session, it will own the process lifetime
+        const result = new RawSession(process);
 
-            if (sessionCreated) {
-                return;
-            }
-            throw new Error(
-                `${localize.DataScience.rawKernelProcessExitBeforeConnect()}, exit code: ${
-                    exitInfo.exitCode
-                }, reason: ${exitInfo.reason}`
-            );
-        };
+        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+        // Restart sessions and retries might make this hard to do correctly otherwise.
+        result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        const processExitedPromise = throwErrorIfProcessExited();
-        // We don't want any dangling promises.
-        // tslint:disable-next-line: no-console
-        processExitedPromise.catch(noop);
-
-        try {
-            // Create our raw session, it will own the process lifetime
-            const result = new RawSession(process);
-
-            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-            // Restart sessions and retries might make this hard to do correctly otherwise.
-            result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
-
-            // const connectPromise = this.jmpConnection(process.connection, process);
-            // const promise = Promise.race([connectPromise, processExitedPromise, cancellationPromise]);
-            // // Track whether we created a session.
-            // promise.then(() => (sessionCreated = true)).catch(noop);
-            // // Safe as `connectPromise` when resolved will only return a session.
-            // // tslint:disable-next-line: no-any
-            // return promise as any;
-            return result;
-        } catch (ex) {
-            // If there is an error in connecting to the kernel, then ensure we dispose the kernel.
-            // await process.dispose();
-            throw ex;
-        }
+        return result;
     }
 }
