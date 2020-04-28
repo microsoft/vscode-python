@@ -76,6 +76,7 @@ import { JupyterServerSelector } from './jupyter/serverSelector';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
+import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
@@ -114,6 +115,7 @@ import {
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
     IKernelDependencyService,
+    INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -126,10 +128,8 @@ import {
     IPlotViewerProvider,
     IRawNotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    INotebookAndInteractiveWindowUsageTracker
+    IThemeFinder
 } from './types';
-import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 

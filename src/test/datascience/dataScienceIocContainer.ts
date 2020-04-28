@@ -225,6 +225,7 @@ import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSe
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
+import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -262,6 +263,7 @@ import {
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
     IKernelDependencyService,
+    INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -274,8 +276,7 @@ import {
     IPlotViewerProvider,
     IRawNotebookProvider,
     IStatusProvider,
-    IThemeFinder,
-    INotebookAndInteractiveWindowUsageTracker
+    IThemeFinder
 } from '../../client/datascience/types';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
@@ -390,7 +391,6 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
