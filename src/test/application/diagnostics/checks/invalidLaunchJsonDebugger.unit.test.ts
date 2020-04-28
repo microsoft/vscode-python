@@ -162,7 +162,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         const diagnostics = await diagnosticService.diagnose(undefined);
         expect(diagnostics).to.be.deep.equal(
             [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined)],
-            'not the same'
+            'Diagnostics returned are not as expected'
         );
         workspaceService.verifyAll();
         fs.verifyAll();
@@ -187,7 +187,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         const diagnostics = await diagnosticService.diagnose(undefined);
         expect(diagnostics).to.be.deep.equal(
             [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)],
-            'not the same'
+            'Diagnostics returned are not as expected'
         );
         workspaceService.verifyAll();
         fs.verifyAll();
@@ -212,7 +212,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         const diagnostics = await diagnosticService.diagnose(undefined);
         expect(diagnostics).to.be.deep.equal(
             [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConfigPythonPathDiagnostic, undefined, false)],
-            'not the same'
+            'Diagnostics returned are not as expected'
         );
         workspaceService.verifyAll();
         fs.verifyAll();
@@ -240,13 +240,13 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
                 new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined),
                 new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)
             ],
-            'not the same'
+            'Diagnostics returned are not as expected'
         );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
-    test('All InvalidLaunchJsonDebugger diagnostics with `shouldShowPrompt` set to `true` should display 2 options to with one command', async () => {
+    test('All InvalidLaunchJsonDebugger diagnostics with `shouldShowPrompt` set to `true` should display a prompt with 2 buttons where clicking the first button will invoke a command', async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
