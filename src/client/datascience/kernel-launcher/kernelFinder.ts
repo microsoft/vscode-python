@@ -229,13 +229,7 @@ export class KernelFinder implements IKernelFinder {
             language: 'python',
             display_name: this.activeInterpreter?.displayName ? this.activeInterpreter.displayName : 'Python 3',
             metadata: {},
-            argv: [
-                this.activeInterpreter?.path || 'python',
-                '-m',
-                'ipykernel_launcher',
-                '-f',
-                connectionFilePlaceholder
-            ],
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
             env: {},
             resources: {}
         };
