@@ -17,7 +17,16 @@ import {
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { ICondaService } from '../../client/interpreter/contracts';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
+import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
+import {
+    IInterpreterEvaluation,
+    IInterpreterSecurityService,
+    IInterpreterSecurityStorage
+} from '../../client/interpreter/autoSelection/types';
+import { ICondaService, IInterpreterHelper } from '../../client/interpreter/contracts';
+import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -86,12 +95,22 @@ suite('Variable Extraction', () => {
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
+        ioc.serviceManager.addSingleton<IInterpreterSecurityStorage>(
+            IInterpreterSecurityStorage,
+            InterpreterSecurityStorage
+        );
+        ioc.serviceManager.addSingleton<IInterpreterSecurityService>(
+            IInterpreterSecurityService,
+            InterpreterSecurityService
+        );
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerMockInterpreterTypes();
 
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        ioc.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
+        ioc.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
     }
     function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
         return async () => {
@@ -192,13 +211,15 @@ suite('Variable Extraction', () => {
     }
 
     // This test fails on linux (text document not getting updated in time)
-    if (!IS_CI_SERVER) {
-        test('Extract Variable (end to end)', async () => {
-            const startPos = new Position(234, 29);
-            const endPos = new Position(234, 38);
-            await testingVariableExtractionEndToEnd(false, startPos, endPos);
-        });
-    }
+    test('Extract Variable (end to end)', async function () {
+        if (!IS_CI_SERVER) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        const startPos = new Position(234, 29);
+        const endPos = new Position(234, 38);
+        await testingVariableExtractionEndToEnd(false, startPos, endPos);
+    });
 
     test('Extract Variable fails if whole string not selected (end to end)', async () => {
         const startPos = new Position(234, 20);
