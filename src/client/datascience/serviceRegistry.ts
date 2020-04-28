@@ -113,6 +113,7 @@ import {
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
+    IKernelDependencyService,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -210,7 +211,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
-    serviceManager.addSingleton<KernelDependencyService>(KernelDependencyService, KernelDependencyService);
+    serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
 
     registerGatherTypes(serviceManager);
 }
