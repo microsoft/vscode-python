@@ -127,7 +127,6 @@ import {
     IStatusProvider,
     IThemeFinder
 } from './types';
-import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -212,7 +211,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<KernelDepdencyService>(KernelDepdencyService, KernelDepdencyService);
-    serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
 
     registerGatherTypes(serviceManager);
 }

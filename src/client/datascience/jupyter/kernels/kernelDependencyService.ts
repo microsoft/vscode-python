@@ -11,7 +11,6 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonInterpreter } from '../../../interpreter/contracts';
-import { JupyterInstallError } from '../jupyterInstallError';
 
 export enum KernelInterpreterDependencyResponse {
     ok,
@@ -34,7 +33,6 @@ export class KernelDepdencyService {
      */
     public async installMissingDependencies(
         interpreter: PythonInterpreter,
-        _error?: JupyterInstallError,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         if (await this.areDependenciesInstalled(interpreter, token)) {
