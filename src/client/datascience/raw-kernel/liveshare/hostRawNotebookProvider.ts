@@ -119,7 +119,7 @@ export class HostRawNotebookProvider
                 cancelToken
             );
 
-            // Location the interpreter that matches our kernelspec
+            // Locate the interpreter that matches our kernelspec
             const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec);
 
             await rawSession.connect(kernelSpec, launchTimeout, interpreter, cancelToken);
