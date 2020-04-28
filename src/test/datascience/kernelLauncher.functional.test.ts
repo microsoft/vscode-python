@@ -8,13 +8,13 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Observable } from 'rxjs';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJMPConnection, IJupyterKernelSpec } from '../../client/datascience/types';
-import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockKernelFinder } from './mockKernelFinder';
@@ -32,8 +32,8 @@ suite('DataScience - Kernel Launcher', () => {
         kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
         const executionFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-        const interpreterService = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        kernelLauncher = new KernelLauncher(executionFactory, interpreterService, file);
+        const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        kernelLauncher = new KernelLauncher(executionFactory, processServiceFactory, file);
 
         pythonInterpreter = await ioc.getJupyterCapableInterpreter();
         kernelSpec = {
@@ -51,7 +51,7 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
@@ -64,7 +64,7 @@ suite('DataScience - Kernel Launcher', () => {
 
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
-            kernel.dispose();
+            await kernel.dispose();
             assert.isRejected(
                 waitForCondition(() => exited, 100, 'Timeout'),
                 'Timeout'
@@ -159,7 +159,7 @@ suite('DataScience - Kernel Launcher', () => {
             };
             kernelFinder.addKernelSpec(pythonInterpreter.path, spec);
 
-            const kernel = await kernelLauncher.launch(spec);
+            const kernel = await kernelLauncher.launch(spec, undefined);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
             // It should not exit.
@@ -190,7 +190,7 @@ suite('DataScience - Kernel Launcher', () => {
 
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
-            kernel.dispose();
+            await kernel.dispose();
             assert.isRejected(
                 waitForCondition(() => exited, 100, 'Timeout'),
                 'Timeout'
@@ -203,7 +203,7 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(kernelSpec);
+            const kernel = await kernelLauncher.launch(kernelSpec, undefined);
 
             try {
                 const zmq = await import('zeromq');
@@ -216,7 +216,7 @@ suite('DataScience - Kernel Launcher', () => {
             } catch (e) {
                 throw new JupyterZMQBinariesNotFoundError(e.toString());
             } finally {
-                kernel.dispose();
+                await kernel.dispose();
             }
         }
     });

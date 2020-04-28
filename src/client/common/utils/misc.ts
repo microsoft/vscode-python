@@ -8,6 +8,17 @@ import { IAsyncDisposable, IDisposable, Resource } from '../types';
 // tslint:disable-next-line:no-empty
 export function noop() {}
 
+/**
+ * Execute a block of code ignoring any exceptions.
+ */
+export function swallowExceptions(cb: Function) {
+    try {
+        cb();
+    } catch {
+        // Ignore errors.
+    }
+}
+
 export function using<T extends IDisposable>(disposable: T, func: (obj: T) => void) {
     try {
         func(disposable);

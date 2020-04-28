@@ -16,7 +16,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
-import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
+import { ILanguageClientFactory, ILanguageServerFolderService, ILanguageServerProxy } from '../types';
 import { FileBasedCancellationStrategy } from './cancellationUtils';
 
 @injectable()
@@ -26,13 +26,21 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     private cancellationStrategy: FileBasedCancellationStrategy | undefined;
     private readonly disposables: Disposable[] = [];
     private disposed: boolean = false;
+    private lsVersion: string | undefined;
 
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService
     ) {
         this.startupCompleted = createDeferred<void>();
+    }
+
+    private static versionTelemetryProps(instance: NodeLanguageServerProxy) {
+        return {
+            lsVersion: instance.lsVersion
+        };
     }
 
     @traceDecorators.verbose('Stopping Language Server')
@@ -58,13 +66,22 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     }
 
     @traceDecorators.error('Failed to start language server')
-    @captureTelemetry(EventName.LANGUAGE_SERVER_ENABLED, undefined, true)
+    @captureTelemetry(
+        EventName.LANGUAGE_SERVER_ENABLED,
+        undefined,
+        true,
+        undefined,
+        NodeLanguageServerProxy.versionTelemetryProps
+    )
     public async start(
         resource: Resource,
         interpreter: PythonInterpreter | undefined,
         options: LanguageClientOptions
     ): Promise<void> {
         if (!this.languageClient) {
+            const lsVersion = await this.folderService.getLatestLanguageServerVersion(resource);
+            this.lsVersion = lsVersion?.version.format();
+
             this.cancellationStrategy = new FileBasedCancellationStrategy();
             options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
 
@@ -81,7 +98,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             const settings = this.configurationService.getSettings(resource);
             if (settings.downloadLanguageServer) {
                 this.languageClient.onTelemetry((telemetryEvent) => {
-                    const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                    const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
                     sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
                 });
             }
@@ -94,7 +111,13 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     // tslint:disable-next-line: no-empty
     public loadExtension(_args?: {}) {}
 
-    @captureTelemetry(EventName.LANGUAGE_SERVER_READY, undefined, true)
+    @captureTelemetry(
+        EventName.LANGUAGE_SERVER_READY,
+        undefined,
+        true,
+        undefined,
+        NodeLanguageServerProxy.versionTelemetryProps
+    )
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);

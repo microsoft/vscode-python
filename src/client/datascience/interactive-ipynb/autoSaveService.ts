@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
@@ -66,11 +65,6 @@ export class AutoSaveService implements IInteractiveWindowListener {
         } else if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
             const notebook = this.getNotebook();
             if (!notebook) {
-                traceError(
-                    `Received message ${message}, but there is no notebook for ${
-                        this.notebookUri ? this.notebookUri.fsPath : undefined
-                    }`
-                );
                 return;
             }
             this.disposables.push(notebook.modified(this.onNotebookModified, this, this.disposables));

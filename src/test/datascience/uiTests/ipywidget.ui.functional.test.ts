@@ -13,6 +13,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
+import { LocalZMQKernel } from '../../../client/common/experimentGroups';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
@@ -28,9 +29,9 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false].forEach((useCustomEditorApi) => {
+[false, true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
-    suite(`DataScience IPyWidgets (${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API)`, () => {
+    suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
@@ -43,9 +44,17 @@ use(chaiAsPromised);
                 this.skip();
             }
         });
-        setup(async () => {
+        setup(async function () {
             ioc = new DataScienceIocContainer(true);
-            ioc.registerDataScienceTypes(useCustomEditorApi);
+            ioc.setExtensionRootPath(EXTENSION_ROOT_DIR);
+            if (ioc.mockJupyter && useRawKernel) {
+                // tslint:disable-next-line: no-invalid-this
+                this.skip();
+            } else {
+                ioc.setExperimentState(LocalZMQKernel.experiment, useRawKernel);
+            }
+
+            ioc.registerDataScienceTypes();
             await ioc.activate();
         });
         teardown(async () => {

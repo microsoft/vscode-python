@@ -195,7 +195,13 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         Array.from(this.notebooks.values()).forEach((promise) => {
-            promise.then((notebook) => notebook.dispose()).catch(noop);
+            promise
+                .then((notebook) => {
+                    if (notebook.identity.scheme === 'history') {
+                        notebook.dispose().ignoreErrors();
+                    }
+                })
+                .catch(noop);
         });
 
         this.notebooks.clear();

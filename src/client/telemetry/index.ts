@@ -133,25 +133,56 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
 }
 
+// Type-parameterized form of MethodDecorator in lib.es5.d.ts.
+type TypedMethodDescriptor<T> = (
+    target: Object,
+    propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<T>
+) => TypedPropertyDescriptor<T> | void;
+
+/**
+ * Decorates a method, sending a telemetry event with the given properties.
+ * @param eventName The event name to send.
+ * @param properties Properties to send with the event; must be valid for the event.
+ * @param captureDuration True if the method's execution duration should be captured.
+ * @param failureEventName If the decorated method returns a Promise and fails, send this event instead of eventName.
+ * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
+ * This can be used to provide properties which are only known at runtime (after the decorator has executed).
+ */
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
+export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
     captureDuration: boolean = true,
-    failureEventName?: E
-) {
+    failureEventName?: E,
+    lazyProperties?: (obj: This) => P[E]
+): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
+    return function (
+        _target: Object,
+        _propertyKey: string | symbol,
+        descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
+    ) {
+        const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
-            if (!captureDuration) {
+        descriptor.value = function (this: This, ...args: any[]) {
+            // Legacy case; fast path that sends event before method executes.
+            // Does not set "failed" if the result is a Promise and throws an exception.
+            if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
                 return originalMethod.apply(this, args);
             }
 
-            const stopWatch = new StopWatch();
+            const props = () => {
+                if (lazyProperties) {
+                    return { ...properties, ...lazyProperties(this) };
+                }
+                return properties;
+            };
+
+            const stopWatch = captureDuration ? new StopWatch() : undefined;
+
             // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
@@ -161,23 +192,23 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then((data) => {
-                        sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+                        sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
                     .catch((ex) => {
                         // tslint:disable-next-line:no-any
-                        properties = properties || ({} as any);
-                        (properties as any).failed = true;
+                        const failedProps: P[E] = props() || ({} as any);
+                        (failedProps as any).failed = true;
                         sendTelemetryEvent(
                             failureEventName ? failureEventName : eventName,
-                            stopWatch.elapsedTime,
-                            properties,
+                            stopWatch?.elapsedTime,
+                            failedProps,
                             ex
                         );
                     });
             } else {
-                sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
+                sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
             }
 
             return result;
@@ -1127,7 +1158,9 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent with details when downloading or extracting LS fails
      */
@@ -1182,11 +1215,15 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is ready to start
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when starting LS
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
+    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when user specified None to the language server and jediEnabled is false.
      */
@@ -1244,15 +1281,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.LANGUAGE_SERVER_ENABLED]: never | undefined;
+    [EventName.LANGUAGE_SERVER_ENABLED]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.LANGUAGE_SERVER_READY]: never | undefined;
+    [EventName.LANGUAGE_SERVER_READY]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry event sent when starting Node.js server
      */
-    [EventName.LANGUAGE_SERVER_STARTUP]: never | undefined;
+    [EventName.LANGUAGE_SERVER_STARTUP]: {
+        lsVersion?: string;
+    };
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */

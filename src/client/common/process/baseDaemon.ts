@@ -38,8 +38,11 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
+    protected outputObservale = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
-    private outputObservale = new Subject<Output<string>>();
+    protected get closed() {
+        return this.connectionClosedDeferred.promise;
+    }
     // tslint:disable-next-line: no-any
     private readonly connectionClosedDeferred: Deferred<any>;
     private disposables: IDisposable[] = [];

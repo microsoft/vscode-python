@@ -22,13 +22,14 @@ import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
-import { BaseJupyterSession, ISession, JupyterSessionStartError } from '../baseJupyterSession';
+import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IJupyterConnection, IJupyterKernelSpec } from '../types';
+import { IJupyterConnection, IJupyterKernelSpec, ISessionWithSocket } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterWebSockets } from './jupyterWebSocket';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
@@ -89,11 +90,8 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         // Start a new session
-        this.session = await this.createSession(
-            this.serverSettings,
-            this.kernelSpec,
-            this.contentsManager,
-            cancelToken
+        this.setSession(
+            await this.createSession(this.serverSettings, this.kernelSpec, this.contentsManager, cancelToken)
         );
 
         // Listen for session status changes
@@ -106,8 +104,8 @@ export class JupyterSession extends BaseJupyterSession {
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         timeoutMS: number
-    ): Promise<ISession> {
-        let newSession: ISession | undefined;
+    ): Promise<ISessionWithSocket> {
+        let newSession: ISessionWithSocket | undefined;
 
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
@@ -132,15 +130,15 @@ export class JupyterSession extends BaseJupyterSession {
 
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        session: ISession,
+        session: ISessionWithSocket,
         cancelToken?: CancellationToken
-    ): Promise<ISession> {
+    ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session
         if (!session || !this.contentsManager || !this.sessionManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        let result: ISession | undefined;
+        let result: ISessionWithSocket | undefined;
         let tryCount = 0;
         // tslint:disable-next-line: no-any
         let exception: any;
@@ -175,7 +173,7 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    private async waitForIdleOnSession(session: ISession | undefined, timeout: number): Promise<void> {
+    private async waitForIdleOnSession(session: ISessionWithSocket | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
             // tslint:disable-next-line: no-any
@@ -197,14 +195,14 @@ export class JupyterSession extends BaseJupyterSession {
                 }
             };
 
-            let statusChangeHandler: Slot<ISession, Kernel.Status> | undefined;
+            let statusChangeHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined;
             const kernelStatusChangedPromise = new Promise((resolve, reject) => {
-                statusChangeHandler = (_: ISession, e: Kernel.Status) => statusHandler(resolve, reject, e);
+                statusChangeHandler = (_: ISessionWithSocket, e: Kernel.Status) => statusHandler(resolve, reject, e);
                 session.statusChanged.connect(statusChangeHandler);
             });
-            let kernelChangedHandler: Slot<ISession, Session.IKernelChangedArgs> | undefined;
+            let kernelChangedHandler: Slot<ISessionWithSocket, Session.IKernelChangedArgs> | undefined;
             const statusChangedPromise = new Promise((resolve, reject) => {
-                kernelChangedHandler = (_: ISession, e: Session.IKernelChangedArgs) =>
+                kernelChangedHandler = (_: ISessionWithSocket, e: Session.IKernelChangedArgs) =>
                     statusHandler(resolve, reject, e.newValue?.status);
                 session.kernelChanged.connect(kernelChangedHandler);
             });
@@ -253,7 +251,7 @@ export class JupyterSession extends BaseJupyterSession {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
-    ): Promise<Session.ISession> {
+    ): Promise<ISessionWithSocket> {
         // Create a temporary notebook for this session.
         this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
 
@@ -272,6 +270,19 @@ export class JupyterSession extends BaseJupyterSession {
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, session.kernel.id)
                         );
+
+                        // Add on the kernel sock information
+                        // tslint:disable-next-line: no-any
+                        (session as any).kernelSocketInformation = {
+                            socket: JupyterWebSockets.get(session.kernel.id),
+                            options: {
+                                clientId: session.kernel.clientId,
+                                id: session.kernel.id,
+                                model: { ...session.kernel.model },
+                                userName: session.kernel.username
+                            }
+                        };
+
                         return session;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
