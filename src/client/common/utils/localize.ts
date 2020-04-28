@@ -181,13 +181,13 @@ export namespace InterpreterQuickPickList {
             'Enter path or find an existing interpreter'
         ),
         label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
-        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python Interpreter.')
+        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.')
     };
     export const browsePath = {
         label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
         detail: localize(
             'InterpreterQuickPickList.browsePath.detail',
-            'Browse your file system to find a Python Interpreter.'
+            'Browse your file system to find a Python interpreter.'
         ),
         openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
     };
