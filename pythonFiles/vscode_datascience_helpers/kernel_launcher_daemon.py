@@ -109,7 +109,7 @@ class PythonDaemon(JupyterDaemon):
         exit_code = self.kernel.poll()
         std_err = self.kernel.stderr.read()
         if std_err:
-            std_err = std_err.decode('utf-8')
+            std_err = std_err.decode("utf-8")
         self.log.warn("Kernel has exited with exit code %s, %s", exit_code, std_err)
         sys.stdout.flush()
         sys.stderr.flush()
