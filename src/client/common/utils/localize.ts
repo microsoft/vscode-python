@@ -28,7 +28,7 @@ export namespace Diagnostics {
     );
     export const upgradeCodeRunner = localize(
         'diagnostics.upgradeCodeRunner',
-        'Please update Code Runner extension for it to be compatible with the Python extension.'
+        'Please update the Code Runner extension for it to be compatible with the Python extension.'
     );
     export const removePythonPathSettingsJson = localize(
         'diagnostics.removePythonPathSettingsJson',
