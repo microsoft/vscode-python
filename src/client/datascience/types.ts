@@ -350,6 +350,13 @@ export interface IJupyterSession extends IAsyncDisposable {
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
+export type ISessionWithSocket = Session.ISession & {
+    // Whether this is a remote session that we attached to.
+    isRemoteSession?: boolean;
+    // Socket information used for hooking messages to the kernel
+    kernelSocketInformation?: KernelSocketInformation;
+};
+
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
     create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
@@ -1043,7 +1050,7 @@ export interface IJupyterServerProvider {
 
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
-    send(data: any, cb?: (err?: Error) => void): void;
+    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
@@ -1127,5 +1134,6 @@ export const IJMPConnection = Symbol('IJMPConnection');
 export interface IJMPConnection extends IDisposable {
     connect(connectInfo: IJMPConnectionInfo): Promise<void>;
     sendMessage(message: KernelMessage.IMessage): void;
-    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void;
+    // tslint:disable-next-line: no-any
+    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void, errorHandler?: (exc: any) => void): void;
 }

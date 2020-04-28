@@ -1,24 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import type { Kernel } from '@jupyterlab/services';
+import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IDisposable } from '../../common/types';
+import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { BaseJupyterSession, ISession } from '../baseJupyterSession';
-import { Telemetry } from '../constants';
+import { BaseJupyterSession } from '../baseJupyterSession';
+import { Identifiers, Telemetry } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { IKernelConnection, IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
+import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
-import { IJMPConnection, IJupyterKernelSpec } from '../types';
+import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -28,11 +29,13 @@ It's responsible for translating our IJupyterSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
+    private processExitHandler: IDisposable | undefined;
     private _disposables: IDisposable[] = [];
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
-        private readonly serviceContainer: IServiceContainer,
-        kernelSelector: KernelSelector
+        kernelSelector: KernelSelector,
+        private readonly resource: Resource,
+        private readonly outputChannel: IOutputChannel
     ) {
         super(kernelSelector);
     }
@@ -45,17 +48,28 @@ export class RawJupyterSession extends BaseJupyterSession {
         this._disposables.forEach((d) => d.dispose());
         await super.dispose();
     }
+
+    public shutdown(): Promise<void> {
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
+        return super.shutdown();
+    }
+
     // Connect to the given kernelspec, which should already have ipykernel installed into its interpreter
     @captureTelemetry(Telemetry.RawKernelSessionConnect, undefined, true)
     public async connect(
         kernelSpec: IJupyterKernelSpec,
         timeout: number,
         cancelToken?: CancellationToken
-    ): Promise<void> {
+    ): Promise<IJupyterKernelSpec | undefined> {
+        // Save the resource that we connect with
+        let newSession: RawSession | null | CancellationError = null;
         try {
             // Try to start up our raw session, allow for cancellation or timeout
             // Notebook Provider level will handle the thrown error
-            const newSession = await waitForPromise(
+            newSession = await waitForPromise(
                 Promise.race([
                     this.startRawSession(kernelSpec, cancelToken),
                     createPromiseFromCancellation({
@@ -79,8 +93,11 @@ export class RawJupyterSession extends BaseJupyterSession {
             } else {
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
                 traceInfo('Raw session started and connected');
-                this.session = newSession;
-                this.kernelSpec = newSession.process?.kernelSpec;
+                this.setSession(newSession);
+                this.kernelSpec = newSession.kernelProcess?.kernelSpec;
+                this.outputChannel.appendLine(
+                    localize.DataScience.kernelStarted().format(this.kernelSpec.display_name || this.kernelSpec.name)
+                );
             }
         } catch (error) {
             sendTelemetryEvent(Telemetry.RawKernelSessionStartException);
@@ -93,18 +110,53 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.startRestartSession();
 
         this.connected = true;
+        return (newSession as RawSession).kernelProcess.kernelSpec;
     }
 
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
         _timeoutMS: number
-    ): Promise<ISession> {
+    ): Promise<ISessionWithSocket> {
         if (!kernel || 'session' in kernel) {
             // Don't allow for connecting to a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
+        this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(kernel.display_name || kernel.name));
+
         return this.startRawSession(kernel);
+    }
+
+    protected shutdownSession(
+        session: ISessionWithSocket | undefined,
+        statusHandler: Slot<ISessionWithSocket, Kernel.Status> | undefined
+    ): Promise<void> {
+        return super.shutdownSession(session, statusHandler).then(() => {
+            if (session) {
+                return (session as RawSession).kernelProcess.dispose();
+            }
+        });
+    }
+
+    protected setSession(session: ISessionWithSocket | undefined) {
+        super.setSession(session);
+
+        // When setting the session clear our current exit handler and hook up to the
+        // new session process
+        if (this.processExitHandler) {
+            this.processExitHandler.dispose();
+            this.processExitHandler = undefined;
+        }
+        if (session && (session as RawSession).kernelProcess) {
+            // Watch to see if our process exits
+            this.processExitHandler = (session as RawSession).kernelProcess.exited((exitCode) => {
+                traceError(`Raw kernel process exited code: ${exitCode}`);
+                this.shutdown().catch((reason) => {
+                    traceError(`Error shutting down jupyter session: ${reason}`);
+                });
+                // Next code the user executes will show a session disposed message
+            });
+        }
     }
 
     protected startRestartSession() {
@@ -114,9 +166,9 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        _session: ISession,
+        _session: ISessionWithSocket,
         cancelToken?: CancellationToken
-    ): Promise<ISession> {
+    ): Promise<ISessionWithSocket> {
         if (!kernelSpec || 'session' in kernelSpec) {
             // Need to have connected before restarting and can't use a LiveKernelModel
             throw new Error(localize.DataScience.sessionDisposed());
@@ -129,7 +181,10 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
-    private async startRawSession(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<ISession> {
+    private async startRawSession(
+        kernelSpec: IJupyterKernelSpec,
+        cancelToken?: CancellationToken
+    ): Promise<RawSession> {
         const cancellationPromise = createPromiseFromCancellation({
             cancelAction: 'reject',
             defaultValue: undefined,
@@ -137,11 +192,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         }) as Promise<never>;
         cancellationPromise.catch(noop);
 
-        const process = await Promise.race([this.kernelLauncher.launch(kernelSpec), cancellationPromise]);
+        const process = await Promise.race([
+            this.kernelLauncher.launch(kernelSpec, this.resource),
+            cancellationPromise
+        ]);
         const processExited = createDeferred<{ exitCode?: number; reason?: string }>();
         const exitedHandler = process.exited((e) => processExited.resolve(e));
         this._disposables.push(exitedHandler);
-        let sessionCreated = false;
+        const sessionCreated = false;
 
         const throwErrorIfProcessExited = async () => {
             const exitInfo = await new Promise<{
@@ -165,30 +223,25 @@ export class RawJupyterSession extends BaseJupyterSession {
         processExitedPromise.catch(noop);
 
         try {
-            const connectPromise = this.jmpConnection(process.connection, process);
-            const promise = Promise.race([connectPromise, processExitedPromise, cancellationPromise]);
-            // Track whether we created a session.
-            promise.then(() => (sessionCreated = true)).catch(noop);
-            // Safe as `connectPromise` when resolved will only return a session.
-            // tslint:disable-next-line: no-any
-            return promise as any;
+            // Create our raw session, it will own the process lifetime
+            const result = new RawSession(process);
+
+            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+            // Restart sessions and retries might make this hard to do correctly otherwise.
+            result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+            // const connectPromise = this.jmpConnection(process.connection, process);
+            // const promise = Promise.race([connectPromise, processExitedPromise, cancellationPromise]);
+            // // Track whether we created a session.
+            // promise.then(() => (sessionCreated = true)).catch(noop);
+            // // Safe as `connectPromise` when resolved will only return a session.
+            // // tslint:disable-next-line: no-any
+            // return promise as any;
+            return result;
         } catch (ex) {
             // If there is an error in connecting to the kernel, then ensure we dispose the kernel.
-            await process.dispose();
+            // await process.dispose();
             throw ex;
         }
-    }
-
-    // Create and connect our JMP (Jupyter Messaging Protocol) for talking to the raw kernel
-    private async jmpConnection(kernelConnection: IKernelConnection, process: IKernelProcess) {
-        const connection = this.serviceContainer.get<IJMPConnection>(IJMPConnection);
-
-        await connection.connect(kernelConnection);
-
-        // Create our raw session, it will own the process lifetime
-        const session: ISession = new RawSession(connection, process);
-        session.isRemoteSession = false;
-        session.process = process;
-        return session;
     }
 }
