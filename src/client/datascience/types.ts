@@ -326,7 +326,11 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
+    changeKernel(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter?: PythonInterpreter
+    ): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>

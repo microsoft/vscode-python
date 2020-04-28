@@ -616,7 +616,7 @@ export class JupyterNotebookBase implements INotebook {
             this.ranInitialSetup = false;
 
             // Change the kernel on the session
-            await this.session.changeKernel(spec, timeoutMS);
+            await this.session.changeKernel(spec, timeoutMS, interpreter);
 
             // Change our own kernel spec
             // Only after session was successfully created.
