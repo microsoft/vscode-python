@@ -17,7 +17,7 @@ import { JupyterSessionStartError } from '../../../../client/datascience/baseJup
 import { Commands } from '../../../../client/datascience/constants';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { KernelDepdencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
@@ -90,7 +90,7 @@ suite('Data Science - Kernel Switcher', () => {
             instance(sessionManagerFactory),
             instance(kernelSelector),
             instance(appShell),
-            instance(mock(KernelDepdencyService))
+            instance(mock(KernelDependencyService))
         );
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();

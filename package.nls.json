@@ -136,6 +136,7 @@
     "DataScience.startingJupyter": "Starting Jupyter server",
     "DataScience.connectingToJupyter": "Connecting to Jupyter server",
     "DataScience.connectingToIPyKernel": "Connecting to IPython kernel",
+    "DataScience.connectedToIPyKernel": "Connected.",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.entireWorkspace": "Entire workspace",
@@ -486,5 +487,6 @@
     "DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork": "Unable to load a compatible version of the widget '{0}'. Expected behavior may be affected.",
     "DataScience.unhandledMessage": "Unhandled kernel message from a widget: {0} : {1}",
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
-    "DataScience.ipykernelNotInstalled": "Ipykernel is not installed."
+    "DataScience.kernelStarted": "Started kernel {0}",
+    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}. Install?"
 }

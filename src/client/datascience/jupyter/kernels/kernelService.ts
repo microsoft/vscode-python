@@ -15,7 +15,7 @@ import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../common/types';
+import { ReadWrite } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
@@ -26,6 +26,7 @@ import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { KernelDependencyService, KernelInterpreterDependencyResponse } from './kernelDependencyService';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -61,7 +62,7 @@ export class KernelService {
         private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(KernelDependencyService) private readonly kernelDependencyService: KernelDependencyService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
@@ -280,15 +281,14 @@ export class KernelService {
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
-        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter)) && !disableUI) {
+        if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
+            const response = await this.kernelDependencyService.installMissingDependencies(
                 interpreter,
                 wrapCancellationTokens(cancelToken, token.token)
             );
-            if (response !== InstallerResponse.Installed) {
+            if (response !== KernelInterpreterDependencyResponse.ok) {
                 traceWarning(
                     `Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`
                 );

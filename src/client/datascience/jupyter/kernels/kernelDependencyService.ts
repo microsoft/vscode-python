@@ -11,7 +11,6 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonInterpreter } from '../../../interpreter/contracts';
-import { JupyterInstallError } from '../jupyterInstallError';
 
 export enum KernelInterpreterDependencyResponse {
     ok,
@@ -23,7 +22,7 @@ export enum KernelInterpreterDependencyResponse {
  * If required modules aren't installed, will prompt user to install them.
  */
 @injectable()
-export class KernelDepdencyService {
+export class KernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller
@@ -34,7 +33,6 @@ export class KernelDepdencyService {
      */
     public async installMissingDependencies(
         interpreter: PythonInterpreter,
-        _error?: JupyterInstallError,
         token?: CancellationToken
     ): Promise<KernelInterpreterDependencyResponse> {
         if (await this.areDependenciesInstalled(interpreter, token)) {

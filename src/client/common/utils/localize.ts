@@ -404,6 +404,7 @@ export namespace DataScience {
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
     export const connectingIPyKernel = localize('DataScience.connectingToIPyKernel', 'Connecting to IPython kernel');
+    export const connectedToIPyKernel = localize('DataScience.connectedToIPyKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize(
@@ -921,7 +922,8 @@ export namespace DataScience {
         'DataScience.qgridWidgetScriptVersionCompatibilityWarning',
         "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1."
     );
-    export const ipykernelNotInstalled = localize('DataScience.ipykernelNotInstalled', 'Ipykernel is not installed.');
+
+    export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
 }
 
 export namespace DebugConfigStrings {

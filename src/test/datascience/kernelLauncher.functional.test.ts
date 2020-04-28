@@ -31,9 +31,9 @@ suite('DataScience - Kernel Launcher', () => {
         ioc.registerDataScienceTypes();
         kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
         const executionFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const processExecutionFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-        kernelLauncher = new KernelLauncher(executionFactory, processExecutionFactory, file);
+        const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        kernelLauncher = new KernelLauncher(executionFactory, processServiceFactory, file);
 
         pythonInterpreter = await ioc.getJupyterCapableInterpreter();
         kernelSpec = {

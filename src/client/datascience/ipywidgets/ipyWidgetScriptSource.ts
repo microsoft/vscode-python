@@ -19,6 +19,7 @@ import {
     IPersistentStateFactory
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { getOSType, OSType } from '../../common/utils/platform';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -111,7 +112,7 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
-        if (!localResource.fsPath.startsWith(this._rootScriptFolder)) {
+        if (!this.isInScriptPath(localResource.fsPath)) {
             if (this.notebookIdentity && !this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
                 const deferred = createDeferred<Uri>();
                 this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
@@ -287,6 +288,16 @@ export class IPyWidgetScriptSource implements IInteractiveWindowListener, ILocal
                     traceError.bind(`Failed to send WidgetScript for ${moduleName}`)
                 );
             }
+        }
+    }
+
+    private isInScriptPath(filePath: string) {
+        const scriptPath = path.normalize(this._rootScriptFolder);
+        filePath = path.normalize(filePath);
+        if (getOSType() === OSType.Windows) {
+            return filePath.toUpperCase().startsWith(scriptPath.toUpperCase());
+        } else {
+            return filePath.startsWith(scriptPath);
         }
     }
 }
