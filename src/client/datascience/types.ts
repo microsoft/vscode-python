@@ -1137,3 +1137,17 @@ export interface IJMPConnection extends IDisposable {
     // tslint:disable-next-line: no-any
     subscribe(handlerFunc: (message: KernelMessage.IMessage) => void, errorHandler?: (exc: any) => void): void;
 }
+
+export enum KernelInterpreterDependencyResponse {
+    ok,
+    cancel
+}
+
+export const IKernelDependencyService = Symbol('IKernelDependencyService');
+export interface IKernelDependencyService {
+    installMissingDependencies(
+        interpreter: PythonInterpreter,
+        token?: CancellationToken
+    ): Promise<KernelInterpreterDependencyResponse>;
+    areDependenciesInstalled(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean>;
+}

@@ -8,10 +8,8 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
-import {
-    KernelDependencyService,
-    KernelInterpreterDependencyResponse
-} from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { KernelInterpreterDependencyResponse } from '../../../../client/datascience/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 
 // tslint:disable: no-any
@@ -61,9 +59,6 @@ suite('Data Science - Kernel Dependency Service', () => {
         const response = await dependencyService.installMissingDependencies(interpreter);
 
         assert.equal(response, KernelInterpreterDependencyResponse.ok);
-        verify(appShell.showErrorMessage(anything(), anything(), anything())).once();
-        verify(installer.install(Product.ipykernel, interpreter, anything())).once();
-        verify(installer.install(anything(), anything(), anything())).once();
     });
     test('Bubble installation errors', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
@@ -75,8 +70,5 @@ suite('Data Science - Kernel Dependency Service', () => {
         const promise = dependencyService.installMissingDependencies(interpreter);
 
         await assert.isRejected(promise, 'Install failed - kaboom');
-        verify(appShell.showErrorMessage(anything(), anything(), anything())).once();
-        verify(installer.install(Product.ipykernel, interpreter, anything())).once();
-        verify(installer.install(anything(), anything(), anything())).once();
     });
 });

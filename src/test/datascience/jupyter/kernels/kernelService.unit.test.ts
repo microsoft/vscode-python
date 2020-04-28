@@ -19,15 +19,13 @@ import { ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
-import {
-    KernelDependencyService,
-    KernelInterpreterDependencyResponse
-} from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import {
     IJupyterKernelSpec,
     IJupyterSessionManager,
-    IJupyterSubCommandExecutionService
+    IJupyterSubCommandExecutionService,
+    KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
