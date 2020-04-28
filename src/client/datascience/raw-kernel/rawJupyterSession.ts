@@ -6,7 +6,7 @@ import type { Slot } from '@phosphor/signaling';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IDisposable, IOutputChannel } from '../../common/types';
+import { IDisposable, IOutputChannel, Resource } from '../../common/types';
 import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -30,10 +30,11 @@ jupyterlabs interface as well as starting up and connecting to a raw session
 */
 export class RawJupyterSession extends BaseJupyterSession {
     private processExitHandler: IDisposable | undefined;
-
+    private _disposables: IDisposable[] = [];
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         kernelSelector: KernelSelector,
+        private readonly resource: Resource,
         private readonly outputChannel: IOutputChannel
     ) {
         super(kernelSelector);
@@ -42,6 +43,10 @@ export class RawJupyterSession extends BaseJupyterSession {
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(_timeout: number): Promise<void> {
         // RawKernels are good to go right away
+    }
+    public async dispose(): Promise<void> {
+        this._disposables.forEach((d) => d.dispose());
+        await super.dispose();
     }
 
     public shutdown(): Promise<void> {
@@ -178,12 +183,19 @@ export class RawJupyterSession extends BaseJupyterSession {
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(
         kernelSpec: IJupyterKernelSpec,
-        _cancelToken?: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<RawSession> {
-        const process = await this.kernelLauncher.launch(kernelSpec);
+        const cancellationPromise = createPromiseFromCancellation({
+            cancelAction: 'reject',
+            defaultValue: undefined,
+            token: cancelToken
+        }) as Promise<never>;
+        cancellationPromise.catch(noop);
 
-        // Wait for the process to actually be ready to connect to
-        await process.ready;
+        const process = await Promise.race([
+            this.kernelLauncher.launch(kernelSpec, this.resource),
+            cancellationPromise
+        ]);
 
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process);

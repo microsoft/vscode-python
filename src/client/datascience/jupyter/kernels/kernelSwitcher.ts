@@ -11,9 +11,15 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
-import { IJupyterConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    IJupyterSessionManagerFactory,
+    IKernelDependencyService,
+    INotebook,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { KernelDependencyService, KernelInterpreterDependencyResponse } from './kernelDependencyService';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
 
@@ -24,7 +30,7 @@ export class KernelSwitcher {
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(KernelSelector) private kernelSelector: KernelSelector,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(KernelDependencyService) private readonly kernelDependencyService: KernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
     public async switchKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {

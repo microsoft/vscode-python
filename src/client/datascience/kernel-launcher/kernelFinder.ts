@@ -224,18 +224,14 @@ export class KernelFinder implements IKernelFinder {
             this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
         }
 
+        // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
+        // associated with the current resource for launching.
         const defaultSpec: Kernel.ISpecModel = {
             name: `python_defaultSpec_${Date.now()}`,
             language: 'python',
             display_name: this.activeInterpreter?.displayName ? this.activeInterpreter.displayName : 'Python 3',
             metadata: {},
-            argv: [
-                this.activeInterpreter?.path || 'python',
-                '-m',
-                'ipykernel_launcher',
-                '-f',
-                connectionFilePlaceholder
-            ],
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
             env: {},
             resources: {}
         };

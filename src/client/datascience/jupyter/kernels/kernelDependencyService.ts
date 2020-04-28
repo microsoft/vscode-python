@@ -11,18 +11,14 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonInterpreter } from '../../../interpreter/contracts';
-
-export enum KernelInterpreterDependencyResponse {
-    ok,
-    cancel
-}
+import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
  * If required modules aren't installed, will prompt user to install them.
  */
 @injectable()
-export class KernelDependencyService {
+export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller

@@ -113,6 +113,7 @@ import {
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
+    IKernelDependencyService,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -212,7 +213,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
-    serviceManager.addSingleton<KernelDependencyService>(KernelDependencyService, KernelDependencyService);
+    serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
 
     registerGatherTypes(serviceManager);
 }

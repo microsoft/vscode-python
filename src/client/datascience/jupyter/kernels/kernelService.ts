@@ -24,9 +24,14 @@ import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
+import {
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    IJupyterSubCommandExecutionService,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { KernelDependencyService, KernelInterpreterDependencyResponse } from './kernelDependencyService';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -62,7 +67,7 @@ export class KernelService {
         private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(KernelDependencyService) private readonly kernelDependencyService: KernelDependencyService,
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
@@ -129,6 +134,7 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
+    // tslint:disable-next-line: cyclomatic-complexity
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
@@ -160,11 +166,35 @@ export class KernelService {
                 `KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
             );
         }
+
+        // 2. Check if we have a fully qualified path in `argv`
+        const pathInArgv =
+            Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
+        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
+            const interpreter = await this.interpreterService.getInterpreterDetails(pathInArgv).catch((ex) => {
+                traceError(
+                    `Failed to get interpreter information for python defined in kernel ${kernelSpec.name}, ${
+                        kernelSpec.display_name
+                    } with argv: ${(kernelSpec.argv || [])?.join(',')}`,
+                    ex
+                );
+                return;
+            });
+            if (interpreter) {
+                traceInfo(
+                    `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                );
+                return interpreter;
+            }
+            traceError(
+                `KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
+            );
+        }
         if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
 
-        // 2. Check if current interpreter has the same display name
+        // 3. Check if current interpreter has the same display name
         const activeInterpreter = await activeInterpreterPromise;
         // If the display name matches the active interpreter then use that.
         if (kernelSpec.display_name === activeInterpreter?.displayName) {
@@ -201,7 +231,7 @@ export class KernelService {
             );
             return activeInterpreter;
         } else {
-            // 4. Look for interpreter with same display name across all interpreters.
+            // 5. Look for interpreter with same display name across all interpreters.
 
             // If the display name matches the active interpreter then use that.
             // Look in all of our interpreters if we have somethign that matches this.

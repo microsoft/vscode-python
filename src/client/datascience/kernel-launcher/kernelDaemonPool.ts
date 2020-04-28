@@ -13,7 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { KernelLauncherDaemonModule } from '../constants';
-import { KernelDepdencyService } from '../jupyter/kernels/kernelDependencyService';
+import { IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
 import { IPythonKernelDaemon } from './types';
 
@@ -37,7 +37,7 @@ export class KernelDaemonPool implements IAsyncDisposable {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interrpeterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(KernelDepdencyService) private readonly kernelDependencyService: KernelDepdencyService
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
     public async preWarmKernelDaemons() {
         if (this.initialized) {

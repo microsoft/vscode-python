@@ -18,8 +18,7 @@ import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetr
 import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { KernelDependencyService } from './kernelDependencyService';
+import { IJupyterKernelSpec, IJupyterSessionManager, IKernelDependencyService } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -58,7 +57,7 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(KernelDependencyService) private readonly kernelDepdencyService: KernelDependencyService
+        @inject(IKernelDependencyService) private readonly kernelDepdencyService: IKernelDependencyService
     ) {}
 
     /**

@@ -8,6 +8,8 @@ import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
+import { Resource } from '../../common/types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
@@ -30,14 +32,20 @@ export class KernelLauncher implements IKernelLauncher {
     ) {}
 
     @captureTelemetry(Telemetry.KernelLauncherPerf)
-    public async launch(kernelSpec: IJupyterKernelSpec): Promise<IKernelProcess> {
+    public async launch(
+        kernelSpec: IJupyterKernelSpec,
+        resource: Resource,
+        interpreter?: PythonInterpreter
+    ): Promise<IKernelProcess> {
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
             this.file,
             this.daemonPool,
             connection,
-            kernelSpec
+            kernelSpec,
+            resource,
+            interpreter
         );
         await kernelProcess.launch();
         return kernelProcess;

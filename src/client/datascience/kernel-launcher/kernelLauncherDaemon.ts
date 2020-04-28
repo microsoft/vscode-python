@@ -9,6 +9,7 @@ import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { IPythonKernelDaemon } from './types';
@@ -24,11 +25,19 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     constructor(@inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool) {}
     public async launch(
         resource: Resource,
-        kernelSpec: IJupyterKernelSpec
+        kernelSpec: IJupyterKernelSpec,
+        interpreter?: PythonInterpreter
     ): Promise<{ observableResult: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
-        const pythonPath = kernelSpec.argv[0];
+        const pythonPath = interpreter?.path || kernelSpec.argv[0];
         await this.daemonPool.preWarmKernelDaemons();
         const daemon = await this.daemonPool.get(resource, pythonPath);
+        // const daemon = await this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
+        //     daemonModule: KernelLauncherDaemonModule,
+        //     pythonPath: interpreter?.path,
+        //     daemonClass: PythonKernelDaemon,
+        //     dedicated: true,
+        //     resource
+        // });
         const args = kernelSpec.argv.slice();
         args.shift(); // Remove executable.
         args.shift(); // Remove `-m`.

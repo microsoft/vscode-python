@@ -90,7 +90,8 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
             ioc.get<IFileSystem>(IFileSystem),
             connectionInfo as any,
-            kernelSpec
+            kernelSpec,
+            undefined
         );
         await kernelProcess.launch();
 
