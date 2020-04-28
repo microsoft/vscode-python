@@ -45,7 +45,7 @@ export type KernelSpecInterpreter = {
 @injectable()
 export class KernelSelector {
     /**
-     * List of ids of kernels that should be hiddenn from the kernel picker.
+     * List of ids of kernels that should be hidden from the kernel picker.
      *
      * @private
      * @type {new Set<string>}
@@ -276,7 +276,7 @@ export class KernelSelector {
                     const match = /\D+(\d+)/.exec(spec.name);
                     if (match && match !== null && match.length > 0) {
                         // See if the version number matches
-                        const nameVersion = parseInt(match[0], 10);
+                        const nameVersion = parseInt(match[1][0], 10);
                         if (nameVersion && nameVersion === interpreter.version.major) {
                             score += 4;
                         }

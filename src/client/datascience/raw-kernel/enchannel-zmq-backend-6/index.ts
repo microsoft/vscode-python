@@ -150,7 +150,9 @@ class SocketEventEmitter extends Events.EventEmitter {
                     this.emit('message', b);
                     setTimeout(this.waitForReceive.bind(this, socket), 0);
                 })
-                .ignoreErrors();
+                .catch((exc) => {
+                    traceError('Exception communicating with kernel:', exc);
+                });
         }
     }
 }

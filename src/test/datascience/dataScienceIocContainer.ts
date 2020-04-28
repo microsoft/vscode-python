@@ -417,6 +417,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
+    public shouldMockJupyter: boolean;
     private missedMessages: any[] = [];
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
@@ -425,7 +426,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         value: boolean;
     }>();
     private jupyterMock: MockJupyterManagerFactory | undefined;
-    private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
@@ -458,6 +458,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
     private disposed = false;
+    private experimentState = new Map<string, boolean>();
+    private extensionRootPath: string | undefined;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -632,7 +634,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup((m) => m.globalStoragePath).returns(() => os.tmpdir());
-        mockExtensionContext.setup((m) => m.extensionPath).returns(() => os.tmpdir());
+        mockExtensionContext.setup((m) => m.extensionPath).returns(() => this.extensionRootPath || os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         const mockServerSelector = mock(JupyterServerSelector);
@@ -827,10 +829,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Turn off experiments.
         const experimentManager = mock(ExperimentsManager);
         when(experimentManager.inExperiment(anything())).thenCall((exp) => {
-            if (exp === LocalZMQKernel.experiment) {
-                return false;
+            const setState = this.experimentState.get(exp);
+            if (setState === undefined) {
+                // Default to true if not the zmq kernel
+                return exp !== LocalZMQKernel.experiment;
             }
-            return true;
+            return setState;
         });
         when(experimentManager.activate()).thenResolve();
         this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
@@ -1113,6 +1117,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
         appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything()))
+            .returns(() => Promise.resolve(''));
+        appShell
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), anything(), anything()))
+            .returns(() => Promise.resolve(''));
+        appShell
             .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
         appShell
@@ -1157,6 +1167,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             if (!activeInterpreter || !(await this.hasJupyter(activeInterpreter))) {
                 const list = await this.getJupyterInterpreters();
                 this.forceSettingsChanged(undefined, list[0].path);
+
+                // Log this all the time. Useful in determining why a test may not pass.
+                // tslint:disable-next-line: no-console
+                console.log(`Setting interpreter to ${list[0].displayName || list[0].path}`);
 
                 // Also set this as the interpreter to use for jupyter
                 await this.serviceManager
@@ -1223,6 +1237,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 return true;
             }
         });
+    }
+
+    public setExtensionRootPath(newRoot: string) {
+        this.extensionRootPath = newRoot;
     }
 
     public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
@@ -1329,6 +1347,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.configMap.set(key, result);
         }
         return result;
+    }
+
+    public setExperimentState(experimentName: string, enabled: boolean) {
+        this.experimentState.set(experimentName, enabled);
     }
 
     private createWebPanel(): IWebPanel {

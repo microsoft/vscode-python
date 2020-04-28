@@ -259,7 +259,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         while (this.pendingMessages.length) {
             try {
-                this.kernelSocketInfo.socket?.send(this.pendingMessages[0]); // NOSONAR
+                this.kernelSocketInfo.socket?.sendToRealKernel(this.pendingMessages[0]); // NOSONAR
                 this.pendingMessages.shift();
             } catch (ex) {
                 traceError('Failed to send message to Kernel', ex);

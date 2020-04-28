@@ -1,14 +1,38 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
-import type { ISignal, Signal } from '@phosphor/signaling';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
-import { traceError } from '../../common/logger';
-import { IJMPConnection } from '../types';
-import { RawFuture } from './rawFuture';
+import { isTestExecution } from '../../common/constants';
+import { IDisposable } from '../../common/types';
+import { noop } from '../../common/utils/misc';
+import { IKernelProcess } from '../kernel-launcher/types';
+import { IWebSocketLike } from '../kernelSocketWrapper';
+import { IKernelSocket } from '../types';
+import { RawSocket } from './rawSocket';
+// tslint:disable: no-any no-require-imports
+
+export function suppressShutdownErrors(realKernel: any) {
+    // When running under a test, mark all futures as done so we
+    // don't hit this problem:
+    // https://github.com/jupyterlab/jupyterlab/issues/4252
+    // tslint:disable:no-any
+    if (isTestExecution()) {
+        const defaultKernel = realKernel as any; // NOSONAR
+        if (defaultKernel && defaultKernel._futures) {
+            const futures = defaultKernel._futures as Map<any, any>; // NOSONAR
+            if (futures) {
+                futures.forEach((f) => {
+                    if (f._status !== undefined) {
+                        f._status |= 4;
+                    }
+                });
+            }
+        }
+        if (defaultKernel && defaultKernel._reconnectLimit) {
+            defaultKernel._reconnectLimit = 0;
+        }
+    }
+}
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface
@@ -16,512 +40,236 @@ to a raw IPython kernel running on the local machine. RawKernel is in charge of 
 input request, translating them, sending them to an IPython kernel over ZMQ, then passing back the messages
 */
 export class RawKernel implements Kernel.IKernel {
-    // IKernel properties
-    get terminated(): ISignal<this, void> {
-        throw new Error('Not yet implemented');
+    public socket: IKernelSocket & IDisposable;
+    public get terminated() {
+        return this.realKernel.terminated as any; // NOSONAR
     }
-    get statusChanged(): ISignal<this, Kernel.Status> {
-        return this._statusChanged;
+    public get statusChanged() {
+        return this.realKernel.statusChanged as any; // NOSONAR
     }
-    get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
-        throw new Error('Not yet implemented');
+    public get iopubMessage() {
+        return this.realKernel.iopubMessage as any; // NOSONAR
     }
-    get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
-        throw new Error('Not yet implemented');
+    public get unhandledMessage() {
+        return this.realKernel.unhandledMessage as any; // NOSONAR
     }
-    get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
-        throw new Error('Not yet implemented');
+    public get anyMessage() {
+        return this.realKernel.anyMessage as any; // NOSONAR
     }
-    get serverSettings(): ServerConnection.ISettings {
-        throw new Error('Not yet implemented');
+    public get serverSettings(): ServerConnection.ISettings {
+        return this.realKernel.serverSettings;
     }
-
-    // IKernelConnection properties
-    get id(): string {
-        return this._id;
+    public get id(): string {
+        return this.realKernel.id;
     }
-    get name(): string {
-        throw new Error('Not yet implemented');
+    public get name(): string {
+        return this.realKernel.name;
     }
-    get model(): Kernel.IModel {
-        throw new Error('Not yet implemented');
+    public get model(): Kernel.IModel {
+        return this.realKernel.model;
     }
-    get username(): string {
-        throw new Error('Not yet implemented');
+    public get username(): string {
+        return this.realKernel.username;
     }
-    get clientId(): string {
-        return this._clientId;
+    public get clientId(): string {
+        return this.realKernel.clientId;
     }
-    get status(): Kernel.Status {
-        return this._status;
+    public get status(): Kernel.Status {
+        return this.realKernel.status;
     }
-    get info(): KernelMessage.IInfoReply | null {
-        throw new Error('Not yet implemented');
+    public get info(): KernelMessage.IInfoReply | null {
+        return this.realKernel.info;
     }
-    get isReady(): boolean {
-        throw new Error('Not yet implemented');
+    public get isReady(): boolean {
+        return this.realKernel.isReady;
     }
-    get ready(): Promise<void> {
-        throw new Error('Not yet implemented');
+    public get ready(): Promise<void> {
+        return this.realKernel.ready;
     }
-    get handleComms(): boolean {
-        throw new Error('Not yet implemented');
+    public get handleComms(): boolean {
+        return this.realKernel.handleComms;
     }
-
-    public isDisposed: boolean = false;
-    private jmpConnection: IJMPConnection;
-    // Message chain to handle our messages async, but in order
-    private messageChain: Promise<void> = Promise.resolve();
-    // Mappings for display id tracking
-    private displayIdToParentIds = new Map<string, string[]>();
-    private msgIdToDisplayIds = new Map<string, string[]>();
-    // The current kernel session Id that we are working with
-    private kernelSession: String = '';
-
-    private _id: string;
-    private _clientId: string;
-    private _status: Kernel.Status;
-    private _statusChanged: Signal<this, Kernel.Status>;
-
-    // Keep track of all of our active futures
-    private futures = new Map<
-        string,
-        RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
-    >();
-
+    public get isDisposed(): boolean {
+        return this.realKernel.isDisposed;
+    }
     constructor(
-        jmpConnection: IJMPConnection,
-        clientId: string,
-        private readonly kernelInterrupter: () => Promise<void>
+        private realKernel: Kernel.IKernel,
+        socket: IKernelSocket & IWebSocketLike & IDisposable,
+        private kernelProcess: IKernelProcess
     ) {
-        // clientID is controlled by the session as we keep the same id
-        this._clientId = clientId;
-        this._id = uuid();
-        this._status = 'unknown';
-        // tslint:disable-next-line: no-require-imports
-        const signalling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
-        this._statusChanged = new signalling.Signal<this, Kernel.Status>(this);
+        // Save this raw socket as our kernel socket. It will be
+        // used to watch and respond to kernel messages.
+        this.socket = socket;
 
-        // Subscribe to messages coming in from our JMP channel
-        this.jmpConnection = jmpConnection;
-        this.jmpConnection.subscribe((message) => {
-            this.msgIn(message);
-        });
+        // Pretend like an open occurred. This will prime the real kernel to be connected
+        socket.emit('open');
     }
 
-    public requestExecute(
-        content: KernelMessage.IExecuteRequestMsg['content'],
-        disposeOnDone?: boolean,
-        _metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        if (this.jmpConnection) {
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-            // Build our execution message
-            // Silent is supposed to be options, but in my testing the message was not passing
-            // correctly without it, so specifying it here with default false
-            const executeOptions: KernelMessage.IOptions<KernelMessage.IExecuteRequestMsg> = {
-                session: this._clientId,
-                channel: 'shell',
-                msgType: 'execute_request',
-                username: 'vscode',
-                content: { ...content, silent: content.silent || false }
-            };
-            const executeMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>(
-                executeOptions
-            );
-
-            const newFuture = this.sendShellMessage(executeMessage, true, disposeOnDone || true);
-
-            return newFuture as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
-        }
-
-        // RAWKERNEL: What should we do here? Throw?
-        // Probably should not get here if session is not available
-        throw new Error('No session available?');
-    }
-
-    public requestComplete(
-        content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg> {
-        if (this.jmpConnection) {
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-            const completeOptions: KernelMessage.IOptions<KernelMessage.ICompleteRequestMsg> = {
-                session: this._clientId,
-                channel: 'shell',
-                msgType: 'complete_request',
-                username: 'vscode',
-                content
-            };
-            const completeMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.ICompleteRequestMsg>(
-                completeOptions
-            );
-
-            return this.sendShellMessage(completeMessage, true).done as Promise<KernelMessage.ICompleteReplyMsg>;
-        }
-
-        // RAWKERNEL: What should we do here? Throw?
-        // Probably should not get here if session is not available
-        throw new Error('No session available?');
-    }
-
-    public requestInspect(
-        content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg> {
-        if (this.jmpConnection) {
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-            const inspectOptions: KernelMessage.IOptions<KernelMessage.IInspectRequestMsg> = {
-                session: this._clientId,
-                channel: 'shell',
-                msgType: 'inspect_request',
-                username: 'vscode',
-                content
-            };
-            const inspectMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IInspectRequestMsg>(
-                inspectOptions
-            );
-
-            return this.sendShellMessage(inspectMessage, true).done as Promise<KernelMessage.IInspectReplyMsg>;
-        }
-
-        // RAWKERNEL: What should we do here? Throw?
-        // Probably should not get here if session is not available
-        throw new Error('No session available?');
-    }
-
-    public sendShellMessage<T extends KernelMessage.ShellMessageType>(
-        message: KernelMessage.IShellMessage<T>,
-        expectReply?: boolean,
-        disposeOnDone?: boolean
-    ): Kernel.IShellFuture<KernelMessage.IShellMessage<T>> {
-        if (this.jmpConnection) {
-            // First send our message
-            this.jmpConnection.sendMessage(message);
-
-            // Next we need to build our future
-            const future = new RawFuture(message, expectReply || false, disposeOnDone || true);
-
-            // RAWKERNEL: DisplayID calculations need to happen here
-            this.futures.set(message.header.msg_id, future);
-
-            // Set our future to remove itself when disposed
-            const oldDispose = future.dispose.bind(future);
-            future.dispose = () => {
-                this.futureDisposed(future);
-                return oldDispose();
-            };
-
-            return future as Kernel.IShellFuture<KernelMessage.IShellMessage<T>>;
-        }
-
-        // RAWKERNEL: sending without a connection
-        throw new Error('Attemping to send shell message without connection');
-    }
-
-    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
-        if (this.jmpConnection) {
-            // tslint:disable-next-line:no-require-imports
-            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            const inputOptions: KernelMessage.IOptions<KernelMessage.IInputReplyMsg> = {
-                session: this.clientId,
-                channel: 'stdin',
-                msgType: 'input_reply',
-                content
-            };
-            const inputReplyMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IInputReplyMsg>(
-                inputOptions
-            );
-
-            // Send off our input reply no futures or promises
-            this.jmpConnection.sendMessage(inputReplyMessage);
-        }
-    }
-
-    // On dispose close down our connection and get rid of saved futures
-    public dispose(): void {
-        if (!this.isDisposed) {
-            if (this.jmpConnection) {
-                this.jmpConnection.dispose();
-            }
-
-            // Dispose of all our outstanding futures
-            this.futures.forEach((future) => {
-                future.dispose();
-            });
-            this.futures.clear();
-
-            this.isDisposed = true;
-        }
-    }
     public shutdown(): Promise<void> {
-        throw new Error('Not yet implemented');
+        suppressShutdownErrors(this.realKernel);
+        return this.realKernel.shutdown().catch((_exc) => {
+            noop();
+        });
     }
     public getSpec(): Promise<Kernel.ISpecModel> {
-        throw new Error('Not yet implemented');
+        return this.realKernel.getSpec();
+    }
+    public sendShellMessage<T extends KernelMessage.ShellMessageType>(
+        msg: KernelMessage.IShellMessage<T>,
+        expectReply?: boolean,
+        disposeOnDone?: boolean
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<T>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        return this.realKernel.sendShellMessage(msg, expectReply, disposeOnDone);
     }
     public sendControlMessage<T extends KernelMessage.ControlMessageType>(
-        _msg: KernelMessage.IControlMessage<T>,
-        _expectReply?: boolean,
-        _disposeOnDone?: boolean
-    ): Kernel.IControlFuture<KernelMessage.IControlMessage<T>> {
-        throw new Error('Not yet implemented');
+        msg: KernelMessage.IControlMessage<T>,
+        expectReply?: boolean,
+        disposeOnDone?: boolean
+    ): Kernel.IControlFuture<
+        KernelMessage.IControlMessage<T>,
+        KernelMessage.IControlMessage<KernelMessage.ControlMessageType>
+    > {
+        return this.realKernel.sendControlMessage(msg, expectReply, disposeOnDone);
     }
     public reconnect(): Promise<void> {
-        throw new Error('Not yet implemented');
+        throw new Error('Reconnect is not supported.');
     }
-    public async interrupt(): Promise<void> {
-        await this.kernelInterrupter();
+    public interrupt(): Promise<void> {
+        // Send this directly to our kernel process. Don't send it through the real kernel. The
+        // real kernel will send a goofy API request to the websocket.
+        return this.kernelProcess.interrupt();
     }
     public restart(): Promise<void> {
-        throw new Error('Not yet implemented');
+        throw new Error('This method should not be called. Restart is implemented at a higher level');
     }
     public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
-        throw new Error('Not yet implemented');
+        return this.realKernel.requestKernelInfo();
+    }
+    public requestComplete(content: { code: string; cursor_pos: number }): Promise<KernelMessage.ICompleteReplyMsg> {
+        return this.realKernel.requestComplete(content);
+    }
+    public requestInspect(content: {
+        code: string;
+        cursor_pos: number;
+        detail_level: 0 | 1;
+    }): Promise<KernelMessage.IInspectReplyMsg> {
+        return this.realKernel.requestInspect(content);
     }
     public requestHistory(
-        _content: KernelMessage.IHistoryRequestMsg['content']
+        content:
+            | KernelMessage.IHistoryRequestRange
+            | KernelMessage.IHistoryRequestSearch
+            | KernelMessage.IHistoryRequestTail
     ): Promise<KernelMessage.IHistoryReplyMsg> {
-        throw new Error('Not yet implemented');
+        return this.realKernel.requestHistory(content);
+    }
+    public requestExecute(
+        content: {
+            code: string;
+            silent?: boolean;
+            store_history?: boolean;
+            user_expressions?: import('@phosphor/coreutils').JSONObject;
+            allow_stdin?: boolean;
+            stop_on_error?: boolean;
+        },
+        disposeOnDone?: boolean,
+        metadata?: import('@phosphor/coreutils').JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+        return this.realKernel.requestExecute(content, disposeOnDone, metadata);
     }
     public requestDebug(
-        _content: KernelMessage.IDebugRequestMsg['content'],
-        _disposeOnDone?: boolean
+        // tslint:disable-next-line: no-banned-terms
+        content: { seq: number; type: 'request'; command: string; arguments?: any },
+        disposeOnDone?: boolean
     ): Kernel.IControlFuture<KernelMessage.IDebugRequestMsg, KernelMessage.IDebugReplyMsg> {
-        throw new Error('Not yet implemented');
+        return this.realKernel.requestDebug(content, disposeOnDone);
     }
-    public requestIsComplete(
-        _content: KernelMessage.IIsCompleteRequestMsg['content']
-    ): Promise<KernelMessage.IIsCompleteReplyMsg> {
-        throw new Error('Not yet implemented');
+    public requestIsComplete(content: { code: string }): Promise<KernelMessage.IIsCompleteReplyMsg> {
+        return this.realKernel.requestIsComplete(content);
     }
-    public requestCommInfo(
-        _content: KernelMessage.ICommInfoRequestMsg['content']
-    ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        throw new Error('Not yet implemented');
+    public requestCommInfo(content: {
+        target_name?: string;
+        target?: string;
+    }): Promise<KernelMessage.ICommInfoReplyMsg> {
+        return this.realKernel.requestCommInfo(content);
     }
-    public connectToComm(_targetName: string, _commId?: string): Kernel.IComm {
-        throw new Error('Not yet implemented');
+    public sendInputReply(content: KernelMessage.ReplyContent<KernelMessage.IInputReply>): void {
+        return this.realKernel.sendInputReply(content);
+    }
+    public connectToComm(targetName: string, commId?: string): Kernel.IComm {
+        return this.realKernel.connectToComm(targetName, commId);
     }
     public registerCommTarget(
-        _targetName: string,
-        _callback: (comm: Kernel.IComm, _msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
-        throw new Error('Not yet implemented');
+        return this.realKernel.registerCommTarget(targetName, callback);
     }
     public removeCommTarget(
-        _targetName: string,
-        _callback: (comm: Kernel.IComm, _msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
-        throw new Error('Not yet implemented');
+        return this.realKernel.removeCommTarget(targetName, callback);
+    }
+    public dispose(): void {
+        this.realKernel.dispose();
+        this.socket.dispose();
     }
     public registerMessageHook(
-        _msgId: string,
-        _hook: (_msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
-        throw new Error('Not yet implemented');
+        this.realKernel.registerMessageHook(msgId, hook);
     }
     public removeMessageHook(
-        _msgId: string,
-        _hook: (_msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
-        throw new Error('Not yet implemented');
+        this.realKernel.removeMessageHook(msgId, hook);
     }
+}
 
-    // When a future is disposed this function is called to remove it from our
-    // various tracking lists
-    private futureDisposed(future: RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>) {
-        const messageId = future.msg.header.msg_id;
-        this.futures.delete(messageId);
+let nonSerializingKernel: any;
 
-        // Remove stored display id information.
-        const displayIds = this.msgIdToDisplayIds.get(messageId);
-        if (!displayIds) {
-            return;
-        }
+export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
+    const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+    const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
-        displayIds.forEach((displayId) => {
-            const messageIds = this.displayIdToParentIds.get(displayId);
-            if (messageIds) {
-                const index = messageIds.indexOf(messageId);
-                if (index === -1) {
-                    return;
-                }
-
-                if (messageIds.length === 1) {
-                    this.displayIdToParentIds.delete(displayId);
-                } else {
-                    messageIds.splice(index, 1);
-                    this.displayIdToParentIds.set(displayId, messageIds);
-                }
-            }
-        });
-
-        // Remove our message id from the mapping to display ids
-        this.msgIdToDisplayIds.delete(messageId);
-    }
-
-    // Message incoming from the JMP connection. Queue it up for processing
-    private msgIn(message: KernelMessage.IMessage) {
-        // Always keep our kernel session id up to date with incoming messages
-        // on something like a restart this will update when the first message on the
-        // new session comes in we use this to check the validity of messages that we are
-        // currently handling
-        this.kernelSession = message.header.session;
-
-        // Add the message onto our message chain, we want to process them async
-        // but in order so use a chain like this
-        this.messageChain = this.messageChain
-            .then(() => {
-                // Return so any promises from each message all resolve before
-                // processing the next one
-                return this.handleMessage(message);
-            })
-            .catch((error) => {
-                traceError(error);
-            });
-    }
-
-    private async handleDisplayId(displayId: string, message: KernelMessage.IMessage): Promise<boolean> {
-        // tslint:disable-next-line:no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-        const messageId = (message.parent_header as KernelMessage.IHeader).msg_id;
-
-        // Get all parent ids for this display id
-        let parentIds = this.displayIdToParentIds.get(displayId);
-
-        // If we have seen this id before
-        if (parentIds) {
-            // We need to create a new update display data message to update the parents
-            const updateMessage: KernelMessage.IMessage = {
-                header: cloneDeep(message.header),
-                parent_header: cloneDeep(message.parent_header),
-                metadata: cloneDeep(message.metadata),
-                content: cloneDeep(message.content),
-                channel: message.channel,
-                buffers: message.buffers ? message.buffers.slice() : []
-            };
-            updateMessage.header.msg_type = 'update_display_data';
-
-            // Now send it out to all the parents
-            await Promise.all(
-                parentIds.map(async (parentId) => {
-                    const future = this.futures && this.futures.get(parentId);
-                    if (future) {
-                        await future.handleMessage(updateMessage);
-                    }
-                })
-            );
-        }
-
-        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(message)) {
-            // End here for an update display data, indicate that we have handed it
-            // so it skip the normal displaying in handleMessage
-            return true;
-        }
-
-        // For display_data message record the mapping from
-        // the displayId to the parent messageId
-        parentIds = this.displayIdToParentIds.get(displayId) ?? [];
-        if (parentIds.indexOf(messageId) === -1) {
-            parentIds.push(messageId);
-        }
-        this.displayIdToParentIds.set(displayId, parentIds);
-
-        // Add to mapping of message -> display ids
-        const displayIds = this.msgIdToDisplayIds.get(messageId) ?? [];
-        if (displayIds.indexOf(messageId) === -1) {
-            displayIds.push(messageId);
-        }
-        this.msgIdToDisplayIds.set(messageId, displayIds);
-
-        // Return false so message continues to get processed
-        return false;
-    }
-
-    /*
-    Messages are handled async so there is a possibility that the kernel might be
-    disposed or restarted during handling. Throw an error here if our message that
-    we are handling is no longer valid.
-    */
-    private checkMessageValid(message: KernelMessage.IMessage) {
-        if (this.isDisposed) {
-            throw new Error('Stop message handling on diposed kernel');
-        }
-
-        // kernelSession is updated when the first message from a new kernel session comes in
-        // in this case don't keep handling the old session messages
-        if (message.header.session !== this.kernelSession) {
-            throw new Error('Stop message handling on message from old session');
+    // Dummy websocket we give to the underlying real kernel
+    let socketInstance: any;
+    class RawSocketWrapper extends RawSocket {
+        constructor() {
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
+            socketInstance = this;
         }
     }
 
-    // Handle a new message arriving from JMP connection
-    private async handleMessage(message: KernelMessage.IMessage): Promise<void> {
-        // tslint:disable-next-line:no-require-imports
-        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+    // Remap the server settings for the real kernel to use our dummy websocket
+    const settings = jupyterLab.ServerConnection.makeSettings({
+        WebSocket: RawSocketWrapper as any, // NOSONAR
+        wsUrl: 'RAW'
+    });
 
-        let handled = false;
-
-        // Check to see if we have the right type of message for a display id
-        if (
-            message.parent_header &&
-            message.channel === 'iopub' &&
-            (jupyterLab.KernelMessage.isDisplayDataMsg(message) ||
-                jupyterLab.KernelMessage.isUpdateDisplayDataMsg(message) ||
-                jupyterLab.KernelMessage.isExecuteResultMsg(message))
-        ) {
-            // Display id can be found in transient message content
-            // https://jupyter-client.readthedocs.io/en/stable/messaging.html#display-data
-            const displayId = message.content.transient?.display_id;
-            if (displayId) {
-                handled = await this.handleDisplayId(displayId, message);
-
-                // After await check the validity of our message
-                this.checkMessageValid(message);
-            }
-        }
-
-        // Look up in our future list and see if a future needs to be updated on this message
-        if (!handled && message.parent_header) {
-            const parentHeader = message.parent_header as KernelMessage.IHeader;
-            const parentFuture = this.futures.get(parentHeader.msg_id);
-
-            if (parentFuture) {
-                // Let the parent future message handle it here
-                await parentFuture.handleMessage(message);
-
-                // After await check the validity of our message
-                this.checkMessageValid(message);
-            } else {
-                if (message.header.session === this._clientId && message.channel !== 'iopub') {
-                    // RAWKERNEL: emit unhandled
-                }
-            }
-        }
-
-        // Check for ioPub status messages
-        if (message.channel === 'iopub' && message.header.msg_type === 'status') {
-            const newStatus = (message as KernelMessage.IStatusMsg).content.execution_state;
-            this.updateStatus(newStatus);
-        }
+    // Then create the real kernel. We will remap its serialize/deserialize functions
+    // to do nothing so that we can control serialization at our socket layer.
+    if (!nonSerializingKernel) {
+        // Note, this is done with a postInstall step (found in build\ci\postInstall.js). In that post install step
+        // we eliminate the serialize import from the default kernel and remap it to do nothing.
+        nonSerializingKernel = require('@jupyterlab/services/lib/kernel/nonSerializingKernel') as typeof import('@jupyterlab/services/lib/kernel/default'); // NOSONAR
     }
+    const realKernel = new nonSerializingKernel.DefaultKernel(
+        {
+            name: kernelProcess.kernelSpec.name,
+            serverSettings: settings,
+            clientId,
+            handleComms: true
+        },
+        uuid()
+    );
 
-    // The status for our kernel has changed
-    private updateStatus(newStatus: Kernel.Status) {
-        if (this._status === newStatus || this._status === 'dead') {
-            return;
-        }
-
-        this._status = newStatus;
-        this._statusChanged.emit(newStatus);
-        if (newStatus === 'dead') {
-            this.dispose();
-        }
-    }
+    // Use this real kernel in result.
+    return new RawKernel(realKernel, socketInstance, kernelProcess);
 }

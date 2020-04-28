@@ -3,17 +3,16 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
-import { noop } from '../../common/utils/misc';
 import { IKernelProcess } from '../kernel-launcher/types';
-import { IJMPConnection } from '../types';
-import { RawKernel } from './rawKernel';
+import { ISessionWithSocket, KernelSocketInformation } from '../types';
+import { createRawKernel, RawKernel } from './rawKernel';
 
 /*
 RawSession class implements a jupyterlab ISession object
 This provides enough of the ISession interface so that our direct
 ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
-export class RawSession implements Session.ISession {
+export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
 
     // Note, ID is the ID of this session
@@ -25,10 +24,10 @@ export class RawSession implements Session.ISession {
     private readonly _statusChanged: Signal<this, Kernel.Status>;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
-    constructor(connection: IJMPConnection, private kernelProcess: IKernelProcess) {
+    constructor(public kernelProcess: IKernelProcess) {
         // tslint:disable-next-line: no-require-imports
-        const singalling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
-        this._statusChanged = new singalling.Signal<this, Kernel.Status>(this);
+        const singaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._statusChanged = new singaling.Signal<this, Kernel.Status>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -36,14 +35,15 @@ export class RawSession implements Session.ISession {
         this._clientID = uuid();
 
         // Connect our kernel and hook up status changes
-        this._kernel = new RawKernel(connection, this._clientID, this.kernelProcess.interrupt.bind(this.kernelProcess));
+        this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
     }
 
-    public dispose() {
+    public async dispose() {
         if (!this.isDisposed) {
+            await this._kernel.shutdown();
             this._kernel.dispose();
-            this.kernelProcess.dispose().catch(noop);
+            this.kernelProcess.dispose().ignoreErrors();
         }
         this.isDisposed = true;
     }
@@ -58,18 +58,26 @@ export class RawSession implements Session.ISession {
         return this._kernel;
     }
 
+    get kernelSocketInformation(): KernelSocketInformation | undefined {
+        return {
+            socket: this._kernel.socket,
+            options: {
+                id: this._kernel.id,
+                clientId: this._clientID,
+                userName: '',
+                model: this._kernel.model
+            }
+        };
+    }
+
     // Provide status changes for the attached kernel
     get statusChanged(): ISignal<this, Kernel.Status> {
         return this._statusChanged;
     }
 
     // Shutdown our session and kernel
-    public async shutdown(): Promise<void> {
-        await this.kernelProcess.dispose().catch(noop);
-        this.dispose();
-        // Normally the server session has to shutdown here with an await on a rest call
-        // but we just have a local connection, so dispose and resolve
-        return Promise.resolve();
+    public shutdown(): Promise<void> {
+        return this.dispose();
     }
 
     // Not Implemented ISession

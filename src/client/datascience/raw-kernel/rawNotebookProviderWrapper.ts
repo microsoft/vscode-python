@@ -2,15 +2,22 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
@@ -36,7 +43,8 @@ type RawNotebookProviderClassType = {
         kernelLauncher: IKernelLauncher,
         kernelFinder: IKernelFinder,
         kernelSelector: KernelSelector,
-        progressReporter: ProgressReporter
+        progressReporter: ProgressReporter,
+        outputChannel: IOutputChannel
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -59,7 +67,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(IKernelFinder) kernelFinder: IKernelFinder,
         @inject(KernelSelector) kernelSelector: KernelSelector,
-        @inject(ProgressReporter) progressReporter: ProgressReporter
+        @inject(ProgressReporter) progressReporter: ProgressReporter,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -78,7 +87,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelLauncher,
             kernelFinder,
             kernelSelector,
-            progressReporter
+            progressReporter,
+            outputChannel
         );
     }
 

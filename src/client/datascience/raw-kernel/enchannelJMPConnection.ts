@@ -1,6 +1,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import type { Channels } from '@nteract/messaging';
 import { injectable } from 'inversify';
+import { noop } from '../../common/utils/misc';
 import { IJMPConnection, IJMPConnectionInfo } from '../types';
 
 @injectable()
@@ -24,10 +25,11 @@ export class EnchannelJMPConnection implements IJMPConnection {
             this.mainChannel.next(message as any);
         }
     }
-    public subscribe(handlerFunc: (message: KernelMessage.IMessage) => void) {
+    // tslint:disable-next-line: no-any
+    public subscribe(handlerFunc: (message: KernelMessage.IMessage) => void, errorHandler?: (exc: any) => void) {
         if (this.mainChannel) {
             // tslint:disable-next-line:no-any
-            this.mainChannel.subscribe(handlerFunc as any);
+            this.mainChannel.subscribe(handlerFunc as any, errorHandler ? errorHandler : noop);
         }
     }
 
