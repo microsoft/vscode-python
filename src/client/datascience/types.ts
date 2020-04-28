@@ -1151,3 +1151,10 @@ export interface IKernelDependencyService {
     ): Promise<KernelInterpreterDependencyResponse>;
     areDependenciesInstalled(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean>;
 }
+
+export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInteractiveWindowUsageTracker');
+export interface INotebookAndInteractiveWindowUsageTracker {
+    readonly lastNotebookOpened?: Date;
+    readonly lastInteractiveWindowOpened?: Date;
+    startTracking(): void;
+}

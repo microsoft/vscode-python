@@ -126,8 +126,10 @@ import {
     IPlotViewerProvider,
     IRawNotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    INotebookAndInteractiveWindowUsageTracker
 } from './types';
+import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -212,6 +214,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
+    serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
 
     registerGatherTypes(serviceManager);
 }

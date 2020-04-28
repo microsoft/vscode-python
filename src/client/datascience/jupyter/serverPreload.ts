@@ -1,19 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider } from '../types';
-
-const LastServerActiveTimeKey = 'last-notebook-start-time';
+import { IConfigurationService } from '../../common/types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    INotebookAndInteractiveWindowUsageTracker,
+    INotebookEditorProvider,
+    INotebookProvider
+} from '../types';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
+        @inject(INotebookAndInteractiveWindowUsageTracker)
+        private readonly tracker: INotebookAndInteractiveWindowUsageTracker,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -36,17 +40,21 @@ export class ServerPreload implements IExtensionSingleActivationService {
     }
 
     private checkDateForServerStart() {
-        const lastTimeNumber = this.mementoStorage.get<number>(LastServerActiveTimeKey);
-
-        if (lastTimeNumber) {
-            const lastTime = new Date(lastTimeNumber);
-            const currentTime = new Date();
-            const diff = currentTime.getTime() - lastTime.getTime();
-            const diffInDays = Math.floor(diff / (24 * 3600 * 1000));
-            if (diffInDays <= 7) {
-                this.createServerIfNecessary().ignoreErrors();
-            }
+        if (
+            this.shouldAutoStartStartServer(this.tracker.lastInteractiveWindowOpened) ||
+            this.shouldAutoStartStartServer(this.tracker.lastNotebookOpened)
+        ) {
+            this.createServerIfNecessary().ignoreErrors();
         }
+    }
+    private shouldAutoStartStartServer(lastTime?: Date) {
+        if (!lastTime) {
+            return false;
+        }
+        const currentTime = new Date();
+        const diff = currentTime.getTime() - lastTime.getTime();
+        const diffInDays = Math.floor(diff / (24 * 3600 * 1000));
+        return diffInDays <= 7;
     }
 
     private async createServerIfNecessary() {
@@ -64,11 +72,6 @@ export class ServerPreload implements IExtensionSingleActivationService {
                     disableUI: true,
                     localOnly: true
                 });
-            }
-
-            if (providerConnection) {
-                // Update our date in the storage that indicates it was succesful
-                this.mementoStorage.update(LastServerActiveTimeKey, Date.now());
             }
         } catch (exc) {
             traceError(`Error starting server in serverPreload: `, exc);

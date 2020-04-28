@@ -274,7 +274,8 @@ import {
     IPlotViewerProvider,
     IRawNotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    INotebookAndInteractiveWindowUsageTracker
 } from '../../client/datascience/types';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
@@ -389,6 +390,7 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
+import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -754,6 +756,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
         this.serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
         this.serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
+        this.serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(
+            INotebookAndInteractiveWindowUsageTracker,
+            NotebookAndInteractiveWindowUsageTracker
+        );
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
         this.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
