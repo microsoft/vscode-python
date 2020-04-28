@@ -63,10 +63,6 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         let bestInterpreter: PythonInterpreter | undefined;
         if (Array.isArray(interpreters) && interpreters.length > 0) {
             bestInterpreter = this.helper.getBestInterpreter(interpreters);
-        } else {
-            const virtualEnv = await virtualEnvPromise.promise;
-            const virtualEnvList = Array.isArray(virtualEnv) ? virtualEnv : [];
-            bestInterpreter = this.helper.getBestInterpreter(virtualEnvList);
         }
         if (bestInterpreter && manager) {
             await super.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
