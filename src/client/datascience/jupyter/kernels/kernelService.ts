@@ -26,7 +26,7 @@ import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { KernelDepdencyService, KernelInterpreterDependencyResponse } from './kernelDependencyService';
+import { KernelDependencyService, KernelInterpreterDependencyResponse } from './kernelDependencyService';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -62,7 +62,7 @@ export class KernelService {
         private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(KernelDepdencyService) private readonly kernelDependencyService: KernelDepdencyService,
+        @inject(KernelDependencyService) private readonly kernelDependencyService: KernelDependencyService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}

@@ -19,7 +19,7 @@ import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { KernelDepdencyService } from './kernelDependencyService';
+import { KernelDependencyService } from './kernelDependencyService';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -58,7 +58,7 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(KernelDepdencyService) private readonly kernelDepdencyService: KernelDepdencyService
+        @inject(KernelDependencyService) private readonly kernelDepdencyService: KernelDependencyService
     ) {}
 
     /**

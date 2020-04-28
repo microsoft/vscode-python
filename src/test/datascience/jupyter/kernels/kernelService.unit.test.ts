@@ -20,7 +20,7 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import {
-    KernelDepdencyService,
+    KernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
@@ -44,7 +44,7 @@ suite('Data Science - KernelService', () => {
     let execFactory: IPythonExecutionFactory;
     let execService: IPythonExecutionService;
     let activationHelper: IEnvironmentActivationService;
-    let dependencyService: KernelDepdencyService;
+    let dependencyService: KernelDependencyService;
     let jupyterInterpreterExecutionService: IJupyterSubCommandExecutionService;
 
     function initialize() {
@@ -54,7 +54,7 @@ suite('Data Science - KernelService', () => {
         activationHelper = mock(EnvironmentActivationService);
         execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
-        dependencyService = mock(KernelDepdencyService);
+        dependencyService = mock(KernelDependencyService);
         jupyterInterpreterExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any

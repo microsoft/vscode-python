@@ -15,7 +15,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
-import { KernelDepdencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
@@ -33,7 +33,7 @@ suite('Data Science - KernelSelector', () => {
     let kernelSelector: KernelSelector;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
-    let dependencyService: KernelDepdencyService;
+    let dependencyService: KernelDependencyService;
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -57,7 +57,7 @@ suite('Data Science - KernelSelector', () => {
         kernelService = mock(KernelService);
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
-        dependencyService = mock(KernelDepdencyService);
+        dependencyService = mock(KernelDependencyService);
         interpreterService = mock(InterpreterService);
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),

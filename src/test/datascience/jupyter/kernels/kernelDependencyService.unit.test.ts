@@ -9,7 +9,7 @@ import { IApplicationShell } from '../../../../client/common/application/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { Common } from '../../../../client/common/utils/localize';
 import {
-    KernelDepdencyService,
+    KernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { createPythonInterpreter } from '../../../utils/interpreters';
@@ -18,14 +18,14 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - Kernel Dependency Service', () => {
-    let dependencyService: KernelDepdencyService;
+    let dependencyService: KernelDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
     const interpreter = createPythonInterpreter();
     setup(() => {
         appShell = mock<IApplicationShell>();
         installer = mock<IInstaller>();
-        dependencyService = new KernelDepdencyService(instance(appShell), instance(installer));
+        dependencyService = new KernelDependencyService(instance(appShell), instance(installer));
     });
     test('Check if ipykernel is installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);

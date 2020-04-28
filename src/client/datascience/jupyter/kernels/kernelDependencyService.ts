@@ -22,7 +22,7 @@ export enum KernelInterpreterDependencyResponse {
  * If required modules aren't installed, will prompt user to install them.
  */
 @injectable()
-export class KernelDepdencyService {
+export class KernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller
