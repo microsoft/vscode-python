@@ -350,6 +350,10 @@ export namespace DataScience {
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
         'Data Science library {1} is not installed in interpreter {0}.'
     );
+    export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
+        'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
+        'Data Science library {1} is not installed in interpreter {0}. Install?'
+    );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
         'Data Science libraries {1} are not installed in interpreter {0}.'
@@ -920,7 +924,6 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const ipykernelNotInstalled = localize('DataScience.ipykernelNotInstalled', 'Ipykernel is not installed.');
 }
 
 export namespace DebugConfigStrings {
