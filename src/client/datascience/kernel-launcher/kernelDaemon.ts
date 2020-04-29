@@ -67,9 +67,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         if (options.cwd) {
             throw new Error("'cwd' not supported in spawnOptions for KernelDaemon.start");
         }
-        // if (options.env) {
-        //     throw new Error("'env' not supported in spawnOptions for KernelDaemon.start");
-        // }
         if (this.started) {
             throw new Error('Kernel has already been started in daemon');
         }
