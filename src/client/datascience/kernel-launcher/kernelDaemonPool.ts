@@ -43,6 +43,7 @@ export class KernelDaemonPool implements IAsyncDisposable {
         if (this.initialized) {
             return;
         }
+        this.initialized = true;
         this.envVars.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange.bind(this));
         this.interrpeterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];

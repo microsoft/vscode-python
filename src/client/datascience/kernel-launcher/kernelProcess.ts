@@ -132,13 +132,13 @@ export class KernelProcess implements IKernelProcess {
         let exeObs: ObservableExecutionResult<string>;
         if (this.isPythonKernel) {
             this.pythonKernelLauncher = new PythonKernelLauncherDaemon(this.daemonPool);
-            const { observableOutput: observableResult, daemon } = await this.pythonKernelLauncher.launch(
+            const { observableOutput, daemon } = await this.pythonKernelLauncher.launch(
                 this.resource,
                 this._kernelSpec,
                 this.interpreter
             );
             this.kernelDaemon = daemon;
-            exeObs = observableResult;
+            exeObs = observableOutput;
         } else {
             // First part of argument is always the executable.
             const executable = this._kernelSpec.argv[0];

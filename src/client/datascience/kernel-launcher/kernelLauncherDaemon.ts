@@ -42,11 +42,11 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         const moduleArgs = args.slice(modulePrefixIndex + 2);
         const env = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
 
-        const observableResult = await daemon.start(moduleName, moduleArgs, { env });
-        if (observableResult.proc) {
-            this.processesToDispose.push(observableResult.proc);
+        const observableOutput = await daemon.start(moduleName, moduleArgs, { env });
+        if (observableOutput.proc) {
+            this.processesToDispose.push(observableOutput.proc);
         }
-        return { observableOutput: observableResult, daemon };
+        return { observableOutput, daemon };
     }
     public dispose() {
         while (this.processesToDispose.length) {

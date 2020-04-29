@@ -74,6 +74,7 @@ import { NotebookStarter } from './jupyter/notebookStarter';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
+import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
@@ -217,6 +218,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
+    serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
 
     registerGatherTypes(serviceManager);
 }
