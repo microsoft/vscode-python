@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
+import { IKernelFinder } from '../../kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelService } from './kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -117,6 +118,20 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     }
 }
 
+// Provider for searching for installed kernelspecs on disk without using jupyter to search
+export class InstalledRawKernelSelectionListProvider implements IKernelSelectionListProvider {
+    constructor(private readonly kernelFinder: IKernelFinder, private readonly pathUtils: IPathUtils) {}
+    public async getKernelSelections(
+        _resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<IKernelSpecQuickPickItem[]> {
+        const items = await this.kernelFinder.listKernelSpecs(cancelToken);
+        return items
+            .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+    }
+}
+
 /**
  * Provider for interpreters to be treated as kernel specs.
  * I.e. return interpreters that are to be treated as kernel specs, and not yet installed as kernels.
@@ -157,7 +172,8 @@ export class KernelSelectionProvider {
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
     /**
      * Gets a selection of kernel specs from a remote session.
@@ -206,6 +222,7 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
+        type: 'raw' | 'jupyter',
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {

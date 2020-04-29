@@ -105,6 +105,11 @@ export class KernelFinder implements IKernelFinder {
         return this.verifyIpyKernel(foundKernel, cancelToken);
     }
 
+    // Search all our local file system locations for installed kernel specs and return them
+    public async listKernelSpecs(_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+        throw new Error('Not yet implmented');
+    }
+
     // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
     private async verifyIpyKernel(
         kernelSpec: IJupyterKernelSpec,
