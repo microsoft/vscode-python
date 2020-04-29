@@ -28,10 +28,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v1
         with:
           python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: Upgrade pip
         run: python -m pip install -U pip
@@ -122,10 +132,20 @@ jobs:
       - name: Run prettier on JavaScript code
         run: npx prettier 'build/**/*.js' --check
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v1
         with:
           python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: Run Black on Python code
         run: |
@@ -222,10 +242,20 @@ jobs:
         run: npx gulp prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit == false
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
         with:
           python-version: ${{matrix.python}}
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v1
