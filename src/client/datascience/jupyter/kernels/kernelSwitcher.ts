@@ -43,7 +43,7 @@ export class KernelSwitcher {
 
     public async askForLocalKernel(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
     ): Promise<KernelSpecInterpreter | undefined> {
         const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
@@ -67,7 +67,7 @@ export class KernelSwitcher {
         if (isLocalConnection) {
             kernel = await this.selectLocalJupyterKernel(
                 notebook.resource,
-                notebook.connection?.type || 'unknown',
+                notebook.connection?.type || 'noConnection',
                 notebook?.getKernelSpec()
             );
         } else if (notebook) {
@@ -82,7 +82,7 @@ export class KernelSwitcher {
 
     private async selectLocalJupyterKernel(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         return this.kernelSelector.selectLocalKernel(
@@ -132,7 +132,7 @@ export class KernelSwitcher {
                     // At this point we have a valid jupyter server.
                     const potential = await this.askForLocalKernel(
                         notebook.resource,
-                        notebook.connection?.type || 'unknown',
+                        notebook.connection?.type || 'noConnection',
                         kernel.kernelSpec || kernel.kernelModel
                     );
                     if (potential && Object.keys(potential).length > 0) {

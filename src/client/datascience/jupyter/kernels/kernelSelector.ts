@@ -123,7 +123,7 @@ export class KernelSelector {
      */
     public async selectLocalKernel(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
@@ -315,7 +315,7 @@ export class KernelSelector {
     }
     private async selectKernel(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         stopWatch: StopWatch,
         telemetryEvent: Telemetry,
         suggestions: IKernelSpecQuickPickItem[],
@@ -386,7 +386,7 @@ export class KernelSelector {
     private async useInterpreterAsKernel(
         resource: Resource,
         interpreter: PythonInterpreter,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,
         disableUI?: boolean,

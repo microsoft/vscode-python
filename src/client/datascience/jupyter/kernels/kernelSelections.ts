@@ -222,7 +222,7 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
-        type: 'raw' | 'jupyter' | 'unknown',
+        type: 'raw' | 'jupyter' | 'noConnection',
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {

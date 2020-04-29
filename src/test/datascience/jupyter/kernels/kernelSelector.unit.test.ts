@@ -510,7 +510,7 @@ suite('Data Science - KernelSelector', () => {
         let selectLocalKernelStub: sinon.SinonStub<
             [
                 Resource,
-                'raw' | 'jupyter' | 'unknown',
+                'raw' | 'jupyter' | 'noConnection',
                 StopWatch,
                 (IJupyterSessionManager | undefined)?,
                 (CancellationToken | undefined)?,
