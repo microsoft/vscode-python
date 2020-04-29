@@ -20,6 +20,10 @@ export class MockKernelFinder implements IKernelFinder {
         return this.realFinder.findKernelSpec(interpreterUri, kernelName);
     }
 
+    public async listKernelSpecs(): Promise<IJupyterKernelSpec[]> {
+        throw new Error('Not yet implemented');
+    }
+
     public addKernelSpec(pythonPathOrResource: string, spec: IJupyterKernelSpec) {
         this.dummySpecs.set(pythonPathOrResource, spec);
     }
