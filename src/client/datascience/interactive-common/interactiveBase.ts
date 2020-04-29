@@ -1062,7 +1062,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
-                    const newKernel = await this.switcher.askForLocalKernel(resource, e.kernelSpec);
+                    const newKernel = await this.switcher.askForLocalKernel(
+                        resource,
+                        serverConnection.type,
+                        e.kernelSpec
+                    );
                     if (newKernel?.kernelSpec) {
                         // Update the notebook metadata
                         await this.updateNotebookOptions(newKernel.kernelSpec, newKernel.interpreter);
