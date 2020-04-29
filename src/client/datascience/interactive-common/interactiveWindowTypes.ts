@@ -13,6 +13,7 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
@@ -494,7 +495,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
-    public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
+    public [InteractiveWindowMessages.NotebookExecutionActivated]: INotebookIdentity & { owningResource: Resource };
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;

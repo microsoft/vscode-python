@@ -598,7 +598,10 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonInterpreter | undefined {
-        return this._executionInfo.interpreter;
+        return (
+            this._executionInfo.interpreter ||
+            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonInterpreter)
+        );
     }
 
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {

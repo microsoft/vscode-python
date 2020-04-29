@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CancellationToken, DiagnosticCollection, Disposable, Event, OutputChannel } from 'vscode';
+import { CancellationToken, DiagnosticCollection, Disposable, Event, Hover, OutputChannel } from 'vscode';
 import {
     Code2ProtocolConverter,
     CompletionItem,
@@ -30,10 +30,12 @@ import {
     StaticFeature,
     TextDocumentContentChangeEvent,
     TextDocumentItem,
+    TextDocumentSyncKind,
     Trace,
     VersionedTextDocumentIdentifier
 } from 'vscode-languageclient';
 
+import { LanguageServerType } from '../../client/activation/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { IntellisenseLine } from '../../client/datascience/interactive-common/intellisense/intellisenseLine';
 import { noop } from '../core';
@@ -47,6 +49,7 @@ export class MockLanguageClient extends LanguageClient {
     private versionId: number | null;
     private code2Protocol: MockCode2ProtocolConverter;
     private protocol2Code: MockProtocol2CodeConverter;
+    private initResult: InitializeResult;
 
     public constructor(
         name: string,
@@ -60,6 +63,21 @@ export class MockLanguageClient extends LanguageClient {
         this.versionId = 0;
         this.code2Protocol = new MockCode2ProtocolConverter();
         this.protocol2Code = new MockProtocol2CodeConverter();
+
+        // Vary our initialize result based on the name
+        if (name === LanguageServerType.Microsoft) {
+            this.initResult = {
+                capabilities: {
+                    textDocumentSync: TextDocumentSyncKind.Incremental
+                }
+            };
+        } else {
+            this.initResult = {
+                capabilities: {
+                    textDocumentSync: TextDocumentSyncKind.Full
+                }
+            };
+        }
     }
     public waitForNotification(): Promise<void> {
         this.notificationPromise = createDeferred();
@@ -82,7 +100,7 @@ export class MockLanguageClient extends LanguageClient {
         throw new Error('Method not implemented.');
     }
     public get initializeResult(): InitializeResult | undefined {
-        throw new Error('Method not implemented.');
+        return this.initResult;
     }
     public sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Promise<R>;
     public sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params: P, token?: CancellationToken): Promise<R>;
@@ -93,8 +111,10 @@ export class MockLanguageClient extends LanguageClient {
             case 'textDocument/completion':
                 // Just return one for each line of our contents
                 return Promise.resolve(this.getDocumentCompletions());
-                break;
 
+            case 'textDocument/hover':
+                // Just return a simple hover
+                return Promise.resolve(this.getHover());
             default:
                 break;
         }
@@ -214,15 +234,21 @@ export class MockLanguageClient extends LanguageClient {
     }
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
-        changes.forEach((change: TextDocumentContentChangeEvent) => {
-            const c = change as { range: Range; rangeLength?: number; text: string };
-            if (c.range) {
-                const offset = c.range ? this.getOffset(c.range.start) : 0;
-                const before = this.contents.substr(0, offset);
-                const after = c.rangeLength ? this.contents.substr(offset + c.rangeLength) : '';
-                this.contents = `${before}${c.text}${after}`;
-            }
-        });
+        if (this.initResult.capabilities.textDocumentSync === TextDocumentSyncKind.Incremental) {
+            changes.forEach((change: TextDocumentContentChangeEvent) => {
+                const c = change as { range: Range; rangeLength?: number; text: string };
+                if (c.range) {
+                    const offset = c.range ? this.getOffset(c.range.start) : 0;
+                    const before = this.contents.substr(0, offset);
+                    const after = c.rangeLength ? this.contents.substr(offset + c.rangeLength) : '';
+                    this.contents = `${before}${c.text}${after}`;
+                }
+            });
+        } else {
+            changes.forEach((c: TextDocumentContentChangeEvent) => {
+                this.contents = c.text;
+            });
+        }
     }
 
     private getDocumentCompletions(): CompletionItem[] {
@@ -234,6 +260,12 @@ export class MockLanguageClient extends LanguageClient {
                 sortText: l
             };
         });
+    }
+
+    private getHover(): Hover {
+        return {
+            contents: [this.contents]
+        };
     }
 
     private createLines(): IntellisenseLine[] {

@@ -126,7 +126,7 @@ const mapJupyterKind: Map<string, number> = new Map<string, number>([
     ['folder', monacoCompletionItemKind.Folder],
     ['typeParameter', monacoCompletionItemKind.TypeParameter],
     ['snippet', monacoCompletionItemKind.Snippet],
-    ['<unknown>', monacoCompletionItemKind.Snippet]
+    ['<unknown>', monacoCompletionItemKind.Field]
 ]);
 
 function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): monacoEditor.IRange | undefined {
