@@ -234,15 +234,7 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const kernelJsonFile = this.cache.find((kernelPath) => {
-            const slash = this.platformService.isWindows ? '\\' : '/';
-            const startKeyword = path.join(slash, 'kernels', slash);
-            const startIndex = kernelPath.indexOf(startKeyword) + startKeyword.length;
-            const endIndex = kernelPath.indexOf(path.join(slash, 'kernel.json'));
-
-            const name = kernelPath.substring(startIndex, endIndex);
-            return name === kernelName;
-        });
+        const kernelJsonFile = this.cache.find((kernelPath) => path.basename(path.dirname(kernelPath)) === kernelName);
 
         if (kernelJsonFile) {
             const kernelJson = JSON.parse(await this.file.readFile(kernelJsonFile));
