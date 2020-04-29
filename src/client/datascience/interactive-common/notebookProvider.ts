@@ -5,13 +5,14 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { LocalZMQKernel } from '../../common/experimentGroups';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Settings, Telemetry } from '../constants';
+import { Identifiers, Settings, Telemetry } from '../constants';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -41,7 +42,8 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(
@@ -96,13 +98,18 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         // Finally create if needed
+        let resource: Resource = options.identity;
+        if (options.identity.scheme === Identifiers.HistoryPurpose) {
+            // If we have any workspaces, then use the first available workspace.
+            // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
+            // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
+            // Ideally we need to pick the resource of the corresponding Python file.
+            resource = this.workspaceService.hasWorkspaceFolders
+                ? this.workspaceService.workspaceFolders![0]!.uri
+                : undefined;
+        }
         const promise = rawKernel
-            ? this.rawNotebookProvider.createNotebook(
-                  options.identity,
-                  options.identity,
-                  options.disableUI,
-                  options.metadata
-              )
+            ? this.rawNotebookProvider.createNotebook(options.identity, resource, options.disableUI, options.metadata)
             : this.jupyterNotebookProvider.createNotebook(options);
 
         this.cacheNotebookPromise(options.identity, promise);
