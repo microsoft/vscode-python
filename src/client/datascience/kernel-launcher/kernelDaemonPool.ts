@@ -11,9 +11,9 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { KernelLauncherDaemonModule } from '../constants';
-import { IKernelDependencyService } from '../types';
+import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
 import { IPythonKernelDaemon } from './types';
 
@@ -47,20 +47,27 @@ export class KernelDaemonPool implements IAsyncDisposable {
         this.interrpeterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];
         promises.push(this.preWarmKernelDaemon(undefined));
-        if (Array.isArray(this.workspaceService.workspaceFolders)) {
-            promises.push(...this.workspaceService.workspaceFolders.map((item) => this.preWarmKernelDaemon(item)));
-        }
-        try {
-            await Promise.all(promises);
-        } catch (ex) {
-            throw ex;
-        }
+        promises.push(
+            ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
+        );
+        await Promise.all(promises);
     }
     public async dispose() {
         this.disposables.forEach((item) => item.dispose());
         await Promise.all(this.asyncDisposables.map((item) => item.dispose().catch(noop)));
     }
-    public async get(resource: Resource, pythonPath: string): Promise<IPythonKernelDaemon> {
+    public async get(
+        resource: Resource,
+        kernelSpec: IJupyterKernelSpec,
+        interpreter?: PythonInterpreter
+    ): Promise<IPythonKernelDaemon> {
+        const pythonPath = interpreter?.path || kernelSpec.argv[0];
+        // If we have environment variables in the kernel.json, then its not we support.
+        // Cuz there's no way to know before hand what kernelspec can be used, hence no way to know what envs are required.
+        if (kernelSpec.env && Object.keys(kernelSpec.env).length > 0) {
+            return this.createDaemon(resource, pythonPath);
+        }
+
         const key = this.getDaemonKey(resource, pythonPath);
         const index = this.daemonPool.findIndex((item) => item.key === key);
         try {

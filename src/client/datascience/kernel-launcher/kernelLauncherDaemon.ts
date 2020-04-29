@@ -27,33 +27,26 @@ export class PythonKernelLauncherDaemon implements IDisposable {
         resource: Resource,
         kernelSpec: IJupyterKernelSpec,
         interpreter?: PythonInterpreter
-    ): Promise<{ observableResult: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
-        const pythonPath = interpreter?.path || kernelSpec.argv[0];
-        await this.daemonPool.preWarmKernelDaemons();
-        const daemon = await this.daemonPool.get(resource, pythonPath);
-        // const daemon = await this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
-        //     daemonModule: KernelLauncherDaemonModule,
-        //     pythonPath: interpreter?.path,
-        //     daemonClass: PythonKernelDaemon,
-        //     dedicated: true,
-        //     resource
-        // });
+    ): Promise<{ observableOutput: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
+        const daemon = await this.daemonPool.get(resource, kernelSpec, interpreter);
         const args = kernelSpec.argv.slice();
-        args.shift(); // Remove executable.
-        args.shift(); // Remove `-m`.
-        const moduleName = args.shift();
-        if (!moduleName) {
-            const providedArgs = kernelSpec.argv.join(' ');
+        const modulePrefixIndex = args.findIndex((item) => item === '-m');
+        if (modulePrefixIndex === -1) {
             throw new Error(
-                `Unsupported KernelSpec file. args must be [<pythonPath>, '-m', <moduleName>, arg1, arg2, ..]. Provied ${providedArgs}`
+                `Unsupported KernelSpec file. args must be [<pythonPath>, '-m', <moduleName>, arg1, arg2, ..]. Provied ${args.join(
+                    ' '
+                )}`
             );
         }
+        const moduleName = args[modulePrefixIndex + 1];
+        const moduleArgs = args.slice(modulePrefixIndex + 2);
         const env = kernelSpec.env && Object.keys(kernelSpec.env).length > 0 ? kernelSpec.env : undefined;
-        const observableResult = await daemon.start(moduleName, args, { env });
+
+        const observableResult = await daemon.start(moduleName, moduleArgs, { env });
         if (observableResult.proc) {
             this.processesToDispose.push(observableResult.proc);
         }
-        return { observableResult, daemon };
+        return { observableOutput: observableResult, daemon };
     }
     public dispose() {
         while (this.processesToDispose.length) {
