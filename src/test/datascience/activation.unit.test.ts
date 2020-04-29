@@ -46,6 +46,7 @@ suite('Data Science - Activation', () => {
         when(jupyterInterpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
         when(contextService.activate()).thenResolve();
+        when(daemonPool.preWarmKernelDaemons()).thenResolve();
         activator = new Activation(
             instance(notebookEditorProvider),
             instance(jupyterInterpreterService),

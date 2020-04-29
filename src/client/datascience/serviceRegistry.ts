@@ -73,6 +73,7 @@ import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from './jupyter/notebookStarter';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
+import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
@@ -128,7 +129,6 @@ import {
     IStatusProvider,
     IThemeFinder
 } from './types';
-import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
