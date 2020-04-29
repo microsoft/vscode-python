@@ -4,6 +4,7 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
+import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
@@ -42,7 +43,7 @@ suite('Kernel Finder', () => {
         metadata: {},
         env: {},
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-        specFile: 'testKernel'
+        specFile: path.join('kernels', kernelName, 'kernel.json')
     };
 
     function setupFileSystem() {
@@ -52,7 +53,7 @@ suite('Kernel Finder', () => {
         fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
         fileSystem
             .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
-            .returns(() => Promise.resolve([kernel.name]));
+            .returns(() => Promise.resolve([path.join('kernels', kernel.name, 'kernel.json')]));
     }
 
     setup(() => {
@@ -222,7 +223,7 @@ suite('Kernel Finder', () => {
                 }
                 return Promise.resolve(JSON.stringify(spec));
             })
-            .verifiable(typemoq.Times.exactly(2));
+            .verifiable(typemoq.Times.once());
 
         // get the same kernel, but from cache
         const spec2 = await kernelFinder.findKernelSpec(resource, spec.name);

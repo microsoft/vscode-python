@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { wrapCancellationTokens } from '../../common/cancellation';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
 import {
@@ -69,18 +69,13 @@ export class KernelFinder implements IKernelFinder {
         let foundKernel: IJupyterKernelSpec | undefined;
 
         if (kernelName) {
-            const kernelSpecPath = this.cache.filter((kernelPath) => kernelPath.includes(kernelName));
+            let kernelSpec = await this.searchCache(kernelName);
 
-            if (kernelSpecPath[0]) {
-                try {
-                    const kernelJson = JSON.parse(await this.file.readFile(kernelSpecPath[0]));
-                    return new JupyterKernelSpec(kernelJson, kernelSpecPath[0]);
-                } catch (e) {
-                    traceError('Invalid kernel.json', e);
-                }
+            if (kernelSpec) {
+                return kernelSpec;
             }
 
-            const kernelSpec = await this.getKernelSpecFromActiveInterpreter(resource, kernelName);
+            kernelSpec = await this.getKernelSpecFromActiveInterpreter(resource, kernelName);
 
             if (kernelSpec) {
                 this.writeCache(this.cache).ignoreErrors();
@@ -191,17 +186,10 @@ export class KernelFinder implements IKernelFinder {
         const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
         const searchResults = await Promise.all(promises);
         searchResults.forEach((result) => {
-            this.cache = this.cache.concat(result);
+            this.cache.push(...result);
         });
 
-        const kernelJsonFile = this.cache.filter((kernelPath) => kernelPath.includes(kernelName));
-
-        if (kernelJsonFile[0]) {
-            const kernelJson = JSON.parse(await this.file.readFile(kernelJsonFile[0]));
-            return new JupyterKernelSpec(kernelJson, kernelJsonFile[0]);
-        }
-
-        return undefined;
+        return this.searchCache(kernelName);
     }
 
     private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
@@ -243,5 +231,24 @@ export class KernelFinder implements IKernelFinder {
             path.join(this.context.globalStoragePath, 'kernelSpecCache.json'),
             JSON.stringify(cache)
         );
+    }
+
+    private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
+        const kernelJsonFile = this.cache.find((kernelPath) => {
+            const slash = this.platformService.isWindows ? '\\' : '/';
+            const startKeyword = path.join(slash, 'kernels', slash);
+            const startIndex = kernelPath.indexOf(startKeyword) + startKeyword.length;
+            const endIndex = kernelPath.indexOf(path.join(slash, 'kernel.json'));
+
+            const name = kernelPath.substring(startIndex, endIndex);
+            return name === kernelName;
+        });
+
+        if (kernelJsonFile) {
+            const kernelJson = JSON.parse(await this.file.readFile(kernelJsonFile));
+            return new JupyterKernelSpec(kernelJson, kernelJsonFile);
+        }
+
+        return undefined;
     }
 }
