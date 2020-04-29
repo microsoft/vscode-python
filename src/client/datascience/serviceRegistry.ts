@@ -81,7 +81,6 @@ import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
-import { EnchannelJMPConnection } from './raw-kernel/enchannelJMPConnection';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
@@ -103,7 +102,6 @@ import {
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
-    IJMPConnection,
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
@@ -209,7 +207,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
-    serviceManager.add<IJMPConnection>(IJMPConnection, EnchannelJMPConnection);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);

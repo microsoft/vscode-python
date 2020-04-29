@@ -1119,29 +1119,6 @@ export type KernelSocketInformation = {
     readonly options: KernelSocketOptions;
 };
 
-// Connection info to connect to a kernel over JMP
-export interface IJMPConnectionInfo {
-    version: number;
-    iopub_port: number;
-    shell_port: number;
-    stdin_port: number;
-    control_port: number;
-    signature_scheme: string;
-    hb_port: number;
-    ip: string;
-    key: string;
-    transport: string;
-}
-
-export const IJMPConnection = Symbol('IJMPConnection');
-// A service to send and recieve messages over Jupyter messaging protocol
-export interface IJMPConnection extends IDisposable {
-    connect(connectInfo: IJMPConnectionInfo): Promise<void>;
-    sendMessage(message: KernelMessage.IMessage): void;
-    // tslint:disable-next-line: no-any
-    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void, errorHandler?: (exc: any) => void): void;
-}
-
 export enum KernelInterpreterDependencyResponse {
     ok,
     cancel
