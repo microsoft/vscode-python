@@ -9,6 +9,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
@@ -29,6 +30,8 @@ import { PipEnvService } from '../../client/interpreter/locators/services/pipEnv
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { IPipEnvServiceHelper } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import * as Telemetry from '../../client/telemetry';
+import { EventName } from '../../client/telemetry/constants';
 
 enum OS {
     Mac,
@@ -270,6 +273,15 @@ suite('Interpreters - PipEnv', () => {
                 pipenvPathSetting = 'spam-spam-pipenv-spam-spam';
                 const pipenvExe = pipEnvService.executable;
                 assert.equal(pipenvExe, 'spam-spam-pipenv-spam-spam', 'Failed to identify pipenv.exe');
+            });
+
+            test('Should send telemetry event when calling getInterpreters', async () => {
+                const sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
+
+                await pipEnvService.getInterpreters(resource);
+
+                sinon.assert.calledWith(sendTelemetryStub, EventName.PIPENV_INTERPRETER_DISCOVERY);
+                sinon.restore();
             });
         });
     });
