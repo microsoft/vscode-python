@@ -134,7 +134,7 @@ suite('Data Science - KernelSelections', () => {
         interpreterSelector = mock(InterpreterSelector);
         sessionManager = mock(JupyterSessionManager);
         kernelService = mock(KernelService);
-        kernelFinder = mock(IKernelFinder);
+        kernelFinder = mock<IKernelFinder>();
         fs = mock(FileSystem);
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
@@ -220,7 +220,45 @@ suite('Data Science - KernelSelections', () => {
         verify(sessionManager.getKernelSpecs()).once();
         assert.deepEqual(items, expectedItems);
     });
-    test('Should return a list of Local Kernels + Interpreters for local connection (excluding non-python kernels)', async () => {
+    test('Should return a list of Local Kernels + Interpreters for local raw connection (excluding non-python kernels)', async () => {
+        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
+        when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
+
+        // Quick pick must contain
+        // - kernel spec display name
+        // - selection = kernel model + kernel spec
+        // - description = last activity and # of connections.
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
+            (item) => {
+                return {
+                    label: item.display_name,
+                    detail: '<user friendly path>',
+                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+                };
+            }
+        );
+        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
+            return {
+                ...item,
+                label: item.label,
+                detail: '<user friendly path>',
+                description: '',
+                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
+            };
+        });
+        const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
+        expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
+
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
+            undefined,
+            'raw',
+            instance(sessionManager)
+        );
+
+        verify(kernelFinder.listKernelSpecs(anything())).once();
+        assert.deepEqual(items, expectedList);
+    });
+    test('Should return a list of Local Kernels + Interpreters for local jupyter connection (excluding non-python kernels)', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
