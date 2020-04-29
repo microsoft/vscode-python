@@ -58,7 +58,7 @@ suite('Data Science - Activation', () => {
             instance(executionFactory),
             [],
             instance(contextService),
-            instance(daemonPool)
+            instance(daemonPool),
             instance(tracker)
         );
         when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(interpreter);

@@ -25,7 +25,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
-        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool
+        @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool,
         @inject(INotebookAndInteractiveWindowUsageTracker)
         private readonly tracker: INotebookAndInteractiveWindowUsageTracker
     ) {}
