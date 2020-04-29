@@ -37,6 +37,11 @@ steps:
     inputs:
       versionSpec: ${{ parameters.PythonVersion }}
 
+  - bash: |
+      printenv
+    displayName: 'Show all env vars'
+    condition: eq(variables['system.debug'], 'true')
+
   # Install the a version of python that works with sqlite3 until this bug is addressed
   # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
   #
