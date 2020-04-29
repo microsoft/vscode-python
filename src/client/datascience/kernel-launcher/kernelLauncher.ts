@@ -61,7 +61,7 @@ export class KernelLauncher implements IKernelLauncher {
         const ports = await getPorts(5, { host: '127.0.0.1', port });
         // We launch restart kernels in the background, its possible other session hasn't started.
         // Ensure we do not use same ports.
-        KernelLauncher.nextFreePortToTryAndUse = Math.max(...ports);
+        KernelLauncher.nextFreePortToTryAndUse = Math.max(...ports) + 1;
 
         return {
             version: 1,
