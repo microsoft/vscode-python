@@ -8,9 +8,10 @@ declare module 'vscode-extension-telemetry' {
          * @param {string} extensionId All events will be prefixed with this event name
          * @param {string} extensionVersion Extension version to be reported with each event
          * @param {string} key The application insights key
+         * @param {boolean} firstParty Force the reporter to treat telemetry as coming from a first-party extension. This parameter will not override in the false direction.
          */
         // tslint:disable-next-line:no-empty
-        constructor(extensionId: string, extensionVersion: string, key: string);
+        constructor(extensionId: string, extensionVersion: string, key: string, firstParty?: boolean);
 
         /**
          * Sends a telemetry event

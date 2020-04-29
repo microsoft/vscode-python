@@ -70,7 +70,7 @@ function getTelemetryReporter() {
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 
 export function clearTelemetryReporter() {
