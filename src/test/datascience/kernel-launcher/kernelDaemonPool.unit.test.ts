@@ -138,6 +138,24 @@ suite('Data Science - Kernel Daemon Pool', () => {
         // Verify we created 2 more daemons.
         verify(pythonExecutionFactory.createDaemon(anything())).times(4);
     });
+    test('Pre-warming multiple times has no affect', async () => {
+        when(worksapceService.workspaceFolders).thenReturn([
+            { index: 0, name: '', uri: workspace1 },
+            { index: 0, name: '', uri: workspace2 }
+        ]);
+        await daemonPool.preWarmKernelDaemons();
+
+        // Verify we only created 2 daemons.
+        verify(pythonExecutionFactory.createDaemon(anything())).twice();
+
+        // attempting to pre-warm again should be a noop.
+        await daemonPool.preWarmKernelDaemons();
+        await daemonPool.preWarmKernelDaemons();
+        await daemonPool.preWarmKernelDaemons();
+
+        // Verify we only created 2 daemons.
+        verify(pythonExecutionFactory.createDaemon(anything())).twice();
+    });
     test('Create new daemons even when not prewarmed', async () => {
         const daemon = await daemonPool.get(workspace1, kernelSpec, interpreter1);
         assert.equal(daemon, instance(daemon1));
