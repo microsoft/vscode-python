@@ -10,8 +10,7 @@ import { IConfigurationService, IExperimentsManager, Resource } from './common/t
 import {
     getDebugpyLauncherArgs,
     getDebugpyPackagePath,
-    getPtvsdLauncherScriptArgs,
-    getPtvsdPackagePath
+    getPtvsdLauncherScriptArgs
 } from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
@@ -43,7 +42,7 @@ export interface IExtensionApi {
          * Gets the path to the debugger package used by the extension.
          * @returns {Promise<string>}
          */
-        getDebuggerPackagePath(): Promise<string>;
+        getDebuggerPackagePath(): Promise<string | undefined>;
     };
     /**
      * Return internal settings within the extension which are stored in VSCode storage
@@ -103,14 +102,14 @@ export function buildApi(
                     waitUntilDebuggerAttaches
                 });
             },
-            async getDebuggerPackagePath(): Promise<string> {
+            async getDebuggerPackagePath(): Promise<string | undefined> {
                 const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
                 if (useNewDADebugger) {
                     return getDebugpyPackagePath();
                 }
 
-                return getPtvsdPackagePath();
+                return undefined;
             }
         },
         settings: {
