@@ -30,6 +30,11 @@ export class KernelDaemonPool implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     private daemonPool: IKernelDaemonInfo[] = [];
     private initialized?: boolean;
+
+    public get daemons() {
+        return this.daemonPool.length;
+    }
+
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IEnvironmentVariablesProvider) private readonly envVars: IEnvironmentVariablesProvider,
@@ -86,6 +91,7 @@ export class KernelDaemonPool implements IDisposable {
             }
         }
     }
+
     private getDaemonKey(resource: Resource, pythonPath: string): string {
         return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}#${pythonPath}`;
     }
