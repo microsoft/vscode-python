@@ -78,7 +78,10 @@ export class KernelDaemonPool implements IAsyncDisposable {
             }
             return this.createDaemon(resource, pythonPath);
         } finally {
-            this.preWarmKernelDaemon(resource).ignoreErrors();
+            // If we removed a daemon from the pool, rehydrate it.
+            if (index >= 0) {
+                this.preWarmKernelDaemon(resource).ignoreErrors();
+            }
         }
     }
     private getDaemonKey(resource: Resource, pythonPath: string): string {
