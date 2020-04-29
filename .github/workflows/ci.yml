@@ -398,6 +398,11 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       # Extract the artifact from its download folder (./${{env.ARTIFACT_NAME_VSIX}}) to the repo root,
       # then delete the download folder and compile the source code.
       - name: Prepare for smoke tests
@@ -405,6 +410,11 @@ jobs:
           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
           rm -r ${{env.ARTIFACT_NAME_VSIX}}
           npx tsc -p ./
+        shell: bash
+
+      - name: Show all env vars
+        run: |
+          printenv
         shell: bash
 
       - name: Run smoke tests
