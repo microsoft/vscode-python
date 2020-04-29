@@ -8,7 +8,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
@@ -26,9 +26,8 @@ type IKernelDaemonInfo = {
 };
 
 @injectable()
-export class KernelDaemonPool implements IAsyncDisposable {
+export class KernelDaemonPool implements IDisposable {
     private readonly disposables: IDisposable[] = [];
-    private readonly asyncDisposables: IAsyncDisposable[] = [];
     private daemonPool: IKernelDaemonInfo[] = [];
     private initialized?: boolean;
     constructor(
@@ -47,15 +46,17 @@ export class KernelDaemonPool implements IAsyncDisposable {
         this.envVars.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange.bind(this));
         this.interrpeterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
         const promises: Promise<void>[] = [];
-        promises.push(this.preWarmKernelDaemon(undefined));
-        promises.push(
-            ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
-        );
+        if (this.workspaceService.hasWorkspaceFolders) {
+            promises.push(
+                ...(this.workspaceService.workspaceFolders || []).map((item) => this.preWarmKernelDaemon(item.uri))
+            );
+        } else {
+            promises.push(this.preWarmKernelDaemon(undefined));
+        }
         await Promise.all(promises);
     }
-    public async dispose() {
+    public dispose() {
         this.disposables.forEach((item) => item.dispose());
-        await Promise.all(this.asyncDisposables.map((item) => item.dispose().catch(noop)));
     }
     public async get(
         resource: Resource,
@@ -89,13 +90,15 @@ export class KernelDaemonPool implements IAsyncDisposable {
         return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}#${pythonPath}`;
     }
     private createDaemon(resource: Resource, pythonPath: string) {
-        return this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
+        const daemon = this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
             daemonModule: KernelLauncherDaemonModule,
             pythonPath,
             daemonClass: PythonKernelDaemon,
             dedicated: true,
             resource
         });
+        daemon.then((d) => this.disposables.push(d)).catch(noop);
+        return daemon;
     }
     private async onDidEnvironmentVariablesChange(affectedResoruce: Resource) {
         const workspaceFolderIdentifier = this.workspaceService.getWorkspaceFolderIdentifier(affectedResoruce);

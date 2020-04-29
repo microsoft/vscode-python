@@ -86,6 +86,7 @@ class PythonDaemon(JupyterDaemon):
         def prewarm_kernel():
             cmd = [sys.executable, isolated_runner, kernel_prewarm_starter]
             self._start_kernel_observable_in_background(cmd)
+            self.log.info("Kernel launched, with PID as a daemon %s", self.kernel.pid)
 
         return self._execute_and_capture_output(prewarm_kernel)
 
@@ -94,7 +95,9 @@ class PythonDaemon(JupyterDaemon):
         """Starts the pre-warmed kernel process.
         """
         self.log.info(
-            "Start pre-warmed Kernel in DS Kernel Launcher Daemon with args %s", args,
+            "Start pre-warmed Kernel in DS Kernel Launcher Daemon %s with args %s",
+            self.kernel.pid,
+            args,
         )
 
         def start_kernel():

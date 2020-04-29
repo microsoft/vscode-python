@@ -156,6 +156,26 @@ suite('Data Science - Kernel Daemon Pool', () => {
         // Verify we only created 2 daemons.
         verify(pythonExecutionFactory.createDaemon(anything())).twice();
     });
+    test('Disposing daemonpool should kill all daemons in the pool', async () => {
+        when(worksapceService.workspaceFolders).thenReturn([
+            { index: 0, name: '', uri: workspace1 },
+            { index: 0, name: '', uri: workspace2 }
+        ]);
+        await daemonPool.preWarmKernelDaemons();
+
+        // Verify we only created 2 daemons.
+        verify(pythonExecutionFactory.createDaemon(anything())).twice();
+
+        // Confirm daemons have been craeted.
+        verify(daemon1.preWarm()).once();
+        verify(daemon2.preWarm()).once();
+
+        daemonPool.dispose();
+
+        // Confirm daemons have been disposed.
+        verify(daemon1.dispose()).once();
+        verify(daemon2.dispose()).once();
+    });
     test('Create new daemons even when not prewarmed', async () => {
         const daemon = await daemonPool.get(workspace1, kernelSpec, interpreter1);
         assert.equal(daemon, instance(daemon1));
