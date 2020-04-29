@@ -17,16 +17,7 @@ import {
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
-import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
-import { InterpreterSecurityStorage } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityStorage';
-import {
-    IInterpreterEvaluation,
-    IInterpreterSecurityService,
-    IInterpreterSecurityStorage
-} from '../../client/interpreter/autoSelection/types';
-import { ICondaService, IInterpreterHelper } from '../../client/interpreter/contracts';
-import { InterpreterHelper } from '../../client/interpreter/helpers';
+import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -95,22 +86,13 @@ suite('Variable Extraction', () => {
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
-        ioc.serviceManager.addSingleton<IInterpreterSecurityStorage>(
-            IInterpreterSecurityStorage,
-            InterpreterSecurityStorage
-        );
-        ioc.serviceManager.addSingleton<IInterpreterSecurityService>(
-            IInterpreterSecurityService,
-            InterpreterSecurityService
-        );
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.registerMockInterpreterTypes();
 
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IInterpreterEvaluation>(IInterpreterEvaluation, InterpreterEvaluation);
-        ioc.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
     }
     function createPythonExecGetter(workspaceRoot: string): () => Promise<IPythonExecutionService> {
         return async () => {
