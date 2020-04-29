@@ -190,11 +190,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
 
     private get textDocumentSyncKind(): vscodeLanguageClient.TextDocumentSyncKind {
         const languageClient = this.getLanguageClient();
-        if (
-            languageClient &&
-            languageClient.initializeResult &&
-            languageClient.initializeResult.capabilities.textDocumentSync !== undefined
-        ) {
+        if (languageClient?.initializeResult?.capabilities?.textDocumentSync) {
             const syncOptions = languageClient.initializeResult.capabilities.textDocumentSync;
             const syncKind =
                 syncOptions !== undefined && syncOptions.hasOwnProperty('change')
