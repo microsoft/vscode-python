@@ -255,7 +255,6 @@ suite('Data Science - KernelSelections', () => {
             instance(sessionManager)
         );
 
-        verify(kernelFinder.listKernelSpecs(anything())).once();
         assert.deepEqual(items, expectedList);
     });
     test('Should return a list of Local Kernels + Interpreters for local jupyter connection (excluding non-python kernels)', async () => {
