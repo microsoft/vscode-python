@@ -194,14 +194,14 @@ export class KernelFinder implements IKernelFinder {
             this.cache = this.cache.concat(result);
         });
 
-        try {
-            const kernelJsonFile = this.cache.filter((kernelPath) => kernelPath.includes(kernelName));
+        const kernelJsonFile = this.cache.filter((kernelPath) => kernelPath.includes(kernelName));
+
+        if (kernelJsonFile[0]) {
             const kernelJson = JSON.parse(await this.file.readFile(kernelJsonFile[0]));
             return new JupyterKernelSpec(kernelJson, kernelJsonFile[0]);
-        } catch (e) {
-            traceError('Invalid kernel.json', e);
-            return undefined;
         }
+
+        return undefined;
     }
 
     private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
@@ -229,8 +229,9 @@ export class KernelFinder implements IKernelFinder {
 
     private async readCache(): Promise<string[]> {
         try {
-            const x = await this.file.readFile(path.join(this.context.globalStoragePath, 'kernelSpecCache.json'));
-            return JSON.parse(x) as string[];
+            return JSON.parse(
+                await this.file.readFile(path.join(this.context.globalStoragePath, 'kernelSpecCache.json'))
+            ) as string[];
         } catch {
             traceInfo('No kernelSpec cache found.');
             return [];
