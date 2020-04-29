@@ -80,6 +80,25 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         return this.postEmitter.event;
     }
 
+    // tslint:disable-next-line: no-any
+    public onMessage(message: string, payload?: any): void {
+        switch (message) {
+            case InteractiveWindowMessages.AddedSysInfo:
+                if (payload && payload.type) {
+                    const reason = payload.type as SysInfoReason;
+                    if (reason !== SysInfoReason.Interrupt) {
+                        this.hashes.clear();
+                        this.executionCount = 0;
+                        this.updateEventEmitter.fire();
+                    }
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
     public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()]
             .map((e) => {

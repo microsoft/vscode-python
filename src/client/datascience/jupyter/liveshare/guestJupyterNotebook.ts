@@ -19,6 +19,7 @@ import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
+    IConnection,
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
@@ -42,6 +43,10 @@ export class GuestJupyterNotebook
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
         }
         return this._jupyterLab!;
+    }
+
+    public get connection(): IConnection {
+        throw new Error('Not Implemented');
     }
 
     public get identity(): Uri {

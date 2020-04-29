@@ -11,6 +11,7 @@ import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types'
 import {
     ICell,
     ICellHashProvider,
+    IConnection,
     IGatherProvider,
     IJupyterKernelSpec,
     INotebook,

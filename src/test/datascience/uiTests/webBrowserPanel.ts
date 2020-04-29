@@ -184,6 +184,9 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         }
         return localResource;
     }
+    public asWebviewUri(localResource: Uri): Uri {
+        return localResource;
+    }
     public setTitle(newTitle: string): void {
         if (this.panel) {
             this.panel.title = newTitle;
