@@ -23,6 +23,7 @@ import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
+import { KernelService } from '../../jupyter/kernels/kernelService';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
@@ -58,6 +59,7 @@ export class HostRawNotebookProvider
         private kernelLauncher: IKernelLauncher,
         private kernelFinder: IKernelFinder,
         private kernelSelector: KernelSelector,
+        private kernelService: KernelService,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel
     ) {
@@ -117,7 +119,10 @@ export class HostRawNotebookProvider
                 cancelToken
             );
 
-            await rawSession.connect(kernelSpec, launchTimeout, cancelToken);
+            // Locate the interpreter that matches our kernelspec
+            const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec);
+
+            await rawSession.connect(kernelSpec, launchTimeout, interpreter, cancelToken);
 
             // Get the execution info for our notebook
             const info = await this.getExecutionInfo(kernelSpec);
