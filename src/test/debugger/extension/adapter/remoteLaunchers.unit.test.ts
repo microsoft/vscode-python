@@ -103,14 +103,9 @@ suite('External debugpy Debugger Launcher', () => {
 
 suite('Path To Debugger Package', () => {
     const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
-    test('Path to ptvsd debugger package', () => {
-        const actual = launchers.getPtvsdPackagePath();
-        const expected = path.join(pathToPythonLibDir, 'old_ptvsd', 'ptvsd').fileToCommandArgument();
-        expect(actual).to.be.deep.equal(expected);
-    });
     test('Path to debugpy debugger package', () => {
         const actual = launchers.getDebugpyPackagePath();
-        const expected = path.join(pathToPythonLibDir, 'debugpy', 'no_wheels', 'debugpy').fileToCommandArgument();
+        const expected = path.join(pathToPythonLibDir, 'debugpy', 'no_wheels', 'debugpy');
         expect(actual).to.be.deep.equal(expected);
     });
 });

@@ -155,10 +155,7 @@ suite('Extension API', () => {
             instance(serviceContainer)
         ).debug.getDebuggerPackagePath();
 
-        const expected = path
-            .join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd', 'ptvsd')
-            .fileToCommandArgument();
-        expect(pkgPath).to.be.deep.equal(expected);
+        assert.isUndefined(pkgPath);
     });
 
     test('Test debugger package path when in experiment', async () => {
@@ -170,9 +167,15 @@ suite('Extension API', () => {
             instance(serviceContainer)
         ).debug.getDebuggerPackagePath();
 
-        const expected = path
-            .join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels', 'debugpy')
-            .fileToCommandArgument();
-        expect(pkgPath).to.be.deep.equal(expected);
+        const expected = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'lib',
+            'python',
+            'debugpy',
+            'no_wheels',
+            'debugpy'
+        );
+        assert.equal(pkgPath, expected);
     });
 });
