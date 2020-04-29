@@ -16,7 +16,11 @@ import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeE
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
-import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import {
+    INotebookAndInteractiveWindowUsageTracker,
+    INotebookEditor,
+    INotebookEditorProvider
+} from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
@@ -36,6 +40,7 @@ suite('Data Science - Activation', () => {
         fakeTimer = new FakeClock();
         openedEventEmitter = new EventEmitter<INotebookEditor>();
         interpreterEventEmitter = new EventEmitter<PythonInterpreter>();
+        const tracker = mock<INotebookAndInteractiveWindowUsageTracker>();
 
         notebookEditorProvider = mock(NativeEditorProvider);
         jupyterInterpreterService = mock(JupyterInterpreterService);
@@ -54,6 +59,7 @@ suite('Data Science - Activation', () => {
             [],
             instance(contextService),
             instance(daemonPool)
+            instance(tracker)
         );
         when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(interpreter);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(interpreter);

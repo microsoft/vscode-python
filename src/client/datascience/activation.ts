@@ -14,7 +14,7 @@ import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
-import { INotebookEditor, INotebookEditorProvider } from './types';
+import { INotebookAndInteractiveWindowUsageTracker, INotebookEditor, INotebookEditorProvider } from './types';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
@@ -26,12 +26,15 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool
+        @inject(INotebookAndInteractiveWindowUsageTracker)
+        private readonly tracker: INotebookAndInteractiveWindowUsageTracker
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         this.contextService.activate().ignoreErrors();
         this.daemonPool.preWarmKernelDaemons().ignoreErrors();
+        this.tracker.startTracking();
     }
 
     private onDidOpenNotebookEditor(_: INotebookEditor) {
