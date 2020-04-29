@@ -323,14 +323,13 @@ export function convertStringsToSuggestions(
     }
 
     return strings.map((s: string, i: number) => {
-        return ({
+        return {
             label: s,
             insertText: s,
             sortText: s,
             kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
             range
-            // tslint:disable-next-line: no-any
-        } as any) as monacoEditor.languages.CompletionItem;
+        };
     });
 }
 
