@@ -15,7 +15,7 @@ import { ActiveEditorContextService } from '../../client/datascience/context/act
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
+import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
@@ -46,12 +46,12 @@ suite('Data Science - Activation', () => {
         jupyterInterpreterService = mock(JupyterInterpreterService);
         executionFactory = mock(PythonExecutionFactory);
         contextService = mock(ActiveEditorContextService);
-        const daemonPool = mock(KernelDaemonPool);
+        const daemonPool = mock(KernelDaemonPreWarmer);
         when(notebookEditorProvider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
         when(jupyterInterpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
         when(contextService.activate()).thenResolve();
-        when(daemonPool.preWarmKernelDaemons()).thenResolve();
+        when(daemonPool.activate(anything())).thenResolve();
         activator = new Activation(
             instance(notebookEditorProvider),
             instance(jupyterInterpreterService),
