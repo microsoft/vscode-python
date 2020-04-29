@@ -162,12 +162,10 @@ export class KernelDaemonPool implements IDisposable {
         // Go through all interpreters for each workspace.
         // If we have a daemon with an interpreter thats not the same as the current interpreter for that workspace
         // then kill that daemon, as its no longer valid.
-        const resourcesForWhichKernelsWereKilled = new Map<string, Resource>();
         this.daemonPool = this.daemonPool.filter((item) => {
             const interpreterForWorkspace = currentInterpreterInEachWorksapce.get(item.key);
             if (!interpreterForWorkspace || !this.fs.arePathsSame(interpreterForWorkspace, item.interpreterPath)) {
                 item.daemon.then((d) => d.dispose()).catch(noop);
-                resourcesForWhichKernelsWereKilled.set(item.workspaceFolderIdentifier, item.workspaceResource);
                 return false;
             }
 
