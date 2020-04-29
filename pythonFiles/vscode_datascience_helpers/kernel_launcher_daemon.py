@@ -108,8 +108,8 @@ class PythonDaemon(JupyterDaemon):
 
         exit_code = self.kernel.poll()
         std_err = self.kernel.stderr.read()
-        if std_err:
-            std_err = std_err.decode()
+        if std_err is not None:
+            std_err = std_err.decode("utf-8")
         self.log.warn("Kernel has exited with exit code %s, %s", exit_code, std_err)
         sys.stdout.flush()
         sys.stderr.flush()
@@ -162,6 +162,11 @@ class PythonDaemon(JupyterDaemon):
         threading.Thread(
             target=self._monitor_kernel, daemon=True, name="kerne_monitor"
         ).start()
+
+        # We could wait for 0.5-1s to ensure kernel doesn't die, however that will not work.
+        # On windows, launching a conda process can take 4s, hence just spinning up a process takes 4s
+        # and then python will attempt to run the kernel module, at which point it could fail.
+        # Meaning there's no way to know it successfully launched the kernel without trying to connect to it.
 
     def signal_kernel(self, signum):
         """Sends a signal to the process group of the kernel (this

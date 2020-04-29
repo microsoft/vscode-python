@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
-import { Observable } from 'rxjs';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
@@ -13,11 +12,13 @@ import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
-import { IJMPConnection, IJupyterKernelSpec } from '../../client/datascience/types';
+import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
+import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { PYTHON_PATH, sleep, waitForCondition } from '../common';
+import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockKernelFinder } from './mockKernelFinder';
+import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 suite('DataScience - Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
@@ -34,10 +35,10 @@ suite('DataScience - Kernel Launcher', () => {
         const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         kernelLauncher = new KernelLauncher(executionFactory, processServiceFactory, file);
-
+        await ioc.activate();
         pythonInterpreter = await ioc.getJupyterCapableInterpreter();
         kernelSpec = {
-            argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'new kernel',
             language: 'python',
             name: 'newkernel',
@@ -51,96 +52,32 @@ suite('DataScience - Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
+            let exitExpected = false;
+            const deferred = createDeferred<boolean>();
             const kernel = await kernelLauncher.launch(kernelSpec, undefined);
-            const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
+            kernel.exited(() => {
+                if (exitExpected) {
+                    deferred.resolve(true);
+                } else {
+                    deferred.reject(new Error('Kernel exited prematurely'));
+                }
+            });
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
             // It should not exit.
             await assert.isRejected(
-                waitForCondition(() => exited, 5_000, 'Timeout'),
+                waitForCondition(() => deferred.promise, 2_000, 'Timeout'),
                 'Timeout'
             );
 
             // Upon disposing, we should get an exit event within 100ms or less.
             // If this happens, then we know a process existed.
+            exitExpected = true;
             await kernel.dispose();
-            assert.isRejected(
-                waitForCondition(() => exited, 100, 'Timeout'),
-                'Timeout'
-            );
+            await deferred.promise;
         }
     }).timeout(10_000);
-
-    function createExecutionMessage(code: string, sessionId: string): KernelMessage.IExecuteRequestMsg {
-        return {
-            channel: 'shell',
-            content: {
-                code,
-                silent: false,
-                store_history: false
-            },
-            header: {
-                date: Date.now().toString(),
-                msg_id: uuid(),
-                msg_type: 'execute_request',
-                session: sessionId,
-                username: 'user',
-                version: '5.1'
-            },
-            parent_header: {},
-            metadata: {}
-        };
-    }
-
-    function sendMessage(
-        enchannelConnection: IJMPConnection,
-        messageObservable: Observable<KernelMessage.IMessage>,
-        message: KernelMessage.IMessage<KernelMessage.MessageType>
-    ): Promise<KernelMessage.IMessage<KernelMessage.MessageType>[]> {
-        const waiter = createDeferred<KernelMessage.IMessage<KernelMessage.MessageType>[]>();
-        const replies: KernelMessage.IMessage<KernelMessage.MessageType>[] = [];
-        let expectedReplyType = 'status';
-        switch (message.header.msg_type) {
-            case 'shutdown_request':
-                expectedReplyType = 'shutdown_reply';
-                break;
-
-            case 'execute_request':
-                expectedReplyType = 'execute_reply';
-                break;
-
-            case 'inspect_request':
-                expectedReplyType = 'inspect_reply';
-                break;
-            default:
-                break;
-        }
-        let foundReply = false;
-        let foundIdle = false;
-        const subscr = messageObservable.subscribe((m) => {
-            replies.push(m);
-            if (m.header.msg_type === 'status') {
-                // tslint:disable-next-line: no-any
-                foundIdle = (m.content as any).execution_state === 'idle';
-            } else if (m.header.msg_type === expectedReplyType) {
-                foundReply = true;
-            }
-
-            if (m.header.msg_type === 'shutdown_reply') {
-                // Special case, status may never come after this.
-                waiter.resolve(replies);
-            }
-            if (!waiter.resolved && foundReply && foundIdle) {
-                waiter.resolve(replies);
-            }
-        });
-        enchannelConnection.sendMessage(message);
-        return waiter.promise.then((m) => {
-            subscr.unsubscribe();
-            return m;
-        });
-    }
 
     test('Launch with environment', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING || !pythonInterpreter) {
@@ -162,26 +99,12 @@ suite('DataScience - Kernel Launcher', () => {
             const kernel = await kernelLauncher.launch(spec, undefined);
             const exited = new Promise<boolean>((resolve) => kernel.exited(() => resolve(true)));
 
-            // It should not exit.
-            await assert.isRejected(
-                waitForCondition(() => exited, 5_000, 'Timeout'),
-                'Timeout'
-            );
-
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
             // Send a request to print out the env vars
-            const sessionId = uuid();
-            const enchannelConnection = ioc.get<IJMPConnection>(IJMPConnection);
-            const messageObservable = new Observable<KernelMessage.IMessage>((subscriber) => {
-                enchannelConnection.subscribe(subscriber.next.bind(subscriber));
-            });
-            await enchannelConnection.connect(kernel.connection);
-            const result = await sendMessage(
-                enchannelConnection,
-                messageObservable,
-                createExecutionMessage('import os\nprint(os.getenv("TEST_VAR"))', sessionId)
-            );
+            const rawKernel = createRawKernel(kernel, uuid());
+
+            const result = await requestExecute(rawKernel, 'import os\nprint(os.getenv("TEST_VAR"))');
             assert.ok(result, 'No result returned');
             // Should have a stream output message
             const output = result.find((r) => r.header.msg_type === 'stream') as KernelMessage.IStreamMsg;

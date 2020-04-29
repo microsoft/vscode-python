@@ -598,7 +598,10 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonInterpreter | undefined {
-        return this._executionInfo.interpreter;
+        return (
+            this._executionInfo.interpreter ||
+            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonInterpreter)
+        );
     }
 
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
@@ -616,7 +619,7 @@ export class JupyterNotebookBase implements INotebook {
             this.ranInitialSetup = false;
 
             // Change the kernel on the session
-            await this.session.changeKernel(spec, timeoutMS);
+            await this.session.changeKernel(spec, timeoutMS, interpreter);
 
             // Change our own kernel spec
             // Only after session was successfully created.

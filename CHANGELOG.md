@@ -1,6 +1,81 @@
 # Changelog
 
-## 2020.4.0-rc (9 April 2020)
+## 2020.4.1 (27 April 2020)
+
+### Fixes
+
+1. Use node FS APIs when searching for python. This is a temporary change until VSC FS APIs are fixed.
+   ([#10850](https://github.com/Microsoft/vscode-python/issues/10850))
+1. Show unhandled widget messages in the jupyter output window.
+   ([#11239](https://github.com/Microsoft/vscode-python/issues/11239))
+1. Warn when using a version of the widget `qgrid` greater than `1.1.1` with the recommendation to downgrade to `1.1.1`.
+   ([#11245](https://github.com/Microsoft/vscode-python/issues/11245))
+1. Allow user modules import when discovering tests.
+   ([#11264](https://github.com/Microsoft/vscode-python/issues/11264))
+1. Fix issue where downloading ipywidgets from the CDN might be busy.
+   ([#11274](https://github.com/Microsoft/vscode-python/issues/11274))
+1. Error: Timeout is shown after running any widget more than once.
+   ([#11334](https://github.com/Microsoft/vscode-python/issues/11334))
+1. Change "python.dataScience.runStartupCommands" commands to be a global setting, not a workspace setting.
+   ([#11352](https://github.com/Microsoft/vscode-python/issues/11352))
+1. Closing the interactive window shuts down other active notebook sessions.
+   ([#11404](https://github.com/Microsoft/vscode-python/issues/11404))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.4.0 (20 April 2020)
 
 ### Enhancements
 
@@ -33,6 +108,20 @@
    ([#11021](https://github.com/Microsoft/vscode-python/issues/11021))
 1. Hide "untrusted" interpreters from 'Select interpreter' dropdown list when in DeprecatePythonPath Experiment.
    ([#11046](https://github.com/Microsoft/vscode-python/issues/11046))
+1. Make spacing of icons on notebook toolbars match spacing on other VS code toolbars.
+   ([#10464](https://github.com/Microsoft/vscode-python/issues/10464))
+1. Make jupyter server status centered in the UI and use the same font as the rest of VS code.
+   ([#10465](https://github.com/Microsoft/vscode-python/issues/10465))
+1. Performa validation of interpreter only when a Notebook is opened instead of when extension activates.
+   ([#10893](https://github.com/Microsoft/vscode-python/issues/10893))
+1. Scrolling in cells doesn't happen on new line.
+   ([#10952](https://github.com/Microsoft/vscode-python/issues/10952))
+1. Ensure images in workspace folder are supported within markdown cells in a `Notebook`.
+   ([#11040](https://github.com/Microsoft/vscode-python/issues/11040))
+1. Make sure ipywidgets have a white background so they display in dark themes.
+   ([#11060](https://github.com/Microsoft/vscode-python/issues/11060))
+1. Arrowing down through cells put the cursor in the wrong spot.
+   ([#11094](https://github.com/Microsoft/vscode-python/issues/11094))
 
 ### Fixes
 
@@ -80,6 +169,16 @@
    ([#10953](https://github.com/Microsoft/vscode-python/issues/10953))
 1. Jupyter notebooks and interactive window crashing on startup.
    ([#11035](https://github.com/Microsoft/vscode-python/issues/11035))
+1. Fix perf problems after running the interactive window for an extended period of time.
+   ([#10971](https://github.com/Microsoft/vscode-python/issues/10971))
+1. Fix problem with opening a notebook in jupyter after saving in VS code.
+   ([#11151](https://github.com/Microsoft/vscode-python/issues/11151))
+1. Fix CTRL+Z and Z for undo on notebooks.
+   ([#11160](https://github.com/Microsoft/vscode-python/issues/11160))
+1. Fix saving to PDF for viewed plots.
+   ([#11157](https://github.com/Microsoft/vscode-python/issues/11157))
+1. Fix scrolling in a notebook whenever resizing or opening.
+   ([#11238](https://github.com/Microsoft/vscode-python/issues/11238))
 
 ### Code Health
 

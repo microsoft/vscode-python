@@ -65,6 +65,7 @@ import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerWrapper } from './jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { KernelDependencyService } from './jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
 import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { KernelService } from './jupyter/kernels/kernelService';
@@ -75,11 +76,11 @@ import { JupyterServerSelector } from './jupyter/serverSelector';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
+import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
-import { EnchannelJMPConnection } from './raw-kernel/enchannelJMPConnection';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
@@ -101,7 +102,6 @@ import {
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
-    IJMPConnection,
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
@@ -112,6 +112,8 @@ import {
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
     IJupyterVariables,
+    IKernelDependencyService,
+    INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
@@ -205,10 +207,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
-    serviceManager.add<IJMPConnection>(IJMPConnection, EnchannelJMPConnection);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
     serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
     serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
+    serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
+    serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
 
     registerGatherTypes(serviceManager);
 }

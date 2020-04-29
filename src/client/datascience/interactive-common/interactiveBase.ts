@@ -1058,6 +1058,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({ identity: identity.resource, metadata })
                     : undefined;
+                if (notebook) {
+                    const executionActivation = { ...identity, owningResource: resource };
+                    this.postMessageToListeners(
+                        InteractiveWindowMessages.NotebookExecutionActivated,
+                        executionActivation
+                    );
+                }
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
@@ -1131,11 +1138,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // If that works notify the UI and listen to status changes.
             if (this._notebook && this._notebook.identity) {
-                this.postMessage(
-                    InteractiveWindowMessages.NotebookExecutionActivated,
-                    this._notebook.identity.toString()
-                ).ignoreErrors();
-
                 return this.listenToNotebookEvents(this._notebook);
             }
         }

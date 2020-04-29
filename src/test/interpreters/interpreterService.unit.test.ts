@@ -178,7 +178,7 @@ suite('Interpreters service', () => {
 
             test(`get Interpreters uses interpreter locactors to get interpreters ${resourceTestSuffix}`, async () => {
                 locator
-                    .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                    .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve([]))
                     .verifiable(TypeMoq.Times.once());
 
@@ -343,7 +343,7 @@ suite('Interpreters service', () => {
                 const pythonPath = 'SOME VALUE';
                 const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
                 locator
-                    .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                    .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve([]))
                     .verifiable(TypeMoq.Times.once());
                 helper

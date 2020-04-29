@@ -9,6 +9,7 @@ import { IDisposable } from 'monaco-editor';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { KernelLauncherDaemonModule } from '../constants';
 import { IJupyterKernelSpec } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';
@@ -25,12 +26,12 @@ export class PythonKernelLauncherDaemon implements IDisposable {
     constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) {}
     public async launch(
         resource: Resource,
-        kernelSpec: IJupyterKernelSpec
+        kernelSpec: IJupyterKernelSpec,
+        interpreter?: PythonInterpreter
     ): Promise<{ observableResult: ObservableExecutionResult<string>; daemon: IPythonKernelDaemon }> {
-        const pythonPath = kernelSpec.argv[0];
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonKernelDaemon>({
             daemonModule: KernelLauncherDaemonModule,
-            pythonPath: pythonPath,
+            pythonPath: interpreter?.path,
             daemonClass: PythonKernelDaemon,
             dedicated: true,
             resource

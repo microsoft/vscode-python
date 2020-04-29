@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IInstaller, Product, Resource } from '../../../common/types';
+import { Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -18,7 +18,7 @@ import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetr
 import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager, IKernelDependencyService } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -57,7 +57,7 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInstaller) private readonly installer: IInstaller
+        @inject(IKernelDependencyService) private readonly kernelDepdencyService: IKernelDependencyService
     ) {}
 
     /**
@@ -378,7 +378,7 @@ export class KernelSelector {
     ): Promise<KernelSpecInterpreter> {
         let kernelSpec: IJupyterKernelSpec | undefined;
 
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
+        if (await this.kernelDepdencyService.areDependenciesInstalled(interpreter, cancelToken)) {
             // Find the kernel associated with this interpter.
             kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
 

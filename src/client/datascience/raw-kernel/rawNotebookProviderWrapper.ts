@@ -19,6 +19,7 @@ import {
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
+import { KernelService } from '../jupyter/kernels/kernelService';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelFinder, IKernelLauncher } from '../kernel-launcher/types';
@@ -43,6 +44,7 @@ type RawNotebookProviderClassType = {
         kernelLauncher: IKernelLauncher,
         kernelFinder: IKernelFinder,
         kernelSelector: KernelSelector,
+        kernelService: KernelService,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel
     ): IRawNotebookProviderInterface;
@@ -67,6 +69,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(IKernelFinder) kernelFinder: IKernelFinder,
         @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(KernelService) kernelService: KernelService,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel
     ) {
@@ -87,6 +90,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelLauncher,
             kernelFinder,
             kernelSelector,
+            kernelService,
             progressReporter,
             outputChannel
         );

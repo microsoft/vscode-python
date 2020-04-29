@@ -176,18 +176,15 @@ export namespace InterpreterQuickPickList {
         'Current: {0}'
     );
     export const enterPath = {
-        detail: localize(
-            'InterpreterQuickPickList.enterPath.detail',
-            'Enter or browse the path to an existing Python Interpreter'
-        ),
-        label: localize('InterpreterQuickPickList.enterPath.label', 'Enter Interpreter Path...'),
-        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python Interpreter.')
+        detail: localize('InterpreterQuickPickList.enterPath.detail', 'Enter path or find an existing interpreter'),
+        label: localize('InterpreterQuickPickList.enterPath.label', 'Enter interpreter path...'),
+        placeholder: localize('InterpreterQuickPickList.enterPath.placeholder', 'Enter path to a Python interpreter.')
     };
     export const browsePath = {
-        label: localize('InterpreterQuickPickList.browsePath.label', 'Browse...'),
+        label: localize('InterpreterQuickPickList.browsePath.label', 'Find...'),
         detail: localize(
             'InterpreterQuickPickList.browsePath.detail',
-            'Browse your file system to select a Python Interpreter.'
+            'Browse your file system to find a Python interpreter.'
         ),
         openButtonLabel: localize('python.command.python.setInterpreter.title', 'Select Interpreter')
     };
@@ -349,6 +346,10 @@ export namespace DataScience {
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
         'Data Science library {1} is not installed in interpreter {0}.'
+    );
+    export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
+        'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
+        'Data Science library {1} is not installed in interpreter {0}. Install?'
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
@@ -920,7 +921,6 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const ipykernelNotInstalled = localize('DataScience.ipykernelNotInstalled', 'Ipykernel is not installed.');
 }
 
 export namespace DebugConfigStrings {
