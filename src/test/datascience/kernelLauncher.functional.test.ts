@@ -15,7 +15,7 @@ import { IKernelConnection, IKernelFinder } from '../../client/datascience/kerne
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { PYTHON_PATH, sleep, waitForCondition } from '../common';
+import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockKernelFinder } from './mockKernelFinder';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
