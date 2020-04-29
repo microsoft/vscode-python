@@ -30,7 +30,7 @@ import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryWhenDone } from '../../../telemetry';
-import { Settings, Telemetry } from '../../constants';
+import { Identifiers, Settings, Telemetry } from '../../constants';
 import { ICell, IInteractiveWindowListener, INotebook, INotebookCompletion, INotebookProvider } from '../../types';
 import {
     ICancelIntellisenseRequest,
@@ -719,7 +719,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private setIdentity(identity: INotebookIdentity) {
         this.notebookIdentity = identity.resource;
-        this.potentialResource = identity.resource.scheme === 'file' ? identity.resource : undefined;
+        this.potentialResource =
+            identity.resource.scheme !== Identifiers.HistoryPurpose ? identity.resource : undefined;
         this.notebookType = identity.type;
     }
 
