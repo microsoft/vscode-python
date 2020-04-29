@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import * as Events from 'events';
 import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
@@ -21,28 +20,6 @@ function formConnectionString(config: IKernelConnection, channel: string) {
     }
     return `${config.transport}://${config.ip}${portDelimiter}${port}`;
 }
-
-class SocketEventEmitter extends Events.EventEmitter {
-    constructor(socket: Dealer | Subscriber) {
-        super();
-        this.waitForReceive(socket);
-    }
-
-    private waitForReceive(socket: Dealer | Subscriber) {
-        if (!socket.closed) {
-            socket
-                .receive()
-                .then((b) => {
-                    this.emit('message', b);
-                    setTimeout(this.waitForReceive.bind(this, socket), 0);
-                })
-                .catch((exc) => {
-                    traceError('Exception communicating with kernel:', exc);
-                });
-        }
-    }
-}
-
 interface IChannels {
     shell: Dealer;
     control: Dealer;
@@ -65,7 +42,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private msgChain: Promise<any> = Promise.resolve();
     private sendChain: Promise<any> = Promise.resolve();
     private channels: IChannels;
-    private zmqEmitters: Map<string, SocketEventEmitter> = new Map<string, SocketEventEmitter>();
     private closed = false;
 
     constructor(
@@ -98,16 +74,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         closer(this.channels.iopub);
         closer(this.channels.shell);
         closer(this.channels.stdin);
-
-        // Also clear the event emitters
-        const clearEmitter = (emitter: SocketEventEmitter) => {
-            try {
-                emitter.removeAllListeners('message');
-            } catch (ex) {
-                traceError(`Error during socket event cleanup`, ex);
-            }
-        };
-        this.zmqEmitters.forEach(clearEmitter);
     }
 
     public emit(event: string | symbol, ...args: any[]): boolean {
@@ -157,7 +123,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ): void {
         this.sendHooks = this.sendHooks.filter((p) => p !== hook);
     }
-
     private generateChannel<T extends Subscriber | Dealer>(
         connection: IKernelConnection,
         channel: 'iopub' | 'shell' | 'control' | 'stdin',
@@ -165,10 +130,19 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ): T {
         const result = ctor();
         result.connect(formConnectionString(connection, channel));
-        const emitter = new SocketEventEmitter(result);
-        emitter.on('message', this.onIncomingMessage.bind(this, channel));
-        this.zmqEmitters.set(channel, emitter);
+        this.processSocketMessages(channel, result).catch(
+            traceError.bind(`Failed to read messages from channel ${channel}`)
+        );
         return result;
+    }
+    private async processSocketMessages(
+        channel: 'iopub' | 'shell' | 'control' | 'stdin',
+        readable: Subscriber | Dealer
+    ) {
+        // tslint:disable-next-line: await-promise
+        for await (const msg of readable) {
+            this.onIncomingMessage(channel, msg);
+        }
     }
 
     private generateChannels(connection: IKernelConnection): IChannels {
