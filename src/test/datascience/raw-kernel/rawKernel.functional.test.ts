@@ -16,6 +16,7 @@ import { IJupyterKernelSpec } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
+import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience raw kernel tests', () => {
