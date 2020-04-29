@@ -8,7 +8,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../client/common/process/types';
+import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelProcess } from '../../../client/datascience/kernel-launcher/kernelProcess';
 import { createRawKernel, RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
