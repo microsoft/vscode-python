@@ -83,10 +83,12 @@ export class KernelFinder implements IKernelFinder {
             }
 
             const diskSearch = this.findDiskPath(kernelName);
-            const interpreterSearch = this.interpreterLocator.getInterpreters(resource, false).then((interpreters) => {
-                const interpreterPaths = interpreters.map((interp) => interp.sysPrefix);
-                return this.findInterpreterPath(interpreterPaths, kernelName);
-            });
+            const interpreterSearch = this.interpreterLocator
+                .getInterpreters(resource, { ignoreCache: false })
+                .then((interpreters) => {
+                    const interpreterPaths = interpreters.map((interp) => interp.sysPrefix);
+                    return this.findInterpreterPath(interpreterPaths, kernelName);
+                });
 
             let result = await Promise.race([diskSearch, interpreterSearch]);
             if (!result) {
