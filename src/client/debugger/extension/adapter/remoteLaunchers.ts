@@ -35,10 +35,6 @@ export function getDebugpyLauncherArgs(options: RemoteDebugOptions, debuggerPath
     return [debuggerPath.fileToCommandArgument(), '--listen', `${options.host}:${options.port}`, ...waitArgs];
 }
 
-export function getPtvsdPackagePath(): string {
-    return path.join(pathToPythonLibDir, 'old_ptvsd', 'ptvsd').fileToCommandArgument();
-}
-
 export function getDebugpyPackagePath(): string {
-    return pathToDebugger.fileToCommandArgument();
+    return pathToDebugger;
 }
