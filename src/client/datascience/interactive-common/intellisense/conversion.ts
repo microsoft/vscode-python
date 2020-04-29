@@ -325,7 +325,7 @@ export function convertStringsToSuggestions(
         return ({
             label: s,
             insertText: s,
-            sortText: '1',
+            sortText: s,
             kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
             range: undefined // This is undefined for results from the language server. Mimic that.
             // tslint:disable-next-line: no-any
