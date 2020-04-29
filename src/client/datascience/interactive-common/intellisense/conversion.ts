@@ -308,6 +308,7 @@ export function convertToMonacoHover(
 
 export function convertStringsToSuggestions(
     strings: ReadonlyArray<string>,
+    range: monacoEditor.IRange,
     // tslint:disable-next-line: no-any
     metadata: any
 ): monacoEditor.languages.CompletionItem[] {
@@ -327,7 +328,7 @@ export function convertStringsToSuggestions(
             insertText: s,
             sortText: s,
             kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
-            range: undefined // This is undefined for results from the language server. Mimic that.
+            range
             // tslint:disable-next-line: no-any
         } as any) as monacoEditor.languages.CompletionItem;
     });

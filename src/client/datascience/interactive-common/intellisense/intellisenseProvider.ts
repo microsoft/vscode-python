@@ -474,20 +474,18 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     if (jupyterResults && jupyterResults.matches) {
                         const filteredMatches = this.filterJupyterMatches(document, jupyterResults, cellId, position);
 
-                        // Disabled range as not returned from normal language server. Code below was
-                        // used to generated it before though.
-                        // const baseOffset = data.offset;
-                        // const basePosition = document.positionAt(baseOffset);
-                        // const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
-                        // const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
-                        // const range: monacoEditor.IRange = {
-                        //     startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
-                        //     startColumn: startPosition.character + 1,
-                        //     endLineNumber: endPosition.line + 1 - basePosition.line,
-                        //     endColumn: endPosition.character + 1
-                        // };
+                        const baseOffset = data.offset;
+                        const basePosition = document.positionAt(baseOffset);
+                        const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
+                        const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
+                        const range: monacoEditor.IRange = {
+                            startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
+                            startColumn: startPosition.character + 1,
+                            endLineNumber: endPosition.line + 1 - basePosition.line,
+                            endColumn: endPosition.character + 1
+                        };
                         return {
-                            suggestions: convertStringsToSuggestions(filteredMatches, jupyterResults.metadata),
+                            suggestions: convertStringsToSuggestions(filteredMatches, range, jupyterResults.metadata),
                             incomplete: false
                         };
                     }
