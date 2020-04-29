@@ -104,9 +104,10 @@ export class RawKernel implements Kernel.IKernel {
         socket.emit('open');
     }
 
-    public shutdown(): Promise<void> {
+    public async shutdown(): Promise<void> {
         suppressShutdownErrors(this.realKernel);
-        return this.realKernel.shutdown().then(() => this.kernelProcess.dispose());
+        await this.kernelProcess.dispose();
+        this.socket.dispose();
     }
     public getSpec(): Promise<Kernel.ISpecModel> {
         return this.realKernel.getSpec();
