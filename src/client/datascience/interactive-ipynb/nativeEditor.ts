@@ -163,7 +163,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,

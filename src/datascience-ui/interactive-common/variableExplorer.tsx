@@ -171,39 +171,28 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
     }
 
     private renderGrid() {
-        if (this.props.debugging) {
-            return (
-                <span className="span-debug-message">
-                    {getLocString(
-                        'DataScience.variableExplorerDisabledDuringDebugging',
-                        "Please see the Debug Side Bar's VARIABLES section."
-                    )}
-                </span>
-            );
-        } else {
-            return (
-                <div
-                    id="variable-explorer-data-grid"
-                    role="table"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
-                    <AdazzleReactDataGrid
-                        columns={this.gridColumns.map((c) => {
-                            return { ...defaultColumnProperties, ...c };
-                        })}
-                        // tslint:disable-next-line: react-this-binding-issue
-                        rowGetter={this.getRow}
-                        rowsCount={this.props.variables.length}
-                        minHeight={200}
-                        headerRowHeight={this.props.fontSize + 9}
-                        rowHeight={this.props.fontSize + 9}
-                        onRowDoubleClick={this.rowDoubleClick}
-                        emptyRowsView={VariableExplorerEmptyRowsView}
-                        rowRenderer={VariableExplorerRowRenderer}
-                    />
-                </div>
-            );
-        }
+        return (
+            <div
+                id="variable-explorer-data-grid"
+                role="table"
+                aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+            >
+                <AdazzleReactDataGrid
+                    columns={this.gridColumns.map((c) => {
+                        return { ...defaultColumnProperties, ...c };
+                    })}
+                    // tslint:disable-next-line: react-this-binding-issue
+                    rowGetter={this.getRow}
+                    rowsCount={this.props.variables.length}
+                    minHeight={200}
+                    headerRowHeight={this.props.fontSize + 9}
+                    rowHeight={this.props.fontSize + 9}
+                    onRowDoubleClick={this.rowDoubleClick}
+                    emptyRowsView={VariableExplorerEmptyRowsView}
+                    rowRenderer={VariableExplorerRowRenderer}
+                />
+            </div>
+        );
     }
 
     private formatNameColumn = (args: IFormatterArgs): JSX.Element => {
