@@ -4,7 +4,7 @@
 import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 
-import { DebugAdapterTracker } from 'vscode';
+import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -19,10 +19,12 @@ import {
 //import { VariableScriptLoader } from './variableScriptLoader';
 
 const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'ndarray', 'Series']);
+const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 
 @injectable()
 export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker {
     //private scriptLoader: VariableScriptLoader;
+    private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
     constructor(
         @inject(IFileSystem) _fileSystem: IFileSystem,
@@ -30,6 +32,10 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {
         //this.scriptLoader = new VariableScriptLoader(fileSystem);
+    }
+
+    public get refreshRequired(): Event<void> {
+        return this.refreshEventEmitter.event;
     }
 
     // IJupyterVariables implementation
@@ -79,10 +85,19 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
             : [];
 
         const allowedVariables = variablesResponse.body.variables.filter((v) => {
-            if (v.type && exclusionList && exclusionList.includes(v.type)) {
+            if (!v.name || !v.type || !v.value) {
                 return false;
             }
-            return v.type !== undefined;
+            if (exclusionList && exclusionList.includes(v.type)) {
+                return false;
+            }
+            if (v.name.startsWith('_')) {
+                return false;
+            }
+            if (KnownExcludedVariables.has(v.name)) {
+                return false;
+            }
+            return true;
         });
 
         this.lastKnownVariables = allowedVariables.map((v) => {
@@ -97,5 +112,7 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
                 truncated: false
             };
         });
+
+        this.refreshEventEmitter.fire();
     }
 }

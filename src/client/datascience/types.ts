@@ -768,6 +768,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
+    readonly refreshRequired: Event<void>;
     getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(

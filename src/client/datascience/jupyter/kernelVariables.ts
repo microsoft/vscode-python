@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -48,12 +48,17 @@ export class KernelVariables implements IJupyterVariables {
     private scriptLoader: VariableScriptLoader;
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
+    private refreshEventEmitter = new EventEmitter<void>();
 
     constructor(
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {
         this.scriptLoader = new VariableScriptLoader(fileSystem);
+    }
+
+    public get refreshRequired(): Event<void> {
+        return this.refreshEventEmitter.event;
     }
 
     // IJupyterVariables implementation

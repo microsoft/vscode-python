@@ -197,6 +197,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // When a server starts, make sure we create a notebook if the server matches
         jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+
+        // When the variable service requests a refresh, refresh our variable list
+        this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
     public async show(): Promise<void> {
@@ -1139,6 +1142,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return this.listenToNotebookEvents(this._notebook);
             }
         }
+    }
+
+    private refreshVariables() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     private async checkForNotebookProviderConnection(): Promise<void> {

@@ -4,7 +4,9 @@
 import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
+import { Event, EventEmitter } from 'vscode';
 import { IDebugService } from '../../common/application/types';
+import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
@@ -15,16 +17,27 @@ import {
     INotebook
 } from '../types';
 
-// Regexes for parsing data from Python kernel. Not sure yet if other
-// kernels will add the ansi encoding.
-
+/**
+ * This class provides variable data for showing in the interactive window or a notebook.
+ * It multiplexes to either one that will use the jupyter kernel or one that uses the debugger.
+ */
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
+    private refreshEventEmitter = new EventEmitter<void>();
+
     constructor(
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debuggerVariables: IJupyterVariables
-    ) {}
+    ) {
+        disposableRegistry.push(debuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
+        disposableRegistry.push(kernelVariables.refreshRequired(this.fireRefresh.bind(this)));
+    }
+
+    public get refreshRequired(): Event<void> {
+        return this.refreshEventEmitter.event;
+    }
 
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
@@ -54,5 +67,9 @@ export class JupyterVariables implements IJupyterVariables {
         }
 
         return this.kernelVariables;
+    }
+
+    private fireRefresh() {
+        this.refreshEventEmitter.fire();
     }
 }
