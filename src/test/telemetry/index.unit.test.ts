@@ -94,7 +94,7 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([properties]);
     });
-    test('Send Telemetry', () => {
+    test('Send Telemetry with properties', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -128,7 +128,7 @@ suite('Telemetry', () => {
         delete Reporter.properties[0].stackTrace;
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
     });
-    test('Send Error Telemetry', () => {
+    test('Send Error Telemetry with stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
         error.stack = [
