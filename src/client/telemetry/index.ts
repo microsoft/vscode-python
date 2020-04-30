@@ -31,7 +31,7 @@ import { LinterTrigger, TestTool } from './types';
 /**
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
- * Withiin DA, there's a completely different way to send telemetry.
+ * Within DA, there's a completely different way to send telemetry.
  * @returns {boolean}
  */
 function isTelemetrySupported(): boolean {
@@ -63,9 +63,7 @@ function getTelemetryReporter() {
     const extensionId = PVSC_EXTENSION_ID;
     // tslint:disable-next-line:no-require-imports
     const extensions = (require('vscode') as typeof import('vscode')).extensions;
-    // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
-    // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
 
     // tslint:disable-next-line:no-require-imports
@@ -105,7 +103,6 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
     const customProperties: Record<string, string> = {};
     if (properties) {
-        // tslint:disable-next-line:prefer-type-cast no-any
         const data = properties as any;
         Object.getOwnPropertyNames(data).forEach((prop) => {
             if (data[prop] === undefined || data[prop] === null) {
@@ -113,9 +110,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             }
             try {
                 // If there are any errors in serializing one property, ignore that and move on.
-                // Else nothign will be sent.
-                // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
-                (customProperties as any)[prop] =
+                // Else nothing will be sent.
+                customProperties[prop] =
                     typeof data[prop] === 'string'
                         ? data[prop]
                         : typeof data[prop] === 'object'
@@ -126,7 +122,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             }
         });
     }
-    reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+    reporter.sendTelemetryEvent(eventName as string, customProperties, measures);
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
             `Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
@@ -152,7 +148,6 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
-// tslint:disable-next-line:no-any function-name
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
@@ -160,20 +155,18 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     failureEventName?: E,
     lazyProperties?: (obj: This) => P[E]
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
-    // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line:no-function-expression no-any
+        // tslint:disable-next-line: no-function-expression
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
-                // tslint:disable-next-line:no-invalid-this
                 return originalMethod.apply(this, args);
             }
 
@@ -185,22 +178,16 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
             };
 
             const stopWatch = captureDuration ? new StopWatch() : undefined;
-
-            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
-            // tslint:disable-next-line:no-unsafe-any
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
-                    // tslint:disable-next-line:promise-function-async
                     .catch((ex) => {
-                        // tslint:disable-next-line:no-any
                         const failedProps: P[E] = props() || ({} as any);
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
@@ -230,16 +217,12 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
-        // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>).then(
             (data) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
-                // tslint:disable-next-line:promise-function-async
             },
             (ex) => {
-                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
             }
