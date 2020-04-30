@@ -223,7 +223,7 @@ jobs:
         os: [windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, multi-workspace]
+        test-suite: [multi-workspace]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
