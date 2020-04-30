@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable: no-any
 import type { JSONObject } from '@phosphor/coreutils';
 import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
@@ -27,6 +26,8 @@ import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
+
+// tslint:disable: no-any
 
 /**
  * Checks whether telemetry is supported.
@@ -148,6 +149,7 @@ type TypedMethodDescriptor<T> = (
  * @param lazyProperties A static function on the decorated class which returns extra properties to add to the event.
  * This can be used to provide properties which are only known at runtime (after the decorator has executed).
  */
+// tslint:disable-next-line:no-any function-name
 export function captureTelemetry<This, P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
     properties?: P[E],
@@ -155,6 +157,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
     failureEventName?: E,
     lazyProperties?: (obj: This) => P[E]
 ): TypedMethodDescriptor<(this: This, ...args: any[]) => any> {
+    // tslint:disable-next-line:no-function-expression no-any
     return function (
         _target: Object,
         _propertyKey: string | symbol,
@@ -167,6 +170,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
             // Does not set "failed" if the result is a Promise and throws an exception.
             if (!captureDuration && !lazyProperties) {
                 sendTelemetryEvent(eventName, undefined, properties);
+                // tslint:disable-next-line:no-invalid-this
                 return originalMethod.apply(this, args);
             }
 
@@ -177,8 +181,9 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 return properties;
             };
 
-            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const stopWatch = captureDuration ? new StopWatch() : undefined;
+
+            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
