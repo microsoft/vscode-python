@@ -357,6 +357,8 @@ jobs:
       # run tests and then clean up the process once the tests ran.
       # See https://github.com/GabrielBB/xvfb-action
       - name: Run venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
