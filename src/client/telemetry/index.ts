@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable:no-reference no-any import-name no-any function-name
-/// <reference path="./vscode-extension-telemetry.d.ts" />
+
+// tslint:disable: no-any
 import type { JSONObject } from '@phosphor/coreutils';
-import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
-import TelemetryReporter from 'vscode-extension-telemetry';
+// tslint:disable-next-line: import-name
+import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -89,17 +89,20 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
 
-    if (ex && (eventName as any) !== 'ERROR') {
-        // When sending `ERROR` telemetry event no need to send custom properties.
+    if (ex) {
+        // When sending telemetry events for exceptions no need to send custom properties.
         // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        const props: Record<string, string> = {};
-        props.stackTrace = getStackTrace(ex);
-        props.originalEventName = (eventName as any) as string;
-        reporter.sendTelemetryEvent('ERROR', props, measures);
+        reporter.sendTelemetryErrorEvent(
+            eventName as string,
+            { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) },
+            measures,
+            []
+        );
     }
+
     const customProperties: Record<string, string> = {};
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
@@ -246,32 +249,12 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     }
 }
 
-function sanitizeFilename(filename: string): string {
-    if (filename.startsWith(EXTENSION_ROOT_DIR)) {
-        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
-    } else {
-        // We don't really care about files outside our extension.
-        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
-    }
-    return filename;
-}
-
-function sanitizeName(name: string): string {
-    if (name.indexOf('/') === -1 && name.indexOf('\\') === -1) {
-        return name;
-    } else {
-        return '<hidden>';
-    }
-}
-
-function getStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might
-    // contain PII.
+function serializeStackTrace(ex: Error): string {
+    // We aren't showing the error message (ex.message) since it might contain PII.
     let trace = '';
     for (const frame of stackTrace.parse(ex)) {
-        let filename = frame.getFileName();
+        const filename = frame.getFileName();
         if (filename) {
-            filename = sanitizeFilename(filename);
             const lineno = frame.getLineNumber();
             const colno = frame.getColumnNumber();
             trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
@@ -297,7 +280,7 @@ function getCallsite(frame: stackTrace.StackFrame) {
             parts.push(frame.getFunctionName());
         }
     }
-    return parts.map(sanitizeName).join('.');
+    return parts.join('.');
 }
 
 // Map all events to their properties
