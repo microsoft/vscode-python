@@ -13,6 +13,7 @@ import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { waitForPromise } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
+import { PythonInterpreter } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
 import { JupyterKernelPromiseFailedError } from './jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -41,6 +42,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         return this._session;
     }
     protected kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined;
+    protected interpreter: PythonInterpreter | undefined;
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -118,7 +120,11 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
-    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
+    public async changeKernel(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter?: PythonInterpreter
+    ): Promise<void> {
         let newSession: ISessionWithSocket | undefined;
 
         // If we are already using this kernel in an active session just return back
@@ -126,7 +132,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             return;
         }
 
-        newSession = await this.createNewKernelSession(kernel, timeoutMS);
+        newSession = await this.createNewKernelSession(kernel, timeoutMS, interpreter);
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
@@ -134,8 +140,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors(); // NOSONAR
         }
 
-        // Update our kernel spec
+        // Update our kernel spec and interpreter
         this.kernelSpec = kernel;
+        this.interpreter = interpreter;
 
         // Save the new session
         this.setSession(newSession);
@@ -144,7 +151,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(kernel, newSession);
+        this.restartSessionPromise = this.createRestartSession(kernel, newSession, interpreter);
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -298,13 +305,15 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected abstract async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         session: ISessionWithSocket,
+        interpreter?: PythonInterpreter,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket>;
 
     // Sub classes need to implement their own kernel change specific code
     protected abstract createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
-        timeoutMS: number
+        timeoutMS: number,
+        interpreter?: PythonInterpreter
     ): Promise<ISessionWithSocket>;
 
     // Changes the current session.

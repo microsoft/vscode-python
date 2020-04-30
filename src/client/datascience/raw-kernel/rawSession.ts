@@ -3,6 +3,9 @@
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
+import '../../common/extensions';
+import { traceError } from '../../common/logger';
+import { IDisposable } from '../../common/types';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';
@@ -14,6 +17,7 @@ ZMQ Kernel connection can pretend to be a jupyterlab Session
 */
 export class RawSession implements ISessionWithSocket {
     public isDisposed: boolean = false;
+    private isDisposing?: boolean;
 
     // Note, ID is the ID of this session
     // ClientID is the ID that we pass in messages to the kernel
@@ -22,6 +26,7 @@ export class RawSession implements ISessionWithSocket {
     private _clientID: string;
     private _kernel: RawKernel;
     private readonly _statusChanged: Signal<this, Kernel.Status>;
+    private readonly exitHandler: IDisposable;
 
     // RawSession owns the lifetime of the kernel process and will dispose it
     constructor(public kernelProcess: IKernelProcess) {
@@ -37,10 +42,13 @@ export class RawSession implements ISessionWithSocket {
         // Connect our kernel and hook up status changes
         this._kernel = createRawKernel(kernelProcess, this._clientID);
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
+        this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
 
     public async dispose() {
+        this.isDisposing = true;
         if (!this.isDisposed) {
+            this.exitHandler.dispose();
             await this._kernel.shutdown();
             this._kernel.dispose();
             this.kernelProcess.dispose().ignoreErrors();
@@ -134,5 +142,13 @@ export class RawSession implements ISessionWithSocket {
     // Send out a message when our kernel changes state
     private onKernelStatus(_sender: Kernel.IKernelConnection, state: Kernel.Status) {
         this._statusChanged.emit(state);
+    }
+    private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
+        if (this.isDisposing) {
+            return;
+        }
+        traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+        // Just kill the session.
+        this.dispose().ignoreErrors();
     }
 }

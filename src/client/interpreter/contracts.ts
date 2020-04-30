@@ -26,12 +26,19 @@ export const IVirtualEnvironmentsSearchPathProvider = Symbol('IVirtualEnvironmen
 export interface IVirtualEnvironmentsSearchPathProvider {
     getSearchPaths(resource?: Uri): Promise<string[]>;
 }
+
+export type GetInterpreterOptions = {
+    onActivation?: boolean;
+};
+
+export type GetInterpreterLocatorOptions = GetInterpreterOptions & { ignoreCache?: boolean };
+
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
     readonly hasInterpreters: Promise<boolean>;
-    getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]>;
 }
 
 export type CondaInfo = {
@@ -91,7 +98,7 @@ export interface IInterpreterService {
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonInterpreter>;
     hasInterpreters: Promise<boolean>;
-    getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
+    getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonInterpreter[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
     refresh(resource: Resource): Promise<void>;

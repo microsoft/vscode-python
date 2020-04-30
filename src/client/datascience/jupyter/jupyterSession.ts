@@ -21,6 +21,7 @@ import { IOutputChannel } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
@@ -131,6 +132,7 @@ export class JupyterSession extends BaseJupyterSession {
     protected async createRestartSession(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         session: ISessionWithSocket,
+        _interpreter?: PythonInterpreter,
         cancelToken?: CancellationToken
     ): Promise<ISessionWithSocket> {
         // We need all of the above to create a restart session

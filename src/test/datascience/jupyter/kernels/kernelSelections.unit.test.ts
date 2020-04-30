@@ -16,6 +16,7 @@ import { JupyterSessionManager } from '../../../../client/datascience/jupyter/ju
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
+import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
@@ -25,6 +26,7 @@ import { InterpreterType } from '../../../../client/interpreter/contracts';
 suite('Data Science - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
+    let kernelFinder: IKernelFinder;
     let interpreterSelector: IInterpreterSelector;
     let pathUtils: IPathUtils;
     let fs: IFileSystem;
@@ -132,6 +134,7 @@ suite('Data Science - KernelSelections', () => {
         interpreterSelector = mock(InterpreterSelector);
         sessionManager = mock(JupyterSessionManager);
         kernelService = mock(KernelService);
+        kernelFinder = mock<IKernelFinder>();
         fs = mock(FileSystem);
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
@@ -140,7 +143,8 @@ suite('Data Science - KernelSelections', () => {
             instance(kernelService),
             instance(interpreterSelector),
             instance(fs),
-            instance(pathUtils)
+            instance(pathUtils),
+            instance(kernelFinder)
         );
     });
 
@@ -216,7 +220,44 @@ suite('Data Science - KernelSelections', () => {
         verify(sessionManager.getKernelSpecs()).once();
         assert.deepEqual(items, expectedItems);
     });
-    test('Should return a list of Local Kernels + Interpreters for local connection (excluding non-python kernels)', async () => {
+    test('Should return a list of Local Kernels + Interpreters for local raw connection (excluding non-python kernels)', async () => {
+        when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
+        when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
+
+        // Quick pick must contain
+        // - kernel spec display name
+        // - selection = kernel model + kernel spec
+        // - description = last activity and # of connections.
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
+            (item) => {
+                return {
+                    label: item.display_name,
+                    detail: '<user friendly path>',
+                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+                };
+            }
+        );
+        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
+            return {
+                ...item,
+                label: item.label,
+                detail: '<user friendly path>',
+                description: '',
+                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
+            };
+        });
+        const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
+        expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
+
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
+            undefined,
+            'raw',
+            instance(sessionManager)
+        );
+
+        assert.deepEqual(items, expectedList);
+    });
+    test('Should return a list of Local Kernels + Interpreters for local jupyter connection (excluding non-python kernels)', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
@@ -248,6 +289,7 @@ suite('Data Science - KernelSelections', () => {
 
         const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
             undefined,
+            'jupyter',
             instance(sessionManager)
         );
 

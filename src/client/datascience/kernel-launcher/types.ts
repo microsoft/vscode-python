@@ -7,11 +7,16 @@ import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(kernelSpec: IJupyterKernelSpec, resource: Resource): Promise<IKernelProcess>;
+    launch(
+        kernelSpec: IJupyterKernelSpec,
+        resource: Resource,
+        interpreter?: PythonInterpreter
+    ): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -29,15 +34,11 @@ export interface IKernelConnection {
 
 export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    /**
-     * This promise is resolved when the launched process is ready to get JMP messages
-     */
-    readonly ready: Promise<void>;
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
     /**
      * This event is triggered if the process is exited
      */
-    readonly exited: Event<number | null>;
+    readonly exited: Event<{ exitCode?: number; reason?: string }>;
     interrupt(): Promise<void>;
 }
 
@@ -48,6 +49,7 @@ export interface IKernelFinder {
         kernelName?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec>;
+    listKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]>;
 }
 
 /**
@@ -56,6 +58,7 @@ export interface IKernelFinder {
 export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;
     kill(): Promise<void>;
+    preWarm(): Promise<void>;
     start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
 }
 

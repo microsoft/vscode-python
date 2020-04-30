@@ -4,6 +4,7 @@
 import json
 import logging
 import os
+import os.path
 import signal
 import sys
 import subprocess
@@ -69,8 +70,43 @@ class PythonDaemon(JupyterDaemon):
                     self.kernel.kill()
             except OSError:
                 pass
-            finally:
-                self.kernel = None
+
+    @error_decorator
+    def m_prewarm_kernel(self):
+        """Starts the kernel process with the module
+        """
+        self.log.info("Pre-Warm DS Kernel in DS Kernel Launcher Daemon")
+        isolated_runner = os.path.join(
+            os.path.dirname(__file__), "..", "pyvsc-run-isolated.py"
+        )
+        kernel_prewarm_starter = os.path.join(
+            os.path.dirname(__file__), "kernel_prewarm_starter.py"
+        )
+
+        def prewarm_kernel():
+            cmd = [sys.executable, isolated_runner, kernel_prewarm_starter]
+            self._start_kernel_observable_in_background(cmd)
+            self.log.info("Kernel launched, with PID as a daemon %s", self.kernel.pid)
+
+        return self._execute_and_capture_output(prewarm_kernel)
+
+    @error_decorator
+    def m_start_prewarmed_kernel(self, args=[]):
+        """Starts the pre-warmed kernel process.
+        """
+        self.log.info(
+            "Start pre-warmed Kernel in DS Kernel Launcher Daemon %s with args %s",
+            self.kernel.pid,
+            args,
+        )
+
+        def start_kernel():
+            self.kernel.stdin.write(
+                "{0}{1}".format(json.dumps(args), os.linesep).encode("utf-8")
+            )
+            self.kernel.stdin.close()
+
+        return self._execute_and_capture_output(start_kernel)
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
@@ -83,7 +119,6 @@ class PythonDaemon(JupyterDaemon):
         )
 
         def start_kernel():
-            thread_args = (module_name, args, cwd, env)
             self._exec_module_observable_in_background(module_name, args, cwd, env)
 
         return self._execute_and_capture_output(start_kernel)
@@ -108,8 +143,8 @@ class PythonDaemon(JupyterDaemon):
 
         exit_code = self.kernel.poll()
         std_err = self.kernel.stderr.read()
-        if std_err:
-            std_err = std_err.decode()
+        if std_err is not None:
+            std_err = std_err.decode("utf-8")
         self.log.warn("Kernel has exited with exit code %s, %s", exit_code, std_err)
         sys.stdout.flush()
         sys.stderr.flush()
@@ -127,6 +162,13 @@ class PythonDaemon(JupyterDaemon):
         )
         args = [] if args is None else args
         cmd = [sys.executable, "-m", module_name] + args
+        self._start_kernel_observable_in_background(cmd, cwd, env)
+        self.kernel.stdin.close()
+
+    def _start_kernel_observable_in_background(self, cmd, cwd=None, env=None):
+        self.log.info(
+            "Exec in DS Kernel Launcher Daemon (observable) %s", cmd,
+        )
         # As the kernel is launched from this same python executable, ensure the kernel variables
         # are merged with the variables of this current environment.
         new_env_vars = {} if env is None else env
@@ -136,15 +178,12 @@ class PythonDaemon(JupyterDaemon):
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
             cwd=cwd,
             env=env,
             independent=False,
         )
-        self.log.info(
-            "Exec in DS Kernel Launcher Daemon (observable) %s with args %s",
-            subprocess.PIPE,
-            subprocess.PIPE,
-        )
+        self.log.info("Exec in DS Kernel Launcher Daemon (observable)")
 
         self.kernel = proc
         self.log.info("Kernel launched, with PID %s", proc.pid)
@@ -162,6 +201,11 @@ class PythonDaemon(JupyterDaemon):
         threading.Thread(
             target=self._monitor_kernel, daemon=True, name="kerne_monitor"
         ).start()
+
+        # We could wait for 0.5-1s to ensure kernel doesn't die, however that will not work.
+        # On windows, launching a conda process can take 4s, hence just spinning up a process takes 4s
+        # and then python will attempt to run the kernel module, at which point it could fail.
+        # Meaning there's no way to know it successfully launched the kernel without trying to connect to it.
 
     def signal_kernel(self, signum):
         """Sends a signal to the process group of the kernel (this

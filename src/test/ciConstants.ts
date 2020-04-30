@@ -10,7 +10,8 @@ export const PYTHON_VIRTUAL_ENVS_LOCATION = process.env.PYTHON_VIRTUAL_ENVS_LOCA
 export const IS_APPVEYOR = process.env.APPVEYOR === 'true';
 export const IS_TRAVIS = process.env.TRAVIS === 'true';
 export const IS_VSTS = process.env.TF_BUILD !== undefined;
-export const IS_CI_SERVER = IS_TRAVIS || IS_APPVEYOR || IS_VSTS;
+export const IS_GITHUB_ACTIONS = process.env.GITHUB_ACTIONS === 'true';
+export const IS_CI_SERVER = IS_TRAVIS || IS_APPVEYOR || IS_VSTS || IS_GITHUB_ACTIONS;
 
 // Control JUnit-style output logging for reporting purposes.
 let reportJunit: boolean = false;

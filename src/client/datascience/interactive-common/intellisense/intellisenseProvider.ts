@@ -30,7 +30,7 @@ import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryWhenDone } from '../../../telemetry';
-import { Settings, Telemetry } from '../../constants';
+import { Identifiers, Settings, Telemetry } from '../../constants';
 import { ICell, IInteractiveWindowListener, INotebook, INotebookCompletion, INotebookProvider } from '../../types';
 import {
     ICancelIntellisenseRequest,
@@ -128,6 +128,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 this.dispatchMessage(message, payload, this.setIdentity);
                 break;
 
+            case InteractiveWindowMessages.NotebookExecutionActivated:
+                this.dispatchMessage(message, payload, this.updateIdentity);
+                break;
+
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadAllCells);
                 break;
@@ -175,9 +179,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             ? activeNotebook.getMatchingInterpreter()
             : await this.interpreterService.getActiveInterpreter(resource);
 
+        const newPath = resource?.fsPath;
+        const oldPath = this.resource?.fsPath;
+
         // See if the resource or the interpreter are different
         if (
-            resource?.toString() !== this.resource?.toString() ||
+            (newPath && !oldPath) ||
+            (newPath && oldPath && !this.fileSystem.arePathsSame(newPath, oldPath)) ||
             interpreter?.path !== this.interpreter?.path ||
             this.languageServer === undefined
         ) {
@@ -709,8 +717,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private setIdentity(identity: INotebookIdentity) {
         this.notebookIdentity = identity.resource;
-        this.potentialResource = identity.resource;
+        this.potentialResource =
+            identity.resource.scheme !== Identifiers.HistoryPurpose ? identity.resource : undefined;
         this.notebookType = identity.type;
+    }
+
+    private updateIdentity(identity: INotebookIdentity & { owningResource: Resource }) {
+        this.potentialResource = identity.owningResource ? identity.owningResource : this.potentialResource;
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {

@@ -76,7 +76,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
 
-        const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
+        const interpreter = await interpreterService.getInterpreterDetails(pythonPath, options.resource);
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: interpreter,

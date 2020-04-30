@@ -73,7 +73,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
 
         // Get latest interpreter list in the background.
-        this.interpreterService.getInterpreters(resource).ignoreErrors();
+        this.interpreterService.getInterpreters(resource, { onActivation: true }).ignoreErrors();
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
 

@@ -7,14 +7,18 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { generateCellsFromString } from '../cellFactory';
 import { Identifiers, Telemetry } from '../constants';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    INotebookIdentity,
+    InteractiveWindowMessages
+} from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     IGatherLogger,
@@ -94,12 +98,12 @@ export class GatherListener implements IInteractiveWindowListener {
         handler.bind(this)(args);
     }
 
-    private doInitGather(payload: string): void {
+    private doInitGather(payload: INotebookIdentity & { owningResource: Resource }): void {
         this.initGather(payload).ignoreErrors();
     }
 
-    private async initGather(notebookUri: string) {
-        this.notebookUri = Uri.parse(notebookUri);
+    private async initGather(identity: INotebookIdentity & { owningResource: Resource }) {
+        this.notebookUri = identity.resource;
 
         const nb = await this.notebookProvider.getOrCreateNotebook({ identity: this.notebookUri, getOnly: true });
         // If we have an executing notebook, get its gather execution service.

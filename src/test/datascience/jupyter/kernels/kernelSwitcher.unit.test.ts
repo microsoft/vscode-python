@@ -10,13 +10,14 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { PythonSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { IConfigurationService, IInstaller, IPythonSettings } from '../../../../client/common/types';
-import { Common, DataScience, Installer } from '../../../../client/common/utils/localize';
+import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
+import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { Commands } from '../../../../client/datascience/constants';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
@@ -36,7 +37,6 @@ suite('Data Science - Kernel Switcher', () => {
     let sessionManagerFactory: IJupyterSessionManagerFactory;
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
-    let installer: IInstaller;
     let notebook: INotebook;
     let connection: IJupyterConnection;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
@@ -80,7 +80,6 @@ suite('Data Science - Kernel Switcher', () => {
         sessionManagerFactory = mock(JupyterSessionManagerFactory);
         kernelSelector = mock(KernelSelector);
         appShell = mock(ApplicationShell);
-        installer = mock(Installer);
 
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);
@@ -91,7 +90,7 @@ suite('Data Science - Kernel Switcher', () => {
             instance(sessionManagerFactory),
             instance(kernelSelector),
             instance(appShell),
-            instance(installer)
+            instance(mock(KernelDependencyService))
         );
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();
@@ -138,6 +137,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 kernelSelector.selectLocalKernel(
                                     anything(),
                                     anything(),
+                                    anything(),
                                     undefined,
                                     undefined,
                                     currentKernelInfo.currentKernel
@@ -161,6 +161,7 @@ suite('Data Science - Kernel Switcher', () => {
                             kernelSelector.selectLocalKernel(
                                 anything(),
                                 anything(),
+                                anything(),
                                 undefined,
                                 undefined,
                                 currentKernelInfo.currentKernel
@@ -177,6 +178,7 @@ suite('Data Science - Kernel Switcher', () => {
                             if (isLocalConnection) {
                                 when(
                                     kernelSelector.selectLocalKernel(
+                                        anything(),
                                         anything(),
                                         anything(),
                                         undefined,
@@ -316,6 +318,7 @@ suite('Data Science - Kernel Switcher', () => {
                                     kernelSelector.selectLocalKernel(
                                         anything(),
                                         anything(),
+                                        anything(),
                                         undefined,
                                         anything(),
                                         anything()
@@ -353,6 +356,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 // first time when user select a kernel, second time is when user selects after failing to switch to the first kernel.
                                 verify(
                                     kernelSelector.selectLocalKernel(
+                                        anything(),
                                         anything(),
                                         anything(),
                                         anything(),
