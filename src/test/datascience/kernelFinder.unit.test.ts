@@ -53,7 +53,13 @@ suite('Kernel Finder', () => {
         fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
         fileSystem
             .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
-            .returns(() => Promise.resolve([path.join('kernels', kernel.name, 'kernel.json')]));
+            .returns(() =>
+                Promise.resolve([
+                    path.join('kernels', kernel.name, 'kernel.json'),
+                    path.join('kernels', 'kernelA', 'kernel.json'),
+                    path.join('kernels', 'kernelB', 'kernel.json')
+                ])
+            );
     }
 
     setup(() => {
@@ -219,7 +225,7 @@ suite('Kernel Finder', () => {
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
                 if (pathParam.includes('kernelSpecCache.json')) {
-                    return Promise.resolve(`["${spec.name}"]`);
+                    return Promise.resolve(`["${spec.path}"]`);
                 }
                 return Promise.resolve(JSON.stringify(spec));
             })
@@ -231,5 +237,54 @@ suite('Kernel Finder', () => {
 
         fileSystem.verifyAll();
         fileSystem.reset();
+    });
+
+    test('Look for KernelA with no cache, find KernelA and KenelB, then search for KernelB and find it in cache', async () => {
+        setupFileSystem();
+        fileSystem
+            .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+            .returns((pathParam: string) => {
+                if (pathParam.includes('kernelSpecCache.json')) {
+                    return Promise.resolve('[]');
+                } else if (pathParam.includes('kernelA')) {
+                    const specA = {
+                        ...kernel,
+                        name: 'kernelA'
+                    };
+                    return Promise.resolve(JSON.stringify(specA));
+                }
+                return Promise.resolve('');
+            });
+
+        const spec = await kernelFinder.findKernelSpec(resource, 'kernelA');
+        assert.equal(spec.name.includes('kernelA'), true);
+        fileSystem.reset();
+
+        setupFileSystem();
+        fileSystem
+            .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
+            .verifiable(typemoq.Times.never()); // this never executing means the kernel was found in cache
+        fileSystem
+            .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+            .returns((pathParam: string) => {
+                if (pathParam.includes('kernelSpecCache.json')) {
+                    return Promise.resolve(
+                        JSON.stringify([
+                            path.join('kernels', kernel.name, 'kernel.json'),
+                            path.join('kernels', 'kernelA', 'kernel.json'),
+                            path.join('kernels', 'kernelB', 'kernel.json')
+                        ])
+                    );
+                } else if (pathParam.includes('kernelB')) {
+                    const specB = {
+                        ...kernel,
+                        name: 'kernelB'
+                    };
+                    return Promise.resolve(JSON.stringify(specB));
+                }
+                return Promise.resolve('{}');
+            });
+        const spec2 = await kernelFinder.findKernelSpec(resource, 'kernelB');
+        assert.equal(spec2.name.includes('kernelB'), true);
     });
 });
