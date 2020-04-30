@@ -538,6 +538,23 @@ suite('Data Science - KernelSelector', () => {
             selectLocalKernelStub.resolves({ kernelSpec, interpreter });
         });
         teardown(() => sinon.restore());
+        test('Raw kernel connection finds a valid kernel spec and interpreter', async () => {
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernelSpec);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
+            ).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
+
+            assert.isOk(kernel.kernelSpec === kernelSpec);
+            assert.isOk(kernel.interpreter === interpreter);
+        });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())

@@ -347,6 +347,7 @@ export class KernelSelector {
         return selection;
     }
 
+    // Get our kernelspec and interpreter for a local raw connection
     private async getKernelForLocalRawConnection(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
@@ -363,7 +364,7 @@ export class KernelSelector {
 
         if (selection.kernelSpec) {
             // Locate the interpreter that matches our kernelspec
-            selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec);
+            selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
         }
         return selection;
     }

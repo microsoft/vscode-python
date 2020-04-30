@@ -23,11 +23,10 @@ import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
-import { KernelService } from '../../jupyter/kernels/kernelService';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelFinder, IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterKernelSpec,
@@ -57,9 +56,7 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelFinder: IKernelFinder,
         private kernelSelector: KernelSelector,
-        private kernelService: KernelService,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel
     ) {
