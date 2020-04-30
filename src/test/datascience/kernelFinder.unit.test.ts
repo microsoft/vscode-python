@@ -35,6 +35,7 @@ suite('Kernel Finder', () => {
     const interpreters: PythonInterpreter[] = [];
     let resource: Resource;
     const kernelName = 'testKernel';
+    const cacheFile = 'kernelSpecPathCache.json';
     const kernel: JupyterKernelSpec = {
         name: 'testKernel',
         language: 'python',
@@ -43,7 +44,7 @@ suite('Kernel Finder', () => {
         metadata: {},
         env: {},
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-        specFile: path.join('kernels', kernelName, 'kernel.json')
+        specFile: path.join('1', 'share', 'jupyter', 'kernels', kernelName, 'kernel.json')
     };
 
     function setupFileSystem() {
@@ -55,9 +56,9 @@ suite('Kernel Finder', () => {
             .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() =>
                 Promise.resolve([
-                    path.join('kernels', kernel.name, 'kernel.json'),
-                    path.join('kernels', 'kernelA', 'kernel.json'),
-                    path.join('kernels', 'kernelB', 'kernel.json')
+                    path.join(kernel.name, 'kernel.json'),
+                    path.join('kernelA', 'kernel.json'),
+                    path.join('kernelB', 'kernel.json')
                 ])
             );
     }
@@ -127,7 +128,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((param: string) => {
-                if (param.includes('kernelSpecCache.json')) {
+                if (param.includes(cacheFile)) {
                     return Promise.resolve(`["${kernel.name}"]`);
                 }
                 return Promise.resolve(JSON.stringify(kernel));
@@ -142,7 +143,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 }
                 return Promise.resolve(JSON.stringify(kernel));
@@ -160,7 +161,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 }
                 return Promise.resolve(JSON.stringify(kernel));
@@ -178,7 +179,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 }
                 return Promise.resolve(JSON.stringify(kernel));
@@ -193,7 +194,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 }
                 return Promise.resolve('{}');
@@ -209,7 +210,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 }
                 return Promise.resolve('{}');
@@ -224,7 +225,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve(`["${spec.path}"]`);
                 }
                 return Promise.resolve(JSON.stringify(spec));
@@ -244,7 +245,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve('[]');
                 } else if (pathParam.includes('kernelA')) {
                     const specA = {
@@ -267,7 +268,7 @@ suite('Kernel Finder', () => {
         fileSystem
             .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
             .returns((pathParam: string) => {
-                if (pathParam.includes('kernelSpecCache.json')) {
+                if (pathParam.includes(cacheFile)) {
                     return Promise.resolve(
                         JSON.stringify([
                             path.join('kernels', kernel.name, 'kernel.json'),
