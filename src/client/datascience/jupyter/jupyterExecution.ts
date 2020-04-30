@@ -145,6 +145,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
                 kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(
                     undefined,
+                    'jupyter',
                     undefined,
                     options?.metadata,
                     !allowUI,
