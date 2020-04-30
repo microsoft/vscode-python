@@ -119,6 +119,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 }
             });
         }
+
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
@@ -160,7 +161,7 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
         descriptor: TypedPropertyDescriptor<(this: This, ...args: any[]) => any>
     ) {
         const originalMethod = descriptor.value!;
-        // tslint:disable-next-line: no-function-expression
+        // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (this: This, ...args: any[]) {
             // Legacy case; fast path that sends event before method executes.
             // Does not set "failed" if the result is a Promise and throws an exception.
@@ -176,17 +177,22 @@ export function captureTelemetry<This, P extends IEventNamePropertyMapping, E ex
                 return properties;
             };
 
+            // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
             const stopWatch = captureDuration ? new StopWatch() : undefined;
             const result = originalMethod.apply(this, args);
 
             // If method being wrapped returns a promise then wait for it.
+            // tslint:disable-next-line:no-unsafe-any
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
+                // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
                     .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch?.elapsedTime, props());
                         return data;
                     })
+                    // tslint:disable-next-line:promise-function-async
                     .catch((ex) => {
+                        // tslint:disable-next-line:no-any
                         const failedProps: P[E] = props() || ({} as any);
                         (failedProps as any).failed = true;
                         sendTelemetryEvent(
@@ -216,12 +222,16 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
 ) {
     stopWatch = stopWatch ? stopWatch : new StopWatch();
     if (typeof promise.then === 'function') {
+        // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>).then(
             (data) => {
+                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
+                // tslint:disable-next-line:promise-function-async
             },
             (ex) => {
+                // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
             }
