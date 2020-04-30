@@ -3,13 +3,10 @@
 'use strict';
 import * as path from 'path';
 import { IFileSystem } from '../../common/platform/types';
-import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IJupyterVariable } from '../types';
 
 export class VariableScriptLoader {
-    private fetchDataFrameInfoScript?: string;
-    private fetchDataFrameRowsScript?: string;
     private fetchVariableShapeScript?: string;
     private filesLoaded: boolean = false;
 
@@ -17,24 +14,6 @@ export class VariableScriptLoader {
 
     public readShapeScript(targetVariable: IJupyterVariable): Promise<string | undefined> {
         return this.readScript(targetVariable, () => this.fetchVariableShapeScript);
-    }
-
-    public readDataFrameInfoScript(targetVariable: IJupyterVariable): Promise<string | undefined> {
-        return this.readScript(targetVariable, () => this.fetchDataFrameInfoScript, [
-            { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() }
-        ]);
-    }
-
-    public readDataFrameRowScript(
-        targetVariable: IJupyterVariable,
-        start: number,
-        end: number
-    ): Promise<string | undefined> {
-        return this.readScript(targetVariable, () => this.fetchDataFrameRowsScript, [
-            { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() },
-            { key: '_VSCode_JupyterStartRow', value: start.toString() },
-            { key: '_VSCode_JupyterEndRow', value: end.toString() }
-        ]);
     }
 
     private async readScript(
@@ -78,25 +57,13 @@ export class VariableScriptLoader {
 
     // Load our python files for fetching variables
     private async loadVariableFiles(): Promise<void> {
-        let file = path.join(
+        const file = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
             'vscode_datascience_helpers',
-            'getJupyterVariableDataFrameInfo.py'
+            'getJupyterVariableShape.py'
         );
-        this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
-
-        file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterVariableShape.py');
         this.fetchVariableShapeScript = await this.fileSystem.readFile(file);
-
-        file = path.join(
-            EXTENSION_ROOT_DIR,
-            'pythonFiles',
-            'vscode_datascience_helpers',
-            'getJupyterVariableDataFrameRows.py'
-        );
-        this.fetchDataFrameRowsScript = await this.fileSystem.readFile(file);
-
         this.filesLoaded = true;
     }
 }

@@ -43,6 +43,12 @@ def execute_script(file, replace_dict=dict([])):
     return result.success
 
 
+def execute_code(code):
+    # Execute this script as a cell
+    result = get_ipython().run_cell(code)
+    return result.success
+
+
 def get_variables(capsys):
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(os.path.join(path, "./getJupyterVariableList.py"))
@@ -74,13 +80,15 @@ def get_variable_value(variables, name, capsys):
 def get_data_frame_info(variables, name, capsys):
     varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(
-            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameInfo.py"
-        )
+    syspath = os.path.abspath(
+        os.path.join(path, "../../vscode_datascience_helpers/dataframes")
     )
-    keys = dict([("_VSCode_JupyterTestValue", json.dumps(varJson))])
-    if execute_script(file, keys):
+    sys.path.append(syspath)
+    if execute_code(
+        "import vscodeGetDataFrameInfo;vscodeGetDataFrameInfo._VSCODE_getDataFrameInfo({0})".format(
+            name
+        )
+    ):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)
     else:
@@ -89,19 +97,15 @@ def get_data_frame_info(variables, name, capsys):
 
 def get_data_frame_rows(varJson, start, end, capsys):
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(
-            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameRows.py"
+    syspath = os.path.abspath(
+        os.path.join(path, "../../vscode_datascience_helpers/dataframes")
+    )
+    sys.path.append(syspath)
+    if execute_code(
+        "import vscodeGetDataFrameRows;vscodeGetDataFrameRows._VSCODE_getDataFrameRows({0}, {1}, {2})".format(
+            name, start, end
         )
-    )
-    keys = dict(
-        [
-            ("_VSCode_JupyterTestValue", json.dumps(varJson)),
-            ("_VSCode_JupyterStartRow", str(start)),
-            ("_VSCode_JupyterEndRow", str(end)),
-        ]
-    )
-    if execute_script(file, keys):
+    ):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)
     else:

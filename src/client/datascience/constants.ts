@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { PYTHON_LANGUAGE } from '../common/constants';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IVariableQuery } from '../common/types';
 
@@ -372,6 +373,17 @@ export namespace Settings {
         query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
         parseExpr: "'(\\w+)'"
     };
+}
+
+export namespace DataFrameLoading {
+    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
+    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
+    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
+    export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportName = '_VSCODE_RowImport';
+    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
+    export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
 }
 
 export namespace Identifiers {

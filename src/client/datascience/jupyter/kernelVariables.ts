@@ -11,9 +11,9 @@ import { Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { Identifiers, Settings } from '../constants';
+import { DataFrameLoading, Identifiers, Settings } from '../constants';
 import {
     ICell,
     IJupyterVariable,
@@ -46,6 +46,7 @@ interface INotebookState {
 @injectable()
 export class KernelVariables implements IJupyterVariables {
     private scriptLoader: VariableScriptLoader;
+    private importedDataFrameScripts = new Map<string, boolean>();
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
@@ -71,10 +72,24 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
-        // Run the get dataframe info script
-        return this.runScript<IJupyterVariable>(notebook, targetVariable, () =>
-            this.scriptLoader.readDataFrameInfoScript(targetVariable)
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        // Then execute a call to get the info and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
         );
+
+        // Combine with the original result (the call only returns the new fields)
+        return {
+            ...targetVariable,
+            ...this.deserializeJupyterResult(results)
+        };
     }
 
     public async getDataFrameRows(
@@ -83,10 +98,41 @@ export class KernelVariables implements IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject> {
-        // Run the get dataframe rows script
-        return this.runScript<JSONObject>(notebook, {}, () =>
-            this.scriptLoader.readDataFrameRowScript(targetVariable, start, end)
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
+
+        if (targetVariable.rowCount) {
+            end = Math.min(end, targetVariable.rowCount);
+        }
+
+        // Then execute a call to get the rows and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${end}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
         );
+        return this.deserializeJupyterResult(results);
+    }
+
+    private async importDataFrameScripts(notebook: INotebook): Promise<void> {
+        const key = notebook.identity.toString();
+        if (!this.importedDataFrameScripts.get(key)) {
+            // Clear our flag if the notebook disposes or restarts
+            const disposables: IDisposable[] = [];
+            const handler = () => {
+                this.importedDataFrameScripts.delete(key);
+                disposables.forEach((d) => d.dispose());
+            };
+            disposables.push(notebook.onDisposed(handler));
+            disposables.push(notebook.onKernelRestarted(handler));
+
+            const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}`;
+            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+            this.importedDataFrameScripts.set(notebook.identity.toString(), true);
+        }
     }
 
     private async runScript<T>(
