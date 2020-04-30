@@ -270,7 +270,7 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install IPython test requirements
+      - name: pip install ipython requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
@@ -329,7 +329,7 @@ jobs:
         shell: pwsh
         if: matrix.test-suite == 'venv'
 
-      - name: Set CI_PYTHON_PATH and disable autoselection
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
           echo "::set-env name=CI_PYTHON_PATH::python"
           echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
@@ -411,6 +411,11 @@ jobs:
           printenv
         shell: bash
 
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{matrix.python}}
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
@@ -420,7 +425,15 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
 
-      - name: Install IPython test requirements
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install ipython requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
@@ -441,6 +454,12 @@ jobs:
           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
           rm -r ${{env.ARTIFACT_NAME_VSIX}}
           npx tsc -p ./
+        shell: bash
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
         shell: bash
 
       - name: Run smoke tests
