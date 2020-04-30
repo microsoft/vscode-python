@@ -605,7 +605,7 @@ export class PythonSettings implements IPythonSettings {
                 ? this.interpreterPathService.get(this.workspaceRoot)
                 : pythonSettings.get<string>('pythonPath')
         )!;
-        if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
+        if (!process.env.CI_DISABLE_AUTO_SELECTION && (this.pythonPath.length === 0 || this.pythonPath === 'python')) {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 this.workspaceRoot
             );
