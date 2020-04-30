@@ -20,6 +20,7 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -34,6 +35,7 @@ suite('Data Science - KernelSelector', () => {
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let dependencyService: KernelDependencyService;
+    let kernelFinder: IKernelFinder;
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -59,12 +61,14 @@ suite('Data Science - KernelSelector', () => {
         appShell = mock(ApplicationShell);
         dependencyService = mock(KernelDependencyService);
         interpreterService = mock(InterpreterService);
+        kernelFinder = mock<IKernelFinder>();
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(dependencyService)
+            instance(dependencyService),
+            instance(kernelFinder)
         );
     });
     teardown(() => sinon.restore());
@@ -550,6 +554,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 anything(),
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -580,6 +585,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -622,6 +628,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -667,6 +674,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 undefined
             );
