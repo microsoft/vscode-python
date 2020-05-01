@@ -46,7 +46,14 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
+    // IANHU: Set not []?
     private cache: string[] = [];
+
+    // Store our results when listing all possible kernelspecs for a resource
+    private resourceToKernels = new Map<Resource, Promise<IJupyterKernelSpec[]>>();
+
+    // Store any json file that we have loaded from disk before
+    private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec>>();
 
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -113,8 +120,123 @@ export class KernelFinder implements IKernelFinder {
     }
 
     // Search all our local file system locations for installed kernel specs and return them
-    public async listKernelSpecs(_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        throw new Error('Not yet implmented');
+    public async listKernelSpecs(resource: Resource, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+        // If we have not already searched for this resource, then generate the search
+        if (!this.resourceToKernels.has(resource)) {
+            this.resourceToKernels.set(resource, this.findResourceKernelSpecs(resource, _cancelToken));
+        }
+
+        // ! as the has and set above verify that we have a return here
+        return this.resourceToKernels.get(resource)!;
+    }
+
+    private async findResourceKernelSpecs(
+        resource: Resource,
+        _cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec[]> {
+        const results: IJupyterKernelSpec[] = [];
+
+        // Find all the possible places to look for this resource
+        const paths = await this.findAllResourcePossibleKernelPaths(resource);
+
+        // Next search to find what actual json files there are
+        // IANHU: Finder also doing something similar
+        const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
+        const searchResults = await Promise.all(promises);
+
+        searchResults.forEach((result, i) => {
+            result.forEach(async (jsonpath) => {
+                // We are not using the cache for list all, but add the items that we find so the finder knows about them
+                // Only push if it's not there already
+                if (!this.cache.includes(jsonpath)) {
+                    // IANHU: Don't mess with the cache while I'm still testing this
+                    //this.cache.push(jsonpath);
+                }
+
+                const specPath = path.join(paths[i], jsonpath);
+                const kernelspec = await this.getKernelSpec(specPath);
+                results.push(kernelspec);
+            });
+        });
+
+        return results;
+    }
+
+    // IANHU: have the finder code use this as well
+    private async getKernelSpec(specPath: string): Promise<IJupyterKernelSpec> {
+        // If we have not already searched for this resource, then generate the search
+        if (!this.pathToKernelSpec.has(specPath)) {
+            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath));
+        }
+
+        // ! as the has and set above verify that we have a return here
+        return this.pathToKernelSpec.get(specPath)!;
+    }
+
+    // Load a kernelspec from disk
+    private async loadKernelSpec(specPath: string): Promise<IJupyterKernelSpec> {
+        const kernelJson = JSON.parse(await this.file.readFile(specPath));
+        return new JupyterKernelSpec(kernelJson, specPath);
+    }
+
+    private async findAllResourcePossibleKernelPaths(
+        resource: Resource,
+        _cancelToken?: CancellationToken
+    ): Promise<string[]> {
+        const possiblePaths: string[] = [];
+        possiblePaths.push(...(await this.getActiveInterpreterPath(resource)));
+        // IANHU: Also add in interpreter paths and disk paths
+        // Use Promise.all to let them run together
+        possiblePaths.push(...(await this.getInterpreterPaths(resource)));
+        possiblePaths.push(...(await this.getDiskPaths()));
+
+        return possiblePaths;
+    }
+
+    // IANHU: Have the finder use this as well?
+    private async getActiveInterpreterPath(resource: Resource): Promise<string[]> {
+        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (activeInterpreter) {
+            return [path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')];
+        }
+
+        return [];
+    }
+
+    // IANHU: also combine with finder
+    private async getInterpreterPaths(resource: Resource): Promise<string[]> {
+        const interpreters = await this.interpreterLocator.getInterpreters(resource, { ignoreCache: false });
+        const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
+        const interpreterPaths = interpreterPrefixPaths.map((prefixPath) =>
+            path.join(prefixPath, kernelPaths.get('kernel')!)
+        );
+        return interpreterPaths;
+    }
+
+    // IANHU: Also combine with finder code
+    private async getDiskPaths(): Promise<string[]> {
+        let paths = [];
+
+        if (this.platformService.isWindows) {
+            paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
+
+            if (process.env.ALLUSERSPROFILE) {
+                paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
+            }
+        } else {
+            // Unix based
+            const secondPart = this.platformService.isMac
+                ? kernelPaths.get('macJupyterPath')!
+                : kernelPaths.get('linuxJupyterPath')!;
+
+            paths = [
+                path.join('usr', 'share', 'jupyter', 'kernels'),
+                path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
+                path.join(this.pathUtils.home, secondPart)
+            ];
+        }
+
+        return paths;
     }
 
     // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
