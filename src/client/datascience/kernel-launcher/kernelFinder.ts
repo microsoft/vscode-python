@@ -6,6 +6,7 @@ import { Kernel } from '@jupyterlab/services';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -45,7 +46,8 @@ export class KernelFinder implements IKernelFinder {
     private cache: string[] = [];
 
     // Store our results when listing all possible kernelspecs for a resource
-    private resourceToKernels = new Map<Resource, Promise<IJupyterKernelSpec[]>>();
+    //private resourceToKernels = new Map<Resource, Promise<IJupyterKernelSpec[]>>();
+    private workspaceToKernels = new Map<string, Promise<IJupyterKernelSpec[]>>();
 
     // Store any json file that we have loaded from disk before
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
@@ -59,7 +61,8 @@ export class KernelFinder implements IKernelFinder {
         @inject(IFileSystem) private file: IFileSystem,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IInstaller) private installer: IInstaller,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
 
     @captureTelemetry(Telemetry.KernelFinderPerf)
@@ -110,13 +113,21 @@ export class KernelFinder implements IKernelFinder {
 
     // Search all our local file system locations for installed kernel specs and return them
     public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
+        if (!resource) {
+            // We need a resource to search for related kernel specs
+            return [];
+        }
+
+        // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
+        const workspaceFolderId = this.workspaceService.getWorkspaceFolderIdentifier(resource, resource.fsPath);
+
         // If we have not already searched for this resource, then generate the search
-        if (!this.resourceToKernels.has(resource)) {
-            this.resourceToKernels.set(resource, this.findResourceKernelSpecs(resource));
+        if (!this.workspaceToKernels.has(workspaceFolderId)) {
+            this.workspaceToKernels.set(workspaceFolderId, this.findResourceKernelSpecs(resource));
         }
 
         // ! as the has and set above verify that we have a return here
-        return this.resourceToKernels.get(resource)!;
+        return this.workspaceToKernels.get(workspaceFolderId)!;
     }
 
     private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
