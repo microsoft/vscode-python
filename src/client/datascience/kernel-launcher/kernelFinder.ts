@@ -148,12 +148,12 @@ export class KernelFinder implements IKernelFinder {
             result.forEach(async (jsonpath) => {
                 // We are not using the cache for list all, but add the items that we find so the finder knows about them
                 // Only push if it's not there already
-                if (!this.cache.includes(jsonpath)) {
+                const specPath = path.join(paths[i], jsonpath);
+                if (!this.cache.includes(specPath)) {
                     // IANHU: Don't mess with the cache while I'm still testing this
-                    //this.cache.push(jsonpath);
+                    //this.cache.push(specPath);
                 }
 
-                const specPath = path.join(paths[i], jsonpath);
                 const kernelspec = await this.getKernelSpec(specPath);
                 results.push(kernelspec);
             });
