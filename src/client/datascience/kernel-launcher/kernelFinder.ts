@@ -25,12 +25,17 @@ import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
-const kernelPaths = new Map([
-    ['winJupyterPath', path.join('AppData', 'Roaming', 'jupyter', 'kernels')],
-    ['linuxJupyterPath', path.join('.local', 'share', 'jupyter', 'kernels')],
-    ['macJupyterPath', path.join('Library', 'Jupyter', 'kernels')],
-    ['kernel', path.join('share', 'jupyter', 'kernels')]
-]);
+//const kernelPaths = new Map([
+//['winJupyterPath', path.join('AppData', 'Roaming', 'jupyter', 'kernels')],
+//['linuxJupyterPath', path.join('.local', 'share', 'jupyter', 'kernels')],
+//['macJupyterPath', path.join('Library', 'Jupyter', 'kernels')],
+//['kernel', path.join('share', 'jupyter', 'kernels')]
+//]);
+const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
+const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
+const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
+const baseKernelPath = path.join('share', 'jupyter', 'kernels');
+
 const cacheFile = 'kernelSpecPathCache.json';
 const defaultSpecName = 'python_defaultSpec_';
 
@@ -195,23 +200,21 @@ export class KernelFinder implements IKernelFinder {
     private async getInterpreterPaths(resource: Resource): Promise<string[]> {
         const interpreters = await this.interpreterLocator.getInterpreters(resource, { ignoreCache: false });
         const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
-        return interpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, kernelPaths.get('kernel')!));
+        return interpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, baseKernelPath));
     }
 
     private async getDiskPaths(): Promise<string[]> {
         let paths = [];
 
         if (this.platformService.isWindows) {
-            paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
+            paths = [path.join(this.pathUtils.home, winJupyterPath)];
 
             if (process.env.ALLUSERSPROFILE) {
                 paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
             }
         } else {
             // Unix based
-            const secondPart = this.platformService.isMac
-                ? kernelPaths.get('macJupyterPath')!
-                : kernelPaths.get('linuxJupyterPath')!;
+            const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
             paths = [
                 path.join('usr', 'share', 'jupyter', 'kernels'),
