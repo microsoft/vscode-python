@@ -172,5 +172,18 @@
         "salt": "DeprecatePythonPath",
         "min": 100,
         "max": 100
+    },
+    {
+        "name": "RunByLine - control",
+        "salt": "RunByLine",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "RunByLine - experiment",
+        "salt": "RunByLine",
+        "max": 0,
+        "min": 0
     }
+
 ]
