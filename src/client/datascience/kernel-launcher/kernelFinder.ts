@@ -22,6 +22,8 @@ import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
 import { IJupyterKernelSpec } from '../types';
 import { getKernelInterpreter } from './helpers';
 import { IKernelFinder } from './types';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 const kernelPaths = new Map([
     ['winJupyterPath', path.join('AppData', 'Roaming', 'jupyter', 'kernels')],
@@ -136,24 +138,12 @@ export class KernelFinder implements IKernelFinder {
         // Find all the possible places to look for this resource
         const paths = await this.findAllResourcePossibleKernelPaths(resource);
 
-        // Next search to find what actual json files there are
-        // IANHU: Finder also doing something similar
-        const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
-        const searchResults = await Promise.all(promises);
+        const searchResults = await this.kernelGlobSearch(paths);
 
-        searchResults.forEach((result, i) => {
-            result.forEach(async (jsonpath) => {
-                // We are not using the cache for list all, but add the items that we find so the finder knows about them
-                // Only push if it's not there already
-                const specPath = path.join(paths[i], jsonpath);
-                if (!this.cache.includes(specPath)) {
-                    // IANHU: Don't mess with the cache while I'm still testing this
-                    //this.cache.push(specPath);
-                }
-
-                const kernelspec = await this.getKernelSpec(specPath);
-                results.push(kernelspec);
-            });
+        searchResults.forEach(async (resultPath) => {
+            // IANHU: Add to cache here as well?
+            const kernelspec = await this.getKernelSpec(resultPath);
+            results.push(kernelspec);
         });
 
         return results;
@@ -231,6 +221,21 @@ export class KernelFinder implements IKernelFinder {
         return paths;
     }
 
+    // IANHU: Have the finder code use this as well for searching
+    private async kernelGlobSearch(paths: string[]): Promise<string[]> {
+        const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
+        const searchResults = await Promise.all(promises);
+
+        // Append back on the start of each path so we have the full path in the results
+        const fullPathResults = searchResults.map((result, index) => {
+            return result.map((partialSpecPath) => {
+                return path.join(paths[index], partialSpecPath);
+            });
+        });
+
+        return flatten(fullPathResults);
+    }
+
     // For the given kernelspec return back the kernelspec with ipykernel installed into it or error
     private async verifyIpyKernel(
         kernelSpec: IJupyterKernelSpec,
@@ -279,26 +284,6 @@ export class KernelFinder implements IKernelFinder {
     // Jupyter looks for kernels in these paths:
     // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     private async findDiskPath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        //let paths = [];
-
-        //if (this.platformService.isWindows) {
-        //paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
-
-        //if (process.env.ALLUSERSPROFILE) {
-        //paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
-        //}
-        //} else {
-        //// Unix based
-        //const secondPart = this.platformService.isMac
-        //? kernelPaths.get('macJupyterPath')!
-        //: kernelPaths.get('linuxJupyterPath')!;
-
-        //paths = [
-        //path.join('usr', 'share', 'jupyter', 'kernels'),
-        //path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
-        //path.join(this.pathUtils.home, secondPart)
-        //];
-        //}
         const paths = await this.getDiskPaths();
 
         return this.getKernelSpecFromDisk(paths, kernelName);
