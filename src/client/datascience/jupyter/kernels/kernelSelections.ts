@@ -123,9 +123,9 @@ export class InstalledRawKernelSelectionListProvider implements IKernelSelection
     constructor(private readonly kernelFinder: IKernelFinder, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(
         resource: Resource,
-        cancelToken?: CancellationToken
+        _cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {
-        const items = await this.kernelFinder.listKernelSpecs(resource, cancelToken);
+        const items = await this.kernelFinder.listKernelSpecs(resource);
         return items
             .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));

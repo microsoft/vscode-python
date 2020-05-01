@@ -109,20 +109,17 @@ export class KernelFinder implements IKernelFinder {
     }
 
     // Search all our local file system locations for installed kernel specs and return them
-    public async listKernelSpecs(resource: Resource, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+    public async listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
         // If we have not already searched for this resource, then generate the search
         if (!this.resourceToKernels.has(resource)) {
-            this.resourceToKernels.set(resource, this.findResourceKernelSpecs(resource, _cancelToken));
+            this.resourceToKernels.set(resource, this.findResourceKernelSpecs(resource));
         }
 
         // ! as the has and set above verify that we have a return here
         return this.resourceToKernels.get(resource)!;
     }
 
-    private async findResourceKernelSpecs(
-        resource: Resource,
-        _cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec[]> {
+    private async findResourceKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]> {
         const results: IJupyterKernelSpec[] = [];
 
         // Find all the possible places to look for this resource
