@@ -28,6 +28,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v1
         with:
@@ -91,6 +96,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: Retrieve cached npm files
         uses: actions/cache@v1
@@ -201,6 +211,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
@@ -255,7 +270,7 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install IPython test requirements
+      - name: pip install ipython requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
@@ -330,6 +345,13 @@ jobs:
           & $condaExecPath create -p "./test_env2" -y python
           & $condaExecPath create -p "~/test_env3" -y python
 
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+        shell: bash
+        if: matrix.test-suite != 'ts-unit'
+
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
@@ -402,6 +424,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{matrix.python}}
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
@@ -410,6 +442,23 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install ipython requirements
+        run: |
+          python -m pip install numpy
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+
+      - name: pip install jupyter
+        run: |
+          python -m pip install --upgrade jupyter
 
       - name: Download VSIX
         uses: actions/download-artifact@v1
@@ -423,6 +472,12 @@ jobs:
           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
           rm -r ${{env.ARTIFACT_NAME_VSIX}}
           npx tsc -p ./
+        shell: bash
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
         shell: bash
 
       - name: Run smoke tests

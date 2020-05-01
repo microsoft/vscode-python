@@ -289,6 +289,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
                 ? this.kernelSelector.getKernelForLocalConnection(
                       resource,
+                      'jupyter',
                       sessionManager,
                       notebookMetadata,
                       isTestExecution(),

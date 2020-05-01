@@ -23,11 +23,10 @@ import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
-import { KernelService } from '../../jupyter/kernels/kernelService';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelFinder, IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
     IJupyterKernelSpec,
@@ -57,9 +56,7 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelFinder: IKernelFinder,
         private kernelSelector: KernelSelector,
-        private kernelService: KernelService,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel
     ) {
@@ -112,46 +109,56 @@ export class HostRawNotebookProvider
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
-            // Before we try to connect we need to find a kernel and install ipykernel
-            const kernelSpec = await this.kernelFinder.findKernelSpec(
+            // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
+            const kernelSpecInterpreter = await this.kernelSelector.getKernelForLocalConnection(
                 resource,
-                notebookMetadata?.kernelspec?.name,
+                'raw',
+                undefined,
+                notebookMetadata,
+                disableUI,
                 cancelToken
             );
 
-            // Locate the interpreter that matches our kernelspec
-            const interpreter = await this.kernelService.findMatchingInterpreter(kernelSpec);
-
-            await rawSession.connect(kernelSpec, launchTimeout, interpreter, cancelToken);
-
-            // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(kernelSpec);
-
-            if (rawSession.isConnected) {
-                // Create our notebook
-                const notebook = new HostJupyterNotebook(
-                    this.liveShare,
-                    rawSession,
-                    this.configService,
-                    this.disposableRegistry,
-                    info,
-                    this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
-                    resource,
-                    identity,
-                    this.getDisposedError.bind(this),
-                    this.workspaceService,
-                    this.appShell,
-                    this.fs
+            // Interpreter is optional, but we must have a kernel spec for a raw launch
+            if (!kernelSpecInterpreter.kernelSpec) {
+                notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
+            } else {
+                await rawSession.connect(
+                    kernelSpecInterpreter.kernelSpec,
+                    launchTimeout,
+                    kernelSpecInterpreter.interpreter,
+                    cancelToken
                 );
 
-                // Run initial setup
-                await notebook.initialize(cancelToken);
+                // Get the execution info for our notebook
+                const info = await this.getExecutionInfo(kernelSpecInterpreter.kernelSpec);
 
-                traceInfo(`Finished connecting ${this.id}`);
+                if (rawSession.isConnected) {
+                    // Create our notebook
+                    const notebook = new HostJupyterNotebook(
+                        this.liveShare,
+                        rawSession,
+                        this.configService,
+                        this.disposableRegistry,
+                        info,
+                        this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
+                        resource,
+                        identity,
+                        this.getDisposedError.bind(this),
+                        this.workspaceService,
+                        this.appShell,
+                        this.fs
+                    );
 
-                notebookPromise.resolve(notebook);
-            } else {
-                notebookPromise.reject(this.getDisposedError());
+                    // Run initial setup
+                    await notebook.initialize(cancelToken);
+
+                    traceInfo(`Finished connecting ${this.id}`);
+
+                    notebookPromise.resolve(notebook);
+                } else {
+                    notebookPromise.reject(this.getDisposedError());
+                }
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process

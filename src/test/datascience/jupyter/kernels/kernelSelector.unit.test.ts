@@ -20,6 +20,7 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -34,6 +35,7 @@ suite('Data Science - KernelSelector', () => {
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let dependencyService: KernelDependencyService;
+    let kernelFinder: IKernelFinder;
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -59,12 +61,14 @@ suite('Data Science - KernelSelector', () => {
         appShell = mock(ApplicationShell);
         dependencyService = mock(KernelDependencyService);
         interpreterService = mock(InterpreterService);
+        kernelFinder = mock<IKernelFinder>();
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(dependencyService)
+            instance(dependencyService),
+            instance(kernelFinder)
         );
     });
     teardown(() => sinon.restore());
@@ -534,6 +538,23 @@ suite('Data Science - KernelSelector', () => {
             selectLocalKernelStub.resolves({ kernelSpec, interpreter });
         });
         teardown(() => sinon.restore());
+        test('Raw kernel connection finds a valid kernel spec and interpreter', async () => {
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernelSpec);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
+            ).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
+
+            assert.isOk(kernel.kernelSpec === kernelSpec);
+            assert.isOk(kernel.interpreter === interpreter);
+        });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
@@ -550,6 +571,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 anything(),
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -580,6 +602,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -622,6 +645,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -667,6 +691,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 undefined
             );

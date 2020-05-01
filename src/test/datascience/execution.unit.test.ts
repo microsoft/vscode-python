@@ -962,7 +962,14 @@ suite('Jupyter Execution', async () => {
             env: undefined
         };
         when(
-            kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything(), anything())
+            kernelSelector.getKernelForLocalConnection(
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything(),
+                anything()
+            )
         ).thenResolve({
             kernelSpec
         });

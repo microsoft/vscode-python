@@ -46,7 +46,6 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    private activeInterpreter: PythonInterpreter | undefined;
     private cache: string[] = [];
 
     constructor(
@@ -69,6 +68,7 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<IJupyterKernelSpec> {
         this.cache = await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
+        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
 
         if (kernelName && !kernelName.includes(defaultSpecName)) {
             let kernelSpec = await this.searchCache(kernelName);
@@ -77,7 +77,10 @@ export class KernelFinder implements IKernelFinder {
                 return kernelSpec;
             }
 
-            kernelSpec = await this.getKernelSpecFromActiveInterpreter(resource, kernelName);
+            // Check in active interpreter first
+            if (activeInterpreter) {
+                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, activeInterpreter);
+            }
 
             if (kernelSpec) {
                 this.writeCache(this.cache).ignoreErrors();
@@ -98,9 +101,9 @@ export class KernelFinder implements IKernelFinder {
                 result = both[0] ? both[0] : both[1];
             }
 
-            foundKernel = result ? result : await this.getDefaultKernelSpec(resource);
+            foundKernel = result ? result : await this.getDefaultKernelSpec(activeInterpreter);
         } else {
-            foundKernel = await this.getDefaultKernelSpec(resource);
+            foundKernel = await this.getDefaultKernelSpec(activeInterpreter);
         }
 
         this.writeCache(this.cache).ignoreErrors();
@@ -139,17 +142,13 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getKernelSpecFromActiveInterpreter(
-        resource: Resource,
-        kernelName: string
+        kernelName: string,
+        activeInterpreter: PythonInterpreter
     ): Promise<IJupyterKernelSpec | undefined> {
-        this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-
-        if (this.activeInterpreter) {
-            return this.getKernelSpecFromDisk(
-                [path.join(this.activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')],
-                kernelName
-            );
-        }
+        return this.getKernelSpecFromDisk(
+            [path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')],
+            kernelName
+        );
     }
 
     private async findInterpreterPath(
@@ -206,17 +205,13 @@ export class KernelFinder implements IKernelFinder {
         return this.searchCache(kernelName);
     }
 
-    private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
-        if (!this.activeInterpreter) {
-            this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
-        }
-
+    private async getDefaultKernelSpec(activeInterpreter?: PythonInterpreter): Promise<IJupyterKernelSpec> {
         // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
         // associated with the current resource for launching.
         const defaultSpec: Kernel.ISpecModel = {
             name: defaultSpecName + Date.now().toString(),
             language: 'python',
-            display_name: this.activeInterpreter?.displayName ? this.activeInterpreter.displayName : 'Python 3',
+            display_name: activeInterpreter?.displayName ? activeInterpreter.displayName : 'Python 3',
             metadata: {},
             argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
             env: {},

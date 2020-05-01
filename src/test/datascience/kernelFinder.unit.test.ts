@@ -93,6 +93,7 @@ suite('Kernel Finder', () => {
 
         activeInterpreter = {
             path: context.object.globalStoragePath,
+            displayName: 'activeInterpreter',
             sysPrefix: '1',
             envName: '1',
             sysVersion: '3.1.1.1',
@@ -150,6 +151,40 @@ suite('Kernel Finder', () => {
             });
         const spec = await kernelFinder.findKernelSpec(resource, kernelName);
         expect(spec).to.deep.include(kernel);
+        fileSystem.reset();
+    });
+
+    test('No kernel name given. Default spec returned should match the interpreter selected.', async () => {
+        setupFileSystem();
+
+        // Create a second active interpreter to return on the second call
+        const activeInterpreter2 = {
+            path: context.object.globalStoragePath,
+            displayName: 'activeInterpreter2',
+            sysPrefix: '1',
+            envName: '1',
+            sysVersion: '3.1.1.1',
+            architecture: Architecture.x64,
+            type: InterpreterType.Unknown
+        };
+        // Record a second call to getActiveInterpreter, will play after the first
+        interpreterService
+            .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(activeInterpreter2));
+
+        fileSystem
+            .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+            .returns((pathParam: string) => {
+                if (pathParam.includes(cacheFile)) {
+                    return Promise.resolve('[]');
+                }
+                return Promise.resolve(JSON.stringify(kernel));
+            });
+        let spec = await kernelFinder.findKernelSpec(resource);
+        expect(spec.display_name).to.equal(activeInterpreter.displayName);
+
+        spec = await kernelFinder.findKernelSpec(resource);
+        expect(spec.display_name).to.equal(activeInterpreter2.displayName);
         fileSystem.reset();
     });
 
