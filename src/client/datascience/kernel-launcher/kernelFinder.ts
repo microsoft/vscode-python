@@ -25,12 +25,6 @@ import { IKernelFinder } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
-//const kernelPaths = new Map([
-//['winJupyterPath', path.join('AppData', 'Roaming', 'jupyter', 'kernels')],
-//['linuxJupyterPath', path.join('.local', 'share', 'jupyter', 'kernels')],
-//['macJupyterPath', path.join('Library', 'Jupyter', 'kernels')],
-//['kernel', path.join('share', 'jupyter', 'kernels')]
-//]);
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
@@ -53,7 +47,6 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
 // Before returning the IJupyterKernelSpec it makes sure that ipykernel is installed into the kernel spec interpreter
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    // IANHU: Set not []?
     private cache: string[] = [];
 
     // Store our results when listing all possible kernelspecs for a resource
@@ -147,7 +140,10 @@ export class KernelFinder implements IKernelFinder {
 
         await Promise.all(
             searchResults.map(async (resultPath) => {
-                // IANHU: Add to cache as well?
+                // Add these into our path cache to speed up later finds
+                if (!this.cache.includes(resultPath)) {
+                    this.cache.push(resultPath);
+                }
                 const kernelspec = await this.getKernelSpec(resultPath);
                 results.push(kernelspec);
             })
