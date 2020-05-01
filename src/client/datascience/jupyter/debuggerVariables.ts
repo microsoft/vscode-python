@@ -89,7 +89,7 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
     ): Promise<JSONObject> {
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession) {
-            // No active server just return the unchanged target variable
+            // No active server just return no rows
             return {};
         }
 
