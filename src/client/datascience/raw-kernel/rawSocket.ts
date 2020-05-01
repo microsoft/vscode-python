@@ -43,6 +43,12 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private sendChain: Promise<any> = Promise.resolve();
     private channels: IChannels;
     private closed = false;
+    /**
+     * This will be true if user has executed something that has resulted in the use of ipywidgets.
+     * We make this determinination based on whether we see messages coming from backend kernel of a specific shape.
+     * E.g. if it contains ipywidget mime type, then widgets are in use.
+     */
+    private isUsingIPyWidgets?: boolean;
 
     constructor(
         private connection: IKernelConnection,
@@ -173,22 +179,31 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
         // Make sure it has a channel on it
         message.channel = channel;
-
+        if (
+            !this.isUsingIPyWidgets &&
+            message.content &&
+            message.content.data &&
+            message.content.data['application/vnd.jupyter.widget-view+json']
+        ) {
+            this.isUsingIPyWidgets = true;
+        }
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
             // to ensure that:
             // a) Hooks finish before we fire the event for real
             // b) Event fires
             // c) Next message happens after this one (so this side can handle the message before another event goes through)
-            this.msgChain = this.msgChain
-                .then(() => {
-                    // Hooks expect serialized data as this normally comes from a WebSocket
-                    const serialized = this.serialize(message);
-                    return Promise.all(this.receiveHooks.map((p) => p(serialized)));
-                })
-                .then(() => this.onmessage({ data: message, type: 'message', target: this }));
+            this.msgChain = this.msgChain.then(async () => {
+                // Hooks expect serialized data as this normally comes from a WebSocket
+                const serialized = this.serialize(message);
+                const promise = Promise.all(this.receiveHooks.map((p) => p(serialized)));
+                if (this.isUsingIPyWidgets) {
+                    await promise;
+                }
+                this.onmessage({ data: message, type: 'message', target: this });
+            });
         } else {
-            this.msgChain = this.msgChain.then(() => this.onmessage({ data: message, type: 'message', target: this }));
+            this.onmessage({ data: message, type: 'message', target: this });
         }
     }
 
@@ -201,13 +216,15 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
             const hookData = this.serialize(msg);
 
-            this.sendChain = this.sendChain
-                .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
-                .then(() => this.postToSocket(msg.channel, data));
-        } else {
-            this.sendChain = this.sendChain.then(() => {
+            this.sendChain = this.sendChain.then(async () => {
+                const promise = Promise.all(this.sendHooks.map((s) => s(hookData, noop)));
+                if (this.isUsingIPyWidgets) {
+                    await promise;
+                }
                 this.postToSocket(msg.channel, data);
             });
+        } else {
+            this.postToSocket(msg.channel, data);
         }
     }
 
