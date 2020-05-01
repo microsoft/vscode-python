@@ -151,7 +151,7 @@ export class KernelFinder implements IKernelFinder {
 
     // IANHU: have the finder code use this as well
     private async getKernelSpec(specPath: string): Promise<IJupyterKernelSpec> {
-        // If we have not already searched for this resource, then generate the search
+        // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(specPath)) {
             this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath));
         }
