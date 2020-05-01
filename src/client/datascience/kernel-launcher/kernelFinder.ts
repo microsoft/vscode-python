@@ -183,14 +183,13 @@ export class KernelFinder implements IKernelFinder {
         resource: Resource,
         _cancelToken?: CancellationToken
     ): Promise<string[]> {
-        const possiblePaths: string[] = [];
-        possiblePaths.push(...(await this.getActiveInterpreterPath(resource)));
-        // IANHU: Also add in interpreter paths and disk paths
-        // Use Promise.all to let them run together
-        possiblePaths.push(...(await this.getInterpreterPaths(resource)));
-        possiblePaths.push(...(await this.getDiskPaths()));
+        const [activePath, interpreterPaths, diskPaths] = await Promise.all([
+            this.getActiveInterpreterPath(resource),
+            this.getInterpreterPaths(resource),
+            this.getDiskPaths()
+        ]);
 
-        return possiblePaths;
+        return [...activePath, ...interpreterPaths, ...diskPaths];
     }
 
     // IANHU: Have the finder use this as well?
