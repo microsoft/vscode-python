@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { RunByLine, WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -164,7 +164,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            experimentsManager.inExperiment(RunByLine.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows

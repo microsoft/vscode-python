@@ -222,6 +222,7 @@ import { KernelService } from '../../client/datascience/jupyter/kernels/kernelSe
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
@@ -608,6 +609,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IJupyterVariables,
             JupyterVariables,
             Identifiers.ALL_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            OldJupyterVariables,
+            Identifiers.OLD_VARIABLES
         );
         this.serviceManager.addSingleton<IJupyterVariables>(
             IJupyterVariables,

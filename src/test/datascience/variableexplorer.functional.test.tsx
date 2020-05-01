@@ -6,16 +6,20 @@ import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
-import { Provider } from 'react-redux';
 import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
-import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
-import { runDoubleTest, runInteractiveTest, waitForMessage } from './testHelpers';
+import {
+    openVariableExplorer,
+    runDoubleTest,
+    runInteractiveTest,
+    waitForMessage,
+    waitForVariablesUpdated
+} from './testHelpers';
 
 // tslint:disable: no-var-requires no-require-imports
 const rangeInclusive = require('range-inclusive');
@@ -63,10 +67,6 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     //      asyncDump();
     //});
 
-    async function waitForVariablesUpdated(numberOfTimes?: number): Promise<void> {
-        return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
-    }
-
     async function addCodeImpartial(
         wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
         code: string,
@@ -74,7 +74,9 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         waitForVariablesCount: number = 1,
         expectError: boolean = false
     ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        const variablesUpdated = waitForVariables ? waitForVariablesUpdated(waitForVariablesCount) : Promise.resolve();
+        const variablesUpdated = waitForVariables
+            ? waitForVariablesUpdated(ioc, waitForVariablesCount)
+            : Promise.resolve();
         const nodes = wrapper.find('InteractivePanel');
         if (nodes.length > 0) {
             const result = await addCode(ioc, wrapper, code, expectError);
@@ -490,17 +492,6 @@ Name: 0, dtype: float64`,
         }
     );
 });
-
-// Open up our variable explorer which also triggers a data fetch
-function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-    const nodes = wrapper.find(Provider);
-    if (nodes.length > 0) {
-        const store = nodes.at(0).props().store;
-        if (store) {
-            store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
-        }
-    }
-}
 
 // Verify a set of rows versus a set of expected variables
 function verifyVariables(

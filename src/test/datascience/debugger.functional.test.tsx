@@ -26,7 +26,7 @@ import { getConnectionInfo } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './testHelpers';
+import { mountConnectedMainPanel, openVariableExplorer } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -129,7 +129,8 @@ suite('DataScience Debugger tests', () => {
         code: string,
         breakpoint?: Range,
         breakpointFile?: string,
-        expectError?: boolean
+        expectError?: boolean,
+        step?: boolean
     ): Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -172,6 +173,24 @@ suite('DataScience Debugger tests', () => {
                 assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
 
                 verifyCodeLenses(expectedBreakLine);
+
+                // Step if allowed
+                if (step && ioc.wrapper) {
+                    await mockDebuggerService?.stepOver();
+                    // Verify variables work
+                    if (!ioc.mockJupyter) {
+                        openVariableExplorer(ioc.wrapper);
+
+                        // Force an update so we render whatever the current state is
+                        ioc.wrapper.update();
+
+                        // Then search for results.
+                        const foundRows = ioc.wrapper.find('div.react-grid-Row');
+
+                        // Just assert we found some rows
+                        assert.ok(foundRows, 'Did not find any rows during debugging');
+                    }
+                }
 
                 // Verify break location
                 await mockDebuggerService!.continue();
@@ -221,6 +240,9 @@ suite('DataScience Debugger tests', () => {
 
     test('Debug cell without breakpoint', async () => {
         await debugCell('#%%\nprint("bar")');
+    });
+    test('Check variables', async () => {
+        await debugCell('#%%\nx = 4\nx = 5', undefined, undefined, false, true);
     });
 
     test('Debug remote', async () => {

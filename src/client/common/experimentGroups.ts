@@ -48,6 +48,12 @@ export enum LocalZMQKernel {
     experiment = 'LocalZMQKernel - experiment'
 }
 
+// Experiment for supporting run by line in data science notebooks
+export enum RunByLine {
+    control = 'RunByLine - control',
+    experiment = 'RunByLine - experiment'
+}
+
 /**
  * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
  *

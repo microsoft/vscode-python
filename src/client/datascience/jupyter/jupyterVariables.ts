@@ -6,7 +6,8 @@ import { inject, injectable, named } from 'inversify';
 
 import { Event, EventEmitter } from 'vscode';
 import { IDebugService } from '../../common/application/types';
-import { IDisposableRegistry } from '../../common/types';
+import { RunByLine } from '../../common/experimentGroups';
+import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
@@ -28,11 +29,14 @@ export class JupyterVariables implements IJupyterVariables {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
+        @inject(IExperimentsManager) private experimentsManager: IExperimentsManager,
+        @inject(IJupyterVariables) @named(Identifiers.OLD_VARIABLES) private oldVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debuggerVariables: IJupyterVariables
     ) {
         disposableRegistry.push(debuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
         disposableRegistry.push(kernelVariables.refreshRequired(this.fireRefresh.bind(this)));
+        disposableRegistry.push(oldVariables.refreshRequired(this.fireRefresh.bind(this)));
     }
 
     public get refreshRequired(): Event<void> {
@@ -62,6 +66,9 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private get realVariables(): IJupyterVariables {
+        if (this.experimentsManager.inExperiment(RunByLine.control)) {
+            return this.oldVariables;
+        }
         if (this.debugService.activeDebugSession) {
             return this.debuggerVariables;
         }

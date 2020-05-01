@@ -54,7 +54,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            false
         );
 
         // Load the web panel using our current directory as we don't expect to load any other files

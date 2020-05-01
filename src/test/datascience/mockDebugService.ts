@@ -188,6 +188,13 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         }
     }
 
+    public async stepOver(): Promise<void> {
+        await this.sendMessage('stepover', { threadId: 0 });
+        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+            this.debugAdapterTracker.onDidSendMessage({ type: 'event', event: 'stepover' });
+        }
+    }
+
     public async getStackTrace(): Promise<DebugProtocol.StackTraceResponse | undefined> {
         const deferred = createDeferred<DebugProtocol.StackTraceResponse>();
         this.protocolParser.once('response_stackTrace', (args: any) => {
@@ -314,6 +321,8 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
             this.debugAdapterTracker.onDidSendMessage(args);
         }
+
+        // Also send out the stack frame and
 
         // Indicate we stopped at a breakpoint
         this.breakpointEmitter.fire();
