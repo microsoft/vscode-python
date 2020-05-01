@@ -1043,6 +1043,10 @@ export interface IEventNamePropertyMapping {
         interpreters?: number;
     };
     /**
+     * Telemetry event sent when pipenv interpreter discovery is executed.
+     */
+    [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
+    /**
      * Telemetry event sent with details when user clicks the prompt with the following message
      * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
