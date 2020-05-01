@@ -86,7 +86,7 @@ export class KernelFinder implements IKernelFinder {
 
             // Check in active interpreter first
             if (activeInterpreter) {
-                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, activeInterpreter);
+                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
             }
 
             if (kernelSpec) {
@@ -95,12 +95,9 @@ export class KernelFinder implements IKernelFinder {
             }
 
             const diskSearch = this.findDiskPath(kernelName);
-            const interpreterSearch = this.interpreterLocator
-                .getInterpreters(resource, { ignoreCache: false })
-                .then((interpreters) => {
-                    const interpreterPaths = interpreters.map((interp) => interp.sysPrefix);
-                    return this.findInterpreterPath(interpreterPaths, kernelName);
-                });
+            const interpreterSearch = this.getInterpreterPaths(resource).then((interpreterPaths) => {
+                return this.findInterpreterPath(interpreterPaths, kernelName);
+            });
 
             let result = await Promise.race([diskSearch, interpreterSearch]);
             if (!result) {
@@ -179,6 +176,7 @@ export class KernelFinder implements IKernelFinder {
         return new JupyterKernelSpec(kernelJson, specPath);
     }
 
+    // For the given resource, find atll the file paths for kernel specs that wewant to associate with this
     private async findAllResourcePossibleKernelPaths(
         resource: Resource,
         _cancelToken?: CancellationToken
@@ -192,9 +190,9 @@ export class KernelFinder implements IKernelFinder {
         return [...activePath, ...interpreterPaths, ...diskPaths];
     }
 
-    // IANHU: Have the finder use this as well?
     private async getActiveInterpreterPath(resource: Resource): Promise<string[]> {
         const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+
         if (activeInterpreter) {
             return [path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')];
         }
@@ -202,17 +200,12 @@ export class KernelFinder implements IKernelFinder {
         return [];
     }
 
-    // IANHU: also combine with finder
     private async getInterpreterPaths(resource: Resource): Promise<string[]> {
         const interpreters = await this.interpreterLocator.getInterpreters(resource, { ignoreCache: false });
         const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
-        const interpreterPaths = interpreterPrefixPaths.map((prefixPath) =>
-            path.join(prefixPath, kernelPaths.get('kernel')!)
-        );
-        return interpreterPaths;
+        return interpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, kernelPaths.get('kernel')!));
     }
 
-    // IANHU: Also combine with finder code
     private async getDiskPaths(): Promise<string[]> {
         let paths = [];
 
@@ -264,12 +257,10 @@ export class KernelFinder implements IKernelFinder {
 
     private async getKernelSpecFromActiveInterpreter(
         kernelName: string,
-        activeInterpreter: PythonInterpreter
+        resource: Resource
     ): Promise<IJupyterKernelSpec | undefined> {
-        return this.getKernelSpecFromDisk(
-            [path.join(activeInterpreter.sysPrefix, 'share', 'jupyter', 'kernels')],
-            kernelName
-        );
+        const activePath = await this.getActiveInterpreterPath(resource);
+        return this.getKernelSpecFromDisk(activePath, kernelName);
     }
 
     private async findInterpreterPath(
@@ -277,7 +268,8 @@ export class KernelFinder implements IKernelFinder {
         kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
         const promises = interpreterPaths.map((intPath) =>
-            this.getKernelSpecFromDisk([path.join(intPath, kernelPaths.get('kernel')!)], kernelName)
+            //this.getKernelSpecFromDisk([path.join(intPath, kernelPaths.get('kernel')!)], kernelName)
+            this.getKernelSpecFromDisk([intPath], kernelName)
         );
 
         const specs = await Promise.all(promises);
@@ -287,26 +279,27 @@ export class KernelFinder implements IKernelFinder {
     // Jupyter looks for kernels in these paths:
     // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     private async findDiskPath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        let paths = [];
+        //let paths = [];
 
-        if (this.platformService.isWindows) {
-            paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
+        //if (this.platformService.isWindows) {
+        //paths = [path.join(this.pathUtils.home, kernelPaths.get('winJupyterPath')!)];
 
-            if (process.env.ALLUSERSPROFILE) {
-                paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
-            }
-        } else {
-            // Unix based
-            const secondPart = this.platformService.isMac
-                ? kernelPaths.get('macJupyterPath')!
-                : kernelPaths.get('linuxJupyterPath')!;
+        //if (process.env.ALLUSERSPROFILE) {
+        //paths.push(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
+        //}
+        //} else {
+        //// Unix based
+        //const secondPart = this.platformService.isMac
+        //? kernelPaths.get('macJupyterPath')!
+        //: kernelPaths.get('linuxJupyterPath')!;
 
-            paths = [
-                path.join('usr', 'share', 'jupyter', 'kernels'),
-                path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
-                path.join(this.pathUtils.home, secondPart)
-            ];
-        }
+        //paths = [
+        //path.join('usr', 'share', 'jupyter', 'kernels'),
+        //path.join('usr', 'local', 'share', 'jupyter', 'kernels'),
+        //path.join(this.pathUtils.home, secondPart)
+        //];
+        //}
+        const paths = await this.getDiskPaths();
 
         return this.getKernelSpecFromDisk(paths, kernelName);
     }

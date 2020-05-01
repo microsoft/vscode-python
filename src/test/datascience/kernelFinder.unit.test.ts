@@ -22,7 +22,7 @@ import {
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 
-suite('Kernel Finder', () => {
+suite('IANHU Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let interpreterLocator: typemoq.IMock<IInterpreterLocatorService>;
     let fileSystem: typemoq.IMock<IFileSystem>;
