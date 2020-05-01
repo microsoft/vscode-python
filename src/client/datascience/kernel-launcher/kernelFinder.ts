@@ -7,15 +7,10 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { wrapCancellationTokens } from '../../common/cancellation';
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExtensionContext, IInstaller, InstallerResponse, IPathUtils, Product, Resource } from '../../common/types';
-import {
-    IInterpreterLocatorService,
-    IInterpreterService,
-    KNOWN_PATH_SERVICE,
-    PythonInterpreter
-} from '../../interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService, KNOWN_PATH_SERVICE } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelSpec } from '../jupyter/kernels/jupyterKernelSpec';
@@ -53,7 +48,7 @@ export class KernelFinder implements IKernelFinder {
     private resourceToKernels = new Map<Resource, Promise<IJupyterKernelSpec[]>>();
 
     // Store any json file that we have loaded from disk before
-    private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec>>();
+    private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
 
     constructor(
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -75,7 +70,6 @@ export class KernelFinder implements IKernelFinder {
     ): Promise<IJupyterKernelSpec> {
         this.cache = await this.readCache();
         let foundKernel: IJupyterKernelSpec | undefined;
-        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
 
         if (kernelName && !kernelName.includes(defaultSpecName)) {
             let kernelSpec = await this.searchCache(kernelName);
@@ -85,9 +79,7 @@ export class KernelFinder implements IKernelFinder {
             }
 
             // Check in active interpreter first
-            if (activeInterpreter) {
-                kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
-            }
+            kernelSpec = await this.getKernelSpecFromActiveInterpreter(kernelName, resource);
 
             if (kernelSpec) {
                 this.writeCache(this.cache).ignoreErrors();
@@ -105,9 +97,9 @@ export class KernelFinder implements IKernelFinder {
                 result = both[0] ? both[0] : both[1];
             }
 
-            foundKernel = result ? result : await this.getDefaultKernelSpec(activeInterpreter);
+            foundKernel = result ? result : await this.getDefaultKernelSpec(resource);
         } else {
-            foundKernel = await this.getDefaultKernelSpec(activeInterpreter);
+            foundKernel = await this.getDefaultKernelSpec(resource);
         }
 
         this.writeCache(this.cache).ignoreErrors();
@@ -145,27 +137,45 @@ export class KernelFinder implements IKernelFinder {
                     this.cache.push(resultPath);
                 }
                 const kernelspec = await this.getKernelSpec(resultPath);
-                results.push(kernelspec);
+
+                if (kernelspec) {
+                    results.push(kernelspec);
+                }
             })
         );
 
         return results;
     }
 
-    // IANHU: have the finder code use this as well
-    private async getKernelSpec(specPath: string): Promise<IJupyterKernelSpec> {
+    // Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
+    private async getKernelSpec(specPath: string): Promise<IJupyterKernelSpec | undefined> {
         // If we have not already loaded this kernel spec, then load it
         if (!this.pathToKernelSpec.has(specPath)) {
             this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath));
         }
 
         // ! as the has and set above verify that we have a return here
-        return this.pathToKernelSpec.get(specPath)!;
+        return this.pathToKernelSpec.get(specPath)!.then((value) => {
+            if (value) {
+                return value;
+            }
+
+            // If we failed to get a kernelspec pull path from our cache and loaded list
+            this.pathToKernelSpec.delete(specPath);
+            this.cache = this.cache.filter((itempath) => itempath !== specPath);
+            return undefined;
+        });
     }
 
-    // Load a kernelspec from disk
-    private async loadKernelSpec(specPath: string): Promise<IJupyterKernelSpec> {
-        const kernelJson = JSON.parse(await this.file.readFile(specPath));
+    // Load kernelspec json from disk
+    private async loadKernelSpec(specPath: string): Promise<IJupyterKernelSpec | undefined> {
+        let kernelJson;
+        try {
+            kernelJson = JSON.parse(await this.file.readFile(specPath));
+        } catch {
+            traceError(`Failed to parse kernelspec ${specPath}`);
+            return undefined;
+        }
         return new JupyterKernelSpec(kernelJson, specPath);
     }
 
@@ -298,7 +308,9 @@ export class KernelFinder implements IKernelFinder {
         return this.searchCache(kernelName);
     }
 
-    private async getDefaultKernelSpec(activeInterpreter?: PythonInterpreter): Promise<IJupyterKernelSpec> {
+    private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
+        const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+
         // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
         // associated with the current resource for launching.
         const defaultSpec: Kernel.ISpecModel = {
@@ -339,10 +351,12 @@ export class KernelFinder implements IKernelFinder {
         });
 
         if (kernelJsonFile) {
-            const kernelJson = JSON.parse(await this.file.readFile(kernelJsonFile));
-            const spec = new JupyterKernelSpec(kernelJson, kernelJsonFile);
-            spec.name = kernelName;
-            return spec;
+            const spec = await this.getKernelSpec(kernelJsonFile);
+
+            if (spec) {
+                spec.name = kernelName;
+                return spec;
+            }
         }
 
         return undefined;
