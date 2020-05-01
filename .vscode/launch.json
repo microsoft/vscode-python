@@ -26,7 +26,9 @@
                 // Enable this to try out new experiments locally
                 "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE" : "1",
                 // Enable this to log telemetry to the output during debugging
-                "XVSC_PYTHON_LOG_TELEMETRY": "1"
+                "XVSC_PYTHON_LOG_TELEMETRY": "1",
+                // Enable this to log debugger output. Directory must exist ahead of time
+                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output_Ex"
             }
         },
         {
@@ -275,7 +277,9 @@
                 // Remove 'X' to turn on all logging in the debug output
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
-                "XCI_PYTHON_PATH": "<Python Path>"
+                "XCI_PYTHON_PATH": "<Python Path>",
+                // Remove 'X' prefix to dump output for debugger. Directory has to exist prior to launch
+                "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output"
             },
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

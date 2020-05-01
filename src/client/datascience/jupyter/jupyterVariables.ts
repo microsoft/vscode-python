@@ -66,7 +66,7 @@ export class JupyterVariables implements IJupyterVariables {
     }
 
     private get realVariables(): IJupyterVariables {
-        if (this.experimentsManager.inExperiment(RunByLine.control)) {
+        if (!this.experimentsManager.inExperiment(RunByLine.experiment)) {
             return this.oldVariables;
         }
         if (this.debugService.activeDebugSession) {

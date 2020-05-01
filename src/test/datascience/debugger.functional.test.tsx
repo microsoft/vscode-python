@@ -10,10 +10,12 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
+import { RunByLine } from '../../client/common/experimentGroups';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     IDataScienceCodeLensProvider,
     IDebugLocationTracker,
@@ -26,7 +28,7 @@ import { getConnectionInfo } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel, openVariableExplorer } from './testHelpers';
+import { mountConnectedMainPanel, openVariableExplorer, waitForMessage } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -157,7 +159,7 @@ suite('DataScience Debugger tests', () => {
 
         // Debug this code. We should either hit the breakpoint or stop on entry
         const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
-            const breakPromise = createDeferred<void>();
+            let breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
@@ -175,21 +177,26 @@ suite('DataScience Debugger tests', () => {
                 verifyCodeLenses(expectedBreakLine);
 
                 // Step if allowed
-                if (step && ioc.wrapper) {
-                    await mockDebuggerService?.stepOver();
+                if (step && ioc.wrapper && !ioc.mockJupyter) {
                     // Verify variables work
-                    if (!ioc.mockJupyter) {
-                        openVariableExplorer(ioc.wrapper);
+                    openVariableExplorer(ioc.wrapper);
+                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                    breakPromise = createDeferred<void>();
+                    await mockDebuggerService?.stepOver();
+                    await breakPromise.promise;
+                    await mockDebuggerService?.getVariables();
+                    await variableRefresh;
 
-                        // Force an update so we render whatever the current state is
-                        ioc.wrapper.update();
+                    // Force an update so we render whatever the current state is
+                    ioc.wrapper.update();
 
-                        // Then search for results.
-                        const foundRows = ioc.wrapper.find('div.react-grid-Row');
+                    // Then search for results.
+                    const foundRows = ioc.wrapper.find('div.react-grid-Row');
 
-                        // Just assert we found some rows
-                        assert.ok(foundRows, 'Did not find any rows during debugging');
-                    }
+                    // Just assert we found some rows
+                    assert.ok(foundRows.length, 'Did not find any rows during debugging');
+                    const html = foundRows.html();
+                    assert.ok(!html.includes('No variables'), 'Variables not being displayed');
                 }
 
                 // Verify break location
@@ -242,6 +249,7 @@ suite('DataScience Debugger tests', () => {
         await debugCell('#%%\nprint("bar")');
     });
     test('Check variables', async () => {
+        ioc.setExperimentState(RunByLine.experiment, true);
         await debugCell('#%%\nx = 4\nx = 5', undefined, undefined, false, true);
     });
 
