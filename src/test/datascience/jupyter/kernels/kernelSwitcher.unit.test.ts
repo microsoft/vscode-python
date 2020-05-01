@@ -137,6 +137,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 kernelSelector.selectLocalKernel(
                                     anything(),
                                     anything(),
+                                    anything(),
                                     undefined,
                                     undefined,
                                     currentKernelInfo.currentKernel
@@ -160,6 +161,7 @@ suite('Data Science - Kernel Switcher', () => {
                             kernelSelector.selectLocalKernel(
                                 anything(),
                                 anything(),
+                                anything(),
                                 undefined,
                                 undefined,
                                 currentKernelInfo.currentKernel
@@ -176,6 +178,7 @@ suite('Data Science - Kernel Switcher', () => {
                             if (isLocalConnection) {
                                 when(
                                     kernelSelector.selectLocalKernel(
+                                        anything(),
                                         anything(),
                                         anything(),
                                         undefined,
@@ -315,6 +318,7 @@ suite('Data Science - Kernel Switcher', () => {
                                     kernelSelector.selectLocalKernel(
                                         anything(),
                                         anything(),
+                                        anything(),
                                         undefined,
                                         anything(),
                                         anything()
@@ -352,6 +356,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 // first time when user select a kernel, second time is when user selects after failing to switch to the first kernel.
                                 verify(
                                     kernelSelector.selectLocalKernel(
+                                        anything(),
                                         anything(),
                                         anything(),
                                         anything(),

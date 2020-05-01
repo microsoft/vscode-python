@@ -174,7 +174,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
+                .setup((i) => i.getInterpreters(typemoq.It.isAny(), { onActivation: true }))
                 .returns(() => Promise.resolve([{} as any]))
                 .verifiable(typemoq.Times.never());
             interpreterService
@@ -204,7 +204,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
+                .setup((i) => i.getInterpreters(typemoq.It.isAny(), { onActivation: true }))
                 .returns(() => Promise.resolve([{} as any]))
                 .verifiable(typemoq.Times.never());
             interpreterService
@@ -235,7 +235,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
+                .setup((i) => i.getInterpreters(typemoq.It.isAny(), { onActivation: true }))
                 .returns(() => Promise.resolve([{ path: pythonPath } as any, { path: pythonPath } as any]))
                 .verifiable(typemoq.Times.once());
             interpreterService
@@ -275,7 +275,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup((i) => i.getInterpreters(typemoq.It.isAny()))
+                .setup((i) => i.getInterpreters(typemoq.It.isAny(), { onActivation: true }))
                 .returns(() =>
                     Promise.resolve([
                         { path: pythonPath } as any,

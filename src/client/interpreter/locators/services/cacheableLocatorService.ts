@@ -15,7 +15,12 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
+import {
+    GetInterpreterLocatorOptions,
+    IInterpreterLocatorService,
+    IInterpreterWatcher,
+    PythonInterpreter
+} from '../../contracts';
 
 /**
  * This class exists so that the interpreter fetching can be cached in between tests. Normally
@@ -82,10 +87,10 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     }
     public abstract dispose(): void;
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
-    public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
-        if (!deferred || ignoreCache) {
+        if (!deferred || options?.ignoreCache) {
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
 
@@ -125,7 +130,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             return deferred.promise;
         }
 
-        const cachedInterpreters = ignoreCache ? undefined : this.getCachedInterpreters(resource);
+        const cachedInterpreters = options?.ignoreCache ? undefined : this.getCachedInterpreters(resource);
         return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
     }
     protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {

@@ -104,6 +104,7 @@ export class KernelSelector {
         suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
+            'jupyter',
             stopWatch,
             Telemetry.SelectRemoteJupyterKernel,
             suggestions,
@@ -122,6 +123,7 @@ export class KernelSelector {
      */
     public async selectLocalKernel(
         resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
         stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
@@ -129,12 +131,14 @@ export class KernelSelector {
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
             resource,
+            type,
             session,
             cancelToken
         );
         suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
+            type,
             stopWatch,
             Telemetry.SelectLocalJupyterKernel,
             suggestions,
@@ -169,7 +173,9 @@ export class KernelSelector {
         };
         // When this method is called, we know we've started a local jupyter server.
         // Lets pre-warm the list of local kernels.
-        this.selectionProvider.getKernelSelectionsForLocalSession(resource, sessionManager, cancelToken).ignoreErrors();
+        this.selectionProvider
+            .getKernelSelectionsForLocalSession(resource, 'jupyter', sessionManager, cancelToken)
+            .ignoreErrors();
 
         let selection: KernelSpecInterpreter = {};
         if (notebookMetadata?.kernelspec) {
@@ -198,6 +204,7 @@ export class KernelSelector {
                     selection = await this.useInterpreterAsKernel(
                         resource,
                         activeInterpreter,
+                        'jupyter',
                         notebookMetadata.kernelspec.display_name,
                         sessionManager,
                         disableUI,
@@ -205,7 +212,13 @@ export class KernelSelector {
                     );
                 } else {
                     telemetryProps.promptedToSelect = true;
-                    selection = await this.selectLocalKernel(resource, stopWatch, sessionManager, cancelToken);
+                    selection = await this.selectLocalKernel(
+                        resource,
+                        'jupyter',
+                        stopWatch,
+                        sessionManager,
+                        cancelToken
+                    );
                 }
             }
         } else {
@@ -302,6 +315,7 @@ export class KernelSelector {
     }
     private async selectKernel(
         resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
         stopWatch: StopWatch,
         telemetryEvent: Telemetry,
         suggestions: IKernelSpecQuickPickItem[],
@@ -323,6 +337,7 @@ export class KernelSelector {
             return this.useInterpreterAsKernel(
                 resource,
                 selection.selection.interpreter,
+                type,
                 undefined,
                 session,
                 false,
@@ -371,6 +386,7 @@ export class KernelSelector {
     private async useInterpreterAsKernel(
         resource: Resource,
         interpreter: PythonInterpreter,
+        type: 'raw' | 'jupyter' | 'noConnection',
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,
         disableUI?: boolean,
@@ -426,7 +442,7 @@ export class KernelSelector {
 
         // When this method is called, we know a new kernel may have been registered.
         // Lets pre-warm the list of local kernels (with the new list).
-        this.selectionProvider.getKernelSelectionsForLocalSession(resource, session, cancelToken).ignoreErrors();
+        this.selectionProvider.getKernelSelectionsForLocalSession(resource, type, session, cancelToken).ignoreErrors();
 
         return { kernelSpec, interpreter };
     }

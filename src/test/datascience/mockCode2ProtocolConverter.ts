@@ -114,7 +114,10 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asPosition(value: null): null;
     public asPosition(value: code.Position | null | undefined): proto.Position | null | undefined;
     public asPosition(_value: any): any {
-        throw new Error('Method not implemented.');
+        if (_value === undefined || _value === null) {
+            return _value;
+        }
+        return { line: _value.line, character: _value.character };
     }
     public asRange(value: code.Range): proto.Range;
     public asRange(value: undefined): undefined;

@@ -267,52 +267,68 @@ jobs:
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
 
-      - name: Prepare environment for venv tests
+      - name: Prepare pipenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
         run: |
-          # venv/bin or venv\\Scripts (windows)?
-          $environmentExecutableFolder = 'bin'
-          if ('${{runner.os}}' -match 'windows-latest') {
-            $environmentExecutableFolder = 'Scripts'
-          }
-
-          # pipenv
           python -m pip install pipenv
-          python -m pipenv run python build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+          python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
 
-          # venv
-          if ('${{matrix.python}}' -like '3.?') {
-            python -m venv .venv
-            & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
-          }
-
-          # virtualenv
+      - name: Prepare virtualenv for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv
-          & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
-
-          # conda
-
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
-
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
-          if ('${{runner.os}}' -match 'windows-latest') {
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
-          } else{
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-              & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
+          python -m virtualenv .virtualenv/
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+          } else {
+            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
           }
+
+      - name: Prepare venv for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
+        run: |
+          python -m venv .venv
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          } else {
+            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          }
+
+      - name: Prepare conda for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
+          # 1. For `terminalActivation.testvirtualenvs.test.ts`
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
+            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+          } else{
+            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
+            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+          }
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
           & $condaExecPath create -n "test_env1" -y python
           & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "$Env:HOME/test_env3" -y python
-        shell: pwsh
-        if: matrix.test-suite == 'venv'
+          & $condaExecPath create -p "~/test_env3" -y python
 
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
@@ -341,6 +357,8 @@ jobs:
       # run tests and then clean up the process once the tests ran.
       # See https://github.com/GabrielBB/xvfb-action
       - name: Run venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace

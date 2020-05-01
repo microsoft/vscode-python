@@ -15,7 +15,6 @@ import { OSType } from '../../../common/utils/platform';
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
-    PIPENV_SERVICE,
     PythonInterpreter,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../contracts';
@@ -30,9 +29,6 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInterpreterLocatorService)
-        @named(PIPENV_SERVICE)
-        private readonly pipEnvInterpreterLocator: IInterpreterLocatorService,
         @inject(IInterpreterLocatorService)
         @named(WORKSPACE_VIRTUAL_ENV_SERVICE)
         private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService,
@@ -59,25 +55,16 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
         }
-        const pipEnvPromise = createDeferredFromPromise(
-            this.pipEnvInterpreterLocator.getInterpreters(workspacePath.folderUri, true)
-        );
         const virtualEnvPromise = createDeferredFromPromise(
             this.getWorkspaceVirtualEnvInterpreters(workspacePath.folderUri)
         );
 
-        // Use only one, we currently do not have support for both pipenv and virtual env in same workspace.
-        // If users have this, then theu can specify which one is to be used.
-        const interpreters = await Promise.race([pipEnvPromise.promise, virtualEnvPromise.promise]);
-        let bestInterpreter: PythonInterpreter | undefined;
-        if (Array.isArray(interpreters) && interpreters.length > 0) {
-            bestInterpreter = this.helper.getBestInterpreter(interpreters);
-        } else {
-            const [pipEnv, virtualEnv] = await Promise.all([pipEnvPromise.promise, virtualEnvPromise.promise]);
-            const pipEnvList = Array.isArray(pipEnv) ? pipEnv : [];
-            const virtualEnvList = Array.isArray(virtualEnv) ? virtualEnv : [];
-            bestInterpreter = this.helper.getBestInterpreter(pipEnvList.concat(virtualEnvList));
-        }
+        const interpreters = await virtualEnvPromise.promise;
+        const bestInterpreter =
+            Array.isArray(interpreters) && interpreters.length > 0
+                ? this.helper.getBestInterpreter(interpreters)
+                : undefined;
+
         if (bestInterpreter && manager) {
             await super.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
             await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
@@ -99,7 +86,9 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             return;
         }
         // Now check virtual environments under the workspace root
-        const interpreters = await this.workspaceVirtualEnvInterpreterLocator.getInterpreters(resource, true);
+        const interpreters = await this.workspaceVirtualEnvInterpreterLocator.getInterpreters(resource, {
+            ignoreCache: true
+        });
         const workspacePath =
             this.platform.osType === OSType.Windows
                 ? workspaceFolder.uri.fsPath.toUpperCase()

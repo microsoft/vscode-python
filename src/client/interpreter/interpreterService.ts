@@ -23,6 +23,7 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
+    GetInterpreterOptions,
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
@@ -112,8 +113,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
-    public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        const interpreters = await this.locator.getInterpreters(resource);
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterOptions): Promise<PythonInterpreter[]> {
+        const interpreters = await this.locator.getInterpreters(resource, options);
         await Promise.all(
             interpreters
                 .filter((item) => !item.displayName)

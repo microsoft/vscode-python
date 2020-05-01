@@ -99,18 +99,25 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isEmpty(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -280,6 +287,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -290,12 +298,18 @@ suite('Data Science - KernelSelector', () => {
             kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
             // tslint:disable-next-line: no-any
             kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isEmpty(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -313,6 +327,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -323,13 +338,19 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -345,6 +366,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -357,7 +379,12 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
@@ -365,6 +392,7 @@ suite('Data Science - KernelSelector', () => {
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -385,6 +413,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -397,7 +426,12 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
@@ -406,6 +440,7 @@ suite('Data Science - KernelSelector', () => {
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -424,6 +459,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -436,13 +472,19 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -468,6 +510,7 @@ suite('Data Science - KernelSelector', () => {
         let selectLocalKernelStub: sinon.SinonStub<
             [
                 Resource,
+                'raw' | 'jupyter' | 'noConnection',
                 StopWatch,
                 (IJupyterSessionManager | undefined)?,
                 (CancellationToken | undefined)?,
@@ -497,7 +540,12 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
@@ -522,7 +570,12 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
@@ -559,7 +612,12 @@ suite('Data Science - KernelSelector', () => {
                 )
             ).thenResolve();
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
@@ -599,7 +657,12 @@ suite('Data Science - KernelSelector', () => {
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(

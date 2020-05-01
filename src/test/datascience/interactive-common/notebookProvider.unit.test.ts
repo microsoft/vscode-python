@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
     IConfigurationService,
@@ -58,11 +59,13 @@ suite('Data Science - NotebookProvider', () => {
         rawNotebookProvider = mock<IRawNotebookProvider>();
         experimentsManager = mock<IExperimentsManager>();
         configuration = mock<IConfigurationService>();
+        const workspaceService = mock<IWorkspaceService>();
 
         // Set up our settings
         pythonSettings = mock<IPythonSettings>();
         dataScienceSettings = mock<IDataScienceSettings>();
         when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');
         when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
         when(configuration.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -78,7 +81,8 @@ suite('Data Science - NotebookProvider', () => {
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(configuration),
-            instance(experimentsManager)
+            instance(experimentsManager),
+            instance(workspaceService)
         );
     });
 

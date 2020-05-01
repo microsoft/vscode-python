@@ -10,6 +10,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
+import { IKernelFinder } from '../../kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelService } from './kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -117,6 +118,20 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     }
 }
 
+// Provider for searching for installed kernelspecs on disk without using jupyter to search
+export class InstalledRawKernelSelectionListProvider implements IKernelSelectionListProvider {
+    constructor(private readonly kernelFinder: IKernelFinder, private readonly pathUtils: IPathUtils) {}
+    public async getKernelSelections(
+        _resource: Resource,
+        cancelToken?: CancellationToken
+    ): Promise<IKernelSpecQuickPickItem[]> {
+        const items = await this.kernelFinder.listKernelSpecs(cancelToken);
+        return items
+            .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+    }
+}
+
 /**
  * Provider for interpreters to be treated as kernel specs.
  * I.e. return interpreters that are to be treated as kernel specs, and not yet installed as kernels.
@@ -157,7 +172,8 @@ export class KernelSelectionProvider {
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder
     ) {}
     /**
      * Gets a selection of kernel specs from a remote session.
@@ -206,15 +222,32 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(
         resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {
         const getSelections = async () => {
-            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
-                this.kernelService,
-                this.pathUtils,
-                sessionManager
-            ).getKernelSelections(resource, cancelToken);
+            // For raw versus jupyter connections we need to use a different method for fetching installed kernelspecs
+            // There is a possible unknown case for if we have a guest jupyter notebook that has not yet connected
+            // in that case we don't use either method
+            let installedKernelsPromise: Promise<IKernelSpecQuickPickItem[]> = Promise.resolve([]);
+            switch (type) {
+                case 'raw':
+                    installedKernelsPromise = new InstalledRawKernelSelectionListProvider(
+                        this.kernelFinder,
+                        this.pathUtils
+                    ).getKernelSelections(resource, cancelToken);
+                    break;
+                case 'jupyter':
+                    installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(
+                        this.kernelService,
+                        this.pathUtils,
+                        sessionManager
+                    ).getKernelSelections(resource, cancelToken);
+                    break;
+                default:
+                    break;
+            }
             const interpretersPromise = new InterpreterKernelSelectionListProvider(
                 this.interpreterSelector
             ).getKernelSelections(resource, cancelToken);
