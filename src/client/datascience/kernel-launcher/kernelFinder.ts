@@ -140,11 +140,13 @@ export class KernelFinder implements IKernelFinder {
 
         const searchResults = await this.kernelGlobSearch(paths);
 
-        searchResults.forEach(async (resultPath) => {
-            // IANHU: Add to cache here as well?
-            const kernelspec = await this.getKernelSpec(resultPath);
-            results.push(kernelspec);
-        });
+        await Promise.all(
+            searchResults.map(async (resultPath) => {
+                // IANHU: Add to cache as well?
+                const kernelspec = await this.getKernelSpec(resultPath);
+                results.push(kernelspec);
+            })
+        );
 
         return results;
     }
@@ -221,9 +223,9 @@ export class KernelFinder implements IKernelFinder {
         return paths;
     }
 
-    // IANHU: Have the finder code use this as well for searching
+    // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async kernelGlobSearch(paths: string[]): Promise<string[]> {
-        const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
+        const promises = paths.map((kernelPath) => this.file.search(`**${path.sep}kernel.json`, kernelPath));
         const searchResults = await Promise.all(promises);
 
         // Append back on the start of each path so we have the full path in the results
@@ -272,10 +274,7 @@ export class KernelFinder implements IKernelFinder {
         interpreterPaths: string[],
         kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
-        const promises = interpreterPaths.map((intPath) =>
-            //this.getKernelSpecFromDisk([path.join(intPath, kernelPaths.get('kernel')!)], kernelName)
-            this.getKernelSpecFromDisk([intPath], kernelName)
-        );
+        const promises = interpreterPaths.map((intPath) => this.getKernelSpecFromDisk([intPath], kernelName));
 
         const specs = await Promise.all(promises);
         return specs.find((sp) => sp !== undefined);
@@ -290,15 +289,11 @@ export class KernelFinder implements IKernelFinder {
     }
 
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        const promises = paths.map((kernelPath) => this.file.search('**/kernel.json', kernelPath));
-        const searchResults = await Promise.all(promises);
-        searchResults.forEach((result, i) => {
-            result.forEach((res) => {
-                const specPath = path.join(paths[i], res);
-                if (!this.cache.includes(specPath)) {
-                    this.cache.push(specPath);
-                }
-            });
+        const searchResults = await this.kernelGlobSearch(paths);
+        searchResults.forEach((specPath) => {
+            if (!this.cache.includes(specPath)) {
+                this.cache.push(specPath);
+            }
         });
 
         return this.searchCache(kernelName);
