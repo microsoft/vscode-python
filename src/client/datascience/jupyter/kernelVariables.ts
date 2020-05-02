@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
@@ -97,7 +96,7 @@ export class KernelVariables implements IJupyterVariables {
         notebook: INotebook,
         start: number,
         end: number
-    ): Promise<JSONObject> {
+    ): Promise<{}> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
 

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import stripAnsi from 'strip-ansi';
@@ -88,9 +87,9 @@ export class OldJupyterVariables implements IJupyterVariables {
         notebook: INotebook,
         start: number,
         end: number
-    ): Promise<JSONObject> {
+    ): Promise<{}> {
         // Run the get dataframe rows script
-        return this.runScript<JSONObject>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [
+        return this.runScript<{}>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [
             { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() },
             { key: '_VSCode_JupyterStartRow', value: start.toString() },
             { key: '_VSCode_JupyterEndRow', value: end.toString() }
