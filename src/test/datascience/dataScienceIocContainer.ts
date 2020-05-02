@@ -258,6 +258,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterDebugger,
+    IJupyterDebugService,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
     IJupyterNotebookProvider,
@@ -755,7 +756,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
-        this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
+        this.serviceManager.addSingleton<IDebugService>(
+            IDebugService,
+            MockDebuggerService,
+            Identifiers.MULTIPLEXING_DEBUGSERVICE,
+            [IJupyterDebugService]
+        );
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
         ]);

@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 'use strict';
 import type { JSONObject } from '@phosphor/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
-import { DataFrameLoading } from '../constants';
+import { DataFrameLoading, Identifiers } from '../constants';
 import {
+    IJupyterDebugService,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -28,7 +29,7 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
     private lastKnownVariables: IJupyterVariable[] = [];
     private topMostFrameId = 0;
     constructor(
-        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
