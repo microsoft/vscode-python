@@ -12,6 +12,7 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IExperimentsManager } from '../../../../client/common/types';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
+    isPythonVersion,
     PYTHON_PATH,
     resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
@@ -172,9 +173,9 @@ suite('Activation of Environments in Terminal', () => {
     });
 
     test('Should activate with venv', async function () {
-        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
-            // tslint:disable-next-line: no-invalid-this
-            this.skip();
+        if (await isPythonVersion('2')) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
         }
         await testActivation(envPaths.venvPath);
     });
