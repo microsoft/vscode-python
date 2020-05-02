@@ -46,7 +46,6 @@ export class KernelFinder implements IKernelFinder {
     private cache: string[] = [];
 
     // Store our results when listing all possible kernelspecs for a resource
-    //private resourceToKernels = new Map<Resource, Promise<IJupyterKernelSpec[]>>();
     private workspaceToKernels = new Map<string, Promise<IJupyterKernelSpec[]>>();
 
     // Store any json file that we have loaded from disk before
