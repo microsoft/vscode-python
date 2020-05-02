@@ -213,7 +213,9 @@ export class KernelFinder implements IKernelFinder {
     private async getInterpreterPaths(resource: Resource): Promise<string[]> {
         const interpreters = await this.interpreterLocator.getInterpreters(resource, { ignoreCache: false });
         const interpreterPrefixPaths = interpreters.map((interpreter) => interpreter.sysPrefix);
-        return interpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, baseKernelPath));
+        // We can get many duplicates here, so de-dupe the list
+        const uniqueInterpreterPrefixPaths = [...new Set(interpreterPrefixPaths)];
+        return uniqueInterpreterPrefixPaths.map((prefixPath) => path.join(prefixPath, baseKernelPath));
     }
 
     private async getDiskPaths(): Promise<string[]> {
