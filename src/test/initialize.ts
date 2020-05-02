@@ -32,7 +32,6 @@ export async function initializePython() {
 
 // tslint:disable-next-line:no-any
 export async function initialize(): Promise<IExtensionTestApi> {
-    process.env.VSC_PYTHON_CI_TEST = '1';
     await initializePython();
     const api = await activateExtension();
     if (!IS_SMOKE_TEST) {
