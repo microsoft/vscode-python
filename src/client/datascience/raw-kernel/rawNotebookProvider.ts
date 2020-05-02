@@ -15,7 +15,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 
-class RawConnection implements IRawConnection {
+export class RawConnection implements IRawConnection {
     public readonly type = 'raw';
     public readonly localLaunch = true;
     public readonly valid = true;
@@ -47,6 +47,11 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         return Promise.resolve(this.rawConnection);
     }
 
+    public supported(): Promise<boolean> {
+        // IANHU: Just return true for now we can move the implementation in from the notebook provider if this works
+        return Promise.resolve(true);
+    }
+
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
     public async createNotebook(
         identity: Uri,
@@ -71,6 +76,10 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     // This may be a bit of a noop in the raw case
     public getDisposedError(): Error {
         return new Error(localize.DataScience.rawConnectionBrokenError());
+    }
+
+    protected getNotebooks(): Promise<INotebook>[] {
+        return [...this.notebooks.values()];
     }
 
     protected getConnection(): IRawConnection {

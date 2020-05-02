@@ -450,4 +450,6 @@ export namespace LiveShareCommands {
     export const guestCheck = 'guestCheck';
     export const createNotebook = 'createNotebook';
     export const inspect = 'inspect';
+    export const rawKernelSupported = 'rawKernelSupported';
+    export const createRawNotebook = 'createRawNotebook';
 }

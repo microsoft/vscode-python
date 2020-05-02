@@ -141,6 +141,7 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
+    supported(): Promise<boolean>;
     connect(): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
