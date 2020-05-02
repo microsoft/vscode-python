@@ -35,7 +35,7 @@ suite('Kernel Finder', () => {
     let workspaceService: IWorkspaceService;
     let kernelFinder: IKernelFinder;
     let activeInterpreter: PythonInterpreter;
-    const interpreters: PythonInterpreter[] = [];
+    let interpreters: PythonInterpreter[] = [];
     let resource: Resource;
     const kernelName = 'testKernel';
     const cacheFile = 'kernelSpecPathCache.json';
@@ -71,15 +71,6 @@ suite('Kernel Finder', () => {
             .setup((fs) => fs.writeFile(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
             .returns(() => Promise.resolve());
         fileSystem.setup((fs) => fs.getSubDirectories(typemoq.It.isAnyString())).returns(() => Promise.resolve(['']));
-        fileSystem
-            .setup((fs) => fs.search(typemoq.It.isAnyString(), typemoq.It.isAnyString()))
-            .returns(() =>
-                Promise.resolve([
-                    path.join(kernel.name, 'kernel.json'),
-                    path.join('kernelA', 'kernel.json'),
-                    path.join('kernelB', 'kernel.json')
-                ])
-            );
     }
 
     setup(() => {
@@ -104,6 +95,7 @@ suite('Kernel Finder', () => {
         let interpreter0Kernel: IJupyterKernelSpec;
         let interpreter1Kernel: IJupyterKernelSpec;
         let globalKernel: IJupyterKernelSpec;
+        let loadError = false;
         setup(() => {
             activeInterpreter = {
                 path: context.object.globalStoragePath,
@@ -114,6 +106,7 @@ suite('Kernel Finder', () => {
                 architecture: Architecture.x64,
                 type: InterpreterType.Unknown
             };
+            interpreters = [];
             for (let i = 0; i < 2; i += 1) {
                 interpreters.push({
                     path: `${context.object.globalStoragePath}_${i}`,
@@ -236,7 +229,11 @@ suite('Kernel Finder', () => {
                 .returns((param: string) => {
                     switch (param) {
                         case activePathA:
-                            return Promise.resolve(JSON.stringify(activeKernelA));
+                            if (!loadError) {
+                                return Promise.resolve(JSON.stringify(activeKernelA));
+                            } else {
+                                return Promise.resolve('');
+                            }
                         case activePathB:
                             return Promise.resolve(JSON.stringify(activeKernelB));
                         case interpreter0FullPath:
@@ -262,7 +259,7 @@ suite('Kernel Finder', () => {
             );
         });
 
-        test('IANHU Basic listKernelSpecs', async () => {
+        test('Basic listKernelSpecs', async () => {
             setupFindFileSystem();
             const specs = await kernelFinder.listKernelSpecs(resource);
             expect(specs[0]).to.deep.include(activeKernelA);
@@ -270,6 +267,17 @@ suite('Kernel Finder', () => {
             expect(specs[2]).to.deep.include(interpreter0Kernel);
             expect(specs[3]).to.deep.include(interpreter1Kernel);
             expect(specs[4]).to.deep.include(globalKernel);
+            fileSystem.reset();
+        });
+
+        test('listKernelSpecs load error', async () => {
+            setupFindFileSystem();
+            loadError = true;
+            const specs = await kernelFinder.listKernelSpecs(resource);
+            expect(specs[0]).to.deep.include(activeKernelB);
+            expect(specs[1]).to.deep.include(interpreter0Kernel);
+            expect(specs[2]).to.deep.include(interpreter1Kernel);
+            expect(specs[3]).to.deep.include(globalKernel);
             fileSystem.reset();
         });
     });
