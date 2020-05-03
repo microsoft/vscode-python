@@ -128,7 +128,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 testArgs.push(`-t${testId}`);
             }
             if (testFile.length > 0) {
-                testArgs.push(`--testFile=${testFile}`);
+                testArgs.push(`--testFile="${testFile}"`);
             }
             if (options.debug === true) {
                 const debugLauncher = this.serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
@@ -219,7 +219,9 @@ export class TestManagerRunner implements ITestManagerRunner {
         }
         const failFast = args.some((arg) => arg.trim() === '-f' || arg.trim() === '--failfast');
         const verbosity = args.some((arg) => arg.trim().indexOf('-v') === 0) ? 2 : 1;
-        const testArgs = [`--us=${startTestDiscoveryDirectory}`, `--up=${pattern}`, `--uvInt=${verbosity}`];
+        // Quotes are required around paths and other strings because if zsh is parsing the command,
+        // it will see * as a regular expression, and try to evaluate it to all the files in the current working directory.
+        const testArgs = [`--us="${startTestDiscoveryDirectory}"`, `--up="${pattern}"`, `--uvInt=${verbosity}`];
         if (failFast) {
             testArgs.push('--uf');
         }
