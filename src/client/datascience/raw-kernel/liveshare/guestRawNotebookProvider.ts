@@ -26,8 +26,6 @@ export class GuestRawNotebookProvider
     implements IRawNotebookProvider, ILiveShareParticipant {
     // Keep track of guest notebooks on this side
     private notebooks = new Map<string, Promise<INotebook>>();
-
-    // IANHU: Do I need to get raw connection from the host side? I don't believe so
     private rawConnection = new RawConnection();
 
     constructor(
@@ -89,7 +87,6 @@ export class GuestRawNotebookProvider
             this.configService,
             resource,
             identity,
-            //this.launchInfo, // Seems like guest jupyter notebook doesn't use this
             undefined,
             this.dataScience.activationStartTime
         );
@@ -120,16 +117,6 @@ export class GuestRawNotebookProvider
 
     public async getNotebook(resource: Uri): Promise<INotebook | undefined> {
         return this.notebooks.get(resource.toString());
-    }
-
-    //public async shutdown(): Promise<void> {
-    //throw new Error('Not implemented');
-    //}
-
-    public dispose(): Promise<void> {
-        // IANHU JupyterServer calls shutdown here to dispose the server on host, but we don't need to do that
-        return Promise.resolve();
-        //throw new Error('Not implemented');
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {

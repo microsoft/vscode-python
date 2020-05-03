@@ -51,7 +51,6 @@ export class NotebookProvider implements INotebookProvider {
     // Disconnect from the specified provider
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
         // Only need to disconnect from actual jupyter servers
-        //if (!(await this.rawKernelSupported())) {
         if (!(await this.rawNotebookProvider.supported())) {
             return this.jupyterNotebookProvider.disconnect(options);
         }
@@ -60,7 +59,6 @@ export class NotebookProvider implements INotebookProvider {
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        //if (await this.rawKernelSupported()) {
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect();
         } else {
@@ -69,7 +67,6 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        //const rawKernel = await this.rawKernelSupported();
         const rawKernel = await this.rawNotebookProvider.supported();
 
         // Check to see if our provider already has this notebook
