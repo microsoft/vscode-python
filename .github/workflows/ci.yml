@@ -8,6 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.8
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
@@ -195,6 +196,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     strategy:
+      fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -415,6 +417,7 @@ jobs:
     needs: [build-vsix]
     if: github.repository == 'microsoft/vscode-python'
     strategy:
+      fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
