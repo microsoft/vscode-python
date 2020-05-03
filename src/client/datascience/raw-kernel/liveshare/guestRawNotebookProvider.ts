@@ -46,12 +46,13 @@ export class GuestRawNotebookProvider
 
     public async supported(): Promise<boolean> {
         const service = await this.waitForService();
+        let result = false;
         if (service) {
-            const result = await service.request(LiveShareCommands.rawKernelSupported, []);
+            result = await service.request(LiveShareCommands.rawKernelSupported, []);
         }
 
         // JUST FOR NOW
-        return false;
+        return result;
     }
 
     public async createNotebook(
