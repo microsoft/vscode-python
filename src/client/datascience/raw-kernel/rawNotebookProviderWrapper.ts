@@ -13,6 +13,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../common/types';
@@ -44,7 +45,8 @@ type RawNotebookProviderClassType = {
         kernelLauncher: IKernelLauncher,
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
-        outputChannel: IOutputChannel
+        outputChannel: IOutputChannel,
+        experimentsManager: IExperimentsManager
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -68,7 +70,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -88,7 +91,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelLauncher,
             kernelSelector,
             progressReporter,
-            outputChannel
+            outputChannel,
+            experimentsManager
         );
     }
 
