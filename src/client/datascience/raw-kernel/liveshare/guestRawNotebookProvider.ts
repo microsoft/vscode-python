@@ -45,13 +45,13 @@ export class GuestRawNotebookProvider
     }
 
     public async supported(): Promise<boolean> {
+        // Query the host to see if liveshare is supported
         const service = await this.waitForService();
         let result = false;
         if (service) {
             result = await service.request(LiveShareCommands.rawKernelSupported, []);
         }
 
-        // JUST FOR NOW
         return result;
     }
 
@@ -59,7 +59,7 @@ export class GuestRawNotebookProvider
         identity: Uri,
         resource: Resource,
         _disableUI: boolean,
-        _notebookMetadata: nbformat.INotebookMetadata,
+        notebookMetadata: nbformat.INotebookMetadata,
         _cancelToken: CancellationToken
     ): Promise<INotebook> {
         // Remember we can have multiple native editors opened against the same ipynb file.
@@ -74,7 +74,12 @@ export class GuestRawNotebookProvider
         if (service) {
             const resourceString = resource ? resource.toString() : undefined;
             const identityString = identity.toString();
-            await service.request(LiveShareCommands.createRawNotebook, [resourceString, identityString]);
+            const notebookMetadataString = JSON.stringify(notebookMetadata);
+            await service.request(LiveShareCommands.createRawNotebook, [
+                resourceString,
+                identityString,
+                notebookMetadataString
+            ]);
         }
 
         // Return a new notebook to listen to

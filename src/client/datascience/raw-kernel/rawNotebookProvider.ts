@@ -69,7 +69,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         resource: Resource,
         disableUI: boolean,
         notebookMetadata: nbformat.INotebookMetadata,
-        cancelToken: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<INotebook> {
         return this.createNotebookInstance(resource, identity, disableUI, notebookMetadata, cancelToken);
     }

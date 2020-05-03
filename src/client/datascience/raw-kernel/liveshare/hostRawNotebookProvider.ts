@@ -89,6 +89,7 @@ export class HostRawNotebookProvider
                     async (args: any[], _cancellation: CancellationToken) => {
                         const resource = this.parseUri(args[0]);
                         const identity = this.parseUri(args[1]);
+                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         //const notebook = (await this.createNotebook(
                         //resource,
@@ -96,7 +97,14 @@ export class HostRawNotebookProvider
                         //undefined,
                         //cancellation
                         //)) as HostJupyterNotebook;
-                        //await notebook.onAttach(api);
+                        const notebook = (await this.createNotebook(
+                            identity!,
+                            resource,
+                            false,
+                            notebookMetadata,
+                            undefined
+                        )) as HostJupyterNotebook;
+                        await notebook.onAttach(api);
                     }
                 );
                 // Requests return arrays
