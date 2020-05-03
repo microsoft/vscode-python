@@ -80,6 +80,9 @@ export class HostRawNotebookProvider
             const service = await this.waitForService();
             // Attach event handlers to different requests
             if (service) {
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
+                    this.onSync()
+                );
                 service.onRequest(
                     LiveShareCommands.rawKernelSupported,
                     (_args: any[], _cancellation: CancellationToken) => this.supported()
@@ -233,5 +236,9 @@ export class HostRawNotebookProvider
             parsed.scheme === 'vsls'
             ? this.finishedApi!.convertSharedUriToLocal(parsed)
             : parsed;
+    }
+
+    private onSync(): Promise<any> {
+        return Promise.resolve(true);
     }
 }
