@@ -50,7 +50,7 @@ export class HostRawNotebookProvider
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
-        private _dataScience: IDataScience,
+        _dataScience: IDataScience,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
@@ -91,44 +91,16 @@ export class HostRawNotebookProvider
                         const identity = this.parseUri(args[1]);
                         const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                        //const notebook = (await this.createNotebook(
-                        //resource,
-                        //identity!,
-                        //undefined,
-                        //cancellation
-                        //)) as HostJupyterNotebook;
                         const notebook = (await this.createNotebook(
                             identity!,
                             resource,
-                            false,
+                            true, // Disable UI for this creation
                             notebookMetadata,
                             undefined
                         )) as HostJupyterNotebook;
                         await notebook.onAttach(api);
                     }
                 );
-                // Requests return arrays
-                //service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
-                //this.onSync()
-                //);
-                //service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) =>
-                //this.dispose()
-                //);
-                //service.onRequest(
-                //LiveShareCommands.createNotebook,
-                //async (args: any[], cancellation: CancellationToken) => {
-                //const resource = this.parseUri(args[0]);
-                //const identity = this.parseUri(args[1]);
-                //// Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                //const notebook = (await this.createNotebook(
-                //resource,
-                //identity!,
-                //undefined,
-                //cancellation
-                //)) as HostJupyterNotebook;
-                //await notebook.onAttach(api);
-                //}
-                //);
             }
         }
     }
@@ -251,10 +223,6 @@ export class HostRawNotebookProvider
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
-    }
-
-    private onSync(): Promise<any> {
-        return Promise.resolve(true);
     }
 
     private parseUri(uri: string | undefined): Resource {
