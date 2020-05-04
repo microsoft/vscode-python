@@ -171,7 +171,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
-            supportsDebugging: this.props.settings ? this.props.settings.variableOptions.enableDuringDebugger : false
+            supportsDebugging:
+                this.props.settings && this.props.settings.variableOptions
+                    ? this.props.settings.variableOptions.enableDuringDebugger
+                    : false
         };
     };
 
