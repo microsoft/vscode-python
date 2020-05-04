@@ -13,7 +13,6 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { clearTelemetryReporter, isTelemetryDisabled, sendTelemetryEvent } from '../../client/telemetry';
-import { fixPath } from '../testing/helper';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -139,7 +138,7 @@ suite('Telemetry', () => {
     test('Send Error Telemetry with stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        const root = fixPath(EXTENSION_ROOT_DIR);
+        const root = EXTENSION_ROOT_DIR.replace(/\\/g, '/');
         error.stack = [
             'Error: Boo',
             `at Context.test (${root}/src/test/telemetry/index.unit.test.ts:50:23)`,
