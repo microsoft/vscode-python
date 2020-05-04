@@ -44,6 +44,7 @@ export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpe
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private cache: string[] = [];
+    private cacheDirty = false;
 
     // Store our results when listing all possible kernelspecs for a resource
     private workspaceToKernels = new Map<string, Promise<IJupyterKernelSpec[]>>();
@@ -125,6 +126,8 @@ export class KernelFinder implements IKernelFinder {
             this.workspaceToKernels.set(workspaceFolderId, this.findResourceKernelSpecs(resource));
         }
 
+        this.writeCache(this.cache).ignoreErrors();
+
         // ! as the has and set above verify that we have a return here
         return this.workspaceToKernels.get(workspaceFolderId)!;
     }
@@ -140,9 +143,7 @@ export class KernelFinder implements IKernelFinder {
         await Promise.all(
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
-                if (!this.cache.includes(resultPath)) {
-                    this.cache.push(resultPath);
-                }
+                this.updateCache(resultPath);
                 const kernelspec = await this.getKernelSpec(resultPath);
 
                 if (kernelspec) {
@@ -309,9 +310,7 @@ export class KernelFinder implements IKernelFinder {
     private async getKernelSpecFromDisk(paths: string[], kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const searchResults = await this.kernelGlobSearch(paths);
         searchResults.forEach((specPath) => {
-            if (!this.cache.includes(specPath)) {
-                this.cache.push(specPath);
-            }
+            this.updateCache(specPath);
         });
 
         return this.searchCache(kernelName);
@@ -345,8 +344,18 @@ export class KernelFinder implements IKernelFinder {
         }
     }
 
+    private updateCache(newPath: string) {
+        if (!this.cache.includes(newPath)) {
+            this.cache.push(newPath);
+            this.cacheDirty = true;
+        }
+    }
+
     private async writeCache(cache: string[]) {
-        await this.file.writeFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
+        if (this.cacheDirty) {
+            await this.file.writeFile(path.join(this.context.globalStoragePath, cacheFile), JSON.stringify(cache));
+            this.cacheDirty = false;
+        }
     }
 
     private async searchCache(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
