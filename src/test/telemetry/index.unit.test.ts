@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { clearTelemetryReporter, isTelemetryDisabled, sendTelemetryEvent } from '../../client/telemetry';
+import { fixPath } from '../testing/helper';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -138,22 +139,23 @@ suite('Telemetry', () => {
     test('Send Error Telemetry with stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
+        const root = fixPath(EXTENSION_ROOT_DIR);
         error.stack = [
             'Error: Boo',
-            `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
-            `at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:372:21)`,
-            `at Test.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)`,
-            `at Runner.runTest (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:455:10)`,
-            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:573:12`,
-            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:369:14)`,
-            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:379:7`,
-            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:303:14)`,
-            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:342:7`,
-            `at done (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:319:5)`,
-            `at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:395:7)`,
-            `at Hook.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)`,
-            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:317:10)`,
-            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
+            `at Context.test (${root}/src/test/telemetry/index.unit.test.ts:50:23)`,
+            `at callFn (${root}/node_modules/mocha/lib/runnable.js:372:21)`,
+            `at Test.Runnable.run (${root}/node_modules/mocha/lib/runnable.js:364:7)`,
+            `at Runner.runTest (${root}/node_modules/mocha/lib/runner.js:455:10)`,
+            `at ${root}/node_modules/mocha/lib/runner.js:573:12`,
+            `at next (${root}/node_modules/mocha/lib/runner.js:369:14)`,
+            `at ${root}/node_modules/mocha/lib/runner.js:379:7`,
+            `at next (${root}/node_modules/mocha/lib/runner.js:303:14)`,
+            `at ${root}/node_modules/mocha/lib/runner.js:342:7`,
+            `at done (${root}/node_modules/mocha/lib/runnable.js:319:5)`,
+            `at callFn (${root}/node_modules/mocha/lib/runnable.js:395:7)`,
+            `at Hook.Runnable.run (${root}/node_modules/mocha/lib/runnable.js:364:7)`,
+            `at next (${root}/node_modules/mocha/lib/runner.js:317:10)`,
+            `at Immediate.<anonymous> (${root}/node_modules/mocha/lib/runner.js:347:5)`,
             'at runCallback (timers.js:789:20)',
             'at tryOnImmediate (timers.js:751:5)',
             'at processImmediate [as _immediateCallback] (timers.js:722:5)'
@@ -181,20 +183,20 @@ suite('Telemetry', () => {
         expect(Reporter.errorProps).to.deep.equal([]);
 
         const expectedStack = [
-            `at Context.test ${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23`,
-            `at callFn ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:372:21`,
-            `at Test.Runnable.run ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7`,
-            `at Runner.runTest ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:455:10`,
-            `at  ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:573:12`,
-            `at next ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:369:14`,
-            `at  ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:379:7`,
-            `at next ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:303:14`,
-            `at  ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:342:7`,
-            `at done ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:319:5`,
-            `at callFn ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:395:7`,
-            `at Hook.Runnable.run ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7`,
-            `at next ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:317:10`,
-            `at Immediate ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5`,
+            `at Context.test ${root}/src/test/telemetry/index.unit.test.ts:50:23`,
+            `at callFn ${root}/node_modules/mocha/lib/runnable.js:372:21`,
+            `at Test.Runnable.run ${root}/node_modules/mocha/lib/runnable.js:364:7`,
+            `at Runner.runTest ${root}/node_modules/mocha/lib/runner.js:455:10`,
+            `at  ${root}/node_modules/mocha/lib/runner.js:573:12`,
+            `at next ${root}/node_modules/mocha/lib/runner.js:369:14`,
+            `at  ${root}/node_modules/mocha/lib/runner.js:379:7`,
+            `at next ${root}/node_modules/mocha/lib/runner.js:303:14`,
+            `at  ${root}/node_modules/mocha/lib/runner.js:342:7`,
+            `at done ${root}/node_modules/mocha/lib/runnable.js:319:5`,
+            `at callFn ${root}/node_modules/mocha/lib/runnable.js:395:7`,
+            `at Hook.Runnable.run ${root}/node_modules/mocha/lib/runnable.js:364:7`,
+            `at next ${root}/node_modules/mocha/lib/runner.js:317:10`,
+            `at Immediate ${root}/node_modules/mocha/lib/runner.js:347:5`,
             'at runCallback timers.js:789:20',
             'at tryOnImmediate timers.js:751:5',
             'at processImmediate [as _immediateCallback] timers.js:722:5'
