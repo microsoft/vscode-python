@@ -156,8 +156,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         // Then use that to make a hash value
         const hashedCode = stripped.join('');
         const hash = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
-
-        return `<ipython-${hash}-${expectedCount}>.py`;
+        return `<ipython-input-${expectedCount}-${hash}>`;
     }
 
     // tslint:disable-next-line: cyclomatic-complexity

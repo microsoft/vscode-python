@@ -83,7 +83,7 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
@@ -709,6 +709,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 if (notebook) {
                     const hashProvider = getCellHashProvider(notebook);
                     if (hashProvider) {
+                        // Add the breakpoint to the first line of the cell so we actually stop
+                        // on the first line.
+                        const newSource = splitMultilineString(runByLine.cell.data.source);
+                        newSource.splice(0, -1, 'breakpoint()\n');
+                        runByLine.cell.data.source = newSource;
+
                         const hashFileName = hashProvider.generateHashFileName(
                             runByLine.cell,
                             runByLine.expectedExecutionCount

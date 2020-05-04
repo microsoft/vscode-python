@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -51,7 +51,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             this.debuggerPackage = 'debugpy';
@@ -69,16 +70,21 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
-        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, {
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(notebook.identity);
+        const config: Partial<DebugConfiguration> = {
             justMyCode: true,
             rules: [
                 {
-                    include: cellHashFileName,
-                    // tslint:disable-next-line: no-invalid-template-strings
-                    exclude: '${workspaceFileRoot}/**/*'
+                    include: false,
+                    path: `${workspaceFolder ? workspaceFolder : EXTENSION_ROOT_DIR}/**/*`
+                },
+                {
+                    include: true,
+                    path: cellHashFileName
                 }
             ]
-        });
+        };
+        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config);
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {

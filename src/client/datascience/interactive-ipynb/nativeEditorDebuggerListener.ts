@@ -16,8 +16,8 @@ import {
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, IJupyterDebugService } from '../types';
+import { InteractiveWindowMessages, IRunByLine } from '../interactive-common/interactiveWindowTypes';
+import { ICell, IInteractiveWindowListener, IJupyterDebugService } from '../types';
 
 // tslint:disable: no-any
 @injectable()
@@ -27,6 +27,8 @@ export class NativeEditorDebuggerListener
         message: string;
         payload: any;
     }>();
+    private currentCellBeingRun: ICell | undefined;
+
     constructor(
         @inject(IJupyterDebugService)
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
@@ -44,7 +46,7 @@ export class NativeEditorDebuggerListener
     }
 
     public onDidSendMessage?(message: any): void {
-        if (message.type === 'event' && message.command === 'stop') {
+        if (message.type === 'event' && message.event === 'stopped') {
             // We've stopped at breakpoint. Get the top most stack frame to figure out our IP
             this.handleBreakEvent().ignoreErrors();
         } else if (message.type === 'event' && (message.command === 'next' || message.command === 'continue')) {
@@ -52,7 +54,7 @@ export class NativeEditorDebuggerListener
         }
     }
 
-    public onMessage(message: string, _payload?: any): void {
+    public onMessage(message: string, payload?: any): void {
         switch (message) {
             case InteractiveWindowMessages.Step:
                 this.handleStep().ignoreErrors();
@@ -60,6 +62,10 @@ export class NativeEditorDebuggerListener
 
             case InteractiveWindowMessages.Continue:
                 this.handleContinue().ignoreErrors();
+                break;
+
+            case InteractiveWindowMessages.RunByLine:
+                this.saveCell(payload);
                 break;
 
             default:
@@ -70,12 +76,19 @@ export class NativeEditorDebuggerListener
         noop();
     }
 
+    private saveCell(runByLine: IRunByLine) {
+        this.currentCellBeingRun = { ...runByLine.cell };
+    }
+
     private async handleBreakEvent() {
         // First get the stack
         const frames = await this.debugService.getStack();
         if (frames && frames.length > 0) {
             // Tell the UI to move to a new location
-            this.postEmitter.fire({ message: InteractiveWindowMessages.ShowBreak, payload: frames });
+            this.postEmitter.fire({
+                message: InteractiveWindowMessages.ShowBreak,
+                payload: { frames, cell: this.currentCellBeingRun }
+            });
         }
     }
 

@@ -70,8 +70,12 @@ export class Editor extends React.Component<IEditorProps> {
     public componentDidUpdate(prevProps: IEditorProps) {
         if (this.modelRef) {
             if (prevProps.ipLocation !== this.props.ipLocation) {
-                const newDecorations = this.createIpDelta();
-                this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, newDecorations);
+                if (this.props.ipLocation) {
+                    const newDecorations = this.createIpDelta();
+                    this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, newDecorations);
+                } else if (this.decorationIds.length) {
+                    this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, []);
+                }
             }
         }
     }
@@ -99,9 +103,9 @@ export class Editor extends React.Component<IEditorProps> {
         const result: monacoEditor.editor.IModelDeltaDecoration[] = [];
         if (this.props.ipLocation) {
             const columnUntilEOLRange = new monacoEditor.Range(
-                this.props.ipLocation + 1,
+                this.props.ipLocation,
                 1,
-                this.props.ipLocation + 1,
+                this.props.ipLocation,
                 1 << 30
             );
             const range = new monacoEditor.Range(this.props.ipLocation + 1, 1, this.props.ipLocation + 1, 2);
