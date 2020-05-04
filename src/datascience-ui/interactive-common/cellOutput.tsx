@@ -25,6 +25,7 @@ const ansiToHtml = require('ansi-to-html');
 const cloneDeep = require('lodash/cloneDeep');
 import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
+import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
 import { TrimmedOutputMessage } from './trimmedOutputLink';
 
@@ -555,7 +556,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderWidget(widgetOutput: ICellOutputData) {
         // Create a view for this widget if we haven't already
         // tslint:disable-next-line: no-any
-        const widgetData: any = widgetOutput.mimeBundle['application/vnd.jupyter.widget-view+json'];
+        const widgetData: any = widgetOutput.mimeBundle[WIDGET_MIMETYPE];
         if (widgetData.model_id) {
             if (!this.renderedViews.has(widgetData.model_id)) {
                 this.renderedViews.set(widgetData.model_id, this.createWidgetView(widgetData));
