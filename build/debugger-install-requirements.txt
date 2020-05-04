@@ -1,3 +1,2 @@
 # Requirements needed to run install_debugpy.py
-wheel
 packaging
