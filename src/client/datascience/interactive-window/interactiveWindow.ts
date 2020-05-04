@@ -384,7 +384,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.updateCwd(path.dirname(file));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, undefined, debug);
+        return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)

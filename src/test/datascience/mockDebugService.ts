@@ -94,6 +94,9 @@ export class MockDebuggerService implements IJupyterDebugService {
     public requestVariables(): Promise<void> {
         return this.activeService.requestVariables();
     }
+    public stop(): void {
+        return this.activeService.stop();
+    }
     private get activeService(): IJupyterDebugService {
         return this.jupyterDebugService;
     }

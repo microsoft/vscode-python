@@ -14,18 +14,10 @@ import {
 } from 'vscode';
 
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
-import { getCellHashProvider } from '../editor-integration/cellhashprovider';
-import { INotebookIdentity, InteractiveWindowMessages, IRunByLine } from '../interactive-common/interactiveWindowTypes';
-import {
-    IInteractiveWindowListener,
-    IJupyterDebugger,
-    IJupyterDebugService,
-    INotebook,
-    INotebookProvider
-} from '../types';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowListener, IJupyterDebugService } from '../types';
 
 // tslint:disable: no-any
 @injectable()
@@ -35,13 +27,10 @@ export class NativeEditorDebuggerListener
         message: string;
         payload: any;
     }>();
-    private nativeIdentity: Resource;
     constructor(
         @inject(IJupyterDebugService)
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
-        private debugService: IJupyterDebugService,
-        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IJupyterDebugger) private jupyterDebugger: IJupyterDebugger
+        private debugService: IJupyterDebugService
     ) {
         debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this);
     }
@@ -63,16 +52,8 @@ export class NativeEditorDebuggerListener
         }
     }
 
-    public onMessage(message: string, payload?: any): void {
+    public onMessage(message: string, _payload?: any): void {
         switch (message) {
-            case InteractiveWindowMessages.RunByLine:
-                this.handleRunByLine(payload).ignoreErrors();
-                break;
-
-            case InteractiveWindowMessages.NotebookIdentity:
-                this.setIdentity(payload);
-                break;
-
             case InteractiveWindowMessages.Step:
                 this.handleStep().ignoreErrors();
                 break;
@@ -111,31 +92,5 @@ export class NativeEditorDebuggerListener
     private async handleContinueEvent() {
         // Tell the ui to erase the current IP
         this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
-    }
-
-    private async handleRunByLine(runByLineArgs: IRunByLine) {
-        const notebook = await this.getNotebook();
-        if (notebook) {
-            const hashProvider = getCellHashProvider(notebook);
-            if (hashProvider) {
-                const hashFileName = hashProvider.generateHashFileName(
-                    runByLineArgs.cell,
-                    runByLineArgs.expectedExecutionCount
-                );
-                return this.jupyterDebugger.startRunByLine(notebook, hashFileName);
-            }
-        }
-    }
-
-    private setIdentity(identity: INotebookIdentity) {
-        if (identity.type === 'native') {
-            this.nativeIdentity = identity.resource;
-        }
-    }
-
-    private async getNotebook(): Promise<INotebook | undefined> {
-        if (this.nativeIdentity) {
-            return this.notebookProvider.getOrCreateNotebook({ getOnly: true, identity: this.nativeIdentity });
-        }
     }
 }

@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { IApplicationShell } from '../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -47,7 +47,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
@@ -94,8 +93,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (config) {
             traceInfo('stop debugging');
 
-            // Stop our debugging UI session, no await as we just want it stopped
-            this.commandManager.executeCommand('workbench.action.debug.stop');
+            // Tell our debug service to shutdown if possible
+            this.debugService.stop();
 
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.

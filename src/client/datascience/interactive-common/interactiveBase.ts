@@ -542,7 +542,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean,
+        debug?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
@@ -567,7 +567,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 line,
                 id,
                 originator: this.id,
-                debug: debug !== undefined ? debug : false
+                debug: debug !== undefined ? true : false
             });
         }
 
@@ -600,8 +600,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.setLaunchingFile(file);
 
                 if (debug) {
-                    // Attach our debugger
-                    await this.jupyterDebugger.startDebugging(this._notebook);
+                    // Attach our debugger based on run by line setting
+                    if (debug.runByLine && debug.hashFileName) {
+                        await this.jupyterDebugger.startRunByLine(this._notebook, debug.hashFileName);
+                    } else {
+                        await this.jupyterDebugger.startDebugging(this._notebook);
+                    }
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
@@ -931,7 +935,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
 
                 // Submit this item as new code.
-                this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
+                this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                ).ignoreErrors();
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }
@@ -946,7 +957,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteAddCode);
 
                 // Submit this item as new code.
-                await this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug);
+                await this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                );
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }

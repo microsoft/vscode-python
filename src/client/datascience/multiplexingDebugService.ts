@@ -16,7 +16,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebugService } from '../common/application/types';
+import { ICommandManager, IDebugService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { Identifiers } from './constants';
 import { IJupyterDebugService } from './types';
@@ -26,6 +26,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     private lastStartedService: IDebugService | undefined;
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private vscodeDebugService: IDebugService,
         @inject(IJupyterDebugService)
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
@@ -123,6 +124,16 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         }
         throw new Error('Requesting jupyter specific variables when not debugging.');
     }
+
+    public stop(): void {
+        if (this.lastStartedService === this.jupyterDebugService) {
+            this.jupyterDebugService.stop();
+        } else {
+            // Stop our debugging UI session, no await as we just want it stopped
+            this.commandManager.executeCommand('workbench.action.debug.stop');
+        }
+    }
+
     private get activeService(): IDebugService {
         if (this.lastStartedService) {
             return this.lastStartedService;

@@ -4,6 +4,8 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
+import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
+import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { IServiceManager } from '../ioc/types';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
@@ -36,6 +38,7 @@ import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorDebuggerListener } from './interactive-ipynb/nativeEditorDebuggerListener';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
 import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
@@ -159,6 +162,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorDebuggerListener);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
@@ -228,6 +232,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
     serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
+    serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
 

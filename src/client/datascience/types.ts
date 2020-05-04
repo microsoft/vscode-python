@@ -1176,4 +1176,8 @@ export interface IJupyterDebugService extends IDebugService {
      * Force a request for variables. DebugAdapterTrackers can listen for the results.
      */
     requestVariables(): Promise<void>;
+    /**
+     * Stop debugging
+     */
+    stop(): void;
 }

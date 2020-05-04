@@ -181,7 +181,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.protocolParser.on('event_output', this.onOutput.bind(this));
             this.socket.on('error', this.onError.bind(this));
             this.socket.on('close', this.onClose.bind(this));
-            return this.sendStartSequence(config.port, config.host, this.session.id);
+            return this.sendStartSequence(config, this.session.id);
         }
         return Promise.resolve(true);
     }
@@ -249,6 +249,10 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         return deferred.promise;
     }
 
+    public stop(): void {
+        this.onClose();
+    }
+
     private sendToTrackers(args: any) {
         this.debugAdapterTrackers.forEach((d) => d.onDidSendMessage!(args));
     }
@@ -257,10 +261,10 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         return this.sendMessage(command, args);
     }
 
-    private async sendStartSequence(port: number, host: string, sessionId: string): Promise<boolean> {
+    private async sendStartSequence(config: DebugConfiguration, sessionId: string): Promise<boolean> {
         const promiseList: Promise<void>[] = [];
         promiseList.push(this.sendInitialize());
-        promiseList.push(this.sendAttach(port, host, sessionId));
+        promiseList.push(this.sendAttach(config, sessionId));
         if (this._breakpoints.length > 0) {
             promiseList.push(this.sendBreakpoints());
         }
@@ -286,21 +290,13 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         });
     }
 
-    private sendAttach(port: number, host: string, sessionId: string): Promise<void> {
+    private sendAttach(config: DebugConfiguration, sessionId: string): Promise<void> {
         // Send our attach request
         return this.sendMessage('attach', {
-            name: 'IPython',
-            request: 'attach',
-            type: 'python',
-            port,
-            host,
-            justMyCode: true,
-            logToFile: true,
             debugOptions: ['RedirectOutput', 'FixFilePathCase', 'WindowsClient', 'ShowReturnValue'],
-            showReturnValue: true,
             workspaceFolder: EXTENSION_ROOT_DIR,
-            pathMappings: [{ localRoot: EXTENSION_ROOT_DIR, remoteRoot: EXTENSION_ROOT_DIR }],
-            __sessionId: sessionId
+            __sessionId: sessionId,
+            ...config
         });
     }
 
@@ -322,6 +318,10 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             supportsRunInTerminalRequest: true,
             locale: 'en-us'
         });
+    }
+
+    private async sendDisconnect(): Promise<void> {
+        await this.sendMessage('disconnect', {});
     }
 
     private async sendMessage(command: string, args?: any): Promise<void> {
@@ -375,7 +375,8 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private onClose(): void {
         if (this.socket) {
-            this.socket.end();
+            this.sendDisconnect().ignoreErrors();
+            this.socket.destroy();
             this.socket = undefined;
         }
     }
