@@ -220,7 +220,7 @@ export class JupyterNotebookBase implements INotebook {
         if (!this._disposed) {
             this._disposed = true;
             if (this.session) {
-                await this.session.dispose();
+                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
         }
         this.disposed.fire();
