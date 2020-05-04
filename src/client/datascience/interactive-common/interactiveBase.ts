@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { RunByLine, WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -164,7 +164,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            experimentsManager.inExperiment(RunByLine.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
@@ -197,6 +198,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // When a server starts, make sure we create a notebook if the server matches
         jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+
+        // When the variable service requests a refresh, refresh our variable list
+        this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
     public async show(): Promise<void> {
@@ -1145,6 +1149,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return this.listenToNotebookEvents(this._notebook);
             }
         }
+    }
+
+    private refreshVariables() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     private async checkForNotebookProviderConnection(): Promise<void> {

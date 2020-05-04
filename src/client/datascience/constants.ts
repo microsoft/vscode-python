@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { PYTHON_LANGUAGE } from '../common/constants';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IVariableQuery } from '../common/types';
 
@@ -374,6 +375,17 @@ export namespace Settings {
     };
 }
 
+export namespace DataFrameLoading {
+    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
+    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
+    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
+    export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportName = '_VSCODE_RowImport';
+    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
+    export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
+}
+
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
@@ -387,6 +399,10 @@ export namespace Identifiers {
     export const InteractiveWindowIdentityScheme = 'history';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
+    export const ALL_VARIABLES = 'ALL_VARIABLES';
+    export const OLD_VARIABLES = 'OLD_VARIABLES';
+    export const KERNEL_VARIABLES = 'KERNEL_VARIABLES';
+    export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
 }
 
 export namespace CodeSnippits {

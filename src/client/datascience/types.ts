@@ -747,6 +747,9 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         wordBasedSuggestions: boolean;
         parameterHintsEnabled: boolean;
     };
+    variableOptions: {
+        enableDuringDebugger: boolean;
+    };
 }
 
 // Get variables from the currently running active Jupyter server
@@ -769,6 +772,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
+    readonly refreshRequired: Event<void>;
     getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(

@@ -170,7 +170,7 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
+import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
@@ -198,6 +198,8 @@ import { InteractiveWindowCommandListener } from '../../client/datascience/inter
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
+import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
+import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
@@ -220,7 +222,9 @@ import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernel
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
+import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
@@ -609,7 +613,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
-        this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            DebuggerVariableRegistration
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            JupyterVariables,
+            Identifiers.ALL_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            OldJupyterVariables,
+            Identifiers.OLD_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            KernelVariables,
+            Identifiers.KERNEL_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            DebuggerVariables,
+            Identifiers.DEBUGGER_VARIABLES
+        );
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
             ICellHashListener
         ]);

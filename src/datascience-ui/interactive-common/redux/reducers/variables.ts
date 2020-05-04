@@ -179,6 +179,29 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
     };
 }
 
+function handleRefresh(arg: VariableReducerArg): IVariableState {
+    // If the variables are visible, refresh them
+    if (arg.prevState.visible) {
+        return handleRequest({
+            ...arg,
+            payload: {
+                ...arg.payload,
+                data: {
+                    executionCount: arg.prevState.currentExecutionCount,
+                    sortColumn: 'name',
+                    sortAscending: true,
+                    startIndex: 0,
+                    pageSize: arg.prevState.pageSize
+                }
+            }
+        });
+    }
+    return {
+        ...arg.prevState,
+        variables: []
+    };
+}
+
 type VariableReducerFunctions<T> = {
     [P in keyof T]: T[P] extends never | undefined ? VariableReducerFunc : VariableReducerFunc<T[P]>;
 };
@@ -190,6 +213,7 @@ type VariableActionMapping = VariableReducerFunctions<IInteractiveWindowMapping>
 const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.RestartKernel]: handleRestarted,
     [InteractiveWindowMessages.FinishCell]: handleFinishCell,
+    [InteractiveWindowMessages.ForceVariableRefresh]: handleRefresh,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse

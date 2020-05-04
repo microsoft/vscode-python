@@ -17,6 +17,7 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
 import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
+import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -786,4 +787,19 @@ export function mountComponent<P>(type: 'native' | 'interactive', Component: Rea
 
     // Mount this with a react redux provider
     return mount(<Provider store={store}>{Component}</Provider>);
+}
+
+// Open up our variable explorer which also triggers a data fetch
+export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+    const nodes = wrapper.find(Provider);
+    if (nodes.length > 0) {
+        const store = nodes.at(0).props().store;
+        if (store) {
+            store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
+        }
+    }
+}
+
+export async function waitForVariablesUpdated(ioc: DataScienceIocContainer, numberOfTimes?: number): Promise<void> {
+    return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }
