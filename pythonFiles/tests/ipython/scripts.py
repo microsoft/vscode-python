@@ -83,10 +83,12 @@ def get_data_frame_info(variables, name, capsys):
     syspath = os.path.abspath(
         os.path.join(path, "../../vscode_datascience_helpers/dataframes")
     )
-    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace('\\', '\\\\'))
-    importcode = 'import vscodeGetDataFrameInfo\nprint(vscodeGetDataFrameInfo._VSCODE_getDataFrameInfo({0}))'.format(name)
+    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace("\\", "\\\\"))
+    importcode = "import vscodeGetDataFrameInfo\nprint(vscodeGetDataFrameInfo._VSCODE_getDataFrameInfo({0}))".format(
+        name
+    )
     result = execute_code(syscode)
-    if (not result.success):
+    if not result.success:
         result.raise_error()
     result = execute_code(importcode)
     if result.success:
@@ -103,10 +105,12 @@ def get_data_frame_rows(varJson, start, end, capsys):
     syspath = os.path.abspath(
         os.path.join(path, "../../vscode_datascience_helpers/dataframes")
     )
-    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace('\\', '\\\\'))
-    importcode = 'import vscodeGetDataFrameRows\nprint(vscodeGetDataFrameRows._VSCODE_getDataFrameRows({0}, {1}, {2}))'.format(varJson['name'], start, end)
+    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace("\\", "\\\\"))
+    importcode = "import vscodeGetDataFrameRows\nprint(vscodeGetDataFrameRows._VSCODE_getDataFrameRows({0}, {1}, {2}))".format(
+        varJson["name"], start, end
+    )
     result = execute_code(syscode)
-    if (not result.success):
+    if not result.success:
         result.raise_error()
     result = execute_code(importcode)
     if result.success:
