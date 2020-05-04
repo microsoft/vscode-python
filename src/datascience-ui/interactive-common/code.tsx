@@ -30,6 +30,7 @@ export interface ICodeProps {
     cursorPos: CursorPos | monacoEditor.IPosition;
     disableUndoStack: boolean;
     focusPending: number;
+    ipLocation: number | undefined;
     onCreated(code: string, modelId: string): void;
     onChange(e: IMonacoModelContentChangeEvent): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -89,6 +90,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     font={this.props.font}
                     disableUndoStack={this.props.disableUndoStack}
                     version={this.props.version}
+                    ipLocation={this.props.ipLocation}
                 />
                 <div className={waterMarkClass} role="textbox" onClick={this.clickWatermark}>
                     {this.getWatermarkString()}

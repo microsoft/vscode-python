@@ -133,5 +133,11 @@ export const actionCreators = {
             pageSize
         }),
     widgetFailed: (ex: Error): CommonAction<Error> =>
-        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex)
+        createIncomingActionWithPayload(CommonActionType.IPYWIDGET_RENDER_FAILURE, ex),
+    runByLine: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.RUN_BY_LINE, { cellId }),
+    continue: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.CONTINUE, { cellId }),
+    step: (cellId: string): CommonAction<ICellAction> =>
+        createIncomingActionWithPayload(CommonActionType.STEP, { cellId })
 };

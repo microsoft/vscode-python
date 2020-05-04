@@ -56,6 +56,7 @@ interface INativeCellBaseProps {
     focusPending: number;
     busy: boolean;
     useCustomEditorApi: boolean;
+    debugging: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -566,6 +567,15 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.deleteCell(cellId);
             this.props.sendCommand(NativeMouseCommandTelemetry.DeleteCell);
         };
+        const runbyline = () => {
+            this.props.runByLine(cellId);
+        };
+        const cont = () => {
+            this.props.continue(cellId);
+        };
+        const step = () => {
+            this.props.step(cellId);
+        };
         const gatherDisabled =
             this.props.cellVM.cell.data.execution_count === null ||
             this.props.cellVM.hasBeenRun === null ||
@@ -593,6 +603,37 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
+        if (this.props.debugging && !this.isMarkdownCell()) {
+            return (
+                <div className={toolbarClassName}>
+                    <div className="native-editor-celltoolbar-middle">
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={step}
+                            tooltip={getLocString('DataScience.step', 'Run next line')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={this.props.busy}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Step} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={cont}
+                            tooltip={getLocString('DataScience.continue', 'Stop')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={this.props.busy}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Continue}
+                            />
+                        </ImageButton>
+                    </div>
+                    <div className="native-editor-celltoolbar-divider" />
+                </div>
+            );
+        }
         return (
             <div className={toolbarClassName}>
                 <div className="native-editor-celltoolbar-middle">
@@ -604,6 +645,19 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         disabled={this.props.busy}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
+                    </ImageButton>
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runbyline}
+                        tooltip={getLocString('DataScience.runByLine', 'Run line by line')}
+                        hidden={this.isMarkdownCell()}
+                        disabled={this.props.busy}
+                    >
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            image={ImageName.RunByLine}
+                        />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />
@@ -657,12 +711,18 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderInput = () => {
         if (this.shouldRenderInput()) {
+            // Make sure the glyph margin is always there for native cells.
+            // We need it for debugging.
+            const options = {
+                ...this.props.editorOptions,
+                glyphMargin: true
+            };
             return (
                 <div className="cell-input-wrapper">
                     {this.renderMiddleToolbar()}
                     <CellInput
                         cellVM={this.props.cellVM}
-                        editorOptions={this.props.editorOptions}
+                        editorOptions={options}
                         history={undefined}
                         codeTheme={this.props.codeTheme}
                         onCodeChange={this.onCodeChange}

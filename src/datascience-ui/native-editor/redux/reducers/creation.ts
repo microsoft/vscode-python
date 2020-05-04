@@ -190,7 +190,8 @@ export namespace Creation {
             focused: false,
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
-            scrollCount: 0
+            scrollCount: 0,
+            runningByLine: false
         };
 
         Transfer.postModelRemoveAll(arg, newVM.cell.id);
@@ -245,7 +246,8 @@ export namespace Creation {
                 focused: cells[0].focused,
                 cursorPos: CursorPos.Current,
                 hasBeenRun: false,
-                scrollCount: 0
+                scrollCount: 0,
+                runningByLine: false
             };
 
             // Send messages to other side to indicate the new add
