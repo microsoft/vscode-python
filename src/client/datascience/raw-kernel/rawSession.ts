@@ -6,7 +6,6 @@ import * as uuid from 'uuid/v4';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { ISessionWithSocket, KernelSocketInformation } from '../types';
 import { createRawKernel, RawKernel } from './rawKernel';

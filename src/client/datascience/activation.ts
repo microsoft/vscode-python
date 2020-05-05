@@ -33,7 +33,7 @@ export class Activation implements IExtensionSingleActivationService {
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         this.contextService.activate().ignoreErrors();
-        //this.daemonPoolPrewarmer.activate(undefined).ignoreErrors();
+        this.daemonPoolPrewarmer.activate(undefined).ignoreErrors();
         this.tracker.startTracking();
     }
 

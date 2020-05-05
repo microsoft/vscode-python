@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
-import * as tcpportused from 'tcp-port-used';
+import * as tcpPortUsed from 'tcp-port-used';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposable, IOutputChannel, Resource } from '../../common/types';
-import { sleep, waitForPromise } from '../../common/utils/async';
+import { waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
@@ -17,12 +17,11 @@ import { BaseJupyterSession } from '../baseJupyterSession';
 import { Identifiers, Telemetry } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { IKernelLauncher, IKernelProcess } from '../kernel-launcher/types';
+import { IKernelLauncher } from '../kernel-launcher/types';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
-import { RawSocket } from './rawSocket';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -203,113 +202,29 @@ export class RawJupyterSession extends BaseJupyterSession {
         }) as Promise<never>;
         cancellationPromise.catch(noop);
 
-        //traceInfo('**** Before kernelLauncher.launch ****');
-
         const process = await Promise.race([
             this.kernelLauncher.launch(kernelSpec, this.resource, interpreter),
             cancellationPromise
         ]);
 
-        // Wait until our heartbeat port is actually open before we create
-        await tcpportused.waitUntilUsed(process.connection.hb_port, 200, 2_000);
-
-        //await sleep(1_000);
-
-        //traceInfo('**** After kernelLauncher.launch ****');
+        // Wait until our heartbeat port is actually open before we create our raw session
+        // otherwise we can get some timing issues with starting up the sockets and connecting them
+        try {
+            await tcpPortUsed.waitUntilUsed(process.connection.hb_port, 200, 10_000);
+        } catch (error) {
+            // Make sure to dispose our process if we never get a heartbeat
+            process.dispose().ignoreErrors();
+            traceError('Timed out waiting to get a heartbeat from kernel process.');
+            throw new Error('Timed out waiting to get a heartbeat from kernel process.');
+        }
 
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process);
-
-        traceInfo('**** Before session ready check');
-        //await this.sessionReadyCheck2(result);
-        //await this.sessionReadyCheck(result);
-        traceInfo('**** After session ready check');
-
-        //jtraceInfo('**** Before ready await ****');
-        //jawait result.kernel.ready;
-        //aceInfo('**** After ready await ****');
-
-        // NOTE: I still see the issue if this sleep is added
-        //await sleep(1_000);
-
-        //traceInfo('**** After RawSession constructor ****');
-
-        //await this.sessionReadyCheck(result);
-
-        //traceInfo('**** After sessionReadyCheck ****');
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
         result.kernel.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
-        //traceInfo('**** After registerCommTarget ****');
-
         return result;
     }
-
-    private async sessionReadyCheck2(session: RawSession): Promise<void> {
-        let sessionReady = false;
-
-        while (!sessionReady) {
-            const ready = waitForPromise(session.kernel.ready, 1_000);
-
-            if (ready === null) {
-                // This was a timeout, we need to retry
-                const sessionSocket = session.kernelSocketInformation?.socket;
-                if (sessionSocket) {
-                    const rawSocket = sessionSocket as RawSocket;
-                    rawSocket.emit('close');
-                    rawSocket.emit('open');
-                }
-            } else {
-                traceInfo('**** Session kernel is ready');
-                sessionReady = true;
-            }
-        }
-    }
-
-    private async sessionReadyCheck(session: RawSession): Promise<void> {
-        // IANHU: Need this? Does it help?
-        await session.kernel.ready;
-        traceInfo('**** kernel ready');
-
-        if (this.jupyterLab) {
-            let replyFound = false;
-
-            while (!replyFound) {
-                const kernelInfoMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.IInfoRequestMsg>({
-                    channel: 'shell',
-                    session: session.kernel.clientId,
-                    msgType: 'kernel_info_request',
-                    content: {}
-                });
-
-                traceInfo('**** Before sendShellMessage');
-
-                const kernelInfoFuture = session.kernel.sendShellMessage(kernelInfoMessage, true, true);
-
-                traceInfo('**** After sendShellMessage');
-
-                //const reply = await kernelInfoFuture.done;
-                const reply = await waitForPromise(kernelInfoFuture.done, 1_000);
-
-                // waitForPromise returns null if it times out
-                if (reply === null || reply === undefined) {
-                    // Kill the old future as we'll do a new one
-                    traceInfo('**** kernel_info_request fail');
-                    kernelInfoFuture.dispose();
-                } else {
-                    traceInfo('**** kernel_info_request success');
-                    replyFound = true;
-                }
-
-                // Will we get a null here?
-                traceInfo(reply?.channel);
-            }
-        }
-
-        traceInfo('Got kernel_info_request reply from kernel');
-    }
-
-    // IANHU: If our future fails, recreate the entire session?
 }
