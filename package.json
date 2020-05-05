@@ -2980,7 +2980,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "0.1.4",
+        "vscode-extension-telemetry": "0.1.0",
         "vscode-jsonrpc": "^5.0.1",
         "vscode-languageclient": "^6.2.0-next.2",
         "vscode-languageserver": "^6.2.0-next.2",

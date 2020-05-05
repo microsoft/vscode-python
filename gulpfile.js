@@ -287,9 +287,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/any-promise/register.js',
                 'WARNING in ./node_modules/log4js/lib/appenders/index.js',
-                'WARNING in ./node_modules/log4js/lib/clustering.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/log4js/lib/clustering.js'
             ];
         case 'extension':
             return [
@@ -302,16 +300,10 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'remove-files-plugin@1.4.0:',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js'
             ];
         case 'debugAdapter':
-            return [
-                'WARNING in ./node_modules/vscode-uri/lib/index.js',
-                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
-                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
-            ];
+            return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
         default:
             throw new Error('Unknown WebPack Configuration');
     }
