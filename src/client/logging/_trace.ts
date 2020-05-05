@@ -30,23 +30,35 @@ export function traceWarning(...args: any[]) {
 }
 
 export namespace traceDecorators {
-    export function verbose(message: string, opts: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue) {
-        return trace(message, opts);
+    const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
+
+    export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
+        return trace({ message, opts });
     }
     export function error(message: string) {
-        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Error);
+        const opts = DEFAULT_OPTS;
+        const level = LogLevel.Error;
+        return trace({ message, opts, level });
     }
     export function info(message: string) {
-        return trace(message);
+        const opts = TraceOptions.None;
+        return trace({ message, opts });
     }
     export function warn(message: string) {
-        return trace(message, TraceOptions.Arguments | TraceOptions.ReturnValue, LogLevel.Warn);
+        const opts = DEFAULT_OPTS;
+        const level = LogLevel.Warn;
+        return trace({ message, opts, level });
     }
 }
 
+type LogInfo = {
+    opts: TraceOptions;
+    message: string;
+    level?: LogLevel;
+};
+
 function formatMessages(
-    opts: TraceOptions,
-    message: string,
+    info: LogInfo,
     kind: string,
     name: string,
     elapsed: number,
@@ -55,22 +67,22 @@ function formatMessages(
     // tslint:disable-next-line:no-any
     returnValue?: any
 ): string {
-    const messages = [message];
+    const messages = [info.message];
     messages.push(
         `${kind} name = ${name}`.trim(),
         `completed in ${elapsed}ms`,
         `has a ${returnValue ? 'truthy' : 'falsy'} return value`
     );
-    if ((opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
+    if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
         messages.push(argsToLogString(args));
     }
-    if ((opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
+    if ((info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
         messages.push(returnValueToLogString(returnValue));
     }
     return messages.join(', ');
 }
 
-function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel?: LogLevel) {
+function trace(logInfo: LogInfo) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -79,17 +91,16 @@ function trace(message: string, opts: TraceOptions = TraceOptions.None, logLevel
             const className = _ && _.constructor ? _.constructor.name : '';
             // tslint:disable-next-line:no-any
             function writeSuccess(elapsedTime: number, returnValue: any) {
-                if (logLevel === LogLevel.Error) {
-                    return;
+                if (logInfo.level === undefined || logInfo.level > LogLevel.Error) {
+                    writeToLog(elapsedTime, returnValue);
                 }
-                writeToLog(elapsedTime, returnValue);
             }
             function writeError(elapsedTime: number, ex: Error) {
                 writeToLog(elapsedTime, undefined, ex);
             }
             // tslint:disable-next-line:no-any
             function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
-                const formatted = formatMessages(opts, message, 'Class', className, elapsedTime, args, returnValue);
+                const formatted = formatMessages(logInfo, 'Class', className, elapsedTime, args, returnValue);
                 if (ex) {
                     log(LogLevel.Error, formatted, ex);
                     // tslint:disable-next-line:no-any
