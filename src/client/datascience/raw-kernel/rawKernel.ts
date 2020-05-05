@@ -103,7 +103,6 @@ export class RawKernel implements Kernel.IKernel {
 
         // Pretend like an open occurred. This will prime the real kernel to be connected
         socket.emit('open');
-        //setTimeout(() => socket.emit('open'), 0);
     }
 
     public async shutdown(): Promise<void> {

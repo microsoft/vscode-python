@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Kernel } from '@jupyterlab/services';
+import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
 import * as tcpPortUsed from 'tcp-port-used';
 import { CancellationToken } from 'vscode-jsonrpc';
