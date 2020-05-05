@@ -612,21 +612,21 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <div className="native-editor-celltoolbar-middle">
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={step}
-                            tooltip={getLocString('DataScience.step', 'Run next line')}
-                            hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy}
-                        >
-                            <div className="codicon codicon-button">{'\uead4'}</div>
-                        </ImageButton>
-                        <ImageButton
-                            baseTheme={this.props.baseTheme}
                             onClick={cont}
                             tooltip={getLocString('DataScience.continue', 'Stop')}
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
                             <div className="codicon codicon-button">{'\uead7'}</div>
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={step}
+                            tooltip={getLocString('DataScience.step', 'Run next line')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={this.props.busy}
+                        >
+                            <div className="codicon codicon-button">{'\uead4'}</div>
                         </ImageButton>
                     </div>
                     <div className="native-editor-celltoolbar-divider" />

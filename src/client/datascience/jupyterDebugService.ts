@@ -352,6 +352,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
                     };
                     this.sequence += 1;
                     const objString = JSON.stringify(obj);
+                    traceInfo(`Sending request to debugger: ${objString}`);
                     const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
                     this.socket.write(message, (_a: any) => {
                         this.sendToTrackers(obj);
