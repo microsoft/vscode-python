@@ -199,7 +199,7 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     private getIpLine(): number | undefined {
         if (this.props.cellVM.currentStack && this.props.cellVM.currentStack.length > 0) {
-            return this.props.cellVM.currentStack[0].line;
+            return this.props.cellVM.currentStack[0].line - 1;
         }
     }
 }

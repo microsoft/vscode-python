@@ -169,6 +169,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
             this.session = new JupyterDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
+            this.sessionChangedEvent.fire(this.session);
 
             // Create our debug adapter trackers at session start
             this.debugAdapterTrackers = this.debugAdapterTrackerFactories.map(
@@ -270,6 +271,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         }
         promiseList.push(this.sendConfigurationDone());
         await Promise.all(promiseList);
+        this.sessionStartedEvent.fire(this.session);
         return true;
     }
 
@@ -375,6 +377,9 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private onClose(): void {
         if (this.socket) {
+            this.sessionTerminatedEvent.fire(this.activeDebugSession);
+            this.session = undefined;
+            this.sessionChangedEvent.fire(undefined);
             this.sendDisconnect().ignoreErrors();
             this.socket.destroy();
             this.socket = undefined;

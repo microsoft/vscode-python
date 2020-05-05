@@ -93,5 +93,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
     [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
     [InteractiveWindowMessages.ShowBreak]: Execution.handleBreakState,
-    [InteractiveWindowMessages.ShowContinue]: Execution.handleContinue
+    [InteractiveWindowMessages.ShowContinue]: Execution.handleContinue,
+    [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
+    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging
 };

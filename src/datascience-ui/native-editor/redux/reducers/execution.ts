@@ -328,4 +328,29 @@ export namespace Execution {
         }
         return arg.prevState;
     }
+
+    export function startDebugging(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            debugging: true
+        };
+    }
+
+    export function stopDebugging(arg: NativeEditorReducerArg): IMainState {
+        // Clear out any cells that have frames
+        const index = arg.prevState.cellVMs.findIndex((cvm) => cvm.currentStack);
+        const newVMs = [...arg.prevState.cellVMs];
+        if (index >= 0) {
+            const newVM = {
+                ...newVMs[index],
+                currentStack: undefined
+            };
+            newVMs[index] = newVM;
+        }
+        return {
+            ...arg.prevState,
+            cellVMs: newVMs,
+            debugging: false
+        };
+    }
 }

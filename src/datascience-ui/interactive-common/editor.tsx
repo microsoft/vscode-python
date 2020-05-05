@@ -108,7 +108,7 @@ export class Editor extends React.Component<IEditorProps> {
                 this.props.ipLocation,
                 1 << 30
             );
-            const range = new monacoEditor.Range(this.props.ipLocation + 1, 1, this.props.ipLocation + 1, 2);
+            const range = new monacoEditor.Range(this.props.ipLocation, 1, this.props.ipLocation, 2);
 
             result.push({
                 options: TOP_STACK_FRAME_MARGIN,

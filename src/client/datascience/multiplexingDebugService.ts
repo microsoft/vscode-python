@@ -13,6 +13,7 @@ import {
     DebugSessionCustomEvent,
     Disposable,
     Event,
+    EventEmitter,
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -24,6 +25,11 @@ import { IJupyterDebugService } from './types';
 @injectable()
 export class MultiplexingDebugService implements IJupyterDebugService {
     private lastStartedService: IDebugService | undefined;
+    private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
+    private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
+    private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
+    private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
+
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -34,6 +40,14 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     ) {
         disposableRegistry.push(vscodeDebugService.onDidTerminateDebugSession(this.endedDebugSession.bind(this)));
         disposableRegistry.push(jupyterDebugService.onDidTerminateDebugSession(this.endedDebugSession.bind(this)));
+        disposableRegistry.push(vscodeDebugService.onDidStartDebugSession(this.startedDebugSession.bind(this)));
+        disposableRegistry.push(jupyterDebugService.onDidStartDebugSession(this.startedDebugSession.bind(this)));
+        disposableRegistry.push(vscodeDebugService.onDidChangeActiveDebugSession(this.changedDebugSession.bind(this)));
+        disposableRegistry.push(jupyterDebugService.onDidChangeActiveDebugSession(this.changedDebugSession.bind(this)));
+        disposableRegistry.push(vscodeDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this)));
+        disposableRegistry.push(
+            jupyterDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this))
+        );
     }
     public get activeDebugSession(): DebugSession | undefined {
         return this.activeService.activeDebugSession;
@@ -46,16 +60,16 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         return this.activeService.breakpoints;
     }
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
-        return this.activeService.onDidChangeActiveDebugSession;
+        return this.sessionChangedEvent.event;
     }
     public get onDidStartDebugSession(): Event<DebugSession> {
-        return this.activeService.onDidStartDebugSession;
+        return this.sessionStartedEvent.event;
     }
     public get onDidReceiveDebugSessionCustomEvent(): Event<DebugSessionCustomEvent> {
-        return this.activeService.onDidReceiveDebugSessionCustomEvent;
+        return this.sessionCustomEvent.event;
     }
     public get onDidTerminateDebugSession(): Event<DebugSession> {
-        return this.activeService.onDidTerminateDebugSession;
+        return this.sessionTerminatedEvent.event;
     }
     public get onDidChangeBreakpoints(): Event<BreakpointsChangeEvent> {
         return this.activeService.onDidChangeBreakpoints;
@@ -151,7 +165,20 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         };
     }
 
-    private endedDebugSession() {
+    private endedDebugSession(session: DebugSession) {
+        this.sessionTerminatedEvent.fire(session);
         this.lastStartedService = undefined;
+    }
+
+    private startedDebugSession(session: DebugSession) {
+        this.sessionStartedEvent.fire(session);
+    }
+
+    private changedDebugSession(session: DebugSession | undefined) {
+        this.sessionChangedEvent.fire(session);
+    }
+
+    private gotCustomEvent(e: DebugSessionCustomEvent) {
+        this.sessionCustomEvent.fire(e);
     }
 }
