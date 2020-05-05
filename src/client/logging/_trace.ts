@@ -87,6 +87,20 @@ function formatMessages(info: LogInfo, traced: TraceInfo): string {
     return messages.join(', ');
 }
 
+function logResult(info: LogInfo, traced: TraceInfo) {
+    const formatted = formatMessages(info, traced);
+    if (traced.err === undefined) {
+        // The call did not fail.
+        if (!info.level || info.level > LogLevel.Error) {
+            log(LogLevel.Info, formatted);
+        }
+    } else {
+        log(LogLevel.Error, formatted, traced.err);
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent('ERROR' as any, undefined, undefined, traced.err);
+    }
+}
+
 function trace(logInfo: LogInfo) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
@@ -98,26 +112,6 @@ function trace(logInfo: LogInfo) {
                 name: _ && _.constructor ? _.constructor.name : '',
                 args
             };
-            // tslint:disable-next-line:no-any
-            function writeSuccess(info: TraceInfo) {
-                if (logInfo.level === undefined || logInfo.level > LogLevel.Error) {
-                    writeToLog(info);
-                }
-            }
-            function writeError(info: TraceInfo) {
-                writeToLog(info);
-            }
-            // tslint:disable-next-line:no-any
-            function writeToLog(info: TraceInfo) {
-                const formatted = formatMessages(logInfo, info);
-                if (info.err) {
-                    log(LogLevel.Error, formatted, info.err);
-                    // tslint:disable-next-line:no-any
-                    sendTelemetryEvent('ERROR' as any, undefined, undefined, info.err);
-                } else {
-                    log(LogLevel.Info, formatted);
-                }
-            }
             const timer = new StopWatch();
             try {
                 // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
@@ -128,22 +122,18 @@ function trace(logInfo: LogInfo) {
                     // tslint:disable-next-line:prefer-type-cast
                     (result as Promise<void>)
                         .then((data) => {
-                            const info = { ...call, elapsed: timer.elapsedTime, returnValue: data };
-                            writeSuccess(info);
+                            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: data });
                             return data;
                         })
                         .catch((ex) => {
-                            const info = { ...call, elapsed: timer.elapsedTime, err: ex };
-                            writeError(info);
+                            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
                         });
                 } else {
-                    const info = { ...call, elapsed: timer.elapsedTime, returnValue: result };
-                    writeSuccess(info);
+                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: result });
                 }
                 return result;
             } catch (ex) {
-                const info = { ...call, elapsed: timer.elapsedTime, err: ex };
-                writeError(info);
+                logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
                 throw ex;
             }
         };
