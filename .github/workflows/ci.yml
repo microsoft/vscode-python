@@ -35,7 +35,7 @@ jobs:
         shell: bash
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -134,7 +134,7 @@ jobs:
         run: npx prettier 'build/**/*.js' --check
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -240,7 +240,7 @@ jobs:
         if: steps.out-cache.outputs.cache-hit == false
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
 
@@ -442,7 +442,7 @@ jobs:
         shell: bash
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
 
