@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
