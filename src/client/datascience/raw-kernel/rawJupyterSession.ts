@@ -3,7 +3,6 @@
 'use strict';
 import type { Kernel } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
-import * as tcpPortUsed from 'tcp-port-used';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
@@ -206,17 +205,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.kernelLauncher.launch(kernelSpec, this.resource, interpreter),
             cancellationPromise
         ]);
-
-        // Wait until our heartbeat port is actually open before we create our raw session
-        // otherwise we can get some timing issues with starting up the sockets and connecting them
-        try {
-            await tcpPortUsed.waitUntilUsed(process.connection.hb_port, 200, 10_000);
-        } catch (error) {
-            // Make sure to dispose our process if we never get a heartbeat
-            process.dispose().ignoreErrors();
-            traceError('Timed out waiting to get a heartbeat from kernel process.');
-            throw new Error('Timed out waiting to get a heartbeat from kernel process.');
-        }
 
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process);
