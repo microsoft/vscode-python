@@ -27,6 +27,16 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     });
 }
 
+// tslint:disable-next-line: no-any
+export function isThenable<T>(v: any): v is Thenable<T> {
+    return typeof v?.then === 'function';
+}
+
+// tslint:disable-next-line: no-any
+export function isPromise<T>(v: any): v is Promise<T> {
+    return typeof v?.then === 'function' && typeof v?.catch === 'function';
+}
+
 //======================
 // Deferred
 
