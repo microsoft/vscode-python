@@ -107,6 +107,7 @@ suite('Sorting', () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         await window.showTextDocument(textDocument);
         const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
+        expect(edit).not.to.eq(undefined, 'No edit returned');
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
         const newValue = `from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
