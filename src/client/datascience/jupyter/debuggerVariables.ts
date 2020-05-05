@@ -77,7 +77,8 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         // Then eval calling the main function with our target variable
         const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
             expression: `${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name})`,
-            frameId: this.topMostFrameId,
+            // tslint:disable-next-line: no-any
+            frameId: (targetVariable as any).frameId || this.topMostFrameId,
             context: 'repl'
         });
 
@@ -109,7 +110,8 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         const minnedEnd = Math.min(end, targetVariable.rowCount || 0);
         const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
             expression: `${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${minnedEnd})`,
-            frameId: this.topMostFrameId,
+            // tslint:disable-next-line: no-any
+            frameId: (targetVariable as any).frameId || this.topMostFrameId,
             context: 'repl'
         });
 
