@@ -84,6 +84,7 @@ export namespace Commands {
     export const GatherQuality = 'python.datascience.gatherquality';
     export const EnableLoadingWidgetsFrom3rdPartySource =
         'python.datascience.enableLoadingWidgetScriptsFromThirdPartySource';
+    export const OpenStartPage = 'python.datascience.startPage.open';
 }
 
 export namespace CodeLensCommands {

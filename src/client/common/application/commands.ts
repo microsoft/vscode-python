@@ -72,6 +72,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
+    [DSCommands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
 }
 

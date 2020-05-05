@@ -12,6 +12,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { IStartPage } from '../startPage/types';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -40,7 +41,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
+        @inject(IStartPage) private startPage: IStartPage
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -76,6 +78,7 @@ export class CommandRegistry implements IDisposable {
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
+        this.registerCommand(Commands.OpenStartPage, this.openStartPage);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -343,6 +346,11 @@ export class CommandRegistry implements IDisposable {
     private async createNewNotebook(): Promise<void> {
         await this.notebookEditorProvider.createNew();
     }
+
+    private async openStartPage(): Promise<void> {
+        await this.startPage.open();
+    }
+
     private viewJupyterOutput() {
         this.jupyterOutput.show(true);
     }

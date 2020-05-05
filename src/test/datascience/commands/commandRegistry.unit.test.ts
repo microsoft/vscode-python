@@ -14,6 +14,7 @@ import { JupyterServerSelectorCommand } from '../../../client/datascience/comman
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { StartPage } from '../../../client/datascience/startPage/startPage';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
@@ -35,6 +36,7 @@ suite('Data Science - Commands', () => {
         commandManager = mock(CommandManager);
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
+        const startPage = mock(StartPage);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -48,7 +50,8 @@ suite('Data Science - Commands', () => {
             instance(debugService),
             instance(configService),
             instance(appShell),
-            new MockOutputChannel('Jupyter')
+            new MockOutputChannel('Jupyter'),
+            instance(startPage)
         );
     });
 
