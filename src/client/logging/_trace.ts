@@ -34,7 +34,7 @@ export namespace traceDecorators {
     const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
     function trace(logInfo: LogInfo) {
-        return traceDecorator((call, traced) => logResult(logInfo, call, traced));
+        return traceDecorator((call, traced) => logResult(logInfo, traced, call));
     }
 
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
@@ -62,7 +62,22 @@ type LogInfo = {
     level?: LogLevel;
 };
 
-function formatMessages(info: LogInfo, call: CallInfo, traced: TraceInfo): string {
+function normalizeCall(call: CallInfo): CallInfo {
+    let { kind, name, args } = call;
+    if (!kind || kind === '') {
+        kind = 'Function';
+    }
+    if (!name || name === '') {
+        name = '<anon>';
+    }
+    if (!args) {
+        args = [];
+    }
+    return { kind, name, args };
+}
+
+function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): string {
+    call = normalizeCall(call!);
     const messages = [info.message];
     messages.push(
         `${call.kind} name = ${call.name}`.trim(),
@@ -78,8 +93,8 @@ function formatMessages(info: LogInfo, call: CallInfo, traced: TraceInfo): strin
     return messages.join(', ');
 }
 
-function logResult(info: LogInfo, call: CallInfo, traced: TraceInfo) {
-    const formatted = formatMessages(info, call, traced);
+function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
+    const formatted = formatMessages(info, traced, call);
     if (traced.err === undefined) {
         // The call did not fail.
         if (!info.level || info.level > LogLevel.Error) {
