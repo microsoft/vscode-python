@@ -21,8 +21,12 @@ import { InteractiveWindowMessages, IRunByLine } from '../interactive-common/int
 import { ICell, IInteractiveWindowListener, IJupyterDebugService } from '../types';
 
 // tslint:disable: no-any
+/**
+ * Native editor listener that responds to run by line commands from the UI and uses
+ * those commands to control a debug client.
+ */
 @injectable()
-export class NativeEditorDebuggerListener
+export class NativeEditorRunByLineListener
     implements IInteractiveWindowListener, DebugAdapterTrackerFactory, DebugAdapterTracker {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;

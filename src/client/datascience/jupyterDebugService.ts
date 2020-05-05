@@ -66,6 +66,10 @@ class JupyterDebugSession implements DebugSession {
 }
 
 //tslint:disable:trailing-comma no-any no-multiline-string
+/**
+ * IJupyterDebugService that talks directly to the debugger. Supports both run by line and
+ * regular debugging (regular is used in tests).
+ */
 @injectable()
 export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     private socket: net.Socket | undefined;
@@ -157,7 +161,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     public startRunByLine(config: DebugConfiguration): Thenable<boolean> {
         // This is the same as normal debugging. Just a convenient entry point
         // in case we need to make it different.
-        return this.startDebugging(undefined, config, undefined);
+        return this.startDebugging(undefined, config);
     }
 
     public startDebugging(
@@ -166,14 +170,14 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         _parentSession?: DebugSession | undefined
     ): Thenable<boolean> {
         // Should have a port number. We'll assume it's local
-        const config = nameOrConfiguration as DebugConfiguration;
+        const config = nameOrConfiguration as DebugConfiguration; // NOSONAR
         if (config.port) {
             this.session = new JupyterDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
             this.sessionChangedEvent.fire(this.session);
 
             // Create our debug adapter trackers at session start
             this.debugAdapterTrackers = this.debugAdapterTrackerFactories.map(
-                (f) => f.createDebugAdapterTracker(this.session!) as DebugAdapterTracker
+                (f) => f.createDebugAdapterTracker(this.session!) as DebugAdapterTracker // NOSONAR
             );
 
             this.socket = net.createConnection(config.port);
@@ -281,7 +285,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private sendBreakpoints(): Promise<void> {
         // Only supporting a single file now
-        const sbs = this._breakpoints.map((b) => b as SourceBreakpoint);
+        const sbs = this._breakpoints.map((b) => b as SourceBreakpoint); // NOSONAR
         const file = sbs[0].location.uri.fsPath;
         return this.sendMessage('setBreakpoints', {
             source: {
@@ -333,7 +337,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     private sendMessage(command: string, args?: any): Promise<void> {
         const response = createDeferred<void>();
         this.protocolParser.once(`response_${command}`, () => response.resolve());
-        this.socket!.on('error', (err) => response.reject(err));
+        this.socket!.on('error', (err) => response.reject(err)); // NOSONAR
         this.emitMessage(command, args).catch((exc) => {
             traceError(`Exception attempting to emit ${command} to debugger: `, exc);
         });

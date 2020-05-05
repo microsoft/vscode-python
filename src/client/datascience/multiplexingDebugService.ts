@@ -22,6 +22,10 @@ import { IDisposableRegistry } from '../common/types';
 import { Identifiers } from './constants';
 import { IJupyterDebugService } from './types';
 
+/**
+ * IJupyterDebugService that will pick the correct debugger based on if doing run by line or normal debugging.
+ * RunByLine will use the JupyterDebugService, Normal debugging will use the VS code debug service.
+ */
 @injectable()
 export class MultiplexingDebugService implements IJupyterDebugService {
     private lastStartedService: IDebugService | undefined;
