@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { isPromise } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel } from './levels';
@@ -101,41 +102,49 @@ function logResult(info: LogInfo, traced: TraceInfo) {
     }
 }
 
+function withTrace<T>(call: CallInfo, logInfo: LogInfo, run: () => T): T {
+    const timer = new StopWatch();
+    try {
+        // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
+        const result = run();
+
+        // If method being wrapped returns a promise then wait for it.
+        if (isPromise(result)) {
+            // tslint:disable-next-line:prefer-type-cast
+            (result as Promise<void>)
+                .then((data) => {
+                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: data });
+                    return data;
+                })
+                .catch((ex) => {
+                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
+                });
+        } else {
+            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: result });
+        }
+        return result;
+    } catch (ex) {
+        logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
+        throw ex;
+    }
+}
+
 function trace(logInfo: LogInfo) {
     // tslint:disable-next-line:no-function-expression no-any
     return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
-            const call = {
+            const info = {
                 kind: 'Class',
                 name: _ && _.constructor ? _.constructor.name : '',
                 args
             };
-            const timer = new StopWatch();
-            try {
-                // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
-                const result = originalMethod.apply(this, args);
-                // If method being wrapped returns a promise then wait for it.
-                // tslint:disable-next-line:no-unsafe-any
-                if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
-                    // tslint:disable-next-line:prefer-type-cast
-                    (result as Promise<void>)
-                        .then((data) => {
-                            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: data });
-                            return data;
-                        })
-                        .catch((ex) => {
-                            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
-                        });
-                } else {
-                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: result });
-                }
-                return result;
-            } catch (ex) {
-                logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
-                throw ex;
-            }
+            // tslint:disable-next-line:no-this-assignment no-invalid-this
+            const scope = this;
+            return withTrace(info, logInfo, () => {
+                return originalMethod.apply(scope, args);
+            });
         };
 
         return descriptor;
