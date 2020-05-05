@@ -177,6 +177,9 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
             if (KnownExcludedVariables.has(v.name)) {
                 return false;
             }
+            if (v.type === 'NoneType') {
+                return false;
+            }
             return true;
         });
 

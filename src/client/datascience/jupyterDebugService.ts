@@ -202,8 +202,8 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     public async step(): Promise<void> {
-        await this.sendMessage('next', { threadId: this._stoppedThreadId ? this._stoppedThreadId : 1 });
-        this.sendToTrackers({ type: 'event', event: 'next' });
+        await this.sendMessage('stepIn', { threadId: this._stoppedThreadId ? this._stoppedThreadId : 1 });
+        this.sendToTrackers({ type: 'event', event: 'stepIn' });
     }
 
     public async getStack(): Promise<DebugProtocol.StackFrame[]> {
