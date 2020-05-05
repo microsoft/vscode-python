@@ -14,6 +14,7 @@ import {
 } from 'vscode';
 
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceInfo } from '../../common/logger';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, IRunByLine } from '../interactive-common/interactiveWindowTypes';
@@ -89,6 +90,7 @@ export class NativeEditorDebuggerListener
 
         // If we got frames, tell the UI
         if (frames && frames.length > 0) {
+            traceInfo(`Broke into ${frames[0].source?.path}:${frames[0].line}`);
             // Tell the UI to move to a new location
             this.postEmitter.fire({
                 message: InteractiveWindowMessages.ShowBreak,

@@ -21,7 +21,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceInfo } from '../common/logger';
+import { traceError, traceInfo } from '../common/logger';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
@@ -182,7 +182,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.protocolParser.on('event_output', this.onOutput.bind(this));
             this.socket.on('error', this.onError.bind(this));
             this.socket.on('close', this.onClose.bind(this));
-            return this.sendStartSequence(config, this.session.id);
+            return this.sendStartSequence(config, this.session.id).then(() => true);
         }
         return Promise.resolve(true);
     }
@@ -262,17 +262,21 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         return this.sendMessage(command, args);
     }
 
-    private async sendStartSequence(config: DebugConfiguration, sessionId: string): Promise<boolean> {
-        const promiseList: Promise<void>[] = [];
-        promiseList.push(this.sendInitialize());
-        promiseList.push(this.sendAttach(config, sessionId));
+    private async sendStartSequence(config: DebugConfiguration, sessionId: string): Promise<void> {
+        traceInfo('Sending debugger initialize...');
+        await this.sendInitialize();
         if (this._breakpoints.length > 0) {
-            promiseList.push(this.sendBreakpoints());
+            traceInfo('Sending breakpoints');
+            await this.sendBreakpoints();
         }
-        promiseList.push(this.sendConfigurationDone());
-        await Promise.all(promiseList);
-        this.sessionStartedEvent.fire(this.session);
-        return true;
+        traceInfo('Sending debugger attach...');
+        const attachPromise = this.sendAttach(config, sessionId);
+        traceInfo('Sending configuration done');
+        await this.sendConfigurationDone();
+        traceInfo('Session started.');
+        return attachPromise.then(() => {
+            this.sessionStartedEvent.fire(this.session);
+        });
     }
 
     private sendBreakpoints(): Promise<void> {
@@ -306,9 +310,9 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         return this.sendMessage('configurationDone');
     }
 
-    private async sendInitialize(): Promise<void> {
+    private sendInitialize(): Promise<void> {
         // Send our initialize request. (Got this by dumping debugAdapter output during real run. Set logToFile to true to generate)
-        await this.sendMessage('initialize', {
+        return this.sendMessage('initialize', {
             clientID: 'vscode',
             clientName: 'Visual Studio Code',
             adapterID: 'python',
@@ -322,16 +326,18 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         });
     }
 
-    private async sendDisconnect(): Promise<void> {
-        await this.sendMessage('disconnect', {});
+    private sendDisconnect(): Promise<void> {
+        return this.sendMessage('disconnect', {});
     }
 
-    private async sendMessage(command: string, args?: any): Promise<void> {
-        const response = createDeferred();
+    private sendMessage(command: string, args?: any): Promise<void> {
+        const response = createDeferred<void>();
         this.protocolParser.once(`response_${command}`, () => response.resolve());
         this.socket!.on('error', (err) => response.reject(err));
-        await this.emitMessage(command, args);
-        await response.promise;
+        this.emitMessage(command, args).catch((exc) => {
+            traceError(`Exception attempting to emit ${command} to debugger: `, exc);
+        });
+        return response.promise;
     }
 
     private emitMessage(command: string, args?: any): Promise<void> {

@@ -69,13 +69,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
+        traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
             justMyCode: true,
             rules: [
-                {
-                    include: false,
-                    path: `**/*`
-                },
                 {
                     include: true,
                     path: cellHashFileName
