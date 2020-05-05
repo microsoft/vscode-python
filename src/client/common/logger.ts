@@ -1,5 +1,6 @@
 export {
     // aliases:
+    // (temporarily for backward compatibility and to avoid churn)
     traceDecorators,
     traceError,
     traceInfo,

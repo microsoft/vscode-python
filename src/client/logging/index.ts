@@ -4,6 +4,7 @@
 
 export {
     // aliases
+    // (for convenience)
     traceDecorators,
     traceError,
     traceInfo,
