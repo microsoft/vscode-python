@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { isPromise } from '../common/utils/async';
-import { StopWatch } from '../common/utils/stopWatch';
+import { TraceInfo, tracing } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel } from './levels';
 import { _log as log } from './logger';
@@ -39,14 +38,14 @@ export namespace traceDecorators {
             const originalMethod = descriptor.value;
             // tslint:disable-next-line:no-function-expression no-any
             descriptor.value = function (...args: any[]) {
-                const traced = {
+                const call = {
                     kind: 'Class',
                     name: _ && _.constructor ? _.constructor.name : '',
                     args
                 };
                 // tslint:disable-next-line:no-this-assignment no-invalid-this
                 const scope = this;
-                return withTrace(traced, logInfo, () => {
+                return withTrace(call, logInfo, () => {
                     return originalMethod.apply(scope, args);
                 });
             };
@@ -87,22 +86,15 @@ type CallInfo = {
     args: any[];
 };
 
-type TraceInfo = CallInfo & {
-    elapsed: number;
-    // tslint:disable-next-line:no-any
-    returnValue?: any;
-    err?: Error;
-};
-
-function formatMessages(info: LogInfo, traced: TraceInfo): string {
+function formatMessages(info: LogInfo, call: CallInfo, traced: TraceInfo): string {
     const messages = [info.message];
     messages.push(
-        `${traced.kind} name = ${traced.name}`.trim(),
+        `${call.kind} name = ${call.name}`.trim(),
         `completed in ${traced.elapsed}ms`,
         `has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`
     );
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
-        messages.push(argsToLogString(traced.args));
+        messages.push(argsToLogString(call.args));
     }
     if ((info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
         messages.push(returnValueToLogString(traced.returnValue));
@@ -110,8 +102,8 @@ function formatMessages(info: LogInfo, traced: TraceInfo): string {
     return messages.join(', ');
 }
 
-function logResult(info: LogInfo, traced: TraceInfo) {
-    const formatted = formatMessages(info, traced);
+function logResult(info: LogInfo, call: CallInfo, traced: TraceInfo) {
+    const formatted = formatMessages(info, call, traced);
     if (traced.err === undefined) {
         // The call did not fail.
         if (!info.level || info.level > LogLevel.Error) {
@@ -125,28 +117,5 @@ function logResult(info: LogInfo, traced: TraceInfo) {
 }
 
 function withTrace<T>(call: CallInfo, logInfo: LogInfo, run: () => T): T {
-    const timer = new StopWatch();
-    try {
-        // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
-        const result = run();
-
-        // If method being wrapped returns a promise then wait for it.
-        if (isPromise(result)) {
-            // tslint:disable-next-line:prefer-type-cast
-            (result as Promise<void>)
-                .then((data) => {
-                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: data });
-                    return data;
-                })
-                .catch((ex) => {
-                    logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
-                });
-        } else {
-            logResult(logInfo, { ...call, elapsed: timer.elapsedTime, returnValue: result });
-        }
-        return result;
-    } catch (ex) {
-        logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
-        throw ex;
-    }
+    return tracing((traced) => logResult(logInfo, call, traced), run);
 }
