@@ -295,6 +295,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         busy={this.props.busy}
                         useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
                         debugging={cellVM.runningByLine}
+                        supportsRunByLine={this.props.settings?.variableOptions?.enableDuringDebugger ? true : false}
                     />
                 </ErrorBoundary>
                 {lastLine}

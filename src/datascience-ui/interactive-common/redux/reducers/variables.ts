@@ -193,6 +193,10 @@ function handleRefresh(arg: VariableReducerArg): IVariableState {
                     startIndex: 0,
                     pageSize: arg.prevState.pageSize
                 }
+            },
+            prevState: {
+                ...arg.prevState,
+                variables: []
             }
         });
     }

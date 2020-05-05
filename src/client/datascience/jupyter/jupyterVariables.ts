@@ -11,6 +11,7 @@ import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
+    IJupyterDebugService,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -28,7 +29,9 @@ export class JupyterVariables implements IJupyterVariables {
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IJupyterDebugService)
+        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+        private debugService: IJupyterDebugService,
         @inject(IExperimentsManager) private experimentsManager: IExperimentsManager,
         @inject(IJupyterVariables) @named(Identifiers.OLD_VARIABLES) private oldVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,

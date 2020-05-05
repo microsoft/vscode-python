@@ -57,6 +57,7 @@ interface INativeCellBaseProps {
     busy: boolean;
     useCustomEditorApi: boolean;
     debugging: boolean;
+    supportsRunByLine: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -650,7 +651,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         baseTheme={this.props.baseTheme}
                         onClick={runbyline}
                         tooltip={getLocString('DataScience.runByLine', 'Run line by line')}
-                        hidden={this.isMarkdownCell()}
+                        hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
                         disabled={this.props.busy}
                     >
                         <Image

@@ -83,6 +83,11 @@ export class NativeEditorDebuggerListener
     private async handleBreakEvent() {
         // First get the stack
         const frames = await this.debugService.getStack();
+
+        // Then force a variable refresh
+        await this.debugService.requestVariables();
+
+        // If we got frames, tell the UI
         if (frames && frames.length > 0) {
             // Tell the UI to move to a new location
             this.postEmitter.fire({
