@@ -46,7 +46,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
-    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+    protected get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
         if (!this._jupyterLab) {
             // tslint:disable-next-line:no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
