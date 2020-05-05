@@ -33,6 +33,28 @@ export function traceWarning(...args: any[]) {
 export namespace traceDecorators {
     const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
+    function trace(logInfo: LogInfo) {
+        // tslint:disable-next-line:no-function-expression no-any
+        return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+            const originalMethod = descriptor.value;
+            // tslint:disable-next-line:no-function-expression no-any
+            descriptor.value = function (...args: any[]) {
+                const traced = {
+                    kind: 'Class',
+                    name: _ && _.constructor ? _.constructor.name : '',
+                    args
+                };
+                // tslint:disable-next-line:no-this-assignment no-invalid-this
+                const scope = this;
+                return withTrace(traced, logInfo, () => {
+                    return originalMethod.apply(scope, args);
+                });
+            };
+
+            return descriptor;
+        };
+    }
+
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
         return trace({ message, opts });
     }
@@ -127,26 +149,4 @@ function withTrace<T>(call: CallInfo, logInfo: LogInfo, run: () => T): T {
         logResult(logInfo, { ...call, elapsed: timer.elapsedTime, err: ex });
         throw ex;
     }
-}
-
-function trace(logInfo: LogInfo) {
-    // tslint:disable-next-line:no-function-expression no-any
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
-        // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
-            const info = {
-                kind: 'Class',
-                name: _ && _.constructor ? _.constructor.name : '',
-                args
-            };
-            // tslint:disable-next-line:no-this-assignment no-invalid-this
-            const scope = this;
-            return withTrace(info, logInfo, () => {
-                return originalMethod.apply(scope, args);
-            });
-        };
-
-        return descriptor;
-    };
 }
