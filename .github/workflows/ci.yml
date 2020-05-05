@@ -1,10 +1,11 @@
-name: CI
+name: Bump setup-python
 
 on:
   push:
     branches:
+      - bump-*
       # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+      # - master
 
 env:
   PYTHON_VERSION: 3.8
@@ -24,7 +25,7 @@ jobs:
   python-deps:
     name: Install Python Requirements
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -74,7 +75,7 @@ jobs:
   js-ts-deps:
     name: Install npm dependencies
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -92,7 +93,7 @@ jobs:
   compile-hygiene:
     name: Compile, lint, check for errors
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
@@ -203,7 +204,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite: [python-unit]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
