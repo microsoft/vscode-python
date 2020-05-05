@@ -96,6 +96,9 @@ export class KernelProcess implements IKernelProcess {
                     } else {
                         traceError('KernelProcess Exit', `Exit - ${error.exitCode}, ${error.reason}`, error);
                     }
+                    if (this.disposed) {
+                        return;
+                    }
                     this.exitEvent.fire({ exitCode: error.exitCode, reason: error.reason || error.message });
                 }
             }
@@ -103,6 +106,9 @@ export class KernelProcess implements IKernelProcess {
     }
 
     public async dispose(): Promise<void> {
+        if (this.disposed) {
+            return;
+        }
         this.disposed = true;
         if (this.kernelDaemon) {
             await this.kernelDaemon.kill().catch(noop);
@@ -151,6 +157,9 @@ export class KernelProcess implements IKernelProcess {
         if (exeObs.proc) {
             exeObs.proc.on('exit', (exitCode) => {
                 traceInfo('KernelProcess Exit', `Exit - ${exitCode}`);
+                if (this.disposed) {
+                    return;
+                }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
         } else {

@@ -151,6 +151,7 @@
     "InterpreterQuickPickList.enterPath.placeholder": "Enter path to a Python interpreter.",
     "InterpreterQuickPickList.browsePath.label": "Find...",
     "InterpreterQuickPickList.browsePath.detail": "Browse your file system to find a Python interpreter.",
+    "diagnostics.upgradeCodeRunner": "Please update the Code Runner extension for it to be compatible with the Python extension.",
     "Common.bannerLabelYes": "Yes",
     "Common.bannerLabelNo": "No",
     "Common.doNotShowAgain": "Do not show again",

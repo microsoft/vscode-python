@@ -13,6 +13,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../common/types';
@@ -23,7 +24,7 @@ import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBas
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
+import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -33,6 +34,7 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
+        dataScience: IDataScience,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
@@ -43,7 +45,8 @@ type RawNotebookProviderClassType = {
         kernelLauncher: IKernelLauncher,
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
-        outputChannel: IOutputChannel
+        outputChannel: IOutputChannel,
+        experimentsManager: IExperimentsManager
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -56,6 +59,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
+        @inject(IDataScience) dataScience: IDataScience,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
@@ -66,7 +70,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -75,6 +80,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             HostRawNotebookProvider,
             GuestRawNotebookProvider,
             liveShare,
+            dataScience,
             disposableRegistry,
             asyncRegistry,
             configService,
@@ -85,12 +91,18 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelLauncher,
             kernelSelector,
             progressReporter,
-            outputChannel
+            outputChannel,
+            experimentsManager
         );
     }
 
     public get role(): vsls.Role {
         return this.serverFactory.role;
+    }
+
+    public async supported(): Promise<boolean> {
+        const notebookProvider = await this.serverFactory.get();
+        return notebookProvider.supported();
     }
 
     public async connect(): Promise<IRawConnection> {

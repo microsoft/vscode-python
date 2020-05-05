@@ -26,6 +26,10 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.'
     );
+    export const upgradeCodeRunner = localize(
+        'diagnostics.upgradeCodeRunner',
+        'Please update the Code Runner extension for it to be compatible with the Python extension.'
+    );
     export const removePythonPathSettingsJson = localize(
         'diagnostics.removePythonPathSettingsJson',
         'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json.'

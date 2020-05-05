@@ -19,6 +19,7 @@ import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
     private started?: boolean;
+    private killed?: boolean;
     private preWarmed?: boolean;
     private outputHooked?: boolean;
     private readonly subject = new Subject<Output<string>>();
@@ -35,6 +36,10 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         await this.sendRequestWithoutArgs(request);
     }
     public async kill() {
+        if (this.killed) {
+            return;
+        }
+        this.killed = true;
         const request = new RequestType0<void, void, void>('kill_kernel');
         await this.sendRequestWithoutArgs(request);
     }

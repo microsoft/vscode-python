@@ -94,10 +94,10 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         _notebook: INotebook,
         start: number,
         end: number
-    ): Promise<JSONObject> {
+    ): Promise<{}> {
         // Run the get dataframe rows script
         if (!this.debugService.activeDebugSession) {
-            // No active server just return the unchanged target variable
+            // No active server just return no rows
             return {};
         }
 
@@ -116,7 +116,7 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         });
 
         // Results should be the row.
-        return JSON.parse(results.result.slice(1, -1)) as JSONObject;
+        return JSON.parse(results.result.slice(1, -1));
     }
 
     public onDidSendMessage(message: DebugProtocol.Response) {

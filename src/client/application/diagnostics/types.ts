@@ -25,6 +25,7 @@ export interface IDiagnostic {
     readonly scope: DiagnosticScope;
     readonly resource: Resource;
     readonly invokeHandler: 'always' | 'default';
+    readonly shouldShowPrompt?: boolean;
 }
 
 export const IDiagnosticsService = Symbol('IDiagnosticsService');

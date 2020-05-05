@@ -49,7 +49,7 @@ export interface IKernelFinder {
         kernelName?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec>;
-    listKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]>;
+    listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
 }
 
 /**

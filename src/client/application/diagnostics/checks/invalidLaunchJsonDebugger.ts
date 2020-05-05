@@ -20,7 +20,8 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../type
 const messages = {
     [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]: Diagnostics.invalidDebuggerTypeDiagnostic(),
     [DiagnosticCodes.JustMyCodeDiagnostic]: Diagnostics.justMyCodeDiagnostic(),
-    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic()
+    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic(),
+    [DiagnosticCodes.ConfigPythonPathDiagnostic]: ''
 };
 
 export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
@@ -28,10 +29,20 @@ export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
         code:
             | DiagnosticCodes.InvalidDebuggerTypeDiagnostic
             | DiagnosticCodes.JustMyCodeDiagnostic
-            | DiagnosticCodes.ConsoleTypeDiagnostic,
-        resource: Resource
+            | DiagnosticCodes.ConsoleTypeDiagnostic
+            | DiagnosticCodes.ConfigPythonPathDiagnostic,
+        resource: Resource,
+        shouldShowPrompt: boolean = true
     ) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
+        super(
+            code,
+            messages[code],
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource,
+            'always',
+            shouldShowPrompt
+        );
     }
 }
 
@@ -52,7 +63,8 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             [
                 DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
                 DiagnosticCodes.JustMyCodeDiagnostic,
-                DiagnosticCodes.ConsoleTypeDiagnostic
+                DiagnosticCodes.ConsoleTypeDiagnostic,
+                DiagnosticCodes.ConfigPythonPathDiagnostic
             ],
             serviceContainer,
             disposableRegistry,
@@ -101,11 +113,19 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         if (fileContents.indexOf('"console": "none"') > 0) {
             diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConsoleTypeDiagnostic, resource));
         }
+        if (fileContents.indexOf('{config:python.pythonPath}') > 0) {
+            diagnostics.push(
+                new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConfigPythonPathDiagnostic, resource, false)
+            );
+        }
         return diagnostics;
     }
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
         if (!this.canHandle(diagnostic)) {
             return;
+        }
+        if (!diagnostic.shouldShowPrompt) {
+            return this.fixLaunchJson(diagnostic.code);
         }
         const commandPrompts = [
             {
@@ -143,6 +163,14 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             }
             case DiagnosticCodes.ConsoleTypeDiagnostic: {
                 fileContents = this.findAndReplace(fileContents, '"console": "none"', '"console": "internalConsole"');
+                break;
+            }
+            case DiagnosticCodes.ConfigPythonPathDiagnostic: {
+                fileContents = this.findAndReplace(
+                    fileContents,
+                    '{config:python.pythonPath}',
+                    '{config:python.interpreterPath}'
+                );
                 break;
             }
             default: {

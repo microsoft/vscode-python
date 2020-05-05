@@ -125,8 +125,8 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         notebook.onDisposed(
             () => {
                 const item = this.messageDispatchers.get(notebook.identity.fsPath);
-                item?.dispose(); // NOSONAR
                 this.messageDispatchers.delete(notebook.identity.fsPath);
+                item?.dispose(); // NOSONAR
             },
             this,
             this.disposables
