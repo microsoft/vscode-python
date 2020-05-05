@@ -57,24 +57,28 @@ type LogInfo = {
     level?: LogLevel;
 };
 
+type CallInfo = {
+    kind: string;
+    name: string;
+    // tslint:disable-next-line:no-any
+    args: any[];
+};
+
 function formatMessages(
     info: LogInfo,
-    kind: string,
-    name: string,
+    call: CallInfo,
     elapsed: number,
-    // tslint:disable-next-line:no-any
-    args: any[],
     // tslint:disable-next-line:no-any
     returnValue?: any
 ): string {
     const messages = [info.message];
     messages.push(
-        `${kind} name = ${name}`.trim(),
+        `${call.kind} name = ${call.name}`.trim(),
         `completed in ${elapsed}ms`,
         `has a ${returnValue ? 'truthy' : 'falsy'} return value`
     );
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
-        messages.push(argsToLogString(args));
+        messages.push(argsToLogString(call.args));
     }
     if ((info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
         messages.push(returnValueToLogString(returnValue));
@@ -88,7 +92,11 @@ function trace(logInfo: LogInfo) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
-            const className = _ && _.constructor ? _.constructor.name : '';
+            const callInfo = {
+                kind: 'Class',
+                name: _ && _.constructor ? _.constructor.name : '',
+                args
+            };
             // tslint:disable-next-line:no-any
             function writeSuccess(elapsedTime: number, returnValue: any) {
                 if (logInfo.level === undefined || logInfo.level > LogLevel.Error) {
@@ -100,7 +108,7 @@ function trace(logInfo: LogInfo) {
             }
             // tslint:disable-next-line:no-any
             function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
-                const formatted = formatMessages(logInfo, 'Class', className, elapsedTime, args, returnValue);
+                const formatted = formatMessages(logInfo, callInfo, elapsedTime, returnValue);
                 if (ex) {
                     log(LogLevel.Error, formatted, ex);
                     // tslint:disable-next-line:no-any
