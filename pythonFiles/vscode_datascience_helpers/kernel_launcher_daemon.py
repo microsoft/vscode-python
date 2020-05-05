@@ -9,6 +9,7 @@ import signal
 import sys
 import subprocess
 import threading
+import time
 from vscode_datascience_helpers.daemon.daemon_python import (
     error_decorator,
     PythonDaemon as BasePythonDaemon,
@@ -138,7 +139,7 @@ class PythonDaemon(JupyterDaemon):
                 sys.stdout.flush()
 
     def _monitor_kernel(self):
-        while self.kernel.poll() is None:
+        while self.kernel.poll(timeout=None) is None:
             pass
 
         exit_code = self.kernel.poll()
