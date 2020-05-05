@@ -3,6 +3,7 @@
 'use strict';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@phosphor/signaling';
+import * as tcpportused from 'tcp-port-used';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
@@ -208,6 +209,9 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.kernelLauncher.launch(kernelSpec, this.resource, interpreter),
             cancellationPromise
         ]);
+
+        // Wait until our heartbeat port is actually open before we create
+        await tcpportused.waitUntilUsed(process.connection.hb_port, 200, 2_000);
 
         //await sleep(1_000);
 
