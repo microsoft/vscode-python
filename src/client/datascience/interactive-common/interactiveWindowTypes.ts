@@ -222,6 +222,7 @@ export interface IProvideHoverRequest {
     position: monacoEditor.Position;
     requestId: string;
     cellId: string;
+    wordAtPosition: string | undefined;
 }
 
 export interface IProvideSignatureHelpRequest {

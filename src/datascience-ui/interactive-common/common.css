@@ -522,6 +522,10 @@ body, html {
     cursor: pointer;
 }
 
+.codicon-button {
+    cursor: pointer;
+}
+
 .image-button-inner-disabled-filter .image-button-image {
     cursor: unset;
 }

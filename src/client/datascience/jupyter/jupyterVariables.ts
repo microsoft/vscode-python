@@ -54,6 +54,10 @@ export class JupyterVariables implements IJupyterVariables {
         return this.realVariables.getVariables(notebook, request);
     }
 
+    public getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
+        return this.realVariables.getMatchingVariable(notebook, name);
+    }
+
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
         return this.realVariables.getDataFrameInfo(targetVariable, notebook);
     }

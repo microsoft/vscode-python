@@ -783,6 +783,7 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
+    getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined>;
 }
 
 // Request for variables

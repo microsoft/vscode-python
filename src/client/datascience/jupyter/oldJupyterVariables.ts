@@ -72,6 +72,11 @@ export class OldJupyterVariables implements IJupyterVariables {
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
+    public async getMatchingVariable(_notebook: INotebook, _name: string): Promise<IJupyterVariable | undefined> {
+        // Not supported with old method.
+        return undefined;
+    }
+
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
         // Run the get dataframe info script
         return this.runScript<IJupyterVariable>(

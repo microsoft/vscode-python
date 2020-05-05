@@ -57,6 +57,12 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         return result;
     }
 
+    public async getMatchingVariable(_notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
+        if (this.debugService.activeDebugSession) {
+            return this.lastKnownVariables.find((v) => v.name === name);
+        }
+    }
+
     public async getDataFrameInfo(targetVariable: IJupyterVariable, _notebook: INotebook): Promise<IJupyterVariable> {
         if (!this.debugService.activeDebugSession) {
             // No active server just return the unchanged target variable

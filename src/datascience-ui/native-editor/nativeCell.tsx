@@ -31,6 +31,8 @@ import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
+import '../react-common/codicon/codicon.css';
+
 namespace CssConstants {
     export const CellOutputWrapper = 'cell-output-wrapper';
     export const CellOutputWrapperClass = `.${CellOutputWrapper}`;
@@ -615,7 +617,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Step} />
+                            <div className="codicon codicon-button">{'\uead4'}</div>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -624,11 +626,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Continue}
-                            />
+                            <div className="codicon codicon-button">{'\uead7'}</div>
                         </ImageButton>
                     </div>
                     <div className="native-editor-celltoolbar-divider" />
@@ -650,15 +648,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={runbyline}
-                        tooltip={getLocString('DataScience.runByLine', 'Run line by line')}
+                        tooltip={getLocString('DataScience.runByLine', 'Run by line')}
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
                         disabled={this.props.busy}
                     >
-                        <Image
-                            baseTheme={this.props.baseTheme}
-                            class="image-button-image"
-                            image={ImageName.RunByLine}
-                        />
+                        <div className="codicon codicon-button">{'\uead4'}</div>
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />

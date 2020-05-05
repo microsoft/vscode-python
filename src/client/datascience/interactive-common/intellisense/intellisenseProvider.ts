@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -13,6 +13,7 @@ import {
     CompletionItem,
     Event,
     EventEmitter,
+    Hover,
     SignatureHelpContext,
     TextDocumentContentChangeEvent,
     Uri
@@ -31,7 +32,14 @@ import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
-import { ICell, IInteractiveWindowListener, INotebook, INotebookCompletion, INotebookProvider } from '../../types';
+import {
+    ICell,
+    IInteractiveWindowListener,
+    IJupyterVariables,
+    INotebook,
+    INotebookCompletion,
+    INotebookProvider
+} from '../../types';
 import {
     ICancelIntellisenseRequest,
     IInteractiveWindowMapping,
@@ -80,7 +88,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache
+        @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableProvider: IJupyterVariables
     ) {}
 
     public dispose() {
@@ -244,16 +253,23 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }
     protected async provideHover(
         position: monacoEditor.Position,
+        wordAtPosition: string | undefined,
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.Hover> {
-        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
-        if (languageServer && document) {
+        const [languageServer, document, variableHover] = await Promise.all([
+            this.getLanguageServer(),
+            this.getDocument(),
+            this.getVariableHover(wordAtPosition)
+        ]);
+        if (!variableHover && languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideHover(document, docPos, token);
             if (result) {
                 return convertToMonacoHover(result);
             }
+        } else if (variableHover) {
+            return convertToMonacoHover(variableHover);
         }
 
         return {
@@ -435,7 +451,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
         this.postTimedResponse(
-            [this.provideHover(request.position, request.cellId, cancelSource.token)],
+            [this.provideHover(request.position, request.wordAtPosition, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ProvideHoverResponse,
             (h) => {
                 if (h && h[0]) {
@@ -730,5 +746,19 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return this.notebookIdentity
             ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true })
             : undefined;
+    }
+
+    private async getVariableHover(wordAtPosition: string | undefined): Promise<Hover | undefined> {
+        if (wordAtPosition) {
+            const notebook = await this.getNotebook();
+            if (notebook) {
+                const variable = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition);
+                if (variable && variable.value && variable.name) {
+                    return {
+                        contents: [`${variable.name} : ${variable.value}`]
+                    };
+                }
+            }
+        }
     }
 }

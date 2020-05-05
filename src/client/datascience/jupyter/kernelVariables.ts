@@ -71,6 +71,39 @@ export class KernelVariables implements IJupyterVariables {
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
+    public async getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
+        // See if in the cache
+        const cache = this.notebookState.get(notebook.identity);
+        if (cache) {
+            let match = cache.variables.find((v) => v.name === name);
+            if (match && !match.value) {
+                match = await this.getVariableValueFromKernel(match, notebook);
+            }
+            return match;
+        } else {
+            // No items in the cache yet, just ask for the names
+            const names = await this.getVariableNamesFromKernel(notebook);
+            if (names) {
+                const matchName = names.find((n) => n === name);
+                if (matchName) {
+                    return this.getVariableValueFromKernel(
+                        {
+                            name,
+                            value: undefined,
+                            supportsDataExplorer: false,
+                            type: '',
+                            size: 0,
+                            count: 0,
+                            shape: '',
+                            truncated: true
+                        },
+                        notebook
+                    );
+                }
+            }
+        }
+    }
+
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
         await this.importDataFrameScripts(notebook);
