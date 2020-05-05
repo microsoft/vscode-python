@@ -19,6 +19,7 @@ const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 import { noop } from '../../client/common/utils/misc';
 import { CursorPos } from '../interactive-common/mainState';
+import './codicon/codicon.css';
 import './monacoEditor.css';
 import { generateChangeEvent, IMonacoModelContentChangeEvent } from './monacoHelpers';
 

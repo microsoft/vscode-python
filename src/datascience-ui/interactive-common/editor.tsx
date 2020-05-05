@@ -15,7 +15,7 @@ const stickiness = monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypi
 
 // we need a separate decoration for glyph margin, since we do not want it on each line of a multi line statement.
 const TOP_STACK_FRAME_MARGIN: monacoEditor.editor.IModelDecorationOptions = {
-    glyphMarginClassName: 'codicon-debug-stackframe',
+    glyphMarginClassName: 'codicon codicon-debug-stackframe',
     stickiness
 };
 const TOP_STACK_FRAME_DECORATION: monacoEditor.editor.IModelDecorationOptions = {
