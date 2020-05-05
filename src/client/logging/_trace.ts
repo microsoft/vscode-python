@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { TraceInfo, tracing } from '../common/utils/misc';
+import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
+import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel } from './levels';
 import { _log as log } from './logger';
@@ -33,25 +34,7 @@ export namespace traceDecorators {
     const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
     function trace(logInfo: LogInfo) {
-        // tslint:disable-next-line:no-function-expression no-any
-        return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
-            const originalMethod = descriptor.value;
-            // tslint:disable-next-line:no-function-expression no-any
-            descriptor.value = function (...args: any[]) {
-                const call = {
-                    kind: 'Class',
-                    name: _ && _.constructor ? _.constructor.name : '',
-                    args
-                };
-                // tslint:disable-next-line:no-this-assignment no-invalid-this
-                const scope = this;
-                return withTrace(call, logInfo, () => {
-                    return originalMethod.apply(scope, args);
-                });
-            };
-
-            return descriptor;
-        };
+        return traceDecorator((call, traced) => logResult(logInfo, call, traced));
     }
 
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
@@ -77,13 +60,6 @@ type LogInfo = {
     opts: TraceOptions;
     message: string;
     level?: LogLevel;
-};
-
-type CallInfo = {
-    kind: string;
-    name: string;
-    // tslint:disable-next-line:no-any
-    args: any[];
 };
 
 function formatMessages(info: LogInfo, call: CallInfo, traced: TraceInfo): string {
@@ -114,8 +90,4 @@ function logResult(info: LogInfo, call: CallInfo, traced: TraceInfo) {
         // tslint:disable-next-line:no-any
         sendTelemetryEvent('ERROR' as any, undefined, undefined, traced.err);
     }
-}
-
-function withTrace<T>(call: CallInfo, logInfo: LogInfo, run: () => T): T {
-    return tracing((traced) => logResult(logInfo, call, traced), run);
 }
