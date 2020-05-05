@@ -183,13 +183,17 @@ suite('Kernel Finder', () => {
                 argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
             };
 
+            platformService.reset();
+            platformService.setup((ps) => ps.isWindows).returns(() => false);
+            platformService.setup((ps) => ps.isMac).returns(() => true);
+
             workspaceService = mock<IWorkspaceService>();
             when(workspaceService.getWorkspaceFolderIdentifier(anything(), resource.fsPath)).thenReturn(
                 resource.fsPath
             );
 
             // Setup file system
-            const activePath = 'active/share/jupyter/kernels';
+            const activePath = path.join('active', 'share', 'jupyter', 'kernels');
             const activePathA = path.join(activePath, activeKernelA.name, 'kernel.json');
             const activePathB = path.join(activePath, activeKernelB.name, 'kernel.json');
             fileSystem
@@ -206,9 +210,9 @@ suite('Kernel Finder', () => {
                         path.join(activeKernelB.name, 'kernel.json')
                     ])
                 );
-            const interpreter0Path = 'Interpreter0/share/jupyter/kernels';
+            const interpreter0Path = path.join('Interpreter0', 'share', 'jupyter', 'kernels');
             const interpreter0FullPath = path.join(interpreter0Path, interpreter0Kernel.name, 'kernel.json');
-            const interpreter1Path = 'Interpreter1/share/jupyter/kernels';
+            const interpreter1Path = path.join('Interpreter1', 'share', 'jupyter', 'kernels');
             const interpreter1FullPath = path.join(interpreter1Path, interpreter1Kernel.name, 'kernel.json');
             fileSystem
                 .setup((fs) => fs.search(typemoq.It.isAnyString(), interpreter0Path))
@@ -217,11 +221,21 @@ suite('Kernel Finder', () => {
                 .setup((fs) => fs.search(typemoq.It.isAnyString(), interpreter1Path))
                 .returns(() => Promise.resolve([path.join(interpreter1Kernel.name, 'kernel.json')]));
 
-            const globalPath = 'AppData/Roaming/jupyter/kernels';
+            const globalPath = path.join('usr', 'share', 'jupyter', 'kernels');
             const globalFullPath = path.join(globalPath, globalKernel.name, 'kernel.json');
             fileSystem
                 .setup((fs) => fs.search(typemoq.It.isAnyString(), globalPath))
                 .returns(() => Promise.resolve([path.join(globalKernel.name, 'kernel.json')]));
+
+            // Empty global paths
+            const globalAPath = path.join('usr', 'local', 'share', 'jupyter', 'kernels');
+            fileSystem
+                .setup((fs) => fs.search(typemoq.It.isAnyString(), globalAPath))
+                .returns(() => Promise.resolve([]));
+            const globalBPath = path.join('Library', 'Jupyter', 'kernels');
+            fileSystem
+                .setup((fs) => fs.search(typemoq.It.isAnyString(), globalBPath))
+                .returns(() => Promise.resolve([]));
 
             // Set the file system to return our kernelspec json
             fileSystem
