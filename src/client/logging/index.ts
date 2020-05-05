@@ -8,6 +8,7 @@ export {
     traceDecorators,
     traceError,
     traceInfo,
+    tracing,
     traceVerbose,
     traceWarning
 } from './_trace';

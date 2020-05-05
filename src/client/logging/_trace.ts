@@ -56,6 +56,11 @@ export namespace traceDecorators {
     }
 }
 
+// This is like a "context manager" that logs tracing info.
+export function tracing<T>(logInfo: LogInfo, run: () => T, call?: CallInfo): T {
+    return _tracing((traced) => logResult(logInfo, traced, call), run);
+}
+
 type LogInfo = {
     opts: TraceOptions;
     message: string;
