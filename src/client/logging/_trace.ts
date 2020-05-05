@@ -64,24 +64,25 @@ type CallInfo = {
     args: any[];
 };
 
-function formatMessages(
-    info: LogInfo,
-    call: CallInfo,
-    elapsed: number,
+type TraceInfo = CallInfo & {
+    elapsed: number;
     // tslint:disable-next-line:no-any
-    returnValue?: any
-): string {
+    returnValue?: any;
+    err?: Error;
+};
+
+function formatMessages(info: LogInfo, traced: TraceInfo): string {
     const messages = [info.message];
     messages.push(
-        `${call.kind} name = ${call.name}`.trim(),
-        `completed in ${elapsed}ms`,
-        `has a ${returnValue ? 'truthy' : 'falsy'} return value`
+        `${traced.kind} name = ${traced.name}`.trim(),
+        `completed in ${traced.elapsed}ms`,
+        `has a ${traced.returnValue ? 'truthy' : 'falsy'} return value`
     );
     if ((info.opts & TraceOptions.Arguments) === TraceOptions.Arguments) {
-        messages.push(argsToLogString(call.args));
+        messages.push(argsToLogString(traced.args));
     }
     if ((info.opts & TraceOptions.ReturnValue) === TraceOptions.ReturnValue) {
-        messages.push(returnValueToLogString(returnValue));
+        messages.push(returnValueToLogString(traced.returnValue));
     }
     return messages.join(', ');
 }
@@ -92,27 +93,27 @@ function trace(logInfo: LogInfo) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
         descriptor.value = function (...args: any[]) {
-            const callInfo = {
+            const call = {
                 kind: 'Class',
                 name: _ && _.constructor ? _.constructor.name : '',
                 args
             };
             // tslint:disable-next-line:no-any
-            function writeSuccess(elapsedTime: number, returnValue: any) {
+            function writeSuccess(info: TraceInfo) {
                 if (logInfo.level === undefined || logInfo.level > LogLevel.Error) {
-                    writeToLog(elapsedTime, returnValue);
+                    writeToLog(info);
                 }
             }
-            function writeError(elapsedTime: number, ex: Error) {
-                writeToLog(elapsedTime, undefined, ex);
+            function writeError(info: TraceInfo) {
+                writeToLog(info);
             }
             // tslint:disable-next-line:no-any
-            function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
-                const formatted = formatMessages(logInfo, callInfo, elapsedTime, returnValue);
-                if (ex) {
-                    log(LogLevel.Error, formatted, ex);
+            function writeToLog(info: TraceInfo) {
+                const formatted = formatMessages(logInfo, info);
+                if (info.err) {
+                    log(LogLevel.Error, formatted, info.err);
                     // tslint:disable-next-line:no-any
-                    sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
+                    sendTelemetryEvent('ERROR' as any, undefined, undefined, info.err);
                 } else {
                     log(LogLevel.Info, formatted);
                 }
@@ -127,18 +128,22 @@ function trace(logInfo: LogInfo) {
                     // tslint:disable-next-line:prefer-type-cast
                     (result as Promise<void>)
                         .then((data) => {
-                            writeSuccess(timer.elapsedTime, data);
+                            const info = { ...call, elapsed: timer.elapsedTime, returnValue: data };
+                            writeSuccess(info);
                             return data;
                         })
                         .catch((ex) => {
-                            writeError(timer.elapsedTime, ex);
+                            const info = { ...call, elapsed: timer.elapsedTime, err: ex };
+                            writeError(info);
                         });
                 } else {
-                    writeSuccess(timer.elapsedTime, result);
+                    const info = { ...call, elapsed: timer.elapsedTime, returnValue: result };
+                    writeSuccess(info);
                 }
                 return result;
             } catch (ex) {
-                writeError(timer.elapsedTime, ex);
+                const info = { ...call, elapsed: timer.elapsedTime, err: ex };
+                writeError(info);
                 throw ex;
             }
         };
