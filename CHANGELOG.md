@@ -1,5 +1,157 @@
 # Changelog
 
+## 2020.5.0-rc (5 May 2020)
+
+### Enhancements
+
+1. Added ability to manually enter a path to interpreter in the select interpreter dropdown.
+   ([#216](https://github.com/Microsoft/vscode-python/issues/216))
+1. Add status bar item with icon when installing Insiders/Stable build.
+   (thanks to [ErwanDL](https://github.com/ErwanDL/))
+   ([#10495](https://github.com/Microsoft/vscode-python/issues/10495))
+1. Support for language servers that don't allow incremental document updates inside of notebooks and the interactive window.
+   ([#10818](https://github.com/Microsoft/vscode-python/issues/10818))
+1. Add telemetry for "Python is not installed" prompt.
+   ([#10885](https://github.com/Microsoft/vscode-python/issues/10885))
+1. Add basic liveshare support for raw kernels.
+   ([#10988](https://github.com/Microsoft/vscode-python/issues/10988))
+1. Do a one-off transfer of existing values for `python.pythonPath` setting to new Interpreter storage if in DeprecatePythonPath experiment.
+   ([#11052](https://github.com/Microsoft/vscode-python/issues/11052))
+1. Ensure the language server can query pythonPath when in the Deprecate PythonPath experiment.
+   ([#11083](https://github.com/Microsoft/vscode-python/issues/11083))
+1. Added prompt asking users to delete `python.pythonPath` key from their workspace settings when in Deprecate PythonPath experiment.
+   ([#11108](https://github.com/Microsoft/vscode-python/issues/11108))
+1. Added `getDebuggerPackagePath` extension API to get the debugger package path.
+   ([#11236](https://github.com/Microsoft/vscode-python/issues/11236))
+1. Expose currently selected interpreter path using API.
+   ([#11294](https://github.com/Microsoft/vscode-python/issues/11294))
+1. Show a prompt asking user to upgrade Code runner to new version to keep using it when in Deprecate PythonPath experiment.
+   ([#11327](https://github.com/Microsoft/vscode-python/issues/11327))
+1. Rename string `${config:python.pythonPath}` which is used in `launch.json` to refer to interpreter path set in settings, to `${config:python.interpreterPath}`.
+   ([#11446](https://github.com/Microsoft/vscode-python/issues/11446))
+
+### Fixes
+
+1. Added 'Enable Scrolling For Cell Outputs' setting. Works together with the 'Max Output Size' setting.
+   ([#9801](https://github.com/Microsoft/vscode-python/issues/9801))
+1. Fix ctrl+enter on markdown cells. Now they render.
+   ([#10006](https://github.com/Microsoft/vscode-python/issues/10006))
+1. Cancelling the prompt to restart the kernel should not leave the toolbar buttons disabled.
+   ([#10356](https://github.com/Microsoft/vscode-python/issues/10356))
+1. Getting environment variables of activated environments should ignore the setting `python.terminal.activateEnvironment`.
+   ([#10370](https://github.com/Microsoft/vscode-python/issues/10370))
+1. Show notebook path when listing remote kernels.
+   ([#10521](https://github.com/Microsoft/vscode-python/issues/10521))
+1. Allow filtering on '0' for the Data Viewer.
+   ([#10552](https://github.com/Microsoft/vscode-python/issues/10552))
+1. Allow interrupting the kernel more than once.
+   ([#10587](https://github.com/Microsoft/vscode-python/issues/10587))
+1. Make error links in exception tracebacks support multiple cells in the stack and extra spaces.
+   ([#10708](https://github.com/Microsoft/vscode-python/issues/10708))
+1. Add channel property onto returned ZMQ messages.
+   ([#10785](https://github.com/Microsoft/vscode-python/issues/10785))
+1. Fix problem with shape not being computed for some types in the variable explorer.
+   ([#10825](https://github.com/Microsoft/vscode-python/issues/10825))
+1. Enable cell related commands when a Python file is already open.
+   ([#10884](https://github.com/Microsoft/vscode-python/issues/10884))
+1. Fix issue with parsing long conda environment names.
+   ([#10942](https://github.com/Microsoft/vscode-python/issues/10942))
+1. Hide progress indicator once `Interactive Window` has loaded.
+   ([#11065](https://github.com/Microsoft/vscode-python/issues/11065))
+1. Do not perform pipenv interpreter discovery on extension activation.
+   ([#11127](https://github.com/Microsoft/vscode-python/issues/11127))
+1. Ensure arguments are included in log messages when using decorators.
+   ([#11153](https://github.com/Microsoft/vscode-python/issues/11153))
+1. Fix for opening the interactive window when no workspace is open.
+   ([#11291](https://github.com/Microsoft/vscode-python/issues/11291))
+1. Conda environments working with raw kernels.
+   ([#11306](https://github.com/Microsoft/vscode-python/issues/11306))
+1. Ensure isolate script is passed as command argument when installing modules.
+   ([#11399](https://github.com/Microsoft/vscode-python/issues/11399))
+1. Make raw kernel launch respect launched resource environment.
+   ([#11451](https://github.com/Microsoft/vscode-python/issues/11451))
+1. When using a kernelspec without a fully qualified python path make sure we use the resource to get the active interpreter.
+   ([#11469](https://github.com/Microsoft/vscode-python/issues/11469))
+1. For direct kernel launch correctly detect if interpreter has changed since last launch.
+   ([#11530](https://github.com/Microsoft/vscode-python/issues/11530))
+1. Performance improvements when executing multiple cells in `Notebook` and `Interactive Window`.
+   ([#11576](https://github.com/Microsoft/vscode-python/issues/11576))
+1. Ensure kernel daemons are disposed correctly when closing notebooks.
+   ([#11579](https://github.com/Microsoft/vscode-python/issues/11579))
+
+### Code Health
+
+1. Enable the `Self Cert` tests for Notebooks.
+   ([#10447](https://github.com/Microsoft/vscode-python/issues/10447))
+1. Remove deprecated telemetry and old way of searching for `Jupyter`.
+   ([#10809](https://github.com/Microsoft/vscode-python/issues/10809))
+1. Add telemetry for pipenv interpreter discovery.
+   ([#11128](https://github.com/Microsoft/vscode-python/issues/11128))
+1. Update to the latest version of [`jedi`](https://github.com/davidhalter/jedi) (`0.17`). Note that this may be the last version of Jedi to support Python 2 and Python 3.5. (#11221; thanks Peter Law)
+   ([#11221](https://github.com/Microsoft/vscode-python/issues/11221))
+1. Lazy load types from `jupyterlab/services` and similar `npm modules`.
+   ([#11297](https://github.com/Microsoft/vscode-python/issues/11297))
+1. Update telemetry on errors and exceptions to use [vscode-extension-telemetry](https://www.npmjs.com/package/vscode-extension-telemetry).
+   ([#11436](https://github.com/Microsoft/vscode-python/issues/11436))
+1. Remove IJMPConnection implementation while maintaining tests written for it.
+   ([#11470](https://github.com/Microsoft/vscode-python/issues/11470))
+1. Implement an IJupyterVariables provider for the debugger.
+   ([#11542](https://github.com/Microsoft/vscode-python/issues/11542))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.4.1 (27 April 2020)
 
 ### Fixes
