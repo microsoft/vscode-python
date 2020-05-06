@@ -19,6 +19,7 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
+import { IWorkspaceService } from '../../common/application/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -74,7 +75,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService
     ) {}
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
@@ -141,6 +143,17 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Write but debounced (wait at least 250 ms)
         return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
     }
+
+    private async saveToStorage(): Promise<void> {
+        // Skip doing this if auto save is enabled or is untitled
+        const filesConfig = this.workspaceService.getConfiguration('files', this.file);
+        const autoSave = filesConfig.get('autoSave', 'off');
+        if (autoSave === 'off' && !this.isUntitled) {
+            // Write but debounced (wait at least 250 ms)
+            return this.storeContentsInHotExitFile(undefined);
+        }
+    }
+
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
             if (!cancelToken?.isCancellationRequested) {
@@ -198,6 +211,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
+            if (this.isDirty) {
+                // Save to temp storage so we don't lose the file if the user exits VS code
+                this.saveToStorage().ignoreErrors();
+            }
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
         if (
@@ -451,6 +468,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             const dirtyContents = await this.getStoredContents();
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
+                this._state.saveChangeCount = -1; // Indicates dirty
                 this.loadContents(dirtyContents);
             } else {
                 // Load without setting dirty
@@ -621,8 +639,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             if (data && !this.isUntitled && data.contents) {
                 return data.contents;
             }
-        } catch {
-            noop();
+        } catch (exc) {
+            traceError(`Exception reading from temporary storage for ${key}`, exc);
         }
     }
 
