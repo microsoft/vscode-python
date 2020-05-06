@@ -72,6 +72,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
             justMyCode: true,
+            // This list should include an exclusion list, but this debugpy issue is preventing that from working:
+            // https://github.com/microsoft/debugpy/issues/226
             rules: [
                 {
                     include: true,

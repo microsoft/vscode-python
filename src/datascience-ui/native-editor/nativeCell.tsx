@@ -59,7 +59,7 @@ interface INativeCellBaseProps {
     focusPending: number;
     busy: boolean;
     useCustomEditorApi: boolean;
-    debugging: boolean;
+    runningByLine: boolean;
     supportsRunByLine: boolean;
 }
 
@@ -607,7 +607,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
-        if (this.props.debugging && !this.isMarkdownCell()) {
+        if (this.props.runningByLine && !this.isMarkdownCell()) {
             return (
                 <div className={toolbarClassName}>
                     <div className="native-editor-celltoolbar-middle">
@@ -627,7 +627,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
-                            <div className="codicon codicon-button">{CodIcon.RunByLine}</div>
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.RunByLine}
+                            />
                         </ImageButton>
                     </div>
                     <div className="native-editor-celltoolbar-divider" />
@@ -653,7 +657,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
                         disabled={this.props.busy}
                     >
-                        <div className="codicon codicon-button">{CodIcon.RunByLine}</div>
+                        <Image
+                            baseTheme={this.props.baseTheme}
+                            class="image-button-image"
+                            image={ImageName.RunByLine}
+                        />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />

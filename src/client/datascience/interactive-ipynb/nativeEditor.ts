@@ -698,7 +698,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async handleRunByLine(runByLine: IRunByLine) {
         try {
             // If there's any payload, it has the code and the id
-            if (runByLine.cell.id && runByLine.cell.data.cell_type !== 'messages') {
+            if (runByLine.cell.id && runByLine.cell.data.cell_type === 'code') {
                 traceInfo(`Running by line cell ${runByLine.cell.id}`);
 
                 // Clear the result if we've run before
@@ -734,6 +734,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                         );
                     }
                 }
+            } else {
+                throw new Error('Run by line started with an invalid cell');
             }
         } catch (exc) {
             // Make this error our cell output

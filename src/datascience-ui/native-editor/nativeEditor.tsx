@@ -289,6 +289,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 />
             ) : null;
 
+        const otherCellRunningByLine = this.props.cellVMs.find(
+            (cvm) => cvm.runningByLine && cvm.cell.id !== cellVM.cell.id
+        );
         const maxOutputSize = this.props.settings.maxOutputSize;
         const outputSizeLimit = 10000;
         const maxTextSize =
@@ -317,8 +320,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         focusPending={0}
                         busy={this.props.busy}
                         useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
-                        debugging={cellVM.runningByLine}
-                        supportsRunByLine={this.props.settings?.variableOptions?.enableDuringDebugger ? true : false}
+                        runningByLine={cellVM.runningByLine}
+                        supportsRunByLine={
+                            this.props.settings?.variableOptions?.enableDuringDebugger
+                                ? otherCellRunningByLine === undefined
+                                : false
+                        }
                     />
                 </ErrorBoundary>
                 {lastLine}
