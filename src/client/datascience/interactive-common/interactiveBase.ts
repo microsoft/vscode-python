@@ -542,7 +542,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: { runByLine: boolean; hashFileName?: string },
+        debugInfo?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
@@ -567,7 +567,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 line,
                 id,
                 originator: this.id,
-                debug: debug !== undefined ? true : false
+                debug: debugInfo !== undefined ? true : false
             });
         }
 
@@ -599,12 +599,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 await this.setLaunchingFile(file);
 
-                if (debug) {
+                if (debugInfo) {
                     // Attach our debugger based on run by line setting
-                    if (debug.runByLine && debug.hashFileName) {
-                        await this.jupyterDebugger.startRunByLine(this._notebook, debug.hashFileName);
-                    } else {
+                    if (debugInfo.runByLine && debugInfo.hashFileName) {
+                        await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
+                    } else if (!debugInfo.runByLine) {
                         await this.jupyterDebugger.startDebugging(this._notebook);
+                    } else {
+                        throw Error('Missing hash file name when running by line');
                     }
                 }
 
@@ -668,7 +670,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } finally {
             status.dispose();
 
-            if (debug) {
+            if (debugInfo) {
                 if (this._notebook) {
                     await this.jupyterDebugger.stopDebugging(this._notebook);
                 }
