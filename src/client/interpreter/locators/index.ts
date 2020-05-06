@@ -34,6 +34,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
+    private didTriggerInterpreterSuggestions: boolean;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter
@@ -42,6 +44,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
         this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
+        this.didTriggerInterpreterSuggestions = false;
     }
     /**
      * This class should never emit events when we're locating.
@@ -102,6 +105,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * The locators are pulled from the registry.
      */
     private getLocators(options?: GetInterpreterLocatorOptions): IInterpreterLocatorService[] {
+        this.didTriggerInterpreterSuggestions = options?.onSuggestion || false;
+
         // The order of the services is important.
         // The order is important because the data sources at the bottom of the list do not contain all,
         //  the information about the interpreters (e.g. type, environment name, etc).
