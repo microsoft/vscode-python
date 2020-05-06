@@ -66,6 +66,9 @@ export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
                 })
                 .catch((ex) => {
                     log({ elapsed: timer.elapsedTime, err: ex });
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-11645) Re-throw the error like we do
+                    // in the non-Promise case.
                 });
         } else {
             log({ elapsed: timer.elapsedTime, returnValue: result });
