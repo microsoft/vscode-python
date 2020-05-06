@@ -171,7 +171,11 @@ suite('Activation of Environments in Terminal', () => {
         expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
     });
 
-    test('Should activate with venv', async () => {
+    test('Should activate with venv', async function () {
+        if (process.env.CI_PYTHON_VERSION && process.env.CI_PYTHON_VERSION.startsWith('2.')) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        }
         await testActivation(envPaths.venvPath);
     });
     test('Should activate with pipenv', async () => {

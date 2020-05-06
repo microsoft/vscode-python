@@ -52,7 +52,9 @@ export class PythonDaemonFactory {
     }
     @traceDecorators.error('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
+        // Add '--log-file=/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/daaemon.log' to log to a file.
         const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
+
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(
             loggingArgs
         );

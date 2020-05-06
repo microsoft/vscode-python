@@ -93,10 +93,10 @@ export class CurrentPathService extends CacheableLocatorService {
     private async getInterpreter(options: { command: string; args?: string[] }) {
         try {
             const processService = await this.processServiceFactory.create();
-            const pyArgs = Array.isArray(options.args) ? options.args : [];
             const [args, parse] = internalPython.getExecutable();
+            const pyArgs = Array.isArray(options.args) ? options.args.concat(args) : args;
             return processService
-                .exec(options.command, pyArgs.concat(args), {})
+                .exec(options.command, pyArgs, {})
                 .then((output) => parse(output.stdout))
                 .then(async (value) => {
                     if (value.length > 0 && (await this.fs.fileExists(value))) {

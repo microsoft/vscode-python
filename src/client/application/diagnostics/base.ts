@@ -21,7 +21,8 @@ export abstract class BaseDiagnostic implements IDiagnostic {
         public readonly severity: DiagnosticSeverity,
         public readonly scope: DiagnosticScope,
         public readonly resource: Resource,
-        public readonly invokeHandler: 'always' | 'default' = 'default'
+        public readonly invokeHandler: 'always' | 'default' = 'default',
+        public readonly shouldShowPrompt = true
     ) {}
 }
 

@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { RunByLine, WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -164,7 +164,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            experimentsManager.inExperiment(RunByLine.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
@@ -197,6 +198,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // When a server starts, make sure we create a notebook if the server matches
         jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+
+        // When the variable service requests a refresh, refresh our variable list
+        this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
     public async show(): Promise<void> {
@@ -412,7 +416,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public async interruptKernel(): Promise<void> {
         if (this._notebook && !this.restartingKernel) {
             this.restartingKernel = true;
-            this.startProgress();
 
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
@@ -448,7 +451,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.applicationShell.showErrorMessage(err);
             } finally {
                 this.restartingKernel = false;
-                this.stopProgress();
             }
         }
     }
@@ -1060,11 +1062,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({ identity: identity.resource, metadata })
                     : undefined;
+                if (notebook) {
+                    const executionActivation = { ...identity, owningResource: resource };
+                    this.postMessageToListeners(
+                        InteractiveWindowMessages.NotebookExecutionActivated,
+                        executionActivation
+                    );
+                }
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
-                    const newKernel = await this.switcher.askForLocalKernel(resource, e.kernelSpec);
+                    const newKernel = await this.switcher.askForLocalKernel(
+                        resource,
+                        serverConnection.type,
+                        e.kernelSpec
+                    );
                     if (newKernel?.kernelSpec) {
                         // Update the notebook metadata
                         await this.updateNotebookOptions(newKernel.kernelSpec, newKernel.interpreter);
@@ -1133,14 +1146,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // If that works notify the UI and listen to status changes.
             if (this._notebook && this._notebook.identity) {
-                this.postMessage(
-                    InteractiveWindowMessages.NotebookExecutionActivated,
-                    this._notebook.identity.toString()
-                ).ignoreErrors();
-
                 return this.listenToNotebookEvents(this._notebook);
             }
         }
+    }
+
+    private refreshVariables() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     private async checkForNotebookProviderConnection(): Promise<void> {

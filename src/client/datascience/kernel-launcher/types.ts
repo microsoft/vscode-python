@@ -2,14 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IDisposable } from 'monaco-editor';
+import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
+import { ObservableExecutionResult } from '../../common/process/types';
+import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(kernelSpec: IJupyterKernelSpec): Promise<IKernelProcess>;
+    launch(
+        kernelSpec: IJupyterKernelSpec,
+        resource: Resource,
+        interpreter?: PythonInterpreter
+    ): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -25,12 +32,14 @@ export interface IKernelConnection {
     transport: 'tcp' | 'ipc';
 }
 
-export interface IKernelProcess extends IDisposable {
+export interface IKernelProcess extends IAsyncDisposable {
     readonly connection: Readonly<IKernelConnection>;
-    ready: Promise<void>;
     readonly kernelSpec: Readonly<IJupyterKernelSpec>;
-    exited: Event<number | null>;
-    dispose(): void;
+    /**
+     * This event is triggered if the process is exited
+     */
+    readonly exited: Event<{ exitCode?: number; reason?: string }>;
+    interrupt(): Promise<void>;
 }
 
 export const IKernelFinder = Symbol('IKernelFinder');
@@ -40,4 +49,36 @@ export interface IKernelFinder {
         kernelName?: string,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec>;
+    listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;
+}
+
+/**
+ * The daemon responsbile for the Python Kernel.
+ */
+export interface IPythonKernelDaemon extends IDisposable {
+    interrupt(): Promise<void>;
+    kill(): Promise<void>;
+    preWarm(): Promise<void>;
+    start(moduleName: string, args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
+}
+
+export class PythonKernelDiedError extends Error {
+    public readonly exitCode: number;
+    public readonly reason?: string;
+    constructor(options: { exitCode: number; reason?: string } | { error: Error }) {
+        const message =
+            'exitCode' in options
+                ? `Kernel died with exit code ${options.exitCode}. ${options.reason}`
+                : `Kernel died ${options.error.message}`;
+        super(message);
+        if ('exitCode' in options) {
+            this.exitCode = options.exitCode;
+            this.reason = options.reason;
+        } else {
+            this.exitCode = -1;
+            this.reason = options.error.message;
+            this.stack = options.error.stack;
+            this.name = options.error.name;
+        }
+    }
 }

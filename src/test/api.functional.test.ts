@@ -19,8 +19,18 @@ import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 
 suite('Extension API', () => {
-    const expectedLauncherPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
-    const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels', 'debugpy');
+    const expectedLauncherPath = path
+        .join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py')
+        .fileToCommandArgument();
+    const debuggerPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'lib',
+        'python',
+        'debugpy',
+        'no_wheels',
+        'debugpy'
+    );
     const ptvsdHost = 'somehost';
     const ptvsdPort = 12345;
 
@@ -90,7 +100,7 @@ suite('Extension API', () => {
             instance(serviceManager),
             instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
-        const expectedArgs = [ptvsdPath.fileToCommandArgument(), '--listen', `${ptvsdHost}:${ptvsdPort}`];
+        const expectedArgs = [debuggerPath.fileToCommandArgument(), '--listen', `${ptvsdHost}:${ptvsdPort}`];
 
         expect(args).to.be.deep.equal(expectedArgs);
     });
@@ -127,12 +137,45 @@ suite('Extension API', () => {
             instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [
-            ptvsdPath.fileToCommandArgument(),
+            debuggerPath.fileToCommandArgument(),
             '--listen',
             `${ptvsdHost}:${ptvsdPort}`,
             '--wait-for-client'
         ];
 
         expect(args).to.be.deep.equal(expectedArgs);
+    });
+
+    test('Test debugger package path when not in experiment', async () => {
+        when(experimentsManager.inExperiment(anyString())).thenReturn(false);
+
+        const pkgPath = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getDebuggerPackagePath();
+
+        assert.isUndefined(pkgPath);
+    });
+
+    test('Test debugger package path when in experiment', async () => {
+        when(experimentsManager.inExperiment(anyString())).thenReturn(true);
+
+        const pkgPath = await buildApi(
+            Promise.resolve(),
+            instance(serviceManager),
+            instance(serviceContainer)
+        ).debug.getDebuggerPackagePath();
+
+        const expected = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'lib',
+            'python',
+            'debugpy',
+            'no_wheels',
+            'debugpy'
+        );
+        assert.equal(pkgPath, expected);
     });
 });

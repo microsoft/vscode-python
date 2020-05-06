@@ -2,21 +2,29 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    Resource
+} from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { KernelSelector } from '../jupyter/kernels/kernelSelector';
 import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
-import { IKernelFinder, IKernelLauncher } from '../kernel-launcher/types';
+import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
+import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -26,6 +34,7 @@ interface IRawNotebookProviderInterface extends IRoleBasedObject, IRawNotebookPr
 type RawNotebookProviderClassType = {
     new (
         liveShare: ILiveShareApi,
+        dataScience: IDataScience,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
@@ -34,9 +43,10 @@ type RawNotebookProviderClassType = {
         fs: IFileSystem,
         serviceContainer: IServiceContainer,
         kernelLauncher: IKernelLauncher,
-        kernelFinder: IKernelFinder,
         kernelSelector: KernelSelector,
-        progressReporter: ProgressReporter
+        progressReporter: ProgressReporter,
+        outputChannel: IOutputChannel,
+        experimentsManager: IExperimentsManager
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -49,6 +59,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
+        @inject(IDataScience) dataScience: IDataScience,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
@@ -57,9 +68,10 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IKernelLauncher) kernelLauncher: IKernelLauncher,
-        @inject(IKernelFinder) kernelFinder: IKernelFinder,
         @inject(KernelSelector) kernelSelector: KernelSelector,
-        @inject(ProgressReporter) progressReporter: ProgressReporter
+        @inject(ProgressReporter) progressReporter: ProgressReporter,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -68,6 +80,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             HostRawNotebookProvider,
             GuestRawNotebookProvider,
             liveShare,
+            dataScience,
             disposableRegistry,
             asyncRegistry,
             configService,
@@ -76,14 +89,20 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             fs,
             serviceContainer,
             kernelLauncher,
-            kernelFinder,
             kernelSelector,
-            progressReporter
+            progressReporter,
+            outputChannel,
+            experimentsManager
         );
     }
 
     public get role(): vsls.Role {
         return this.serverFactory.role;
+    }
+
+    public async supported(): Promise<boolean> {
+        const notebookProvider = await this.serverFactory.get();
+        return notebookProvider.supported();
     }
 
     public async connect(): Promise<IRawConnection> {

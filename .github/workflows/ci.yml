@@ -8,6 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: 3.8
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   CACHE_NPM_DEPS: cache-npm
   CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
@@ -28,8 +29,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -44,6 +50,7 @@ jobs:
 
       - name: Install debugpy wheels
         run: |
+          python -m pip install wheel
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
 
@@ -92,6 +99,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
@@ -123,7 +135,7 @@ jobs:
         run: npx prettier 'build/**/*.js' --check
 
       - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
@@ -185,6 +197,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     strategy:
+      fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -200,6 +213,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: Retrieve cached npm files
         uses: actions/cache@v1
@@ -223,7 +241,7 @@ jobs:
         if: steps.out-cache.outputs.cache-hit == false
 
       - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
 
@@ -235,31 +253,32 @@ jobs:
       - name: curl PyPI to get debugpy versions
         run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
 
-      - name: Retrieve cached pythonFiles/ directory
-        uses: actions/cache@v1
-        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
-        id: pythonFiles-cache
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
-
-      - name: Install Python requirements if not cached
+        # We're intentionally not retrieving cached Python requirements installation, as it appears that pulling the cache pulls in some extra libraries as well,
+        # which causes problems with the tests. Also, running the installation seems much faster than retrieving it from cache.
+      - name: Install Python requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           # We need to have debugpy available in wheels/ so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        if: steps.pythonFiles-cache.outputs.cache-hit == false
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install IPython test requirements
+      - name: pip install ipython requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
         if: matrix.test-suite == 'python-unit'
+
+      - name: Install debugpy wheels
+        run: |
+          python -m pip install wheel
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_debugpy.py
+        shell: bash
+        if: matrix.test-suite == 'debugger' && matrix.python == 3.8
 
       - name: Install functional test requirements
         run: |
@@ -267,52 +286,75 @@ jobs:
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
 
-      - name: Prepare environment for venv tests
+      - name: Prepare pipenv for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
         run: |
-          # venv/bin or venv\\Scripts (windows)?
-          $environmentExecutableFolder = 'bin'
-          if ('${{runner.os}}' -match 'windows-latest') {
-            $environmentExecutableFolder = 'Scripts'
-          }
-
-          # pipenv
           python -m pip install pipenv
-          python -m pipenv run python build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+          python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
 
-          # venv
-          if ('${{matrix.python}}' -like '3.?') {
-            python -m venv .venv
-            & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
-          }
-
-          # virtualenv
+      - name: Prepare virtualenv for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
           python -m pip install virtualenv
-          python -m virtualenv .virtualenv
-          & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
-
-          # conda
-
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
-
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
-          if ('${{runner.os}}' -match 'windows-latest') {
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
-          } else{
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-              & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
+          python -m virtualenv .virtualenv/
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+          } else {
+            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
           }
+
+      - name: Prepare venv for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
+        run: |
+          python -m venv .venv
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          } else {
+            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          }
+
+      - name: Prepare conda for venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        shell: pwsh
+        if: matrix.test-suite == 'venv'
+        run: |
+          # 1. For `terminalActivation.testvirtualenvs.test.ts`
+          if ('${{matrix.os}}' -match 'windows-latest') {
+            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
+            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
+          } else{
+            $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
+            $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
+          }
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
           & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
           & $condaExecPath create -n "test_env1" -y python
           & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "$Env:HOME/test_env3" -y python
-        shell: pwsh
-        if: matrix.test-suite == 'venv'
+          & $condaExecPath create -p "~/test_env3" -y python
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
+        shell: bash
+        if: matrix.test-suite != 'ts-unit'
 
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
@@ -341,6 +383,9 @@ jobs:
       # run tests and then clean up the process once the tests ran.
       # See https://github.com/GabrielBB/xvfb-action
       - name: Run venv tests
+        env:
+          TEST_FILES_SUFFIX: testvirtualenvs
+          CI_PYTHON_VERSION: ${{matrix.python}}
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
@@ -375,6 +420,7 @@ jobs:
     needs: [build-vsix]
     if: github.repository == 'microsoft/vscode-python'
     strategy:
+      fail-fast: false
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
@@ -384,6 +430,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
+      - name: Use Python ${{matrix.python}}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{matrix.python}}
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
@@ -392,6 +448,23 @@ jobs:
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
+      - name: pip install system test requirements
+        run: |
+          python -m pip install --upgrade -r build/test-requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+        shell: bash
+
+      - name: pip install ipython requirements
+        run: |
+          python -m pip install numpy
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+
+      - name: pip install jupyter
+        run: |
+          python -m pip install --upgrade jupyter
 
       - name: Download VSIX
         uses: actions/download-artifact@v1
@@ -405,6 +478,12 @@ jobs:
           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
           rm -r ${{env.ARTIFACT_NAME_VSIX}}
           npx tsc -p ./
+        shell: bash
+
+      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
+        run: |
+          echo "::set-env name=CI_PYTHON_PATH::python"
+          echo "::set-env name=CI_DISABLE_AUTO_SELECTION::1"
         shell: bash
 
       - name: Run smoke tests

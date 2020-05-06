@@ -198,7 +198,7 @@ suite('Activation Manager', () => {
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(folder2);
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+            when(interpreterService.getInterpreters(anything(), anything())).thenResolve();
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())
@@ -232,7 +232,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+            when(interpreterService.getInterpreters(anything(), anything())).thenResolve();
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())
@@ -252,7 +252,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+            when(interpreterService.getInterpreters(anything(), anything())).thenResolve();
             when(experiments.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
             interpreterPathService
                 .setup((i) => i.copyOldInterpreterStorageValuesToNew(resource))
@@ -278,7 +278,7 @@ suite('Activation Manager', () => {
             const resource = Uri.parse('two');
             when(activationService1.activate(resource)).thenResolve();
             when(activationService2.activate(resource)).thenResolve();
-            when(interpreterService.getInterpreters(anything())).thenResolve();
+            when(interpreterService.getInterpreters(anything(), anything())).thenResolve();
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
                 .returns(() => Promise.resolve())

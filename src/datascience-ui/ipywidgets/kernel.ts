@@ -329,7 +329,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private messageHookInterceptor(msg: KernelMessage.IIOPubMessage): boolean | PromiseLike<boolean> {
         try {
             window.console.log(
-                `Message hook callback for ${(msg as any).msg_type} and ${(msg.parent_header as any).msg_id}`
+                `Message hook callback for ${(msg as any).header.msg_type} and ${(msg.parent_header as any).msg_id}`
             );
             // Save the active message that is currently being hooked. The Extension
             // side needs this information during removeMessageHook so it can delay removal until after a message is called

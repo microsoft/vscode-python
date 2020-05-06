@@ -5,13 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
-import { LocalZMQKernel } from '../../common/experimentGroups';
-import { traceError, traceInfo } from '../../common/logger';
+import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Settings, Telemetry } from '../constants';
+import { Identifiers } from '../constants';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -29,7 +27,6 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
-    private _zmqSupported: boolean | undefined;
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -40,8 +37,7 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
         disposables.push(
@@ -55,7 +51,7 @@ export class NotebookProvider implements INotebookProvider {
     // Disconnect from the specified provider
     public async disconnect(options: ConnectNotebookProviderOptions): Promise<void> {
         // Only need to disconnect from actual jupyter servers
-        if (!(await this.rawKernelSupported())) {
+        if (!(await this.rawNotebookProvider.supported())) {
             return this.jupyterNotebookProvider.disconnect(options);
         }
     }
@@ -63,7 +59,7 @@ export class NotebookProvider implements INotebookProvider {
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
-        if (await this.rawKernelSupported()) {
+        if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect();
         } else {
             return this.jupyterNotebookProvider.connect(options);
@@ -71,7 +67,7 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        const rawKernel = await this.rawKernelSupported();
+        const rawKernel = await this.rawNotebookProvider.supported();
 
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
@@ -96,57 +92,23 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         // Finally create if needed
+        let resource: Resource = options.identity;
+        if (options.identity.scheme === Identifiers.HistoryPurpose) {
+            // If we have any workspaces, then use the first available workspace.
+            // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
+            // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
+            // Ideally we need to pick the resource of the corresponding Python file.
+            resource = this.workspaceService.hasWorkspaceFolders
+                ? this.workspaceService.workspaceFolders![0]!.uri
+                : undefined;
+        }
         const promise = rawKernel
-            ? this.rawNotebookProvider.createNotebook(
-                  options.identity,
-                  options.identity,
-                  options.disableUI,
-                  options.metadata
-              )
+            ? this.rawNotebookProvider.createNotebook(options.identity, resource, options.disableUI, options.metadata)
             : this.jupyterNotebookProvider.createNotebook(options);
 
         this.cacheNotebookPromise(options.identity, promise);
 
         return promise;
-    }
-
-    // Check to see if we have all that we need for supporting raw kernel launch
-    private async rawKernelSupported(): Promise<boolean> {
-        const zmqOk = await this.zmqSupported();
-
-        return zmqOk && this.localLaunch() && this.experimentsManager.inExperiment(LocalZMQKernel.experiment)
-            ? true
-            : false;
-    }
-
-    private localLaunch(): boolean {
-        const settings = this.configuration.getSettings(undefined);
-        const serverURI: string | undefined = settings.datascience.jupyterServerURI;
-
-        if (!serverURI || serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            return true;
-        }
-
-        return false;
-    }
-
-    // Check to see if this machine supports our local ZMQ launching
-    private async zmqSupported(): Promise<boolean> {
-        if (this._zmqSupported !== undefined) {
-            return this._zmqSupported;
-        }
-
-        try {
-            await import('zeromq');
-            traceInfo(`ZMQ install verified.`);
-            this._zmqSupported = true;
-        } catch (e) {
-            traceError(`Exception while attempting zmq :`, e);
-            sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            this._zmqSupported = false;
-        }
-
-        return this._zmqSupported;
     }
 
     // Cache the promise that will return a notebook

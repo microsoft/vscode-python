@@ -51,7 +51,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() private readonly useWebViewServer: boolean,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean,
+        @unmanaged() private readonly enableVariablesDuringDebugging: boolean
     ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -211,6 +212,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
                 wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
                 parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
+            },
+            variableOptions: {
+                enableDuringDebugger: this.enableVariablesDuringDebugging
             }
         };
     }
@@ -317,7 +321,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
         const settings = await this.generateDataScienceExtraSettings();
-        const requestIsDark = settings.ignoreVscodeTheme ? false : request.isDark;
+        const requestIsDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(requestIsDark);
         const isDark = settings.ignoreVscodeTheme
             ? false
@@ -334,7 +338,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
         const settings = await this.generateDataScienceExtraSettings();
-        const isDark = settings.ignoreVscodeTheme ? false : request.isDark;
+        const isDark = settings.ignoreVscodeTheme ? false : request?.isDark;
         this.setTheme(isDark);
         const resource = await this.getOwningResource();
         const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);

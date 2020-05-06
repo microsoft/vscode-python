@@ -7,24 +7,6 @@ import { _ISOLATED as ISOLATED, _SCRIPTS_DIR } from './index';
 const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'vscode_datascience_helpers');
 
 //============================
-// getJupyterVariableDataFrameInfo.py
-
-export function getJupyterVariableDataFrameInfo(): string[] {
-    const script = path.join(SCRIPTS_DIR, 'getJupyterVariableDataFrameInfo.py');
-    // There is no script-specific output to parse, so we do not return a function.
-    return [ISOLATED, script];
-}
-
-//============================
-// getJupyterVariableDataFrameRows.py
-
-export function getJupyterVariableDataFrameRows(): string[] {
-    const script = path.join(SCRIPTS_DIR, 'getJupyterVariableDataFrameRows.py');
-    // There is no script-specific output to parse, so we do not return a function.
-    return [ISOLATED, script];
-}
-
-//============================
 // getServerInfo.py
 
 type JupyterServerInfo = {

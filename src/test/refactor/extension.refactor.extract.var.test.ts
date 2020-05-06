@@ -89,6 +89,7 @@ suite('Variable Extraction', () => {
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
+        ioc.registerInterpreterStorageTypes();
         ioc.registerMockInterpreterTypes();
 
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
@@ -192,13 +193,15 @@ suite('Variable Extraction', () => {
     }
 
     // This test fails on linux (text document not getting updated in time)
-    if (!IS_CI_SERVER) {
-        test('Extract Variable (end to end)', async () => {
-            const startPos = new Position(234, 29);
-            const endPos = new Position(234, 38);
-            await testingVariableExtractionEndToEnd(false, startPos, endPos);
-        });
-    }
+    test('Extract Variable (end to end)', async function () {
+        if (!IS_CI_SERVER) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        const startPos = new Position(234, 29);
+        const endPos = new Position(234, 38);
+        await testingVariableExtractionEndToEnd(false, startPos, endPos);
+    });
 
     test('Extract Variable fails if whole string not selected (end to end)', async () => {
         const startPos = new Position(234, 20);

@@ -11,7 +11,14 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
-import { IJupyterConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    IJupyterSessionManagerFactory,
+    IKernelDependencyService,
+    INotebook,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
@@ -22,7 +29,8 @@ export class KernelSwitcher {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(KernelSelector) private kernelSelector: KernelSelector,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
     public async switchKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
@@ -35,6 +43,7 @@ export class KernelSwitcher {
 
     public async askForLocalKernel(
         resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
     ): Promise<KernelSpecInterpreter | undefined> {
         const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
@@ -43,7 +52,7 @@ export class KernelSwitcher {
         const cancel = Common.cancel();
         const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
         if (selection === selectKernel) {
-            return this.selectLocalJupyterKernel(resource, kernelSpec);
+            return this.selectLocalJupyterKernel(resource, type, kernelSpec);
         }
     }
 
@@ -56,7 +65,11 @@ export class KernelSwitcher {
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
-            kernel = await this.selectLocalJupyterKernel(notebook.resource, notebook?.getKernelSpec());
+            kernel = await this.selectLocalJupyterKernel(
+                notebook.resource,
+                notebook.connection?.type || 'noConnection',
+                notebook?.getKernelSpec()
+            );
         } else if (notebook) {
             const connInfo = notebook.connection;
             const currentKernel = notebook.getKernelSpec();
@@ -69,9 +82,17 @@ export class KernelSwitcher {
 
     private async selectLocalJupyterKernel(
         resource: Resource,
+        type: 'raw' | 'jupyter' | 'noConnection',
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
-        return this.kernelSelector.selectLocalKernel(resource, new StopWatch(), undefined, undefined, currentKernel);
+        return this.kernelSelector.selectLocalKernel(
+            resource,
+            type,
+            new StopWatch(),
+            undefined,
+            undefined,
+            currentKernel
+        );
     }
 
     private async selectRemoteJupyterKernel(
@@ -111,6 +132,7 @@ export class KernelSwitcher {
                     // At this point we have a valid jupyter server.
                     const potential = await this.askForLocalKernel(
                         notebook.resource,
+                        notebook.connection?.type || 'noConnection',
                         kernel.kernelSpec || kernel.kernelModel
                     );
                     if (potential && Object.keys(potential).length > 0) {
@@ -123,6 +145,13 @@ export class KernelSwitcher {
         }
     }
     private async switchToKernel(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
+        if (notebook.connection?.type === 'raw' && kernel.interpreter) {
+            const response = await this.kernelDependencyService.installMissingDependencies(kernel.interpreter);
+            if (response === KernelInterpreterDependencyResponse.cancel) {
+                return;
+            }
+        }
+
         const switchKernel = async (newKernel: KernelSpecInterpreter) => {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(

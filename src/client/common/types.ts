@@ -65,12 +65,6 @@ export type ExecutionInfo = {
     product?: Product;
 };
 
-export enum LogLevel {
-    Information = 'Information',
-    Error = 'Error',
-    Warning = 'Warning'
-}
-
 export enum InstallerResponse {
     Installed,
     Disabled,
@@ -313,6 +307,12 @@ export interface IExperiments {
     readonly optOutFrom: string[];
 }
 
+export enum AnalysisSettingsLogLevel {
+    Information = 'Information',
+    Error = 'Error',
+    Warning = 'Warning'
+}
+
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
@@ -324,7 +324,7 @@ export interface IAnalysisSettings {
     readonly information: string[];
     readonly disabled: string[];
     readonly traceLogging: boolean;
-    readonly logLevel: LogLevel;
+    readonly logLevel: AnalysisSettingsLogLevel;
 }
 
 export interface IVariableQuery {

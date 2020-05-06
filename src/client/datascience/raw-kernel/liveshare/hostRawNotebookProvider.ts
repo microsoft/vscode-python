@@ -11,18 +11,26 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    Resource
+} from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { Identifiers, LiveShare, Settings } from '../../constants';
+import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
 import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
-import { IKernelFinder, IKernelLauncher } from '../../kernel-launcher/types';
+import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
+    IDataScience,
     IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
@@ -42,6 +50,7 @@ export class HostRawNotebookProvider
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
+        _dataScience: IDataScience,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
@@ -50,11 +59,12 @@ export class HostRawNotebookProvider
         private fs: IFileSystem,
         private serviceContainer: IServiceContainer,
         private kernelLauncher: IKernelLauncher,
-        private kernelFinder: IKernelFinder,
         private kernelSelector: KernelSelector,
-        private progressReporter: ProgressReporter
+        private progressReporter: ProgressReporter,
+        private outputChannel: IOutputChannel,
+        experimentsManager: IExperimentsManager
     ) {
-        super(liveShare, asyncRegistry);
+        super(liveShare, asyncRegistry, configService, experimentsManager);
     }
 
     public async dispose(): Promise<void> {
@@ -64,20 +74,57 @@ export class HostRawNotebookProvider
         }
     }
 
-    public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onAttach(api);
+        if (api && !this.disposed) {
+            const service = await this.waitForService();
+            // Attach event handlers to different requests
+            if (service) {
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
+                    this.onSync()
+                );
+                service.onRequest(
+                    LiveShareCommands.rawKernelSupported,
+                    (_args: any[], _cancellation: CancellationToken) => this.supported()
+                );
+                service.onRequest(
+                    LiveShareCommands.createRawNotebook,
+                    async (args: any[], _cancellation: CancellationToken) => {
+                        const resource = this.parseUri(args[0]);
+                        const identity = this.parseUri(args[1]);
+                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
+                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
+                        const notebook = (await this.createNotebook(
+                            identity!,
+                            resource,
+                            true, // Disable UI for this creation
+                            notebookMetadata,
+                            undefined
+                        )) as HostJupyterNotebook;
+                        await notebook.onAttach(api);
+                    }
+                );
+            }
+        }
     }
 
-    public async onSessionChange(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
+        await super.onSessionChange(api);
+
+        this.getNotebooks().forEach(async (notebook) => {
+            const hostNotebook = (await notebook) as HostJupyterNotebook;
+            if (hostNotebook) {
+                await hostNotebook.onSessionChange(api);
+            }
+        });
     }
 
-    public async onDetach(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onDetach(api);
     }
 
     public async waitForServiceName(): Promise<string> {
-        return 'Not implemented';
+        return LiveShare.RawNotebookProviderService;
     }
 
     protected async createNotebookInstance(
@@ -94,47 +141,65 @@ export class HostRawNotebookProvider
             ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingIPyKernel())
             : undefined;
 
-        const rawSession = new RawJupyterSession(this.kernelLauncher, this.serviceContainer, this.kernelSelector);
+        const rawSession = new RawJupyterSession(
+            this.kernelLauncher,
+            this.kernelSelector,
+            resource,
+            this.outputChannel
+        );
         try {
             const launchTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
 
-            // Before we try to connect we need to find a kernel and install ipykernel
-            const kernelSpec = await this.kernelFinder.findKernelSpec(
+            // We need to locate kernelspec and possible interpreter for this launch based on resource and notebook metadata
+            const kernelSpecInterpreter = await this.kernelSelector.getKernelForLocalConnection(
                 resource,
-                notebookMetadata?.kernelspec?.name,
+                'raw',
+                undefined,
+                notebookMetadata,
+                disableUI,
                 cancelToken
             );
 
-            await rawSession.connect(kernelSpec, launchTimeout, cancelToken);
-
-            // Get the execution info for our notebook
-            const info = await this.getExecutionInfo(kernelSpec);
-
-            if (rawSession.isConnected) {
-                // Create our notebook
-                const notebook = new HostJupyterNotebook(
-                    this.liveShare,
-                    rawSession,
-                    this.configService,
-                    this.disposableRegistry,
-                    info,
-                    this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
-                    resource,
-                    identity,
-                    this.getDisposedError.bind(this),
-                    this.workspaceService,
-                    this.appShell,
-                    this.fs
+            // Interpreter is optional, but we must have a kernel spec for a raw launch
+            if (!kernelSpecInterpreter.kernelSpec) {
+                notebookPromise.reject('Failed to find a kernelspec to use for ipykernel launch');
+            } else {
+                await rawSession.connect(
+                    kernelSpecInterpreter.kernelSpec,
+                    launchTimeout,
+                    kernelSpecInterpreter.interpreter,
+                    cancelToken
                 );
 
-                // Run initial setup
-                await notebook.initialize(cancelToken);
+                // Get the execution info for our notebook
+                const info = await this.getExecutionInfo(kernelSpecInterpreter.kernelSpec);
 
-                traceInfo(`Finished connecting ${this.id}`);
+                if (rawSession.isConnected) {
+                    // Create our notebook
+                    const notebook = new HostJupyterNotebook(
+                        this.liveShare,
+                        rawSession,
+                        this.configService,
+                        this.disposableRegistry,
+                        info,
+                        this.serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
+                        resource,
+                        identity,
+                        this.getDisposedError.bind(this),
+                        this.workspaceService,
+                        this.appShell,
+                        this.fs
+                    );
 
-                notebookPromise.resolve(notebook);
-            } else {
-                notebookPromise.reject(this.getDisposedError());
+                    // Run initial setup
+                    await notebook.initialize(cancelToken);
+
+                    traceInfo(`Finished connecting ${this.id}`);
+
+                    notebookPromise.resolve(notebook);
+                } else {
+                    notebookPromise.reject(this.getDisposedError());
+                }
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
@@ -161,5 +226,19 @@ export class HostRawNotebookProvider
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
+    }
+
+    private parseUri(uri: string | undefined): Resource {
+        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
+        return parsed &&
+            parsed.scheme &&
+            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
+            parsed.scheme === 'vsls'
+            ? this.finishedApi!.convertSharedUriToLocal(parsed)
+            : parsed;
+    }
+
+    private onSync(): Promise<any> {
+        return Promise.resolve(true);
     }
 }

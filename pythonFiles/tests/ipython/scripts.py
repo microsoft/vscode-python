@@ -43,6 +43,12 @@ def execute_script(file, replace_dict=dict([])):
     return result.success
 
 
+def execute_code(code):
+    # Execute this script as a cell
+    result = get_ipython().run_cell(code)
+    return result
+
+
 def get_variables(capsys):
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(os.path.join(path, "./getJupyterVariableList.py"))
@@ -74,35 +80,41 @@ def get_variable_value(variables, name, capsys):
 def get_data_frame_info(variables, name, capsys):
     varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(
-            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameInfo.py"
-        )
+    syspath = os.path.abspath(
+        os.path.join(path, "../../vscode_datascience_helpers/dataframes")
     )
-    keys = dict([("_VSCode_JupyterTestValue", json.dumps(varJson))])
-    if execute_script(file, keys):
+    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace("\\", "\\\\"))
+    importcode = "import vscodeGetDataFrameInfo\nprint(vscodeGetDataFrameInfo._VSCODE_getDataFrameInfo({0}))".format(
+        name
+    )
+    result = execute_code(syscode)
+    if not result.success:
+        result.raise_error()
+    result = execute_code(importcode)
+    if result.success:
         read_out = capsys.readouterr()
-        return json.loads(read_out.out)
+        info = json.loads(read_out.out[0:-1])
+        varJson.update(info)
+        return varJson
     else:
-        raise Exception("Get dataframe info failed.")
+        result.raise_error()
 
 
 def get_data_frame_rows(varJson, start, end, capsys):
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(
-            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameRows.py"
-        )
+    syspath = os.path.abspath(
+        os.path.join(path, "../../vscode_datascience_helpers/dataframes")
     )
-    keys = dict(
-        [
-            ("_VSCode_JupyterTestValue", json.dumps(varJson)),
-            ("_VSCode_JupyterStartRow", str(start)),
-            ("_VSCode_JupyterEndRow", str(end)),
-        ]
+    syscode = 'import sys\nsys.path.append("{0}")'.format(syspath.replace("\\", "\\\\"))
+    importcode = "import vscodeGetDataFrameRows\nprint(vscodeGetDataFrameRows._VSCODE_getDataFrameRows({0}, {1}, {2}))".format(
+        varJson["name"], start, end
     )
-    if execute_script(file, keys):
+    result = execute_code(syscode)
+    if not result.success:
+        result.raise_error()
+    result = execute_code(importcode)
+    if result.success:
         read_out = capsys.readouterr()
-        return json.loads(read_out.out)
+        return json.loads(read_out.out[0:-1])
     else:
-        raise Exception("Getting dataframe rows failed.")
+        result.raise_error()

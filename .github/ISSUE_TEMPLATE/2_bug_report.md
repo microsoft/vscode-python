@@ -38,14 +38,33 @@ Note: If you think a GIF of what is happening would be helpful, consider tools l
 
 ## Logs
 
-Output for `Python` in the `Output` panel (`View`→`Output`, change the drop-down the upper-right of the `Output` panel to `Python`)
+<details>
+
+<summary>Output for <code>Python</code> in the <code>Output</code> panel (<code>View</code>→<code>Output</code>, change the drop-down the upper-right of the <code>Output</code> panel to <code>Python</code>)
+</summary>
+
+<p>
 
 ```
 XXX
 ```
 
-Output from `Console` under the `Developer Tools` panel (toggle Developer Tools on under `Help`; turn on source maps to make any tracebacks be useful by running `Enable source map support for extension debugging`)
+</p>
+</details>
+
+<br />
+
+<details>
+
+<summary>
+Output from <code>Console</code> under the <code>Developer Tools</code> panel (toggle Developer Tools on under <code>Help</code>; turn on source maps to make any tracebacks be useful by running <code>Enable source map support for extension debugging</code>)
+</summary>
+
+<p>
 
 ```
-XXX
+XXXX
 ```
+
+</p>
+</details>

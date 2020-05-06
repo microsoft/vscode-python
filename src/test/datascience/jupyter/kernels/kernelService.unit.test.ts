@@ -11,20 +11,21 @@ import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
-import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
-import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../../client/common/types';
+import { ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import {
     IJupyterKernelSpec,
     IJupyterSessionManager,
-    IJupyterSubCommandExecutionService
+    IJupyterSubCommandExecutionService,
+    KernelInterpreterDependencyResponse
 } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
@@ -41,7 +42,7 @@ suite('Data Science - KernelService', () => {
     let execFactory: IPythonExecutionFactory;
     let execService: IPythonExecutionService;
     let activationHelper: IEnvironmentActivationService;
-    let installer: IInstaller;
+    let dependencyService: KernelDependencyService;
     let jupyterInterpreterExecutionService: IJupyterSubCommandExecutionService;
 
     function initialize() {
@@ -51,7 +52,7 @@ suite('Data Science - KernelService', () => {
         activationHelper = mock(EnvironmentActivationService);
         execFactory = mock(PythonExecutionFactory);
         execService = mock<IPythonExecutionService>();
-        installer = mock(ProductInstaller);
+        dependencyService = mock(KernelDependencyService);
         jupyterInterpreterExecutionService = mock<IJupyterSubCommandExecutionService>();
         when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
@@ -61,7 +62,7 @@ suite('Data Science - KernelService', () => {
             instance(jupyterInterpreterExecutionService),
             instance(execFactory),
             instance(interperterService),
-            instance(installer),
+            instance(dependencyService),
             instance(fs),
             instance(activationHelper)
         );
@@ -395,7 +396,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Fail if installed kernel cannot be found', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             findMatchingKernelSpecStub.resolves(undefined);
             fakeTimer.install();
 
@@ -421,9 +422,9 @@ suite('Data Science - KernelService', () => {
         });
         test('If ipykernel is not installed, then prompt to install ipykernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-            when(installer.promptToInstall(anything(), anything(), anything())).thenResolve(
-                InstallerResponse.Installed
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
+            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve(
+                KernelInterpreterDependencyResponse.ok
             );
             findMatchingKernelSpecStub.resolves(undefined);
             fakeTimer.install();
@@ -447,23 +448,25 @@ suite('Data Science - KernelService', () => {
                 promise,
                 `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `
             );
-            verify(installer.promptToInstall(anything(), anything(), anything())).once();
+            verify(dependencyService.installMissingDependencies(anything(), anything())).once();
         });
         test('If ipykernel is not installed, and ipykerne installation is canclled, then do not reigster kernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-            when(installer.promptToInstall(anything(), anything(), anything())).thenResolve(InstallerResponse.Ignore);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
+            when(dependencyService.installMissingDependencies(anything(), anything())).thenResolve(
+                KernelInterpreterDependencyResponse.cancel
+            );
             findMatchingKernelSpecStub.resolves(undefined);
 
             const kernel = await kernelService.registerKernel(interpreter);
 
             assert.isUndefined(kernel);
             verify(execService.execModule('ipykernel', anything(), anything())).never();
-            verify(installer.promptToInstall(anything(), anything(), anything())).once();
+            verify(dependencyService.installMissingDependencies(anything(), anything())).once();
         });
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             // tslint:disable-next-line: no-any
             findMatchingKernelSpecStub.resolves({} as any);
 
@@ -480,7 +483,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Fail if installed kernel spec does not have a specFile setup', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             // tslint:disable-next-line: no-any
             const kernel = new JupyterKernelSpec({} as any);
             findMatchingKernelSpecStub.resolves(kernel);
@@ -498,7 +501,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata and interpreter path in argv', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
@@ -522,7 +525,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
@@ -549,7 +552,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Kernel is found and spec file is updated with interpreter information in metadata along with environment variables', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
             when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
@@ -577,7 +580,7 @@ suite('Data Science - KernelService', () => {
         });
         test('Kernel is found and spec file is not updated with interpreter information when user spec file', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             const kernel = new JupyterKernelSpec(userKernelSpecModel, kernelJsonFile);
             when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));

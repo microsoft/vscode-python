@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
@@ -16,7 +16,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { HelpLinks, Telemetry } from '../constants';
+import { HelpLinks, Identifiers, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
 import { ICodeCssGenerator, IDataViewer, IJupyterVariable, IJupyterVariables, INotebook, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
@@ -37,7 +37,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IJupyterVariables) private variableManager: IJupyterVariables,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean
@@ -54,7 +54,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            false
         );
 
         // Load the web panel using our current directory as we don't expect to load any other files

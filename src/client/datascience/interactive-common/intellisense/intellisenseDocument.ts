@@ -65,7 +65,7 @@ export interface ICellData {
 
 export class IntellisenseDocument implements TextDocument {
     private _uri: Uri;
-    private _version: number = 0;
+    private _version: number = 1;
     private _lines: IntellisenseLine[] = [];
     private _contents: string = '';
     private _cellRanges: ICellRange[] = [];

@@ -220,7 +220,7 @@ export class JupyterNotebookBase implements INotebook {
         if (!this._disposed) {
             this._disposed = true;
             if (this.session) {
-                await this.session.dispose();
+                await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
         }
         this.disposed.fire();
@@ -598,7 +598,10 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonInterpreter | undefined {
-        return this._executionInfo.interpreter;
+        return (
+            this._executionInfo.interpreter ||
+            (this._executionInfo.kernelSpec?.metadata?.interpreter as PythonInterpreter)
+        );
     }
 
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
@@ -616,7 +619,7 @@ export class JupyterNotebookBase implements INotebook {
             this.ranInitialSetup = false;
 
             // Change the kernel on the session
-            await this.session.changeKernel(spec, timeoutMS);
+            await this.session.changeKernel(spec, timeoutMS, interpreter);
 
             // Change our own kernel spec
             // Only after session was successfully created.
@@ -1017,6 +1020,7 @@ export class JupyterNotebookBase implements INotebook {
             this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                    ignoreFocusOut: true,
                     password: hasPassword
                 })
                 .then((v) => {

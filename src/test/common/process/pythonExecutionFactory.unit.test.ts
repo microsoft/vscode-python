@@ -431,7 +431,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({
+                when(interpreterService.getInterpreterDetails(anything(), anything())).thenResolve({
                     version: parse('2.7.14')
                 } as any);
                 factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);

@@ -9,8 +9,17 @@ import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../common/types';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
+import {
+    GetInterpreterLocatorOptions,
+    IInterpreterHelper,
+    InterpreterType,
+    IPipEnvService,
+    PythonInterpreter
+} from '../../contracts';
 import { IPipEnvServiceHelper } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -47,6 +56,18 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
 
     public get executable(): string {
         return this.configService.getSettings().pipenvPath;
+    }
+
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+        const stopwatch = new StopWatch();
+        const startDiscoveryTime = stopwatch.elapsedTime;
+
+        const interpreters = await super.getInterpreters(resource, options);
+
+        const discoveryDuration = stopwatch.elapsedTime - startDiscoveryTime;
+        sendTelemetryEvent(EventName.PIPENV_INTERPRETER_DISCOVERY, discoveryDuration);
+
+        return interpreters;
     }
 
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {

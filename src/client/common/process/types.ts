@@ -65,6 +65,16 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export function isDaemonPoolCreationOption(
+    options: PooledDaemonExecutionFactoryCreationOptions | DedicatedDaemonExecutionFactoryCreationOptions
+): options is PooledDaemonExecutionFactoryCreationOptions {
+    if ('dedicated' in options && options.dedicated === true) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 // This daemon will belong to a daemon pool (i.e it goes back into a pool for re-use).
 export type PooledDaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
     /**
@@ -108,7 +118,7 @@ export type DedicatedDaemonExecutionFactoryCreationOptions = ExecutionFactoryCre
      * Defaults to `PythonDaemonExecutionService`.
      * Any other class provided must extend `PythonDaemonExecutionService`.
      */
-    daemonClass?: Newable<IPythonDaemonExecutionService>;
+    daemonClass?: Newable<IPythonDaemonExecutionService | IDisposable>;
     /**
      * This flag indicates it is a dedicated daemon.
      */

@@ -65,6 +65,9 @@ export function getDefaultSettings() {
             wordBasedSuggestions: true,
             parameterHintsEnabled: true
         },
+        variableOptions: {
+            enableDuringDebugger: false
+        },
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

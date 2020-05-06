@@ -5,12 +5,14 @@ import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
+import * as path from 'path';
 import * as socketIO from 'socket.io';
 import { env, Event, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { IWebPanel, IWebPanelOptions } from '../../../client/common/application/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
 // tslint:disable: no-any no-console no-require-imports no-var-requires
 const nocache = require('nocache');
@@ -69,6 +71,18 @@ export class WebServer implements IWebServer {
         // Ensure browser does'nt cache anything (for UI tests/debugging).
         this.app.use(nocache());
         this.app.disable('view cache');
+        this.app.get('/source', (req, res) => {
+            // Query has been messed up in sending to the web site. Works in vscode though, so don't try
+            // to fix the encoding.
+            const queryKeys = Object.keys(req.query);
+            const hashKey = queryKeys ? queryKeys.find((q) => q.startsWith('hash=')) : undefined;
+            if (hashKey) {
+                const diskLocation = path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts', hashKey.substr(5), 'index.js');
+                res.sendFile(diskLocation);
+            } else {
+                res.status(404).end();
+            }
+        });
 
         this.io.on('connection', (socket) => {
             // Possible we close browser and reconnect, or hit refresh button.
@@ -119,6 +133,7 @@ export class WebServer implements IWebServer {
 export class WebBrowserPanel implements IWebPanel, IDisposable {
     private panel?: WebviewPanel;
     private server?: IWebServer;
+    private serverUrl: string | undefined;
     constructor(private readonly disposableRegistry: IDisposableRegistry, private readonly options: IWebPanelOptions) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
@@ -150,12 +165,23 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
             })
         );
 
-        this.launchServer(this.options.cwd, this.options.rootPath).catch((ex) =>
-            // tslint:disable-next-line: no-console
-            console.error('Failed to start Web Browser Panel', ex)
-        );
+        this.launchServer(this.options.cwd, this.options.rootPath)
+            .then((p) => {
+                this.serverUrl = p;
+            })
+            .catch((ex) =>
+                // tslint:disable-next-line: no-console
+                console.error('Failed to start Web Browser Panel', ex)
+            );
     }
     public asWebviewUri(localResource: Uri): Uri {
+        const filePath = localResource.fsPath;
+        const name = path.basename(path.dirname(filePath));
+        if (name !== 'nbextensions' && this.serverUrl) {
+            // This is a CDN download, Remap to our webserver
+            const remapped = `${this.serverUrl}/source?hash=${name}`;
+            return Uri.parse(remapped);
+        }
         return localResource;
     }
     public setTitle(newTitle: string): void {
@@ -191,7 +217,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
      * Starts a WebServer, and optionally displays a Message when server is ready.
      * Used only for debugging and testing purposes.
      */
-    public async launchServer(cwd: string, resourcesRoot: string): Promise<void> {
+    public async launchServer(cwd: string, resourcesRoot: string): Promise<string> {
         // If no port is provided, use a random port.
         const dsUIPort = parseInt(process.env.VSC_PYTHON_DS_UI_PORT || '', 10);
         const portToUse = isNaN(dsUIPort) ? 0 : dsUIPort;
@@ -208,5 +234,8 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
             this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
         }
         await this.server.waitForConnection();
+
+        // tslint:disable-next-line: no-http-string
+        return `http://localhost:${port}`;
     }
 }

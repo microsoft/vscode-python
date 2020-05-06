@@ -26,6 +26,7 @@ interface IVariableExplorerProps {
     skipDefault?: boolean;
     variables: IJupyterVariable[];
     debugging: boolean;
+    supportsDebugging: boolean;
     fontSize: number;
     executionCount: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
@@ -171,7 +172,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
     }
 
     private renderGrid() {
-        if (this.props.debugging) {
+        if (this.props.debugging && !this.props.supportsDebugging) {
             return (
                 <span className="span-debug-message">
                     {getLocString(

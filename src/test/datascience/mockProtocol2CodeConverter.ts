@@ -46,8 +46,11 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asHover(hover: proto.Hover): code.Hover;
     public asHover(hover: null | undefined): undefined;
     public asHover(hover: proto.Hover | null | undefined): code.Hover | undefined;
-    public asHover(_hover: any): any {
-        throw new Error('Method not implemented.');
+    public asHover(hover: any): any {
+        if (!hover) {
+            return undefined;
+        }
+        return hover;
     }
     public asCompletionResult(result: proto.CompletionList): code.CompletionList;
     public asCompletionResult(result: proto.CompletionItem[]): code.CompletionItem[];

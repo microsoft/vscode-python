@@ -94,10 +94,21 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
     public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendNotification(
-                vscodeLanguageClient.DidChangeTextDocumentNotification.type,
-                languageClient.code2ProtocolConverter.asChangeTextDocumentParams({ document, contentChanges: changes })
-            );
+            // If the language client doesn't support incremental, just send the whole document
+            if (this.textDocumentSyncKind === vscodeLanguageClient.TextDocumentSyncKind.Full) {
+                languageClient.sendNotification(
+                    vscodeLanguageClient.DidChangeTextDocumentNotification.type,
+                    languageClient.code2ProtocolConverter.asChangeTextDocumentParams(document)
+                );
+            } else {
+                languageClient.sendNotification(
+                    vscodeLanguageClient.DidChangeTextDocumentNotification.type,
+                    languageClient.code2ProtocolConverter.asChangeTextDocumentParams({
+                        document,
+                        contentChanges: changes
+                    })
+                );
+            }
         }
     }
 
@@ -175,6 +186,23 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
             await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, resource);
         }
         return languageServerFolderPath;
+    }
+
+    private get textDocumentSyncKind(): vscodeLanguageClient.TextDocumentSyncKind {
+        const languageClient = this.getLanguageClient();
+        if (languageClient?.initializeResult?.capabilities?.textDocumentSync) {
+            const syncOptions = languageClient.initializeResult.capabilities.textDocumentSync;
+            const syncKind =
+                syncOptions !== undefined && syncOptions.hasOwnProperty('change')
+                    ? (syncOptions as vscodeLanguageClient.TextDocumentSyncOptions).change
+                    : syncOptions;
+            if (syncKind !== undefined) {
+                return syncKind as vscodeLanguageClient.TextDocumentSyncKind;
+            }
+        }
+
+        // Default is full if not provided
+        return vscodeLanguageClient.TextDocumentSyncKind.Full;
     }
 
     private getLanguageClient(): vscodeLanguageClient.LanguageClient | undefined {

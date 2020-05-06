@@ -15,7 +15,7 @@ import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../common/types';
+import { ReadWrite } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
@@ -24,7 +24,13 @@ import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
-import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
+import {
+    IJupyterKernelSpec,
+    IJupyterSessionManager,
+    IJupyterSubCommandExecutionService,
+    IKernelDependencyService,
+    KernelInterpreterDependencyResponse
+} from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
@@ -61,7 +67,7 @@ export class KernelService {
         private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
@@ -128,6 +134,7 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
+    // tslint:disable-next-line: cyclomatic-complexity
     public async findMatchingInterpreter(
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
@@ -159,11 +166,35 @@ export class KernelService {
                 `KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
             );
         }
+
+        // 2. Check if we have a fully qualified path in `argv`
+        const pathInArgv =
+            Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
+        if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
+            const interpreter = await this.interpreterService.getInterpreterDetails(pathInArgv).catch((ex) => {
+                traceError(
+                    `Failed to get interpreter information for python defined in kernel ${kernelSpec.name}, ${
+                        kernelSpec.display_name
+                    } with argv: ${(kernelSpec.argv || [])?.join(',')}`,
+                    ex
+                );
+                return;
+            });
+            if (interpreter) {
+                traceInfo(
+                    `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                );
+                return interpreter;
+            }
+            traceError(
+                `KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
+            );
+        }
         if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
 
-        // 2. Check if current interpreter has the same display name
+        // 3. Check if current interpreter has the same display name
         const activeInterpreter = await activeInterpreterPromise;
         // If the display name matches the active interpreter then use that.
         if (kernelSpec.display_name === activeInterpreter?.displayName) {
@@ -200,7 +231,7 @@ export class KernelService {
             );
             return activeInterpreter;
         } else {
-            // 4. Look for interpreter with same display name across all interpreters.
+            // 5. Look for interpreter with same display name across all interpreters.
 
             // If the display name matches the active interpreter then use that.
             // Look in all of our interpreters if we have somethign that matches this.
@@ -280,15 +311,14 @@ export class KernelService {
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
-        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter)) && !disableUI) {
+        if (!(await this.kernelDependencyService.areDependenciesInstalled(interpreter, cancelToken)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(
-                Product.ipykernel,
+            const response = await this.kernelDependencyService.installMissingDependencies(
                 interpreter,
                 wrapCancellationTokens(cancelToken, token.token)
             );
-            if (response !== InstallerResponse.Installed) {
+            if (response !== KernelInterpreterDependencyResponse.ok) {
                 traceWarning(
                     `Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`
                 );

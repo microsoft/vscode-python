@@ -141,6 +141,7 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
+    supported(): Promise<boolean>;
     connect(): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
@@ -326,7 +327,11 @@ export interface IJupyterSession extends IAsyncDisposable {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
+    changeKernel(
+        kernel: IJupyterKernelSpec | LiveKernelModel,
+        timeoutMS: number,
+        interpreter?: PythonInterpreter
+    ): Promise<void>;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
@@ -349,6 +354,13 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): void;
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
+
+export type ISessionWithSocket = Session.ISession & {
+    // Whether this is a remote session that we attached to.
+    isRemoteSession?: boolean;
+    // Socket information used for hooking messages to the kernel
+    kernelSocketInformation?: KernelSocketInformation;
+};
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
@@ -735,6 +747,9 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         wordBasedSuggestions: boolean;
         parameterHintsEnabled: boolean;
     };
+    variableOptions: {
+        enableDuringDebugger: boolean;
+    };
 }
 
 // Get variables from the currently running active Jupyter server
@@ -757,6 +772,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
+    readonly refreshRequired: Event<void>;
     getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(
@@ -1043,7 +1059,7 @@ export interface IJupyterServerProvider {
 
 export interface IKernelSocket {
     // tslint:disable-next-line: no-any
-    send(data: any, cb?: (err?: Error) => void): void;
+    sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
      * Adds a listener to a socket that will be called before the socket's onMessage is called. This
      * allows waiting for a callback before processing messages
@@ -1108,24 +1124,23 @@ export type KernelSocketInformation = {
     readonly options: KernelSocketOptions;
 };
 
-// Connection info to connect to a kernel over JMP
-export interface IJMPConnectionInfo {
-    version: number;
-    iopub_port: number;
-    shell_port: number;
-    stdin_port: number;
-    control_port: number;
-    signature_scheme: string;
-    hb_port: number;
-    ip: string;
-    key: string;
-    transport: string;
+export enum KernelInterpreterDependencyResponse {
+    ok,
+    cancel
 }
 
-export const IJMPConnection = Symbol('IJMPConnection');
-// A service to send and recieve messages over Jupyter messaging protocol
-export interface IJMPConnection extends IDisposable {
-    connect(connectInfo: IJMPConnectionInfo): Promise<void>;
-    sendMessage(message: KernelMessage.IMessage): void;
-    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void;
+export const IKernelDependencyService = Symbol('IKernelDependencyService');
+export interface IKernelDependencyService {
+    installMissingDependencies(
+        interpreter: PythonInterpreter,
+        token?: CancellationToken
+    ): Promise<KernelInterpreterDependencyResponse>;
+    areDependenciesInstalled(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean>;
+}
+
+export const INotebookAndInteractiveWindowUsageTracker = Symbol('INotebookAndInteractiveWindowUsageTracker');
+export interface INotebookAndInteractiveWindowUsageTracker {
+    readonly lastNotebookOpened?: Date;
+    readonly lastInteractiveWindowOpened?: Date;
+    startTracking(): void;
 }

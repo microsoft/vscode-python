@@ -14,6 +14,7 @@ import {
     IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
+    isDaemonPoolCreationOption,
     ObservableExecutionResult,
     PooledDaemonExecutionFactoryCreationOptions,
     PythonExecutionInfo,
@@ -38,8 +39,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         this.disposables.push(this);
     }
     public async initialize() {
-        // If `dedicated` is in optoins, then we are not initializing a pool of daemons.
-        if ('dedicated' in this.options) {
+        if (!isDaemonPoolCreationOption(this.options)) {
             return;
         }
         const promises = Promise.all(

@@ -5,6 +5,8 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import '../../../../client/common/extensions';
 import * as launchers from '../../../../client/debugger/extension/adapter/remoteLaunchers';
 
 suite('External ptvsd Debugger Launcher', () => {
@@ -96,5 +98,14 @@ suite('External debugpy Debugger Launcher', () => {
                 expect(args).to.be.deep.equal(expectedArgs);
             });
         });
+    });
+});
+
+suite('Path To Debugger Package', () => {
+    const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+    test('Path to debugpy debugger package', () => {
+        const actual = launchers.getDebugpyPackagePath();
+        const expected = path.join(pathToPythonLibDir, 'debugpy', 'no_wheels', 'debugpy');
+        expect(actual).to.be.deep.equal(expected);
     });
 });

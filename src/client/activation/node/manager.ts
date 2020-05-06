@@ -35,6 +35,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     private middleware: LanguageClientMiddleware | undefined;
     private disposables: IDisposable[] = [];
     private connected: boolean = false;
+    private lsVersion: string | undefined;
+
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions)
@@ -47,6 +49,12 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
+
+    private static versionTelemetryProps(instance: NodeLanguageServerManager) {
+        return {
+            lsVersion: instance.lsVersion
+        };
+    }
 
     public dispose() {
         if (this.languageProxy) {
@@ -67,6 +75,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.resource = resource;
         this.interpreter = interpreter;
         this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
+
+        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
+        this.lsVersion = versionPair?.version.format();
 
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
@@ -96,12 +107,16 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
 
-    @captureTelemetry(EventName.LANGUAGE_SERVER_STARTUP, undefined, true)
+    @captureTelemetry(
+        EventName.LANGUAGE_SERVER_STARTUP,
+        undefined,
+        true,
+        undefined,
+        NodeLanguageServerManager.versionTelemetryProps
+    )
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
-
-        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
@@ -109,7 +124,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
             this.experimentsManager,
             this.configService,
             LanguageServerType.Node,
-            versionPair?.version.format()
+            this.lsVersion
         );
 
         // Make sure the middleware is connected if we restart and we we're already connected.

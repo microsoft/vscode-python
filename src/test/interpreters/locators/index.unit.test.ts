@@ -183,6 +183,78 @@ suite('Interpreters - Locators Index', () => {
                 expect(interpreters).to.be.lengthOf(locatorsTypes.length);
                 expect(interpreters).to.be.deep.equal(expectedInterpreters);
             });
+
+            test(`The pipenv locator service isn't used when the onActivation option is true ${testSuffix}`, async () => {
+                const locatorsTypes: string[] = [];
+                if (osType.value === OSType.Windows) {
+                    locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
+                }
+                platformSvc.setup((p) => p.osType).returns(() => osType.value);
+                platformSvc.setup((p) => p.isWindows).returns(() => osType.value === OSType.Windows);
+                platformSvc.setup((p) => p.isLinux).returns(() => osType.value === OSType.Linux);
+                platformSvc.setup((p) => p.isMac).returns(() => osType.value === OSType.OSX);
+
+                locatorsTypes.push(CONDA_ENV_SERVICE);
+                locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
+                locatorsTypes.push(PIPENV_SERVICE);
+                locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
+                locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
+                locatorsTypes.push(KNOWN_PATH_SERVICE);
+                locatorsTypes.push(CURRENT_PATH_SERVICE);
+
+                const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
+                    const interpreter: PythonInterpreter = {
+                        architecture: Architecture.Unknown,
+                        displayName: typeName,
+                        path: typeName,
+                        sysPrefix: typeName,
+                        sysVersion: typeName,
+                        type: InterpreterType.Unknown,
+                        version: new SemVer('0.0.0-alpha')
+                    };
+
+                    const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
+                    typeLocator
+                        .setup((l) => l.hasInterpreters)
+                        .returns(() => Promise.resolve(true))
+                        .verifiable(TypeMoq.Times.once());
+                    typeLocator
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .returns(() => Promise.resolve([interpreter]))
+                        .verifiable(TypeMoq.Times.once());
+
+                    serviceContainer
+                        .setup((c) =>
+                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
+                        )
+                        .returns(() => typeLocator.object);
+
+                    return {
+                        type: typeName,
+                        locator: typeLocator,
+                        interpreters: [interpreter]
+                    };
+                });
+
+                const expectedInterpreters: PythonInterpreter[] = [];
+                locatorsWithInterpreters.forEach((item) => {
+                    if (item.type !== PIPENV_SERVICE) {
+                        expectedInterpreters.push(item.interpreters[0]);
+                    }
+                });
+
+                // const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
+                helper
+                    .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(expectedInterpreters))
+                    .verifiable(TypeMoq.Times.once());
+
+                const interpreters = await locator.getInterpreters(resource, { onActivation: false });
+
+                locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
+                helper.verifyAll();
+                expect(interpreters).to.be.deep.equal(expectedInterpreters);
+            });
         });
     });
 });

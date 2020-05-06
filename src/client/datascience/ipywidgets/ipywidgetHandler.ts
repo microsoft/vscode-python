@@ -156,7 +156,9 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         if (!this.notebookIdentity || !this.enabled) {
             return;
         }
-        this.ipyWidgetMessageDispatcher = this.widgetMessageDispatcherFactory.create(this.notebookIdentity);
+        if (!this.ipyWidgetMessageDispatcher) {
+            this.ipyWidgetMessageDispatcher = this.widgetMessageDispatcherFactory.create(this.notebookIdentity);
+        }
         return this.ipyWidgetMessageDispatcher;
     }
 

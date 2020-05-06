@@ -7,7 +7,11 @@ import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
-import { getDebugpyLauncherArgs, getPtvsdLauncherScriptArgs } from './debugger/extension/adapter/remoteLaunchers';
+import {
+    getDebugpyLauncherArgs,
+    getDebugpyPackagePath,
+    getPtvsdLauncherScriptArgs
+} from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -33,6 +37,12 @@ export interface IExtensionApi {
          * @returns {Promise<string[]>}
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
+
+        /**
+         * Gets the path to the debugger package used by the extension.
+         * @returns {Promise<string>}
+         */
+        getDebuggerPackagePath(): Promise<string | undefined>;
     };
     /**
      * Return internal settings within the extension which are stored in VSCode storage
@@ -91,6 +101,15 @@ export function buildApi(
                     port,
                     waitUntilDebuggerAttaches
                 });
+            },
+            async getDebuggerPackagePath(): Promise<string | undefined> {
+                const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+
+                if (useNewDADebugger) {
+                    return getDebugpyPackagePath();
+                }
+
+                return undefined;
             }
         },
         settings: {

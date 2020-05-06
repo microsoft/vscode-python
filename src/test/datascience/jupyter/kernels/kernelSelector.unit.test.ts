@@ -9,17 +9,18 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
-import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
-import { IInstaller, Product, Resource } from '../../../../client/common/types';
+import { Resource } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
@@ -33,7 +34,8 @@ suite('Data Science - KernelSelector', () => {
     let kernelSelector: KernelSelector;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
-    let installer: IInstaller;
+    let dependencyService: KernelDependencyService;
+    let kernelFinder: IKernelFinder;
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -57,14 +59,16 @@ suite('Data Science - KernelSelector', () => {
         kernelService = mock(KernelService);
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
-        installer = mock(ProductInstaller);
+        dependencyService = mock(KernelDependencyService);
         interpreterService = mock(InterpreterService);
+        kernelFinder = mock<IKernelFinder>();
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(installer)
+            instance(dependencyService),
+            instance(kernelFinder)
         );
     });
     teardown(() => sinon.restore());
@@ -99,18 +103,25 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isEmpty(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -280,6 +291,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -290,12 +302,18 @@ suite('Data Science - KernelSelector', () => {
             kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
             // tslint:disable-next-line: no-any
             kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isEmpty(kernel);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -313,6 +331,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -323,13 +342,19 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -338,13 +363,14 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
         });
         test('If seleted interpreter has ipykernel installed, then return matching kernelspec and interpreter', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             when(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).thenResolve(
                 kernelSpec
             );
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -357,14 +383,20 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
-            verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
+            verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -379,12 +411,13 @@ suite('Data Science - KernelSelector', () => {
             ).never();
         });
         test('If seleted interpreter has ipykernel installed and there is no matching kernelSpec, then register a new kernel and return the new kernelspec and interpreter', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
             when(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).thenResolve();
             when(kernelService.registerKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -397,15 +430,21 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
-            verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
+            verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -419,11 +458,12 @@ suite('Data Science - KernelSelector', () => {
             ).never();
         });
         test('If seleted interpreter does not have ipykernel installed and there is no matching kernelspec, then register a new kernel and return the new kernelspec and interpreter', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(kernelService.registerKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
             when(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -436,13 +476,19 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(undefined, new StopWatch(), instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(
+                undefined,
+                'jupyter',
+                new StopWatch(),
+                instance(sessionManager)
+            );
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
-            verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
+            verify(dependencyService.areDependenciesInstalled(interpreter, anything())).once();
             verify(
                 kernelSelectionProvider.getKernelSelectionsForLocalSession(
                     anything(),
+                    'jupyter',
                     instance(sessionManager),
                     anything()
                 )
@@ -468,6 +514,7 @@ suite('Data Science - KernelSelector', () => {
         let selectLocalKernelStub: sinon.SinonStub<
             [
                 Resource,
+                'raw' | 'jupyter' | 'noConnection',
                 StopWatch,
                 (IJupyterSessionManager | undefined)?,
                 (CancellationToken | undefined)?,
@@ -491,17 +538,40 @@ suite('Data Science - KernelSelector', () => {
             selectLocalKernelStub.resolves({ kernelSpec, interpreter });
         });
         teardown(() => sinon.restore());
+        test('Raw kernel connection finds a valid kernel spec and interpreter', async () => {
+            when(kernelFinder.findKernelSpec(anything(), anything(), anything())).thenResolve(kernelSpec);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
+            ).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForLocalConnection(anything(), 'raw', undefined, nbMetadata);
+
+            assert.isOk(kernel.kernelSpec === kernelSpec);
+            assert.isOk(kernel.interpreter === interpreter);
+        });
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 anything(),
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -522,11 +592,17 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -542,7 +618,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.registerKernel(anything(), anything(), anything())).never();
         });
         test('If metadata contains kernel information, and there is matching kernelspec, then use current interpreter as a kernel', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(undefined);
@@ -559,11 +635,17 @@ suite('Data Science - KernelSelector', () => {
                 )
             ).thenResolve();
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 nbMetadata
             );
@@ -592,18 +674,24 @@ suite('Data Science - KernelSelector', () => {
             ).once();
         });
         test('If metadata is empty, then use active interperter and find a kernel matching active interpreter', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
             when(
-                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(
+                    anything(),
+                    anything(),
+                    anything(),
+                    anything()
+                )
             ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
+                'jupyter',
                 instance(sessionManager),
                 undefined
             );
@@ -621,7 +709,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.registerKernel(anything(), anything())).never();
         });
         test('Remote search works', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(undefined);
@@ -669,7 +757,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.registerKernel(anything(), anything(), anything())).never();
         });
         test('Remote search prefers same name as long as it is python', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(undefined);
@@ -724,7 +812,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.registerKernel(anything(), anything())).never();
         });
         test('Remote search prefers same version', async () => {
-            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(false);
             when(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(undefined);

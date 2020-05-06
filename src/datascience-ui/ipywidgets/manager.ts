@@ -18,6 +18,7 @@ import {
     InteractiveWindowMessages,
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
 import { KernelSocketOptions } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { create as createKernel } from './kernel';
@@ -184,13 +185,9 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
         const displayMsg = payload as KernelMessage.IDisplayDataMsg;
 
-        if (
-            displayMsg.content &&
-            displayMsg.content.data &&
-            displayMsg.content.data['application/vnd.jupyter.widget-view+json']
-        ) {
+        if (displayMsg.content && displayMsg.content.data && displayMsg.content.data[WIDGET_MIMETYPE]) {
             // tslint:disable-next-line: no-any
-            const data = displayMsg.content.data['application/vnd.jupyter.widget-view+json'] as any;
+            const data = displayMsg.content.data[WIDGET_MIMETYPE] as any;
             const modelId = data.model_id;
             let deferred = this.modelIdsToBeDisplayed.get(modelId);
             if (!deferred) {

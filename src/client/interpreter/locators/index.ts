@@ -10,6 +10,7 @@ import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
+    GetInterpreterLocatorOptions,
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
@@ -73,8 +74,8 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * interpreters.
      */
     @traceDecorators.verbose('Get Interpreters')
-    public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
-        const locators = this.getLocators();
+    public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+        const locators = this.getLocators(options);
         const promises = locators.map(async (provider) => provider.getInterpreters(resource));
         locators.forEach((locator) => {
             locator.hasInterpreters
@@ -100,23 +101,23 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      *
      * The locators are pulled from the registry.
      */
-    private getLocators(): IInterpreterLocatorService[] {
+    private getLocators(options?: GetInterpreterLocatorOptions): IInterpreterLocatorService[] {
         // The order of the services is important.
         // The order is important because the data sources at the bottom of the list do not contain all,
         //  the information about the interpreters (e.g. type, environment name, etc).
         // This way, the items returned from the top of the list will win, when we combine the items returned.
-        const keys: [string, OSType | undefined][] = [
+        const keys: [string | undefined, OSType | undefined][] = [
             [WINDOWS_REGISTRY_SERVICE, OSType.Windows],
             [CONDA_ENV_SERVICE, undefined],
             [CONDA_ENV_FILE_SERVICE, undefined],
-            [PIPENV_SERVICE, undefined],
+            options?.onActivation ? [undefined, undefined] : [PIPENV_SERVICE, undefined],
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
             [CURRENT_PATH_SERVICE, undefined]
         ];
         return keys
-            .filter((item) => item[1] === undefined || item[1] === this.platform.osType)
+            .filter((item) => item[0] !== undefined && (item[1] === undefined || item[1] === this.platform.osType))
             .map((item) => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
     }
 }

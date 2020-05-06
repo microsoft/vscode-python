@@ -218,12 +218,10 @@ export class JupyterExporter implements INotebookExporter {
 
     private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
-        return (
-            cells
-                .filter((c) => c.data.cell_type !== 'messages')
-                // Then prune each cell down to just the cell data.
-                .map((c) => this.pruneCell(c, cellMatcher))
-        );
+        const filtered = cells.filter((c) => c.data.cell_type !== 'messages');
+
+        // Then prune each cell down to just the cell data.
+        return filtered.map((c) => this.pruneCell(c, cellMatcher));
     };
 
     private pruneCell = (cell: ICell, cellMatcher: CellMatcher): nbformat.IBaseCell => {
