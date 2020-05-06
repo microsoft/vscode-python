@@ -370,7 +370,8 @@ suite('Data Science - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
-            instance(workspace)
+            instance(workspace),
+            []
         );
     }
 

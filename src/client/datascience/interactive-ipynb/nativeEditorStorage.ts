@@ -8,7 +8,14 @@ import { concatMultilineStringInput, splitMultilineString } from '../../../datas
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    ICryptoUtils,
+    IDisposableRegistry,
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
@@ -19,6 +26,7 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
+import { IDisposable } from 'monaco-editor';
 import { IWorkspaceService } from '../../common/application/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
@@ -36,7 +44,7 @@ interface INativeEditorStorageState {
 }
 
 @injectable()
-export class NativeEditorStorage implements INotebookModel, INotebookStorage {
+export class NativeEditorStorage implements INotebookModel, INotebookStorage, IDisposable {
     public get isDirty(): boolean {
         return this._state.changeCount !== this._state.saveChangeCount;
     }
@@ -68,6 +76,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     };
     private indentAmount: string = ' ';
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
+    private disposed = false;
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -76,8 +85,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService
-    ) {}
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
+        disposableRegistry.push(this);
+    }
+
+    public dispose() {
+        this.disposed = true;
+    }
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
         // Reload our cells
@@ -156,7 +172,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
-            if (!cancelToken?.isCancellationRequested) {
+            // Only write to storage if not disposed.
+            if (!cancelToken?.isCancellationRequested && !this.disposed) {
                 if (contents) {
                     await this.fileSystem.createDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
