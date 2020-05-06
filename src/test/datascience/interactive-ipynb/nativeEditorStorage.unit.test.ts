@@ -89,7 +89,7 @@ class MockWorkspaceConfiguration implements WorkspaceConfiguration {
 }
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Native Editor Storage', () => {
+suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let fileSystem: typemoq.IMock<IFileSystem>;
