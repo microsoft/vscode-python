@@ -122,7 +122,10 @@ export class KernelProcess implements IKernelProcess {
             await this.kernelDaemon.kill().catch(noop);
             swallowExceptions(() => this.kernelDaemon?.dispose());
         }
-        swallowExceptions(() => this._process?.kill());
+        swallowExceptions(() => {
+            this._process?.kill();
+            this.exitEvent.fire();
+        });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
         swallowExceptions(() => this.connectionFile?.dispose());
     }

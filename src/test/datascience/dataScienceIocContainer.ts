@@ -227,6 +227,7 @@ import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarte
 import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
@@ -756,11 +757,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
-        this.serviceManager.addSingleton<IDebugService>(
-            IDebugService,
-            MockDebuggerService,
-            Identifiers.MULTIPLEXING_DEBUGSERVICE,
-            [IJupyterDebugService]
+        this.serviceManager.addSingleton<IJupyterDebugService>(
+            IJupyterDebugService,
+            JupyterDebugService,
+            Identifiers.RUN_BY_LINE_DEBUGSERVICE
+        );
+        const mockDebugService = new MockDebuggerService(
+            this.serviceManager.get<IJupyterDebugService>(IJupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE)
+        );
+        this.serviceManager.addSingletonInstance<IDebugService>(IDebugService, mockDebugService);
+        this.serviceManager.addSingletonInstance<IJupyterDebugService>(
+            IJupyterDebugService,
+            mockDebugService,
+            Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
