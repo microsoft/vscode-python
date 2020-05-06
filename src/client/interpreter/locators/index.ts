@@ -105,7 +105,10 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * The locators are pulled from the registry.
      */
     private getLocators(options?: GetInterpreterLocatorOptions): IInterpreterLocatorService[] {
-        this.didTriggerInterpreterSuggestions = options?.onSuggestion || false;
+        // Set it to true the first time the user selects an interpreter
+        if (!this.didTriggerInterpreterSuggestions && options?.onSuggestion === true) {
+            this.didTriggerInterpreterSuggestions = options?.onSuggestion;
+        }
 
         // The order of the services is important.
         // The order is important because the data sources at the bottom of the list do not contain all,
@@ -115,7 +118,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [WINDOWS_REGISTRY_SERVICE, OSType.Windows],
             [CONDA_ENV_SERVICE, undefined],
             [CONDA_ENV_FILE_SERVICE, undefined],
-            options?.onActivation ? [undefined, undefined] : [PIPENV_SERVICE, undefined],
+            this.didTriggerInterpreterSuggestions ? [PIPENV_SERVICE, undefined] : [undefined, undefined],
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],

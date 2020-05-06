@@ -28,7 +28,6 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 }
 
 export type GetInterpreterOptions = {
-    onActivation?: boolean;
     onSuggestion?: boolean;
 };
 
