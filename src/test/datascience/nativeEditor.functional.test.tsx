@@ -385,8 +385,8 @@ df.head()`;
                         // find the buttons on the cell itself
                         let cell = getLastOutputCell(wrapper, 'NativeCell');
                         let ImageButtons = cell.find(ImageButton);
-                        assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
-                        let deleteButton = ImageButtons.at(5);
+                        assert.equal(ImageButtons.length, 7, 'Cell buttons not found'); // Note, run by line is there as a button, it's just disabled.
+                        let deleteButton = ImageButtons.at(6);
 
                         // Make sure delete works
                         let afterDelete = await getNativeCellResults(ioc, wrapper, async () => {
@@ -399,8 +399,8 @@ df.head()`;
                         // least one cell in the file.
                         cell = getLastOutputCell(wrapper, 'NativeCell');
                         ImageButtons = cell.find(ImageButton);
-                        assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
-                        deleteButton = ImageButtons.at(5);
+                        assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+                        deleteButton = ImageButtons.at(6);
 
                         afterDelete = await getNativeCellResults(
                             ioc,
@@ -776,7 +776,7 @@ df.head()`;
                     const cell = getOutputCell(wrapper, 'NativeCell', 1);
                     assert.ok(cell, 'Cannot find the first cell');
                     const imageButtons = cell!.find(ImageButton);
-                    assert.equal(imageButtons.length, 6, 'Cell buttons not found');
+                    assert.equal(imageButtons.length, 7, 'Cell buttons not found');
                     const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
                     const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
@@ -1226,8 +1226,8 @@ df.head()`;
                         // Delete the cell
                         let cell = getLastOutputCell(wrapper, 'NativeCell');
                         let imageButtons = cell.find(ImageButton);
-                        assert.equal(imageButtons.length, 6, 'Cell buttons not found');
-                        const deleteButton = imageButtons.at(5);
+                        assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+                        const deleteButton = imageButtons.at(6);
                         const afterDelete = await getNativeCellResults(ioc, wrapper, async () => {
                             deleteButton.simulate('click');
                             return Promise.resolve();
@@ -1250,7 +1250,7 @@ df.head()`;
                         // Move some cells around
                         cell = getLastOutputCell(wrapper, 'NativeCell');
                         imageButtons = cell.find(ImageButton);
-                        assert.equal(imageButtons.length, 6, 'Cell buttons not found');
+                        assert.equal(imageButtons.length, 7, 'Cell buttons not found');
                         const moveUpButton = imageButtons.at(0);
                         const afterMove = await getNativeCellResults(ioc, wrapper, async () => {
                             moveUpButton.simulate('click');
