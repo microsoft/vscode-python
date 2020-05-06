@@ -20,6 +20,7 @@ import { IKernelFinder } from '../../kernel-launcher/types';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager, IKernelDependencyService } from '../../types';
+import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
@@ -388,7 +389,7 @@ export class KernelSelector {
             return {};
         }
         // Check if ipykernel is installed in this kernel.
-        if (selection.selection.interpreter) {
+        if (selection.selection.interpreter && type === 'jupyter') {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             return this.useInterpreterAsKernel(
                 resource,
@@ -399,6 +400,8 @@ export class KernelSelector {
                 false,
                 cancelToken
             );
+        } else if (selection.selection.interpreter && type === 'raw') {
+            return this.useInterpreterAndDefaultKernel(selection.selection.interpreter);
         } else if (selection.selection.kernelModel) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
                 language: this.computeLanguage(selection.selection.kernelModel.language)
@@ -425,6 +428,26 @@ export class KernelSelector {
             return {};
         }
     }
+
+    // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
+    private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSpecInterpreter> {
+        // IANHU: Shared code with kernel finder
+        const defaultSpecName = 'python_defaultSpec_';
+        const connectionFilePlaceholder = '{connection_file}';
+        const defaultSpec: Kernel.ISpecModel = {
+            name: defaultSpecName + Date.now().toString(),
+            language: 'python',
+            display_name: interpreter.displayName ? interpreter.displayName : 'Python 3',
+            metadata: {},
+            argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
+            env: {},
+            resources: {}
+        };
+        const kernelSpec = new JupyterKernelSpec(defaultSpec);
+
+        return { kernelSpec, interpreter };
+    }
+
     /**
      * Use the provided interpreter as a kernel.
      * If `displayNameOfKernelNotFound` is provided, then display a message indicating we're using the `current interpreter`.
