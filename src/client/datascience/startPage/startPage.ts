@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { injectable, unmanaged } from 'inversify';
-import { Uri, ViewColumn } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { EventEmitter, Uri } from 'vscode';
 import { IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
@@ -14,27 +14,29 @@ import { IStartPage, IStartPageMapping } from './types';
 
 @injectable()
 export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage {
+    protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
+
     constructor(
         // @unmanaged() liveShare: ILiveShareApi,
         // @unmanaged() protected applicationShell: IApplicationShell,
         // @unmanaged() protected documentManager: IDocumentManager,
-        @unmanaged() provider: IWebPanelProvider,
-        @unmanaged() cssGenerator: ICodeCssGenerator,
-        @unmanaged() themeFinder: IThemeFinder,
+        @inject(IWebPanelProvider) provider: IWebPanelProvider,
+        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
+        @inject(IThemeFinder) themeFinder: IThemeFinder,
         // @unmanaged() protected jupyterExecution: IJupyterExecution,
         // @unmanaged() protected fileSystem: IFileSystem,
-        @unmanaged() protected configuration: IConfigurationService,
+        @inject(IConfigurationService) protected configuration: IConfigurationService,
         // @unmanaged() protected jupyterExporter: INotebookExporter,
-        @unmanaged() workspaceService: IWorkspaceService,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         // @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         // @unmanaged() protected readonly commandManager: ICommandManager,
         // @unmanaged() protected globalStorage: Memento,
-        @unmanaged() rootPath: string,
-        @unmanaged() scripts: string[],
-        @unmanaged() title: string,
-        @unmanaged() viewColumn: ViewColumn,
-        @unmanaged() experimentsManager: IExperimentsManager,
-        @unmanaged() useCustomEditorApi: boolean
+        // @inject(String) rootPath: string,
+        // @inject(String) scripts: string[],
+        // @inject(String) title: string,
+        // @unmanaged() viewColumn: ViewColumn,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        // @inject(Boolean) useCustomEditorApi: boolean
     ) {
         super(
             configuration,
@@ -43,23 +45,35 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             themeFinder,
             workspaceService,
             (c, v, d) => new StartPageMessageListener(c, v, d),
-            rootPath,
-            scripts,
-            title,
-            viewColumn,
+            'asd',
+            [''],
+            'Kut',
+            1,
             experimentsManager.inExperiment(''),
-            useCustomEditorApi
+            true
         );
     }
+
+    public dispose(): Promise<void> {
+        super.dispose();
+        return this.close();
+    }
+
     public get file(): Uri {
-        return Uri.file('');
+        return Uri.file('asd');
     }
     public async open(): Promise<void> {
+        await this.loadWebPanel(process.cwd());
         // open webview
         await super.show(true);
     }
 
     public async getOwningResource(): Promise<Resource> {
         return this.file;
+    }
+
+    public async close(): Promise<void> {
+        // Fire our event
+        this.closedEvent.fire(this);
     }
 }
