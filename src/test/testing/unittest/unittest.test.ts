@@ -222,6 +222,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
     });
 
     test('Re-run failed tests results in the correct number of tests counted', async function () {
+        // https://github.com/microsoft/vscode-python/issues/11634
         // tslint:disable-next-line: no-invalid-this
         return this.skip();
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
