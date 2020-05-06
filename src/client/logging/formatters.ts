@@ -48,8 +48,8 @@ function getMinimalFormatter() {
     return format.combine(
         format.timestamp({ format: TIMESTAMP }),
         format.printf(
-            // tslint:disable-next-line:no-any
-            ({ level, message, timestamp }) => formatMessage(level as any, timestamp, message)
+            // This relies on the timestamp formatter we added above:
+            ({ level, message, timestamp }) => formatMessage(level as LogLevelName, timestamp, message)
         )
     );
 }
@@ -61,8 +61,9 @@ function getLabeledFormatter(label_: string) {
         format.label({ label: label_ }),
         format.timestamp({ format: TIMESTAMP }),
         format.printf(
-            // tslint:disable-next-line:no-any
-            ({ level, message, label, timestamp }) => formatLabeledMessage(level as any, timestamp, label, message)
+            // This relies on the label and timestamp formatters we added above:
+            ({ level, message, label, timestamp }) =>
+                formatLabeledMessage(level as LogLevelName, timestamp, label, message)
         )
     );
 }
