@@ -31,6 +31,7 @@ import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
+import { CodIcon } from '../react-common/codicon/codicon';
 import '../react-common/codicon/codicon.css';
 
 namespace CssConstants {
@@ -613,11 +614,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={cont}
-                            tooltip={getLocString('DataScience.continue', 'Stop')}
+                            tooltip={getLocString('DataScience.continueRunByLine', 'Stop')}
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
-                            <div className="codicon codicon-button">{'\uead7'}</div>
+                            <div className="codicon codicon-button">{CodIcon.Stop}</div>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -626,7 +627,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy}
                         >
-                            <div className="codicon codicon-button">{'\uead4'}</div>
+                            <div className="codicon codicon-button">{CodIcon.RunByLine}</div>
                         </ImageButton>
                     </div>
                     <div className="native-editor-celltoolbar-divider" />
@@ -652,7 +653,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         hidden={this.isMarkdownCell() || !this.props.supportsRunByLine}
                         disabled={this.props.busy}
                     >
-                        <div className="codicon codicon-button">{'\uead4'}</div>
+                        <div className="codicon codicon-button">{CodIcon.RunByLine}</div>
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={otherCellImage} />

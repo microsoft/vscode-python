@@ -925,6 +925,8 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
+    export const runByLine = localize('DataScience.runByLine', 'Run by line');
+    export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
 }
 
 export namespace DebugConfigStrings {
