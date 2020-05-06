@@ -4,7 +4,8 @@
 
 import * as util from 'util';
 import * as winston from 'winston';
-import { isTestExecution } from '../common/constants';
+import * as Transport from 'winston-transport';
+import { isCI, isTestExecution } from '../common/constants';
 import { logToConsole, monkeypatchConsole } from './_console';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
@@ -64,32 +65,46 @@ export function _log(logLevel: LogLevel, ...args: Arguments) {
  *   this is setup on CI servers.
  */
 function initialize() {
-    // Hijack `console.log` when running tests on CI.
-    if (process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD) {
-        function logToFile(logLevel: LogLevel, ...args: Arguments) {
-            log([fileLogger], logLevel, args);
+    if (process.env.VSC_PYTHON_LOG_FILE) {
+        initializeFileLogging(fileLogger, process.env.VSC_PYTHON_LOG_FILE);
+        if (isCI) {
+            hijackConsole(fileLogger);
         }
-        monkeypatchConsole(logToFile);
-    }
-    // Do not log to console if running tests on CI and we're not
-    // asked to do so.
-    if (!isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING) {
-        // Rest of this stuff is just to instantiate the console logger.
-        // I.e. when we use our logger, ensure we also log to the
-        // console (for end users).
-        const formatter = getFormatter({
-            // In CI there's no need for the label.
-            label: process.env.TF_BUILD ? undefined : 'Python Extension:'
-        });
-        const transport = getConsoleTransport(logToConsole, formatter);
-        // tslint:disable-next-line:no-any
-        consoleLogger.add(transport as any);
     }
 
-    const logfile = process.env.VSC_PYTHON_LOG_FILE;
-    if (logfile) {
-        const formatter = getFormatter();
-        const transport = getFileTransport(logfile, formatter);
-        fileLogger.add(transport);
+    // Do not log to console if running tests and we're not
+    // asked to do so.
+    if (!isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING) {
+        if (isCI) {
+            // In CI there's no need for the label.
+            initializeConsoleLogging(consoleLogger);
+        } else {
+            initializeConsoleLogging(consoleLogger, 'Python Extension:');
+        }
     }
+}
+
+interface ILoggerTransports {
+    add(transport: Transport): void;
+}
+
+function initializeFileLogging(logger: ILoggerTransports, logfile: string) {
+    const formatter = getFormatter();
+    const transport = getFileTransport(logfile, formatter);
+    logger.add(transport);
+}
+
+function hijackConsole(logger: ILogger) {
+    function logToFile(logLevel: LogLevel, ...args: Arguments) {
+        log([logger], logLevel, args);
+    }
+    monkeypatchConsole(logToFile);
+}
+
+function initializeConsoleLogging(logger: ILoggerTransports, label?: string) {
+    // When we use our logger, ensure we also log to the console (for end users).
+    const formatter = getFormatter({ label });
+    const transport = getConsoleTransport(logToConsole, formatter);
+    // tslint:disable-next-line:no-any
+    logger.add(transport as any);
 }
