@@ -45,10 +45,7 @@ export enum ImageName {
     ExportToPython,
     ClearAllOutput,
     JupyterServerConnected,
-    JupyterServerDisconnected,
-    Step,
-    Continue,
-    RunByLine
+    JupyterServerDisconnected
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -199,18 +196,6 @@ const images: { [key: string]: { light: string; dark: string } } = {
     JupyterServerDisconnected: {
         light: require('./images/JupyterServerDisconnected/disconnected-light.svg'),
         dark: require('./images/JupyterServerDisconnected/disconnected-dark.svg')
-    },
-    RunByLine: {
-        light: require('./images/RunByLine/runbyline_light.svg'),
-        dark: require('./images/RunByLine/runbyline_dark.svg')
-    },
-    Continue: {
-        light: require('./images/Continue/continue_light.svg'),
-        dark: require('./images/Continue/continue_dark.svg')
-    },
-    Step: {
-        light: require('./images/Step/step_light.svg'),
-        dark: require('./images/Step/step_dark.svg')
     }
 };
 
