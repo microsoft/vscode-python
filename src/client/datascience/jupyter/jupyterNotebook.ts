@@ -1020,6 +1020,7 @@ export class JupyterNotebookBase implements INotebook {
             this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                    ignoreFocusOut: true,
                     password: hasPassword
                 })
                 .then((v) => {

@@ -139,8 +139,8 @@ class PythonDaemon(JupyterDaemon):
                 sys.stdout.flush()
 
     def _monitor_kernel(self):
-        while self.kernel.poll(timeout=None) is None:
-            pass
+        self.log.warn("Waiting for Kernel to die %s", self.kernel.pid)
+        self.kernel.wait(timeout=None)
 
         exit_code = self.kernel.poll()
         std_err = self.kernel.stderr.read()

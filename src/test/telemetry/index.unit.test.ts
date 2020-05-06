@@ -23,21 +23,15 @@ suite('Telemetry', () => {
         public static eventName: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
-        public static errorProps: string[] | undefined;
         public static clear() {
             Reporter.eventName = [];
             Reporter.properties = [];
             Reporter.measures = [];
-            Reporter.errorProps = undefined;
         }
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
             Reporter.eventName.push(eventName);
             Reporter.properties.push(properties!);
             Reporter.measures.push(measures!);
-        }
-        public sendTelemetryErrorEvent(eventName: string, properties?: {}, measures?: {}, errorProps?: string[]) {
-            this.sendTelemetryEvent(eventName, properties, measures);
-            Reporter.errorProps = errorProps;
         }
     }
 
@@ -100,7 +94,7 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([properties]);
     });
-    test('Send Telemetry with properties', () => {
+    test('Send Telemetry', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -128,33 +122,31 @@ suite('Telemetry', () => {
             originalEventName: eventName
         };
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
-        expect(Reporter.measures).to.deep.equal([measures]);
+        expect(Reporter.eventName).to.deep.equal(['ERROR', eventName]);
+        expect(Reporter.measures).to.deep.equal([measures, measures]);
         expect(Reporter.properties[0].stackTrace).to.be.length.greaterThan(1);
         delete Reporter.properties[0].stackTrace;
-        expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
-        expect(Reporter.errorProps).to.deep.equal([]);
+        expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
     });
-    test('Send Error Telemetry with stack trace', () => {
+    test('Send Error Telemetry', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        const root = EXTENSION_ROOT_DIR.replace(/\\/g, '/');
         error.stack = [
             'Error: Boo',
-            `at Context.test (${root}/src/test/telemetry/index.unit.test.ts:50:23)`,
-            `at callFn (${root}/node_modules/mocha/lib/runnable.js:372:21)`,
-            `at Test.Runnable.run (${root}/node_modules/mocha/lib/runnable.js:364:7)`,
-            `at Runner.runTest (${root}/node_modules/mocha/lib/runner.js:455:10)`,
-            `at ${root}/node_modules/mocha/lib/runner.js:573:12`,
-            `at next (${root}/node_modules/mocha/lib/runner.js:369:14)`,
-            `at ${root}/node_modules/mocha/lib/runner.js:379:7`,
-            `at next (${root}/node_modules/mocha/lib/runner.js:303:14)`,
-            `at ${root}/node_modules/mocha/lib/runner.js:342:7`,
-            `at done (${root}/node_modules/mocha/lib/runnable.js:319:5)`,
-            `at callFn (${root}/node_modules/mocha/lib/runnable.js:395:7)`,
-            `at Hook.Runnable.run (${root}/node_modules/mocha/lib/runnable.js:364:7)`,
-            `at next (${root}/node_modules/mocha/lib/runner.js:317:10)`,
-            `at Immediate.<anonymous> (${root}/node_modules/mocha/lib/runner.js:347:5)`,
+            `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
+            `at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:372:21)`,
+            `at Test.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)`,
+            `at Runner.runTest (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:455:10)`,
+            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:573:12`,
+            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:369:14)`,
+            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:379:7`,
+            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:303:14)`,
+            `at ${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:342:7`,
+            `at done (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:319:5)`,
+            `at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:395:7)`,
+            `at Hook.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)`,
+            `at next (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:317:10)`,
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
             'at runCallback (timers.js:789:20)',
             'at tryOnImmediate (timers.js:751:5)',
             'at processImmediate [as _immediateCallback] (timers.js:722:5)'
@@ -175,30 +167,112 @@ suite('Telemetry', () => {
         const stackTrace = Reporter.properties[0].stackTrace;
         delete Reporter.properties[0].stackTrace;
 
-        expect(Reporter.eventName).to.deep.equal(['ERROR']);
-        expect(Reporter.measures).to.deep.equal([measures]);
-        expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
+        expect(Reporter.eventName).to.deep.equal(['ERROR', eventName]);
+        expect(Reporter.measures).to.deep.equal([measures, measures]);
+        expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
         expect(stackTrace).to.be.length.greaterThan(1);
-        expect(Reporter.errorProps).to.deep.equal([]);
 
         const expectedStack = [
-            `at Context.test ${root}/src/test/telemetry/index.unit.test.ts:50:23`,
-            `at callFn ${root}/node_modules/mocha/lib/runnable.js:372:21`,
-            `at Test.Runnable.run ${root}/node_modules/mocha/lib/runnable.js:364:7`,
-            `at Runner.runTest ${root}/node_modules/mocha/lib/runner.js:455:10`,
-            `at  ${root}/node_modules/mocha/lib/runner.js:573:12`,
-            `at next ${root}/node_modules/mocha/lib/runner.js:369:14`,
-            `at  ${root}/node_modules/mocha/lib/runner.js:379:7`,
-            `at next ${root}/node_modules/mocha/lib/runner.js:303:14`,
-            `at  ${root}/node_modules/mocha/lib/runner.js:342:7`,
-            `at done ${root}/node_modules/mocha/lib/runnable.js:319:5`,
-            `at callFn ${root}/node_modules/mocha/lib/runnable.js:395:7`,
-            `at Hook.Runnable.run ${root}/node_modules/mocha/lib/runnable.js:364:7`,
-            `at next ${root}/node_modules/mocha/lib/runner.js:317:10`,
-            `at Immediate ${root}/node_modules/mocha/lib/runner.js:347:5`,
-            'at runCallback timers.js:789:20',
-            'at tryOnImmediate timers.js:751:5',
-            'at processImmediate [as _immediateCallback] timers.js:722:5'
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23\n\tat callFn <pvsc>/node_modules/mocha/lib/runnable.js:372:21',
+            'at Test.Runnable.run <pvsc>/node_modules/mocha/lib/runnable.js:364:7',
+            'at Runner.runTest <pvsc>/node_modules/mocha/lib/runner.js:455:10',
+            'at  <pvsc>/node_modules/mocha/lib/runner.js:573:12',
+            'at next <pvsc>/node_modules/mocha/lib/runner.js:369:14',
+            'at  <pvsc>/node_modules/mocha/lib/runner.js:379:7',
+            'at next <pvsc>/node_modules/mocha/lib/runner.js:303:14',
+            'at  <pvsc>/node_modules/mocha/lib/runner.js:342:7',
+            'at done <pvsc>/node_modules/mocha/lib/runnable.js:319:5',
+            'at callFn <pvsc>/node_modules/mocha/lib/runnable.js:395:7',
+            'at Hook.Runnable.run <pvsc>/node_modules/mocha/lib/runnable.js:364:7',
+            'at next <pvsc>/node_modules/mocha/lib/runner.js:317:10',
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5',
+            'at runCallback <hidden>/timers.js:789:20',
+            'at tryOnImmediate <hidden>/timers.js:751:5',
+            'at processImmediate [as _immediateCallback] <hidden>/timers.js:722:5'
+        ].join('\n\t');
+
+        expect(stackTrace).to.be.equal(expectedStack);
+    });
+    test('Ensure non extension file paths are stripped from stack trace', () => {
+        rewiremock.enable();
+        const error = new Error('Boo');
+        error.stack = [
+            'Error: Boo',
+            `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
+            'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
+            'at Test.Runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
+            'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+        ].join('\n\t');
+        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+
+        const eventName = 'Testing';
+        const properties = { hello: 'world', foo: 'bar' };
+        const measures = { start: 123, end: 987 };
+
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent(eventName as any, measures, properties as any, error);
+
+        const expectedErrorProperties = {
+            originalEventName: eventName
+        };
+
+        const stackTrace = Reporter.properties[0].stackTrace;
+        delete Reporter.properties[0].stackTrace;
+
+        expect(Reporter.eventName).to.deep.equal(['ERROR', eventName]);
+        expect(Reporter.measures).to.deep.equal([measures, measures]);
+        expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
+        expect(stackTrace).to.be.length.greaterThan(1);
+
+        const expectedStack = [
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
+            'at callFn <hidden>/runnable.js:372:21',
+            'at Test.Runnable.run <hidden>/runnable.js:364:7',
+            'at Runner.runTest <hidden>/runner.js:455:10',
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
+        ].join('\n\t');
+
+        expect(stackTrace).to.be.equal(expectedStack);
+    });
+    test('Ensure non function names containing file names (unlikely, but for sake of completeness) are stripped from stack trace', () => {
+        rewiremock.enable();
+        const error = new Error('Boo');
+        error.stack = [
+            'Error: Boo',
+            `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
+            'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
+            'at Test./usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
+            'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+        ].join('\n\t');
+        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+
+        const eventName = 'Testing';
+        const properties = { hello: 'world', foo: 'bar' };
+        const measures = { start: 123, end: 987 };
+
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent(eventName as any, measures, properties as any, error);
+
+        const expectedErrorProperties = {
+            originalEventName: eventName
+        };
+
+        const stackTrace = Reporter.properties[0].stackTrace;
+        delete Reporter.properties[0].stackTrace;
+
+        expect(Reporter.eventName).to.deep.equal(['ERROR', eventName]);
+        expect(Reporter.measures).to.deep.equal([measures, measures]);
+        expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
+        expect(stackTrace).to.be.length.greaterThan(1);
+
+        const expectedStack = [
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
+            'at callFn <hidden>/runnable.js:372:21',
+            'at <hidden>.run <hidden>/runnable.js:364:7',
+            'at Runner.runTest <hidden>/runner.js:455:10',
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
         ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);

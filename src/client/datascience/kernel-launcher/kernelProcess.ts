@@ -3,6 +3,7 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as tcpPortUsed from 'tcp-port-used';
 import { Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -11,6 +12,8 @@ import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
 import { findIndexOfConnectionFile } from './kernelFinder';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
@@ -61,6 +64,8 @@ export class KernelProcess implements IKernelProcess {
             await this.kernelDaemon?.interrupt();
         }
     }
+
+    @captureTelemetry(Telemetry.RawKernelProcessLaunch, undefined, true)
     public async launch(): Promise<void> {
         if (this.launchedOnce) {
             throw new Error('Kernel has already been launched.');
@@ -103,6 +108,9 @@ export class KernelProcess implements IKernelProcess {
                 }
             }
         );
+
+        // Don't return until our heartbeat channel is open for connections
+        return this.waitForHeartbeat();
     }
 
     public async dispose(): Promise<void> {
@@ -117,6 +125,20 @@ export class KernelProcess implements IKernelProcess {
         swallowExceptions(() => this._process?.kill());
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
         swallowExceptions(() => this.connectionFile?.dispose());
+    }
+
+    // Make sure that the heartbeat channel is open for connections
+    private async waitForHeartbeat() {
+        try {
+            // Wait until the port is open for connection
+            // First parameter is wait between retries, second parameter is total wait before error
+            await tcpPortUsed.waitUntilUsed(this.connection.hb_port, 200, 30_000);
+        } catch (error) {
+            // Make sure to dispose if we never get a heartbeat
+            this.dispose().ignoreErrors();
+            traceError('Timed out waiting to get a heartbeat from kernel process.');
+            throw new Error('Timed out waiting to get a heartbeat from kernel process.');
+        }
     }
 
     private async createAndUpdateConnectionFile() {
