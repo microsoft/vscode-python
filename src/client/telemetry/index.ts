@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
+// tslint:disable:no-reference no-any import-name no-any function-name
+/// <reference path="./vscode-extension-telemetry.d.ts" />
 import type { JSONObject } from '@phosphor/coreutils';
+import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
-// tslint:disable-next-line: import-name
-import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -27,12 +28,10 @@ import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
 
-// tslint:disable: no-any
-
 /**
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
- * Within DA, there's a completely different way to send telemetry.
+ * Withiin DA, there's a completely different way to send telemetry.
  * @returns {boolean}
  */
 function isTelemetrySupported(): boolean {
@@ -64,12 +63,14 @@ function getTelemetryReporter() {
     const extensionId = PVSC_EXTENSION_ID;
     // tslint:disable-next-line:no-require-imports
     const extensions = (require('vscode') as typeof import('vscode')).extensions;
+    // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
+    // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
 }
 
 export function clearTelemetryReporter() {
@@ -87,46 +88,45 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
-    let customProperties: Record<string, string> = {};
-    let eventNameSent = eventName as string;
 
-    if (ex) {
-        // When sending telemetry events for exceptions no need to send custom properties.
+    if (ex && (eventName as any) !== 'ERROR') {
+        // When sending `ERROR` telemetry event no need to send custom properties.
         // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        eventNameSent = 'ERROR';
-        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
-    } else {
-        if (properties) {
-            const data = properties as any;
-            Object.getOwnPropertyNames(data).forEach((prop) => {
-                if (data[prop] === undefined || data[prop] === null) {
-                    return;
-                }
-                try {
-                    // If there are any errors in serializing one property, ignore that and move on.
-                    // Else nothing will be sent.
-                    customProperties[prop] =
-                        typeof data[prop] === 'string'
-                            ? data[prop]
-                            : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
-                } catch (ex) {
-                    traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
-                }
-            });
-        }
-
-        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        const props: Record<string, string> = {};
+        props.stackTrace = getStackTrace(ex);
+        props.originalEventName = (eventName as any) as string;
+        reporter.sendTelemetryEvent('ERROR', props, measures);
     }
-
+    const customProperties: Record<string, string> = {};
+    if (properties) {
+        // tslint:disable-next-line:prefer-type-cast no-any
+        const data = properties as any;
+        Object.getOwnPropertyNames(data).forEach((prop) => {
+            if (data[prop] === undefined || data[prop] === null) {
+                return;
+            }
+            try {
+                // If there are any errors in serializing one property, ignore that and move on.
+                // Else nothign will be sent.
+                // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
+                (customProperties as any)[prop] =
+                    typeof data[prop] === 'string'
+                        ? data[prop]
+                        : typeof data[prop] === 'object'
+                        ? 'object'
+                        : data[prop].toString();
+            } catch (ex) {
+                traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+            }
+        });
+    }
+    reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
-            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+            `Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties
             )} `
         );
@@ -246,12 +246,32 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     }
 }
 
-function serializeStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might contain PII.
+function sanitizeFilename(filename: string): string {
+    if (filename.startsWith(EXTENSION_ROOT_DIR)) {
+        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
+    } else {
+        // We don't really care about files outside our extension.
+        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
+    }
+    return filename;
+}
+
+function sanitizeName(name: string): string {
+    if (name.indexOf('/') === -1 && name.indexOf('\\') === -1) {
+        return name;
+    } else {
+        return '<hidden>';
+    }
+}
+
+function getStackTrace(ex: Error): string {
+    // We aren't showing the error message (ex.message) since it might
+    // contain PII.
     let trace = '';
     for (const frame of stackTrace.parse(ex)) {
-        const filename = frame.getFileName();
+        let filename = frame.getFileName();
         if (filename) {
+            filename = sanitizeFilename(filename);
             const lineno = frame.getLineNumber();
             const colno = frame.getColumnNumber();
             trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
@@ -277,7 +297,7 @@ function getCallsite(frame: stackTrace.StackFrame) {
             parts.push(frame.getFunctionName());
         }
     }
-    return parts.join('.');
+    return parts.map(sanitizeName).join('.');
 }
 
 // Map all events to their properties
