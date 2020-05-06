@@ -151,7 +151,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
     public generateHashFileName(cell: ICell, expectedCount: number): string {
         // First get the true lines from the cell
-        const stripped = this.extractStrippedLines(cell);
+        const { stripped } = this.extractStrippedLines(cell);
 
         // Then use that to make a hash value
         const hashedCode = stripped.join('');
@@ -166,18 +166,8 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, cell.file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
-            const lines = splitMultilineString(cell.data.source);
-            const stripped = this.extractStrippedLines(cell);
+            const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 
-            // Figure out our true 'start' line. This is what we need to tell the debugger is
-            // actually the start of the code as that's what Jupyter will be getting.
-            let trueStartLine = cell.line;
-            for (let i = 0; i < stripped.length; i += 1) {
-                if (stripped[i] !== lines[i]) {
-                    trueStartLine += i + 1;
-                    break;
-                }
-            }
             const line = doc.lineAt(trueStartLine);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
 
@@ -280,9 +270,20 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         }
     }
 
-    private extractStrippedLines(cell: ICell): string[] {
+    private extractStrippedLines(cell: ICell): { stripped: string[]; trueStartLine: number } {
         // Compute the code that will really be sent to jupyter
+        const lines = splitMultilineString(cell.data.source);
         const stripped = this.extractExecutableLines(cell);
+
+        // Figure out our true 'start' line. This is what we need to tell the debugger is
+        // actually the start of the code as that's what Jupyter will be getting.
+        let trueStartLine = cell.line;
+        for (let i = 0; i < stripped.length; i += 1) {
+            if (stripped[i] !== lines[i]) {
+                trueStartLine += i + 1;
+                break;
+            }
+        }
 
         // Find the first non blank line
         let firstNonBlankIndex = 0;
@@ -312,7 +313,7 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             stripped[lastLinePos] = `${stripped[lastLinePos]}\n`;
         }
 
-        return stripped;
+        return { stripped, trueStartLine };
     }
 
     private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
