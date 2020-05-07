@@ -504,6 +504,20 @@ suite('Data Science - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).never();
         });
+        test('IANHU For a raw connection, if an interpreter is selected return it along with a default kernelspec', async () => {
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), 'raw', anything(), anything())
+            ).thenResolve([]);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
+                selection: { interpreter, kernelSpec: undefined }
+                // tslint:disable-next-line: no-any
+            } as any);
+
+            const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
+
+            assert.isOk(kernel.interpreter === interpreter);
+        });
     });
     // tslint:disable-next-line: max-func-body-length
     suite('Get a kernel for local sessions', () => {

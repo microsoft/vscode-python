@@ -18,17 +18,21 @@ const connectionFilePlaceholder = '{connection_file}';
 export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpec>): number {
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
 }
-export function createDefaultKernelSpec(interpreter?: PythonInterpreter): IJupyterKernelSpec {
+//export function createDefaultKernelSpec(interpreter?: PythonInterpreter): IJupyterKernelSpec {
+export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {
     // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: Kernel.ISpecModel = {
         name: defaultKernelSpecName + Date.now().toString(),
         language: 'python',
-        display_name: interpreter?.displayName || 'Python 3',
+        display_name: displayName || 'Python 3',
+        // tslint:disable-next-line: no-any
+        //metadata: interpreter ? { interpreter: interpreter as any } : {},
         metadata: {},
         argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},
         resources: {}
     };
+
     return new JupyterKernelSpec(defaultSpec);
 }
