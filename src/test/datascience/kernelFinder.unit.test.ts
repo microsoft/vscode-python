@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IExtensionContext, IInstaller, IPathUtils, Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { defaultKernelSpecName } from '../../client/datascience/jupyter/kernels/helpers';
 import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
@@ -463,6 +464,26 @@ suite('Kernel Finder', () => {
             // get default kernel
             const spec = await kernelFinder.findKernelSpec(resource);
             assert.equal(spec.name.includes('python_defaultSpec'), true);
+            fileSystem.reset();
+        });
+
+        test('Kernel metadata already has a default spec, return the same default spec', async () => {
+            setupFileSystem();
+            fileSystem
+                .setup((fs) => fs.readFile(typemoq.It.isAnyString()))
+                .returns((pathParam: string) => {
+                    if (pathParam.includes(cacheFile)) {
+                        return Promise.resolve('[]');
+                    }
+                    return Promise.resolve('{}');
+                });
+            // get default kernel
+            const spec = await kernelFinder.findKernelSpec(resource, {
+                name: defaultKernelSpecName,
+                display_name: 'TargetDisplayName'
+            });
+            assert.equal(spec.name.includes(defaultKernelSpecName), true);
+            expect(spec.display_name).to.equals('TargetDisplayName');
             fileSystem.reset();
         });
 
