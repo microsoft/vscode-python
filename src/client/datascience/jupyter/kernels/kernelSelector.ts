@@ -359,7 +359,6 @@ export class KernelSelector {
         // First use our kernel finder to locate a kernelspec on disk
         selection.kernelSpec = await this.kernelFinder.findKernelSpec(
             resource,
-            //notebookMetadata?.kernelspec?.name,
             notebookMetadata?.kernelspec,
             cancelToken
         );
@@ -432,7 +431,6 @@ export class KernelSelector {
 
     // When switching to an interpreter in raw kernel mode then just create a default kernelspec for that interpreter to use
     private async useInterpreterAndDefaultKernel(interpreter: PythonInterpreter): Promise<KernelSpecInterpreter> {
-        //const kernelSpec = createDefaultKernelSpec(interpreter);
         const kernelSpec = createDefaultKernelSpec(interpreter.displayName);
         return { kernelSpec, interpreter };
     }

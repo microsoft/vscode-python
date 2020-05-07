@@ -103,7 +103,7 @@ export class KernelFinder implements IKernelFinder {
                 foundKernel = this.reuseExistingDefaultSpec(kernelSpecMetadata);
             }
         } else {
-            // If we don't have a kernel name then just get a default spec to use
+            // If we don't have kernel metadata then just get a default spec to use
             foundKernel = await this.getDefaultKernelSpec(resource);
         }
 

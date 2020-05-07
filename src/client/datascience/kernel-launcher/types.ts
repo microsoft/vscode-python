@@ -47,7 +47,6 @@ export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     findKernelSpec(
         interpreterUri: InterpreterUri,
-        //kernelName?: string,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec>;
