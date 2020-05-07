@@ -7,4 +7,4 @@ export {
     traceInfo,
     traceVerbose,
     traceWarning
-} from '../logging/_trace';
+} from '../logging';
