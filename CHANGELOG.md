@@ -78,6 +78,8 @@
    ([#11576](https://github.com/Microsoft/vscode-python/issues/11576))
 1. Ensure kernel daemons are disposed correctly when closing notebooks.
    ([#11579](https://github.com/Microsoft/vscode-python/issues/11579))
+1. When VS quits, make sure to save contents of notebook for next reopen.
+   ([#11557](https://github.com/Microsoft/vscode-python/issues/11557))   
 
 ### Code Health
 
