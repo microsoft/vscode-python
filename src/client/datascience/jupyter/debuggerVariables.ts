@@ -49,7 +49,18 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         };
 
         if (this.debugService.activeDebugSession) {
-            result.pageResponse = this.lastKnownVariables;
+            const startPos = request.startIndex ? request.startIndex : 0;
+            const chunkSize = request.pageSize ? request.pageSize : 100;
+            result.pageStartIndex = startPos;
+
+            // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
+            for (const i = startPos; i < startPos + chunkSize && i < this.lastKnownVariables.length; ) {
+                const fullVariable = !this.lastKnownVariables[i].truncated
+                    ? this.lastKnownVariables[i]
+                    : await this.getFullVariable(this.lastKnownVariables[i]);
+                this.lastKnownVariables[i] = fullVariable;
+                result.pageResponse.push(fullVariable);
+            }
             result.totalCount = this.lastKnownVariables.length;
         }
 
@@ -74,12 +85,11 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         }
 
         // Then eval calling the main function with our target variable
-        const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
-            expression: `${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name})`,
+        const results = await this.evaluate(
+            `${DataFrameLoading.DataFrameInfoFunc}(${targetVariable.name})`,
             // tslint:disable-next-line: no-any
-            frameId: (targetVariable as any).frameId || this.topMostFrameId,
-            context: 'repl'
-        });
+            (targetVariable as any).frameId
+        );
 
         // Results should be the updated variable.
         return {
@@ -107,12 +117,11 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
 
         // Then eval calling the main function with our target variable
         const minnedEnd = Math.min(end, targetVariable.rowCount || 0);
-        const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
-            expression: `${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${minnedEnd})`,
+        const results = await this.evaluate(
+            `${DataFrameLoading.DataFrameRowFunc}(${targetVariable.name}, ${start}, ${minnedEnd})`,
             // tslint:disable-next-line: no-any
-            frameId: (targetVariable as any).frameId || this.topMostFrameId,
-            context: 'repl'
-        });
+            (targetVariable as any).frameId
+        );
 
         // Results should be the row.
         return JSON.parse(results.result.slice(1, -1));
@@ -131,11 +140,11 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
     }
 
     // tslint:disable-next-line: no-any
-    private async evalute(code: string): Promise<any> {
+    private async evaluate(code: string, frameId?: number): Promise<any> {
         if (this.debugService.activeDebugSession) {
             return this.debugService.activeDebugSession.customRequest('evaluate', {
                 expression: code,
-                frameId: this.topMostFrameId,
+                frameId: frameId || this.topMostFrameId,
                 context: 'repl'
             });
         }
@@ -144,9 +153,10 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
 
     private async importDataFrameScripts(): Promise<boolean> {
         try {
-            await this.evalute(DataFrameLoading.DataFrameSysImport);
-            await this.evalute(DataFrameLoading.DataFrameInfoImport);
-            await this.evalute(DataFrameLoading.DataFrameRowImport);
+            await this.evaluate(DataFrameLoading.DataFrameSysImport);
+            await this.evaluate(DataFrameLoading.DataFrameInfoImport);
+            await this.evaluate(DataFrameLoading.DataFrameRowImport);
+            await this.evaluate(DataFrameLoading.VariableInfoImport);
             return true;
         } catch (exc) {
             traceError('Error attempting to import in debugger', exc);
@@ -158,6 +168,26 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
         if (stackResponse.body.stackFrames[0]) {
             this.topMostFrameId = stackResponse.body.stackFrames[0].id;
         }
+    }
+
+    private async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
+        // See if we imported or not into the kernel our special function
+        if (!this.imported) {
+            this.imported = await this.importDataFrameScripts();
+        }
+
+        // Then eval calling the variable info function with our target variable
+        const results = await this.evaluate(
+            `${DataFrameLoading.VariableInfoFunc}(${variable.name})`,
+            // tslint:disable-next-line: no-any
+            (variable as any).frameId
+        );
+
+        // Results should be the updated variable.
+        return {
+            ...variable,
+            ...JSON.parse(results.result.slice(1, -1))
+        };
     }
 
     private updateVariables(resource: Resource, variablesResponse: DebugProtocol.VariablesResponse) {
@@ -193,7 +223,7 @@ export class DebuggerVariables implements IJupyterVariables, DebugAdapterTracker
                 size: 0,
                 supportsDataExplorer: DataViewableTypes.has(v.type || ''),
                 value: v.value,
-                truncated: false,
+                truncated: true,
                 frameId: v.variablesReference
             };
         });
