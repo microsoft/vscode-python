@@ -106,7 +106,7 @@ suite('Interpreters - selector', () => {
                 return { ...info, ...item };
             });
             interpreterService
-                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
             const actual = await selector.getSuggestions(undefined);
