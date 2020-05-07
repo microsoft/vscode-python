@@ -30,7 +30,13 @@ import {
 import { isResource } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    InterpreterUri,
+    IProductPathService,
+    IProductService
+} from './types';
 
 export { Product } from '../types';
 
@@ -76,14 +82,18 @@ export abstract class BaseInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        installer?: IModuleInstaller
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
 
         const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
-        const installer = await channels.getInstallationChannel(product, resource);
+        if (!installer) {
+            installer = await channels.getInstallationChannel(product, resource);
+        }
+
         if (!installer) {
             return InstallerResponse.Ignore;
         }
@@ -407,9 +417,10 @@ export class ProductInstaller implements IInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken
+        cancel?: CancellationToken,
+        installer?: IModuleInstaller
     ): Promise<InstallerResponse> {
-        return this.createInstaller(product).install(product, resource, cancel);
+        return this.createInstaller(product).install(product, resource, cancel, installer);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller(product).isInstalled(product, resource);
