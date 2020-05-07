@@ -9,7 +9,6 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { DeprecatePythonPath } from '../../../common/experimentGroups';
 import { IDisposableRegistry, IExperimentsManager, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
-import { learnMoreOnInterpreterSecurityURI } from '../../../interpreter/autoSelection/constants';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -96,13 +95,6 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
             },
             {
                 prompt: Common.noIWillDoItLater()
-            },
-            {
-                prompt: Common.moreInfo(),
-                command: commandFactory.createCommand(diagnostic, {
-                    type: 'launch',
-                    options: learnMoreOnInterpreterSecurityURI
-                })
             },
             {
                 prompt: Common.doNotShowAgain(),

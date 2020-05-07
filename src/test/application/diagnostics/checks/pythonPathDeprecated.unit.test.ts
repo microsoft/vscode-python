@@ -142,7 +142,6 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         });
         test('Python Path Deprecated Diagnostic is handled as expected', async () => {
             const diagnostic = new PythonPathDeprecatedDiagnostic('message', resource);
-            const launchCmd = ({ cmd: 'launchCmd' } as any) as IDiagnosticCommand;
             const ignoreCmd = ({ cmd: 'ignoreCmd' } as any) as IDiagnosticCommand;
             filterService
                 .setup((f) =>
@@ -154,15 +153,6 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
                 .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
                 .returns(() => Promise.resolve())
-                .verifiable(typemoq.Times.once());
-            commandFactory
-                .setup((f) =>
-                    f.createCommand(
-                        typemoq.It.isAny(),
-                        typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
-                    )
-                )
-                .returns(() => launchCmd)
                 .verifiable(typemoq.Times.once());
 
             commandFactory
@@ -180,16 +170,12 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
             messageHandler.verifyAll();
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
-            expect(messagePrompt!.commandPrompts.length).to.equal(4, 'Incorrect length');
+            expect(messagePrompt!.commandPrompts.length).to.equal(3, 'Incorrect length');
             expect(messagePrompt!.commandPrompts[0].command).not.be.equal(undefined, 'Command not set');
             expect(messagePrompt!.commandPrompts[0].command!.diagnostic).to.be.deep.equal(diagnostic);
             expect(messagePrompt!.commandPrompts[0].prompt).to.be.deep.equal(Common.yesPlease());
             expect(messagePrompt!.commandPrompts[1]).to.be.deep.equal({ prompt: Common.noIWillDoItLater() });
             expect(messagePrompt!.commandPrompts[2]).to.be.deep.equal({
-                prompt: Common.moreInfo(),
-                command: launchCmd
-            });
-            expect(messagePrompt!.commandPrompts[3]).to.be.deep.equal({
                 prompt: Common.doNotShowAgain(),
                 command: ignoreCmd
             });
