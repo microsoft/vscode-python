@@ -3,6 +3,7 @@
 'use strict';
 import * as React from 'react';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { InputHistory } from './inputHistory';
 import { ICellViewModel } from './mainState';
@@ -37,8 +38,12 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     public componentDidMount() {
         this.scrollToBottom();
     }
-    public componentWillReceiveProps() {
-        this.scrollToBottom();
+    public componentWillReceiveProps(prevProps: IContentPanelProps) {
+        // Scroll if we suddenly finished or updated a cell. This should happen on
+        // finish, updating output, etc.
+        if (!fastDeepEqual(prevProps.cellVMs, this.props.cellVMs)) {
+            this.scrollToBottom();
+        }
     }
 
     public computeIsAtBottom(parent: HTMLDivElement): boolean {

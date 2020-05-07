@@ -389,6 +389,7 @@ export interface IDataScienceSettings {
     disableJupyterAutoStart?: boolean;
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
+    alwaysScrollOnNewCell?: boolean;
 }
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
