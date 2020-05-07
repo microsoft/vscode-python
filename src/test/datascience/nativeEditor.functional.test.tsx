@@ -733,6 +733,9 @@ df.head()`;
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                         await threeCellsUpdated;
                         verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
+
+                        // Make sure the storage we write out is finished or this test will mess up other tests
+                        await sleep(500);
                     },
                     () => {
                         // Disable the warning displayed by nodejs when there are too many listeners.
