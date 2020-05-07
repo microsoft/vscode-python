@@ -9,9 +9,9 @@ import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { InstallationChannelManager } from '../../../common/installer/channelManager';
 import { ProductNames } from '../../../common/installer/productNames';
-import { IInstallationChannelManager, IModuleInstaller } from '../../../common/installer/types';
+import { IInstallationChannelManager } from '../../../common/installer/types';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
-import { DataScience } from '../../../common/utils/localize';
+import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
@@ -49,17 +49,24 @@ export class KernelDependencyService implements IKernelDependencyService {
         );
         const installerToken = wrapCancellationTokens(token);
 
-        const channels = await this.channelManager.getInstallationChannels();
         const selection = await Promise.race([
-            this.appShell.showErrorMessage(message, ...channels.map((installer) => installer.displayName)),
+            this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise
         ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        if (selection) {
-            const installerModule: IModuleInstaller | undefined = channels.find((v) => v.displayName === selection);
+        if (selection === Common.install()) {
+            const channels = await this.channelManager.getInstallationChannels();
+
+            // Pick an installerModule based on whether the interpreter is conda or not.
+            let installerModule;
+            if (interpreter.type && interpreter.type === 'Conda') {
+                installerModule = channels.find((v) => v.displayName.includes('Conda'));
+            } else {
+                installerModule = channels.find((v) => !v.displayName.includes('Conda'));
+            }
             const cancellatonPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
