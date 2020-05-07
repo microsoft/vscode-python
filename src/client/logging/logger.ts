@@ -39,9 +39,9 @@ function getLevelName(level: LogLevel, logger: ILogger): string {
 
 // Emit a log message derived from the args to all enabled transports.
 function log(loggers: ILogger[], logLevel: LogLevel, args: Arguments) {
+    const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
     for (const logger of loggers) {
         if (logger.transports.length > 0) {
-            const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
             const levelName = getLevelName(logLevel, logger);
             logger.log(levelName, message);
         }

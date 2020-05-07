@@ -8,16 +8,6 @@ import { LogLevel } from './levels';
 // Ensure that the console functions are bound before monkeypatching.
 import './transports';
 
-// The logging "streams" (methods) of the node console.
-enum ConsoleStream {
-    Log = 'log',
-    Error = 'error',
-    Warn = 'warn',
-    Info = 'info',
-    Debug = 'debug',
-    Trace = 'trace'
-}
-
 /**
  * What we're doing here is monkey patching the console.log so we can
  * send everything sent to console window into our logs.  This is only
@@ -28,13 +18,15 @@ enum ConsoleStream {
  */
 // tslint:disable-next-line:no-any
 export function monkeypatchConsole(log: (logLevel: LogLevel, ...args: any[]) => void) {
+    // The logging "streams" (methods) of the node console.
+    const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {
         error: LogLevel.Error,
         warn: LogLevel.Warn
     };
     // tslint:disable-next-line:no-any
     const consoleAny: any = console;
-    for (const stream of Object.values(ConsoleStream)) {
+    for (const stream of streams) {
         // Using symbols guarantee the properties will be unique & prevents
         // clashing with names other code/library may create or have created.
         // We could use a closure but it's a bit trickier.
