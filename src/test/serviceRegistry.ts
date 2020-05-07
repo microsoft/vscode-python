@@ -55,7 +55,6 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
-    IPipEnvService,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
@@ -379,7 +378,6 @@ export class IocContainer {
             KnownPathsService,
             KNOWN_PATH_SERVICE
         );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
 
         this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
             IInterpreterLocatorHelper,

@@ -60,7 +60,6 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -200,7 +199,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
         WORKSPACE_VIRTUAL_ENV_SERVICE
     );
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
-    serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
 
     serviceManager.addSingleton<IInterpreterLocatorService>(
         IInterpreterLocatorService,

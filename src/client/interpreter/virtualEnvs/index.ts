@@ -12,7 +12,7 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { getNamesAndValues } from '../../common/utils/enum';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType, IPipEnvService } from '../contracts';
+import { IInterpreterLocatorService, InterpreterType, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 
 const PYENVFILES = ['pyvenv.cfg', path.join('..', 'pyvenv.cfg')];
@@ -27,7 +27,10 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.pipEnvService = serviceContainer.get<IPipEnvService>(IPipEnvService);
+        this.pipEnvService = serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PIPENV_SERVICE
+        ) as IPipEnvService;
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public async getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
@@ -37,6 +40,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
+
         if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath))) {
             // In pipenv, return the folder name of the workspace.
             return path.basename(workspaceUri.fsPath);

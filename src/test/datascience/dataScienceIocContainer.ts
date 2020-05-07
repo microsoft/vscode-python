@@ -324,7 +324,6 @@ import {
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
-    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -1050,7 +1049,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 PipEnvService,
                 PIPENV_SERVICE
             );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
             this.serviceManager.addSingleton<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 WindowsRegistryService,
