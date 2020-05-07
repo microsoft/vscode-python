@@ -83,6 +83,9 @@ import {
 use(chaiAsPromised);
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
+async function updateFileConfig(ioc: DataScienceIocContainer, key: string, value: any) {
+    return ioc.get<IWorkspaceService>(IWorkspaceService).getConfiguration('file').update(key, value);
+}
 
 suite('DataScience Native Editor', () => {
     const originalPlatform = window.navigator.platform;
@@ -641,6 +644,8 @@ df.head()`;
                 runMountedTest(
                     'RunAllCells',
                     async (wrapper) => {
+                        // Make sure we don't write to storage for the notebook. It messes up other tests
+                        await updateFileConfig(ioc, 'autoSave', 'onFocusChange');
                         addMockData(ioc, 'print(1)\na=1', 1);
                         addMockData(ioc, 'a=a+1\nprint(a)', 2);
                         addMockData(ioc, 'print(a+1)', 3);
@@ -2122,17 +2127,10 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a', false);
                     }
 
-                    async function updateFileConfig(key: string, value: any) {
-                        return ioc
-                            .get<IWorkspaceService>(IWorkspaceService)
-                            .getConfiguration('file')
-                            .update(key, value);
-                    }
-
                     test('Auto save notebook every 1s', async () => {
                         // Configure notebook to save automatically ever 1s.
-                        await updateFileConfig('autoSave', 'afterDelay');
-                        await updateFileConfig('autoSaveDelay', 1_000);
+                        await updateFileConfig(ioc, 'autoSave', 'afterDelay');
+                        await updateFileConfig(ioc, 'autoSaveDelay', 1_000);
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         /**
@@ -2165,8 +2163,8 @@ df.head()`;
 
                     test('File saved with same format', async () => {
                         // Configure notebook to save automatically ever 1s.
-                        await updateFileConfig('autoSave', 'afterDelay');
-                        await updateFileConfig('autoSaveDelay', 2_000);
+                        await updateFileConfig(ioc, 'autoSave', 'afterDelay');
+                        await updateFileConfig(ioc, 'autoSaveDelay', 2_000);
 
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
@@ -2190,8 +2188,8 @@ df.head()`;
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
 
                         // Configure notebook to to never save.
-                        await updateFileConfig('autoSave', 'off');
-                        await updateFileConfig('autoSaveDelay', 1_000);
+                        await updateFileConfig(ioc, 'autoSave', 'off');
+                        await updateFileConfig(ioc, 'autoSaveDelay', 1_000);
 
                         // Update the settings and wait for the component to receive it and process it.
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
@@ -2231,7 +2229,7 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        await updateFileConfig('autoSave', 'onFocusChange');
+                        await updateFileConfig(ioc, 'autoSave', 'onFocusChange');
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, change the active editor.
@@ -2263,7 +2261,7 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when window state changes.
-                        await updateFileConfig('autoSave', 'onWindowChange');
+                        await updateFileConfig(ioc, 'autoSave', 'onWindowChange');
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, change the active editor.
@@ -2289,7 +2287,7 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        await updateFileConfig('autoSave', configSetting);
+                        await updateFileConfig(ioc, 'autoSave', configSetting);
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, send notification about changes to window state.
@@ -2321,7 +2319,7 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        await updateFileConfig('autoSave', 'onFocusChange');
+                        await updateFileConfig(ioc, 'autoSave', 'onFocusChange');
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Force a view state change

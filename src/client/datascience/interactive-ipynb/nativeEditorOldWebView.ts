@@ -139,6 +139,11 @@ export class NativeEditorOldWebView extends NativeEditor {
         // Update our title to match
         this.setTitle(path.basename(model.file.fsPath));
 
+        // Update dirty if model started out that way
+        if (this.model?.isDirty) {
+            this.setDirty().ignoreErrors();
+        }
+
         // Show ourselves
         await this.show();
         this.model?.changed(() => {
