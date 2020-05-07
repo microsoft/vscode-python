@@ -60,6 +60,7 @@ suite('Interpreters - PipEnv', () => {
             let settings: TypeMoq.IMock<IPythonSettings>;
             let pipenvPathSetting: string;
             let pipEnvServiceHelper: IPipEnvServiceHelper;
+
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -136,6 +137,11 @@ suite('Interpreters - PipEnv', () => {
                 pipenvPathSetting = 'pipenv';
 
                 pipEnvService = new PipEnvService(serviceContainer.object);
+                sinon.stub(pipEnvService, 'didTriggerInterpreterSuggestions').get(() => true);
+            });
+
+            teardown(() => {
+                sinon.restore();
             });
 
             test(`Should return an empty list'${testSuffix}`, () => {
