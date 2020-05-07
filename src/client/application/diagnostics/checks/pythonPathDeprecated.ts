@@ -99,10 +99,17 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
             },
             {
                 prompt: Common.moreInfo(),
-                command: commandFactory.createCommand(diagnostic, {
-                    type: 'launch',
-                    options: learnMoreOnInterpreterSecurityURI
-                })
+                command: {
+                    diagnostic,
+                    invoke: async (): Promise<void> => {
+                        const launchCommand = commandFactory.createCommand(diagnostic, {
+                            type: 'launch',
+                            options: learnMoreOnInterpreterSecurityURI
+                        });
+                        await launchCommand.invoke();
+                        return this.messageService.handle(diagnostic, { commandPrompts: options });
+                    }
+                }
             },
             {
                 prompt: Common.doNotShowAgain(),
