@@ -176,7 +176,11 @@ export class KernelFinder implements IKernelFinder {
             traceError(`Failed to parse kernelspec ${specPath}`);
             return undefined;
         }
-        return new JupyterKernelSpec(kernelJson, specPath);
+        const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(kernelJson, specPath);
+
+        // Some registered kernel specs do not have a name, in this case use the last part of the path
+        kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
+        return kernelSpec;
     }
 
     // For the given resource, find atll the file paths for kernel specs that wewant to associate with this
@@ -350,12 +354,7 @@ export class KernelFinder implements IKernelFinder {
         });
 
         if (kernelJsonFile) {
-            const spec = await this.getKernelSpec(kernelJsonFile);
-
-            if (spec) {
-                spec.name = kernelName;
-                return spec;
-            }
+            return this.getKernelSpec(kernelJsonFile);
         }
 
         return undefined;
