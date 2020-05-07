@@ -30,11 +30,12 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
  */
 @injectable()
 export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
+    public didTriggerInterpreterSuggestions: boolean;
+
     private readonly disposables: Disposable[] = [];
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
-    private didTriggerInterpreterSuggestions: boolean;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -105,27 +106,31 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * The locators are pulled from the registry.
      */
     private getLocators(options?: GetInterpreterLocatorOptions): IInterpreterLocatorService[] {
-        // Set it to true the first time the user selects an interpreter
-        if (!this.didTriggerInterpreterSuggestions && options?.onSuggestion === true) {
-            this.didTriggerInterpreterSuggestions = options?.onSuggestion;
-        }
-
         // The order of the services is important.
         // The order is important because the data sources at the bottom of the list do not contain all,
         //  the information about the interpreters (e.g. type, environment name, etc).
         // This way, the items returned from the top of the list will win, when we combine the items returned.
-        const keys: [string | undefined, OSType | undefined][] = [
+        const keys: [string, OSType | undefined][] = [
             [WINDOWS_REGISTRY_SERVICE, OSType.Windows],
             [CONDA_ENV_SERVICE, undefined],
             [CONDA_ENV_FILE_SERVICE, undefined],
-            this.didTriggerInterpreterSuggestions ? [PIPENV_SERVICE, undefined] : [undefined, undefined],
+            [PIPENV_SERVICE, undefined],
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
             [CURRENT_PATH_SERVICE, undefined]
         ];
-        return keys
-            .filter((item) => item[0] !== undefined && (item[1] === undefined || item[1] === this.platform.osType))
+
+        const locators = keys
+            .filter((item) => item[1] === undefined || item[1] === this.platform.osType)
             .map((item) => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
+
+        // Set it to true the first time the user selects an interpreter
+        if (!this.didTriggerInterpreterSuggestions && options?.onSuggestion === true) {
+            this.didTriggerInterpreterSuggestions = true;
+            locators.forEach((locator) => (locator.didTriggerInterpreterSuggestions = true));
+        }
+
+        return locators;
     }
 }

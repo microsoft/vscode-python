@@ -38,6 +38,7 @@ export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
     readonly hasInterpreters: Promise<boolean>;
+    didTriggerInterpreterSuggestions?: boolean;
     getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]>;
 }
 
