@@ -38,6 +38,7 @@ suite('Kernel Finder', () => {
     let interpreters: PythonInterpreter[] = [];
     let resource: Resource;
     const kernelName = 'testKernel';
+    const testKernelMetadata = { name: 'testKernel', display_name: 'Test Display Name' };
     const cacheFile = 'kernelSpecPathCache.json';
     const kernel: JupyterKernelSpec = {
         name: 'testKernel',
@@ -359,7 +360,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, kernelName);
+            const spec = await kernelFinder.findKernelSpec(resource, testKernelMetadata);
             assert.deepEqual(spec, kernel, 'The found kernel spec is not the same.');
             fileSystem.reset();
         });
@@ -374,7 +375,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(resource, kernelName);
+            const spec = await kernelFinder.findKernelSpec(resource, testKernelMetadata);
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -426,7 +427,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
+            const spec = await kernelFinder.findKernelSpec(activeInterpreter, testKernelMetadata);
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -444,7 +445,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve(JSON.stringify(kernel));
                 });
-            const spec = await kernelFinder.findKernelSpec(activeInterpreter, kernelName);
+            const spec = await kernelFinder.findKernelSpec(activeInterpreter, testKernelMetadata);
             expect(spec).to.deep.include(kernel);
             fileSystem.reset();
         });
@@ -493,7 +494,7 @@ suite('Kernel Finder', () => {
                 .verifiable(typemoq.Times.once());
 
             // get the same kernel, but from cache
-            const spec2 = await kernelFinder.findKernelSpec(resource, spec.name);
+            const spec2 = await kernelFinder.findKernelSpec(resource, { name: spec.name, display_name: '' });
             assert.notStrictEqual(spec, spec2);
 
             fileSystem.verifyAll();
@@ -517,7 +518,7 @@ suite('Kernel Finder', () => {
                     return Promise.resolve('');
                 });
 
-            const spec = await kernelFinder.findKernelSpec(resource, 'kernelA');
+            const spec = await kernelFinder.findKernelSpec(resource, { name: 'kernelA', display_name: '' });
             assert.equal(spec.name.includes('kernelA'), true);
             fileSystem.reset();
 
@@ -545,7 +546,7 @@ suite('Kernel Finder', () => {
                     }
                     return Promise.resolve('{}');
                 });
-            const spec2 = await kernelFinder.findKernelSpec(resource, 'kernelB');
+            const spec2 = await kernelFinder.findKernelSpec(resource, { name: 'kernelB', display_name: '' });
             assert.equal(spec2.name.includes('kernelB'), true);
         });
     });

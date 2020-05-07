@@ -61,7 +61,6 @@ export class KernelFinder implements IKernelFinder {
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernelSpec(
         resource: Resource,
-        //kernelName?: string,
         kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec> {

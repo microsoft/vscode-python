@@ -3,7 +3,6 @@
 'use strict';
 
 import type { Kernel } from '@jupyterlab/services';
-import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
