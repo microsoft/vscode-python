@@ -25,12 +25,24 @@ interface ILogger {
     log(level: string, message: string): void;
 }
 
+function getLevelName(level: LogLevel, logger: ILogger): string {
+    const levelName = resolveLevelName(level, logger.levels);
+    if (levelName) {
+        return levelName;
+    } else if (logger === consoleLogger) {
+        // XXX Hard-coding this is fragile:
+        return 'silly';
+    } else {
+        return resolveLevelName(LogLevel.Info, logger.levels) || 'info';
+    }
+}
+
 // Emit a log message derived from the args to all enabled transports.
 function log(loggers: ILogger[], logLevel: LogLevel, args: Arguments) {
     for (const logger of loggers) {
         if (logger.transports.length > 0) {
             const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
-            const levelName: string = resolveLevelName(logLevel, logger.levels) || '';
+            const levelName = getLevelName(logLevel, logger);
             logger.log(levelName, message);
         }
     }
@@ -68,7 +80,7 @@ function initialize() {
     if (process.env.VSC_PYTHON_LOG_FILE) {
         initializeFileLogging(fileLogger, process.env.VSC_PYTHON_LOG_FILE);
         if (isCI) {
-            hijackConsole(consoleLogger, fileLogger);
+            sendConsoleToLogger(fileLogger);
         }
     }
 
@@ -94,7 +106,7 @@ function initializeFileLogging(logger: ILoggerTransports, logfile: string) {
     logger.add(transport);
 }
 
-function hijackConsole(...loggers: ILogger[]) {
+function sendConsoleToLogger(...loggers: ILogger[]) {
     function logToAll(logLevel: LogLevel, ...args: Arguments) {
         log(loggers, logLevel, args);
     }

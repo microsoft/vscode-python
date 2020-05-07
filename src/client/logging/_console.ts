@@ -5,9 +5,18 @@
 // tslint:disable:no-console
 
 import { LogLevel } from './levels';
+// Ensure that the console functions are bound before monkeypatching.
+import './transports';
 
-// tslint:disable-next-line:no-any
-type Arguments = any[];
+// The logging "streams" (methods) of the node console.
+enum ConsoleStream {
+    Log = 'log',
+    Error = 'error',
+    Warn = 'warn',
+    Info = 'info',
+    Debug = 'debug',
+    Trace = 'trace'
+}
 
 /**
  * What we're doing here is monkey patching the console.log so we can
@@ -18,35 +27,26 @@ type Arguments = any[];
  * (via the logs).
  */
 // tslint:disable-next-line:no-any
-export function monkeypatchConsole(log: (logLevel: LogLevel, ...args: Arguments) => void) {
-    // tslint:disable-next-line: no-function-expression
-    console.log = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log((undefined as unknown) as LogLevel, ...args);
+export function monkeypatchConsole(log: (logLevel: LogLevel, ...args: any[]) => void) {
+    const levels: { [key: string]: LogLevel } = {
+        error: LogLevel.Error,
+        warn: LogLevel.Warn
     };
-    // tslint:disable-next-line: no-function-expression
-    console.info = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log(LogLevel.Info, ...args);
-    };
-    // tslint:disable-next-line: no-function-expression
-    console.warn = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log(LogLevel.Warn, ...args);
-    };
-    // tslint:disable-next-line: no-function-expression
-    console.error = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log(LogLevel.Error, ...args);
-    };
-    // tslint:disable-next-line: no-function-expression
-    console.debug = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log(LogLevel.Info, ...args);
-    };
-    // tslint:disable-next-line: no-function-expression
-    console.trace = function () {
-        const args = Array.prototype.slice.call(arguments);
-        log(LogLevel.Info, ...args);
-    };
+    // tslint:disable-next-line:no-any
+    const consoleAny: any = console;
+    for (const stream of Object.values(ConsoleStream)) {
+        // Using symbols guarantee the properties will be unique & prevents
+        // clashing with names other code/library may create or have created.
+        // We could use a closure but it's a bit trickier.
+        const sym = Symbol.for(stream);
+        consoleAny[sym] = consoleAny[stream];
+        // tslint:disable-next-line: no-function-expression
+        consoleAny[stream] = function () {
+            const args = Array.prototype.slice.call(arguments);
+            const fn = consoleAny[sym];
+            fn(...args);
+            const level = levels[stream] || LogLevel.Info;
+            log(level, ...args);
+        };
+    }
 }
