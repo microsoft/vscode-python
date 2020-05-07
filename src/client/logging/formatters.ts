@@ -4,9 +4,13 @@
 
 import { format } from 'winston';
 import { getLevel, LogLevel, LogLevelName } from './levels';
-import { FormatterOptions } from './types';
 
 const TIMESTAMP = 'YYYY-MM-DD HH:mm:ss';
+
+// Knobs used when creating a formatter.
+export type FormatterOptions = {
+    label?: string;
+};
 
 // Pascal casing is used so log files get highlighted when viewing
 // in VSC and other editors.

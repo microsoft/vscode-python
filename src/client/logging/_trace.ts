@@ -7,8 +7,14 @@ import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { LogLevel } from './levels';
 import { _log as log } from './logger';
-import { TraceOptions } from './types';
 import { argsToLogString, returnValueToLogString } from './util';
+
+// The information we want to log.
+export enum TraceOptions {
+    None = 0,
+    Arguments = 1,
+    ReturnValue = 2
+}
 
 // tslint:disable-next-line:no-any
 export function traceVerbose(...args: any[]) {
