@@ -718,7 +718,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             if (!this.coordsInsideEditor(e.clientX, e.clientY)) {
                 // tslint:disable-next-line: no-any
                 const hover = this.state.editor.getContribution('editor.contrib.hover') as any;
-                if (hover._hideWidgets && e.clientX) {
+                if (hover._hideWidgets) {
                     hover._hideWidgets();
                 }
             }
