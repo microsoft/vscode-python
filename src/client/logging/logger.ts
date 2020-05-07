@@ -6,7 +6,7 @@ import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 import { isCI, isTestExecution } from '../common/constants';
-import { logToConsole, monkeypatchConsole } from './_console';
+import { monkeypatchConsole } from './_console';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport } from './transports';
@@ -104,7 +104,7 @@ function hijackConsole(logger: ILogger) {
 function initializeConsoleLogging(logger: ILoggerTransports, label?: string) {
     // When we use our logger, ensure we also log to the console (for end users).
     const formatter = getFormatter({ label });
-    const transport = getConsoleTransport(logToConsole, formatter);
+    const transport = getConsoleTransport(formatter);
     // tslint:disable-next-line:no-any
     logger.add(transport as any);
 }

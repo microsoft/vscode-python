@@ -31,7 +31,7 @@ const logMethods = {
 type Arguments = any[];
 
 // Log a message based on "args" to the given console "stream".
-export function logToConsole(level: LogLevel | undefined, ...args: Arguments) {
+function logToConsole(level: LogLevel | undefined, ...args: Arguments) {
     const stream = (level ? streamByLevel[level] : undefined) || 'log';
     // Further below we monkeypatch the console.log, etc methods.
     // tslint:disable-next-line:no-any

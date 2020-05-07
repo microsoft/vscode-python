@@ -5,19 +5,29 @@
 import * as logform from 'logform';
 import * as path from 'path';
 import * as winston from 'winston';
+import * as Transport from 'winston-transport';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { LogLevel, resolveLevel } from './levels';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-const TransportStream = require('winston-transport');
 
 const formattedMessage = Symbol.for('message');
 
 // A winston-compatible transport type.
-class ConsoleTransport extends TransportStream {
+// We do not use transports.ConsoleTransport because it cannot
+// adapt to our custom log levels very well.
+class ConsoleTransport extends Transport {
+    // tslint:disable:no-console
+    // tslint:disable-next-line:no-any
+    private static funcByLevel: { [K in LogLevel]: (...args: any[]) => void } = {
+        [LogLevel.Error]: console.error,
+        [LogLevel.Warn]: console.warn,
+        [LogLevel.Info]: console.info,
+        [LogLevel.Debug]: console.debug,
+        [LogLevel.Trace]: console.trace
+    };
+    private static defaultFunc = console.log;
+    // tslint:enable:no-console
+
     constructor(
-        // tslint:disable-next-line:no-any
-        private readonly logToConsole: (level: LogLevel | undefined, ...args: any[]) => void,
         // tslint:disable-next-line:no-any
         options?: any,
         private readonly levels?: winston.config.AbstractConfigSetLevels
@@ -35,22 +45,26 @@ class ConsoleTransport extends TransportStream {
             next();
         }
     }
+
+    private logToConsole(level?: LogLevel, msg?: string) {
+        let func = ConsoleTransport.defaultFunc;
+        if (level) {
+            func = ConsoleTransport.funcByLevel[level] || func;
+        }
+        func(msg);
+    }
 }
 
 // Create a console-targeting transport that can be added to a winston logger.
-export function getConsoleTransport(
-    // tslint:disable-next-line:no-any
-    logToConsole: (level: LogLevel | undefined, ...args: any[]) => void,
-    formatter: logform.Format
-) {
-    return new ConsoleTransport(logToConsole, {
+export function getConsoleTransport(formatter: logform.Format): Transport {
+    return new ConsoleTransport({
         // We minimize customization.
         format: formatter
     });
 }
 
 // Create a file-targeting transport that can be added to a winston logger.
-export function getFileTransport(logfile: string, formatter: logform.Format) {
+export function getFileTransport(logfile: string, formatter: logform.Format): Transport {
     if (!path.isAbsolute(logfile)) {
         logfile = path.join(EXTENSION_ROOT_DIR, logfile);
     }
