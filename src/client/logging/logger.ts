@@ -68,7 +68,7 @@ function initialize() {
     if (process.env.VSC_PYTHON_LOG_FILE) {
         initializeFileLogging(fileLogger, process.env.VSC_PYTHON_LOG_FILE);
         if (isCI) {
-            hijackConsole(fileLogger);
+            hijackConsole(consoleLogger, fileLogger);
         }
     }
 
@@ -94,11 +94,11 @@ function initializeFileLogging(logger: ILoggerTransports, logfile: string) {
     logger.add(transport);
 }
 
-function hijackConsole(logger: ILogger) {
-    function logToFile(logLevel: LogLevel, ...args: Arguments) {
-        log([logger], logLevel, args);
+function hijackConsole(...loggers: ILogger[]) {
+    function logToAll(logLevel: LogLevel, ...args: Arguments) {
+        log(loggers, logLevel, args);
     }
-    monkeypatchConsole(logToFile);
+    monkeypatchConsole(logToAll);
 }
 
 function initializeConsoleLogging(logger: ILoggerTransports, label?: string) {
