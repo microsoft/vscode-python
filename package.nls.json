@@ -491,5 +491,5 @@
     "DataScience.kernelStarted": "Started kernel {0}",
     "DataScience.runByLine": "Run by line",
     "DataScience.continueRunByLine": "Stop",
-    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed. Install with..."
+    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed."
 }
