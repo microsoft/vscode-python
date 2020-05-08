@@ -9,7 +9,7 @@ import { createLogger } from 'winston';
 import { isTestExecution } from '../common/constants';
 import { logToConsole, monkeypatchConsole } from './_console';
 import { getFormatter } from './formatters';
-import { getConsoleTransport, getFileTransport } from './transports';
+import { getConsoleTransport, getFileTransport, getPythonOutputChannelTransport } from './transports';
 import { LogLevel } from './types';
 
 // Initialize the loggers as soon as this module is imported.
@@ -75,7 +75,10 @@ function initializeConsoleLogger() {
         // In CI there's no need for the label.
         label: process.env.TF_BUILD ? undefined : 'Python Extension:'
     });
-    const transport = getConsoleTransport(logToConsole, formatter);
+    const transport =
+        process.env.VSC_PYTHON_LOG_FILE && process.env.TF_BUILD
+            ? getConsoleTransport(logToConsole, formatter)
+            : getPythonOutputChannelTransport(formatter);
     consoleLogger.add(transport as any);
 }
 

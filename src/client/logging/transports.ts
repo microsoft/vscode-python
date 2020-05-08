@@ -7,11 +7,14 @@
 import * as logform from 'logform';
 import * as path from 'path';
 import { transports } from 'winston';
+import { IOutputChannel } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ConsoleStreams } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const TransportStream = require('winston-transport');
+
+let pythonOutputChannel: IOutputChannel;
 
 // Create a console-targeting transport that can be added to a winston logger.
 export function getConsoleTransport(
@@ -32,6 +35,31 @@ export function getConsoleTransport(
         }
     }
     return new ConsoleTransport({
+        // We minimize customization.
+        format: formatter
+    });
+}
+
+export function setPythonOutputChannelTransport(outputChannel: IOutputChannel) {
+    pythonOutputChannel = outputChannel;
+}
+
+// Create a console-targeting transport ;that can be added to a winston logger.
+export function getPythonOutputChannelTransport(formatter: logform.Format) {
+    const formattedMessage = Symbol.for('message');
+    class PythonOutputChannelTransport extends TransportStream {
+        constructor(options?: any) {
+            super(options);
+        }
+        public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
+            setImmediate(() => this.emit('logged', info));
+            pythonOutputChannel.appendLine(info[formattedMessage] || info.message);
+            if (next) {
+                next();
+            }
+        }
+    }
+    return new PythonOutputChannelTransport({
         // We minimize customization.
         format: formatter
     });
