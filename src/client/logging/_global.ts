@@ -4,7 +4,6 @@
 
 import { isCI, isTestExecution } from '../common/constants';
 import { CallInfo } from '../common/utils/decorators';
-import { monkeypatchConsole } from './_console';
 import { LogLevel } from './levels';
 import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
@@ -60,19 +59,12 @@ function initialize() {
     if (isCI && nonConsole) {
         delete config.console;
         // Send console.*() to the non-console loggers.
-        sendConsoleToLogger(
+        monkeypatchConsole(
             // This is a separate logger that matches our config but
             // does not do any console logging.
             createLogger(config)
         );
     }
-}
-
-function sendConsoleToLogger(logger: ILogger) {
-    function _log(logLevel: LogLevel, ...args: Arguments) {
-        logToAll([logger], logLevel, args);
-    }
-    monkeypatchConsole(_log);
 }
 
 // Emit a log message derived from the args to all enabled transports.
@@ -124,5 +116,42 @@ export namespace traceDecorators {
         const opts = DEFAULT_OPTS;
         const level = LogLevel.Warn;
         return createTracingDecorator([globalLogger], { message, opts, level });
+    }
+}
+
+// Ensure that the console functions are bound before monkeypatching.
+import './transports';
+
+/**
+ * What we're doing here is monkey patching the console.log so we can
+ * send everything sent to console window into our logs.  This is only
+ * required when we're directly writing to `console.log` or not using
+ * our `winston logger`.  This is something we'd generally turn on, only
+ * on CI so we can see everything logged to the console window
+ * (via the logs).
+ */
+function monkeypatchConsole(logger: ILogger) {
+    // The logging "streams" (methods) of the node console.
+    const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
+    const levels: { [key: string]: LogLevel } = {
+        error: LogLevel.Error,
+        warn: LogLevel.Warn
+    };
+    // tslint:disable-next-line:no-any
+    const consoleAny: any = console;
+    for (const stream of streams) {
+        // Using symbols guarantee the properties will be unique & prevents
+        // clashing with names other code/library may create or have created.
+        // We could use a closure but it's a bit trickier.
+        const sym = Symbol.for(stream);
+        consoleAny[sym] = consoleAny[stream];
+        // tslint:disable-next-line: no-function-expression
+        consoleAny[stream] = function () {
+            const args = Array.prototype.slice.call(arguments);
+            const fn = consoleAny[sym];
+            fn(...args);
+            const level = levels[stream] || LogLevel.Info;
+            logToAll([logger], level, args);
+        };
     }
 }
