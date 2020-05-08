@@ -331,10 +331,6 @@ suite('Interpreters - PipEnv', () => {
                     expect(interpreters).to.be.lengthOf(0);
                     processService.verifyAll();
                 });
-
-                teardown(() => {
-                    sinon.restore();
-                });
             });
         });
     });
