@@ -147,19 +147,19 @@ npm run testMultiWorkspace  # will launch the VSC UI
 
 _To limit system tests to a specific suite_
 
-If you are running system tests (we call them _system_ tests, others call them _integration_ or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
+If you are running system tests (we call them _system_ tests, others call them _integration_ or otherwise) and you wish to run a specific test suite, set the `VSC_PYTHON_CI_TEST_GREP` environment variable:
 
-https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/index.ts#L21
-
-...and identify the test suite you want to run/debug like this:
-
-```ts
-const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
+```shell
+VSC_PYTHON_CI_TEST_GREP=<suite> npm run testSingleWorkspace
 ```
 
-...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
+For example, to run only the tests in the `Sorting` suite (from `src/test/format/extension.sort.test.ts`) you would say:
 
-And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
+```shell
+VSC_PYTHON_CI_TEST_GREP=Sorting npm run testSingleWorkspace
+```
+
+Be sure to escape any grep-sensitive characters in your suite name.
 
 ### Testing Python Scripts
 
