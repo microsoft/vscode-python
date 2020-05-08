@@ -97,7 +97,7 @@ export abstract class BaseInstaller {
 
         // Pick an installerModule based on whether the interpreter is conda or not.
         let installerModule;
-        if (interpreter.hasOwnProperty('type') !== undefined && interpreter.type === 'Conda') {
+        if (interpreter && interpreter.hasOwnProperty('type') !== undefined && interpreter.type === 'Conda') {
             installerModule = channels.find((v) => v.name === 'Conda');
         } else {
             installerModule = channels.find((v) => v.name === 'Pip');
