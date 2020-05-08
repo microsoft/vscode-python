@@ -19,6 +19,8 @@ const debuggerType = DebuggerTypeName;
 suite('Run without Debugging', () => {
     let debugClient: DebugClient;
     setup(async function () {
+        // https://github.com/microsoft/vscode-python/issues/11704
+        return this.skip();
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
