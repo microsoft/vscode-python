@@ -7,7 +7,12 @@ import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
-import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
+import {
+    getConsoleTransport,
+    getFileTransport,
+    getPythonOutputChannelTransport,
+    isConsoleTransport
+} from './transports';
 import { Arguments } from './util';
 
 export type LoggerConfig = {
@@ -18,6 +23,7 @@ export type LoggerConfig = {
     console?: {
         label?: string;
     };
+    pythonOutputChannel?: boolean;
 };
 
 // Create a logger just the way we like it.
@@ -53,6 +59,11 @@ export function configureLogger(logger: IConfigurableLogger, config: LoggerConfi
     if (config.console) {
         const formatter = getFormatter({ label: config.console.label });
         const transport = getConsoleTransport(formatter);
+        logger.add(transport);
+    }
+    if (config.pythonOutputChannel) {
+        const formatter = getFormatter();
+        const transport = getPythonOutputChannelTransport(formatter);
         logger.add(transport);
     }
 }
