@@ -82,7 +82,7 @@ steps:
   - template: steps/generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
-  # we ship in our extension such as PTVSD and Jedi.
+  # we ship in our extension such as PTVSD, DEBUGPY and Jedi.
   #
   # This task will only run if variable `NeedsPythonTestReqs` is true.
   #
@@ -94,6 +94,7 @@ steps:
       python -m pip install --upgrade -r build/test-requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
@@ -202,7 +203,7 @@ steps:
       python ./pythonFiles/install_debugpy.py
     failOnStderr: true
     displayName: 'Install DEBUGPY wheels'
-    condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
+    condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
   # will be uploaded after all tests are complete.
