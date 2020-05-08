@@ -10,8 +10,7 @@ import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from '
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
 import { Arguments } from './util';
 
-const consoleLogger = createLogger();
-const fileLogger = createLogger();
+const globalLogger = createLogger();
 initialize();
 
 /**
@@ -50,15 +49,13 @@ function initialize() {
             config.console.label = 'Python Extension:';
         }
     }
-    configureLogger(consoleLogger, config);
-    delete config.console;
     if (process.env.VSC_PYTHON_LOG_FILE) {
         config.file = {
             logfile: process.env.VSC_PYTHON_LOG_FILE
         };
         nonConsole = true;
     }
-    configureLogger(fileLogger, config);
+    configureLogger(globalLogger, config);
 
     if (isCI && nonConsole) {
         delete config.console;
@@ -71,8 +68,6 @@ function initialize() {
     }
 }
 
-const loggers = [consoleLogger, fileLogger];
-
 function sendConsoleToLogger(logger: ILogger) {
     function _log(logLevel: LogLevel, ...args: Arguments) {
         logToAll([logger], logLevel, args);
@@ -82,7 +77,7 @@ function sendConsoleToLogger(logger: ILogger) {
 
 // Emit a log message derived from the args to all enabled transports.
 export function log(logLevel: LogLevel, ...args: Arguments) {
-    logToAll(loggers, logLevel, args);
+    logToAll([globalLogger], logLevel, args);
 }
 
 // tslint:disable-next-line:no-any
@@ -107,27 +102,27 @@ export function logWarning(...args: any[]) {
 
 // This is like a "context manager" that logs tracing info.
 export function tracing<T>(info: LogInfo, run: () => T, call?: CallInfo): T {
-    return _tracing(loggers, info, run, call);
+    return _tracing([globalLogger], info, run, call);
 }
 
 export namespace traceDecorators {
     const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
     export function verbose(message: string, opts: TraceOptions = DEFAULT_OPTS) {
-        return createTracingDecorator(loggers, { message, opts });
+        return createTracingDecorator([globalLogger], { message, opts });
     }
     export function error(message: string) {
         const opts = DEFAULT_OPTS;
         const level = LogLevel.Error;
-        return createTracingDecorator(loggers, { message, opts, level });
+        return createTracingDecorator([globalLogger], { message, opts, level });
     }
     export function info(message: string) {
         const opts = TraceOptions.None;
-        return createTracingDecorator(loggers, { message, opts });
+        return createTracingDecorator([globalLogger], { message, opts });
     }
     export function warn(message: string) {
         const opts = DEFAULT_OPTS;
         const level = LogLevel.Warn;
-        return createTracingDecorator(loggers, { message, opts, level });
+        return createTracingDecorator([globalLogger], { message, opts, level });
     }
 }
