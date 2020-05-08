@@ -39,16 +39,16 @@ function initialize() {
     const config: LoggerConfig = {};
     let nonConsole = false;
 
-    if (!isTestExecution()) {
-        // Do not log to console if running tests and we're not
-        // asked to do so.
-        if (process.env.VSC_PYTHON_FORCE_LOGGING) {
-            config.console = {};
-            // In CI there's no need for the label.
-            if (!isCI) {
-                config.console.label = 'Python Extension:';
-            }
+    // Do not log to console if running tests and we're not
+    // asked to do so.
+    if (!isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING) {
+        config.console = {};
+        // In CI there's no need for the label.
+        if (!isCI) {
+            config.console.label = 'Python Extension:';
         }
+    }
+    if (!isTestExecution()) {
         config.pythonOutputChannel = true;
     }
     if (process.env.VSC_PYTHON_LOG_FILE) {
