@@ -41,7 +41,7 @@ function initialize() {
 
     // Do not log to console if running tests and we're not
     // asked to do so.
-    if (!isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING) {
+    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
         config.console = {};
         // In CI there's no need for the label.
         if (!isCI) {
