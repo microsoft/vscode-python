@@ -8,14 +8,7 @@ import { concatMultilineStringInput, splitMultilineString } from '../../../datas
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    GLOBAL_MEMENTO,
-    ICryptoUtils,
-    IDisposableRegistry,
-    IExtensionContext,
-    IMemento,
-    WORKSPACE_MEMENTO
-} from '../../common/types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
@@ -30,8 +23,6 @@ import detectIndent = require('detect-indent');
 import cloneDeep = require('lodash/cloneDeep');
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
-// tslint:disable-next-line:no-require-imports no-var-requires
-const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
@@ -146,10 +137,6 @@ class NativeEditorNotebookModel implements INotebookModel {
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
-            if (this.isDirty) {
-                // Save to temp storage so we don't lose the file if the user exits VS code
-                this.saveToStorage().ignoreErrors();
-            }
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
         if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
@@ -432,8 +419,6 @@ class NativeEditorNotebookModel implements INotebookModel {
 
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
-    private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
-
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -466,7 +451,7 @@ export class NativeEditorStorage implements INotebookStorage {
      * Also keep track of the current time. This way we can check whether changes were
      * made to the file since the last time uncommitted changes were stored.
      */
-    public async storeContentsInHotExitFile(model: INotebookModel, cancelToken?: CancellationToken): Promise<void> {
+    private async storeContentsInHotExitFile(model: INotebookModel, cancelToken?: CancellationToken): Promise<void> {
         const contents = model.getContent();
         const key = this.getStorageKey(model.file);
         const filePath = this.getHashedFileName(key);
@@ -475,8 +460,7 @@ export class NativeEditorStorage implements INotebookStorage {
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
 
-        // Write but debounced (wait at least 250 ms)
-        return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
+        return this.writeToStorage(filePath, specialContents, cancelToken);
     }
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
