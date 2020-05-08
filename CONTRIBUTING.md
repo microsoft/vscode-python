@@ -301,7 +301,6 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm ci
 > python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 > python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 > python3 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
 > python3 ./pythonFiles/install_debugpy.py
 > npm run clean

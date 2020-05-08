@@ -238,20 +238,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      * @returns {Promise<string>}
      * @memberof JupyterDebugger
      */
-    private async getDebuggerPath(notebook: INotebook): Promise<string> {
+    private async getDebuggerPath(_notebook: INotebook): Promise<string> {
         if (this.debuggerPackage === 'ptvsd') {
             return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
         }
-        const pythonVersion = await this.getKernelPythonVersion(notebook);
-        // The new debug adapter with wheels is only supported in 3.7
-        // Code can be found here (src/client/debugger/extension/adapter/factory.ts).
-        if (pythonVersion && pythonVersion.major === 3 && pythonVersion.minor === 7) {
-            // Return debugger with wheels
-            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'wheels');
-        }
 
         // We are here so this is NOT python 3.7, return debugger without wheels
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
     }
     private async calculateDebuggerPathList(notebook: INotebook): Promise<string | undefined> {
         const extraPaths: string[] = [];
@@ -326,11 +319,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private executeSilently(notebook: INotebook, code: string): Promise<ICell[]> {
         return notebook.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
-    }
-
-    private async getKernelPythonVersion(notebook: INotebook): Promise<Version | undefined> {
-        const execResults = await this.executeSilently(notebook, 'import sys;print(sys.version)');
-        return this.parseVersionInfo(execResults, 'pythonVersionInfo');
     }
 
     private async debuggerCheck(notebook: INotebook): Promise<Version | undefined> {
