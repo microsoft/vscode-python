@@ -988,25 +988,36 @@ export interface IJupyterInterpreterDependencyManager {
 }
 
 export interface INotebookModel {
+    readonly indentAmount: string;
+    readonly onDidDispose: Event<void>;
     readonly file: Uri;
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: ICell[];
-    getJson(): Promise<Partial<nbformat.INotebookContent>>;
-    getContent(cells?: ICell[]): Promise<string>;
+    readonly cells: Readonly<ICell>[];
+    readonly onDidEdit: Event<NotebookModelChange>;
+    readonly isDisposed: boolean;
+    readonly metadata: nbformat.INotebookMetadata | undefined;
+    getContent(): string;
+    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
+    clone(file: Uri): INotebookModel;
+    /**
+     * Dispose of the Notebook model.
+     *
+     * This is invoked when there are no more references to a given `NotebookModel` (for example when
+     * all editors associated with the document have been closed.)
+     */
+    dispose(): void;
 }
 
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
-    readonly onDidEdit: Event<NotebookModelChange>;
-    save(cancellation: CancellationToken): Thenable<void>;
-    saveAs(targetResource: Uri): Thenable<void>;
-    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    backup(cancellation: CancellationToken): Thenable<void>;
+    save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
+    backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     load(file: Uri, contents?: string): Promise<INotebookModel>;
 }
 type WebViewViewState = {

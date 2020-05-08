@@ -11,7 +11,12 @@ import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { INotebookEditor, INotebookEditorProvider, INotebookStorage } from '../../client/datascience/types';
+import {
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookModel,
+    INotebookStorage
+} from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
 export class MockCustomEditorService implements ICustomEditorService {
@@ -20,7 +25,11 @@ export class MockCustomEditorService implements ICustomEditorService {
     private undoStack = new Map<string, unknown[]>();
     private redoStack = new Map<string, unknown[]>();
 
-    constructor(disposableRegistry: IDisposableRegistry, commandManager: ICommandManager) {
+    constructor(
+        disposableRegistry: IDisposableRegistry,
+        commandManager: ICommandManager,
+        private readonly storage: INotebookStorage
+    ) {
         disposableRegistry.push(
             commandManager.registerCommand('workbench.action.files.save', this.onFileSave.bind(this))
         );
@@ -65,11 +74,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     public undo(file: Uri) {
         this.popAndApply(file, this.undoStack, this.redoStack, (e) => {
             this.getModel(file)
-                .then((m) => {
-                    if (m) {
-                        m.undoEdits([e as NotebookModelChange]);
-                    }
-                })
+                .then((m) => m?.undoEdits([e as NotebookModelChange]))
                 .ignoreErrors();
         });
     }
@@ -77,11 +82,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     public redo(file: Uri) {
         this.popAndApply(file, this.redoStack, this.undoStack, (e) => {
             this.getModel(file)
-                .then((m) => {
-                    if (m) {
-                        m.applyEdits([e as NotebookModelChange]);
-                    }
-                })
+                .then((m) => m?.applyEdits([e as NotebookModelChange]))
                 .ignoreErrors();
         });
     }
@@ -115,10 +116,10 @@ export class MockCustomEditorService implements ICustomEditorService {
         };
     }
 
-    private async getModel(file: Uri): Promise<INotebookStorage | undefined> {
+    private async getModel(file: Uri): Promise<INotebookModel | undefined> {
         const nativeProvider = this.provider as NativeEditorProvider;
         if (nativeProvider) {
-            return nativeProvider.resolveNativeEditorStorage(this.createDocument(file));
+            return nativeProvider.loadModel(file);
         }
         return undefined;
     }
@@ -126,7 +127,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private async onFileSave(file: Uri) {
         const model = await this.getModel(file);
         if (model) {
-            model.save(new CancellationTokenSource().token);
+            this.storage.save(model, new CancellationTokenSource().token);
         }
     }
 
@@ -134,7 +135,7 @@ export class MockCustomEditorService implements ICustomEditorService {
         const model = await this.getModel(file);
         if (model) {
             const tmp = await createTemporaryFile('.ipynb');
-            model.saveAs(Uri.file(tmp.filePath));
+            await this.storage.saveAs(model, Uri.file(tmp.filePath));
         }
     }
 
@@ -145,11 +146,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private openedEditor(editor: INotebookEditor) {
         // Listen for model changes
         this.getModel(editor.file)
-            .then((m) => {
-                if (m) {
-                    m.onDidEdit(this.onEditChange.bind(this, editor.file));
-                }
-            })
+            .then((m) => m?.onDidEdit(this.onEditChange.bind(this, editor.file)))
             .ignoreErrors();
     }
 

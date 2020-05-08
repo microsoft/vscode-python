@@ -18,6 +18,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { IDataScienceErrorHandler, INotebookEditor } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
+import { INotebookModelProvider } from './notebookModelProvider';
 
 @injectable()
 export class NativeEditorProviderOld extends NativeEditorProvider {
@@ -42,9 +43,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookModelProvider) storage: INotebookModelProvider
     ) {
-        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService);
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
 
         // No live share sync required as open document from vscode will give us our contents.
 

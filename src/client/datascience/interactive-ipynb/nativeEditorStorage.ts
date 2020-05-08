@@ -26,8 +26,8 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-import { IDisposable } from 'monaco-editor';
-import { IWorkspaceService } from '../../common/application/types';
+// tslint:disable-next-line:no-require-imports no-var-requires
+import cloneDeep = require('lodash/cloneDeep');
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -43,8 +43,13 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
-@injectable()
-export class NativeEditorStorage implements INotebookModel, INotebookStorage, IDisposable {
+class NativeEditorNotebookModel implements INotebookModel {
+    public get onDidDispose() {
+        return this._disposed.event;
+    }
+    public get isDisposed() {
+        return this._isDisposed === true;
+    }
     public get isDirty(): boolean {
         return this._state.changeCount !== this._state.saveChangeCount;
     }
@@ -64,7 +69,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
     }
-
+    private _disposed = new EventEmitter<void>();
+    private _isDisposed?: boolean;
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
     private _editEventEmitter = new EventEmitter<NotebookModelChange>();
     private _state: INativeEditorStorageState = {
@@ -74,33 +80,35 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         cells: [],
         notebookJson: {}
     };
-    private indentAmount: string = ' ';
-    private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
-    private disposed = false;
 
     constructor(
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(ICryptoUtils) private crypto: ICryptoUtils,
-        @inject(IExtensionContext) private context: IExtensionContext,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        file: Uri,
+        cells: ICell[],
+        json: Partial<nbformat.INotebookContent> = {},
+        public readonly indentAmount: string = ' ',
+        private readonly pythonNumber: number = 3
     ) {
-        disposableRegistry.push(this);
+        this._state.file = file;
+        this._state.cells = cells;
+        this._state.notebookJson = json;
+        this.ensureNotebookJson();
     }
+    // public static fromJson(json:nbformat.INotebookContent){
 
+    // }
     public dispose() {
-        this.disposed = true;
+        this._isDisposed = true;
+        this._disposed.fire();
     }
 
-    public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
-        // Reload our cells
-        await this.loadFromFile(file, possibleContents);
-        return this;
+    public clone(file: Uri) {
+        return new NativeEditorNotebookModel(
+            file,
+            cloneDeep(this._state.cells),
+            cloneDeep(this._state.notebookJson),
+            this.indentAmount
+        );
     }
-
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
     }
@@ -111,105 +119,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }
-    public save(): Promise<void> {
-        return this.saveAs(this.file);
+    public get metadata(): nbformat.INotebookMetadata | undefined {
+        return this._state.notebookJson.metadata;
     }
 
-    public async saveAs(file: Uri): Promise<void> {
-        const contents = await this.getContent();
-        await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
-        if (this.isDirty || file.fsPath !== this.file.fsPath) {
-            this.handleModelChange({
-                source: 'user',
-                kind: 'file',
-                newFile: file,
-                oldFile: this.file,
-                newDirty: false,
-                oldDirty: this.isDirty
-            });
-        }
-    }
-    public async backup(cancellation: CancellationToken): Promise<void> {
-        // Should send to extension context storage path
-        return this.storeContentsInHotExitFile(cancellation);
-    }
-    public async getJson(): Promise<Partial<nbformat.INotebookContent>> {
-        await this.ensureNotebookJson();
-        return this._state.notebookJson;
+    public getContent(): string {
+        return this.generateNotebookContent();
     }
 
-    public getContent(cells?: ICell[]): Promise<string> {
-        return this.generateNotebookContent(cells ? cells : this.cells);
-    }
-
-    /**
-     * Stores the uncommitted notebook changes into a temporary location.
-     * Also keep track of the current time. This way we can check whether changes were
-     * made to the file since the last time uncommitted changes were stored.
-     */
-    public async storeContentsInHotExitFile(cancelToken?: CancellationToken): Promise<void> {
-        const contents = await this.getContent();
-        const key = this.getStorageKey();
-        const filePath = this.getHashedFileName(key);
-
-        // Keep track of the time when this data was saved.
-        // This way when we retrieve the data we can compare it against last modified date of the file.
-        const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-
-        // Write but debounced (wait at least 250 ms)
-        return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
-    }
-
-    private async saveToStorage(): Promise<void> {
-        // Skip doing this if auto save is enabled or is untitled
-        const filesConfig = this.workspaceService.getConfiguration('files', this.file);
-        const autoSave = filesConfig.get('autoSave', 'off');
-        if (autoSave === 'off' && !this.isUntitled) {
-            // Write but debounced (wait at least 250 ms)
-            return this.storeContentsInHotExitFile(undefined);
-        }
-    }
-
-    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
-        try {
-            // Only write to storage if not disposed.
-            if (!cancelToken?.isCancellationRequested && !this.disposed) {
-                if (contents) {
-                    await this.fileSystem.createDirectory(path.dirname(filePath));
-                    if (!cancelToken?.isCancellationRequested) {
-                        return this.fileSystem.writeFile(filePath, contents);
-                    }
-                } else {
-                    return this.fileSystem.deleteFile(filePath);
-                }
-            }
-        } catch (exc) {
-            traceError(`Error writing storage for ${filePath}: `, exc);
-        }
-    }
-
-    private sendLanguageTelemetry(notebookJson: Partial<nbformat.INotebookContent>) {
-        try {
-            // See if we have a language
-            let language = '';
-            if (notebookJson.metadata?.language_info?.name) {
-                language = notebookJson.metadata?.language_info?.name;
-            } else if (notebookJson.metadata?.kernelspec?.language) {
-                language = notebookJson.metadata?.kernelspec?.language.toString();
-            }
-            if (language && !KnownNotebookLanguages.includes(language.toLowerCase())) {
-                language = 'unknown';
-            }
-            if (language) {
-                sendTelemetryEvent(Telemetry.NotebookLanguage, undefined, { language });
-            }
-        } catch {
-            // If this fails, doesn't really matter
-            noop();
-        }
-    }
-
-    private handleModelChange(change: NotebookModelChange) {
+    public handleModelChange(change: NotebookModelChange) {
         const oldDirty = this.isDirty;
         let changed = false;
 
@@ -234,12 +152,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
             }
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
-        if (
-            (changed || this.isDirty !== oldDirty) &&
-            change.kind !== 'version' &&
-            change.kind !== 'file' &&
-            change.source === 'user'
-        ) {
+        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
             this._editEventEmitter.fire(change);
         }
     }
@@ -274,19 +187,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
-            case 'file':
-                changed = !this.fileSystem.arePathsSame(this._state.file.fsPath, change.newFile.fsPath);
-                this._state.file = change.newFile;
-                this._state.saveChangeCount = this._state.changeCount;
-                break;
             default:
                 break;
-        }
-
-        // Dirty state comes from undo. At least VS code will track it that way. However
-        // skip file changes as we don't forward those to VS code
-        if (change.kind !== 'file') {
-            this._state.changeCount += 1;
         }
 
         return changed;
@@ -472,31 +374,6 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         return cell as ICell;
     }
 
-    private async loadFromFile(file: Uri, possibleContents?: string) {
-        // Save file
-        this._state.file = file;
-
-        try {
-            // Attempt to read the contents if a viable file
-            const contents =
-                file.scheme === 'untitled' ? possibleContents : await this.fileSystem.readFile(this.file.fsPath);
-
-            // See if this file was stored in storage prior to shutdown
-            const dirtyContents = await this.getStoredContents();
-            if (dirtyContents) {
-                // This means we're dirty. Indicate dirty and load from this content
-                this._state.saveChangeCount = -1; // Indicates dirty
-                this.loadContents(dirtyContents);
-            } else {
-                // Load without setting dirty
-                this.loadContents(contents);
-            }
-        } catch {
-            // May not exist at this time. Should always have a single cell though
-            return [this.createEmptyCell(uuid())];
-        }
-    }
-
     private createEmptyCell(id: string) {
         return {
             id,
@@ -507,71 +384,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         };
     }
 
-    private loadContents(contents: string | undefined) {
-        // tslint:disable-next-line: no-any
-        const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
-
-        // Double check json (if we have any)
-        if (json && !json.cells) {
-            throw new InvalidNotebookFileError(this.file.fsPath);
-        }
-
-        // Then compute indent. It's computed from the contents
-        if (contents) {
-            this.indentAmount = detectIndent(contents).indent;
-        }
-
-        // Then save the contents. We'll stick our cells back into this format when we save
-        if (json) {
-            this._state.notebookJson = json;
-
-            // Log language or kernel telemetry
-            this.sendLanguageTelemetry(this._state.notebookJson);
-        }
-
-        // Extract cells from the json
-        const cells = json ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];
-
-        // Remap the ids
-        const remapped = cells.map((c, index) => {
-            return {
-                id: `NotebookImport#${index}`,
-                file: Identifiers.EmptyFileName,
-                line: 0,
-                state: CellState.finished,
-                data: c
-            };
-        });
-
-        // Make sure at least one
-        if (remapped.length === 0) {
-            remapped.splice(0, 0, this.createEmptyCell(uuid()));
-        }
-
-        // Save as our visible list
-        this._state.cells = remapped;
-    }
-
-    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
-        if (
-            notebookData &&
-            notebookData.metadata &&
-            notebookData.metadata.language_info &&
-            notebookData.metadata.language_info.codemirror_mode &&
-            // tslint:disable-next-line: no-any
-            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number'
-        ) {
-            // tslint:disable-next-line: no-any
-            return (notebookData.metadata.language_info.codemirror_mode as any).version;
-        }
-        // Use the active interpreter
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
-    }
-
-    private async ensureNotebookJson(): Promise<void> {
+    private ensureNotebookJson() {
         if (!this._state.notebookJson || !this._state.notebookJson.metadata) {
-            const pythonNumber = await this.extractPythonMainVersion(this._state.notebookJson);
+            // const pythonNumber = await this.extractPythonMainVersion(this._state.notebookJson);
+            const pythonNumber = this.pythonNumber;
             // Use this to build our metadata object
             // Use these as the defaults unless we have been given some in the options.
             const metadata: nbformat.INotebookMetadata = {
@@ -599,22 +415,197 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         }
     }
 
-    private async generateNotebookContent(cells: ICell[]): Promise<string> {
+    private generateNotebookContent(): string {
         // Make sure we have some
-        await this.ensureNotebookJson();
+        this.ensureNotebookJson();
 
         // Reuse our original json except for the cells.
         const json = {
-            cells: cells.map((c) => pruneCell(c.data)),
+            cells: this.cells.map((c) => pruneCell(c.data)),
             metadata: this._state.notebookJson.metadata,
             nbformat: this._state.notebookJson.nbformat,
             nbformat_minor: this._state.notebookJson.nbformat_minor
         };
         return JSON.stringify(json, null, this.indentAmount);
     }
+}
 
-    private getStorageKey(): string {
-        return `${KeyPrefix}${this.file.toString()}`;
+@injectable()
+export class NativeEditorStorage implements INotebookStorage {
+    private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
+
+    constructor(
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(ICryptoUtils) private crypto: ICryptoUtils,
+        @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
+    ) {}
+    private static isUntitledFile(file: Uri) {
+        return file.scheme === 'untitled';
+    }
+
+    public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
+        return this.loadFromFile(file, possibleContents);
+    }
+    public save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
+        return this.saveAs(model, model.file);
+    }
+
+    public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
+        const contents = model.getContent();
+        await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
+    }
+    public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
+        // Should send to extension context storage path
+        return this.storeContentsInHotExitFile(model, cancellation);
+    }
+    /**
+     * Stores the uncommitted notebook changes into a temporary location.
+     * Also keep track of the current time. This way we can check whether changes were
+     * made to the file since the last time uncommitted changes were stored.
+     */
+    public async storeContentsInHotExitFile(model: INotebookModel, cancelToken?: CancellationToken): Promise<void> {
+        const contents = model.getContent();
+        const key = this.getStorageKey(model.file);
+        const filePath = this.getHashedFileName(key);
+
+        // Keep track of the time when this data was saved.
+        // This way when we retrieve the data we can compare it against last modified date of the file.
+        const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
+
+        // Write but debounced (wait at least 250 ms)
+        return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
+    }
+    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
+        try {
+            if (!cancelToken?.isCancellationRequested) {
+                if (contents) {
+                    await this.fileSystem.createDirectory(path.dirname(filePath));
+                    if (!cancelToken?.isCancellationRequested) {
+                        return this.fileSystem.writeFile(filePath, contents);
+                    }
+                } else {
+                    return this.fileSystem.deleteFile(filePath);
+                }
+            }
+        } catch (exc) {
+            traceError(`Error writing storage for ${filePath}: `, exc);
+        }
+    }
+    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
+        if (
+            notebookData &&
+            notebookData.metadata &&
+            notebookData.metadata.language_info &&
+            notebookData.metadata.language_info.codemirror_mode &&
+            // tslint:disable-next-line: no-any
+            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number'
+        ) {
+            // tslint:disable-next-line: no-any
+            return (notebookData.metadata.language_info.codemirror_mode as any).version;
+        }
+        // Use the active interpreter
+        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
+    }
+
+    private sendLanguageTelemetry(notebookJson: Partial<nbformat.INotebookContent>) {
+        try {
+            // See if we have a language
+            let language = '';
+            if (notebookJson.metadata?.language_info?.name) {
+                language = notebookJson.metadata?.language_info?.name;
+            } else if (notebookJson.metadata?.kernelspec?.language) {
+                language = notebookJson.metadata?.kernelspec?.language.toString();
+            }
+            if (language && !KnownNotebookLanguages.includes(language.toLowerCase())) {
+                language = 'unknown';
+            }
+            if (language) {
+                sendTelemetryEvent(Telemetry.NotebookLanguage, undefined, { language });
+            }
+        } catch {
+            // If this fails, doesn't really matter
+            noop();
+        }
+    }
+    private async loadFromFile(file: Uri, possibleContents?: string): Promise<INotebookModel> {
+        try {
+            // Attempt to read the contents if a viable file
+            const contents = NativeEditorStorage.isUntitledFile(file)
+                ? possibleContents
+                : await this.fileSystem.readFile(file.fsPath);
+
+            // See if this file was stored in storage prior to shutdown
+            const dirtyContents = await this.getStoredContents(file);
+            if (dirtyContents) {
+                // This means we're dirty. Indicate dirty and load from this content
+                return this.loadContents(file, dirtyContents);
+            } else {
+                // Load without setting dirty
+                return this.loadContents(file, contents);
+            }
+        } catch (ex) {
+            // May not exist at this time. Should always have a single cell though
+            traceError(`Failed to load notebook file ${file.toString()}`, ex);
+            return new NativeEditorNotebookModel(file, []);
+        }
+    }
+
+    private createEmptyCell(id: string) {
+        return {
+            id,
+            line: 0,
+            file: Identifiers.EmptyFileName,
+            state: CellState.finished,
+            data: createCodeCell()
+        };
+    }
+
+    private async loadContents(file: Uri, contents: string | undefined) {
+        // tslint:disable-next-line: no-any
+        const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
+
+        // Double check json (if we have any)
+        if (json && !json.cells) {
+            throw new InvalidNotebookFileError(file.fsPath);
+        }
+
+        // Then compute indent. It's computed from the contents
+        const indentAmount = contents ? detectIndent(contents).indent : undefined;
+
+        // Then save the contents. We'll stick our cells back into this format when we save
+        if (json) {
+            // Log language or kernel telemetry
+            this.sendLanguageTelemetry(json);
+        }
+
+        // Extract cells from the json
+        const cells = json ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];
+
+        // Remap the ids
+        const remapped = cells.map((c, index) => {
+            return {
+                id: `NotebookImport#${index}`,
+                file: Identifiers.EmptyFileName,
+                line: 0,
+                state: CellState.finished,
+                data: c
+            };
+        });
+
+        // Make sure at least one
+        if (remapped.length === 0) {
+            remapped.splice(0, 0, this.createEmptyCell(uuid()));
+        }
+        const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
+        return new NativeEditorNotebookModel(file, remapped, json, indentAmount, pythonNumber);
+    }
+
+    private getStorageKey(file: Uri): string {
+        return `${KeyPrefix}${file.toString()}`;
     }
 
     /**
@@ -625,35 +616,40 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
      * @returns {(Promise<string | undefined>)}
      * @memberof NativeEditor
      */
-    private async getStoredContents(): Promise<string | undefined> {
-        const key = this.getStorageKey();
+    private async getStoredContents(file: Uri): Promise<string | undefined> {
+        const key = this.getStorageKey(file);
 
         // First look in the global storage file location
-        let result = await this.getStoredContentsFromFile(key);
+        let result = await this.getStoredContentsFromFile(file, key);
         if (!result) {
-            result = await this.getStoredContentsFromGlobalStorage(key);
+            result = await this.getStoredContentsFromGlobalStorage(file, key);
             if (!result) {
-                result = await this.getStoredContentsFromLocalStorage(key);
+                result = await this.getStoredContentsFromLocalStorage(file, key);
             }
         }
 
         return result;
     }
 
-    private async getStoredContentsFromFile(key: string): Promise<string | undefined> {
+    private async getStoredContentsFromFile(file: Uri, key: string): Promise<string | undefined> {
         const filePath = this.getHashedFileName(key);
         try {
             // Use this to read from the extension global location
             const contents = await this.fileSystem.readFile(filePath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
-            if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file') {
-                const stat = await this.fileSystem.stat(this.file.fsPath);
+            if (
+                data &&
+                data.lastModifiedTimeMs &&
+                !NativeEditorStorage.isUntitledFile(file) &&
+                file.scheme === 'file'
+            ) {
+                const stat = await this.fileSystem.stat(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
             }
-            if (data && !this.isUntitled && data.contents) {
+            if (data && !NativeEditorStorage.isUntitledFile(file) && data.contents) {
                 return data.contents;
             }
         } catch (exc) {
@@ -661,7 +657,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         }
     }
 
-    private async getStoredContentsFromGlobalStorage(key: string): Promise<string | undefined> {
+    private async getStoredContentsFromGlobalStorage(file: Uri, key: string): Promise<string | undefined> {
         try {
             const data = this.globalStorage.get<{ contents?: string; lastModifiedTimeMs?: number }>(key);
 
@@ -671,13 +667,18 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
             }
 
             // Check whether the file has been modified since the last time the contents were saved.
-            if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file') {
-                const stat = await this.fileSystem.stat(this.file.fsPath);
+            if (
+                data &&
+                data.lastModifiedTimeMs &&
+                !NativeEditorStorage.isUntitledFile(file) &&
+                file.scheme === 'file'
+            ) {
+                const stat = await this.fileSystem.stat(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
             }
-            if (data && !this.isUntitled && data.contents) {
+            if (data && !NativeEditorStorage.isUntitledFile(file) && data.contents) {
                 return data.contents;
             }
         } catch {
@@ -685,9 +686,9 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         }
     }
 
-    private async getStoredContentsFromLocalStorage(key: string): Promise<string | undefined> {
+    private async getStoredContentsFromLocalStorage(file: Uri, key: string): Promise<string | undefined> {
         const workspaceData = this.localStorage.get<string>(key);
-        if (workspaceData && !this.isUntitled) {
+        if (workspaceData && !NativeEditorStorage.isUntitledFile(file)) {
             // Make sure to clear so we don't use this again.
             this.localStorage.update(key, undefined);
 

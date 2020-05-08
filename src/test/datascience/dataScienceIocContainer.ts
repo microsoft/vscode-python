@@ -671,7 +671,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
         this.serviceManager.addSingletonInstance<ICustomEditorService>(
             ICustomEditorService,
-            new MockCustomEditorService(this.asyncRegistry, this.commandManager)
+            new MockCustomEditorService(
+                this.asyncRegistry,
+                this.commandManager,
+                this.serviceContainer.get<INotebookStorage>(INotebookStorage)
+            )
         );
         this.serviceManager.addSingleton<IDataScienceCommandListener>(
             IDataScienceCommandListener,

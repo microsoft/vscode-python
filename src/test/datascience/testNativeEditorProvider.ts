@@ -18,7 +18,12 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
-import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import {
+    IDataScienceErrorHandler,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookStorage
+} from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
@@ -45,7 +50,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookStorage) storage: INotebookStorage
     ) {
         if (useCustomEditor) {
             this.realProvider = new NativeEditorProvider(
@@ -54,7 +60,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
                 disposables,
                 workspace,
                 configuration,
-                customEditorService
+                customEditorService,
+                storage
             );
         } else {
             this.realProvider = new NativeEditorProviderOld(
@@ -67,7 +74,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
                 fs,
                 documentManager,
                 cmdManager,
-                dataScienceErrorHandler
+                dataScienceErrorHandler,
+                storage
             );
         }
     }
