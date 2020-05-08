@@ -159,4 +159,18 @@ suite('Sorting', () => {
         await commands.executeCommand(Commands.Sort_Imports);
         assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
     });
+
+    test('With Changes and Config implicit from cwd', async () => {
+        const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
+        assert.equal(textDocument.isDirty, false, 'Document should initially be unmodified');
+        const editor = await window.showTextDocument(textDocument);
+        await editor.edit((builder) => {
+            builder.insert(new Position(0, 0), `from third_party import lib0${EOL}`);
+        });
+        assert.equal(textDocument.isDirty, true, 'Document should have been modified (pre sort)');
+        await sorter.sortImports(textDocument.uri);
+        assert.equal(textDocument.isDirty, true, 'Document should have been modified by sorting');
+        const newValue = `from third_party import lib0${EOL}from third_party import lib1${EOL}from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
+        assert.equal(textDocument.getText(), newValue);
+    });
 });
