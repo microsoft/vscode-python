@@ -1,15 +1,14 @@
 import { DocumentFilter } from 'vscode';
 
 export const PYTHON_LANGUAGE = 'python';
-export const MARKDOWN_LANGUAGE = 'markdown';
+
 export const JUPYTER_LANGUAGE = 'jupyter';
 
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
 export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
-    { scheme: 'untitled', language: PYTHON_LANGUAGE },
-    { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE }
+    { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
