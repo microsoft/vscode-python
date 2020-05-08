@@ -64,7 +64,8 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
         return [
             { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+            { scheme: 'untitled', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE }
         ];
     }
 
