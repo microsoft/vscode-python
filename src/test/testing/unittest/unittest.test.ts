@@ -177,7 +177,10 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
     });
 
-    test('Ensure correct test count for running a set of tests multiple times', async () => {
+    test('Ensure correct test count for running a set of tests multiple times', async function () {
+        // https://github.com/microsoft/vscode-python/issues/11634
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_*.py'], rootWorkspaceUri!, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_COUNTS_TEST_FILE_PATH);
