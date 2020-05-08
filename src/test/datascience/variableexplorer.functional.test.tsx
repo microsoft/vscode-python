@@ -455,6 +455,7 @@ Name: 0, dtype: float64`,
 
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
+                    targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
                     await verifyAfterStep(ioc, wrapper, targetVariables);
                 }
             },
@@ -485,7 +486,7 @@ Name: 0, dtype: float64`,
         // sure no perf problems with one or the other and to smoke test the native editor
         runDoubleTest(
             'Variable explorer - A lot of items',
-            async (wrapper) => {
+            async (t, wrapper) => {
                 const basicCode: string = `for _i in range(1050):
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
@@ -517,8 +518,12 @@ Name: 0, dtype: float64`,
                 verifyVariables(wrapper, bottomVariables);
 
                 // Step into the first cell over again. Should have the same variables
-                if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                if (runByLine && t === 'interactive') {
+                    // Remove values, don't bother checking them as they'll be different from the debugger
+                    const nonValued = targetVariables.map((v) => {
+                        return { ...v, value: undefined };
+                    });
+                    await verifyAfterStep(ioc, wrapper, nonValued);
                 }
             },
             () => {

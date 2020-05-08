@@ -10,12 +10,11 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterDebugService, IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
-import { waitForMessage, waitForVariablesUpdated } from './testHelpers';
+import { waitForVariablesUpdated } from './testHelpers';
 
 // tslint:disable: no-var-requires no-require-imports no-any
 
