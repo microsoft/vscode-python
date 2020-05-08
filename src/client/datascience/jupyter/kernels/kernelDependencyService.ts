@@ -7,9 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { InstallationChannelManager } from '../../../common/installer/channelManager';
 import { ProductNames } from '../../../common/installer/productNames';
-import { IInstallationChannelManager } from '../../../common/installer/types';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { PythonInterpreter } from '../../../interpreter/contracts';
@@ -23,8 +21,7 @@ import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '.
 export class KernelDependencyService implements IKernelDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IInstallationChannelManager) private readonly channelManager: InstallationChannelManager
+        @inject(IInstaller) private readonly installer: IInstaller
     ) {}
     /**
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
@@ -58,15 +55,6 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         if (selection === Common.install()) {
-            const channels = await this.channelManager.getInstallationChannels();
-
-            // Pick an installerModule based on whether the interpreter is conda or not.
-            let installerModule;
-            if (interpreter.type && interpreter.type === 'Conda') {
-                installerModule = channels.find((v) => v.displayName.includes('Conda'));
-            } else {
-                installerModule = channels.find((v) => !v.displayName.includes('Conda'));
-            }
             const cancellatonPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
@@ -74,7 +62,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             });
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
-                this.installer.install(Product.ipykernel, interpreter, installerToken, installerModule),
+                this.installer.install(Product.ipykernel, interpreter, installerToken),
                 cancellatonPromise
             ]);
             if (response === InstallerResponse.Installed) {

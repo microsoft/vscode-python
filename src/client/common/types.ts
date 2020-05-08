@@ -20,7 +20,7 @@ import {
 import { LanguageServerType } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
-import { IModuleInstaller, InterpreterUri } from './installer/types';
+import { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
@@ -119,12 +119,7 @@ export interface IInstaller {
         resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse>;
-    install(
-        product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        installer?: IModuleInstaller
-    ): Promise<InstallerResponse>;
+    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }

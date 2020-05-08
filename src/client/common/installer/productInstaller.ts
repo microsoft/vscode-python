@@ -6,7 +6,7 @@ import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 import { Telemetry } from '../../datascience/constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -81,29 +81,37 @@ export abstract class BaseInstaller {
 
     public async install(
         product: Product,
-        resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        installer?: IModuleInstaller
+        interpreterUri?: InterpreterUri,
+        cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
 
-        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
-        if (!installer) {
-            installer = await channels.getInstallationChannel(product, resource);
+        const channels: IModuleInstaller[] = await this.serviceContainer
+            .get<IInstallationChannelManager>(IInstallationChannelManager)
+            .getInstallationChannels();
+
+        // Assume the Uri is actually a full PythonInterpreter for a sec...
+        const interpreter = interpreterUri as PythonInterpreter;
+        // Pick an installerModule based on whether the interpreter is conda or not.
+        let installerModule;
+        if (interpreter.type !== undefined && interpreter.type === 'Conda') {
+            installerModule = channels.find((v) => v.name.includes('Conda'));
+        } else {
+            installerModule = channels.find((v) => !v.name.includes('Conda'));
         }
 
-        if (!installer) {
+        if (!installerModule) {
             return InstallerResponse.Ignore;
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        await installer
-            .installModule(moduleName, resource, cancel)
+        await installerModule
+            .installModule(moduleName, interpreter, cancel)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
-        return this.isInstalled(product, resource).then((isInstalled) =>
+        return this.isInstalled(product, interpreter).then((isInstalled) =>
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
@@ -417,10 +425,9 @@ export class ProductInstaller implements IInstaller {
     public async install(
         product: Product,
         resource?: InterpreterUri,
-        cancel?: CancellationToken,
-        installer?: IModuleInstaller
+        cancel?: CancellationToken
     ): Promise<InstallerResponse> {
-        return this.createInstaller(product).install(product, resource, cancel, installer);
+        return this.createInstaller(product).install(product, resource, cancel);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller(product).isInstalled(product, resource);
