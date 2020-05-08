@@ -41,7 +41,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     public componentWillReceiveProps(prevProps: IContentPanelProps) {
         // Scroll if we suddenly finished or updated a cell. This should happen on
         // finish, updating output, etc.
-        if (!fastDeepEqual(prevProps.cellVMs, this.props.cellVMs)) {
+        if (!fastDeepEqual(prevProps.cellVMs.map(this.outputCheckable), this.props.cellVMs.map(this.outputCheckable))) {
             this.scrollToBottom();
         }
     }
@@ -65,6 +65,14 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
             </div>
         );
     }
+
+    private outputCheckable = (cellVM: ICellViewModel) => {
+        // Return the properties that if they change means a cell updated something
+        return {
+            outputs: cellVM.cell.data.outputs,
+            state: cellVM.cell.state
+        };
+    };
 
     private renderCells = () => {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
