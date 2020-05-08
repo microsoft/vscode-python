@@ -91,17 +91,10 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
 
-                    if (typeName === PIPENV_SERVICE) {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([]))
-                            .verifiable(TypeMoq.Times.once());
-                    } else {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([interpreter]))
-                            .verifiable(TypeMoq.Times.once());
-                    }
+                    typeLocator
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .returns(() => Promise.resolve([interpreter]))
+                        .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
                         .setup((c) =>
@@ -161,17 +154,10 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
 
-                    if (typeName === PIPENV_SERVICE) {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([]))
-                            .verifiable(TypeMoq.Times.once());
-                    } else {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([interpreter]))
-                            .verifiable(TypeMoq.Times.once());
-                    }
+                    typeLocator
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .returns(() => Promise.resolve([interpreter]))
+                        .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
                         .setup((c) =>
@@ -187,6 +173,7 @@ suite('Interpreters - Locators Index', () => {
                 });
 
                 const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
+
                 helper
                     .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(expectedInterpreters))
@@ -196,7 +183,6 @@ suite('Interpreters - Locators Index', () => {
 
                 locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
                 helper.verifyAll();
-                expect(interpreters).to.be.lengthOf(locatorsTypes.length);
                 expect(interpreters).to.be.deep.equal(expectedInterpreters);
             });
             test(`didTriggerInterpreterSuggestions is set to true in the locators if onSuggestion is true ${testSuffix}`, async () => {
@@ -233,19 +219,11 @@ suite('Interpreters - Locators Index', () => {
                         .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
-                    // typeLocator.setup((l) => l.didTriggerInterpreterSuggestions).verifiable(TypeMoq.Times.once());
 
-                    if (typeName === PIPENV_SERVICE) {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([]))
-                            .verifiable(TypeMoq.Times.once());
-                    } else {
-                        typeLocator
-                            .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                            .returns(() => Promise.resolve([interpreter]))
-                            .verifiable(TypeMoq.Times.once());
-                    }
+                    typeLocator
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .returns(() => Promise.resolve([interpreter]))
+                        .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
                         .setup((c) =>
@@ -260,26 +238,19 @@ suite('Interpreters - Locators Index', () => {
                     };
                 });
 
-                const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
-
                 helper
                     .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(expectedInterpreters))
-                    .verifiable(TypeMoq.Times.once());
+                    .returns(() => Promise.resolve(locatorsWithInterpreters.map((item) => item.interpreters[0])));
 
-                const interpreters = await locator.getInterpreters(resource, { onSuggestion: true });
+                await locator.getInterpreters(resource, { onSuggestion: true });
 
-                locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
                 locatorsWithInterpreters.forEach((item) =>
                     item.locator.verify((l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once())
                 );
-                helper.verifyAll();
                 expect(locator.didTriggerInterpreterSuggestions).to.equal(
                     true,
                     'didTriggerInterpreterSuggestions should be set to true.'
                 );
-                expect(interpreters).to.be.lengthOf(locatorsTypes.length);
-                expect(interpreters).to.be.deep.equal(expectedInterpreters);
             });
         });
     });
