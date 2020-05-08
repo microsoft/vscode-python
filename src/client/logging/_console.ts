@@ -7,6 +7,7 @@
 import { LogLevel } from './levels';
 // Ensure that the console functions are bound before monkeypatching.
 import './transports';
+import { Arguments } from './util';
 
 /**
  * What we're doing here is monkey patching the console.log so we can
@@ -16,8 +17,7 @@ import './transports';
  * on CI so we can see everything logged to the console window
  * (via the logs).
  */
-// tslint:disable-next-line:no-any
-export function monkeypatchConsole(log: (logLevel: LogLevel, ...args: any[]) => void) {
+export function monkeypatchConsole(log: (logLevel: LogLevel, ...args: Arguments) => void) {
     // The logging "streams" (methods) of the node console.
     const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {

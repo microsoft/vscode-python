@@ -3,7 +3,7 @@
 'use strict';
 
 // tslint:disable-next-line:no-any
-type Arguments = any[];
+export type Arguments = any[];
 
 function valueToLogString(value: unknown, kind: string): string {
     if (value === undefined) {

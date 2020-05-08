@@ -8,16 +8,21 @@ import * as winston from 'winston';
 import * as Transport from 'winston-transport';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { LogLevel, resolveLevel } from './levels';
+import { Arguments } from './util';
 
 const formattedMessage = Symbol.for('message');
+
+export function isConsoleTransport(transport: unknown): boolean {
+    // tslint:disable-next-line:no-any
+    return (transport as any).isConsole;
+}
 
 // A winston-compatible transport type.
 // We do not use transports.ConsoleTransport because it cannot
 // adapt to our custom log levels very well.
 class ConsoleTransport extends Transport {
     // tslint:disable:no-console
-    // tslint:disable-next-line:no-any
-    private static funcByLevel: { [K in LogLevel]: (...args: any[]) => void } = {
+    private static funcByLevel: { [K in LogLevel]: (...args: Arguments) => void } = {
         [LogLevel.Error]: console.error,
         [LogLevel.Warn]: console.warn,
         [LogLevel.Info]: console.info,
@@ -26,6 +31,9 @@ class ConsoleTransport extends Transport {
     };
     private static defaultFunc = console.log;
     // tslint:enable:no-console
+
+    // This is used to identify the type.
+    public readonly isConsole = true;
 
     constructor(
         // tslint:disable-next-line:no-any
