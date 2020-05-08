@@ -9,7 +9,7 @@ import '../../../common/extensions';
 
 const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
 const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
-const pathToDebugger = path.join(pathToPythonLibDir, 'debugpy');
+const pathToDebugger = path.join(pathToPythonLibDir, 'debugpy', 'no_wheels', 'debugpy');
 
 export type RemoteDebugOptions = {
     host: string;

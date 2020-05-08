@@ -22,7 +22,15 @@ suite('Extension API', () => {
     const expectedLauncherPath = path
         .join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py')
         .fileToCommandArgument();
-    const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
+    const debuggerPath = path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'lib',
+        'python',
+        'debugpy',
+        'no_wheels',
+        'debugpy'
+    );
     const ptvsdHost = 'somehost';
     const ptvsdPort = 12345;
 
@@ -159,7 +167,15 @@ suite('Extension API', () => {
             instance(serviceContainer)
         ).debug.getDebuggerPackagePath();
 
-        const expected = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
+        const expected = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'lib',
+            'python',
+            'debugpy',
+            'no_wheels',
+            'debugpy'
+        );
         assert.equal(pkgPath, expected);
     });
 });

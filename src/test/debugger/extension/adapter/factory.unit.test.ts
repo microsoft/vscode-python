@@ -50,6 +50,8 @@ suite('Debugging - Adapter Factory', () => {
         'lib',
         'python',
         'debugpy',
+        'wheels',
+        'debugpy',
         'adapter'
     );
     const ptvsdAdapterPathWithoutWheels = path.join(
@@ -57,6 +59,8 @@ suite('Debugging - Adapter Factory', () => {
         'pythonFiles',
         'lib',
         'python',
+        'debugpy',
+        'no_wheels',
         'debugpy',
         'adapter'
     );
@@ -425,7 +429,7 @@ suite('Debugging - Adapter Factory', () => {
             EventName.PYTHON_EXPERIMENTS,
             EventName.DEBUG_ADAPTER_USING_WHEELS_PATH
         ]);
-        assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'true' }]);
+        assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'false' }]);
     });
 
     test('Send attach to local process telemetry if inside the DA experiment and attaching to a local process', async () => {
