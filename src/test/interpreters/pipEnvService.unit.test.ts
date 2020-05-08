@@ -296,12 +296,12 @@ suite('Interpreters - PipEnv', () => {
             });
 
             suite('With didTriggerInterpreterSuggestions set to false', () => {
-                let didTriggerInterpreterSuggestionsStub: sinon.SinonStub;
-
                 setup(() => {
-                    didTriggerInterpreterSuggestionsStub = sinon
-                        .stub(pipEnvService, 'didTriggerInterpreterSuggestions')
-                        .get(() => false);
+                    sinon.stub(pipEnvService, 'didTriggerInterpreterSuggestions').get(() => false);
+                });
+
+                teardown(() => {
+                    sinon.restore();
                 });
 
                 test('isRelatedPipEnvironment should exit early', async () => {
