@@ -40,22 +40,17 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     ): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {
-            console.log('No document');
             return;
         }
         if (document.lineCount <= 1) {
-            console.log('No lines in document');
             return;
         }
 
         const execIsort = await this.getExecIsort(document, uri, token);
         if (token && token.isCancellationRequested) {
-            console.log('Cancellation requested');
             return;
         }
         const diffPatch = await execIsort(document.getText());
-
-        console.log('diffPath:', diffPatch);
 
         return diffPatch
             ? this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri)
@@ -130,17 +125,11 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             cwd: path.dirname(uri.fsPath)
         };
 
-        console.log('uri:', uri);
-        console.log('uri.fsPath:', uri.fsPath);
-        console.log('spawnOptions:', spawnOptions);
-        console.log('spawnOptions.cwd:', spawnOptions.cwd);
-
         if (isort) {
             const procService = await this.processServiceFactory.create(document.uri);
             // Use isort directly instead of the internal script.
             return async (documentText: string) => {
                 const args = getIsortArgs(filename, isortArgs);
-                console.log('args:', args);
                 const result = procService.execObservable(isort, args, spawnOptions);
                 return this.communicateWithIsortProcess(result, documentText);
             };
@@ -148,7 +137,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             const procService = await this.pythonExecutionFactory.create({ resource: document.uri });
             return async (documentText: string) => {
                 const [args, parse] = internalScripts.sortImports(filename, isortArgs);
-                console.log('args:', args);
                 const result = procService.execObservable(args, spawnOptions);
                 return parse(await this.communicateWithIsortProcess(result, documentText));
             };
@@ -179,8 +167,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
 
         // .. and finally wait for isort to do its thing
         await isortOutput.promise;
-
-        console.log('Output buffer:', outputBuffer);
 
         return outputBuffer;
     }
