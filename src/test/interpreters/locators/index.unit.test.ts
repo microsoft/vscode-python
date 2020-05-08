@@ -90,6 +90,7 @@ suite('Interpreters - Locators Index', () => {
                         .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
+
                     typeLocator
                         .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([interpreter]))
@@ -152,6 +153,7 @@ suite('Interpreters - Locators Index', () => {
                         .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
+
                     typeLocator
                         .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([interpreter]))
@@ -171,6 +173,7 @@ suite('Interpreters - Locators Index', () => {
                 });
 
                 const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
+
                 helper
                     .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(expectedInterpreters))
@@ -180,11 +183,9 @@ suite('Interpreters - Locators Index', () => {
 
                 locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
                 helper.verifyAll();
-                expect(interpreters).to.be.lengthOf(locatorsTypes.length);
                 expect(interpreters).to.be.deep.equal(expectedInterpreters);
             });
-
-            test(`The pipenv locator service isn't used when the onActivation option is true ${testSuffix}`, async () => {
+            test(`didTriggerInterpreterSuggestions is set to true in the locators if onSuggestion is true ${testSuffix}`, async () => {
                 const locatorsTypes: string[] = [];
                 if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
@@ -218,6 +219,7 @@ suite('Interpreters - Locators Index', () => {
                         .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
+
                     typeLocator
                         .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([interpreter]))
@@ -236,24 +238,19 @@ suite('Interpreters - Locators Index', () => {
                     };
                 });
 
-                const expectedInterpreters: PythonInterpreter[] = [];
-                locatorsWithInterpreters.forEach((item) => {
-                    if (item.type !== PIPENV_SERVICE) {
-                        expectedInterpreters.push(item.interpreters[0]);
-                    }
-                });
-
-                // const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
                 helper
                     .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(expectedInterpreters))
-                    .verifiable(TypeMoq.Times.once());
+                    .returns(() => Promise.resolve(locatorsWithInterpreters.map((item) => item.interpreters[0])));
 
-                const interpreters = await locator.getInterpreters(resource, { onActivation: false });
+                await locator.getInterpreters(resource, { onSuggestion: true });
 
-                locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
-                helper.verifyAll();
-                expect(interpreters).to.be.deep.equal(expectedInterpreters);
+                locatorsWithInterpreters.forEach((item) =>
+                    item.locator.verify((l) => (l.didTriggerInterpreterSuggestions = true), TypeMoq.Times.once())
+                );
+                expect(locator.didTriggerInterpreterSuggestions).to.equal(
+                    true,
+                    'didTriggerInterpreterSuggestions should be set to true.'
+                );
             });
         });
     });

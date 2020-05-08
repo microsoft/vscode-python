@@ -713,14 +713,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     };
 
-    private onHoverLeave = () => {
+    private onHoverLeave = (e: MouseEvent) => {
         // If the hover is active, make sure to hide it.
         if (this.state.editor && this.widgetParent) {
             this.enteredHover = false;
-            // tslint:disable-next-line: no-any
-            const hover = this.state.editor.getContribution('editor.contrib.hover') as any;
-            if (hover._hideWidgets) {
-                hover._hideWidgets();
+
+            // Hide only if not still inside the same editor. Monaco will handle closing otherwise
+            if (!this.coordsInsideEditor(e.clientX, e.clientY)) {
+                // tslint:disable-next-line: no-any
+                const hover = this.state.editor.getContribution('editor.contrib.hover') as any;
+                if (hover._hideWidgets) {
+                    hover._hideWidgets();
+                }
             }
         }
     };
@@ -732,24 +736,36 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     };
 
-    private outermostParentLeave = () => {
+    // tslint:disable-next-line: no-any
+    private outermostParentLeave = (e: any) => {
         // Have to bounce this because the leave for the cell is the
         // enter for the hover
         if (this.leaveTimer) {
             clearTimeout(this.leaveTimer);
         }
-        this.leaveTimer = window.setTimeout(this.outermostParentLeaveBounced, 0);
+        this.leaveTimer = window.setTimeout(() => this.outermostParentLeaveBounced(e), 0);
     };
 
-    private outermostParentLeaveBounced = () => {
-        if (this.state.editor && !this.enteredHover) {
+    // tslint:disable-next-line: no-any
+    private outermostParentLeaveBounced = (e: MouseEvent) => {
+        if (this.state.editor && !this.enteredHover && !this.coordsInsideEditor(e.clientX, e.clientY)) {
             // If we haven't already entered hover, then act like it shuts down
-            this.onHoverLeave();
+            this.onHoverLeave(e);
             // Possible user is viewing the parameter hints, wait before user moves the mouse.
             // Waiting for 1s is too long to move the mouse and hide the hints (100ms seems like a good fit).
             setTimeout(() => this.hideParameterWidget(), 100);
         }
     };
+
+    private coordsInsideEditor(x: number, y: number): boolean {
+        if (this.monacoContainer) {
+            const clientRect = this.monacoContainer.getBoundingClientRect();
+            if (x >= clientRect.left && x <= clientRect.right && y >= clientRect.top && y <= clientRect.bottom) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * This will hide the parameter widget if the user is not hovering over

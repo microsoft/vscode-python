@@ -32,15 +32,15 @@ export namespace Diagnostics {
     );
     export const removePythonPathSettingsJson = localize(
         'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json.'
+        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const removePythonPathCodeWorkspace = localize(
         'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your .code-workspace file.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
         'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and .code-workspace file.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',

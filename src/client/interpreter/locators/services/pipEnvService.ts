@@ -43,9 +43,15 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pipEnvServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
+
     // tslint:disable-next-line:no-empty
     public dispose() {}
+
     public async isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean> {
+        if (!this.didTriggerInterpreterSuggestions) {
+            return false;
+        }
+
         // In PipEnv, the name of the cwd is used as a prefix in the virtual env.
         if (pythonPath.indexOf(`${path.sep}${path.basename(dir)}-`) === -1) {
             return false;
@@ -55,10 +61,14 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     }
 
     public get executable(): string {
-        return this.configService.getSettings().pipenvPath;
+        return this.didTriggerInterpreterSuggestions ? this.configService.getSettings().pipenvPath : '';
     }
 
     public async getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]> {
+        if (!this.didTriggerInterpreterSuggestions) {
+            return [];
+        }
+
         const stopwatch = new StopWatch();
         const startDiscoveryTime = stopwatch.elapsedTime;
 
@@ -71,6 +81,10 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     }
 
     protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+        if (!this.didTriggerInterpreterSuggestions) {
+            return Promise.resolve([]);
+        }
+
         const pipenvCwd = this.getPipenvWorkingDirectory(resource);
         if (!pipenvCwd) {
             return Promise.resolve([]);
@@ -146,6 +160,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             }
         }
     }
+
     private async checkIfPipFileExists(cwd: string): Promise<boolean> {
         const currentProcess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         const pipFileName = currentProcess.env[pipEnvFileNameVariable];

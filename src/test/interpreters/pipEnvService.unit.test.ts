@@ -60,6 +60,7 @@ suite('Interpreters - PipEnv', () => {
             let settings: TypeMoq.IMock<IPythonSettings>;
             let pipenvPathSetting: string;
             let pipEnvServiceHelper: IPipEnvServiceHelper;
+
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -138,150 +139,198 @@ suite('Interpreters - PipEnv', () => {
                 pipEnvService = new PipEnvService(serviceContainer.object);
             });
 
-            test(`Should return an empty list'${testSuffix}`, () => {
-                const environments = pipEnvService.getInterpreters(resource);
-                expect(environments).to.be.eventually.deep.equal([]);
+            suite('With didTriggerInterpreterSuggestions set to true', () => {
+                setup(() => {
+                    sinon.stub(pipEnvService, 'didTriggerInterpreterSuggestions').get(() => true);
+                });
+
+                teardown(() => {
+                    sinon.restore();
+                });
+
+                test(`Should return an empty list'${testSuffix}`, () => {
+                    const environments = pipEnvService.getInterpreters(resource);
+                    expect(environments).to.be.eventually.deep.equal([]);
+                });
+                test(`Should return an empty list if there is no \'PipFile\'${testSuffix}`, async () => {
+                    const env = {};
+                    envVarsProvider
+                        .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({}))
+                        .verifiable(TypeMoq.Times.once());
+                    currentProcess.setup((c) => c.env).returns(() => env);
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                        .returns(() => Promise.resolve(false))
+                        .verifiable(TypeMoq.Times.once());
+                    const environments = await pipEnvService.getInterpreters(resource);
+
+                    expect(environments).to.be.deep.equal([]);
+                    fileSystem.verifyAll();
+                });
+                test(`Should display warning message if there is a \'PipFile\' but \'pipenv --version\' fails ${testSuffix}`, async () => {
+                    const env = {};
+                    currentProcess.setup((c) => c.env).returns(() => env);
+                    processService
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
+                        )
+                        .returns(() => Promise.reject(''));
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                        .returns(() => Promise.resolve(true));
+                    const warningMessage =
+                        "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
+                    appShell
+                        .setup((a) => a.showWarningMessage(warningMessage))
+                        .returns(() => Promise.resolve(''))
+                        .verifiable(TypeMoq.Times.once());
+                    const environments = await pipEnvService.getInterpreters(resource);
+
+                    expect(environments).to.be.deep.equal([]);
+                    appShell.verifyAll();
+                });
+                test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' fails with stderr ${testSuffix}`, async () => {
+                    const env = {};
+                    currentProcess.setup((c) => c.env).returns(() => env);
+                    processService
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
+                        )
+                        .returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
+                    processService
+                        .setup((p) =>
+                            p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny())
+                        )
+                        .returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                        .returns(() => Promise.resolve(true));
+                    const warningMessage =
+                        'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
+                    appShell
+                        .setup((a) => a.showWarningMessage(warningMessage))
+                        .returns(() => Promise.resolve(''))
+                        .verifiable(TypeMoq.Times.once());
+                    const environments = await pipEnvService.getInterpreters(resource);
+
+                    expect(environments).to.be.deep.equal([]);
+                    appShell.verifyAll();
+                });
+                test(`Should return interpreter information${testSuffix}`, async () => {
+                    const env = {};
+                    const pythonPath = 'one';
+                    envVarsProvider
+                        .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({}))
+                        .verifiable(TypeMoq.Times.once());
+                    currentProcess.setup((c) => c.env).returns(() => env);
+                    processService
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({ stdout: pythonPath }));
+                    interpreterHelper
+                        .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                        .returns(() => Promise.resolve(true))
+                        .verifiable();
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pythonPath)))
+                        .returns(() => Promise.resolve(true))
+                        .verifiable();
+
+                    const environments = await pipEnvService.getInterpreters(resource);
+
+                    expect(environments).to.be.lengthOf(1);
+                    fileSystem.verifyAll();
+                });
+                test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
+                    const envPipFile = 'XYZ';
+                    const env = {
+                        PIPENV_PIPFILE: envPipFile
+                    };
+                    const pythonPath = 'one';
+                    envVarsProvider
+                        .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({}))
+                        .verifiable(TypeMoq.Times.once());
+                    currentProcess.setup((c) => c.env).returns(() => env);
+                    processService
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({ stdout: pythonPath }));
+                    interpreterHelper
+                        .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                        .returns(() => Promise.resolve(false))
+                        .verifiable(TypeMoq.Times.never());
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile))))
+                        .returns(() => Promise.resolve(true))
+                        .verifiable(TypeMoq.Times.once());
+                    fileSystem
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pythonPath)))
+                        .returns(() => Promise.resolve(true))
+                        .verifiable();
+                    const environments = await pipEnvService.getInterpreters(resource);
+
+                    expect(environments).to.be.lengthOf(1);
+                    fileSystem.verifyAll();
+                });
+                test("Must use 'python.pipenvPath' setting", async () => {
+                    pipenvPathSetting = 'spam-spam-pipenv-spam-spam';
+                    const pipenvExe = pipEnvService.executable;
+                    assert.equal(pipenvExe, 'spam-spam-pipenv-spam-spam', 'Failed to identify pipenv.exe');
+                });
+
+                test('Should send telemetry event when calling getInterpreters', async () => {
+                    const sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
+
+                    await pipEnvService.getInterpreters(resource);
+
+                    sinon.assert.calledWith(sendTelemetryStub, EventName.PIPENV_INTERPRETER_DISCOVERY);
+                    sinon.restore();
+                });
             });
-            test(`Should return an empty list if there is no \'PipFile\'${testSuffix}`, async () => {
-                const env = {};
-                envVarsProvider
-                    .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({}))
-                    .verifiable(TypeMoq.Times.once());
-                currentProcess.setup((c) => c.env).returns(() => env);
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
-                    .returns(() => Promise.resolve(false))
-                    .verifiable(TypeMoq.Times.once());
-                const environments = await pipEnvService.getInterpreters(resource);
 
-                expect(environments).to.be.deep.equal([]);
-                fileSystem.verifyAll();
-            });
-            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --version\' fails ${testSuffix}`, async () => {
-                const env = {};
-                currentProcess.setup((c) => c.env).returns(() => env);
-                processService
-                    .setup((p) =>
-                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
-                    )
-                    .returns(() => Promise.reject(''));
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
-                    .returns(() => Promise.resolve(true));
-                const warningMessage =
-                    "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
-                appShell
-                    .setup((a) => a.showWarningMessage(warningMessage))
-                    .returns(() => Promise.resolve(''))
-                    .verifiable(TypeMoq.Times.once());
-                const environments = await pipEnvService.getInterpreters(resource);
+            suite('With didTriggerInterpreterSuggestions set to false', () => {
+                setup(() => {
+                    sinon.stub(pipEnvService, 'didTriggerInterpreterSuggestions').get(() => false);
+                });
 
-                expect(environments).to.be.deep.equal([]);
-                appShell.verifyAll();
-            });
-            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' fails with stderr ${testSuffix}`, async () => {
-                const env = {};
-                currentProcess.setup((c) => c.env).returns(() => env);
-                processService
-                    .setup((p) =>
-                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
-                    )
-                    .returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
-                processService
-                    .setup((p) =>
-                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny())
-                    )
-                    .returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
-                    .returns(() => Promise.resolve(true));
-                const warningMessage =
-                    'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
-                appShell
-                    .setup((a) => a.showWarningMessage(warningMessage))
-                    .returns(() => Promise.resolve(''))
-                    .verifiable(TypeMoq.Times.once());
-                const environments = await pipEnvService.getInterpreters(resource);
+                teardown(() => {
+                    sinon.restore();
+                });
 
-                expect(environments).to.be.deep.equal([]);
-                appShell.verifyAll();
-            });
-            test(`Should return interpreter information${testSuffix}`, async () => {
-                const env = {};
-                const pythonPath = 'one';
-                envVarsProvider
-                    .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({}))
-                    .verifiable(TypeMoq.Times.once());
-                currentProcess.setup((c) => c.env).returns(() => env);
-                processService
-                    .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper
-                    .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
-                    .returns(() => Promise.resolve(true))
-                    .verifiable();
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pythonPath)))
-                    .returns(() => Promise.resolve(true))
-                    .verifiable();
+                test('isRelatedPipEnvironment should exit early', async () => {
+                    processService
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .verifiable(TypeMoq.Times.never());
 
-                const environments = await pipEnvService.getInterpreters(resource);
+                    const result = await pipEnvService.isRelatedPipEnvironment('foo', 'some/python/path');
 
-                expect(environments).to.be.lengthOf(1);
-                fileSystem.verifyAll();
-            });
-            test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
-                const envPipFile = 'XYZ';
-                const env = {
-                    PIPENV_PIPFILE: envPipFile
-                };
-                const pythonPath = 'one';
-                envVarsProvider
-                    .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({}))
-                    .verifiable(TypeMoq.Times.once());
-                currentProcess.setup((c) => c.env).returns(() => env);
-                processService
-                    .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper
-                    .setup((v) => v.getInterpreterInformation(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
-                    .returns(() => Promise.resolve(false))
-                    .verifiable(TypeMoq.Times.never());
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, envPipFile))))
-                    .returns(() => Promise.resolve(true))
-                    .verifiable(TypeMoq.Times.once());
-                fileSystem
-                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pythonPath)))
-                    .returns(() => Promise.resolve(true))
-                    .verifiable();
-                const environments = await pipEnvService.getInterpreters(resource);
+                    expect(result).to.be.equal(false, 'isRelatedPipEnvironment should return false.');
+                    processService.verifyAll();
+                });
 
-                expect(environments).to.be.lengthOf(1);
-                fileSystem.verifyAll();
-            });
-            test("Must use 'python.pipenvPath' setting", async () => {
-                pipenvPathSetting = 'spam-spam-pipenv-spam-spam';
-                const pipenvExe = pipEnvService.executable;
-                assert.equal(pipenvExe, 'spam-spam-pipenv-spam-spam', 'Failed to identify pipenv.exe');
-            });
+                test('Executable getter should return an empty string', () => {
+                    const executable = pipEnvService.executable;
 
-            test('Should send telemetry event when calling getInterpreters', async () => {
-                const sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
+                    expect(executable).to.be.equal('', 'The executable getter should return an empty string.');
+                });
 
-                await pipEnvService.getInterpreters(resource);
+                test('getInterpreters should exit early', async () => {
+                    processService
+                        .setup((p) => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .verifiable(TypeMoq.Times.never());
 
-                sinon.assert.calledWith(sendTelemetryStub, EventName.PIPENV_INTERPRETER_DISCOVERY);
-                sinon.restore();
+                    const interpreters = await pipEnvService.getInterpreters(resource);
+
+                    expect(interpreters).to.be.lengthOf(0);
+                    processService.verifyAll();
+                });
             });
         });
     });

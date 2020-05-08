@@ -70,6 +70,8 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
     private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
+    private _didTriggerInterpreterSuggestions: boolean;
+
     constructor(
         @unmanaged() private readonly name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
@@ -77,6 +79,15 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
+        this._didTriggerInterpreterSuggestions = false;
+    }
+
+    public get didTriggerInterpreterSuggestions(): boolean {
+        return this._didTriggerInterpreterSuggestions;
+    }
+
+    public set didTriggerInterpreterSuggestions(value: boolean) {
+        this._didTriggerInterpreterSuggestions = value;
     }
 
     public get onLocating(): Event<Promise<PythonInterpreter[]>> {

@@ -28,7 +28,7 @@ export interface IVirtualEnvironmentsSearchPathProvider {
 }
 
 export type GetInterpreterOptions = {
-    onActivation?: boolean;
+    onSuggestion?: boolean;
 };
 
 export type GetInterpreterLocatorOptions = GetInterpreterOptions & { ignoreCache?: boolean };
@@ -38,6 +38,7 @@ export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 export interface IInterpreterLocatorService extends Disposable {
     readonly onLocating: Event<Promise<PythonInterpreter[]>>;
     readonly hasInterpreters: Promise<boolean>;
+    didTriggerInterpreterSuggestions?: boolean;
     getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]>;
 }
 
@@ -126,7 +127,7 @@ export interface IInterpreterHelper {
 }
 
 export const IPipEnvService = Symbol('IPipEnvService');
-export interface IPipEnvService {
+export interface IPipEnvService extends IInterpreterLocatorService {
     executable: string;
     isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }

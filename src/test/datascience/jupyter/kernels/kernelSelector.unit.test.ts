@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { nbformat } from '@jupyterlab/coreutils';
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -15,6 +15,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { defaultKernelSpecName } from '../../../../client/datascience/jupyter/kernels/helpers';
 import { KernelDependencyService } from '../../../../client/datascience/jupyter/kernels/kernelDependencyService';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
@@ -25,7 +26,7 @@ import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/d
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
-// tslint:disable: max-func-body-length
+// tslint:disable: max-func-body-length no-unused-expression
 
 suite('Data Science - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
@@ -503,6 +504,36 @@ suite('Data Science - KernelSelector', () => {
             verify(
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).never();
+        });
+        test('For a raw connection, if an interpreter is selected return it along with a default kernelspec', async () => {
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), 'raw', anything(), anything())
+            ).thenResolve([]);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
+                selection: { interpreter, kernelSpec: undefined }
+                // tslint:disable-next-line: no-any
+            } as any);
+
+            const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
+
+            assert.isOk(kernel.interpreter === interpreter);
+            expect(kernel.kernelSpec, 'Should have kernelspec').to.not.be.undefined;
+            expect(kernel.kernelSpec!.name, 'Spec should have default name').to.include(defaultKernelSpecName);
+        });
+        test('For a raw connection, if a kernel spec is selected return it with the interpreter', async () => {
+            when(dependencyService.areDependenciesInstalled(interpreter, anything())).thenResolve(true);
+            when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), 'raw', anything(), anything())
+            ).thenResolve([]);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
+                selection: { interpreter: undefined, kernelSpec }
+                // tslint:disable-next-line: no-any
+            } as any);
+            const kernel = await kernelSelector.selectLocalKernel(undefined, 'raw', new StopWatch());
+            expect(kernel.kernelSpec).to.equal(kernelSpec);
+            expect(kernel.interpreter).to.equal(interpreter);
         });
     });
     // tslint:disable-next-line: max-func-body-length
