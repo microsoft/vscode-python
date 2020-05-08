@@ -49,6 +49,22 @@ import {
 import { RefBool } from '../../common/refBool';
 
 class CellSubscriber {
+    public get startTime(): number {
+        return this._startTime;
+    }
+
+    public get onCanceled(): Event<void> {
+        return this.canceledEvent.event;
+    }
+
+    public get promise(): Promise<CellState> {
+        return this.deferred.promise;
+    }
+
+    public get cell(): ICell {
+        return this.cellRef;
+    }
+    public executionState?: Kernel.Status;
     private deferred: Deferred<CellState> = createDeferred<CellState>();
     private cellRef: ICell;
     private subscriber: Subscriber<ICell>;
@@ -61,14 +77,6 @@ class CellSubscriber {
         this.subscriber = subscriber;
         this.promiseComplete = promiseComplete;
         this._startTime = Date.now();
-    }
-
-    public get startTime(): number {
-        return this._startTime;
-    }
-
-    public get onCanceled(): Event<void> {
-        return this.canceledEvent.event;
     }
 
     public isValid(sessionStartTime: number | undefined) {
@@ -122,14 +130,6 @@ class CellSubscriber {
             this.deferred.resolve();
             this.promiseComplete(this);
         }
-    }
-
-    public get promise(): Promise<CellState> {
-        return this.deferred.promise;
-    }
-
-    public get cell(): ICell {
-        return this.cellRef;
     }
 
     private attemptToFinish() {
@@ -950,30 +950,41 @@ export class JupyterNotebookBase implements INotebook {
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
         const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
-
+        let shouldUpdateSubscriber = true;
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
+                // If there is no change in the status, then there's no need to update the subscriber.
+                // Else we end up sending a number of messages unnecessarily uptream.
+                const statusMsg = msg as KernelMessage.IStatusMsg;
+                if (statusMsg.content.execution_state === subscriber.executionState) {
+                    shouldUpdateSubscriber = false;
+                }
+                subscriber.executionState = statusMsg.content.execution_state;
+                this.handleStatusMessage(statusMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
                 this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, clearState, subscriber.cell);
+                // No new data to update UI, hence do not send updates.
+                shouldUpdateSubscriber = false;
             } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
-                // Ignore this
+                // No new data to update UI, hence do not send updates.
+                shouldUpdateSubscriber = false;
             } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
-                // Ignore this
+                // No new data to update UI, hence do not send updates.
+                shouldUpdateSubscriber = false;
             } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
-                // Ignore this
+                // No new data to update UI, hence do not send updates.
+                shouldUpdateSubscriber = false;
             } else {
                 traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
             }
@@ -989,7 +1000,9 @@ export class JupyterNotebookBase implements INotebook {
             result = Promise.all([...this.ioPubListeners].map((l) => l(msg, msg.header.msg_id)));
 
             // Show our update if any new output.
-            subscriber.next(this.sessionStartTime);
+            if (shouldUpdateSubscriber) {
+                subscriber.next(this.sessionStartTime);
+            }
         } catch (err) {
             // If not a restart error, then tell the subscriber
             subscriber.error(this.sessionStartTime, err);
@@ -1326,10 +1339,6 @@ export class JupyterNotebookBase implements INotebook {
             transient: msg.content.transient as any // NOSONAR
         };
         this.addToCellData(cell, output, clearState);
-    }
-
-    private handleUpdateDisplayData(_msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, _cell: ICell) {
-        // Updates should be handled outside.
     }
 
     private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool, cell: ICell) {
