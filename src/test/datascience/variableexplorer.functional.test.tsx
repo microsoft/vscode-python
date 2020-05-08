@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
-import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Disposable } from 'vscode';
@@ -12,7 +10,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode } from './interactiveWindowTestHelpers';
+import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     openVariableExplorer,
@@ -316,6 +314,22 @@ myDict = {'a': 1}`;
                         truncated: false
                     }
                 ];
+                verifyVariables(wrapper, targetVariables);
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                }
+
+                // Restart the kernel and repeat
+                const interactive = await getOrCreateInteractiveWindow(ioc);
+                await interactive.restartKernel();
+
+                // Should have no variables
+                verifyVariables(wrapper, []);
+
+                await addCodeImpartial(wrapper, 'a=1\na');
+                await addCodeImpartial(wrapper, basicCode, true);
+
                 verifyVariables(wrapper, targetVariables);
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
