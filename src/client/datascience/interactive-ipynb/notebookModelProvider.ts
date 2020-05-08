@@ -54,7 +54,14 @@ export class NotebookModelProvider implements INotebookModelProvider {
     private trackModel(model: INotebookModel) {
         this.disposables.push(model);
         // When a model is no longer used, ensure we remove it from the cache.
-        model.onDidDispose(() => this.storageAndModels.delete(model.file.toString()), this, this.disposables);
+        model.onDidDispose(
+            () => {
+                this.storageAndModels.delete(model.file.toString());
+                this.autSaveNotebookInHotExitFile.delete(model);
+            },
+            this,
+            this.disposables
+        );
 
         // Ensure we save into back for hotexit, if it is not an untitled file.
         if (!model.isUntitled) {
