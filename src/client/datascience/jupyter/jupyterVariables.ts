@@ -10,6 +10,7 @@ import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
+    IConditionalJupyterVariables,
     IJupyterDebugService,
     IJupyterVariable,
     IJupyterVariables,
@@ -28,13 +29,12 @@ export class JupyterVariables implements IJupyterVariables {
 
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IJupyterDebugService)
-        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
-        private debugService: IJupyterDebugService,
         @inject(IExperimentsManager) private experimentsManager: IExperimentsManager,
         @inject(IJupyterVariables) @named(Identifiers.OLD_VARIABLES) private oldVariables: IJupyterVariables,
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private kernelVariables: IJupyterVariables,
-        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debuggerVariables: IJupyterVariables
+        @inject(IJupyterVariables)
+        @named(Identifiers.DEBUGGER_VARIABLES)
+        private debuggerVariables: IConditionalJupyterVariables
     ) {
         disposableRegistry.push(debuggerVariables.refreshRequired(this.fireRefresh.bind(this)));
         disposableRegistry.push(kernelVariables.refreshRequired(this.fireRefresh.bind(this)));
@@ -54,8 +54,8 @@ export class JupyterVariables implements IJupyterVariables {
         return this.realVariables.getVariables(notebook, request);
     }
 
-    public getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
-        return this.realVariables.getMatchingVariable(notebook, name);
+    public getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined> {
+        return this.realVariables.getMatchingVariableValue(notebook, name);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
@@ -75,7 +75,7 @@ export class JupyterVariables implements IJupyterVariables {
         if (!this.experimentsManager.inExperiment(RunByLine.experiment)) {
             return this.oldVariables;
         }
-        if (this.debugService.activeDebugSession) {
+        if (this.debuggerVariables.active) {
             return this.debuggerVariables;
         }
 

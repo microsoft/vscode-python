@@ -784,7 +784,11 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
-    getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined>;
+    getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined>;
+}
+
+export interface IConditionalJupyterVariables extends IJupyterVariables {
+    readonly active: boolean;
 }
 
 // Request for variables

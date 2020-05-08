@@ -184,6 +184,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.protocolParser.connect(this.socket);
             this.protocolParser.on('event_stopped', this.onBreakpoint.bind(this));
             this.protocolParser.on('event_output', this.onOutput.bind(this));
+            this.protocolParser.on('event_terminated', this.sendToTrackers.bind(this));
             this.socket.on('error', this.onError.bind(this));
             this.socket.on('close', this.onClose.bind(this));
             return this.sendStartSequence(config, this.session.id).then(() => true);
@@ -262,7 +263,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         this.debugAdapterTrackers.forEach((d) => d.onDidSendMessage!(args));
     }
 
-    private sendCustomRequest(command: string, args?: any): Promise<void> {
+    private sendCustomRequest(command: string, args?: any): Promise<any> {
         return this.sendMessage(command, args);
     }
 
@@ -334,9 +335,12 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         return this.sendMessage('disconnect', {});
     }
 
-    private sendMessage(command: string, args?: any): Promise<void> {
-        const response = createDeferred<void>();
-        this.protocolParser.once(`response_${command}`, () => response.resolve());
+    private sendMessage(command: string, args?: any): Promise<any> {
+        const response = createDeferred<any>();
+        this.protocolParser.once(`response_${command}`, (args: any) => {
+            this.sendToTrackers(args);
+            response.resolve(args.body);
+        });
         this.socket!.on('error', (err) => response.reject(err)); // NOSONAR
         this.emitMessage(command, args).catch((exc) => {
             traceError(`Exception attempting to emit ${command} to debugger: `, exc);
@@ -379,10 +383,12 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     }
 
     private onOutput(args: any): void {
+        this.sendToTrackers(args);
         traceInfo(JSON.stringify(args));
     }
 
     private onError(args: any): void {
+        this.sendToTrackers(args);
         traceInfo(JSON.stringify(args));
     }
 
@@ -391,6 +397,8 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
             this.sessionTerminatedEvent.fire(this.activeDebugSession);
             this.session = undefined;
             this.sessionChangedEvent.fire(undefined);
+            this.debugAdapterTrackers.forEach((d) => (d.onExit ? d.onExit(0, undefined) : noop()));
+            this.debugAdapterTrackers = [];
             this.sendDisconnect().ignoreErrors();
             this.socket.destroy();
             this.socket = undefined;

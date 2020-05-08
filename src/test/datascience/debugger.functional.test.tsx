@@ -30,6 +30,7 @@ import { getConnectionInfo } from './jupyterHelpers';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 import { mountConnectedMainPanel, openVariableExplorer, waitForMessage } from './testHelpers';
+import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -133,7 +134,7 @@ suite('DataScience Debugger tests', () => {
         breakpoint?: Range,
         breakpointFile?: string,
         expectError?: boolean,
-        step?: boolean
+        stepAndVerify?: () => void
     ): Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -178,26 +179,20 @@ suite('DataScience Debugger tests', () => {
                 verifyCodeLenses(expectedBreakLine);
 
                 // Step if allowed
-                if (step && ioc.wrapper && !ioc.mockJupyter) {
+                if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
                     // Verify variables work
                     openVariableExplorer(ioc.wrapper);
                     const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
-                    await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
 
                     // Force an update so we render whatever the current state is
                     ioc.wrapper.update();
 
-                    // Then search for results.
-                    const foundRows = ioc.wrapper.find('div.react-grid-Row');
-
-                    // Just assert we found some rows
-                    assert.ok(foundRows.length, 'Did not find any rows during debugging');
-                    const html = foundRows.html();
-                    assert.ok(!html.includes('No variables'), 'Variables not being displayed');
+                    // Then verify results.
+                    stepAndVerify();
                 }
 
                 // Verify break location
@@ -251,7 +246,19 @@ suite('DataScience Debugger tests', () => {
     });
     test('Check variables', async () => {
         ioc.setExperimentState(RunByLine.experiment, true);
-        await debugCell('#%%\nx = 4\nx = 5', undefined, undefined, false, true);
+        await debugCell('#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
+            const targetResult = {
+                name: 'x',
+                value: '[4, 6]',
+                supportsDataExplorer: true,
+                type: 'List',
+                size: 0,
+                shape: '',
+                count: 2,
+                truncated: false
+            };
+            verifyVariables(ioc!.wrapper!, [targetResult]);
+        });
     });
 
     test('Debug remote', async () => {

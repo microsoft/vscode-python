@@ -752,10 +752,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (wordAtPosition) {
             const notebook = await this.getNotebook();
             if (notebook) {
-                const variable = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition);
-                if (variable && variable.value && variable.name) {
+                const value = await this.variableProvider.getMatchingVariableValue(notebook, wordAtPosition);
+                if (value) {
                     return {
-                        contents: [`${variable.name} : ${variable.value}`]
+                        contents: [`${wordAtPosition} : ${value}`]
                     };
                 }
             }
