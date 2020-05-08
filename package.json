@@ -2071,7 +2071,7 @@
                 "python.jediPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
+                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory). Note: since Jedi depends on Parso, if using this setting you will need to ensure a suitable version of Parso is available.",
                     "scope": "resource"
                 },
                 "python.languageServer": {
