@@ -6,8 +6,9 @@ import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 
+import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IJupyterVariable } from '../../client/datascience/types';
+import { IJupyterDebugService, IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { waitForMessage } from './testHelpers';
@@ -22,6 +23,8 @@ export async function verifyAfterStep(
     const interactive = await getOrCreateInteractiveWindow(ioc);
     const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
     const debugPromise = interactive.debugCode('a=1\na', 'foo.py', 1, undefined, undefined);
+    const jupyterDebugger = ioc.get<IJupyterDebugService>(IJupyterDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
+    await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();
     verifyVariables(wrapper, targetVariables);

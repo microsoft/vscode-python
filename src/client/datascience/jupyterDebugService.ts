@@ -337,9 +337,9 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private sendMessage(command: string, args?: any): Promise<any> {
         const response = createDeferred<any>();
-        this.protocolParser.once(`response_${command}`, (args: any) => {
-            this.sendToTrackers(args);
-            response.resolve(args.body);
+        this.protocolParser.once(`response_${command}`, (resp: any) => {
+            this.sendToTrackers(resp);
+            response.resolve(resp.body);
         });
         this.socket!.on('error', (err) => response.reject(err)); // NOSONAR
         this.emitMessage(command, args).catch((exc) => {

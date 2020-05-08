@@ -11,7 +11,6 @@ import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import {
     IConditionalJupyterVariables,
-    IJupyterDebugService,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
