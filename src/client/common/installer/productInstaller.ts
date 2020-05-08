@@ -81,38 +81,25 @@ export abstract class BaseInstaller {
 
     public async install(
         product: Product,
-        interpreterUri?: InterpreterUri,
+        resource?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
 
-        const channels: IModuleInstaller[] = await this.serviceContainer
-            .get<IInstallationChannelManager>(IInstallationChannelManager)
-            .getInstallationChannels();
-
-        // Assume the Uri is actually a full PythonInterpreter for a sec...
-        const interpreter = interpreterUri as PythonInterpreter;
-
-        // Pick an installerModule based on whether the interpreter is conda or not.
-        let installerModule;
-        if (interpreter && interpreter.hasOwnProperty('type') !== undefined && interpreter.type === 'Conda') {
-            installerModule = channels.find((v) => v.name === 'Conda');
-        } else {
-            installerModule = channels.find((v) => v.name === 'Pip');
-        }
-
-        if (!installerModule) {
+        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
+        const installer = await channels.getInstallationChannel(product, resource);
+        if (!installer) {
             return InstallerResponse.Ignore;
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        await installerModule
-            .installModule(moduleName, interpreter, cancel)
+        await installer
+            .installModule(moduleName, resource, cancel)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
-        return this.isInstalled(product, interpreter).then((isInstalled) =>
+        return this.isInstalled(product, resource).then((isInstalled) =>
             isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
         );
     }
@@ -365,6 +352,70 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
 }
 
 export class DataScienceInstaller extends BaseInstaller {
+    // Override base installer to support a more DS-friendly streamlined installation.
+    public async install(
+        product: Product,
+        interpreterUri?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
+        // Get a list of known installation channels, pip, conda, etc.
+        const channels: IModuleInstaller[] = await this.serviceContainer
+            .get<IInstallationChannelManager>(IInstallationChannelManager)
+            .getInstallationChannels();
+
+        // Assume the Uri is actually a full PythonInterpreter...
+        const interpreter = interpreterUri as PythonInterpreter;
+
+        // Pick an installerModule based on whether the interpreter is conda or not.
+        let installerModule;
+        if (!interpreter || !interpreter.hasOwnProperty('type')) {
+            return InstallerResponse.Ignore; // All data science packages require an interpreter be passed in.
+        } else {
+            // If conda-based interpreter use it. If not, just use pip.
+            if (interpreter.type === 'Conda') {
+                installerModule = channels.find((v) => v.name === 'Conda');
+            } else {
+                installerModule = channels.find((v) => v.name === 'Pip');
+            }
+        }
+
+        if (!installerModule) {
+            return InstallerResponse.Ignore;
+        }
+
+        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
+        await installerModule
+            .installModule(moduleName, interpreter, cancel)
+            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+
+        return this.isInstalled(product, interpreter).then((isInstalled) =>
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
+        );
+    }
+
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
+        if (product === Product.unittest) {
+            return true;
+        }
+        // User may have customized the module name or provided the fully qualified path.
+        const interpreter = isResource(resource) ? undefined : resource;
+        const uri = isResource(resource) ? resource : undefined;
+        const executableName = this.getExecutableNameFromSettings(product, uri);
+
+        const isModule = this.isExecutableAModule(product, uri);
+        if (isModule) {
+            const pythonProcess = await this.serviceContainer
+                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
+            return pythonProcess.isModuleInstalled(executableName);
+        } else {
+            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
+            return process
+                .exec(executableName, ['--version'], { mergeStdOutErr: true })
+                .then(() => true)
+                .catch(() => false);
+        }
+    }
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,
