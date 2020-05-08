@@ -66,9 +66,13 @@ export class MockDocument implements TextDocument {
         this._onSave = onSave;
     }
 
-    public addContent(contents: string) {
-        this._contents = `${this._contents}\n${contents}`;
+    public setContent(contents: string) {
+        this._contents = contents;
         this._lines = this.createLines();
+    }
+
+    public addContent(contents: string) {
+        this.setContent(`${this._contents}\n${contents}`);
     }
 
     public forceUntitled(): void {

@@ -6,12 +6,16 @@ import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 
+import { Uri } from 'vscode';
+import { IDocumentManager } from '../../client/common/application/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterDebugService, IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
-import { waitForMessage } from './testHelpers';
+import { MockDocumentManager } from './mockDocumentManager';
+import { waitForMessage, waitForVariablesUpdated } from './testHelpers';
 
 // tslint:disable: no-var-requires no-require-imports no-any
 
@@ -21,13 +25,20 @@ export async function verifyAfterStep(
     targetVariables: IJupyterVariable[]
 ) {
     const interactive = await getOrCreateInteractiveWindow(ioc);
-    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
-    const debugPromise = interactive.debugCode('a=1\na', 'foo.py', 1, undefined, undefined);
+    const debuggerBroke = createDeferred();
     const jupyterDebugger = ioc.get<IJupyterDebugService>(IJupyterDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
+    jupyterDebugger.onBreakpointHit(() => debuggerBroke.resolve());
+    const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+    const file = Uri.file('foo.py');
+    docManager.addDocument('a=1\na', file.fsPath);
+    const debugPromise = interactive.debugCode('a=1\na', file.fsPath, 1, undefined, undefined);
+    await debuggerBroke.promise;
+    const variableRefresh = waitForVariablesUpdated(ioc, 2); // Two times. Once for the initial refresh and another for the values.
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();
     verifyVariables(wrapper, targetVariables);
+    await jupyterDebugger.continue();
     return debugPromise;
 }
 

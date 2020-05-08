@@ -322,12 +322,14 @@ myDict = {'a': 1}`;
 
                 // Restart the kernel and repeat
                 const interactive = await getOrCreateInteractiveWindow(ioc);
+                const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                 await interactive.restartKernel();
+                await variablesComplete; // Restart should cause a variable refresh
 
                 // Should have no variables
                 verifyVariables(wrapper, []);
 
-                await addCodeImpartial(wrapper, 'a=1\na');
+                await addCodeImpartial(wrapper, 'a=1\na', true);
                 await addCodeImpartial(wrapper, basicCode, true);
 
                 verifyVariables(wrapper, targetVariables);

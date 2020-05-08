@@ -8,6 +8,7 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -101,7 +102,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
-            await this.executeSilently(notebook, this.tracingDisableCode);
+            if (notebook.status !== ServerStatus.Dead && notebook.status !== ServerStatus.NotStarted) {
+                await this.executeSilently(notebook, this.tracingDisableCode);
+            }
         }
     }
 
