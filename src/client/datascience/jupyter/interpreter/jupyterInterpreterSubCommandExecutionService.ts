@@ -51,7 +51,7 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
-    ) {}
+    ) { }
 
     /**
      * This is a noop, implemented for backwards compatibility.
@@ -145,9 +145,18 @@ export class JupyterInterpreterSubCommandExecutionService
         return serverInfos;
     }
     public async exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string> {
-        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
-        if (!(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
-            throw new Error(DataScience.jupyterNbConvertNotSupported());
+        // Before we export check if our selected interpreter is available and supports export
+        let interpreter = await this.getSelectedInterpreter(token);
+        if (!interpreter || !(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
+            // If not available or not supported install missing dependecies
+            await this.installMissingDependencies();
+
+            // Install missing dependencies might change the selected interpreter, so check the new one
+            interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
+
+            if (!(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
+                throw new Error(DataScience.jupyterNbConvertNotSupported());
+            }
         }
 
         const daemon = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
