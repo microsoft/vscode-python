@@ -349,15 +349,15 @@ export namespace DataScience {
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        'Data Science library {1} is not installed in interpreter {0}.'
+        '{0} requires {1} to be installed.'
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        'Data Science library {1} is not installed in interpreter {0}. Install?'
+        '{0} requires {1} to be installed.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        'Data Science libraries {1} are not installed in interpreter {0}.'
+        '{0} requires {1} to be installed.'
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
