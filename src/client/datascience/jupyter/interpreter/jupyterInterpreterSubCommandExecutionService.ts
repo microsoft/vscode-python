@@ -51,7 +51,7 @@ export class JupyterInterpreterSubCommandExecutionService
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
-    ) { }
+    ) {}
 
     /**
      * This is a noop, implemented for backwards compatibility.

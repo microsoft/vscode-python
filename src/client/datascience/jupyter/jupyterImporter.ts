@@ -15,7 +15,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CodeSnippits, Identifiers } from '../constants';
-import { CellState, ICell, IJupyterExecution, INotebookImporter, IJupyterInterpreterDependencyManager } from '../types';
+import { CellState, ICell, IJupyterExecution, IJupyterInterpreterDependencyManager, INotebookImporter } from '../types';
 import { InvalidNotebookFileError } from './invalidNotebookFileError';
 
 @injectable()
@@ -44,7 +44,8 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IJupyterInterpreterDependencyManager) private readonly dependencyManager: IJupyterInterpreterDependencyManager
+        @inject(IJupyterInterpreterDependencyManager)
+        private readonly dependencyManager: IJupyterInterpreterDependencyManager
     ) {
         this.templatePromise = this.createTemplateFile();
     }
@@ -61,7 +62,7 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         // Before we try the import, see if we don't support it, if we don't give a chance to install dependencies
-        if (!await this.jupyterExecution.isImportSupported()) {
+        if (!(await this.jupyterExecution.isImportSupported())) {
             await this.dependencyManager.installMissingDependencies();
         }
 
