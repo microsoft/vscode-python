@@ -158,10 +158,11 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
 
     // tslint:disable-next-line: no-any
     public onDidSendMessage(message: any) {
-        // If using the interactive debugger, update our variables.
+        // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
         } else if (message.type === 'response' && message.command === 'variables') {
+            // If using the interactive debugger, update our variables.
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use
             this.updateVariables(undefined, message as DebugProtocol.VariablesResponse);

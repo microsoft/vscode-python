@@ -407,7 +407,9 @@ suite('Installer', () => {
                 prod.value === Product.jupyter ||
                 prod.value === Product.notebook ||
                 prod.value === Product.pandas ||
-                prod.value === Product.ipykernel
+                prod.value === Product.ipykernel ||
+                prod.value === Product.kernelspec ||
+                prod.value === Product.nbconvert
             ) {
                 return;
             }

@@ -1,10 +1,10 @@
---- src/test/pythonFiles/formatting/fileToFormat.py  (original)
-+++ src/test/pythonFiles/formatting/fileToFormat.py  (formatted)
-@@ -1,22 +1,38 @@
--import math, sys;
+--- C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py	2020-05-11 18:56:39.835398 +0000
++++ C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py	2020-05-11 19:05:50.969508 +0000
+@@ -1,23 +1,42 @@
 +import math, sys
-+
-
+ 
+-import math, sys;
+ 
  def example1():
      ####This is a long comment. This should be wrapped to fit within 72 characters.
 -    some_tuple=(   1,2, 3,'a'  );
@@ -16,7 +16,12 @@
 +    some_variable = {
 +        "long": "Long code lines should be wrapped within 79 characters.",
 +        "other": [
-+            math.pi, 100, 200, 300, 9876543210, "This is a long string that goes on"
++            math.pi,
++            100,
++            200,
++            300,
++            9876543210,
++            "This is a long string that goes on",
 +        ],
 +        "more": {
 +            "inner": "This whole logical line should be wrapped.",
@@ -38,7 +43,6 @@
 +
 +
 +class Example3(object):
-+
 +    def __init__(self, bar):
 +        # Comments should have a space after the hash.
 +        if bar:
@@ -52,3 +56,4 @@
  """
 -                    return (sys.path, some_string)
 +            return (sys.path, some_string)
+ 

@@ -7,7 +7,6 @@ import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { RunByLine } from '../../client/common/experimentGroups';
@@ -23,11 +22,19 @@ import {
     IJupyterDebugService,
     IJupyterExecution
 } from '../../client/datascience/types';
+import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel, openVariableExplorer, waitForMessage } from './testHelpers';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
+import {
+    getLastOutputCell,
+    openVariableExplorer,
+    runInteractiveTest,
+    runNativeTest,
+    waitForMessage
+} from './testHelpers';
 import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
@@ -52,13 +59,45 @@ suite('DataScience Debugger tests', () => {
     });
 
     setup(async () => {
-        ioc = createContainer();
+        ioc = new DataScienceIocContainer();
+    });
+
+    async function createIOC() {
+        ioc.registerDataScienceTypes();
         jupyterDebuggerService = ioc.serviceManager.get<IJupyterDebugService>(
             IJupyterDebugService,
             Identifiers.MULTIPLEXING_DEBUGSERVICE
         );
-        return ioc.activate();
-    });
+        // Rebind the appshell so we can change what happens on an error
+        const dummyDisposable = {
+            dispose: () => {
+                return;
+            }
+        };
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
+        appShell
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(''));
+        appShell
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell
+            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
+        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+        // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
+        // This is necessary to get the appropriate live share services up and running.
+        ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        ioc.get<IJupyterExecution>(IJupyterExecution);
+        ioc.get<IDebugLocationTracker>(IDebugLocationTracker);
+
+        await ioc.activate();
+        return ioc;
+    }
 
     teardown(async () => {
         for (const disposable of disposables) {
@@ -88,42 +127,6 @@ suite('DataScience Debugger tests', () => {
     suiteTeardown(() => {
         //        asyncDump();
     });
-
-    function createContainer(): DataScienceIocContainer {
-        const result = new DataScienceIocContainer();
-        result.registerDataScienceTypes();
-
-        // Rebind the appshell so we can change what happens on an error
-        const dummyDisposable = {
-            dispose: () => {
-                return;
-            }
-        };
-        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(''));
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell
-            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
-        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-
-        result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
-        // Setup our webview panel
-        result.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
-
-        // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-        // This is necessary to get the appropriate live share services up and running.
-        result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        result.get<IJupyterExecution>(IJupyterExecution);
-        result.get<IDebugLocationTracker>(IDebugLocationTracker);
-        return result;
-    }
 
     async function debugCell(
         code: string,
@@ -238,63 +241,108 @@ suite('DataScience Debugger tests', () => {
         return [];
     }
 
-    test('Debug cell without breakpoint', async () => {
-        await debugCell('#%%\nprint("bar")');
-    });
-    test('Check variables', async () => {
-        ioc.setExperimentState(RunByLine.experiment, true);
-        await debugCell('#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
-            const targetResult = {
-                name: 'x',
-                value: '[4, 6]',
-                supportsDataExplorer: true,
-                type: 'list',
-                size: 0,
-                shape: '',
-                count: 2,
-                truncated: false
-            };
-            verifyVariables(ioc!.wrapper!, [targetResult]);
-        });
-    });
+    runInteractiveTest(
+        'Debug cell without breakpoint',
+        async () => {
+            await debugCell('#%%\nprint("bar")');
+        },
+        createIOC
+    );
+    runInteractiveTest(
+        'Check variables',
+        async () => {
+            ioc.setExperimentState(RunByLine.experiment, true);
+            await debugCell('#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
+                const targetResult = {
+                    name: 'x',
+                    value: '[4, 6]',
+                    supportsDataExplorer: true,
+                    type: 'list',
+                    size: 0,
+                    shape: '',
+                    count: 2,
+                    truncated: false
+                };
+                verifyVariables(ioc!.wrapper!, [targetResult]);
+            });
+        },
+        createIOC
+    );
 
-    test('Debug temporary file', async () => {
-        const code = '#%%\nprint("bar")';
+    runInteractiveTest(
+        'Debug temporary file',
+        async () => {
+            const code = '#%%\nprint("bar")';
 
-        // Create a dummy document with just this code
-        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-        const fileName = 'Untitled-1';
-        docManager.addDocument(code, fileName);
-        const mockDoc = docManager.textDocuments[0] as MockDocument;
-        mockDoc.forceUntitled();
+            // Create a dummy document with just this code
+            const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+            const fileName = 'Untitled-1';
+            docManager.addDocument(code, fileName);
+            const mockDoc = docManager.textDocuments[0] as MockDocument;
+            mockDoc.forceUntitled();
 
-        // Start the jupyter server
-        const history = await getOrCreateInteractiveWindow(ioc);
-        const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
+            // Start the jupyter server
+            const history = await getOrCreateInteractiveWindow(ioc);
+            const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
-        // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
-            const breakPromise = createDeferred<void>();
-            disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            const targetUri = Uri.file(fileName);
-            const done = history.debugCode(code, targetUri.fsPath, 0, docManager.activeTextEditor);
-            await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
-            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
-            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
-            const stackFrames = await jupyterDebuggerService!.getStack();
-            assert.ok(stackFrames, 'Stack trace not computable');
-            assert.ok(stackFrames.length >= 1, 'Not enough frames');
-            assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-            assert.ok(
-                stackFrames[0].source!.path!.includes('baz.py'),
-                'Stopped on wrong file name. Name should have been saved'
-            );
-            // Verify break location
-            await jupyterDebuggerService!.continue();
-        });
+            // Debug this code. We should either hit the breakpoint or stop on entry
+            const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
+                const breakPromise = createDeferred<void>();
+                disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
+                const targetUri = Uri.file(fileName);
+                const done = history.debugCode(code, targetUri.fsPath, 0, docManager.activeTextEditor);
+                await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+                assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+                assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+                const stackFrames = await jupyterDebuggerService!.getStack();
+                assert.ok(stackFrames, 'Stack trace not computable');
+                assert.ok(stackFrames.length >= 1, 'Not enough frames');
+                assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+                assert.ok(
+                    stackFrames[0].source!.path!.includes('baz.py'),
+                    'Stopped on wrong file name. Name should have been saved'
+                );
+                // Verify break location
+                await jupyterDebuggerService!.continue();
+            });
 
-        const cellResults = await resultPromise;
-        assert.ok(cellResults, 'No cell results after finishing debugging');
-        await history.dispose();
-    });
+            const cellResults = await resultPromise;
+            assert.ok(cellResults, 'No cell results after finishing debugging');
+            await history.dispose();
+        },
+        createIOC
+    );
+
+    runNativeTest(
+        'Run by line',
+        async () => {
+            // Create an editor so something is listening to messages
+            await createNewEditor(ioc);
+            const wrapper = ioc.wrapper!;
+
+            // Add a cell into the UI and wait for it to render and submit it.
+            await addCell(wrapper, ioc, 'a=1\na', true);
+
+            // Step into this cell using the button
+            let cell = getLastOutputCell(wrapper, 'NativeCell');
+            let ImageButtons = cell.find(ImageButton);
+            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            const runByLineButton = ImageButtons.at(3);
+            // tslint:disable-next-line: no-any
+            assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
+
+            const promise = waitForMessage(ioc, InteractiveWindowMessages.ShowingIp);
+            runByLineButton.simulate('click');
+            await promise;
+
+            // We should be in the break state. See if buttons indicate that or not
+            cell = getLastOutputCell(wrapper, 'NativeCell');
+            ImageButtons = cell.find(ImageButton);
+            assert.equal(ImageButtons.length, 4, 'Cell buttons wrong number');
+        },
+        () => {
+            ioc.setExperimentState(RunByLine.experiment, true);
+            return createIOC();
+        }
+    );
 });

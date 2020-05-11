@@ -491,7 +491,8 @@
     "DataScience.unhandledMessage": "Unhandled kernel message from a widget: {0} : {1}",
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
     "DataScience.kernelStarted": "Started kernel {0}",
-    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}. Install?",
+    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed.",
     "DataScience.runByLine": "Run by line",
-    "DataScience.continueRunByLine": "Stop"
+    "DataScience.continueRunByLine": "Stop",
+    "DataScience.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment."
 }

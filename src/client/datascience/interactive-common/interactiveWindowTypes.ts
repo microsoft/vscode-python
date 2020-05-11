@@ -127,7 +127,8 @@ export enum InteractiveWindowMessages {
     Step = 'step',
     Continue = 'continue',
     ShowContinue = 'show_continue',
-    ShowBreak = 'show_break'
+    ShowBreak = 'show_break',
+    ShowingIp = 'showing_ip'
 }
 
 export enum IPyWidgetMessages {
@@ -607,4 +608,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowBreak]: { frames: DebugProtocol.StackFrame[]; cell: ICell };
     public [InteractiveWindowMessages.ShowContinue]: ICell;
     public [InteractiveWindowMessages.Step]: never | undefined;
+    public [InteractiveWindowMessages.ShowingIp]: never | undefined;
 }
