@@ -325,14 +325,8 @@ suite('Module Installer only', () => {
                                 try {
                                     await installer.install(product.value, resource);
                                 } catch (ex) {
-                                    moduleInstaller.verify(
-                                        (m) =>
-                                            m.installModule(
-                                                TypeMoq.It.isValue(moduleName),
-                                                TypeMoq.It.isValue(resource),
-                                                TypeMoq.It.isValue(undefined)
-                                            ),
-                                        TypeMoq.Times.once()
+                                    expect(ex.message).to.be.equal(
+                                        'All data science packages require an interpreter be passed in'
                                     );
                                 }
                             });
