@@ -188,15 +188,9 @@ gulp.task('webpack', async () => {
             ['--config', './build/webpack/webpack.extension.config.js'],
             webpackEnv
         );
-        const buildDebugAdapter = buildWebPack(
-            'debugAdapter',
-            ['--config', './build/webpack/webpack.debugadapter.config.js'],
-            webpackEnv
-        );
-        await Promise.all([buildExtension, buildDebugAdapter]);
+        await Promise.all([buildExtension]);
     } else {
         await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
     }
 });
 
