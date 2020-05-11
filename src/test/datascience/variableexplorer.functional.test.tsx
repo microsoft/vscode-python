@@ -530,5 +530,34 @@ Name: 0, dtype: float64`,
                 return ioc;
             }
         );
+
+        runInteractiveTest(
+            'Variable explorer - DataFrameInfo and Rows',
+            async (wrapper) => {
+                const basicCode: string = `import numpy as np
+import pandas as pd
+mynpArray = np.array([1.0, 2.0, 3.0])
+myDataframe = pd.DataFrame(mynpArray)
+mySeries = myDataframe[0]
+`;
+
+                openVariableExplorer(wrapper);
+
+                await addCodeImpartial(wrapper, 'a=1\na');
+                await addCodeImpartial(wrapper, basicCode, true, 2);
+
+                verifyCanFetchData(ioc, 'myDataframe', [1, 2, 3]);
+                verifyCanFetchData(ioc, 'mynpArray', [1, 2, 3]);
+                verifyCanFetchData(ioc, 'mySeries', [1, 2, 3]);
+
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    await verifyAfterStep(ioc, wrapper, (w) => verifyVariables(wrapper, targetVariables));
+                }
+            },
+            () => {
+                return ioc;
+            }
+        );
     });
 });

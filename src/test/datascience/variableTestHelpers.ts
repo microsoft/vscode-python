@@ -10,7 +10,12 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
-import { IJupyterDebugService, IJupyterVariable } from '../../client/datascience/types';
+import {
+    IJupyterDebugService,
+    IJupyterVariable,
+    IJupyterVariables,
+    INotebookProvider
+} from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -21,7 +26,7 @@ import { waitForVariablesUpdated } from './testHelpers';
 export async function verifyAfterStep(
     ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    targetVariables: IJupyterVariable[]
+    verify: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => void
 ) {
     const interactive = await getOrCreateInteractiveWindow(ioc);
     const debuggerBroke = createDeferred();
@@ -36,7 +41,7 @@ export async function verifyAfterStep(
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();
-    verifyVariables(wrapper, targetVariables);
+    verify(wrapper);
     await jupyterDebugger.continue();
     return debugPromise;
 }
@@ -112,4 +117,29 @@ function verifyCell(
             expect(innerHTML).to.not.include('image-button-image', `Image class was found ${targetName}`);
         }
     }
+}
+
+export async function verifyCanFetchData(ioc: DataScienceIocContainer, executionCount: number, name: string, rows: []) {
+    const variableFetcher = ioc.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES);
+    const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
+    const notebook = await notebookProvider.getOrCreateNotebook({
+        getOnly: true,
+        identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+    });
+    expect(notebook).to.exist('Notebook not found');
+    const variableList = await variableFetcher.getVariables(notebook!, {
+        executionCount,
+        startIndex: 0,
+        pageSize: 100,
+        sortAscending: true,
+        sortColumn: 'INDEX'
+    });
+    expect(variableList.pageResponse.length).to.be.greaterThan(0, 'No variables returned');
+    const variable = variableList.pageResponse.find((v) => v.name === name);
+    expect(variable).to.exist(`Variable ${name} not found in variables`);
+    expect(variable?.supportsDataExplorer).to.eq(true, `Variable ${name} does not support data explorer`);
+    const withInfo = await variableFetcher.getDataFrameInfo(variable!, notebook!);
+    expect(withInfo.count).to.eq(rows.length, 'Wrong number of rows for variable');
+    const fetchedRows = await variableFetcher.getDataFrameRows(withInfo!, notebook!, 0, rows.length);
+    expect(fetchedRows).to.haveOwnProperty('data', 'No data property on returned rows');
 }
