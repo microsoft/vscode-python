@@ -19,7 +19,7 @@ import {
     waitForMessage,
     waitForVariablesUpdated
 } from './testHelpers';
-import { verifyAfterStep, verifyVariables } from './variableTestHelpers';
+import { verifyAfterStep, verifyCanFetchData, verifyVariables } from './variableTestHelpers';
 
 // tslint:disable: no-var-requires no-require-imports
 const rangeInclusive = require('range-inclusive');
@@ -317,7 +317,10 @@ myDict = {'a': 1}`;
                 verifyVariables(wrapper, targetVariables);
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
 
                 // Restart the kernel and repeat
@@ -335,7 +338,10 @@ myDict = {'a': 1}`;
                 verifyVariables(wrapper, targetVariables);
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
@@ -456,7 +462,10 @@ Name: 0, dtype: float64`,
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
                     targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
@@ -523,7 +532,10 @@ Name: 0, dtype: float64`,
                     const nonValued = targetVariables.map((v) => {
                         return { ...v, value: undefined };
                     });
-                    await verifyAfterStep(ioc, wrapper, nonValued);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, nonValued);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
@@ -544,15 +556,19 @@ mySeries = myDataframe[0]
                 openVariableExplorer(wrapper);
 
                 await addCodeImpartial(wrapper, 'a=1\na');
-                await addCodeImpartial(wrapper, basicCode, true, 2);
+                await addCodeImpartial(wrapper, basicCode, true);
 
-                verifyCanFetchData(ioc, 'myDataframe', [1, 2, 3]);
-                verifyCanFetchData(ioc, 'mynpArray', [1, 2, 3]);
-                verifyCanFetchData(ioc, 'mySeries', [1, 2, 3]);
+                await verifyCanFetchData(ioc, 2, 'myDataframe', [1, 2, 3]);
+                await verifyCanFetchData(ioc, 2, 'mynpArray', [1, 2, 3]);
+                await verifyCanFetchData(ioc, 2, 'mySeries', [1, 2, 3]);
 
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, (w) => verifyVariables(wrapper, targetVariables));
+                    await verifyAfterStep(ioc, wrapper, async (_w) => {
+                        await verifyCanFetchData(ioc, 2, 'myDataframe', [1, 2, 3]);
+                        await verifyCanFetchData(ioc, 2, 'mynpArray', [1, 2, 3]);
+                        await verifyCanFetchData(ioc, 2, 'mySeries', [1, 2, 3]);
+                    });
                 }
             },
             () => {

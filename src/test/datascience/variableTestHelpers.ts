@@ -21,12 +21,12 @@ import { getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { waitForVariablesUpdated } from './testHelpers';
 
-// tslint:disable: no-var-requires no-require-imports no-any
+// tslint:disable: no-var-requires no-require-imports no-any chai-vague-errors no-unused-expression
 
 export async function verifyAfterStep(
     ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    verify: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => void
+    verify: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
 ) {
     const interactive = await getOrCreateInteractiveWindow(ioc);
     const debuggerBroke = createDeferred();
@@ -41,7 +41,7 @@ export async function verifyAfterStep(
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();
-    verify(wrapper);
+    await verify(wrapper);
     await jupyterDebugger.continue();
     return debugPromise;
 }
@@ -119,14 +119,19 @@ function verifyCell(
     }
 }
 
-export async function verifyCanFetchData(ioc: DataScienceIocContainer, executionCount: number, name: string, rows: []) {
+export async function verifyCanFetchData<T>(
+    ioc: DataScienceIocContainer,
+    executionCount: number,
+    name: string,
+    rows: T[]
+) {
     const variableFetcher = ioc.get<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES);
     const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
     const notebook = await notebookProvider.getOrCreateNotebook({
         getOnly: true,
         identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
     });
-    expect(notebook).to.exist('Notebook not found');
+    expect(notebook).to.not.be.undefined;
     const variableList = await variableFetcher.getVariables(notebook!, {
         executionCount,
         startIndex: 0,
@@ -136,10 +141,15 @@ export async function verifyCanFetchData(ioc: DataScienceIocContainer, execution
     });
     expect(variableList.pageResponse.length).to.be.greaterThan(0, 'No variables returned');
     const variable = variableList.pageResponse.find((v) => v.name === name);
-    expect(variable).to.exist(`Variable ${name} not found in variables`);
+    expect(variable).to.not.be.undefined;
     expect(variable?.supportsDataExplorer).to.eq(true, `Variable ${name} does not support data explorer`);
     const withInfo = await variableFetcher.getDataFrameInfo(variable!, notebook!);
     expect(withInfo.count).to.eq(rows.length, 'Wrong number of rows for variable');
     const fetchedRows = await variableFetcher.getDataFrameRows(withInfo!, notebook!, 0, rows.length);
-    expect(fetchedRows).to.haveOwnProperty('data', 'No data property on returned rows');
+    expect(fetchedRows.data).to.have.length(rows.length, 'Fetched rows data is not the correct size');
+    for (let i = 0; i < rows.length; i += 1) {
+        const fetchedRow = (fetchedRows.data as any)[i];
+        const val = fetchedRow['0']; // Column should default to zero for tests calling this.
+        expect(val).to.be.eq(rows[i], 'Invalid value found');
+    }
 }
