@@ -12,7 +12,7 @@
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
-## Contributing a pull request
+## Contributing a Pull Request
 
 ### Prerequisites
 
@@ -69,7 +69,7 @@ This is especially true if you have added or removed files.
 
 TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code.
 
-### Run dev build and validate your changes
+### Run Dev Build and Validate your Changes
 
 To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode`.
 Then, open the debug panel by clicking the `Run and Debug` icon on the sidebar, select the `Extension`
@@ -193,7 +193,7 @@ We have CI tests to ensure the code committed will adhere to the above coding st
 
 Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/master/src/client/common/utils/localize.ts) file.
 
-## Development process
+## The Development Process
 
 To effectively contribute to this extension, it helps to know how its
 development process works. That way you know not only why the
@@ -202,7 +202,7 @@ smoothly, but it allows you to help out by noticing when a step is
 missed or to learn in case someday you become a project maintainer as
 well!
 
-### Helping others
+### Helping Others
 
 First and foremost, we try to be helpful to users of the extension.
 We monitor
@@ -216,7 +216,7 @@ For pull requests, we aim to review any externally contributed PR no later
 than the next sprint from when it was submitted (see
 [Release Cycle](#release-cycle) below for our sprint schedule).
 
-### Release cycle
+### The Release Cycle
 
 Planning is done as two week sprints. We start a sprint every other Wednesday.
 You can look at the newest
@@ -242,9 +242,9 @@ our [release branch](https://github.com/microsoft/vscode-python/branches).
 At that point only what is in the release branch will make it into the next
 release.
 
-### Issue triaging
+### Triaging Issues
 
-#### Classifying issues
+#### Classifying Issues
 
 To help actively track what stage
 [issues](https://github.com/Microsoft/vscode-python/issues)
@@ -265,7 +265,7 @@ It is also very important to make the title accurate. People often write very br
 Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that
 have a merged fix and verify that the fix did in fact work. The other is to try to fix issues marked as `needs PR`.
 
-### Pull requests
+### Pull Requests
 
 Key details that all pull requests are expected to handle should be
 in the [pull request template](https://github.com/Microsoft/vscode-python/blob/master/.github/PULL_REQUEST_TEMPLATE.md). We do expect CI to be passing for a pull request before we will consider merging it.
@@ -281,13 +281,13 @@ release count for that year, and the build number is a number that increments
 for every build.
 For example the first release made in 2020 is `2020.1.<build number>`.
 
-## Releasing
+## Releasing the Extension
 
 Overall steps for releasing are covered in the
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 ([template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
-### Building a release
+### Building a Release
 
 To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
