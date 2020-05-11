@@ -36,6 +36,8 @@ initialize();
  *   this is setup on CI servers.
  */
 function initialize() {
+    // tslint:disable-next-line: no-console
+    console.log('Logger initializing begins');
     const config: LoggerConfig = {};
     let nonConsole = false;
 
