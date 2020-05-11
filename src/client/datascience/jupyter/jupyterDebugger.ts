@@ -82,14 +82,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 }
             ]
         };
-        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config);
+        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config, true);
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
-        return this.startDebugSession((c) => this.debugService.startDebugging(undefined, c), notebook, {
-            justMyCode: settings.datascience.debugJustMyCode
-        });
+        return this.startDebugSession(
+            (c) => this.debugService.startDebugging(undefined, c),
+            notebook,
+            {
+                justMyCode: settings.datascience.debugJustMyCode
+            },
+            false
+        );
     }
 
     public async stopDebugging(notebook: INotebook): Promise<void> {
@@ -129,12 +134,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async startDebugSession(
         startCommand: (config: DebugConfiguration) => Thenable<boolean>,
         notebook: INotebook,
-        extraConfig: Partial<DebugConfiguration>
+        extraConfig: Partial<DebugConfiguration>,
+        runByLine: boolean
     ) {
         traceInfo('start debugging');
 
         // Try to connect to this notebook
-        const config = await this.connect(notebook, extraConfig);
+        const config = await this.connect(notebook, runByLine, extraConfig);
         if (config) {
             traceInfo('connected to notebook during debugging');
 
@@ -182,6 +188,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async connect(
         notebook: INotebook,
+        runByLine: boolean,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
@@ -203,7 +210,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // If we don't have debugger installed or the version is too old then we need to install it
         if (!debuggerVersion || !this.debuggerMeetsRequirement(debuggerVersion, requiredVersion)) {
-            await this.promptToInstallDebugger(notebook, debuggerVersion);
+            await this.promptToInstallDebugger(notebook, debuggerVersion, runByLine);
         }
 
         // Connect local or remote based on what type of notebook we're talking to
@@ -387,10 +394,18 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
-    private async promptToInstallDebugger(notebook: INotebook, oldVersion: Version | undefined): Promise<void> {
-        const promptMessage = oldVersion
-            ? localize.DataScience.jupyterDebuggerInstallUpdate().format(this.debuggerPackage)
+    private async promptToInstallDebugger(
+        notebook: INotebook,
+        oldVersion: Version | undefined,
+        runByLine: boolean
+    ): Promise<void> {
+        const updateMessage = runByLine
+            ? localize.DataScience.jupyterDebuggerInstallUpdateRunByLine().format(this.debuggerPackage)
+            : localize.DataScience.jupyterDebuggerInstallUpdate().format(this.debuggerPackage);
+        const newMessage = runByLine
+            ? localize.DataScience.jupyterDebuggerInstallNewRunByLine().format(this.debuggerPackage)
             : localize.DataScience.jupyterDebuggerInstallNew().format(this.debuggerPackage);
+        const promptMessage = oldVersion ? updateMessage : newMessage;
         const result = await this.appShell.showInformationMessage(
             promptMessage,
             localize.DataScience.jupyterDebuggerInstallYes(),

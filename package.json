@@ -1764,7 +1764,7 @@
                 "python.dataScience.alwaysScrollOnNewCell": {
                     "type": "boolean",
                     "default": false,
-                    "description": "If a new cell comes in, scroll the interactive window to the bottom regardless of where the scroll bar is. The default is to only scroll if the current position was already at the bottom when the new cell is created",
+                    "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
                 "python.dataScience.enableScrollingForCellOutputs": {
