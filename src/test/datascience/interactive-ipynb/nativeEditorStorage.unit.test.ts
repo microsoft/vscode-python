@@ -39,6 +39,7 @@ import {
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
+import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IJupyterExecution, INotebookModel, INotebookServerOptions } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -106,7 +107,7 @@ suite('DataScience - Native Editor Storage', () => {
     let filesConfig: MockWorkspaceConfiguration | undefined;
     let testIndex = 0;
     let model: INotebookModel;
-    let storage: NativeEditorStorage;
+    let storage: NotebookStorageProvider;
     const disposables: IDisposable[] = [];
     const baseUri = Uri.parse('file:///foo.ipynb');
     const baseFile = `{
@@ -364,7 +365,7 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     function createStorage() {
-        return new NativeEditorStorage(
+        const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
             instance(crypto),
@@ -372,6 +373,8 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento
         );
+
+        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
     }
 
     teardown(() => {

@@ -4,12 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import debounce from 'lodash/debounce';
 import { CancellationToken, CancellationTokenSource, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { INotebookModel, INotebookStorage } from '../types';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 export const INotebookStorageProvider = Symbol.for('INotebookStorageProvider');
 export interface INotebookStorageProvider extends INotebookStorage {}
@@ -64,7 +66,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
 
         // Ensure we save into back for hotexit, if it is not an untitled file.
         if (!model.isUntitled) {
-            const fileSettings = this.workspaceService.getConfiguration('file', model.file);
+            const fileSettings = this.workspaceService.getConfiguration('files', model.file);
             const saveToHotExitDebounced = debounce(() => this.autoSaveNotebookInHotExitFile(model, fileSettings), 250);
             this.autSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
         }

@@ -77,12 +77,17 @@ class NativeEditorNotebookModel implements INotebookModel {
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
         public readonly indentAmount: string = ' ',
-        private readonly pythonNumber: number = 3
+        private readonly pythonNumber: number = 3,
+        isInitiallyDirty: boolean = false
     ) {
         this._state.file = file;
         this._state.cells = cells;
         this._state.notebookJson = json;
         this.ensureNotebookJson();
+        if (isInitiallyDirty) {
+            // This means we're dirty. Indicate dirty and load from this content
+            this._state.saveChangeCount = -1;
+        }
     }
     // public static fromJson(json:nbformat.INotebookContent){
 
@@ -529,7 +534,7 @@ export class NativeEditorStorage implements INotebookStorage {
             const dirtyContents = await this.getStoredContents(file);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents);
+                return this.loadContents(file, dirtyContents, true);
             } else {
                 // Load without setting dirty
                 return this.loadContents(file, contents);
@@ -551,7 +556,7 @@ export class NativeEditorStorage implements INotebookStorage {
         };
     }
 
-    private async loadContents(file: Uri, contents: string | undefined) {
+    private async loadContents(file: Uri, contents: string | undefined, isInitiallyDirty = false) {
         // tslint:disable-next-line: no-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
@@ -588,7 +593,7 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        return new NativeEditorNotebookModel(file, remapped, json, indentAmount, pythonNumber);
+        return new NativeEditorNotebookModel(file, remapped, json, indentAmount, pythonNumber, isInitiallyDirty);
     }
 
     private getStorageKey(file: Uri): string {
