@@ -94,7 +94,7 @@ steps:
       python -m pip install --upgrade -r build/test-requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
@@ -161,7 +161,7 @@ steps:
   # Run the pip installs in the 3 environments (windows)
   - script: |
       call activate base
-      conda install --quiet -y --file build/ci/conda_base.yml      
+      conda install --quiet -y --file build/ci/conda_base.yml
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt

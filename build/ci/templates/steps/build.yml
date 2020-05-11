@@ -21,7 +21,6 @@ steps:
   - bash: |
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     failOnStderr: true
     displayName: 'pip install requirements'
 

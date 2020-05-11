@@ -405,37 +405,6 @@ gulp.task('installNewDebugpy', async () => {
     }
 
     rmrf.sync('./pythonFiles/lib/temp');
-
-    // Install source only version of new DEBUGPY for use with all other python versions.
-    const args = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '-t',
-        './pythonFiles/lib/python/debugpy/no_wheels',
-        '--no-cache-dir',
-        '--implementation',
-        'py',
-        '--no-deps',
-        '--upgrade',
-        '--pre',
-        'debugpy'
-    ];
-    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install DEBUGPY using 'python3'", ex);
-            return false;
-        });
-    if (!successWithoutWheels) {
-        console.info(
-            "Failed to install source only version of new DEBUGPY using 'python3', attempting to install using 'python'"
-        );
-        await spawnAsync('python', args).catch((ex) =>
-            console.error("Failed to install source only DEBUGPY using 'python'", ex)
-        );
-    }
 });
 
 // Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
