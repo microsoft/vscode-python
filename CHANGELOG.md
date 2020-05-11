@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.5.0-rc (5 May 2020)
+## 2020.5.0 (12 May 2020)
 
 ### Enhancements
 
@@ -79,7 +79,7 @@
 1. Ensure kernel daemons are disposed correctly when closing notebooks.
    ([#11579](https://github.com/Microsoft/vscode-python/issues/11579))
 1. When VS quits, make sure to save contents of notebook for next reopen.
-   ([#11557](https://github.com/Microsoft/vscode-python/issues/11557))   
+   ([#11557](https://github.com/Microsoft/vscode-python/issues/11557))
 1. Fix scrolling when clicking in the interactive window to not jump around.
    ([#11554](https://github.com/Microsoft/vscode-python/issues/11554))
 
