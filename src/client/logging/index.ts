@@ -5,10 +5,9 @@
 export {
     // aliases
     // (for convenience)
-    logError,
-    logInfo,
-    logVerbose,
-    logWarning,
     traceDecorators,
-    tracing
-} from './_global';
+    traceError,
+    traceInfo,
+    traceVerbose,
+    traceWarning
+} from './_trace';

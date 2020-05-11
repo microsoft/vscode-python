@@ -4,8 +4,6 @@
 import { Uri } from 'vscode';
 import { InterpreterUri } from '../installer/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../types';
-import { isPromise } from './async';
-import { StopWatch } from './stopWatch';
 
 // tslint:disable-next-line:no-empty
 export function noop() {}
@@ -37,46 +35,6 @@ export async function usingAsync<T extends IAsyncDisposable, R>(
         return await func(disposable);
     } finally {
         await disposable.dispose();
-    }
-}
-
-// Information about a traced function/method call.
-export type TraceInfo = {
-    elapsed: number; // milliseconds
-    // Either returnValue or err will be set.
-    // tslint:disable-next-line:no-any
-    returnValue?: any;
-    err?: Error;
-};
-
-// Call run(), call log() with the trace info, and return the result.
-export function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
-    const timer = new StopWatch();
-    try {
-        // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
-        const result = run();
-
-        // If method being wrapped returns a promise then wait for it.
-        if (isPromise(result)) {
-            // tslint:disable-next-line:prefer-type-cast
-            (result as Promise<void>)
-                .then((data) => {
-                    log({ elapsed: timer.elapsedTime, returnValue: data });
-                    return data;
-                })
-                .catch((ex) => {
-                    log({ elapsed: timer.elapsedTime, err: ex });
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-11645) Re-throw the error like we do
-                    // in the non-Promise case.
-                });
-        } else {
-            log({ elapsed: timer.elapsedTime, returnValue: result });
-        }
-        return result;
-    } catch (ex) {
-        log({ elapsed: timer.elapsedTime, err: ex });
-        throw ex;
     }
 }
 

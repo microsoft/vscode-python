@@ -8,7 +8,6 @@ import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
 import { createDeferred, Deferred } from './async';
 import { getCacheKeyFromFunctionArgs, getGlobalCacheStore, InMemoryInterpreterSpecificCache } from './cacheUtils';
-import { TraceInfo, tracing } from './misc';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -224,39 +223,5 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
             }
             return promise;
         };
-    };
-}
-
-// Information about a function/method call.
-export type CallInfo = {
-    kind: string; // "Class", etc.
-    name: string;
-    // tslint:disable-next-line:no-any
-    args: any[];
-};
-
-// Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
-    // tslint:disable-next-line:no-function-expression no-any
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
-        // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
-            const call = {
-                kind: 'Class',
-                name: _ && _.constructor ? _.constructor.name : '',
-                args
-            };
-            // tslint:disable-next-line:no-this-assignment no-invalid-this
-            const scope = this;
-            return tracing(
-                // "log()"
-                (t) => log(call, t),
-                // "run()"
-                () => originalMethod.apply(scope, args)
-            );
-        };
-
-        return descriptor;
     };
 }
