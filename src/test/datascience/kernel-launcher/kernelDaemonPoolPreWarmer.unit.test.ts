@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { IExperimentsManager } from '../../../client/common/types';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from '../../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import {
@@ -22,12 +23,15 @@ suite('Data Science - Kernel Daemon Pool PreWarmer', () => {
         interactiveProvider = mock<IInteractiveWindowProvider>();
         usageTracker = mock<INotebookAndInteractiveWindowUsageTracker>();
         daemonPool = mock<KernelDaemonPool>();
+        const experiment = mock<IExperimentsManager>();
+        when(experiment.inExperiment(anything())).thenReturn(true);
         prewarmer = new KernelDaemonPreWarmer(
             instance(notebookEditorProvider),
             instance(interactiveProvider),
             [],
             instance(usageTracker),
-            instance(daemonPool)
+            instance(daemonPool),
+            instance(experiment)
         );
     });
     test('Should not pre-warm daemon pool if ds was never used', async () => {
