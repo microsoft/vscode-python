@@ -27,7 +27,7 @@ import {
     Product,
     ProductType
 } from '../types';
-import { isResource } from '../utils/misc';
+import { isResource, noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
 import {
@@ -358,32 +358,35 @@ export class DataScienceInstaller extends BaseInstaller {
         interpreterUri?: InterpreterUri,
         cancel?: CancellationToken
     ): Promise<InstallerResponse> {
+        // Precondition
+        if (isResource(interpreterUri)) {
+            throw new Error('All data science packages require an interpreter be passed in');
+        }
+
+        // At this point we know that `interpreterUri` is of type PythonInterpreter
+        const interpreter = interpreterUri as PythonInterpreter;
+
         // Get a list of known installation channels, pip, conda, etc.
         const channels: IModuleInstaller[] = await this.serviceContainer
             .get<IInstallationChannelManager>(IInstallationChannelManager)
             .getInstallationChannels();
 
-        // Assume the Uri is actually a full PythonInterpreter...
-        const interpreter = interpreterUri as PythonInterpreter;
-
-        // Pick an installerModule based on whether the interpreter is conda or not.
+        // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
         let installerModule;
-        if (!interpreter || !interpreter.hasOwnProperty('type')) {
-            return InstallerResponse.Ignore; // All data science packages require an interpreter be passed in.
+        if (interpreter.type === 'Conda') {
+            installerModule = channels.find((v) => v.name === 'Conda');
         } else {
-            // If conda-based interpreter use it. If not, just use pip.
-            if (interpreter.type === 'Conda') {
-                installerModule = channels.find((v) => v.name === 'Conda');
-            } else {
-                installerModule = channels.find((v) => v.name === 'Pip');
-            }
-        }
-
-        if (!installerModule) {
-            return InstallerResponse.Ignore;
+            installerModule = channels.find((v) => v.name === 'Pip');
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
+        if (!installerModule) {
+            this.appShell
+                .showErrorMessage(localize.DataScience.couldNotInstallLibrary().format(moduleName))
+                .then(noop, noop);
+            return InstallerResponse.Ignore;
+        }
+
         await installerModule
             .installModule(moduleName, interpreter, cancel)
             .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));

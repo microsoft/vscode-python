@@ -339,6 +339,10 @@ export namespace DataScience {
         'DataScience.libraryNotInstalled',
         'Data Science library {0} is not installed. Install?'
     );
+    export const couldNotInstallLibrary = localize(
+        'DataScience.couldNotInstallLibrary',
+        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+    );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
         'Data Science library {0} is not installed.'
