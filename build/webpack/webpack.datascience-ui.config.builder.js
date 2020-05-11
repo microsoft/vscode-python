@@ -30,7 +30,8 @@ function getEntry(isNotebook) {
 
     return {
         plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
+        startPage: ['babel-polyfill', `./src/datascience-ui/startPage/index.tsx`]
     };
 }
 
@@ -82,6 +83,12 @@ function getPlugins(isNotebook) {
                     indexUrl: `${constants.ExtensionRootDir}/out/1`,
                     chunks: ['commons', 'dataExplorer'],
                     filename: 'index.dataExplorer.html'
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/startPage/index.html',
+                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                    chunks: ['commons', 'startPage'],
+                    filename: 'index.startPage.html'
                 })
             ]
         );

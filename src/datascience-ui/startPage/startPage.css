@@ -1,0 +1,79 @@
+.main-page {
+    margin: 50px;
+    font-family: var(--font-family);
+    min-width: 700px;
+}
+
+.title-icon {
+    display: inline-block;
+    vertical-align: top;
+    width: 40px;
+    margin-right: 10px;
+}
+
+.icon {
+    display: inline-block;
+    width: 45px;
+    padding: 20px 25px 20px 25px;
+    margin-right: 10px;
+    background-color: #1a1a1a;
+    /* background-color: var(--vscode-activityBar-background); ??? */
+}
+
+.icon:hover {
+    background-color: var(--vscode-editorGroup-dropBackground);
+    cursor: pointer;
+}
+
+.title {
+    display: inline-block;
+    vertical-align: top;
+    font-size: xx-large;
+}
+
+.title-row {
+    display: block;
+    height: 80px;
+}
+
+.text {
+    font-weight: 100;
+    font-size: x-large;
+}
+
+.block {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.row {
+    display: block;
+    height: 120px;
+}
+
+.link {
+    display: inline;
+    /* color: var(--vscode-button-hoverBackground); */
+    color: var(--vscode-debugIcon-continueForeground);
+}
+
+.link:hover {
+    cursor: pointer;
+}
+
+.italics {
+    display: inline;
+    font-style: italic;
+}
+
+.checkbox {
+    margin: 1em 1em 1em 0em;
+}
+
+.paragraph {
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}

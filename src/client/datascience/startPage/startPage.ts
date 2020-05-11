@@ -3,14 +3,19 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
+import * as path from 'path';
+import { EventEmitter, Uri, ViewColumn } from 'vscode';
 import { IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, IExperimentsManager, Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
+import * as localize from '../../common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { StartPageMessageListener } from './startPageMessageListener';
-import { IStartPage, IStartPageMapping } from './types';
-// import * as path from 'path';
+import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
+
+const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
+// const startPageDir2 = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
 @injectable()
 export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage {
@@ -27,7 +32,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         // @unmanaged() protected fileSystem: IFileSystem,
         @inject(IConfigurationService) protected configuration: IConfigurationService,
         // @unmanaged() protected jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService
         // @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         // @unmanaged() protected readonly commandManager: ICommandManager,
         // @unmanaged() protected globalStorage: Memento,
@@ -35,7 +40,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         // @inject(String) scripts: string[],
         // @inject(String) title: string,
         // @unmanaged() viewColumn: ViewColumn,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        // @inject(IExperimentsManager) experimentsManager: IExperimentsManager
         // @inject(Boolean) useCustomEditorApi: boolean
     ) {
         super(
@@ -45,12 +50,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             themeFinder,
             workspaceService,
             (c, v, d) => new StartPageMessageListener(c, v, d),
-            'asd',
-            [''],
-            'Kut',
-            1,
-            experimentsManager.inExperiment(''),
-            true
+            startPageDir,
+            [
+                // path.join(startPageDir2, 'require.js'),
+                path.join(startPageDir, 'commons.initial.bundle.js'),
+                path.join(startPageDir, 'startPage.js')
+            ],
+            localize.DataScience.startPage(),
+            ViewColumn.One,
+            false,
+            false
         );
     }
 
@@ -59,9 +68,6 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         return this.close();
     }
 
-    public get file(): Uri {
-        return Uri.file('asd');
-    }
     public async open(): Promise<void> {
         await this.loadWebPanel(process.cwd());
         // open webview
@@ -69,11 +75,27 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async getOwningResource(): Promise<Resource> {
-        return this.file;
+        return Uri.file('');
     }
 
     public async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);
+    }
+
+    // tslint:disable-next-line: no-any
+    public async onMessage(message: string) {
+        switch (message) {
+            case StartPageMessages.RequestReleaseNotes:
+                await this.handleReleaseNotesRequest();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private async handleReleaseNotesRequest() {
+        await this.postMessage(StartPageMessages.SendReleaseNotes, { date: 'aaa', notes: ['cool', 'stuff'] });
     }
 }

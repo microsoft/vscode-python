@@ -921,6 +921,7 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
+    export const startPage = localize('DataScience.startPage', 'Python Start');
 }
 
 export namespace DebugConfigStrings {
