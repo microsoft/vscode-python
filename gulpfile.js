@@ -306,9 +306,7 @@ gulp.task('renameSourceMaps', async () => {
     // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
     await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
-    await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
 gulp.task('verifyBundle', async () => {
