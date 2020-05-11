@@ -1,12 +1,16 @@
+import { SharedMessages } from '../messages';
+
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;
 }
 
-export enum StartPageMessages {
-    RequestReleaseNotes = 'RequestReleaseNotes',
-    SendReleaseNotes = 'SendReleaseNotes',
-    ReceivedReleaseNotes = 'ReceivedReleaseNotes'
+export namespace StartPageMessages {
+    export const RequestReleaseNotes = 'RequestReleaseNotes';
+    export const SendReleaseNotes = 'SendReleaseNotes';
+    export const ReceivedReleaseNotes = 'ReceivedReleaseNotes';
+    export const Started = SharedMessages.Started;
+    export const UpdateSettings = SharedMessages.UpdateSettings;
 }
 
 export interface IReleaseNotesPackage {

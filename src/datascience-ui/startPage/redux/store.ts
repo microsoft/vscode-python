@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { StartPageMessages } from '../../../client/datascience/startPage/types';
 import { isAllowedAction, postActionToExtension } from '../../interactive-common/redux/helpers';
@@ -75,10 +78,8 @@ export interface IStore {
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
-    return (store) => (next) => (action) => {
-        const prevState = store.getState();
+    return (_store) => (next) => (action) => {
         const res = next(action);
-        const afterState = store.getState();
 
         // If the action is part of a sync message, then do not send it to the extension.
         const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.other;
@@ -89,21 +90,6 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
             return res;
         }
 
-        // If cell vm count changed or selected cell changed, send the message
-        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
-        if (
-            prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-            getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
-            prevState.main.undoStack.length !== afterState.main.undoStack.length ||
-            prevState.main.redoStack.length !== afterState.main.redoStack.length
-        ) {
-            postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
-                cellCount: afterState.main.cellVMs.length,
-                undoCount: afterState.main.undoStack.length,
-                redoCount: afterState.main.redoStack.length,
-                selectedCell: currentSelection.selectedCellId
-            });
-        }
         return res;
     };
 }
@@ -196,10 +182,10 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         },
         logger: testMode ? createTestLogger() : window.console
     });
-    const loggerMiddleware =
-        process.env.VSC_PYTHON_FORCE_LOGGING !== undefined && !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING
-            ? logger
-            : undefined;
+    const loggerMiddleware = logger;
+    // process.env.VSC_PYTHON_FORCE_LOGGING !== undefined && !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING
+    //     ? logger
+    //     : undefined;
 
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);

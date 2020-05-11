@@ -75,7 +75,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async getOwningResource(): Promise<Resource> {
-        return Uri.file('');
+        return Promise.resolve(undefined);
     }
 
     public async close(): Promise<void> {
@@ -84,7 +84,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     // tslint:disable-next-line: no-any
-    public async onMessage(message: string) {
+    public async onMessage(message: string, payload: any) {
         switch (message) {
             case StartPageMessages.RequestReleaseNotes:
                 await this.handleReleaseNotesRequest();
@@ -93,6 +93,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             default:
                 break;
         }
+
+        super.onMessage(message, payload);
     }
 
     private async handleReleaseNotesRequest() {

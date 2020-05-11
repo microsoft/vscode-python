@@ -43,7 +43,7 @@ export class StartPageMessageListener implements IWebPanelMessageListener {
         // Remember the list of interactive window messages we registered for
         // this.startPageMessages = this.getStartPageMessages();
 
-        // We need to register callbacks for all interactive window messages.
+        // // We need to register callbacks for all interactive window messages.
         // this.startPageMessages.forEach((m) => {
         //     this.postOffice.registerCallback(m, (a) => callback(m, a)).ignoreErrors();
         // });

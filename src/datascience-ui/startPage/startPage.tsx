@@ -4,6 +4,7 @@
 
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { PostOffice } from '../react-common/postOffice';
@@ -23,12 +24,25 @@ export type IStartPageProps = IDefaultState & typeof actionCreators;
 
 export class StartPage extends React.Component<IStartPageProps> {
     private checked = false;
+    private postOffice: PostOffice = new PostOffice();
+
     constructor(props: IStartPageProps) {
         super(props);
     }
 
     public componentDidMount() {
         this.props.requestReleaseNotes();
+    }
+
+    public componentWillMount() {
+        // Add ourselves as a handler for the post office
+        this.postOffice.addHandler(this);
+
+        // Tell the plot viewer code we have started.
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
+
+        // Listen to key events
+        // window.addEventListener('keydown', this.onKeyDown);
     }
 
     public render() {
@@ -141,6 +155,20 @@ export class StartPage extends React.Component<IStartPageProps> {
             </div>
         );
     }
+
+    public handleMessage = (msg: string, payload?: any) => {
+        switch (msg) {
+            case StartPageMessages.ReceivedReleaseNotes:
+                console.log('yes');
+                break;
+
+            default:
+                break;
+        }
+
+        return false;
+    };
+
     private sendMessage = (evt: React.SyntheticEvent<HTMLElement>) => {
         // tslint:disable-next-line: no-console
         // console.log(evt);
