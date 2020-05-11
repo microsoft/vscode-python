@@ -136,9 +136,9 @@ async function testInnerLoop(
         type: 'native' | 'interactive',
         wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
     ) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
-    const ioc = getIOC();
+    const ioc = await getIOC();
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     if (await jupyterExecution.isNotebookSupported()) {
         addMockData(ioc, 'a=1\na', 1);
@@ -156,7 +156,7 @@ export function runDoubleTest(
         type: 'native' | 'interactive',
         wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
     ) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
@@ -168,7 +168,7 @@ export function runDoubleTest(
 export function runInteractiveTest(
     name: string,
     testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window
     test(`${name} (interactive)`, async () =>
@@ -176,6 +176,21 @@ export function runInteractiveTest(
             name,
             'interactive',
             (ioc) => mountWebView(ioc, 'interactive'),
+            (_t, w) => testFunc(w),
+            getIOC
+        ));
+}
+export function runNativeTest(
+    name: string,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    getIOC: () => Promise<DataScienceIocContainer>
+) {
+    // Run the test with just the native window
+    test(`${name} (native)`, async () =>
+        testInnerLoop(
+            name,
+            'native',
+            (ioc) => mountWebView(ioc, 'native'),
             (_t, w) => testFunc(w),
             getIOC
         ));

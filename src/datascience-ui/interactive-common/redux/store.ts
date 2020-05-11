@@ -204,6 +204,13 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
 
+        // Entering break state in a native cell
+        const prevBreak = prevState.main.cellVMs.find((cvm) => cvm.currentStack);
+        const newBreak = afterState.main.cellVMs.find((cvm) => cvm.currentStack);
+        if (prevBreak !== newBreak || !fastDeepEqual(prevBreak?.currentStack, newBreak?.currentStack)) {
+            sendMessage(InteractiveWindowMessages.ShowingIp);
+        }
+
         if (action.type !== 'action.postOutgoingMessage') {
             sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
         }

@@ -169,6 +169,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.SendInfo]: MessageType.other,
     [InteractiveWindowMessages.SettingsUpdated]: MessageType.other,
     [InteractiveWindowMessages.ShowBreak]: MessageType.other,
+    [InteractiveWindowMessages.ShowingIp]: MessageType.other,
     [InteractiveWindowMessages.ShowContinue]: MessageType.other,
     [InteractiveWindowMessages.ShowDataViewer]: MessageType.other,
     [InteractiveWindowMessages.ShowPlot]: MessageType.other,
