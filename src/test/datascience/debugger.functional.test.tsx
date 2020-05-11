@@ -27,7 +27,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { addCell, createNewEditor, getNativeCellResults } from './nativeEditorTestHelpers';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     getLastOutputCell,
     openVariableExplorer,
