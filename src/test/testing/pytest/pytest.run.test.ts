@@ -475,6 +475,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         });
     }
     async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
+        const junitXmlArgs = '--junit-xml=';
         const procService = (await ioc.serviceContainer
             .get<IProcessServiceFactory>(IProcessServiceFactory)
             .create()) as MockProcessService;
@@ -482,9 +483,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             if (failedOutput && args.indexOf('--last-failed') === -1) {
                 return;
             }
-            const index = args.findIndex((arg) => arg.startsWith('--junitxml='));
+            const index = args.findIndex((arg) => arg.startsWith(junitXmlArgs));
             if (index >= 0) {
-                const fileName = args[index].substr('--junitxml='.length);
+                const fileName = args[index].substr(junitXmlArgs.length);
                 const contents = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8');
                 fs.writeFileSync(fileName, contents, 'utf8');
                 callback({ out: '', source: 'stdout' });
