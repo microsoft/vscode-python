@@ -9,7 +9,6 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { DataFrameLoading, Identifiers, Settings } from '../constants';
@@ -22,7 +21,6 @@ import {
     INotebook
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
-import { VariableScriptLoader } from './variableScriptLoader';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 
@@ -44,18 +42,12 @@ interface INotebookState {
 
 @injectable()
 export class KernelVariables implements IJupyterVariables {
-    private scriptLoader: VariableScriptLoader;
     private importedDataFrameScripts = new Map<string, boolean>();
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
     private refreshEventEmitter = new EventEmitter<void>();
 
-    constructor(
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IConfigurationService) private configService: IConfigurationService
-    ) {
-        this.scriptLoader = new VariableScriptLoader(fileSystem);
-    }
+    constructor(@inject(IConfigurationService) private configService: IConfigurationService) {}
 
     public get refreshRequired(): Event<void> {
         return this.refreshEventEmitter.event;
@@ -68,6 +60,40 @@ export class KernelVariables implements IJupyterVariables {
     ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
+    }
+
+    public async getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined> {
+        // See if in the cache
+        const cache = this.notebookState.get(notebook.identity);
+        if (cache) {
+            let match = cache.variables.find((v) => v.name === name);
+            if (match && !match.value) {
+                match = await this.getVariableValueFromKernel(match, notebook);
+            }
+            return match?.value;
+        } else {
+            // No items in the cache yet, just ask for the names
+            const names = await this.getVariableNamesFromKernel(notebook);
+            if (names) {
+                const matchName = names.find((n) => n === name);
+                if (matchName) {
+                    const match = await this.getVariableValueFromKernel(
+                        {
+                            name,
+                            value: undefined,
+                            supportsDataExplorer: false,
+                            type: '',
+                            size: 0,
+                            count: 0,
+                            shape: '',
+                            truncated: true
+                        },
+                        notebook
+                    );
+                    return match.value;
+                }
+            }
+        }
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
@@ -126,30 +152,34 @@ export class KernelVariables implements IJupyterVariables {
                 disposables.forEach((d) => d.dispose());
             };
             disposables.push(notebook.onDisposed(handler));
+            disposables.push(notebook.onKernelChanged(handler));
             disposables.push(notebook.onKernelRestarted(handler));
 
-            const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}`;
+            const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
             await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
             this.importedDataFrameScripts.set(notebook.identity.toString(), true);
         }
     }
 
-    private async runScript<T>(
-        notebook: INotebook,
-        defaultValue: T,
-        scriptTextFetcher: () => Promise<string | undefined>
-    ): Promise<T> {
-        const scriptText = await scriptTextFetcher();
-        if (!notebook || !scriptText) {
-            // No active server just return the unchanged target variable
-            return defaultValue;
-        }
+    private async getFullVariable(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+        // Import the data frame script directory if we haven't already
+        await this.importDataFrameScripts(notebook);
 
-        // Execute this on the notebook passed in.
-        const results = await notebook.execute(scriptText, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+        // Then execute a call to get the info and turn it into JSON
+        const results = await notebook.execute(
+            `print(${DataFrameLoading.VariableInfoFunc}(${targetVariable.name}))`,
+            Identifiers.EmptyFileName,
+            0,
+            uuid(),
+            undefined,
+            true
+        );
 
-        // Results should be the updated variable.
-        return this.deserializeJupyterResult<T>(results);
+        // Combine with the original result (the call only returns the new fields)
+        return {
+            ...targetVariable,
+            ...this.deserializeJupyterResult(results)
+        };
     }
 
     private extractJupyterResultText(cells: ICell[]): string {
@@ -411,11 +441,7 @@ export class KernelVariables implements IJupyterVariables {
             result.supportsDataExplorer &&
             result.type !== 'list' // List count is good enough
         ) {
-            const computedShape = await this.runScript<IJupyterVariable>(notebook, result, () =>
-                this.scriptLoader.readShapeScript(result)
-            );
-            // Only want shape and count from the request. Other things might have been destroyed
-            result = { ...result, shape: computedShape.shape, count: computedShape.count };
+            result = await this.getFullVariable(result, notebook);
         }
 
         return result;

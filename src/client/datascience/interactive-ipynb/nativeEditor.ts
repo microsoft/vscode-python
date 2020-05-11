@@ -51,6 +51,7 @@ import {
     INotebookIdentity,
     InteractiveWindowMessages,
     IReExecuteCells,
+    IRunByLine,
     ISubmitNewCell,
     NotebookModelChange,
     SysInfoReason
@@ -82,9 +83,10 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
+import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -289,6 +291,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.interruptExecution();
                 break;
 
+            case InteractiveWindowMessages.RunByLine:
+                this.handleMessage(message, payload, this.handleRunByLine);
+                break;
+
             default:
                 break;
         }
@@ -352,12 +358,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean,
+        debugOptions?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
         const stopWatch = new StopWatch();
         return super
-            .submitCode(code, file, line, id, data, debug, cancelToken)
+            .submitCode(code, file, line, id, data, debugOptions, cancelToken)
             .finally(() => this.sendPerceivedCellExecute(stopWatch));
     }
 
@@ -584,7 +590,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 const code = concatMultilineStringInput(cell.data.source);
                 // Send to ourselves.
-                await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, false, cancelToken);
+                await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
             // Make this error our cell output
@@ -685,6 +691,69 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     localizedUri: '',
                     displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name
                 }).ignoreErrors();
+            }
+        }
+    }
+
+    private async handleRunByLine(runByLine: IRunByLine) {
+        try {
+            // If there's any payload, it has the code and the id
+            if (runByLine.cell.id && runByLine.cell.data.cell_type === 'code') {
+                traceInfo(`Running by line cell ${runByLine.cell.id}`);
+
+                // Clear the result if we've run before
+                await this.clearResult(runByLine.cell.id);
+
+                // Generate a hash file name for this cell.
+                const notebook = this.getNotebook();
+                if (notebook) {
+                    const hashProvider = getCellHashProvider(notebook);
+                    if (hashProvider) {
+                        // Add the breakpoint to the first line of the cell so we actually stop
+                        // on the first line.
+                        const newSource = splitMultilineString(runByLine.cell.data.source);
+                        newSource.splice(0, -1, 'breakpoint()\n');
+                        runByLine.cell.data.source = newSource;
+
+                        const hashFileName = hashProvider.generateHashFileName(
+                            runByLine.cell,
+                            runByLine.expectedExecutionCount
+                        );
+                        const code = concatMultilineStringInput(runByLine.cell.data.source);
+                        // Send to ourselves.
+                        await this.submitCode(
+                            code,
+                            Identifiers.EmptyFileName,
+                            0,
+                            runByLine.cell.id,
+                            runByLine.cell.data,
+                            {
+                                runByLine: true,
+                                hashFileName
+                            }
+                        );
+                    }
+                }
+            } else {
+                throw new Error('Run by line started with an invalid cell');
+            }
+        } catch (exc) {
+            // Make this error our cell output
+            this.sendCellsToWebView([
+                {
+                    // tslint:disable-next-line: no-any
+                    data: { ...runByLine.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
+                    id: runByLine.cell.id,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.error
+                }
+            ]);
+
+            throw exc;
+        } finally {
+            if (runByLine.cell && runByLine.cell.id) {
+                traceInfo(`Finished run by line on cell ${runByLine.cell.id}`);
             }
         }
     }

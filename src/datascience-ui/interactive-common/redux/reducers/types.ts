@@ -36,6 +36,7 @@ export enum CommonActionType {
     CHANGE_CELL_TYPE = 'action.change_cell_type',
     CLICK_CELL = 'action.click_cell',
     CODE_CREATED = 'action.code_created',
+    CONTINUE = 'action.continue',
     COPY_CELL_CODE = 'action.copy_cell_code',
     DELETE_CELL = 'action.delete_cell',
     EDITOR_LOADED = 'action.editor_loaded',
@@ -68,12 +69,14 @@ export enum CommonActionType {
     PostOutgoingMessage = 'action.postOutgoingMessage',
     REFRESH_VARIABLES = 'action.refresh_variables',
     RESTART_KERNEL = 'action.restart_kernel_action',
+    RUN_BY_LINE = 'action.run_by_line',
     SAVE = 'action.save',
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
     SELECT_SERVER = 'action.select_server',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
+    STEP = 'action.step',
     SUBMIT_INPUT = 'action.submit_input',
     TOGGLE_INPUT_BLOCK = 'action.toggle_input_block',
     TOGGLE_LINE_NUMBERS = 'action.toggle_line_numbers',
@@ -139,6 +142,9 @@ export type CommonActionTypeMapping = {
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: ILoadIPyWidgetClassFailureAction;
     [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: NotifyIPyWidgeWidgetVersionNotSupportedAction;
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: Error;
+    [CommonActionType.STEP]: ICellAction;
+    [CommonActionType.CONTINUE]: ICellAction;
+    [CommonActionType.RUN_BY_LINE]: ICellAction;
 };
 
 export interface IShowDataViewerAction extends IShowDataViewer {}

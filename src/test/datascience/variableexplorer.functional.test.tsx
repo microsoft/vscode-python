@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
-import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Disposable } from 'vscode';
@@ -12,7 +10,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode } from './interactiveWindowTestHelpers';
+import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     openVariableExplorer,
@@ -21,6 +19,7 @@ import {
     waitForMessage,
     waitForVariablesUpdated
 } from './testHelpers';
+import { verifyAfterStep, verifyVariables } from './variableTestHelpers';
 
 // tslint:disable: no-var-requires no-require-imports
 const rangeInclusive = require('range-inclusive');
@@ -316,6 +315,28 @@ myDict = {'a': 1}`;
                     }
                 ];
                 verifyVariables(wrapper, targetVariables);
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                }
+
+                // Restart the kernel and repeat
+                const interactive = await getOrCreateInteractiveWindow(ioc);
+                const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                await interactive.restartKernel();
+                await variablesComplete; // Restart should cause a variable refresh
+
+                // Should have no variables
+                verifyVariables(wrapper, []);
+
+                await addCodeImpartial(wrapper, 'a=1\na', true);
+                await addCodeImpartial(wrapper, basicCode, true);
+
+                verifyVariables(wrapper, targetVariables);
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                }
             },
             () => {
                 return ioc;
@@ -431,6 +452,12 @@ Name: 0, dtype: float64`,
                     }
                 ];
                 verifyVariables(wrapper, targetVariables);
+
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
+                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                }
             },
             () => {
                 return ioc;
@@ -459,7 +486,7 @@ Name: 0, dtype: float64`,
         // sure no perf problems with one or the other and to smoke test the native editor
         runDoubleTest(
             'Variable explorer - A lot of items',
-            async (wrapper) => {
+            async (t, wrapper) => {
                 const basicCode: string = `for _i in range(1050):
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
@@ -489,83 +516,19 @@ Name: 0, dtype: float64`,
                 // Now we should have the bottom. For some reason only 10 come back here.
                 const bottomVariables = allVariables.slice(1041, 1051);
                 verifyVariables(wrapper, bottomVariables);
+
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine && t === 'interactive') {
+                    // Remove values, don't bother checking them as they'll be different from the debugger
+                    const nonValued = targetVariables.map((v) => {
+                        return { ...v, value: undefined };
+                    });
+                    await verifyAfterStep(ioc, wrapper, nonValued);
+                }
             },
             () => {
                 return ioc;
             }
         );
     });
-
-    // Verify a set of rows versus a set of expected variables
-    function verifyVariables(
-        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-        targetVariables: IJupyterVariable[]
-    ) {
-        // Force an update so we render whatever the current state is
-        wrapper.update();
-
-        // Then search for results.
-        const foundRows = wrapper.find('div.react-grid-Row');
-
-        expect(foundRows.length).to.be.equal(
-            targetVariables.length,
-            'Different number of variable explorer rows and target variables'
-        );
-
-        foundRows.forEach((row, index) => {
-            verifyRow(row, targetVariables[index]);
-        });
-    }
-
-    // Verify a single row versus a single expected variable
-    function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariable: IJupyterVariable) {
-        const rowCells = rowWrapper.find('div.react-grid-Cell');
-
-        expect(rowCells.length).to.be.equal(5, 'Unexpected number of cells in variable explorer row');
-
-        verifyCell(rowCells.at(0), targetVariable.name, targetVariable.name);
-        verifyCell(rowCells.at(1), targetVariable.type, targetVariable.name);
-
-        if (targetVariable.shape && targetVariable.shape !== '') {
-            verifyCell(rowCells.at(2), targetVariable.shape, targetVariable.name);
-        } else if (targetVariable.count) {
-            verifyCell(rowCells.at(2), targetVariable.count.toString(), targetVariable.name);
-        }
-
-        if (targetVariable.value) {
-            verifyCell(rowCells.at(3), targetVariable.value, targetVariable.name);
-        }
-
-        verifyCell(rowCells.at(4), targetVariable.supportsDataExplorer, targetVariable.name);
-    }
-
-    // Verify a single cell value against a specific target value
-    function verifyCell(
-        cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-        value: string | boolean,
-        targetName: string
-    ) {
-        const cellHTML = parse(cellWrapper.html()) as any;
-        const innerHTML = cellHTML.innerHTML;
-        if (typeof value === 'string') {
-            // tslint:disable-next-line:no-string-literal
-            const match = /value="([\s\S]+?)"\s+/.exec(innerHTML);
-            expect(match).to.not.be.equal(null, `${targetName} does not have a value attribute`);
-
-            // Eliminate whitespace differences
-            const actualValueNormalized = match![1].replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
-            const expectedValueNormalized = value.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
-
-            expect(actualValueNormalized).to.be.equal(
-                expectedValueNormalized,
-                `${targetName} has an unexpected value ${innerHTML} in variable explorer cell`
-            );
-        } else {
-            if (value) {
-                expect(innerHTML).to.include('image-button-image', `Image class not found in ${targetName}`);
-            } else {
-                expect(innerHTML).to.not.include('image-button-image', `Image class was found ${targetName}`);
-            }
-        }
-    }
 });

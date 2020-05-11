@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 
+import { instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -18,6 +19,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { ICell, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
@@ -64,6 +66,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
+        const variableProvider = mock(JupyterVariables);
 
         pythonSettings.jediEnabled = false;
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
@@ -77,7 +80,8 @@ suite('DataScience Intellisense Unit Tests', () => {
             fileSystem.object,
             notebookProvider.object,
             interpreterService.object,
-            languageServerCache
+            languageServerCache,
+            instance(variableProvider)
         );
         intellisenseDocument = await intellisenseProvider.getDocument();
     });

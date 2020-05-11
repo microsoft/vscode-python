@@ -62,6 +62,9 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: CommonEffects.handleLoadIPyWidgetClassSuccess,
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: CommonEffects.handleLoadIPyWidgetClassFailure,
     [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: CommonEffects.notifyAboutUnsupportedWidgetVersions,
+    [CommonActionType.CONTINUE]: Execution.continueExec,
+    [CommonActionType.STEP]: Execution.step,
+    [CommonActionType.RUN_BY_LINE]: Execution.runByLine,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
@@ -88,5 +91,9 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [InteractiveWindowMessages.UpdateModel]: Creation.handleUpdate,
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
     [SharedMessages.LocInit]: CommonEffects.handleLocInit,
-    [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData
+    [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData,
+    [InteractiveWindowMessages.ShowBreak]: Execution.handleBreakState,
+    [InteractiveWindowMessages.ShowContinue]: Execution.handleContinue,
+    [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
+    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging
 };

@@ -69,7 +69,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         const manager = mock(InterpreterAutoSelectionService);
         const resource = Uri.file('x');
 
-        when(locator.getInterpreters(resource, anything())).thenResolve([]);
+        when(locator.getInterpreters(resource)).thenResolve([]);
 
         const nextAction = await rule.onAutoSelectInterpreter(resource, manager);
 

@@ -14,8 +14,8 @@ import { noop, swallowExceptions } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
-import { findIndexOfConnectionFile } from './kernelFinder';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
@@ -122,7 +122,10 @@ export class KernelProcess implements IKernelProcess {
             await this.kernelDaemon.kill().catch(noop);
             swallowExceptions(() => this.kernelDaemon?.dispose());
         }
-        swallowExceptions(() => this._process?.kill());
+        swallowExceptions(() => {
+            this._process?.kill(); // NOSONAR
+            this.exitEvent.fire();
+        });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
         swallowExceptions(() => this.connectionFile?.dispose());
     }

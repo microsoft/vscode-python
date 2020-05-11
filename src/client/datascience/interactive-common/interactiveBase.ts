@@ -542,7 +542,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean,
+        debugInfo?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
@@ -567,7 +567,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 line,
                 id,
                 originator: this.id,
-                debug: debug !== undefined ? debug : false
+                debug: debugInfo !== undefined ? true : false
             });
         }
 
@@ -599,9 +599,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 await this.setLaunchingFile(file);
 
-                if (debug) {
-                    // Attach our debugger
-                    await this.jupyterDebugger.startDebugging(this._notebook);
+                if (debugInfo) {
+                    // Attach our debugger based on run by line setting
+                    if (debugInfo.runByLine && debugInfo.hashFileName) {
+                        await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
+                    } else if (!debugInfo.runByLine) {
+                        await this.jupyterDebugger.startDebugging(this._notebook);
+                    } else {
+                        throw Error('Missing hash file name when running by line');
+                    }
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
@@ -664,7 +670,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } finally {
             status.dispose();
 
-            if (debug) {
+            if (debugInfo) {
                 if (this._notebook) {
                     await this.jupyterDebugger.stopDebugging(this._notebook);
                 }
@@ -931,7 +937,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
 
                 // Submit this item as new code.
-                this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
+                this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                ).ignoreErrors();
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }
@@ -946,7 +959,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteAddCode);
 
                 // Submit this item as new code.
-                await this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug);
+                await this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                );
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }

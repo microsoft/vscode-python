@@ -69,6 +69,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     font={this.props.font}
                     disableUndoStack={this.props.disableUndoStack}
                     version={this.props.version}
+                    ipLocation={undefined}
                 />
             </div>
         );

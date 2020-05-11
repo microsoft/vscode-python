@@ -522,6 +522,11 @@ body, html {
     cursor: pointer;
 }
 
+.codicon-button {
+    cursor: pointer;
+    color: var(--vscode-editor-foreground);
+}
+
 .image-button-inner-disabled-filter .image-button-image {
     cursor: unset;
 }

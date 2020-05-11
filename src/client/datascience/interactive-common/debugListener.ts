@@ -3,12 +3,12 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { DebugSession, Event, EventEmitter } from 'vscode';
 
-import { IDebugService } from '../../common/application/types';
 import { noop } from '../../common/utils/misc';
-import { IInteractiveWindowListener } from '../types';
+import { Identifiers } from '../constants';
+import { IInteractiveWindowListener, IJupyterDebugService } from '../types';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
 // tslint:disable: no-any
@@ -18,7 +18,11 @@ export class DebugListener implements IInteractiveWindowListener {
         message: string;
         payload: any;
     }>();
-    constructor(@inject(IDebugService) private debugService: IDebugService) {
+    constructor(
+        @inject(IJupyterDebugService)
+        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+        private debugService: IJupyterDebugService
+    ) {
         this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this));
     }
 

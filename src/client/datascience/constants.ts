@@ -385,6 +385,9 @@ export namespace DataFrameLoading {
     export const DataFrameRowImportName = '_VSCODE_RowImport';
     export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
     export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
+    export const VariableInfoImportName = '_VSCODE_VariableImport';
+    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
+    export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace Identifiers {
@@ -404,6 +407,8 @@ export namespace Identifiers {
     export const OLD_VARIABLES = 'OLD_VARIABLES';
     export const KERNEL_VARIABLES = 'KERNEL_VARIABLES';
     export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
+    export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
+    export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
 }
 
 export namespace CodeSnippits {

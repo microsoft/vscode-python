@@ -11,6 +11,7 @@ import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
     EventEmitter,
+    FileType,
     TextEditor,
     Uri,
     WorkspaceConfiguration
@@ -31,6 +32,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
+import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     IEditorContentChange,
@@ -87,7 +89,7 @@ class MockWorkspaceConfiguration implements WorkspaceConfiguration {
 }
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Native Editor Storage', () => {
+suite('DataScience - Native Editor Storage', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let fileSystem: typemoq.IMock<IFileSystem>;
@@ -321,6 +323,7 @@ suite('Data Science - Native Editor Storage', () => {
 
         let listener: IWebPanelMessageListener;
         const webPanel = mock(WebPanel);
+        const startTime = Date.now();
         class WebPanelCreateMatcher extends Matcher {
             public match(value: any) {
                 listener = value.listener;
@@ -351,16 +354,26 @@ suite('Data Science - Native Editor Storage', () => {
             .returns((_a1) => {
                 return Promise.resolve(lastWriteFileValue);
             });
+        fileSystem
+            .setup((f) => f.stat(typemoq.It.isAny()))
+            .returns((_a1) => {
+                return Promise.resolve({ mtime: startTime, type: FileType.File, ctime: startTime, size: 100 });
+            });
+        storage = createStorage();
+    });
 
-        storage = new NativeEditorStorage(
+    function createStorage() {
+        return new NativeEditorStorage(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            instance(workspace),
+            []
         );
-    });
+    }
 
     teardown(() => {
         globalMemento.clear();
@@ -478,6 +491,47 @@ suite('Data Science - Native Editor Storage', () => {
         deleteAllCells();
         cells = storage.cells;
         expect(cells).to.be.lengthOf(1);
+    });
+
+    test('Editing a file and closing will keep contents', async () => {
+        await filesConfig?.update('autoSave', 'off');
+
+        await storage.load(baseUri);
+        expect(storage.isDirty).to.be.equal(false, 'Editor should not be dirty');
+        editCell(
+            [
+                {
+                    range: {
+                        startLineNumber: 2,
+                        startColumn: 1,
+                        endLineNumber: 2,
+                        endColumn: 1
+                    },
+                    rangeOffset: 4,
+                    rangeLength: 0,
+                    text: 'a',
+                    position: {
+                        lineNumber: 1,
+                        column: 1
+                    }
+                }
+            ],
+            storage.cells[1],
+            'a'
+        );
+
+        // Wait for a second so it has time to update
+        await sleep(1000);
+
+        // Recreate
+        storage = createStorage();
+        await storage.load(baseUri);
+
+        const cells = storage.cells;
+        expect(cells).to.be.lengthOf(3);
+        expect(cells[1].id).to.be.match(/NotebookImport#1/);
+        expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
+        expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 
     test('Opening file with local storage but no global will still open with old contents', async () => {

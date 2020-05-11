@@ -8,12 +8,12 @@ import { IDebugService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IDisposableRegistry } from '../../common/types';
 import { Identifiers } from '../constants';
-import { IJupyterVariables } from '../types';
+import { IJupyterDebugService, IJupyterVariables } from '../types';
 
 @injectable()
 export class DebuggerVariableRegistration implements IExtensionSingleActivationService, DebugAdapterTrackerFactory {
     constructor(
-        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private debugVariables: DebugAdapterTracker
     ) {}

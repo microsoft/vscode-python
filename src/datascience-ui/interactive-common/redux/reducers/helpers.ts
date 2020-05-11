@@ -5,7 +5,7 @@ import { min } from 'lodash';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 
-import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
+import { CellState, ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { arePathsSame } from '../../../react-common/arePathsSame';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
 import { ICellViewModel, IMainState } from '../../mainState';
@@ -72,6 +72,8 @@ export namespace Helpers {
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
             // Use its execution count to update our execution count.
+            const finished =
+                arg.payload.data.state === CellState.finished || arg.payload.data.state === CellState.error;
 
             // Have to make a copy of the cell VM array or
             // we won't actually update.
@@ -93,7 +95,8 @@ export namespace Helpers {
                         ...arg.payload.data.data,
                         source: newVMs[index].cell.data.source
                     }
-                }
+                },
+                runningByLine: finished ? false : newVMs[index].runningByLine
             };
             newVMs[index] = newVM;
 

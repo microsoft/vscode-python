@@ -75,23 +75,17 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                     return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
                 }
 
-                const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
+                const debuggerAdapterPathToUse = path.join(
+                    EXTENSION_ROOT_DIR,
+                    'pythonFiles',
+                    'lib',
+                    'python',
+                    'debugpy',
+                    'adapter'
+                );
 
-                if (await this.useNewDebugger(pythonPath)) {
-                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-                    return new DebugAdapterExecutable(pythonPath, [
-                        path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
-                        ...logArgs
-                    ]);
-                } else {
-                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, {
-                        usingWheels: false
-                    });
-                    return new DebugAdapterExecutable(pythonPath, [
-                        path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
-                        ...logArgs
-                    ]);
-                }
+                sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
+                return new DebugAdapterExecutable(pythonPath, [debuggerAdapterPathToUse, ...logArgs]);
             }
         } else {
             this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
@@ -103,22 +97,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         }
         // Unlikely scenario.
         throw new Error('Debug Adapter Executable not provided');
-    }
-
-    /**
-     * Check and return whether the user should and can use the new Debugger wheels or not.
-     *
-     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user should and can use the new Debugger wheels or not.
-     * @memberof DebugAdapterDescriptorFactory
-     */
-    private async useNewDebugger(pythonPath: string): Promise<boolean> {
-        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

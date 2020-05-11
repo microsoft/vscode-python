@@ -182,6 +182,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private mainKeyDown = (event: KeyboardEvent) => {
         // Handler for key down presses in the main panel
         switch (event.key) {
@@ -210,6 +211,25 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
                     }
+                }
+                break;
+
+            case 'F10':
+                if (this.props.debugging) {
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
+                    if (debuggingCell) {
+                        this.props.step(debuggingCell.cell.id);
+                    }
+                    event.stopPropagation();
+                }
+                break;
+            case 'F5':
+                if (this.props.debugging) {
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
+                    if (debuggingCell) {
+                        this.props.continue(debuggingCell.cell.id);
+                    }
+                    event.stopPropagation();
                 }
                 break;
             default:
@@ -269,6 +289,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 />
             ) : null;
 
+        const otherCellRunningByLine = this.props.cellVMs.find(
+            (cvm) => cvm.runningByLine && cvm.cell.id !== cellVM.cell.id
+        );
         const maxOutputSize = this.props.settings.maxOutputSize;
         const outputSizeLimit = 10000;
         const maxTextSize =
@@ -297,6 +320,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         focusPending={0}
                         busy={this.props.busy}
                         useCustomEditorApi={this.props.settings?.extraSettings.useCustomEditorApi}
+                        runningByLine={cellVM.runningByLine}
+                        supportsRunByLine={
+                            this.props.settings?.variableOptions?.enableDuringDebugger
+                                ? otherCellRunningByLine === undefined
+                                : false
+                        }
                     />
                 </ErrorBoundary>
                 {lastLine}

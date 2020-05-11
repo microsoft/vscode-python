@@ -11,6 +11,19 @@ import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { InputHistory } from './inputHistory';
 import { CursorPos, IFont } from './mainState';
 
+const stickiness = monacoEditor.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges;
+
+// we need a separate decoration for glyph margin, since we do not want it on each line of a multi line statement.
+const TOP_STACK_FRAME_MARGIN: monacoEditor.editor.IModelDecorationOptions = {
+    glyphMarginClassName: 'codicon codicon-debug-stackframe',
+    stickiness
+};
+const TOP_STACK_FRAME_DECORATION: monacoEditor.editor.IModelDecorationOptions = {
+    isWholeLine: true,
+    className: 'debug-top-stack-frame-line',
+    stickiness
+};
+
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
     content: string;
@@ -30,6 +43,7 @@ export interface IEditorProps {
     hasFocus: boolean;
     cursorPos: CursorPos | monacoEditor.IPosition;
     disableUndoStack: boolean;
+    ipLocation: number | undefined;
     onCreated(code: string, modelId: string): void;
     onChange(e: IMonacoModelContentChangeEvent): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -42,6 +56,8 @@ export class Editor extends React.Component<IEditorProps> {
     private subscriptions: monacoEditor.IDisposable[] = [];
     private lastCleanVersionId: number = 0;
     private monacoRef: React.RefObject<MonacoEditor> = React.createRef<MonacoEditor>();
+    private modelRef: monacoEditor.editor.ITextModel | null = null;
+    private decorationIds: string[] = [];
 
     constructor(prop: IEditorProps) {
         super(prop);
@@ -50,6 +66,19 @@ export class Editor extends React.Component<IEditorProps> {
     public componentWillUnmount = () => {
         this.subscriptions.forEach((d) => d.dispose());
     };
+
+    public componentDidUpdate(prevProps: IEditorProps) {
+        if (this.modelRef) {
+            if (prevProps.ipLocation !== this.props.ipLocation) {
+                if (this.props.ipLocation) {
+                    const newDecorations = this.createIpDelta();
+                    this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, newDecorations);
+                } else if (this.decorationIds.length) {
+                    this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, []);
+                }
+            }
+        }
+    }
 
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
@@ -68,6 +97,30 @@ export class Editor extends React.Component<IEditorProps> {
             return this.monacoRef.current.getContents();
         }
         return '';
+    }
+
+    private createIpDelta(): monacoEditor.editor.IModelDeltaDecoration[] {
+        const result: monacoEditor.editor.IModelDeltaDecoration[] = [];
+        if (this.props.ipLocation) {
+            const columnUntilEOLRange = new monacoEditor.Range(
+                this.props.ipLocation,
+                1,
+                this.props.ipLocation,
+                1 << 30
+            );
+            const range = new monacoEditor.Range(this.props.ipLocation, 1, this.props.ipLocation, 2);
+
+            result.push({
+                options: TOP_STACK_FRAME_MARGIN,
+                range
+            });
+
+            result.push({
+                options: TOP_STACK_FRAME_DECORATION,
+                range: columnUntilEOLRange
+            });
+        }
+        return result;
     }
 
     private renderMonacoEditor = (): JSX.Element => {
@@ -124,6 +177,7 @@ export class Editor extends React.Component<IEditorProps> {
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
         const model = editor.getModel();
+        this.modelRef = model;
 
         // Disable undo/redo on the model if asked
         // tslint:disable: no-any

@@ -25,7 +25,7 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         resource: Resource,
         manager?: IInterpreterAutoSelectionService
     ): Promise<NextAction> {
-        const interpreters = await this.interpreterService.getInterpreters(resource, { onActivation: true });
+        const interpreters = await this.interpreterService.getInterpreters(resource);
         // Exclude non-local interpreters.
         const filteredInterpreters = interpreters.filter(
             (int) =>

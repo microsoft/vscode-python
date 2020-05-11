@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import type { nbformat } from '@jupyterlab/coreutils';
 import { SpawnOptions } from 'child_process';
 import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
@@ -46,7 +47,7 @@ export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     findKernelSpec(
         interpreterUri: InterpreterUri,
-        kernelName?: string,
+        kernelSpecMetadata?: nbformat.IKernelspecMetadata,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec>;
     listKernelSpecs(resource: Resource): Promise<IJupyterKernelSpec[]>;

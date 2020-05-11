@@ -4,8 +4,9 @@
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CellState } from '../../../../client/datascience/types';
+import { CellState, ICell } from '../../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import {
@@ -251,5 +252,105 @@ export namespace Execution {
         }
 
         return arg.prevState;
+    }
+
+    export function continueExec(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((cv) => cv.cell.id === arg.payload.data.cellId);
+        if (index >= 0) {
+            postActionToExtension(arg, InteractiveWindowMessages.Continue);
+        }
+        return arg.prevState;
+    }
+
+    export function step(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((cv) => cv.cell.id === arg.payload.data.cellId);
+        if (index >= 0) {
+            postActionToExtension(arg, InteractiveWindowMessages.Step);
+        }
+        return arg.prevState;
+    }
+
+    export function runByLine(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((cv) => cv.cell.id === arg.payload.data.cellId);
+        if (index >= 0) {
+            postActionToExtension(arg, InteractiveWindowMessages.RunByLine, {
+                cell: arg.prevState.cellVMs[index].cell,
+                expectedExecutionCount: arg.prevState.currentExecutionCount + 1
+            });
+            const newVM = {
+                ...arg.prevState.cellVMs[index],
+                runningByLine: true
+            };
+            const newVMs = [...arg.prevState.cellVMs];
+            newVMs[index] = newVM;
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs
+            };
+        }
+        return arg.prevState;
+    }
+
+    export function handleBreakState(
+        arg: NativeEditorReducerArg<{ frames: DebugProtocol.StackFrame[]; cell: ICell }>
+    ): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((cv) => cv.cell.id === arg.payload.data.cell.id);
+        if (index >= 0) {
+            const newVM = {
+                ...arg.prevState.cellVMs[index],
+                runningByLine: true,
+                currentStack: arg.payload.data.frames
+            };
+            const newVMs = [...arg.prevState.cellVMs];
+            newVMs[index] = newVM;
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs
+            };
+        }
+        return arg.prevState;
+    }
+
+    export function handleContinue(arg: NativeEditorReducerArg<ICell>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex((cv) => cv.cell.id === arg.payload.data.id);
+        if (index >= 0) {
+            const newVM = {
+                ...arg.prevState.cellVMs[index],
+                runningByLine: true,
+                currentStack: undefined
+            };
+            const newVMs = [...arg.prevState.cellVMs];
+            newVMs[index] = newVM;
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs
+            };
+        }
+        return arg.prevState;
+    }
+
+    export function startDebugging(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            debugging: true
+        };
+    }
+
+    export function stopDebugging(arg: NativeEditorReducerArg): IMainState {
+        // Clear out any cells that have frames
+        const index = arg.prevState.cellVMs.findIndex((cvm) => cvm.currentStack);
+        const newVMs = [...arg.prevState.cellVMs];
+        if (index >= 0) {
+            const newVM = {
+                ...newVMs[index],
+                currentStack: undefined
+            };
+            newVMs[index] = newVM;
+        }
+        return {
+            ...arg.prevState,
+            cellVMs: newVMs,
+            debugging: false
+        };
     }
 }

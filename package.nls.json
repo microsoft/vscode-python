@@ -240,9 +240,9 @@
     "DataScience.liveShareServiceFailure": "Failure starting '{0}' service during live share connection.",
     "DataScience.documentMismatch": "Cannot run cells, duplicate documents for {0} found.",
     "DataScience.pythonInteractiveCreateFailed": "Failure to create a 'Python Interactive' window. Try reinstalling the Python extension.",
-    "diagnostics.removePythonPathSettingsJson": "The setting \"python.pythonPath\" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the \"python.pythonPath\" entry from your settings.json.",
-    "diagnostics.removePythonPathCodeWorkspace": "The setting \"python.pythonPath\" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the \"python.pythonPath\" entry from your .code-workspace file.",
-    "diagnostics.removePythonPathCodeWorkspaceAndSettingsJson": "The setting \"python.pythonPath\" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the \"python.pythonPath\" entry from your settings.json and .code-workspace file.",
+    "diagnostics.removePythonPathSettingsJson": "The setting \"python.pythonPath\" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).",
+    "diagnostics.removePythonPathCodeWorkspace": "The setting \"python.pythonPath\" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).",
+    "diagnostics.removePythonPathCodeWorkspaceAndSettingsJson": "The setting \"python.pythonPath\" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).",
     "diagnostics.warnSourceMaps": "Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.",
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
@@ -489,5 +489,7 @@
     "DataScience.unhandledMessage": "Unhandled kernel message from a widget: {0} : {1}",
     "DataScience.qgridWidgetScriptVersionCompatibilityWarning": "Unable to load a compatible version of the widget 'qgrid'. Consider downgrading to version 1.1.1.",
     "DataScience.kernelStarted": "Started kernel {0}",
-    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}. Install?"
+    "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}. Install?",
+    "DataScience.runByLine": "Run by line",
+    "DataScience.continueRunByLine": "Stop"
 }

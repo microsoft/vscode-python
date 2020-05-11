@@ -7,6 +7,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
@@ -41,6 +42,8 @@ export interface ICellViewModel {
     runDuringDebug?: boolean;
     codeVersion?: number;
     uiSideError?: string;
+    runningByLine: boolean;
+    currentStack?: DebugProtocol.StackFrame[];
 }
 
 export type IMainState = {
@@ -205,7 +208,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         focused: false,
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
-        scrollCount: 0
+        scrollCount: 0,
+        runningByLine: false
     };
 }
 
@@ -258,7 +262,8 @@ export function createCellVM(
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        runDuringDebug
+        runDuringDebug,
+        runningByLine: false
     };
 
     // Update the input text

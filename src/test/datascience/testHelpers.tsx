@@ -130,8 +130,12 @@ export async function waitForMessageResponse(ioc: DataScienceIocContainer, actio
 
 async function testInnerLoop(
     name: string,
+    type: 'native' | 'interactive',
     mountFunc: (ioc: DataScienceIocContainer) => ReactWrapper<any, Readonly<{}>, React.Component>,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    testFunc: (
+        type: 'native' | 'interactive',
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
     const ioc = getIOC();
@@ -139,7 +143,7 @@ async function testInnerLoop(
     if (await jupyterExecution.isNotebookSupported()) {
         addMockData(ioc, 'a=1\na', 1);
         const wrapper = mountFunc(ioc);
-        await testFunc(wrapper);
+        await testFunc(type, wrapper);
     } else {
         // tslint:disable-next-line:no-console
         console.log(`${name} skipped, no Jupyter installed.`);
@@ -148,13 +152,17 @@ async function testInnerLoop(
 
 export function runDoubleTest(
     name: string,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    testFunc: (
+        type: 'native' | 'interactive',
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
+        testInnerLoop(name, 'interactive', (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    test(`${name} (native)`, async () =>
+        testInnerLoop(name, 'native', (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
 export function runInteractiveTest(
@@ -164,7 +172,13 @@ export function runInteractiveTest(
 ) {
     // Run the test with just the interactive window
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+        testInnerLoop(
+            name,
+            'interactive',
+            (ioc) => mountWebView(ioc, 'interactive'),
+            (_t, w) => testFunc(w),
+            getIOC
+        ));
 }
 
 export function mountWebView(

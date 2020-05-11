@@ -15,6 +15,8 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 suite('Smoke Test: Debug file', () => {
     suiteSetup(async function () {
+        // https://github.com/microsoft/vscode-python/issues/11733
+        return this.skip();
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
