@@ -5,7 +5,8 @@ export interface IStartPage {
 
 export enum StartPageMessages {
     RequestReleaseNotes = 'RequestReleaseNotes',
-    SendReleaseNotes = 'SendReleaseNotes'
+    SendReleaseNotes = 'SendReleaseNotes',
+    ReceivedReleaseNotes = 'ReceivedReleaseNotes'
 }
 
 export interface IReleaseNotesPackage {

@@ -15,6 +15,7 @@ import {
 } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload, SyncPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
+import { StartPageMessages } from '../../../client/datascience/startPage/types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 
@@ -22,7 +23,8 @@ const AllowedMessages = [
     ...Object.values(InteractiveWindowMessages),
     ...Object.values(CssMessages),
     ...Object.values(SharedMessages),
-    ...Object.values(CommonActionType)
+    ...Object.values(CommonActionType),
+    ...Object.values(StartPageMessages)
 ];
 export function isAllowedMessage(message: string) {
     // tslint:disable-next-line: no-any

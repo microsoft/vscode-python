@@ -143,7 +143,7 @@ export class StartPage extends React.Component<IStartPageProps> {
     }
     private sendMessage = (evt: React.SyntheticEvent<HTMLElement>) => {
         // tslint:disable-next-line: no-console
-        console.log(evt);
+        // console.log(evt);
         // location.reload();
         this.props.requestReleaseNotes();
     };
