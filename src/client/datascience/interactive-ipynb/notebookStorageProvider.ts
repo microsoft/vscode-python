@@ -5,17 +5,16 @@
 
 import { inject, injectable } from 'inversify';
 import debounce from 'lodash/debounce';
-import { CancellationToken, Uri, WorkspaceConfiguration } from 'vscode';
-import { CancellationToken, CancellationTokenSource } from 'vscode-languageclient';
+import { CancellationToken, CancellationTokenSource, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { INotebookModel, INotebookStorage } from '../types';
 
-export const INotebookModelProvider = Symbol.for('INotebookModelProvider');
-export interface INotebookModelProvider extends INotebookStorage {}
+export const INotebookStorageProvider = Symbol.for('INotebookStorageProvider');
+export interface INotebookStorageProvider extends INotebookStorage {}
 @injectable()
-export class NotebookModelProvider implements INotebookModelProvider {
+export class NotebookStorageProvider implements INotebookStorageProvider {
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
     private readonly disposables: IDisposable[] = [];
     private readonly autSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();

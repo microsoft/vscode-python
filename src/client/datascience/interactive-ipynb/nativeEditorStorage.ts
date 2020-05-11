@@ -178,6 +178,9 @@ class NativeEditorNotebookModel implements INotebookModel {
                 break;
         }
 
+        // Dirty state comes from undo. At least VS code will track it that way. However
+        this._state.changeCount += 1;
+
         return changed;
     }
 

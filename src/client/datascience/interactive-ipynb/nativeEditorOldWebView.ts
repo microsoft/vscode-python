@@ -50,7 +50,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { INotebookModelProvider } from './notebookModelProvider';
+import { INotebookStorageProvider } from './notebookStorageProvider';
 
 enum AskForSaveResult {
     Yes,
@@ -98,7 +98,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(INotebookModelProvider) private readonly storage: INotebookModelProvider
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
     ) {
         super(
             listeners,

@@ -18,7 +18,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { IDataScienceErrorHandler, INotebookEditor } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
-import { INotebookModelProvider } from './notebookModelProvider';
+import { INotebookStorageProvider } from './notebookStorageProvider';
 
 @injectable()
 export class NativeEditorProviderOld extends NativeEditorProvider {
@@ -44,7 +44,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookModelProvider) storage: INotebookModelProvider
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
     ) {
         super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
 
