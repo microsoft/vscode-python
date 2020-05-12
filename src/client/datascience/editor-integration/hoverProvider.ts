@@ -82,6 +82,7 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         if (range) {
             const word = document.getText(range);
             if (word) {
+                // Only do this for the interactive window notebook
                 const notebook = await this.notebookProvider.getOrCreateNotebook(
                     {
                         getOnly: true,
