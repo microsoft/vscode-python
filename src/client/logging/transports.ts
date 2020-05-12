@@ -87,7 +87,7 @@ class PythonOutputChannelTransport extends Transport {
     }
 }
 
-// Create a Python output channel targeting transport ;that can be added to a winston logger.
+// Create a Python output channel targeting transport that can be added to a winston logger.
 export function getPythonOutputChannelTransport(channel: IOutputChannel, formatter: logform.Format) {
     return new PythonOutputChannelTransport(channel, {
         // We minimize customization.

@@ -70,6 +70,7 @@ function initialize() {
     }
 }
 
+// Register the output channel transport the logger will log into
 export function addOutputChannelLogging(channel: IOutputChannel) {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
