@@ -261,7 +261,6 @@ steps:
   #
   # Example command line (windows pwsh):
   # > python -m pip install -U -r news/requirements.txt
-  # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
   - script: |
       python -m pip install --upgrade -r news/requirements.txt
       python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
@@ -276,30 +275,6 @@ steps:
       testResultsFiles: 'python-news-junit.xml'
       searchFolder: '$(Common.TestResultsDirectory)'
       testRunTitle: 'news-$(Agent.Os)-Py$(pythonVersion)'
-      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-      buildConfiguration: 'UnitTests'
-
-  # Run the TPN tool tests.
-  #
-  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
-  #
-  # Example command line (windows pwsh):
-  # > python -m pip install -U -r tpn/requirements.txt
-  # > python -m pytest tpn --color=yes --junit-xml=python-tpn-junit.xml
-  - script: |
-      python -m pip install --upgrade -r tpn/requirements.txt
-      python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
-    displayName: 'Run Python tests for TPN tool'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
-
-  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-  - task: PublishTestResults@2
-    displayName: 'Publish Python tests for TPN tool results'
-    condition: contains(variables['TestsToRun'], 'pythonInternalTools')
-    inputs:
-      testResultsFiles: 'python-tpn-junit.xml'
-      searchFolder: '$(Common.TestResultsDirectory)'
-      testRunTitle: 'tpn-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
