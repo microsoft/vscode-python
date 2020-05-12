@@ -179,12 +179,18 @@ class NativeEditorNotebookModel implements INotebookModel {
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
+            case 'save':
+                this._state.saveChangeCount = this._state.changeCount;
+                break;
             default:
                 break;
         }
 
         // Dirty state comes from undo. At least VS code will track it that way. However
-        this._state.changeCount += 1;
+        // skip file changes as we don't forward those to VS code
+        if (change.kind !== 'save') {
+            this._state.changeCount += 1;
+        }
 
         return changed;
     }
@@ -442,13 +448,19 @@ export class NativeEditorStorage implements INotebookStorage {
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
         return this.loadFromFile(file, possibleContents);
     }
-    public save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
-        return this.saveAs(model, model.file);
+    public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
+        await this.saveAs(model, model.file);
     }
 
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const contents = model.getContent();
         await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
+        model.update({
+            source: 'user',
+            kind: 'save',
+            oldDirty: model.isDirty,
+            newDirty: false
+        });
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
         // Should send to extension context storage path

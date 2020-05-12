@@ -340,6 +340,10 @@ export interface INotebookModelChange {
     source: 'undo' | 'user' | 'redo';
 }
 
+export interface INotebookModelSaved extends INotebookModelChange {
+    kind: 'save';
+}
+
 export interface INotebookModelRemoveAllChange extends INotebookModelChange {
     kind: 'remove_all';
     oldCells: ICell[];
@@ -454,6 +458,7 @@ export interface INotebookModelVersionChange extends INotebookModelChange {
 }
 
 export type NotebookModelChange =
+    | INotebookModelSaved
     | INotebookModelModifyChange
     | INotebookModelRemoveAllChange
     | INotebookModelClearChange
