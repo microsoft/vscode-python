@@ -8,7 +8,6 @@ black ; python_version>='3.6'
 yapf
 pylint
 pycodestyle
-prospector
 pydocstyle
 nose
 pytest==4.6.9 # Last version of pytest with Python 2.7 support
