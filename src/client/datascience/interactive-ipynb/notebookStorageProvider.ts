@@ -49,7 +49,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     }
     public dispose() {
         while (this.disposables.length) {
-            this.disposables.shift()?.dispose();
+            this.disposables.shift()?.dispose(); // NOSONAR
         }
     }
     private trackModel(model: INotebookModel) {

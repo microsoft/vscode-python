@@ -219,7 +219,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public dispose(): Promise<void> {
         super.dispose();
-        this.model?.dispose();
+        this.model?.dispose(); // NOSONAR
         return this.close();
     }
 
