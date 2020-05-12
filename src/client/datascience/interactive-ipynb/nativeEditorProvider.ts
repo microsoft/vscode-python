@@ -71,7 +71,7 @@ export class NativeEditorProvider
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
     private executedEditors: Set<string> = new Set<string>();
-    private models = new WeakSet<INotebookModel>();
+    private models = new Set<INotebookModel>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
@@ -244,6 +244,7 @@ export class NativeEditorProvider
     private trackModel(model: INotebookModel) {
         if (!this.models.has(model)) {
             this.models.add(model);
+            this.disposables.push(model.onDidDispose(() => this.models.delete(model)));
             this.disposables.push(model.onDidEdit(this.modelEdited.bind(this, model)));
         }
     }
@@ -270,13 +271,11 @@ export class NativeEditorProvider
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: This will not work, if we close an untitled document.
         // See if we have any untitled storage already
-        const untitledStorage = this.editors.map((e) => e.model).filter((model) => model?.file.scheme === 'untitled');
-
+        const untitledStorage = Array.from(this.models.values()).filter((model) => model?.file?.scheme === 'untitled');
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.
         const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
         const fileUri = Uri.file(fileName);
-
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });
     }
