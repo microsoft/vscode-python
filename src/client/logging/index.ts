@@ -5,6 +5,11 @@
 export {
     // aliases
     // (for convenience)
+    addOutputChannelLogging,
+    logError,
+    logInfo,
+    logVerbose,
+    logWarning,
     traceDecorators,
     traceError,
     traceInfo,
