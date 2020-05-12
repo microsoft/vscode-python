@@ -92,7 +92,6 @@
     "diagnostics.consoleTypeDiagnostic": "Your launch.json file needs to be updated to change the console type string from \"none\" to \"internalConsole\", otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
     "diagnostics.justMyCodeDiagnostic": "Configuration \"debugStdLib\" in launch.json is no longer supported. It's recommended to replace it with \"justMyCode\", which is the exact opposite of using \"debugStdLib\". Would you like to automatically update your launch.json file to do that?",
     "diagnostics.yesUpdateLaunch": "是，更新 launch.json",
-    "diagnostics.processId": "Attaching the debugger to a local process is an experimental feature. It will be available to all users soon.",
     "diagnostics.invalidTestSettings": "Your settings needs to be updated to change the setting \"python.unitTest.\" to \"python.testing.\", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?",
     "Common.canceled": "已取消",
     "Common.cancel": "取消",

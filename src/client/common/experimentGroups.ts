@@ -13,18 +13,6 @@ export enum ShowExtensionSurveyPrompt {
     enabled = 'ShowExtensionSurveyPrompt - enabled'
 }
 
-// Experiment to check whether the extension should use the new VS Code debug adapter API.
-export enum DebugAdapterDescriptorFactory {
-    control = 'DebugAdapterFactory - control',
-    experiment = 'DebugAdapterFactory - experiment'
-}
-
-// Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
-export enum DebugAdapterNewPtvsd {
-    control = 'PtvsdWheels37 - control',
-    experiment = 'PtvsdWheels37 - experiment'
-}
-
 // Experiment to check whether to enable re-load for web apps while debugging.
 export enum WebAppReload {
     control = 'Reload - control',
