@@ -15,6 +15,7 @@ import {
 import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
 import { IInterpreterAutoSeletionProxyService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
+import { LogLevel } from '../logging/levels';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
@@ -40,6 +41,7 @@ import {
     ITerminalSettings,
     ITestingSettings,
     IWorkspaceSymbolSettings,
+    LoggingLevelSettingType,
     Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
@@ -112,7 +114,7 @@ export class PythonSettings implements IPythonSettings {
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
-    public logging: ILoggingSettings = { level: 'error' };
+    public logging: ILoggingSettings = { level: LogLevel.Error };
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Resource;
@@ -255,8 +257,9 @@ export class PythonSettings implements IPythonSettings {
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
 
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        const loggingSettings = systemVariables.resolveAny(pythonSettings.get<ILoggingSettings>('logging'))!;
+        // tslint:disable-next-line: no-any
+        const loggingSettings = systemVariables.resolveAny(pythonSettings.get<any>('logging'))!;
+        loggingSettings.level = convertSettingTypeToLogLevel(loggingSettings.level);
         if (this.logging) {
             Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
         } else {
@@ -713,5 +716,25 @@ function isValidPythonPath(pythonPath: string): boolean {
         return parse(output);
     } catch (ex) {
         return false;
+    }
+}
+
+function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLevel {
+    switch (setting) {
+        case 'info': {
+            return LogLevel.Info;
+        }
+        case 'warn': {
+            return LogLevel.Warn;
+        }
+        case 'error': {
+            return LogLevel.Error;
+        }
+        case 'debug': {
+            return LogLevel.Debug;
+        }
+        default: {
+            return LogLevel.Off;
+        }
     }
 }

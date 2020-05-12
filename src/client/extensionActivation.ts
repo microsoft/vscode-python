@@ -48,7 +48,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { addOutputChannelLogging } from './logging';
+import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -116,9 +116,9 @@ async function activateLegacy(
     appRegisterTypes(serviceManager, languageServerType);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
+    setLoggingLevel(configuration.getSettings().logging.level);
 
     // "initialize" "services"
-
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
 

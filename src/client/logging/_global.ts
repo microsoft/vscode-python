@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as vscode from 'vscode';
+import * as winston from 'winston';
 import { isCI } from '../common/constants';
-import { ILoggingSettings, IOutputChannel, LoggingLevelSettingType } from '../common/types';
+import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
-import { LogLevel } from './levels';
+import { LogLevel, resolveLevelName } from './levels';
 import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
 import { getPythonOutputChannelTransport } from './transports';
@@ -58,11 +58,6 @@ function initialize() {
         };
         nonConsole = true;
     }
-    const pythonConfig = vscode.workspace.getConfiguration('python');
-    const settingValue = pythonConfig?.get<ILoggingSettings>('logging')!.level;
-    if (settingValue) {
-        config.level = convertSettingTypeToLogLevel(settingValue);
-    }
     configureLogger(globalLogger, config);
 
     if (isCI && nonConsole) {
@@ -76,31 +71,19 @@ function initialize() {
     }
 }
 
-// Register the output channel transport the logger will log into
+// Set the logging level the extension logs at.
+export function setLoggingLevel(level: LogLevel) {
+    const levelName = resolveLevelName(level, winston.config.npm.levels);
+    if (levelName) {
+        globalLogger.level = levelName;
+    }
+}
+
+// Register the output channel transport the logger will log into.
 export function addOutputChannelLogging(channel: IOutputChannel) {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
     globalLogger.add(transport);
-}
-
-function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLevel {
-    switch (setting) {
-        case 'info': {
-            return LogLevel.Info;
-        }
-        case 'warn': {
-            return LogLevel.Warn;
-        }
-        case 'error': {
-            return LogLevel.Error;
-        }
-        case 'debug': {
-            return LogLevel.Debug;
-        }
-        default: {
-            return LogLevel.Off;
-        }
-    }
 }
 
 // Emit a log message derived from the args to all enabled transports.

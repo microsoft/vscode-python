@@ -18,6 +18,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
+import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
@@ -186,6 +187,7 @@ export interface IPythonSettings {
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
+    readonly logging: ILoggingSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -231,7 +233,7 @@ export interface IMypyCategorySeverity {
 export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
 
 export interface ILoggingSettings {
-    readonly level: LoggingLevelSettingType;
+    readonly level: LogLevel;
 }
 export interface ILintingSettings {
     readonly enabled: boolean;
