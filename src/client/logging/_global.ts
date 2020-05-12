@@ -2,11 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { isCI, isTestExecution } from '../common/constants';
+import { isCI } from '../common/constants';
+import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
+import { getFormatter } from './formatters';
 import { LogLevel } from './levels';
 import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
+import { getPythonOutputChannelTransport } from './transports';
 import { Arguments } from './util';
 
 const globalLogger = createLogger();
@@ -48,9 +51,6 @@ function initialize() {
             config.console.label = 'Python Extension:';
         }
     }
-    if (!isTestExecution()) {
-        config.pythonOutputChannel = true;
-    }
     if (process.env.VSC_PYTHON_LOG_FILE) {
         config.file = {
             logfile: process.env.VSC_PYTHON_LOG_FILE
@@ -68,6 +68,12 @@ function initialize() {
             createLogger(config)
         );
     }
+}
+
+export function addOutputChannelLogging(channel: IOutputChannel) {
+    const formatter = getFormatter();
+    const transport = getPythonOutputChannelTransport(channel, formatter);
+    globalLogger.add(transport);
 }
 
 // Emit a log message derived from the args to all enabled transports.
@@ -121,9 +127,6 @@ export namespace traceDecorators {
         return createTracingDecorator([globalLogger], { message, opts, level });
     }
 }
-
-// Ensure that the console functions are bound before monkeypatching.
-import './transports';
 
 /**
  * What we're doing here is monkey patching the console.log so we can

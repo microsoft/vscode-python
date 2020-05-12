@@ -5,6 +5,7 @@
 export {
     // aliases
     // (for convenience)
+    addOutputChannelLogging,
     logError,
     logInfo,
     logVerbose,
