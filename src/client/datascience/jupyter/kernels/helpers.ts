@@ -5,6 +5,8 @@
 import type { Kernel } from '@jupyterlab/services';
 import { IJupyterKernelSpec } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -17,6 +19,8 @@ const connectionFilePlaceholder = '{connection_file}';
 export function findIndexOfConnectionFile(kernelSpec: Readonly<IJupyterKernelSpec>): number {
     return kernelSpec.argv.indexOf(connectionFilePlaceholder);
 }
+
+// Create a default kernelspec with the given display name
 export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpec {
     // This creates a default kernel spec. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
@@ -31,4 +35,10 @@ export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpe
     };
 
     return new JupyterKernelSpec(defaultSpec);
+}
+
+// Check if a name is a default python kernel name and pull the version
+export function detectDefaultKernelName(name: string) {
+    const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
+    return regEx.exec(name.toLowerCase());
 }

@@ -31,6 +31,7 @@ import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../types';
+import { detectDefaultKernelName } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
@@ -202,8 +203,7 @@ export class KernelService {
         }
 
         // Check if kernel is `Python2` or `Python3` or a similar generic kernel.
-        const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
-        const match = regEx.exec(kernelSpec.name.toLowerCase());
+        const match = detectDefaultKernelName(kernelSpec.name);
         if (match && match.groups()) {
             // 3. Look for interpreter with same major version
 
