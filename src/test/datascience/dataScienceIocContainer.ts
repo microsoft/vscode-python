@@ -197,6 +197,10 @@ import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipy
 import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
+import {
+    INotebookStorageProvider,
+    NotebookStorageProvider
+} from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
@@ -668,15 +672,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             useCustomEditor ? NativeEditor : NativeEditorOldWebView
         );
 
-        this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
-        this.serviceManager.addSingletonInstance<ICustomEditorService>(
-            ICustomEditorService,
-            new MockCustomEditorService(
-                this.asyncRegistry,
-                this.commandManager,
-                this.serviceContainer.get<INotebookStorage>(INotebookStorage)
-            )
-        );
         this.serviceManager.addSingleton<IDataScienceCommandListener>(
             IDataScienceCommandListener,
             NativeEditorCommandListener
@@ -924,12 +919,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Mock the app shell
         const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        this.datascience = TypeMoq.Mock.ofType<IDataScience>();
 
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
-
-        const startTime = Date.now();
-        this.datascience.setup((d) => d.activationStartTime).returns(() => startTime);
 
         this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(
             IEnvironmentVariablesProvider,
@@ -943,6 +934,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IConfigurationService,
             configurationService.object
         );
+
+        const startTime = Date.now();
+        this.datascience = TypeMoq.Mock.ofType<IDataScience>();
+        this.datascience.setup((d) => d.activationStartTime).returns(() => startTime);
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(
@@ -1007,6 +1002,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         interpreterDisplay.setup((i) => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+
+        this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
+        this.serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
+        this.serviceManager.addSingletonInstance<ICustomEditorService>(
+            ICustomEditorService,
+            new MockCustomEditorService(
+                this.asyncRegistry,
+                this.commandManager,
+                this.serviceContainer.get<INotebookStorage>(INotebookStorage)
+            )
+        );
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {

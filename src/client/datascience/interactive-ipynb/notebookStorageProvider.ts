@@ -19,7 +19,7 @@ export interface INotebookStorageProvider extends INotebookStorage {}
 export class NotebookStorageProvider implements INotebookStorageProvider {
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
     private readonly disposables: IDisposable[] = [];
-    private readonly autSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();
+    private readonly _autoSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -58,7 +58,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         model.onDidDispose(
             () => {
                 this.storageAndModels.delete(model.file.toString());
-                this.autSaveNotebookInHotExitFile.delete(model);
+                this._autoSaveNotebookInHotExitFile.delete(model);
             },
             this,
             this.disposables
@@ -68,10 +68,10 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         if (!model.isUntitled) {
             const fileSettings = this.workspaceService.getConfiguration('files', model.file);
             const saveToHotExitDebounced = debounce(() => this.autoSaveNotebookInHotExitFile(model, fileSettings), 250);
-            this.autSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
+            this._autoSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
         }
         model.changed((e) => {
-            const debouncedHotExitSave = this.autSaveNotebookInHotExitFile.get(model);
+            const debouncedHotExitSave = this._autoSaveNotebookInHotExitFile.get(model);
             if (e.newDirty && debouncedHotExitSave) {
                 debouncedHotExitSave();
             }
