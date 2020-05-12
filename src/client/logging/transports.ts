@@ -24,6 +24,8 @@ export function isConsoleTransport(transport: unknown): boolean {
 class ConsoleTransport extends Transport {
     // tslint:disable:no-console
     private static funcByLevel: { [K in LogLevel]: (...args: Arguments) => void } = {
+        // tslint:disable-next-line: no-empty
+        [LogLevel.Off]: () => {},
         [LogLevel.Error]: console.error,
         [LogLevel.Warn]: console.warn,
         [LogLevel.Info]: console.info,

@@ -15,6 +15,7 @@ export type FormatterOptions = {
 // Pascal casing is used so log files get highlighted when viewing
 // in VSC and other editors.
 const formattedLogLevels: { [K in LogLevel]: string } = {
+    [LogLevel.Off]: 'Off',
     [LogLevel.Error]: 'Error',
     [LogLevel.Warn]: 'Warn',
     [LogLevel.Info]: 'Info',

@@ -34,6 +34,7 @@ import {
     IFormattingSettings,
     IInterpreterPathService,
     ILintingSettings,
+    ILoggingSettings,
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
@@ -111,6 +112,7 @@ export class PythonSettings implements IPythonSettings {
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
+    public logging: ILoggingSettings = { level: 'error' };
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Resource;
@@ -252,6 +254,14 @@ export class PythonSettings implements IPythonSettings {
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
+
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        const loggingSettings = systemVariables.resolveAny(pythonSettings.get<ILoggingSettings>('logging'))!;
+        if (this.logging) {
+            Object.assign<ILoggingSettings, ILoggingSettings>(this.logging, loggingSettings);
+        } else {
+            this.logging = loggingSettings;
+        }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;

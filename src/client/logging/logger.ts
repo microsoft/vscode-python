@@ -39,7 +39,7 @@ interface IConfigurableLogger {
 // Set up a logger just the way we like it.
 export function configureLogger(logger: IConfigurableLogger, config: LoggerConfig) {
     if (config.level) {
-        const levelName = resolveLevelName(config.level);
+        const levelName = resolveLevelName(config.level, winston.config.npm.levels);
         if (levelName) {
             logger.level = levelName;
         }

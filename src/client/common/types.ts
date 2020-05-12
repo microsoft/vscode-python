@@ -227,6 +227,12 @@ export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
 }
+
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
+
+export interface ILoggingSettings {
+    readonly level: LoggingLevelSettingType;
+}
 export interface ILintingSettings {
     readonly enabled: boolean;
     readonly ignorePatterns: string[];

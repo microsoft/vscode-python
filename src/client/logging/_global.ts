@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as vscode from 'vscode';
 import { isCI } from '../common/constants';
-import { IOutputChannel } from '../common/types';
+import { ILoggingSettings, IOutputChannel, LoggingLevelSettingType } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
 import { LogLevel } from './levels';
@@ -57,6 +58,11 @@ function initialize() {
         };
         nonConsole = true;
     }
+    const pythonConfig = vscode.workspace.getConfiguration('python');
+    const settingValue = pythonConfig?.get<ILoggingSettings>('logging')!.level;
+    if (settingValue) {
+        config.level = convertSettingTypeToLogLevel(settingValue);
+    }
     configureLogger(globalLogger, config);
 
     if (isCI && nonConsole) {
@@ -75,6 +81,26 @@ export function addOutputChannelLogging(channel: IOutputChannel) {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
     globalLogger.add(transport);
+}
+
+function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLevel {
+    switch (setting) {
+        case 'info': {
+            return LogLevel.Info;
+        }
+        case 'warn': {
+            return LogLevel.Warn;
+        }
+        case 'error': {
+            return LogLevel.Error;
+        }
+        case 'debug': {
+            return LogLevel.Debug;
+        }
+        default: {
+            return LogLevel.Off;
+        }
+    }
 }
 
 // Emit a log message derived from the args to all enabled transports.

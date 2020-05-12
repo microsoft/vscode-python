@@ -9,14 +9,16 @@ import * as winston from 'winston';
 
 export enum LogLevel {
     // Larger numbers are higher priority.
+    Off = 50,
     Error = 40,
     Warn = 30,
     Info = 20,
     Debug = 10,
     Trace = 5
 }
-export type LogLevelName = 'ERROR' | 'WARNING' | 'INFORMATION' | 'DEBUG' | 'DEBUG-TRACE';
+export type LogLevelName = 'OFF' | 'ERROR' | 'WARNING' | 'INFORMATION' | 'DEBUG' | 'DEBUG-TRACE';
 const logLevelMap: { [K in LogLevel]: LogLevelName } = {
+    [LogLevel.Off]: 'OFF',
     [LogLevel.Error]: 'ERROR',
     [LogLevel.Warn]: 'WARNING',
     [LogLevel.Info]: 'INFORMATION',
@@ -37,8 +39,9 @@ export const configLevels: winston.config.AbstractConfigSetLevels = {
 
 // The level names from winston/config.npm.
 // See: https://www.npmjs.com/package/winston#logging-levels
-type NPMLogLevelName = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
+type NPMLogLevelName = 'off' | 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
 const npmLogLevelMap: { [K in LogLevel]: NPMLogLevelName } = {
+    [LogLevel.Off]: 'off',
     [LogLevel.Error]: 'error',
     [LogLevel.Warn]: 'warn',
     [LogLevel.Info]: 'info',
