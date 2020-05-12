@@ -248,8 +248,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         return gitSchemeEditor === editor || fileSchemeEditor === editor;
     }
     private isNotebook(document: TextDocument) {
-        // Only support file uris (we don't want to automatically open any other ipynb file from another resource as a notebook).
-        // E.g. when opening a document for comparison, the scheme is `git`, in live share the scheme is `vsls`.
+        // Skip opening anything from git as we should use the git viewer.
         const validUriScheme = document.uri.scheme !== 'git';
         return (
             validUriScheme &&
