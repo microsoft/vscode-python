@@ -183,6 +183,7 @@ import { CellHashProvider } from '../../client/datascience/editor-integration/ce
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
+import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
@@ -790,6 +791,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
         ]);
+        this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
         this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
