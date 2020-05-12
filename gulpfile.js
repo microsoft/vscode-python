@@ -176,18 +176,7 @@ gulp.task('webpack', async () => {
     await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
-    // Run both in parallel, for faster process on CI.
-    // Yes, console would print output from both, that's ok, we have a faster CI.
-    // If things fail, we can run locally separately.
-    if (isCI) {
-        await Promise.all([
-            buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension'),
-            buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter')
-        ]);
-    } else {
-        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
-        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter');
-    }
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
 });
 
 gulp.task('updateBuildNumber', async () => {
@@ -310,9 +299,7 @@ gulp.task('renameSourceMaps', async () => {
     // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
     await fs.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
-    await fs.rename(debuggerSourceMap, `${debuggerSourceMap}.disabled`);
 });
 
 gulp.task('verifyBundle', async () => {

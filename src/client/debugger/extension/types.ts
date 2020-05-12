@@ -3,13 +3,16 @@
 
 'use strict';
 
+import { Readable } from 'stream';
 import {
     CancellationToken,
     DebugAdapterDescriptorFactory,
     DebugAdapterTrackerFactory,
     DebugConfigurationProvider,
+    Disposable,
     WorkspaceFolder
 } from 'vscode';
+
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { DebugConfigurationArguments } from '../types';
 
@@ -60,3 +63,10 @@ export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory 
 export const IOutdatedDebuggerPromptFactory = Symbol('IOutdatedDebuggerPromptFactory');
 
 export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFactory {}
+
+export const IProtocolParser = Symbol('IProtocolParser');
+export interface IProtocolParser extends Disposable {
+    connect(stream: Readable): void;
+    once(event: string | symbol, listener: Function): this;
+    on(event: string | symbol, listener: Function): this;
+}

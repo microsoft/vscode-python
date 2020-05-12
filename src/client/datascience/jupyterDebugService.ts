@@ -26,8 +26,8 @@ import { IDisposable, IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../constants';
-import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { DebugAdapterDescriptorFactory } from '../debugger/extension/adapter/factory';
+import { IProtocolParser } from '../debugger/extension/types';
 import { IJupyterDebugService } from './types';
 
 // tslint:disable:no-any

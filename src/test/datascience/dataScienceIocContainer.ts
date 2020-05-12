@@ -310,8 +310,8 @@ import {
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
-import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
-import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
+import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
+import { IProtocolParser } from '../../client/debugger/extension/types';
 import {
     EnvironmentActivationService,
     EnvironmentActivationServiceCache
