@@ -4,8 +4,8 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
-import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
-import { IProtocolParser } from '../debugger/debugAdapter/types';
+import { ProtocolParser } from '../debugger/extension/helpers/protocolParser';
+import { IProtocolParser } from '../debugger/extension/types';
 import { IServiceManager } from '../ioc/types';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
