@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
 import {
     CustomDocument,
@@ -19,6 +20,7 @@ import {
 } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
+@injectable()
 export class MockCustomEditorService implements ICustomEditorService {
     private provider: CustomEditorProvider | undefined;
     private resolvedList = new Map<string, Thenable<void>>();
@@ -26,9 +28,9 @@ export class MockCustomEditorService implements ICustomEditorService {
     private redoStack = new Map<string, unknown[]>();
 
     constructor(
-        disposableRegistry: IDisposableRegistry,
-        commandManager: ICommandManager,
-        private readonly storage: INotebookStorage
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(ICommandManager) commandManager: ICommandManager,
+        @inject(INotebookStorage) private readonly storage: INotebookStorage
     ) {
         disposableRegistry.push(
             commandManager.registerCommand('workbench.action.files.save', this.onFileSave.bind(this))

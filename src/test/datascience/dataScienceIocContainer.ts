@@ -1005,14 +1005,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
         this.serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
-        this.serviceManager.addSingletonInstance<ICustomEditorService>(
-            ICustomEditorService,
-            new MockCustomEditorService(
-                this.asyncRegistry,
-                this.commandManager,
-                this.serviceContainer.get<INotebookStorage>(INotebookStorage)
-            )
-        );
+        this.serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, MockCustomEditorService);
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
