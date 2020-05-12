@@ -17,6 +17,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
+import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
 type PendingMessage = {
@@ -53,6 +54,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private totalWaitTime: number = 0;
     private totalWaitedMessages: number = 0;
     private hookCount: number = 0;
+    /**
+     * This will be true if user has executed something that has resulted in the use of ipywidgets.
+     * We make this determinination based on whether we see messages coming from backend kernel of a specific shape.
+     * E.g. if it contains ipywidget mime type, then widgets are in use.
+     */
+    private isUsingIPyWidgets?: boolean;
+    private readonly deserialize: (data: string | ArrayBuffer) => KernelMessage.IMessage<KernelMessage.MessageType>;
+
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {
         // Always register this comm target.
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
@@ -69,6 +78,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         );
         this.mirrorSend = this.mirrorSend.bind(this);
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
+        // tslint:disable-next-line: no-require-imports
+        const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+        this.deserialize = jupyterLabSerialize.deserialize;
     }
     public dispose() {
         // Send overhead telemetry for our message hooking
@@ -203,16 +215,19 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
         }
     }
-    private async mirrorSend(data: any, _cb?: (err?: Error) => void) {
+    private async mirrorSend(data: any, _cb?: (err?: Error) => void): Promise<void> {
         // If this is shell control message, mirror to the other side. This is how
         // we get the kernel in the UI to have the same set of futures we have on this side
         if (typeof data === 'string') {
             const startTime = Date.now();
             // tslint:disable-next-line: no-require-imports
-            const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
-            const msg = jupyterLabSerialize.deserialize(data);
+            const msg = this.deserialize(data);
             if (msg.channel === 'shell' && msg.header.msg_type === 'execute_request') {
-                await this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
+                const promise = this.mirrorExecuteRequest(msg as KernelMessage.IExecuteRequestMsg); // NOSONAR
+                // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
+                if (this.isUsingIPyWidgets) {
+                    await promise;
+                }
                 this.totalWaitTime = Date.now() - startTime;
                 this.totalWaitedMessages += 1;
             }
@@ -230,7 +245,21 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
 
-    private onKernelSocketMessage(data: WebSocketData) {
+    private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
+        if (!this.isUsingIPyWidgets) {
+            // Hooks expect serialized data as this normally comes from a WebSocket
+            const message = this.deserialize(data as any) as any;
+
+            // Check for hints that would indicate whether ipywidgest are used in outputs.
+            if (
+                message.content &&
+                message.content.data &&
+                (message.content.data[WIDGET_MIMETYPE] || message.content.target_name === Identifiers.DefaultCommTarget)
+            ) {
+                this.isUsingIPyWidgets = true;
+            }
+        }
+
         const msgUuid = uuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
@@ -242,7 +271,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 data: serializeDataViews([data as any])
             });
         }
-        return promise.promise;
+
+        // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
+        if (this.isUsingIPyWidgets) {
+            await promise.promise;
+        }
     }
     private onKernelSocketResponse(payload: { id: string }) {
         const pending = this.waitingMessageIds.get(payload.id);

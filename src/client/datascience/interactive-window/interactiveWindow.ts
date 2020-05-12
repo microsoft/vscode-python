@@ -102,7 +102,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
+        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
@@ -384,7 +384,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.updateCwd(path.dirname(file));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, undefined, debug);
+        return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)

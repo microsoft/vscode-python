@@ -9,6 +9,7 @@ import signal
 import sys
 import subprocess
 import threading
+import time
 from vscode_datascience_helpers.daemon.daemon_python import (
     error_decorator,
     PythonDaemon as BasePythonDaemon,
@@ -138,8 +139,8 @@ class PythonDaemon(JupyterDaemon):
                 sys.stdout.flush()
 
     def _monitor_kernel(self):
-        while self.kernel.poll() is None:
-            pass
+        self.log.warn("Waiting for Kernel to die %s", self.kernel.pid)
+        self.kernel.wait(timeout=None)
 
         exit_code = self.kernel.poll()
         std_err = self.kernel.stderr.read()

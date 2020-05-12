@@ -6,13 +6,7 @@ import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IDataScienceSettings,
-    IDisposableRegistry,
-    IExperimentsManager,
-    IPythonSettings
-} from '../../../client/common/types';
+import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
 import {
     IInteractiveWindowProvider,
@@ -45,8 +39,6 @@ suite('Data Science - NotebookProvider', () => {
     let disposableRegistry: IDisposableRegistry;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
-    let experimentsManager: IExperimentsManager;
-    let configuration: IConfigurationService;
     let pythonSettings: IPythonSettings;
     let dataScienceSettings: IDataScienceSettings;
 
@@ -57,8 +49,6 @@ suite('Data Science - NotebookProvider', () => {
         disposableRegistry = mock<IDisposableRegistry>();
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
-        experimentsManager = mock<IExperimentsManager>();
-        configuration = mock<IConfigurationService>();
         const workspaceService = mock<IWorkspaceService>();
 
         // Set up our settings
@@ -68,10 +58,6 @@ suite('Data Science - NotebookProvider', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');
         when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
-        when(configuration.getSettings(anything())).thenReturn(instance(pythonSettings));
-
-        // Set up experiment manager
-        when(experimentsManager.inExperiment(anything())).thenReturn(false);
 
         notebookProvider = new NotebookProvider(
             instance(fileSystem),
@@ -80,8 +66,6 @@ suite('Data Science - NotebookProvider', () => {
             instance(disposableRegistry),
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(configuration),
-            instance(experimentsManager),
             instance(workspaceService)
         );
     });

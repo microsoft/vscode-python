@@ -20,7 +20,7 @@ export const multirootPath = path.join(__dirname, '..', '..', 'src', 'testMultiR
 const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
 //First thing to be executed.
-process.env['VSC_PYTHON_CI_TEST'] = '1';
+process.env.VSC_PYTHON_CI_TEST = '1';
 
 // Ability to use custom python environments for testing
 export async function initializePython() {

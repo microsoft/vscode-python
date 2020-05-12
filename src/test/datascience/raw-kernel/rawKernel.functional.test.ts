@@ -95,11 +95,13 @@ suite('DataScience raw kernel tests', () => {
     }
 
     async function disconnectFromKernel() {
-        await kernelProcess.dispose().catch(noop);
-        try {
-            await fs.remove(connectionFile);
-        } catch {
-            noop();
+        if (kernelProcess) {
+            await kernelProcess.dispose().catch(noop);
+            try {
+                await fs.remove(connectionFile);
+            } catch {
+                noop();
+            }
         }
     }
 
@@ -111,7 +113,7 @@ suite('DataScience raw kernel tests', () => {
         let exited = false;
         kernelProcess.exited(() => (exited = true));
         await shutdown();
-        await sleep(500); // Give time for the shutdown to go across
+        await sleep(2500); // Give time for the shutdown to go across
         assert.ok(exited, 'Kernel did not shutdown');
     });
 

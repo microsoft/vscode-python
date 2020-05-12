@@ -94,9 +94,14 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public addDocument(code: string, file: string) {
-        const mockDoc = new MockDocument(code, file, this.saveDocument);
-        this.textDocuments.push(mockDoc);
-        return mockDoc;
+        let existing = this.textDocuments.find((d) => d.uri.fsPath === file) as MockDocument;
+        if (existing) {
+            existing.setContent(code);
+        } else {
+            existing = new MockDocument(code, file, this.saveDocument);
+            this.textDocuments.push(existing);
+        }
+        return existing;
     }
 
     public changeDocument(file: string, changes: { range: Range; newText: string }[]) {

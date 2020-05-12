@@ -106,7 +106,7 @@ suite('Interpreters - selector', () => {
                 return { ...info, ...item };
             });
             interpreterService
-                .setup((x) => x.getInterpreters(TypeMoq.It.isAny()))
+                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true }))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
             const actual = await selector.getSuggestions(undefined);
@@ -139,7 +139,9 @@ suite('Interpreters - selector', () => {
     test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
         // tslint:disable-next-line: no-any
         const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
-        interpreterService.setup((i) => i.getInterpreters(folder1.uri)).returns(() => interpreterList);
+        interpreterService
+            .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true }))
+            .returns(() => interpreterList);
         // tslint:disable-next-line: no-any
         interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
         // tslint:disable-next-line: no-any

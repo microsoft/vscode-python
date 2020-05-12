@@ -49,7 +49,8 @@ export enum ImageName {
     Notebook,
     Interactive,
     Python,
-    PythonColor
+    PythonColor,
+    RunByLine
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -216,6 +217,10 @@ const images: { [key: string]: { light: string; dark: string } } = {
     PythonColor: {
         light: require('./images/StartPage/Python-color.svg'),
         dark: require('./images/StartPage/Python-color.svg')
+    },
+    RunByLine: {
+        light: require('./images/RunByLine/runbyline_light.svg'),
+        dark: require('./images/RunByLine/runbyline_dark.svg')
     }
 };
 

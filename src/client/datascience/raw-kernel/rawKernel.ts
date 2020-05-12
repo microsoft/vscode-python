@@ -4,6 +4,7 @@ import type { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/servic
 import * as uuid from 'uuid/v4';
 import { isTestExecution } from '../../common/constants';
 import { IDisposable } from '../../common/types';
+import { swallowExceptions } from '../../common/utils/misc';
 import { IKernelProcess } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';
 import { IKernelSocket } from '../types';
@@ -213,8 +214,8 @@ export class RawKernel implements Kernel.IKernel {
         return this.realKernel.removeCommTarget(targetName, callback);
     }
     public dispose(): void {
-        this.realKernel.dispose();
-        this.socket.dispose();
+        swallowExceptions(() => this.realKernel.dispose());
+        swallowExceptions(() => this.socket.dispose());
     }
     public registerMessageHook(
         msgId: string,

@@ -33,6 +33,7 @@ import {
     PythonPathDeprecatedDiagnosticService,
     PythonPathDeprecatedDiagnosticServiceId
 } from './checks/pythonPathDeprecated';
+import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -84,6 +85,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         IDiagnosticsService,
         PythonPathDeprecatedDiagnosticService,
         PythonPathDeprecatedDiagnosticServiceId
+    );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        UpgradeCodeRunnerDiagnosticService,
+        UpgradeCodeRunnerDiagnosticServiceId
     );
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);

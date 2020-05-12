@@ -51,7 +51,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() private readonly useWebViewServer: boolean,
-        @unmanaged() protected readonly useCustomEditorApi: boolean
+        @unmanaged() protected readonly useCustomEditorApi: boolean,
+        @unmanaged() private readonly enableVariablesDuringDebugging: boolean
     ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -211,6 +212,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
                 wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
                 parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
+            },
+            variableOptions: {
+                enableDuringDebugger: this.enableVariablesDuringDebugging
             }
         };
     }

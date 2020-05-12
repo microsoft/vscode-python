@@ -122,10 +122,10 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
 export class InstalledRawKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly kernelFinder: IKernelFinder, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(
-        _resource: Resource,
-        cancelToken?: CancellationToken
+        resource: Resource,
+        _cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {
-        const items = await this.kernelFinder.listKernelSpecs(cancelToken);
+        const items = await this.kernelFinder.listKernelSpecs(resource);
         return items
             .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));

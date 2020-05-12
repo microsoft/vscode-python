@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { RunByLine, WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -164,7 +164,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
-            useCustomEditorApi
+            useCustomEditorApi,
+            experimentsManager.inExperiment(RunByLine.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
@@ -197,6 +198,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // When a server starts, make sure we create a notebook if the server matches
         jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+
+        // When the variable service requests a refresh, refresh our variable list
+        this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
     }
 
     public async show(): Promise<void> {
@@ -538,7 +542,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean,
+        debugInfo?: { runByLine: boolean; hashFileName?: string },
         cancelToken?: CancellationToken
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
@@ -563,7 +567,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 line,
                 id,
                 originator: this.id,
-                debug: debug !== undefined ? debug : false
+                debug: debugInfo !== undefined ? true : false
             });
         }
 
@@ -595,9 +599,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 await this.setLaunchingFile(file);
 
-                if (debug) {
-                    // Attach our debugger
-                    await this.jupyterDebugger.startDebugging(this._notebook);
+                if (debugInfo) {
+                    // Attach our debugger based on run by line setting
+                    if (debugInfo.runByLine && debugInfo.hashFileName) {
+                        await this.jupyterDebugger.startRunByLine(this._notebook, debugInfo.hashFileName);
+                    } else if (!debugInfo.runByLine) {
+                        await this.jupyterDebugger.startDebugging(this._notebook);
+                    } else {
+                        throw Error('Missing hash file name when running by line');
+                    }
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
@@ -660,7 +670,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } finally {
             status.dispose();
 
-            if (debug) {
+            if (debugInfo) {
                 if (this._notebook) {
                     await this.jupyterDebugger.stopDebugging(this._notebook);
                 }
@@ -927,7 +937,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
 
                 // Submit this item as new code.
-                this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
+                this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                ).ignoreErrors();
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }
@@ -942,7 +959,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 sendTelemetryEvent(Telemetry.RemoteAddCode);
 
                 // Submit this item as new code.
-                await this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug);
+                await this.submitCode(
+                    args.code,
+                    args.file,
+                    args.line,
+                    args.id,
+                    undefined,
+                    args.debug ? { runByLine: false } : undefined
+                );
             } catch (exc) {
                 this.errorHandler.handleError(exc).ignoreErrors();
             }
@@ -1145,6 +1169,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return this.listenToNotebookEvents(this._notebook);
             }
         }
+    }
+
+    private refreshVariables() {
+        this.postMessage(InteractiveWindowMessages.ForceVariableRefresh).ignoreErrors();
     }
 
     private async checkForNotebookProviderConnection(): Promise<void> {

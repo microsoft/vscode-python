@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
-import { IApplicationShell, ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { IApplicationShell } from '../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
@@ -16,7 +17,6 @@ import { IConfigurationService, IExperimentsManager, Version } from '../../commo
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { getCellResource } from '../cellFactory';
 import { Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -25,6 +25,7 @@ import {
     IFileHashes,
     IJupyterConnection,
     IJupyterDebugger,
+    IJupyterDebugService,
     INotebook,
     ISourceMapRequest
 } from '../types';
@@ -47,10 +48,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IJupyterDebugService)
+        @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
+        private debugService: IJupyterDebugService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
@@ -68,38 +69,27 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
+    public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
+        traceInfo(`Running by line for ${cellHashFileName}`);
+        const config: Partial<DebugConfiguration> = {
+            justMyCode: true,
+            // This list should include an exclusion list, but this debugpy issue is preventing that from working:
+            // https://github.com/microsoft/debugpy/issues/226
+            rules: [
+                {
+                    include: true,
+                    path: cellHashFileName
+                }
+            ]
+        };
+        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config);
+    }
+
     public async startDebugging(notebook: INotebook): Promise<void> {
-        traceInfo('start debugging');
-
-        // Try to connect to this notebook
-        const config = await this.connect(notebook);
-        if (config) {
-            traceInfo('connected to notebook during debugging');
-
-            // First check if this is a live share session. Skip debugging attach on the guest
-            // tslint:disable-next-line: no-any
-            const hasRole = (notebook as any) as ILiveShareHasRole;
-            if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
-                traceInfo('guest mode attach skipped');
-            } else {
-                await this.debugService.startDebugging(undefined, config);
-
-                // Force the debugger to update its list of breakpoints. This is used
-                // to make sure the breakpoint list is up to date when we do code file hashes
-                this.debugService.removeBreakpoints([]);
-            }
-
-            // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);
-            if (importResults.length === 0 || importResults[0].state === CellState.error) {
-                traceWarning(`${this.debuggerPackage} not found in path.`);
-            } else {
-                this.traceCellResults('import startup', importResults);
-            }
-
-            // Then enable tracing
-            await this.executeSilently(notebook, this.tracingEnableCode);
-        }
+        const settings = this.configService.getSettings(notebook.resource);
+        return this.startDebugSession((c) => this.debugService.startDebugging(undefined, c), notebook, {
+            justMyCode: settings.datascience.debugJustMyCode
+        });
     }
 
     public async stopDebugging(notebook: INotebook): Promise<void> {
@@ -107,12 +97,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         if (config) {
             traceInfo('stop debugging');
 
-            // Stop our debugging UI session, no await as we just want it stopped
-            this.commandManager.executeCommand('workbench.action.debug.stop');
+            // Tell our debug service to shutdown if possible
+            this.debugService.stop();
 
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
-            await this.executeSilently(notebook, this.tracingDisableCode);
+            if (notebook.status !== ServerStatus.Dead && notebook.status !== ServerStatus.NotStarted) {
+                await this.executeSilently(notebook, this.tracingDisableCode);
+            }
         }
     }
 
@@ -134,6 +126,44 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
+    private async startDebugSession(
+        startCommand: (config: DebugConfiguration) => Thenable<boolean>,
+        notebook: INotebook,
+        extraConfig: Partial<DebugConfiguration>
+    ) {
+        traceInfo('start debugging');
+
+        // Try to connect to this notebook
+        const config = await this.connect(notebook, extraConfig);
+        if (config) {
+            traceInfo('connected to notebook during debugging');
+
+            // First check if this is a live share session. Skip debugging attach on the guest
+            // tslint:disable-next-line: no-any
+            const hasRole = (notebook as any) as ILiveShareHasRole;
+            if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
+                traceInfo('guest mode attach skipped');
+            } else {
+                await startCommand(config);
+
+                // Force the debugger to update its list of breakpoints. This is used
+                // to make sure the breakpoint list is up to date when we do code file hashes
+                this.debugService.removeBreakpoints([]);
+            }
+
+            // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
+            const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);
+            if (importResults.length === 0 || importResults[0].state === CellState.error) {
+                traceWarning(`${this.debuggerPackage} not found in path.`);
+            } else {
+                this.traceCellResults('import startup', importResults);
+            }
+
+            // Then enable tracing
+            await this.executeSilently(notebook, this.tracingEnableCode);
+        }
+    }
+
     private traceCellResults(prefix: string, results: ICell[]) {
         if (results.length > 0 && results[0].data.cell_type === 'code') {
             const cell = results[0].data as nbformat.ICodeCell;
@@ -150,7 +180,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    private async connect(notebook: INotebook): Promise<DebugConfiguration | undefined> {
+    private async connect(
+        notebook: INotebook,
+        extraConfig: Partial<DebugConfiguration>
+    ): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(notebook.identity.toString());
         if (result) {
@@ -174,14 +207,24 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         // Connect local or remote based on what type of notebook we're talking to
+        result = {
+            type: 'python',
+            name: 'IPython',
+            request: 'attach',
+            ...extraConfig
+        };
         const connectionInfo = notebook.connection;
         if (connectionInfo && !connectionInfo.localLaunch) {
-            result = await this.connectToRemote(notebook, connectionInfo);
+            const { host, port } = await this.connectToRemote(notebook, connectionInfo);
+            result.host = host;
+            result.port = port;
         } else {
-            result = await this.connectToLocal(notebook);
+            const { host, port } = await this.connectToLocal(notebook);
+            result.host = host;
+            result.port = port;
         }
 
-        if (result) {
+        if (result.port) {
             this.configs.set(notebook.identity.toString(), result);
         }
 
@@ -198,20 +241,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      * @returns {Promise<string>}
      * @memberof JupyterDebugger
      */
-    private async getDebuggerPath(notebook: INotebook): Promise<string> {
+    private async getDebuggerPath(_notebook: INotebook): Promise<string> {
         if (this.debuggerPackage === 'ptvsd') {
             return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
         }
-        const pythonVersion = await this.getKernelPythonVersion(notebook);
-        // The new debug adapter with wheels is only supported in 3.7
-        // Code can be found here (src/client/debugger/extension/adapter/factory.ts).
-        if (pythonVersion && pythonVersion.major === 3 && pythonVersion.minor === 7) {
-            // Return debugger with wheels
-            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'wheels');
-        }
 
         // We are here so this is NOT python 3.7, return debugger without wheels
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
     }
     private async calculateDebuggerPathList(notebook: INotebook): Promise<string | undefined> {
         const extraPaths: string[] = [];
@@ -286,11 +322,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private executeSilently(notebook: INotebook, code: string): Promise<ICell[]> {
         return notebook.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
-    }
-
-    private async getKernelPythonVersion(notebook: INotebook): Promise<Version | undefined> {
-        const execResults = await this.executeSilently(notebook, 'import sys;print(sys.version)');
-        return this.parseVersionInfo(execResults, 'pythonVersionInfo');
     }
 
     private async debuggerCheck(notebook: INotebook): Promise<Version | undefined> {
@@ -400,7 +431,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     // Pull our connection info out from the cells returned by enable_attach
-    private parseConnectInfo(cells: ICell[], local: boolean): DebugConfiguration | undefined {
+    private parseConnectInfo(cells: ICell[]): { port: number; host: string } {
         if (cells.length > 0) {
             let enableAttachString = this.extractOutput(cells[0]);
             if (enableAttachString) {
@@ -409,47 +440,26 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 // Important: This regex matches the format of the string returned from enable_attach. When
                 // doing enable_attach remotely, make sure to print out a string in the format ('host', port)
                 const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
-
                 const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
-                const settings = this.configService.getSettings(getCellResource(cells[0]));
                 if (debugInfoMatch) {
-                    const localConfig: DebugConfiguration = {
-                        name: 'IPython',
-                        request: 'attach',
-                        type: 'python',
+                    return {
                         port: parseInt(debugInfoMatch[2], 10),
-                        host: debugInfoMatch[1],
-                        justMyCode: settings.datascience.debugJustMyCode
+                        host: debugInfoMatch[1]
                     };
-                    if (local) {
-                        return localConfig;
-                    } else {
-                        return {
-                            ...localConfig,
-                            pathMappings: [
-                                {
-                                    localRoot: this.workspace.rootPath,
-                                    remoteRoot: '.'
-                                }
-                            ]
-                        };
-                    }
                 }
-            } else {
-                // if we cannot parse the connect information, throw so we exit out of debugging
-                if (cells[0].data) {
-                    const outputs = cells[0].data.outputs as nbformat.IOutput[];
-                    if (outputs[0]) {
-                        const error = outputs[0] as nbformat.IError;
-                        throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
-                    }
-                }
-                throw new JupyterDebuggerNotInstalledError(
-                    localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage)
-                );
             }
         }
-        return undefined;
+        // if we cannot parse the connect information, throw so we exit out of debugging
+        if (cells[0]?.data) {
+            const outputs = cells[0].data.outputs as nbformat.IOutput[];
+            if (outputs[0]) {
+                const error = outputs[0] as nbformat.IError;
+                throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
+            }
+        }
+        throw new JupyterDebuggerNotInstalledError(
+            localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage)
+        );
     }
 
     private extractOutput(cell: ICell): string | undefined {
@@ -470,17 +480,17 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return undefined;
     }
 
-    private async connectToLocal(notebook: INotebook): Promise<DebugConfiguration | undefined> {
+    private async connectToLocal(notebook: INotebook): Promise<{ port: number; host: string }> {
         const enableDebuggerResults = await this.executeSilently(notebook, this.enableDebuggerCode);
 
         // Save our connection info to this notebook
-        return this.parseConnectInfo(enableDebuggerResults, true);
+        return this.parseConnectInfo(enableDebuggerResults);
     }
 
     private async connectToRemote(
         _notebook: INotebook,
         _connectionInfo: IJupyterConnection
-    ): Promise<DebugConfiguration | undefined> {
+    ): Promise<{ port: number; host: string }> {
         // We actually need a token. This isn't supported at the moment
         throw new JupyterDebuggerRemoteNotSupported();
 

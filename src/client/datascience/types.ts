@@ -10,6 +10,7 @@ import {
     CancellationToken,
     CodeLens,
     CodeLensProvider,
+    DebugConfiguration,
     DebugSession,
     Disposable,
     Event,
@@ -19,9 +20,10 @@ import {
     Uri,
     WebviewPanel
 } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
-import { ICommandManager } from '../common/application/types';
+import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -141,6 +143,7 @@ export interface INotebookServer extends IAsyncDisposable {
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
+    supported(): Promise<boolean>;
     connect(): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
@@ -286,6 +289,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
+    startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void>;
     startDebugging(notebook: INotebook): Promise<void>;
     stopDebugging(notebook: INotebook): Promise<void>;
     onRestart(notebook: INotebook): void;
@@ -746,6 +750,9 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
         wordBasedSuggestions: boolean;
         parameterHintsEnabled: boolean;
     };
+    variableOptions: {
+        enableDuringDebugger: boolean;
+    };
 }
 
 // Get variables from the currently running active Jupyter server
@@ -768,6 +775,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
+    readonly refreshRequired: Event<void>;
     getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(
@@ -776,6 +784,11 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
+    getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined>;
+}
+
+export interface IConditionalJupyterVariables extends IJupyterVariables {
+    readonly active: boolean;
 }
 
 // Request for variables
@@ -855,6 +868,7 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
     getExecutionCount(): number;
     incExecutionCount(): void;
+    generateHashFileName(cell: ICell, executionCount: number): string;
 }
 
 export interface IDebugLocation {
@@ -1138,4 +1152,38 @@ export interface INotebookAndInteractiveWindowUsageTracker {
     readonly lastNotebookOpened?: Date;
     readonly lastInteractiveWindowOpened?: Date;
     startTracking(): void;
+}
+
+export const IJupyterDebugService = Symbol('IJupyterDebugService');
+export interface IJupyterDebugService extends IDebugService {
+    /**
+     * Event fired when a breakpoint is hit (debugger has stopped)
+     */
+    readonly onBreakpointHit: Event<void>;
+    /**
+     * Start debugging a notebook cell.
+     * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
+     * @return A thenable that resolves when debugging could be successfully started.
+     */
+    startRunByLine(config: DebugConfiguration): Thenable<boolean>;
+    /**
+     * Gets the current stack frame for the current thread
+     */
+    getStack(): Promise<DebugProtocol.StackFrame[]>;
+    /**
+     * Steps the current thread. Returns after the request is sent. Wait for onBreakpointHit or onDidTerminateDebugSession to determine when done.
+     */
+    step(): Promise<void>;
+    /**
+     * Runs the current thread. Will keep running until a breakpoint or end of session.
+     */
+    continue(): Promise<void>;
+    /**
+     * Force a request for variables. DebugAdapterTrackers can listen for the results.
+     */
+    requestVariables(): Promise<void>;
+    /**
+     * Stop debugging
+     */
+    stop(): void;
 }

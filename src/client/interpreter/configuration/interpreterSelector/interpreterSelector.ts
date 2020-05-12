@@ -27,7 +27,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     public async getSuggestions(resource: Resource) {
-        let interpreters = await this.interpreterManager.getInterpreters(resource);
+        let interpreters = await this.interpreterManager.getInterpreters(resource, { onSuggestion: true });
         if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
             interpreters = interpreters.filter((item) => this.interpreterSecurityService.isSafe(item) !== false);
         }

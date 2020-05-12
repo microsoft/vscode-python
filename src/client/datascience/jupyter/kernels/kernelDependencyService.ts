@@ -45,15 +45,16 @@ export class KernelDependencyService implements IKernelDependencyService {
             ProductNames.get(Product.ipykernel)!
         );
         const installerToken = wrapCancellationTokens(token);
+
         const selection = await Promise.race([
-            this.appShell.showErrorMessage(message, Common.ok(), Common.cancel()),
+            this.appShell.showErrorMessage(message, Common.install()),
             promptCancellationPromise
         ]);
         if (installerToken.isCancellationRequested) {
             return KernelInterpreterDependencyResponse.cancel;
         }
 
-        if (selection === Common.ok()) {
+        if (selection === Common.install()) {
             const cancellatonPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,

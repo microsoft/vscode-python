@@ -22,6 +22,7 @@ import {
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
+    INotebook,
     INotebookExecutionLogger
 } from '../types';
 
@@ -148,6 +149,16 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         return lines;
     }
 
+    public generateHashFileName(cell: ICell, expectedCount: number): string {
+        // First get the true lines from the cell
+        const { stripped } = this.extractStrippedLines(cell);
+
+        // Then use that to make a hash value
+        const hashedCode = stripped.join('');
+        const hash = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
+        return `<ipython-input-${expectedCount}-${hash}>`;
+    }
+
     // tslint:disable-next-line: cyclomatic-complexity
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
@@ -155,18 +166,8 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
         const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, cell.file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
-            const lines = splitMultilineString(cell.data.source);
-            const stripped = this.extractExecutableLines(cell);
+            const { stripped, trueStartLine } = this.extractStrippedLines(cell);
 
-            // Figure out our true 'start' line. This is what we need to tell the debugger is
-            // actually the start of the code as that's what Jupyter will be getting.
-            let trueStartLine = cell.line;
-            for (let i = 0; i < stripped.length; i += 1) {
-                if (stripped[i] !== lines[i]) {
-                    trueStartLine += i + 1;
-                    break;
-                }
-            }
             const line = doc.lineAt(trueStartLine);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
 
@@ -180,28 +181,6 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             // to move around
             const startOffset = doc.offsetAt(new Position(cell.line, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
-
-            // Jupyter also removes blank lines at the end. Make sure only one
-            let lastLinePos = stripped.length - 1;
-            let nextToLastLinePos = stripped.length - 2;
-            while (nextToLastLinePos > 0) {
-                const lastLine = stripped[lastLinePos];
-                const nextToLastLine = stripped[nextToLastLinePos];
-                if (
-                    (lastLine.length === 0 || lastLine === '\n') &&
-                    (nextToLastLine.length === 0 || nextToLastLine === '\n')
-                ) {
-                    stripped.splice(lastLinePos, 1);
-                    lastLinePos -= 1;
-                    nextToLastLinePos -= 1;
-                } else {
-                    break;
-                }
-            }
-            // Make sure the last line with actual content ends with a linefeed
-            if (!stripped[lastLinePos].endsWith('\n') && stripped[lastLinePos].length > 0) {
-                stripped[lastLinePos] = `${stripped[lastLinePos]}\n`;
-            }
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
             const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped, startOffset, endOffset);
@@ -289,6 +268,52 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
                 this.handleContentChange(docText, c, perFile);
             });
         }
+    }
+
+    private extractStrippedLines(cell: ICell): { stripped: string[]; trueStartLine: number } {
+        // Compute the code that will really be sent to jupyter
+        const lines = splitMultilineString(cell.data.source);
+        const stripped = this.extractExecutableLines(cell);
+
+        // Figure out our true 'start' line. This is what we need to tell the debugger is
+        // actually the start of the code as that's what Jupyter will be getting.
+        let trueStartLine = cell.line;
+        for (let i = 0; i < stripped.length; i += 1) {
+            if (stripped[i] !== lines[i]) {
+                trueStartLine += i + 1;
+                break;
+            }
+        }
+
+        // Find the first non blank line
+        let firstNonBlankIndex = 0;
+        while (firstNonBlankIndex < stripped.length && stripped[firstNonBlankIndex].trim().length === 0) {
+            firstNonBlankIndex += 1;
+        }
+
+        // Jupyter also removes blank lines at the end. Make sure only one
+        let lastLinePos = stripped.length - 1;
+        let nextToLastLinePos = stripped.length - 2;
+        while (nextToLastLinePos > 0) {
+            const lastLine = stripped[lastLinePos];
+            const nextToLastLine = stripped[nextToLastLinePos];
+            if (
+                (lastLine.length === 0 || lastLine === '\n') &&
+                (nextToLastLine.length === 0 || nextToLastLine === '\n')
+            ) {
+                stripped.splice(lastLinePos, 1);
+                lastLinePos -= 1;
+                nextToLastLinePos -= 1;
+            } else {
+                break;
+            }
+        }
+        // Make sure the last line with actual content ends with a linefeed
+        if (!stripped[lastLinePos].endsWith('\n') && stripped[lastLinePos].length > 0) {
+            stripped[lastLinePos] = `${stripped[lastLinePos]}\n`;
+        }
+
+        return { stripped, trueStartLine };
     }
 
     private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
@@ -404,5 +429,13 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
             }
         }
         return traceFrame;
+    }
+}
+
+export function getCellHashProvider(notebook: INotebook): ICellHashProvider | undefined {
+    const logger = notebook.getLoggers().find((f) => f instanceof CellHashProvider);
+    if (logger) {
+        // tslint:disable-next-line: no-any
+        return (logger as any) as ICellHashProvider;
     }
 }

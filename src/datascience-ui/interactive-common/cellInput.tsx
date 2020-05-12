@@ -120,6 +120,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         disableUndoStack={this.props.disableUndoStack}
                         version={this.props.codeVersion}
                         focusPending={this.props.focusPending}
+                        ipLocation={this.getIpLine()}
                     />
                 </div>
             );
@@ -195,4 +196,10 @@ export class CellInput extends React.Component<ICellInputProps> {
     private onCodeCreated = (code: string, modelId: string) => {
         this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
     };
+
+    private getIpLine(): number | undefined {
+        if (this.props.cellVM.currentStack && this.props.cellVM.currentStack.length > 0) {
+            return this.props.cellVM.currentStack[0].line - 1;
+        }
+    }
 }

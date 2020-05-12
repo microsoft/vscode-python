@@ -61,7 +61,6 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -148,7 +147,6 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterLocatorService, GlobalVirtualEnvService, GLOBAL_VIRTUAL_ENV_SERVICE],
             [IInterpreterLocatorService, WorkspaceVirtualEnvService, WORKSPACE_VIRTUAL_ENV_SERVICE],
             [IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE],
-            [IPipEnvService, PipEnvService],
 
             [IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE],
             [IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE],

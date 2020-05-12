@@ -15,13 +15,14 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
-import { Identifiers, LiveShare, Settings } from '../../constants';
+import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../../constants';
 import { KernelSelector } from '../../jupyter/kernels/kernelSelector';
 import { HostJupyterNotebook } from '../../jupyter/liveshare/hostJupyterNotebook';
 import { LiveShareParticipantHost } from '../../jupyter/liveshare/liveShareParticipantMixin';
@@ -29,6 +30,7 @@ import { IRoleBasedObject } from '../../jupyter/liveshare/roleBasedFactory';
 import { IKernelLauncher } from '../../kernel-launcher/types';
 import { ProgressReporter } from '../../progress/progressReporter';
 import {
+    IDataScience,
     IJupyterKernelSpec,
     INotebook,
     INotebookExecutionInfo,
@@ -48,6 +50,7 @@ export class HostRawNotebookProvider
     private disposed = false;
     constructor(
         private liveShare: ILiveShareApi,
+        _dataScience: IDataScience,
         private disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
@@ -58,9 +61,10 @@ export class HostRawNotebookProvider
         private kernelLauncher: IKernelLauncher,
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter,
-        private outputChannel: IOutputChannel
+        private outputChannel: IOutputChannel,
+        experimentsManager: IExperimentsManager
     ) {
-        super(liveShare, asyncRegistry);
+        super(liveShare, asyncRegistry, configService, experimentsManager);
     }
 
     public async dispose(): Promise<void> {
@@ -70,20 +74,57 @@ export class HostRawNotebookProvider
         }
     }
 
-    public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onAttach(api);
+        if (api && !this.disposed) {
+            const service = await this.waitForService();
+            // Attach event handlers to different requests
+            if (service) {
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
+                    this.onSync()
+                );
+                service.onRequest(
+                    LiveShareCommands.rawKernelSupported,
+                    (_args: any[], _cancellation: CancellationToken) => this.supported()
+                );
+                service.onRequest(
+                    LiveShareCommands.createRawNotebook,
+                    async (args: any[], _cancellation: CancellationToken) => {
+                        const resource = this.parseUri(args[0]);
+                        const identity = this.parseUri(args[1]);
+                        const notebookMetadata = JSON.parse(args[2]) as nbformat.INotebookMetadata;
+                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
+                        const notebook = (await this.createNotebook(
+                            identity!,
+                            resource,
+                            true, // Disable UI for this creation
+                            notebookMetadata,
+                            undefined
+                        )) as HostJupyterNotebook;
+                        await notebook.onAttach(api);
+                    }
+                );
+            }
+        }
     }
 
-    public async onSessionChange(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
+        await super.onSessionChange(api);
+
+        this.getNotebooks().forEach(async (notebook) => {
+            const hostNotebook = (await notebook) as HostJupyterNotebook;
+            if (hostNotebook) {
+                await hostNotebook.onSessionChange(api);
+            }
+        });
     }
 
-    public async onDetach(_api: vsls.LiveShare | null): Promise<void> {
-        // Not implemented yet
+    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
+        await super.onDetach(api);
     }
 
     public async waitForServiceName(): Promise<string> {
-        return 'Not implemented';
+        return LiveShare.RawNotebookProviderService;
     }
 
     protected async createNotebookInstance(
@@ -185,5 +226,19 @@ export class HostRawNotebookProvider
             workingDir: await calculateWorkingDirectory(this.configService, this.workspaceService, this.fs),
             purpose: Identifiers.RawPurpose
         };
+    }
+
+    private parseUri(uri: string | undefined): Resource {
+        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
+        return parsed &&
+            parsed.scheme &&
+            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
+            parsed.scheme === 'vsls'
+            ? this.finishedApi!.convertSharedUriToLocal(parsed)
+            : parsed;
+    }
+
+    private onSync(): Promise<any> {
+        return Promise.resolve(true);
     }
 }

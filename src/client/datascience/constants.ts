@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { PYTHON_LANGUAGE } from '../common/constants';
+import * as path from 'path';
+import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IVariableQuery } from '../common/types';
 
@@ -313,7 +314,8 @@ export enum Telemetry {
     RawKernelSessionStartSuccess = 'DS_INTERNAL.RAWKERNEL_SESSION_START_SUCCESS',
     RawKernelSessionStartUserCancel = 'DS_INTERNAL.RAWKERNEL_SESSION_START_USER_CANCEL',
     RawKernelSessionStartTimeout = 'DS_INTERNAL.RAWKERNEL_SESSION_START_TIMEOUT',
-    RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION'
+    RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
+    RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -375,6 +377,20 @@ export namespace Settings {
     };
 }
 
+export namespace DataFrameLoading {
+    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
+    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
+    export const DataFrameInfoImportName = '_VSCODE_InfoImport';
+    export const DataFrameInfoImport = `import vscodeGetDataFrameInfo as ${DataFrameInfoImportName}`;
+    export const DataFrameInfoFunc = `${DataFrameInfoImportName}._VSCODE_getDataFrameInfo`;
+    export const DataFrameRowImportName = '_VSCODE_RowImport';
+    export const DataFrameRowImport = `import vscodeGetDataFrameRows as ${DataFrameRowImportName}`;
+    export const DataFrameRowFunc = `${DataFrameRowImportName}._VSCODE_getDataFrameRows`;
+    export const VariableInfoImportName = '_VSCODE_VariableImport';
+    export const VariableInfoImport = `import vscodeGetVariableInfo as ${VariableInfoImportName}`;
+    export const VariableInfoFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
+}
+
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
@@ -388,6 +404,12 @@ export namespace Identifiers {
     export const InteractiveWindowIdentityScheme = 'history';
     export const DefaultCodeCellMarker = '# %%';
     export const DefaultCommTarget = 'jupyter.widget';
+    export const ALL_VARIABLES = 'ALL_VARIABLES';
+    export const OLD_VARIABLES = 'OLD_VARIABLES';
+    export const KERNEL_VARIABLES = 'KERNEL_VARIABLES';
+    export const DEBUGGER_VARIABLES = 'DEBUGGER_VARIABLES';
+    export const MULTIPLEXING_DEBUGSERVICE = 'MULTIPLEXING_DEBUGSERVICE';
+    export const RUN_BY_LINE_DEBUGSERVICE = 'RUN_BY_LINE_DEBUGSERVICE';
 }
 
 export namespace CodeSnippits {
@@ -451,4 +473,6 @@ export namespace LiveShareCommands {
     export const guestCheck = 'guestCheck';
     export const createNotebook = 'createNotebook';
     export const inspect = 'inspect';
+    export const rawKernelSupported = 'rawKernelSupported';
+    export const createRawNotebook = 'createRawNotebook';
 }

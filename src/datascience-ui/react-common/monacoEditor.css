@@ -114,3 +114,10 @@
 .monaco-editor .parameter-hints-widget > .wrapper {
 	overflow: hidden;
 }
+
+.monaco-editor .view-overlays .debug-top-stack-frame-line { background: var(--vscode-editor-stackFrameHighlightBackground); }
+
+.codicon-debug-stackframe-active:before { content: "\eb89" }
+.codicon-debug-stackframe-dot:before { content: "\eb8a" }
+.codicon-debug-stackframe:before { content: "\eb8b"; color: var(--vscode-debugIcon-breakpointCurrentStackframeForeground); }
+.codicon-debug-stackframe-focused:before { content: "\eb8b" }

@@ -3,6 +3,8 @@
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
+import * as fs from 'fs-extra';
+import * as glob from 'glob';
 import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -24,6 +26,7 @@ import {
 import * as vsls from 'vsls/vscode';
 import { KernelDaemonPool } from '../../client/datascience/kernel-launcher/kernelDaemonPool';
 
+import { promisify } from 'util';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -170,7 +173,7 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
+import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
@@ -191,6 +194,7 @@ import { AutoSaveService } from '../../client/datascience/interactive-ipynb/auto
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
+import { NativeEditorRunByLineListener } from '../../client/datascience/interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -198,6 +202,8 @@ import { InteractiveWindowCommandListener } from '../../client/datascience/inter
 import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from '../../client/datascience/ipywidgets/ipyWidgetScriptSource';
+import { DebuggerVariableRegistration } from '../../client/datascience/jupyter/debuggerVariableRegistration';
+import { DebuggerVariables } from '../../client/datascience/jupyter/debuggerVariables';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
@@ -220,9 +226,12 @@ import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernel
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
+import { KernelVariables } from '../../client/datascience/jupyter/kernelVariables';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyterVariables';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
+import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
@@ -254,6 +263,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterDebugger,
+    IJupyterDebugService,
     IJupyterExecution,
     IJupyterInterpreterDependencyManager,
     IJupyterNotebookProvider,
@@ -320,7 +330,6 @@ import {
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
-    IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
@@ -475,6 +484,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public async dispose(): Promise<void> {
+        try {
+            // Make sure to delete any temp files written by native editor storage
+            const globPr = promisify(glob);
+            const tempLocation = this.serviceManager.get<IExtensionContext>(IExtensionContext).globalStoragePath;
+            const tempFiles = await globPr(`${tempLocation}/*.ipynb`);
+            if (tempFiles && tempFiles.length) {
+                await Promise.all(tempFiles.map((t) => fs.remove(t)));
+            }
+        } catch (exc) {
+            // tslint:disable-next-line: no-console
+            console.log(`Exception on cleanup: ${exc}`);
+        }
         await this.asyncRegistry.dispose();
         await super.dispose();
         this.disposed = true;
@@ -609,7 +630,30 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
-        this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            DebuggerVariableRegistration
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            JupyterVariables,
+            Identifiers.ALL_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            OldJupyterVariables,
+            Identifiers.OLD_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            KernelVariables,
+            Identifiers.KERNEL_VARIABLES
+        );
+        this.serviceManager.addSingleton<IJupyterVariables>(
+            IJupyterVariables,
+            DebuggerVariables,
+            Identifiers.DEBUGGER_VARIABLES
+        );
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
             ICellHashListener
         ]);
@@ -720,6 +764,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
         this.serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(
             IPyWidgetMessageDispatcherFactory,
             IPyWidgetMessageDispatcherFactory
@@ -728,7 +773,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
         }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
-        this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
+        this.serviceManager.addSingleton<IJupyterDebugService>(
+            IJupyterDebugService,
+            JupyterDebugService,
+            Identifiers.RUN_BY_LINE_DEBUGSERVICE
+        );
+        const mockDebugService = new MockDebuggerService(
+            this.serviceManager.get<IJupyterDebugService>(IJupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE)
+        );
+        this.serviceManager.addSingletonInstance<IDebugService>(IDebugService, mockDebugService);
+        this.serviceManager.addSingletonInstance<IJupyterDebugService>(
+            IJupyterDebugService,
+            mockDebugService,
+            Identifiers.MULTIPLEXING_DEBUGSERVICE
+        );
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [
             INotebookExecutionLogger
         ]);
@@ -1023,7 +1081,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 PipEnvService,
                 PIPENV_SERVICE
             );
-            this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
             this.serviceManager.addSingleton<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 WindowsRegistryService,

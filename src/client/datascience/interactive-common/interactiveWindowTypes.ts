@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import {
     CommonActionType,
     IAddCellAction,
@@ -66,6 +67,7 @@ export enum InteractiveWindowMessages {
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
+    ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
     ProvideCompletionItemsResponse = 'provide_completion_items_response',
@@ -120,7 +122,13 @@ export enum InteractiveWindowMessages {
     IPyWidgetLoadFailure = 'ipywidget_load_failure',
     IPyWidgetRenderFailure = 'ipywidget_render_failure',
     IPyWidgetUnhandledKernelMessage = 'ipywidget_unhandled_kernel_message',
-    IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported'
+    IPyWidgetWidgetVersionNotSupported = 'ipywidget_widget_version_not_supported',
+    RunByLine = 'run_by_line',
+    Step = 'step',
+    Continue = 'continue',
+    ShowContinue = 'show_continue',
+    ShowBreak = 'show_break',
+    ShowingIp = 'showing_ip'
 }
 
 export enum IPyWidgetMessages {
@@ -215,6 +223,7 @@ export interface IProvideHoverRequest {
     position: monacoEditor.Position;
     requestId: string;
     cellId: string;
+    wordAtPosition: string | undefined;
 }
 
 export interface IProvideSignatureHelpRequest {
@@ -463,6 +472,11 @@ export type NotebookModelChange =
     | INotebookModelFileChange
     | INotebookModelChangeTypeChange;
 
+export interface IRunByLine {
+    cell: ICell;
+    expectedExecutionCount: number;
+}
+
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
@@ -491,6 +505,7 @@ export class IInteractiveWindowMapping {
     };
     public [IPyWidgetMessages.IPyWidgets_mirror_execute]: { id: string; msg: KernelMessage.IExecuteRequestMsg };
     public [InteractiveWindowMessages.StartCell]: ICell;
+    public [InteractiveWindowMessages.ForceVariableRefresh]: never | undefined;
     public [InteractiveWindowMessages.FinishCell]: ICell;
     public [InteractiveWindowMessages.UpdateCellWithExecutionResults]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
@@ -588,4 +603,10 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;
     public [InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage]: KernelMessage.IMessage;
+    public [InteractiveWindowMessages.RunByLine]: IRunByLine;
+    public [InteractiveWindowMessages.Continue]: never | undefined;
+    public [InteractiveWindowMessages.ShowBreak]: { frames: DebugProtocol.StackFrame[]; cell: ICell };
+    public [InteractiveWindowMessages.ShowContinue]: ICell;
+    public [InteractiveWindowMessages.Step]: never | undefined;
+    public [InteractiveWindowMessages.ShowingIp]: never | undefined;
 }

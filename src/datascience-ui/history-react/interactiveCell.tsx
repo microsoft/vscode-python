@@ -142,6 +142,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     ref={this.wrapperRef}
                     tabIndex={0}
                     onKeyDown={this.onKeyDown}
+                    onKeyUp={this.onKeyUp}
                     onClick={this.onMouseClick}
                 >
                     <div className={cellOuterClass}>
@@ -354,10 +355,25 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     };
 
+    private onKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        // Handle keydown events for the entire cell
+        if (this.getCell().id === Identifiers.EditCellId) {
+            const e: IKeyboardEvent = {
+                code: event.key,
+                shiftKey: event.shiftKey,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                altKey: event.altKey,
+                target: event.target as HTMLDivElement,
+                stopPropagation: () => event.stopPropagation(),
+                preventDefault: () => event.preventDefault()
+            };
+            this.onEditCellKeyUp(Identifiers.EditCellId, e);
+        }
+    };
+
     private onEditCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
-        if (e.code === 'Tab' && e.shiftKey) {
-            this.editCellShiftTab(e);
-        } else if (e.code === 'Enter' && e.shiftKey) {
+        if (e.code === 'Enter' && e.shiftKey) {
             this.editCellSubmit(e);
         } else if (e.code === 'NumpadEnter' && e.shiftKey) {
             this.editCellSubmit(e);
@@ -365,10 +381,18 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             e.editorInfo.clear();
             e.stopPropagation();
             e.preventDefault();
-        } else if (e.code === 'Escape' && e.editorInfo && !e.editorInfo.isSuggesting) {
+        } else if (e.code === 'Escape' && !e.shiftKey && e.editorInfo && !e.editorInfo.isSuggesting) {
             e.editorInfo.clear();
             e.stopPropagation();
             e.preventDefault();
+        }
+    };
+
+    private onEditCellKeyUp = (_cellId: string, e: IKeyboardEvent) => {
+        // Special case. Escape + Shift only comes as a key up because shift comes as the
+        // key down.
+        if (e.code === 'Escape' && e.shiftKey) {
+            this.editCellShiftEscape(e);
         }
     };
 
@@ -409,9 +433,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    private editCellShiftTab = (e: IKeyboardEvent) => {
+    private editCellShiftEscape = (e: IKeyboardEvent) => {
         const focusedElement = document.activeElement;
-        if (focusedElement !== null && e.editorInfo && !e.editorInfo.isSuggesting) {
+        if (focusedElement !== null) {
             const nextTabStop = this.findTabStop(1, focusedElement);
             if (nextTabStop) {
                 e.stopPropagation();

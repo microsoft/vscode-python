@@ -2098,6 +2098,7 @@ export interface IEventNamePropertyMapping {
     // Raw kernel timing events
     [Telemetry.RawKernelSessionConnect]: never | undefined;
     [Telemetry.RawKernelStartRawSession]: never | undefined;
+    [Telemetry.RawKernelProcessLaunch]: never | undefined;
 
     // Raw kernel single events
     [Telemetry.RawKernelSessionStartSuccess]: never | undefined;

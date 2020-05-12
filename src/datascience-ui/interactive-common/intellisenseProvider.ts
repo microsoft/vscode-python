@@ -129,6 +129,7 @@ export class IntellisenseProvider
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.Hover>();
+        const wordAtPosition = model.getWordAtPosition(position);
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
@@ -139,7 +140,8 @@ export class IntellisenseProvider
         this.sendMessage(InteractiveWindowMessages.ProvideHoverRequest, {
             position,
             requestId,
-            cellId: this.getCellId(model.id)
+            cellId: this.getCellId(model.id),
+            wordAtPosition: wordAtPosition ? wordAtPosition.word : undefined
         });
 
         return promise.promise;

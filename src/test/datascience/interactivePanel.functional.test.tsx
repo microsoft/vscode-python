@@ -55,7 +55,8 @@ suite('DataScience Interactive Panel', () => {
                 inputBlockShow: true,
                 inputBlockText: '',
                 scrollCount: 0,
-                selected: false
+                selected: false,
+                runningByLine: false
             },
             editorLoaded: noopAny,
             editorUnmounted: noopAny,

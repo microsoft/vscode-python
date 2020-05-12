@@ -17,6 +17,7 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
 import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
+import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -129,16 +130,20 @@ export async function waitForMessageResponse(ioc: DataScienceIocContainer, actio
 
 async function testInnerLoop(
     name: string,
+    type: 'native' | 'interactive',
     mountFunc: (ioc: DataScienceIocContainer) => ReactWrapper<any, Readonly<{}>, React.Component>,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    testFunc: (
+        type: 'native' | 'interactive',
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ) => Promise<void>,
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
-    const ioc = getIOC();
+    const ioc = await getIOC();
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     if (await jupyterExecution.isNotebookSupported()) {
         addMockData(ioc, 'a=1\na', 1);
         const wrapper = mountFunc(ioc);
-        await testFunc(wrapper);
+        await testFunc(type, wrapper);
     } else {
         // tslint:disable-next-line:no-console
         console.log(`${name} skipped, no Jupyter installed.`);
@@ -147,23 +152,48 @@ async function testInnerLoop(
 
 export function runDoubleTest(
     name: string,
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    testFunc: (
+        type: 'native' | 'interactive',
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ) => Promise<void>,
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
+        testInnerLoop(name, 'interactive', (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    test(`${name} (native)`, async () =>
+        testInnerLoop(name, 'native', (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
 export function runInteractiveTest(
     name: string,
     testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
-    getIOC: () => DataScienceIocContainer
+    getIOC: () => Promise<DataScienceIocContainer>
 ) {
     // Run the test with just the interactive window
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+        testInnerLoop(
+            name,
+            'interactive',
+            (ioc) => mountWebView(ioc, 'interactive'),
+            (_t, w) => testFunc(w),
+            getIOC
+        ));
+}
+export function runNativeTest(
+    name: string,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    getIOC: () => Promise<DataScienceIocContainer>
+) {
+    // Run the test with just the native window
+    test(`${name} (native)`, async () =>
+        testInnerLoop(
+            name,
+            'native',
+            (ioc) => mountWebView(ioc, 'native'),
+            (_t, w) => testFunc(w),
+            getIOC
+        ));
 }
 
 export function mountWebView(
@@ -786,4 +816,19 @@ export function mountComponent<P>(type: 'native' | 'interactive', Component: Rea
 
     // Mount this with a react redux provider
     return mount(<Provider store={store}>{Component}</Provider>);
+}
+
+// Open up our variable explorer which also triggers a data fetch
+export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+    const nodes = wrapper.find(Provider);
+    if (nodes.length > 0) {
+        const store = nodes.at(0).props().store;
+        if (store) {
+            store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
+        }
+    }
+}
+
+export async function waitForVariablesUpdated(ioc: DataScienceIocContainer, numberOfTimes?: number): Promise<void> {
+    return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }

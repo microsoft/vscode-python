@@ -26,17 +26,21 @@ export namespace Diagnostics {
         'diagnostics.lsNotSupported',
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.'
     );
+    export const upgradeCodeRunner = localize(
+        'diagnostics.upgradeCodeRunner',
+        'Please update the Code Runner extension for it to be compatible with the Python extension.'
+    );
     export const removePythonPathSettingsJson = localize(
         'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json.'
+        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const removePythonPathCodeWorkspace = localize(
         'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your .code-workspace file.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
         'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it? This will only remove the "python.pythonPath" entry from your settings.json and .code-workspace file.'
+        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -335,6 +339,10 @@ export namespace DataScience {
         'DataScience.libraryNotInstalled',
         'Data Science library {0} is not installed. Install?'
     );
+    export const couldNotInstallLibrary = localize(
+        'DataScience.couldNotInstallLibrary',
+        'Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.'
+    );
     export const libraryRequiredToLaunchJupyterNotInstalled = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalled',
         'Data Science library {0} is not installed.'
@@ -345,15 +353,15 @@ export namespace DataScience {
     );
     export const libraryRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter',
-        'Data Science library {1} is not installed in interpreter {0}.'
+        '{0} requires {1} to be installed.'
     );
     export const libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter = localize(
         'DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter',
-        'Data Science library {1} is not installed in interpreter {0}. Install?'
+        '{0} requires {1} to be installed.'
     );
     export const librariesRequiredToLaunchJupyterNotInstalledInterpreter = localize(
         'DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter',
-        'Data Science libraries {1} are not installed in interpreter {0}.'
+        '{0} requires {1} to be installed.'
     );
     export const selectJupyterInterpreter = localize(
         'DataScience.selectJupyterInterpreter',
@@ -922,6 +930,8 @@ export namespace DataScience {
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
     export const startPage = localize('DataScience.startPage', 'Python Start');
+    export const runByLine = localize('DataScience.runByLine', 'Run by line');
+    export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
 }
 
 export namespace DebugConfigStrings {

@@ -309,7 +309,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
-            executionCount: this.props.currentExecutionCount
+            executionCount: this.props.currentExecutionCount,
+            supportsDebugging:
+                this.props.settings && this.props.settings.variableOptions
+                    ? this.props.settings.variableOptions.enableDuringDebugger
+                    : false
         };
     };
 
@@ -369,7 +373,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         if (this.internalScrollCount > 0) {
             this.internalScrollCount -= 1;
         } else if (this.contentPanelRef.current) {
-            const isAtBottom = this.contentPanelRef.current.computeIsAtBottom(e.currentTarget);
+            const isAtBottom = this.props.settings?.alwaysScrollOnNewCell
+                ? true
+                : this.contentPanelRef.current.computeIsAtBottom(e.currentTarget);
             this.props.scroll(isAtBottom);
         }
     };

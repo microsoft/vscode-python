@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.5.0-dev",
+    "version": "2020.6.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1221,8 +1221,8 @@
                             },
                             "pythonPath": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "default": "${config:python.interpreterPath}"
                             },
                             "args": {
                                 "type": "array",
@@ -1359,8 +1359,8 @@
                         "properties": {
                             "pythonPath": {
                                 "type": "string",
-                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings.json",
-                                "default": "${config:python.pythonPath}"
+                                "description": "Path (fully qualified) to python executable. Defaults to the value in settings",
+                                "default": "${config:python.interpreterPath}"
                             },
                             "stopOnEntry": {
                                 "type": "boolean",
@@ -1615,6 +1615,7 @@
                             "CollectLSRequestTiming - experiment",
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
+                            "RunByLine - experiment",
                             "All"
                         ]
                     },
@@ -1639,6 +1640,7 @@
                             "CollectLSRequestTiming - experiment",
                             "CollectNodeLSRequestTiming - experiment",
                             "DeprecatePythonPath - experiment",
+                            "RunByLine - experiment",
                             "All"
                         ]
                     },
@@ -1768,6 +1770,12 @@
                     "type": "number",
                     "default": 400,
                     "description": "Maximum size (in pixels) of text output in the Python Interactive window and Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
+                    "scope": "resource"
+                },
+                "python.dataScience.alwaysScrollOnNewCell": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If a new cell comes in, scroll the interactive window to the bottom regardless of where the scroll bar is. The default is to only scroll if the current position was already at the bottom when the new cell is created",
                     "scope": "resource"
                 },
                 "python.dataScience.enableScrollingForCellOutputs": {
@@ -2938,6 +2946,7 @@
         "@koa/cors": "^3.0.0",
         "@loadable/component": "^5.12.0",
         "@nteract/messaging": "^7.0.0",
+        "@types/tcp-port-used": "^1.0.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
@@ -2981,6 +2990,7 @@
         "strip-ansi": "^5.2.0",
         "sudo-prompt": "^8.2.0",
         "svg-to-pdfkit": "^0.1.8",
+        "tcp-port-used": "^1.0.1",
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.2",
         "typescript-char": "^0.0.0",
