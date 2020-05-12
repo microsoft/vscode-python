@@ -17,8 +17,8 @@ import { InteractiveWindowMessageListener } from '../../client/datascience/inter
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
+import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
