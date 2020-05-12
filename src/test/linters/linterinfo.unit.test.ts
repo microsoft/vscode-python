@@ -10,6 +10,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PylintLinterInfo } from '../../client/linters/linterInfo';
+import { LanguageServerType } from '../../client/activation/types';
 
 suite('Linter Info - Pylint', () => {
     test('Test disabled when Pylint is explicitly disabled', async () => {
@@ -28,7 +29,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
-            jediEnabled: true
+            languageServer: LanguageServerType.Jedi
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
@@ -38,7 +39,10 @@ suite('Linter Info - Pylint', () => {
         const workspaceService = mock(WorkspaceService);
         const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
 
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: true } as any);
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: true },
+            languageServer: LanguageServerType.Jedi
+        } as any);
 
         expect(linterInfo.isEnabled()).to.be.true;
     });
@@ -53,7 +57,7 @@ suite('Linter Info - Pylint', () => {
         };
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            jediEnabled: false
+            languageServer: LanguageServerType.Node
         } as any);
         when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
@@ -86,7 +90,7 @@ suite('Linter Info - Pylint', () => {
                 };
                 when(config.getSettings(anything())).thenReturn({
                     linting: { pylintEnabled: true },
-                    jediEnabled: false
+                    languageServer: LanguageServerType.Node
                 } as any);
                 when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 

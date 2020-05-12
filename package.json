@@ -6,7 +6,8 @@
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
-    "languageServerVersion": "0.5.30",
+    "minLanguageServerVersionV1": "0.5.30",
+    "minLanguageServerVersionV2": "0.0.100",
     "publisher": "ms-python",
     "enableProposedApi": false,
     "author": {
@@ -2056,12 +2057,6 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource"
                 },
-                "python.jediEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
-                    "scope": "resource"
-                },
                 "python.jediMemoryLimit": {
                     "type": "number",
                     "default": 0,
@@ -2078,10 +2073,11 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
-                        "Microsoft",
+                        "Microsoft (V1)",
+                        "Microsoft (V2)",
                         "None"
                     ],
-                    "default": "Microsoft",
+                    "default": "Microsoft (V1)",
                     "description": "Defines type of the language server.",
                     "scope": "resource"
                 },

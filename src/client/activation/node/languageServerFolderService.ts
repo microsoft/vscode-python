@@ -6,14 +6,15 @@
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
+import { NodeLanguageServerMinVersionKey, NodeLanguageServerFolder } from '../types';
 
 @injectable()
 export class NodeLanguageServerFolderService extends LanguageServerFolderService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, 'nodeLanguageServer');
+        super(serviceContainer, NodeLanguageServerFolder);
     }
 
     protected getMinimalLanguageServerVersion(): string {
-        return '0.0.0';
+        return super.getMinimalLanguageServerVersion(NodeLanguageServerMinVersionKey);
     }
 }

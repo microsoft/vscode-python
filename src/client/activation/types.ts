@@ -65,10 +65,17 @@ export interface IExtensionActivationService {
 
 export enum LanguageServerType {
     Jedi = 'Jedi',
-    Microsoft = 'Microsoft',
-    Node = 'Node',
+    Microsoft = 'Microsoft (V1)',
+    Node = 'Microsoft (V2)',
     None = 'None'
 }
+
+export const DotNetLanguageServerFolder = 'languageServerV1';
+export const NodeLanguageServerFolder = 'languageServerV2';
+
+// Must match minLanguageServerVersionV* keys in package.json
+export const DotNetLanguageServerMinVersionKey = 'languageServerVersionV1';
+export const NodeLanguageServerMinVersionKey = 'languageServerVersionV2';
 
 // tslint:disable-next-line: interface-name
 export interface DocumentHandler {
@@ -83,16 +90,16 @@ export interface LanguageServerCommandHandler {
 
 export interface ILanguageServer
     extends RenameProvider,
-        DefinitionProvider,
-        HoverProvider,
-        ReferenceProvider,
-        CompletionItemProvider,
-        CodeLensProvider,
-        DocumentSymbolProvider,
-        SignatureHelpProvider,
-        Partial<DocumentHandler>,
-        Partial<LanguageServerCommandHandler>,
-        IDisposable {}
+    DefinitionProvider,
+    HoverProvider,
+    ReferenceProvider,
+    CompletionItemProvider,
+    CodeLensProvider,
+    DocumentSymbolProvider,
+    SignatureHelpProvider,
+    Partial<DocumentHandler>,
+    Partial<LanguageServerCommandHandler>,
+    IDisposable { }
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {

@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
+import { LanguageServerType } from '../activation/types';
 
 // tslint:disable:no-any
 
@@ -86,7 +87,7 @@ export class PylintLinterInfo extends LinterInfo {
     }
     public isEnabled(resource?: Uri): boolean {
         const enabled = super.isEnabled(resource);
-        if (!enabled || this.configService.getSettings(resource).jediEnabled) {
+        if (!enabled || this.configService.getSettings(resource).languageServer === LanguageServerType.Jedi) {
             return enabled;
         }
         // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).

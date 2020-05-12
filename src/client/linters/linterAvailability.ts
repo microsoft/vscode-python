@@ -14,6 +14,7 @@ import { Common, Linters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
+import { LanguageServerType } from '../activation/types';
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_CONFIGURE_AVAILABLE_LINTER_PROMPT';
 @injectable()
@@ -24,7 +25,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
-    ) {}
+    ) { }
 
     /**
      * Check if it is possible to enable an otherwise-unconfigured linter in
@@ -133,11 +134,11 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * This is a feature of the vscode-python extension that will become enabled once the
      * Python Language Server becomes the default, replacing Jedi as the default. Testing
-     * the global default setting for `"python.jediEnabled": false` enables it.
+     * the global default setting for `"python.languageServer": !Jedi` enables it.
      *
-     * @returns true if the global default for python.jediEnabled is false.
+     * @returns true if the global default for python.languageServer is not Jedi.
      */
     public get isFeatureEnabled(): boolean {
-        return !this.configService.getSettings().jediEnabled;
+        return this.configService.getSettings().languageServer !== LanguageServerType.Jedi;
     }
 }

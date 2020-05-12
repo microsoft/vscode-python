@@ -86,7 +86,6 @@ export class PythonSettings implements IPythonSettings {
     }
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
     public downloadLanguageServer = true;
-    public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
     public envFile = '';
@@ -223,11 +222,17 @@ export class PythonSettings implements IPythonSettings {
         this.downloadLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('downloadLanguageServer', true)
         )!;
-        this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         this.autoUpdateLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
-        if (this.jediEnabled) {
+
+        let ls = pythonSettings.get<LanguageServerType>('languageServer');
+        if (!ls) {
+            ls = LanguageServerType.Jedi;
+        }
+        this.languageServer = systemVariables.resolveAny(ls)!;
+
+        if (this.languageServer === LanguageServerType.Jedi) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
             if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
@@ -237,12 +242,6 @@ export class PythonSettings implements IPythonSettings {
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
-
-        let ls = pythonSettings.get<LanguageServerType>('languageServer');
-        if (!ls) {
-            ls = LanguageServerType.Jedi;
-        }
-        this.languageServer = systemVariables.resolveAny(ls)!;
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
@@ -285,59 +284,59 @@ export class PythonSettings implements IPythonSettings {
         this.linting = this.linting
             ? this.linting
             : {
-                  enabled: false,
-                  ignorePatterns: [],
-                  flake8Args: [],
-                  flake8Enabled: false,
-                  flake8Path: 'flake',
-                  lintOnSave: false,
-                  maxNumberOfProblems: 100,
-                  mypyArgs: [],
-                  mypyEnabled: false,
-                  mypyPath: 'mypy',
-                  banditArgs: [],
-                  banditEnabled: false,
-                  banditPath: 'bandit',
-                  pycodestyleArgs: [],
-                  pycodestyleEnabled: false,
-                  pycodestylePath: 'pycodestyle',
-                  pylamaArgs: [],
-                  pylamaEnabled: false,
-                  pylamaPath: 'pylama',
-                  prospectorArgs: [],
-                  prospectorEnabled: false,
-                  prospectorPath: 'prospector',
-                  pydocstyleArgs: [],
-                  pydocstyleEnabled: false,
-                  pydocstylePath: 'pydocstyle',
-                  pylintArgs: [],
-                  pylintEnabled: false,
-                  pylintPath: 'pylint',
-                  pylintCategorySeverity: {
-                      convention: DiagnosticSeverity.Hint,
-                      error: DiagnosticSeverity.Error,
-                      fatal: DiagnosticSeverity.Error,
-                      refactor: DiagnosticSeverity.Hint,
-                      warning: DiagnosticSeverity.Warning
-                  },
-                  pycodestyleCategorySeverity: {
-                      E: DiagnosticSeverity.Error,
-                      W: DiagnosticSeverity.Warning
-                  },
-                  flake8CategorySeverity: {
-                      E: DiagnosticSeverity.Error,
-                      W: DiagnosticSeverity.Warning,
-                      // Per http://flake8.pycqa.org/en/latest/glossary.html#term-error-code
-                      // 'F' does not mean 'fatal as in PyLint but rather 'pyflakes' such as
-                      // unused imports, variables, etc.
-                      F: DiagnosticSeverity.Warning
-                  },
-                  mypyCategorySeverity: {
-                      error: DiagnosticSeverity.Error,
-                      note: DiagnosticSeverity.Hint
-                  },
-                  pylintUseMinimalCheckers: false
-              };
+                enabled: false,
+                ignorePatterns: [],
+                flake8Args: [],
+                flake8Enabled: false,
+                flake8Path: 'flake',
+                lintOnSave: false,
+                maxNumberOfProblems: 100,
+                mypyArgs: [],
+                mypyEnabled: false,
+                mypyPath: 'mypy',
+                banditArgs: [],
+                banditEnabled: false,
+                banditPath: 'bandit',
+                pycodestyleArgs: [],
+                pycodestyleEnabled: false,
+                pycodestylePath: 'pycodestyle',
+                pylamaArgs: [],
+                pylamaEnabled: false,
+                pylamaPath: 'pylama',
+                prospectorArgs: [],
+                prospectorEnabled: false,
+                prospectorPath: 'prospector',
+                pydocstyleArgs: [],
+                pydocstyleEnabled: false,
+                pydocstylePath: 'pydocstyle',
+                pylintArgs: [],
+                pylintEnabled: false,
+                pylintPath: 'pylint',
+                pylintCategorySeverity: {
+                    convention: DiagnosticSeverity.Hint,
+                    error: DiagnosticSeverity.Error,
+                    fatal: DiagnosticSeverity.Error,
+                    refactor: DiagnosticSeverity.Hint,
+                    warning: DiagnosticSeverity.Warning
+                },
+                pycodestyleCategorySeverity: {
+                    E: DiagnosticSeverity.Error,
+                    W: DiagnosticSeverity.Warning
+                },
+                flake8CategorySeverity: {
+                    E: DiagnosticSeverity.Error,
+                    W: DiagnosticSeverity.Warning,
+                    // Per http://flake8.pycqa.org/en/latest/glossary.html#term-error-code
+                    // 'F' does not mean 'fatal as in PyLint but rather 'pyflakes' such as
+                    // unused imports, variables, etc.
+                    F: DiagnosticSeverity.Warning
+                },
+                mypyCategorySeverity: {
+                    error: DiagnosticSeverity.Error,
+                    note: DiagnosticSeverity.Hint
+                },
+                pylintUseMinimalCheckers: false
+            };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
         this.linting.pycodestylePath = getAbsolutePath(
@@ -367,14 +366,14 @@ export class PythonSettings implements IPythonSettings {
         this.formatting = this.formatting
             ? this.formatting
             : {
-                  autopep8Args: [],
-                  autopep8Path: 'autopep8',
-                  provider: 'autopep8',
-                  blackArgs: [],
-                  blackPath: 'black',
-                  yapfArgs: [],
-                  yapfPath: 'yapf'
-              };
+                autopep8Args: [],
+                autopep8Path: 'autopep8',
+                provider: 'autopep8',
+                blackArgs: [],
+                blackPath: 'black',
+                yapfArgs: [],
+                yapfPath: 'yapf'
+            };
         this.formatting.autopep8Path = getAbsolutePath(
             systemVariables.resolveAny(this.formatting.autopep8Path),
             workspaceRoot
@@ -398,11 +397,11 @@ export class PythonSettings implements IPythonSettings {
         this.autoComplete = this.autoComplete
             ? this.autoComplete
             : {
-                  extraPaths: [],
-                  addBrackets: false,
-                  showAdvancedMembers: false,
-                  typeshedPaths: []
-              };
+                extraPaths: [],
+                addBrackets: false,
+                showAdvancedMembers: false,
+                typeshedPaths: []
+            };
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const workspaceSymbolsSettings = systemVariables.resolveAny(
@@ -420,13 +419,13 @@ export class PythonSettings implements IPythonSettings {
         this.workspaceSymbols = this.workspaceSymbols
             ? this.workspaceSymbols
             : {
-                  ctagsPath: 'ctags',
-                  enabled: true,
-                  exclusionPatterns: [],
-                  rebuildOnFileSave: true,
-                  rebuildOnStart: true,
-                  tagFilePath: workspaceRoot ? path.join(workspaceRoot, 'tags') : ''
-              };
+                ctagsPath: 'ctags',
+                enabled: true,
+                exclusionPatterns: [],
+                rebuildOnFileSave: true,
+                rebuildOnStart: true,
+                tagFilePath: workspaceRoot ? path.join(workspaceRoot, 'tags') : ''
+            };
         this.workspaceSymbols.tagFilePath = getAbsolutePath(
             systemVariables.resolveAny(this.workspaceSymbols.tagFilePath),
             workspaceRoot
@@ -461,18 +460,18 @@ export class PythonSettings implements IPythonSettings {
         this.testing = this.testing
             ? this.testing
             : {
-                  promptToConfigure: true,
-                  debugPort: 3000,
-                  nosetestArgs: [],
-                  nosetestPath: 'nosetest',
-                  nosetestsEnabled: false,
-                  pytestArgs: [],
-                  pytestEnabled: false,
-                  pytestPath: 'pytest',
-                  unittestArgs: [],
-                  unittestEnabled: false,
-                  autoTestDiscoverOnSaveEnabled: true
-              };
+                promptToConfigure: true,
+                debugPort: 3000,
+                nosetestArgs: [],
+                nosetestPath: 'nosetest',
+                nosetestsEnabled: false,
+                pytestArgs: [],
+                pytestEnabled: false,
+                pytestPath: 'pytest',
+                unittestArgs: [],
+                unittestEnabled: false,
+                autoTestDiscoverOnSaveEnabled: true
+            };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         this.testing.nosetestPath = getAbsolutePath(
             systemVariables.resolveAny(this.testing.nosetestPath),
@@ -503,11 +502,11 @@ export class PythonSettings implements IPythonSettings {
         this.terminal = this.terminal
             ? this.terminal
             : {
-                  executeInFileDir: true,
-                  launchArgs: [],
-                  activateEnvironment: true,
-                  activateEnvInCurrentTerminal: false
-              };
+                executeInFileDir: true,
+                launchArgs: [],
+                activateEnvironment: true,
+                activateEnvInCurrentTerminal: false
+            };
 
         const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
         if (this.experiments) {
@@ -518,10 +517,10 @@ export class PythonSettings implements IPythonSettings {
         this.experiments = this.experiments
             ? this.experiments
             : {
-                  enabled: true,
-                  optInto: [],
-                  optOutFrom: []
-              };
+                enabled: true,
+                optInto: [],
+                optOutFrom: []
+            };
 
         const dataScienceSettings = systemVariables.resolveAny(
             pythonSettings.get<IDataScienceSettings>('dataScience')

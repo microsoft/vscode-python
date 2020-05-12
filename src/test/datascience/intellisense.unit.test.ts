@@ -26,6 +26,7 @@ import { createEmptyCell, generateTestCells } from '../../datascience-ui/interac
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageServerCache } from './mockLanguageServerCache';
+import { LanguageServerType } from '../../client/activation/types';
 
 // tslint:disable:no-any unified-signatures
 const TestCellContents = `myvar = """ # Lorem Ipsum
@@ -68,7 +69,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         const variableProvider = mock(JupyterVariables);
 
-        pythonSettings.jediEnabled = false;
+        pythonSettings.languageServer = LanguageServerType.Node;
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem

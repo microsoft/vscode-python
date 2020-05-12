@@ -9,6 +9,7 @@ import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils/random';
+import { LanguageServerType } from '../activation/types';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -82,7 +83,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
             case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
-                await this.enableNewLanguageServer();
+                await this.enableLanguageServer();
                 await this.disable();
                 break;
             }
@@ -111,7 +112,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             .updateValue(false);
     }
 
-    public async enableNewLanguageServer(): Promise<void> {
-        await this.configuration.updateSetting('jediEnabled', false, undefined, ConfigurationTarget.Global);
+    public async enableLanguageServer(): Promise<void> {
+        await this.configuration.updateSetting('languageServer', LanguageServerType.Node, undefined, ConfigurationTarget.Global);
     }
 }

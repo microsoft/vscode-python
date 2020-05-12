@@ -195,16 +195,6 @@ suite('Application Diagnostics - Check Test Settings', () => {
                 '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
             expectedContents:
                 '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
-        },
-        {
-            testTitle: 'Should replace python.jediEnabled.',
-            expectedContents: '{"python.jediEnabled": false}',
-            contents: '{"python.languageServer": "microsoft"}'
-        },
-        {
-            testTitle: 'Should replace python.jediEnabled.',
-            expectedContents: '{"python.jediEnabled": true}',
-            contents: '{"python.languageServer": "jedi"}'
         }
     ].forEach((item) => {
         test(item.testTitle, async () => {

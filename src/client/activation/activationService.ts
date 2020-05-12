@@ -35,7 +35,6 @@ import {
     LanguageServerType
 } from './types';
 
-const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 
@@ -130,19 +129,16 @@ export class LanguageServerExtensionActivationService
         }
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
-    public async sendTelemetryForChosenLanguageServer(jediEnabled: boolean): Promise<void> {
+    public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
-        if (typeof state.value !== 'boolean') {
-            await state.updateValue(jediEnabled);
-        }
         if (state.value !== jediEnabled) {
             await state.updateValue(jediEnabled);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: jediEnabled
+                switchTo: languageServer
             });
         } else {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: jediEnabled
+                lsStartup: languageServer
             });
         }
     }
@@ -178,9 +174,7 @@ export class LanguageServerExtensionActivationService
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let enabled = configurationService.getSettings(this.resource).jediEnabled;
-        const languageServerType = configurationService.getSettings(this.resource).languageServer;
-        enabled = enabled || languageServerType === LanguageServerType.Jedi;
+        let enabled = configurationService.getSettings(this.resource).languageServer === LanguageServerType.Jedi;
         this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
     }
@@ -295,10 +289,7 @@ export class LanguageServerExtensionActivationService
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
-        if (
-            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
-            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
-        ) {
+        if (workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1) {
             return;
         }
         const jedi = this.useJedi();

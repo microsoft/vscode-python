@@ -19,7 +19,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
     }
@@ -62,11 +62,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pytest_enabled, '.pytestEnabled"');
         fileContents = fileContents.replace(setting_pytest_args, '.pytestArgs"');
         fileContents = fileContents.replace(setting_pytest_path, '.pytestPath"');
-
-        const setting_microsoftLanguageServer = new RegExp('\\.languageServer": "microsoft"', 'g');
-        const setting_JediLanguageServer = new RegExp('\\.languageServer": "jedi"', 'g');
-        fileContents = fileContents.replace(setting_microsoftLanguageServer, '.jediEnabled": false');
-        fileContents = fileContents.replace(setting_JediLanguageServer, '.jediEnabled": true');
 
         const setting_pep8_args = new RegExp('\\.(?<!auto)pep8Args', 'g');
         const setting_pep8_cat_severity = new RegExp('\\.pep8CategorySeverity\\.', 'g');

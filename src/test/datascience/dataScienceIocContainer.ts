@@ -1501,7 +1501,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             disableJupyterAutoStart: true,
             widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
         };
-        pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;
         const folders = ['Envs', '.virtualenvs'];
         pythonSettings.venvFolders = folders;
@@ -1628,7 +1627,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.postMessageToWebPanel(msg);
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {},
+                setState: (_msg: any) => { },
                 // tslint:disable-next-line:no-any no-empty
                 getState: () => {
                     return {};

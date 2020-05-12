@@ -116,8 +116,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                     typeof data[prop] === 'string'
                         ? data[prop]
                         : typeof data[prop] === 'object'
-                        ? 'object'
-                        : data[prop].toString();
+                            ? 'object'
+                            : data[prop].toString();
             } catch (ex) {
                 traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
             }
@@ -1229,7 +1229,7 @@ export interface IEventNamePropertyMapping {
         lsVersion?: string;
     };
     /**
-     * Telemetry event sent when user specified None to the language server and jediEnabled is false.
+     * Telemetry event sent when user specified None to the language server.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
     /**

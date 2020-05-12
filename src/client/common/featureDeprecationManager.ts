@@ -30,7 +30,7 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
         message:
-            "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using the new Language Server ('python.jediEnabled = false').",
+            "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using Microsoft Language Server ('python.languageServer' setting).",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
         setting: { setting: 'autoComplete.preloadModules' }
     }
@@ -44,7 +44,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         @inject(ICommandManager) private cmdMgr: ICommandManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
-    ) {}
+    ) { }
 
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());

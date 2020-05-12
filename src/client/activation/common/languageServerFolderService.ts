@@ -16,15 +16,17 @@ import {
     FolderVersionPair,
     IDownloadChannelRule,
     ILanguageServerFolderService,
-    ILanguageServerPackageService
+    ILanguageServerPackageService,
+    DotNetLanguageServerFolder
 } from '../types';
+import { IApplicationEnvironment } from '../../common/application/types';
 
 @injectable()
 export abstract class LanguageServerFolderService implements ILanguageServerFolderService {
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly languageServerFolder: string
-    ) {}
+    ) { }
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
@@ -51,7 +53,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
 
     @traceDecorators.verbose('Get latest version of Language Server')
     public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
-        const minVersion = this.getMinimalLanguageServerVersion();
+        const minVersion = this.getMinimalLanguageServerVersion(DotNetLanguageServerFolder);
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
             ILanguageServerPackageService
         );
@@ -100,7 +102,17 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
             : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
     }
 
-    protected abstract getMinimalLanguageServerVersion(): string;
+    protected getMinimalLanguageServerVersion(key: string): string {
+        let minVersion = '0.0.0';
+        try {
+            const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+            if (appEnv) {
+                minVersion = appEnv.packageJson[key] as string;
+            }
+            // tslint:disable-next-line: no-empty
+        } catch { }
+        return minVersion;
+    }
 
     private getDownloadChannel() {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(

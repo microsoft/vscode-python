@@ -42,6 +42,7 @@ export enum OSType {
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
     | 'pythonPath'
+    | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
     | 'linting.pylintEnabled'
@@ -61,7 +62,6 @@ export type PythonSettingKeys =
     | 'testing.pytestEnabled'
     | 'testing.unittestEnabled'
     | 'envFile'
-    | 'jediEnabled'
     | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
@@ -571,7 +571,7 @@ export class FakeClock {
      * @param {number} [advacenTimeMs=10_000] Default `timeout` value. Defaults to 10s. Assuming we do not have anything bigger.
      * @memberof FakeClock
      */
-    constructor(private readonly advacenTimeMs: number = 10_000) {}
+    constructor(private readonly advacenTimeMs: number = 10_000) { }
     public install() {
         // tslint:disable-next-line:no-require-imports
         const lolex = require('lolex');

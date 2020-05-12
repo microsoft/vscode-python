@@ -24,6 +24,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinter, ILinterManager, ILintMessage, LinterId } from '../../client/linters/types';
+import { LanguageServerType } from '../../client/activation/types';
 
 export function newMockDocument(filename: string): TypeMoq.IMock<TextDocument> {
     const uri = Uri.file(filename);
@@ -318,7 +319,7 @@ export class BaseTestFixture {
             })
             .returns(() => Promise.resolve(undefined));
 
-        this.pythonSettings.setup((s) => s.jediEnabled).returns(() => true);
+        this.pythonSettings.setup((s) => s.languageServer).returns(() => LanguageServerType.Jedi);
     }
 
     private initData(): void {
