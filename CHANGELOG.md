@@ -59,6 +59,7 @@
 1. Hide progress indicator once `Interactive Window` has loaded.
    ([#11065](https://github.com/Microsoft/vscode-python/issues/11065))
 1. Do not perform pipenv interpreter discovery on extension activation.
+   Fix for [CVE-2020-1171](https://portal.msrc.microsoft.com/en-us/security-guidance/advisory/CVE-2020-1171).
    ([#11127](https://github.com/Microsoft/vscode-python/issues/11127))
 1. Ensure arguments are included in log messages when using decorators.
    ([#11153](https://github.com/Microsoft/vscode-python/issues/11153))
@@ -82,6 +83,8 @@
    ([#11557](https://github.com/Microsoft/vscode-python/issues/11557))
 1. Fix scrolling when clicking in the interactive window to not jump around.
    ([#11554](https://github.com/Microsoft/vscode-python/issues/11554))
+1. Setting "Data Science: Run Startup Commands" is now limited to being a user setting.
+   Fix for [CVE-2020-1192](https://portal.msrc.microsoft.com/en-us/security-guidance/advisory/CVE-2020-1192).
 
 ### Code Health
 
