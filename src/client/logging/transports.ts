@@ -6,6 +6,7 @@ import * as logform from 'logform';
 import * as path from 'path';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
+import { IOutputChannel } from '../common/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { LogLevel, resolveLevel } from './levels';
 import { Arguments } from './util';
@@ -66,6 +67,29 @@ class ConsoleTransport extends Transport {
 // Create a console-targeting transport that can be added to a winston logger.
 export function getConsoleTransport(formatter: logform.Format): Transport {
     return new ConsoleTransport({
+        // We minimize customization.
+        format: formatter
+    });
+}
+
+class PythonOutputChannelTransport extends Transport {
+    // tslint:disable-next-line: no-any
+    constructor(private readonly channel: IOutputChannel, options?: any) {
+        super(options);
+    }
+    // tslint:disable-next-line: no-any
+    public log?(info: { message: string; [formattedMessage]: string }, next: () => void): any {
+        setImmediate(() => this.emit('logged', info));
+        this.channel.appendLine(info[formattedMessage] || info.message);
+        if (next) {
+            next();
+        }
+    }
+}
+
+// Create a Python output channel targeting transport that can be added to a winston logger.
+export function getPythonOutputChannelTransport(channel: IOutputChannel, formatter: logform.Format) {
+    return new PythonOutputChannelTransport(channel, {
         // We minimize customization.
         format: formatter
     });
