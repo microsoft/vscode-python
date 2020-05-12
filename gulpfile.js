@@ -183,12 +183,7 @@ gulp.task('webpack', async () => {
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack(
-            'extension',
-            ['--config', './build/webpack/webpack.extension.config.js'],
-            webpackEnv
-        );
-        await Promise.all([buildExtension]);
+        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
     } else {
         await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
     }

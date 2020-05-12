@@ -133,10 +133,10 @@ suite('Debugging - Adapter Factory', () => {
         when(interpreterService.getInterpreters(anything())).thenResolve([]);
         const session = createSession({});
 
-        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+        const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
+        await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
         verify(appShell.showErrorMessage(anyString())).once();
-        assert.deepEqual(descriptor, nodeExecutable);
     });
 
     test('Return Debug Adapter server if request is "attach", and port is specified directly', async () => {
@@ -190,13 +190,6 @@ suite('Debugging - Adapter Factory', () => {
         );
     });
 
-    test('Return old node debugger when not in the experiment', async () => {
-        const session = createSession({});
-
-        const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
-        await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
-    });
-
     test('Pass the --log-dir argument to debug adapter if configuration.logToFile is set', async () => {
         const session = createSession({ logToFile: true });
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [
@@ -240,8 +233,7 @@ suite('Debugging - Adapter Factory', () => {
 
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        assert.deepEqual(Reporter.eventNames, []);
-        assert.deepEqual(Reporter.properties, []);
+        assert.ok(Reporter.eventNames.includes(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH));
     });
 
     test('Use custom debug adapter path when specified', async () => {
