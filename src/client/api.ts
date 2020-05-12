@@ -4,15 +4,10 @@
 'use strict';
 
 import { isTestExecution } from './common/constants';
-import { DebugAdapterNewPtvsd } from './common/experiments/groups';
 import { traceError } from './common/logger';
-import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
+import { IConfigurationService, Resource } from './common/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
-import {
-    getDebugpyLauncherArgs,
-    getDebugpyPackagePath,
-    getPtvsdLauncherScriptArgs
-} from './debugger/extension/adapter/remoteLaunchers';
+import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
@@ -81,7 +76,6 @@ export function buildApi(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ): IExtensionApi {
-    const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
@@ -95,30 +89,14 @@ export function buildApi(
                 port: number,
                 waitUntilDebuggerAttaches: boolean = true
             ): Promise<string[]> {
-                const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
-
-                if (useNewDADebugger) {
-                    return getDebugpyLauncherArgs({
-                        host,
-                        port,
-                        waitUntilDebuggerAttaches
-                    });
-                }
-
-                return getPtvsdLauncherScriptArgs({
+                return getDebugpyLauncherArgs({
                     host,
                     port,
                     waitUntilDebuggerAttaches
                 });
             },
             async getDebuggerPackagePath(): Promise<string | undefined> {
-                const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
-
-                if (useNewDADebugger) {
-                    return getDebugpyPackagePath();
-                }
-
-                return undefined;
+                return getDebugpyPackagePath();
             }
         },
         settings: {
