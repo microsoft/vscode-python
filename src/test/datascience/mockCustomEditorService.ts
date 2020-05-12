@@ -12,12 +12,8 @@ import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookModel,
-    INotebookStorage
-} from '../../client/datascience/types';
+import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
 @injectable()
@@ -30,7 +26,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(INotebookStorage) private readonly storage: INotebookStorage
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
     ) {
         disposableRegistry.push(
             commandManager.registerCommand('workbench.action.files.save', this.onFileSave.bind(this))
