@@ -248,7 +248,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             // tslint:disable-next-line: no-any
             (variable as any).frameId
         );
-        if (results) {
+        if (results && results.result) {
             // Results should be the updated variable.
             return {
                 ...variable,

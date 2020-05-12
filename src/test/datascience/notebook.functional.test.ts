@@ -365,7 +365,8 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
                 const pythonService = await createPythonService(2);
 
-                if (pythonService) {
+                // Skip test for older python and on windows. Getting E_PROTO on windows.
+                if (pythonService && os.platform() !== 'win32') {
                     // We will only connect if we allow for self signed cert connections
                     ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 

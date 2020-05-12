@@ -611,7 +611,7 @@ Type:      builtin_function_or_method`,
             if (!ioc.mockJupyter) {
                 const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
                 const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
-                const interpreters = await ioc.getJupyterInterpreters();
+                const interpreters = await ioc.getFunctionalTestInterpreters();
                 if (interpreters.length < 2) {
                     // tslint:disable-next-line: no-console
                     console.log(

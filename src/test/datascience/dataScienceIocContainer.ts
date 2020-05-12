@@ -1235,18 +1235,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (!this.mockJupyter) {
             const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
             const activeInterpreter = await interpreterService.getActiveInterpreter();
-            if (!activeInterpreter || !(await this.hasJupyter(activeInterpreter))) {
-                const list = await this.getJupyterInterpreters();
-                this.forceSettingsChanged(undefined, list[0].path);
+            if (!activeInterpreter || !(await this.hasFunctionalDependencies(activeInterpreter))) {
+                const list = await this.getFunctionalTestInterpreters();
+                if (list.length) {
+                    this.forceSettingsChanged(undefined, list[0].path);
 
-                // Log this all the time. Useful in determining why a test may not pass.
-                // tslint:disable-next-line: no-console
-                console.log(`Setting interpreter to ${list[0].displayName || list[0].path}`);
+                    // Log this all the time. Useful in determining why a test may not pass.
+                    // tslint:disable-next-line: no-console
+                    console.log(`Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`);
 
-                // Also set this as the interpreter to use for jupyter
-                await this.serviceManager
-                    .get<JupyterInterpreterService>(JupyterInterpreterService)
-                    .setAsSelectedInterpreter(list[0]);
+                    // Also set this as the interpreter to use for jupyter
+                    await this.serviceManager
+                        .get<JupyterInterpreterService>(JupyterInterpreterService)
+                        .setAsSelectedInterpreter(list[0]);
+                } else {
+                    throw new Error(
+                        'No jupyter capable interpreter found. Make sure you install all of the functional requirements before running a test'
+                    );
+                }
             }
         }
     }
@@ -1315,17 +1321,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
-        const list = await this.getJupyterInterpreters();
+        const list = await this.getFunctionalTestInterpreters();
         return list ? list[0] : undefined;
     }
 
-    public async getJupyterInterpreters(): Promise<PythonInterpreter[]> {
+    public async getFunctionalTestInterpreters(): Promise<PythonInterpreter[]> {
         // This should be cacheable as we don't install new interpreters during tests
         if (DataScienceIocContainer.jupyterInterpreters.length > 0) {
             return DataScienceIocContainer.jupyterInterpreters;
         }
         const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
-        const promises = list.map((f) => this.hasJupyter(f).then((b) => (b ? f : undefined)));
+        const promises = list.map((f) => this.hasFunctionalDependencies(f).then((b) => (b ? f : undefined)));
         const resolved = await Promise.all(promises);
         DataScienceIocContainer.jupyterInterpreters = resolved.filter((r) => r) as PythonInterpreter[];
         return DataScienceIocContainer.jupyterInterpreters;
@@ -1587,12 +1593,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return '';
     }
 
-    private async hasJupyter(interpreter: PythonInterpreter): Promise<boolean | undefined> {
+    private async hasFunctionalDependencies(interpreter: PythonInterpreter): Promise<boolean | undefined> {
         try {
             const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
                 JupyterInterpreterDependencyService
             );
-            return dependencyChecker.areDependenciesInstalled(interpreter);
+            if (await dependencyChecker.areDependenciesInstalled(interpreter)) {
+                // Functional tests require livelossplot too. Make sure this interpreter has that value as well
+                const pythonProcess = await this.serviceContainer
+                    .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                    .createActivatedEnvironment({
+                        resource: undefined,
+                        interpreter,
+                        allowEnvironmentFetchExceptions: true
+                    });
+                return pythonProcess.isModuleInstalled('livelossplot'); // Should we check all dependencies?
+            }
         } catch (ex) {
             return false;
         }
