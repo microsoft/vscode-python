@@ -45,6 +45,7 @@ suite('Python Settings - pythonPath', () => {
         experimentsManager = typemoq.Mock.ofType<IExperimentsManager>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         pythonSettings.setup((p) => p.get(typemoq.It.isValue('defaultInterpreterPath'))).returns(() => 'python');
+        pythonSettings.setup((p) => p.get('logging')).returns(() => ({ level: 'error' }));
     });
     teardown(() => {
         if (configSettings) {
