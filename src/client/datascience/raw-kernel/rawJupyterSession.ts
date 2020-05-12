@@ -22,6 +22,13 @@ import { ReportableAction } from '../progress/types';
 import { RawSession } from '../raw-kernel/rawSession';
 import { IJupyterKernelSpec, ISessionWithSocket } from '../types';
 
+// Error thrown when we are unable to start a raw kernel session
+export class RawKernelSessionStartError extends Error {
+    constructor(kernelTitle: string) {
+        super(localize.DataScience.rawKernelSessionFailed().format(kernelTitle));
+    }
+}
+
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
 connecting to JupyterLab services it instead connects to a kernel directly
@@ -91,7 +98,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             } else if (newSession === null) {
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartTimeout);
                 traceError('Raw session failed to start in given timeout');
-                throw new Error(localize.DataScience.sessionDisposed());
+                throw new RawKernelSessionStartError(kernelSpec.display_name || kernelSpec.name);
             } else {
                 sendTelemetryEvent(Telemetry.RawKernelSessionStartSuccess);
                 traceInfo('Raw session started and connected');
@@ -121,7 +128,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     public async createNewKernelSession(
         kernel: IJupyterKernelSpec | LiveKernelModel,
-        _timeoutMS: number,
+        timeoutMS: number,
         interpreter?: PythonInterpreter
     ): Promise<ISessionWithSocket> {
         if (!kernel || 'session' in kernel) {
@@ -131,7 +138,13 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         this.outputChannel.appendLine(localize.DataScience.kernelStarted().format(kernel.display_name || kernel.name));
 
-        return this.startRawSession(kernel, interpreter);
+        const newSession = await waitForPromise(this.startRawSession(kernel, interpreter), timeoutMS);
+
+        if (!newSession) {
+            throw new RawKernelSessionStartError(kernel.display_name || kernel.name);
+        }
+
+        return newSession;
     }
 
     protected shutdownSession(
@@ -208,6 +221,9 @@ export class RawJupyterSession extends BaseJupyterSession {
 
         // Create our raw session, it will own the process lifetime
         const result = new RawSession(process);
+
+        // When our kernel connects and gets a status message it triggers the ready promise
+        await result.kernel.ready;
 
         // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
         // Restart sessions and retries might make this hard to do correctly otherwise.
