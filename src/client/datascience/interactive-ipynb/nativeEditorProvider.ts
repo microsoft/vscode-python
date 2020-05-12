@@ -107,10 +107,7 @@ export class NativeEditorProvider
     }
     public async saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
-        const newModel = model.clone(targetResource);
-        await this.storage.saveAs(newModel, targetResource);
-        this.models.add(newModel);
-        this.disposables.push(newModel.onDidEdit(this.modelEdited.bind(this, newModel)));
+        await this.storage.saveAs(model, targetResource);
     }
     public applyEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
         return this.loadModel(document.uri).then((s) => {
