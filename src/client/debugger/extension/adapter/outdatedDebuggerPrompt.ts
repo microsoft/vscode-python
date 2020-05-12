@@ -76,7 +76,6 @@ export class OutdatedDebuggerPromptFactory implements DebugAdapterTrackerFactory
         @inject(IBrowserService) private browserService: IBrowserService
     ) {
         this.promptCheck = new OutdatedDebuggerPromptState();
-        this.promptCheck.setShowPrompt(false);
     }
     public createDebugAdapterTracker(_session: DebugSession): ProviderResult<DebugAdapterTracker> {
         return new OutdatedDebuggerPrompt(this.promptCheck, this.appShell, this.browserService);
