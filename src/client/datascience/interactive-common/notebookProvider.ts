@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
+import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -57,22 +57,28 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
-    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
+    public async connect(
+        options: ConnectNotebookProviderOptions,
+        token?: CancellationToken
+    ): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            return this.rawNotebookProvider.connect();
+            return this.rawNotebookProvider.connect(token);
         } else {
-            return this.jupyterNotebookProvider.connect(options);
+            return this.jupyterNotebookProvider.connect(options, token);
         }
     }
 
-    public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
+    public async getOrCreateNotebook(
+        options: GetNotebookOptions,
+        token?: CancellationToken
+    ): Promise<INotebook | undefined> {
         const rawKernel = await this.rawNotebookProvider.supported();
 
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
-            ? await this.rawNotebookProvider.getNotebook(options.identity)
-            : await this.jupyterNotebookProvider.getNotebook(options);
+            ? await this.rawNotebookProvider.getNotebook(options.identity, token)
+            : await this.jupyterNotebookProvider.getNotebook(options, token);
         if (notebook) {
             return notebook;
         }
@@ -86,7 +92,7 @@ export class NotebookProvider implements INotebookProvider {
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect(options))) {
+            if (!(await this.jupyterNotebookProvider.connect(options, token))) {
                 return undefined;
             }
         }
@@ -103,8 +109,14 @@ export class NotebookProvider implements INotebookProvider {
                 : undefined;
         }
         const promise = rawKernel
-            ? this.rawNotebookProvider.createNotebook(options.identity, resource, options.disableUI, options.metadata)
-            : this.jupyterNotebookProvider.createNotebook(options);
+            ? this.rawNotebookProvider.createNotebook(
+                  options.identity,
+                  resource,
+                  options.disableUI,
+                  options.metadata,
+                  token
+              )
+            : this.jupyterNotebookProvider.createNotebook(options, token);
 
         this.cacheNotebookPromise(options.identity, promise);
 

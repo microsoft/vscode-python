@@ -133,7 +133,7 @@ export interface INotebookServer extends IAsyncDisposable {
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
@@ -144,7 +144,7 @@ export interface INotebookServer extends IAsyncDisposable {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
-    connect(): Promise<IRawConnection>;
+    connect(token?: CancellationToken): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
         resource: Resource,
@@ -152,15 +152,18 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri, token?: CancellationToken): Promise<INotebook | undefined>;
 }
 
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
-    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
-    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
-    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    connect(
+        options: ConnectNotebookProviderOptions,
+        token?: CancellationToken
+    ): Promise<IJupyterConnection | undefined>;
+    createNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook>;
+    getNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook | undefined>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
@@ -784,7 +787,11 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
-    getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined>;
+    getMatchingVariableValue(
+        notebook: INotebook,
+        name: string,
+        cancelToken?: CancellationToken
+    ): Promise<string | undefined>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -1046,16 +1053,19 @@ export interface INotebookProvider {
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
-    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    getOrCreateNotebook(options: GetNotebookOptions, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
-    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
+    connect(
+        options: ConnectNotebookProviderOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookProviderConnection | undefined>;
 
     /**
      * Disconnect from a notebook provider connection
      */
-    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
+    disconnect(options: ConnectNotebookProviderOptions, cancelToken?: CancellationToken): Promise<void>;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');
@@ -1063,7 +1073,7 @@ export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */
-    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: GetServerOptions, token?: CancellationToken): Promise<INotebookServer | undefined>;
 }
 
 export interface IKernelSocket {

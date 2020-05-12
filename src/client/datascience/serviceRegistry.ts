@@ -26,6 +26,7 @@ import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
@@ -150,6 +151,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, useCustomEditorApi);
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
+    serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);

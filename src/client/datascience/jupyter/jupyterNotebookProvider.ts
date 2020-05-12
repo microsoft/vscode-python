@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { CancellationToken } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import {
     ConnectNotebookProviderOptions,
@@ -25,32 +26,41 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         return server?.dispose();
     }
 
-    public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
-        const server = await this.serverProvider.getOrCreateServer(options);
+    public async connect(
+        options: ConnectNotebookProviderOptions,
+        token?: CancellationToken
+    ): Promise<IJupyterConnection | undefined> {
+        const server = await this.serverProvider.getOrCreateServer(options, token);
         return server?.getConnectionInfo();
     }
 
-    public async createNotebook(options: GetNotebookOptions): Promise<INotebook> {
+    public async createNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook> {
         // Make sure we have a server
-        const server = await this.serverProvider.getOrCreateServer({
-            getOnly: options.getOnly,
-            disableUI: options.disableUI
-        });
+        const server = await this.serverProvider.getOrCreateServer(
+            {
+                getOnly: options.getOnly,
+                disableUI: options.disableUI
+            },
+            token
+        );
 
         if (server) {
-            return server.createNotebook(options.identity, options.identity, options.metadata);
+            return server.createNotebook(options.identity, options.identity, options.metadata, token);
         }
         // We want createNotebook to always return a notebook promise, so if we don't have a server
         // here throw our generic server disposed message that we use in server creatio n
         throw new Error(localize.DataScience.sessionDisposed());
     }
-    public async getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
-        const server = await this.serverProvider.getOrCreateServer({
-            getOnly: options.getOnly,
-            disableUI: options.disableUI
-        });
+    public async getNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook | undefined> {
+        const server = await this.serverProvider.getOrCreateServer(
+            {
+                getOnly: options.getOnly,
+                disableUI: options.disableUI
+            },
+            token
+        );
         if (server) {
-            return server.getNotebook(options.identity);
+            return server.getNotebook(options.identity, token);
         }
     }
 }
