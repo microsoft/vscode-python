@@ -235,7 +235,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // Look for other editors with the same file name that have a scheme of file/git and same viewcolumn.
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
-                (editorUri.document.uri.scheme === 'file' || editorUri.document.uri.scheme === 'git') &&
                 editorUri !== gitSchemeEditor &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
@@ -251,7 +250,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     private isNotebook(document: TextDocument) {
         // Only support file uris (we don't want to automatically open any other ipynb file from another resource as a notebook).
         // E.g. when opening a document for comparison, the scheme is `git`, in live share the scheme is `vsls`.
-        const validUriScheme = document.uri.scheme === 'file' || document.uri.scheme === 'vsls';
+        const validUriScheme = document.uri.scheme !== 'git';
         return (
             validUriScheme &&
             (document.languageId === JUPYTER_LANGUAGE ||
