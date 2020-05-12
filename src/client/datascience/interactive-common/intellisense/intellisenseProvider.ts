@@ -744,7 +744,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private async getNotebook(token: CancellationToken): Promise<INotebook | undefined> {
         return this.notebookIdentity
-            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true }, token)
+            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true, token })
             : undefined;
     }
 
@@ -758,7 +758,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 const value = await this.variableProvider.getMatchingVariableValue(notebook, wordAtPosition, token);
                 if (value) {
                     return {
-                        contents: [`${wordAtPosition} : ${value}`]
+                        contents: [`${wordAtPosition} = ${value}`]
                     };
                 }
             }

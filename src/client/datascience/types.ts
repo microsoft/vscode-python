@@ -158,12 +158,9 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
-    connect(
-        options: ConnectNotebookProviderOptions,
-        token?: CancellationToken
-    ): Promise<IJupyterConnection | undefined>;
-    createNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook>;
-    getNotebook(options: GetNotebookOptions, token?: CancellationToken): Promise<INotebook | undefined>;
+    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
+    createNotebook(options: GetNotebookOptions): Promise<INotebook>;
+    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
     disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
 }
 
@@ -236,6 +233,7 @@ export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
+    token?: CancellationToken;
 };
 
 export interface INotebookServerOptions {
@@ -1028,6 +1026,7 @@ export type GetServerOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
+    token?: CancellationToken;
 };
 
 /**
@@ -1038,6 +1037,7 @@ export type GetNotebookOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
+    token?: CancellationToken;
 };
 
 export interface INotebookProvider {
@@ -1053,14 +1053,11 @@ export interface INotebookProvider {
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
-    getOrCreateNotebook(options: GetNotebookOptions, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
+    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
-    connect(
-        options: ConnectNotebookProviderOptions,
-        cancelToken?: CancellationToken
-    ): Promise<INotebookProviderConnection | undefined>;
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
 
     /**
      * Disconnect from a notebook provider connection
@@ -1073,7 +1070,7 @@ export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */
-    getOrCreateServer(options: GetServerOptions, token?: CancellationToken): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }
 
 export interface IKernelSocket {

@@ -4,10 +4,12 @@
 import { inject, injectable, named } from 'inversify';
 
 import * as vscode from 'vscode';
+import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
 import { RunByLine } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IExperimentsManager } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
 import { ICell, IJupyterVariables, INotebookExecutionLogger, INotebookProvider } from '../types';
@@ -61,7 +63,11 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         position: vscode.Position,
         token: vscode.CancellationToken
     ): vscode.ProviderResult<vscode.Hover> {
-        return this.getVariableHover(document, position, token);
+        const timeoutHandler = async () => {
+            await sleep(100);
+            return null;
+        };
+        return Promise.race([timeoutHandler(), this.getVariableHover(document, position, token)]);
     }
 
     private initializeHoverProvider() {
@@ -73,33 +79,34 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
         }
     }
 
-    private async getVariableHover(
+    private getVariableHover(
         document: vscode.TextDocument,
         position: vscode.Position,
         token: vscode.CancellationToken
     ): Promise<vscode.Hover | null> {
-        const range = document.getWordRangeAtPosition(position);
-        if (range) {
-            const word = document.getText(range);
-            if (word) {
-                // Only do this for the interactive window notebook
-                const notebook = await this.notebookProvider.getOrCreateNotebook(
-                    {
+        // Make sure to fail as soon as the cancel token is signaled
+        return Cancellation.race(async (t) => {
+            const range = document.getWordRangeAtPosition(position);
+            if (range) {
+                const word = document.getText(range);
+                if (word) {
+                    // Only do this for the interactive window notebook
+                    const notebook = await this.notebookProvider.getOrCreateNotebook({
                         getOnly: true,
-                        identity: vscode.Uri.parse(Identifiers.InteractiveWindowIdentity)
-                    },
-                    token
-                );
-                if (notebook) {
-                    const match = await this.variableProvider.getMatchingVariableValue(notebook, word, token);
-                    if (match) {
-                        return {
-                            contents: [`${word} : ${match}`]
-                        };
+                        identity: vscode.Uri.parse(Identifiers.InteractiveWindowIdentity),
+                        token: t
+                    });
+                    if (notebook) {
+                        const match = await this.variableProvider.getMatchingVariableValue(notebook, word, t);
+                        if (match) {
+                            return {
+                                contents: [`${word} = ${match}`]
+                            };
+                        }
                     }
                 }
             }
-        }
-        return null;
+            return null;
+        }, token);
     }
 }

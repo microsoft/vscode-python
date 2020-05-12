@@ -65,20 +65,17 @@ export class NotebookProvider implements INotebookProvider {
         if (await this.rawNotebookProvider.supported()) {
             return this.rawNotebookProvider.connect(token);
         } else {
-            return this.jupyterNotebookProvider.connect(options, token);
+            return this.jupyterNotebookProvider.connect(options);
         }
     }
 
-    public async getOrCreateNotebook(
-        options: GetNotebookOptions,
-        token?: CancellationToken
-    ): Promise<INotebook | undefined> {
+    public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         const rawKernel = await this.rawNotebookProvider.supported();
 
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
-            ? await this.rawNotebookProvider.getNotebook(options.identity, token)
-            : await this.jupyterNotebookProvider.getNotebook(options, token);
+            ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
+            : await this.jupyterNotebookProvider.getNotebook(options);
         if (notebook) {
             return notebook;
         }
@@ -92,7 +89,7 @@ export class NotebookProvider implements INotebookProvider {
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawKernel) {
-            if (!(await this.jupyterNotebookProvider.connect(options, token))) {
+            if (!(await this.jupyterNotebookProvider.connect(options))) {
                 return undefined;
             }
         }
@@ -114,9 +111,9 @@ export class NotebookProvider implements INotebookProvider {
                   resource,
                   options.disableUI,
                   options.metadata,
-                  token
+                  options.token
               )
-            : this.jupyterNotebookProvider.createNotebook(options, token);
+            : this.jupyterNotebookProvider.createNotebook(options);
 
         this.cacheNotebookPromise(options.identity, promise);
 
