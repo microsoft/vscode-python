@@ -127,7 +127,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private async onFileSave(file: Uri) {
         const model = await this.getModel(file);
         if (model) {
-            this.storage.save(model, new CancellationTokenSource().token);
+            await this.storage.save(model, new CancellationTokenSource().token);
         }
     }
 
