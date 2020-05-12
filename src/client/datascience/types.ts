@@ -785,11 +785,11 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
-    getMatchingVariableValue(
+    getMatchingVariable(
         notebook: INotebook,
         name: string,
         cancelToken?: CancellationToken
-    ): Promise<string | undefined>;
+    ): Promise<IJupyterVariable | undefined>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

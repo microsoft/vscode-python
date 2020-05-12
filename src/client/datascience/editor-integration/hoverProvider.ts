@@ -97,10 +97,10 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
                         token: t
                     });
                     if (notebook) {
-                        const match = await this.variableProvider.getMatchingVariableValue(notebook, word, t);
+                        const match = await this.variableProvider.getMatchingVariable(notebook, word, t);
                         if (match) {
                             return {
-                                contents: [`${word} = ${match}`]
+                                contents: [`${word} = ${match.value}`]
                             };
                         }
                     }

@@ -76,10 +76,10 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         return result;
     }
 
-    public async getMatchingVariableValue(_notebook: INotebook, name: string): Promise<string | undefined> {
+    public async getMatchingVariable(_notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
-            return this.lastKnownVariables.find((v) => v.name === name)?.value;
+            return this.lastKnownVariables.find((v) => v.name === name);
         }
     }
 

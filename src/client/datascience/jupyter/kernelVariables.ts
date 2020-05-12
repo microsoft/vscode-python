@@ -62,11 +62,11 @@ export class KernelVariables implements IJupyterVariables {
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
-    public async getMatchingVariableValue(
+    public async getMatchingVariable(
         notebook: INotebook,
         name: string,
         token?: CancellationToken
-    ): Promise<string | undefined> {
+    ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
         const cache = this.notebookState.get(notebook.identity);
         if (cache) {
@@ -74,14 +74,14 @@ export class KernelVariables implements IJupyterVariables {
             if (match && !match.value) {
                 match = await this.getVariableValueFromKernel(match, notebook, token);
             }
-            return match?.value;
+            return match;
         } else {
             // No items in the cache yet, just ask for the names
             const names = await this.getVariableNamesFromKernel(notebook, token);
             if (names) {
                 const matchName = names.find((n) => n === name);
                 if (matchName) {
-                    const match = await this.getVariableValueFromKernel(
+                    return this.getVariableValueFromKernel(
                         {
                             name,
                             value: undefined,
@@ -95,7 +95,6 @@ export class KernelVariables implements IJupyterVariables {
                         notebook,
                         token
                     );
-                    return match.value;
                 }
             }
         }
