@@ -11,6 +11,7 @@ import { getConsoleTransport, getFileTransport, isConsoleTransport } from './tra
 import { Arguments } from './util';
 
 export type LoggerConfig = {
+    level?: LogLevel;
     file?: {
         logfile: string;
     };
@@ -37,6 +38,12 @@ interface IConfigurableLogger {
 
 // Set up a logger just the way we like it.
 export function configureLogger(logger: IConfigurableLogger, config: LoggerConfig) {
+    if (config.level) {
+        const levelName = resolveLevelName(config.level);
+        if (levelName) {
+            logger.level = levelName;
+        }
+    }
     if (config.file) {
         const formatter = getFormatter();
         const transport = getFileTransport(config.file.logfile, formatter);
