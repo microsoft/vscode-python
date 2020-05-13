@@ -145,6 +145,8 @@ export class KernelProcess implements IKernelProcess {
     }
 
     private async createAndUpdateConnectionFile() {
+        // Create the connection file so that any user can destroy it. The kernel will
+        // actually read it, delete it, and recreate it with more restricted permissions
         this.connectionFile = await this.file.createTemporaryFile('.json', 0o777);
         await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
             encoding: 'utf-8',
