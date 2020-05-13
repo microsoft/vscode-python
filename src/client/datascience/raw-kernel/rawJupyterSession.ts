@@ -104,6 +104,9 @@ export class RawJupyterSession extends BaseJupyterSession {
                 traceInfo('Raw session started and connected');
                 this.setSession(newSession);
 
+                // Listen for session status changes
+                this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
+
                 // Update kernelspec and interpreter
                 this.kernelSpec = newSession.kernelProcess?.kernelSpec;
                 this.interpreter = interpreter;
