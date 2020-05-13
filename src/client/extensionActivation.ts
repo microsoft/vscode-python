@@ -99,6 +99,7 @@ async function activateLegacy(
 
     commonRegisterTypes(serviceManager);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     setLoggingLevel(configuration.getSettings().logging.level);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
