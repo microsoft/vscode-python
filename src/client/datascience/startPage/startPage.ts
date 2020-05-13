@@ -4,44 +4,31 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { EventEmitter, Uri, ViewColumn } from 'vscode';
+import { EventEmitter, ViewColumn, window } from 'vscode';
 import { IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
+import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { StartPageMessageListener } from './startPageMessageListener';
 import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
-// const startPageDir2 = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
 @injectable()
 export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
 
     constructor(
-        // @unmanaged() liveShare: ILiveShareApi,
-        // @unmanaged() protected applicationShell: IApplicationShell,
-        // @unmanaged() protected documentManager: IDocumentManager,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
-        // @unmanaged() protected jupyterExecution: IJupyterExecution,
-        // @unmanaged() protected fileSystem: IFileSystem,
         @inject(IConfigurationService) protected configuration: IConfigurationService,
-        // @unmanaged() protected jupyterExporter: INotebookExporter,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService
-        // @unmanaged() protected errorHandler: IDataScienceErrorHandler,
-        // @unmanaged() protected readonly commandManager: ICommandManager,
-        // @unmanaged() protected globalStorage: Memento,
-        // @inject(String) rootPath: string,
-        // @inject(String) scripts: string[],
-        // @inject(String) title: string,
-        // @unmanaged() viewColumn: ViewColumn,
-        // @inject(IExperimentsManager) experimentsManager: IExperimentsManager
-        // @inject(Boolean) useCustomEditorApi: boolean
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IFileSystem) private file: IFileSystem,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         super(
             configuration,
@@ -51,13 +38,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             workspaceService,
             (c, v, d) => new StartPageMessageListener(c, v, d),
             startPageDir,
-            [
-                // path.join(startPageDir2, 'require.js'),
-                path.join(startPageDir, 'commons.initial.bundle.js'),
-                path.join(startPageDir, 'startPage.js')
-            ],
+            [path.join(startPageDir, 'commons.initial.bundle.js'), path.join(startPageDir, 'startPage.js')],
             localize.DataScience.startPage(),
             ViewColumn.One,
+            false,
             false,
             false
         );
@@ -89,7 +73,22 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             case StartPageMessages.RequestReleaseNotes:
                 await this.handleReleaseNotesRequest();
                 break;
-
+            case StartPageMessages.OpenBlankNotebook:
+                await this.notebookEditorProvider.createNew();
+                break;
+            case StartPageMessages.OpenBlankPythonFile:
+                break;
+            case StartPageMessages.OpenInteractiveWindow:
+                break;
+            case StartPageMessages.OpenCommandPalette:
+                break;
+            case StartPageMessages.OpenCommandPaletteWithOpenNBSelected:
+                break;
+            case StartPageMessages.OpenSampleNotebook:
+                break;
+            case StartPageMessages.OpenFileBrowser:
+                window.showOpenDialog({});
+                break;
             default:
                 break;
         }
@@ -98,6 +97,21 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async handleReleaseNotesRequest() {
-        await this.postMessage(StartPageMessages.SendReleaseNotes, { date: 'aaa', notes: ['cool', 'stuff'] });
+        const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
+        const changelogEnding = changelog.indexOf('### Fixes');
+        const startOfLog = changelog.substring(0, changelogEnding);
+
+        const whiteSpace = ' ';
+        const dateEnd = startOfLog.indexOf(')');
+        const dateBegin = startOfLog.indexOf('(');
+        const scrappedDate = startOfLog.substring(dateBegin + 1, dateEnd).split(whiteSpace);
+
+        const scrappedNotes = startOfLog.splitLines();
+        const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.'));
+
+        await this.postMessage(StartPageMessages.SendReleaseNotes, {
+            date: scrappedDate[1] + whiteSpace + scrappedDate[2],
+            notes: filteredNotes.map((line) => line.substr(3))
+        });
     }
 }

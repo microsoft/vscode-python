@@ -3,27 +3,29 @@
 'use strict';
 
 import * as React from 'react';
-import { connect } from 'react-redux';
-import { IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
+import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
-import { PostOffice } from '../react-common/postOffice';
-// import { IMainWithVariables } from '../interactive-common/redux/store';
-import { actionCreators } from './redux/actions';
+import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import './startPage.css';
 
-// type IStartPageProps = IMainWithVariables & typeof actionCreators;
-export type IDefaultState = {
+export interface IStartPageProps {
     skipDefault?: boolean;
     baseTheme: string;
     testMode?: boolean;
-    postOffice: PostOffice;
-};
+}
 
-export type IStartPageProps = IDefaultState & typeof actionCreators;
+interface IStartPageState {
+    settings?: IDataScienceExtraSettings;
+}
 
-export class StartPage extends React.Component<IStartPageProps> {
+export class StartPage extends React.Component<IStartPageProps, IStartPageState> implements IMessageHandler {
     private checked = false;
+    private releaseNotes: IReleaseNotesPackage = {
+        date: '',
+        notes: []
+    };
     private postOffice: PostOffice = new PostOffice();
 
     constructor(props: IStartPageProps) {
@@ -31,7 +33,7 @@ export class StartPage extends React.Component<IStartPageProps> {
     }
 
     public componentDidMount() {
-        this.props.requestReleaseNotes();
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotes);
     }
 
     public componentWillMount() {
@@ -40,9 +42,6 @@ export class StartPage extends React.Component<IStartPageProps> {
 
         // Tell the plot viewer code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
-
-        // Listen to key events
-        // window.addEventListener('keydown', this.onKeyDown);
     }
 
     public render() {
@@ -61,7 +60,7 @@ export class StartPage extends React.Component<IStartPageProps> {
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon">
+                    <div className="icon" onClick={this.openBlankNotebook} role="button">
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -101,7 +100,7 @@ export class StartPage extends React.Component<IStartPageProps> {
                         <div className="paragraph">
                             - Create a new file and use the .py extension
                             <br />-{' '}
-                            <div className="link" role="button" onClick={this.sendMessage}>
+                            <div className="link" role="button" onClick={this.openFileBrowser}>
                                 Open a file or workspace
                             </div>{' '}
                             to continue work
@@ -128,38 +127,43 @@ export class StartPage extends React.Component<IStartPageProps> {
                 <div className="row">
                     <div className="paragraph">
                         Take a look at our{' '}
-                        <div className="link" role="button" onClick={this.sendMessage}>
+                        <a className="link" href="https://aka.ms/AA8dxtb">
                             {this.getCurrentReleaseVersion()} Release Notes
-                        </div>{' '}
+                        </a>{' '}
                         to learn more about the latest features
                     </div>
                     {this.renderReleaseNotes()}
                     <div className="paragraph">
                         Explore more features in our{' '}
-                        <div className="link" role="button" onClick={this.sendMessage}>
+                        <a className="link" href="https://aka.ms/AA8dqti">
                             Tutorials
-                        </div>{' '}
+                        </a>{' '}
                         or check{' '}
-                        <div className="link" role="button" onClick={this.sendMessage}>
+                        <a className="link" href="https://aka.ms/AA8dxwy">
                             Documentation
-                        </div>{' '}
+                        </a>{' '}
                         for tips and troubleshooting.
                     </div>
                 </div>
-                <div className="block">
-                    <input type="checkbox" aria-checked={this.checked} className="checkbox"></input>
-                </div>
-                <div className="block">
-                    <p>Don't show this page again</p>
+                <div className="row">
+                    <div className="block">
+                        <input type="checkbox" aria-checked={this.checked} className="checkbox"></input>
+                    </div>
+                    <div className="block">
+                        <p>Don't show this page again</p>
+                    </div>
                 </div>
             </div>
         );
     }
 
+    // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case StartPageMessages.ReceivedReleaseNotes:
-                console.log('yes');
+            case StartPageMessages.SendReleaseNotes:
+                this.releaseNotes.date = payload.date;
+                this.releaseNotes.notes = payload.notes;
+                this.setState({});
                 break;
 
             default:
@@ -171,30 +175,27 @@ export class StartPage extends React.Component<IStartPageProps> {
 
     private sendMessage = (evt: React.SyntheticEvent<HTMLElement>) => {
         // tslint:disable-next-line: no-console
-        // console.log(evt);
-        // location.reload();
-        this.props.requestReleaseNotes();
+        console.log(evt);
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotes);
+    };
+
+    private openBlankNotebook = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankNotebook);
+    };
+
+    private openFileBrowser = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
     };
 
     private getCurrentReleaseVersion(): string {
-        return 'get month and year';
+        return this.releaseNotes.date;
     }
 
     private renderReleaseNotes(): JSX.Element {
-        // const releaseNotes = this.props.requestReleaseNotes();
-        const releaseNotes = ['1', '2', '3'];
         const notes: JSX.Element[] = [];
-        releaseNotes.forEach((rel, index) => {
+        this.releaseNotes.notes.forEach((rel, index) => {
             notes.push(<li key={index}>{rel}</li>);
         });
         return <ul>{notes}</ul>;
     }
-}
-
-function mapStateToProps(state: IStartPageProps): IStartPageProps {
-    return state;
-}
-
-export function getConnectedStartPage() {
-    return connect(mapStateToProps, actionCreators)(StartPage);
 }

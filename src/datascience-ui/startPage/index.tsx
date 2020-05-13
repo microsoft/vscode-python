@@ -12,11 +12,9 @@ import '../common/index.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-import { Provider } from 'react-redux';
-import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
+import { IVsCodeApi } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import { createStore } from './redux/store';
-import { getConnectedStartPage } from './startPage';
+import { StartPage } from './startPage';
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
@@ -26,14 +24,8 @@ const baseTheme = detectBaseTheme();
 const testMode = (window as any).inTestMode;
 // tslint:disable-next-line: no-typeof-undefined
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
-const postOffice = new PostOffice();
-
-const store = createStore(skipDefault, baseTheme, testMode, postOffice);
-const ConnectedStartPage = getConnectedStartPage();
 
 ReactDOM.render(
-    <Provider store={store}>
-        <ConnectedStartPage />
-    </Provider>,
+    <StartPage baseTheme={baseTheme} skipDefault={skipDefault} testMode={testMode} />,
     document.getElementById('root') as HTMLElement
 );

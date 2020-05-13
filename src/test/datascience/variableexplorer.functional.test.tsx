@@ -539,7 +539,7 @@ Name: 0, dtype: float64`,
                 }
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
             }
         );
 

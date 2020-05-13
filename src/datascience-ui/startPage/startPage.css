@@ -48,13 +48,14 @@
 
 .row {
     display: block;
-    height: 120px;
+    min-height: 120px;
 }
 
 .link {
     display: inline;
     /* color: var(--vscode-button-hoverBackground); */
     color: var(--vscode-debugIcon-continueForeground);
+    text-decoration: none;
 }
 
 .link:hover {
