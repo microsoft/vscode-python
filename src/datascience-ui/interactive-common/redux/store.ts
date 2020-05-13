@@ -210,8 +210,8 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Hiding/displaying output
-        const prevHidingOutput = prevState.main.cellVMs.filter((c) => c.hideOutput);
-        const afterHidingOutput = afterState.main.cellVMs.filter((c) => c.hideOutput);
+        const prevHidingOutput = prevState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
+        const afterHidingOutput = afterState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
         if (!fastDeepEqual(prevHidingOutput, afterHidingOutput)) {
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.OutputToggled);
