@@ -160,12 +160,12 @@ steps:
 
   # Run the pip installs in the 3 environments (windows)
   - script: |
-      conda activate base
-      conda install --quiet -y --file build/ci/conda_base.yml
+      call activate base
+      call conda install --quiet -y --file build/ci/conda_base.yml
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
-      conda activate conda_env_1
+      call activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
-      conda activate conda_env_2
+      call activate conda_env_2
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
     displayName: 'Install Pip requirements for CONDA envs'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
