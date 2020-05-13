@@ -466,7 +466,7 @@ suite('Language Server Activation - ActivationService', () => {
                 expect(connectCount).to.be.equal(4, 'Reconnect is not happening');
                 server.dispose();
             });
-            if (!jediIsEnabled) {
+            if (languageServerType !== LanguageServerType.Jedi) {
                 test('Revert to jedi when LS activation fails', async () => {
                     pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
                     const activatorDotNet = TypeMoq.Mock.ofType<ILanguageServerActivator>();
@@ -607,7 +607,6 @@ suite('Language Server Activation - ActivationService', () => {
                 });
             } else {
                 test('Jedi is only started once', async () => {
-                    pythonSettings.setup((p) => p.jediEnabled).returns(() => jediIsEnabled);
                     pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
@@ -775,7 +774,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(true);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Jedi);
 
             state.verifyAll();
         });
@@ -795,7 +794,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(false);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Node);
 
             state.verifyAll();
         });
@@ -815,7 +814,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(true);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Jedi);
 
             state.verifyAll();
         });
@@ -835,7 +834,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(true);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Jedi);
 
             state.verifyAll();
         });
@@ -927,7 +926,7 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => lsNotSupportedDiagnosticService.object);
         });
 
-        test('If default value of jedi is being used, and LSEnabled experiment is enabled, then return false', async () => {
+        test('If default value (Jedi) of language server is being used, and LSEnabled experiment is enabled, then return false', async () => {
             const settings = {};
             experiments
                 .setup((ex) => ex.inExperiment(LSEnabled))
@@ -938,7 +937,7 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             workspaceConfig
-                .setup((c) => c.inspect<boolean>('jediEnabled'))
+                .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
 
@@ -955,7 +954,7 @@ suite('Language Server Activation - ActivationService', () => {
             experiments.verifyAll();
         });
 
-        test('If default value of jedi is being used, and LSEnabled experiment is disabled, then send telemetry if user is in Experiment LSControl and return python settings value (which will always be true as default value is true)', async () => {
+        test('If default value of languageServer (Jedi) is being used, and LSEnabled experiment is disabled, then send telemetry if user is in Experiment LSControl and return python settings value (which will always be true as default value is true)', async () => {
             const settings = {};
             experiments
                 .setup((ex) => ex.inExperiment(LSEnabled))
@@ -966,12 +965,12 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             workspaceConfig
-                .setup((c) => c.inspect<boolean>('jediEnabled'))
+                .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
             pythonSettings
-                .setup((p) => p.jediEnabled)
-                .returns(() => true)
+                .setup((p) => p.languageServer)
+                .returns(() => LanguageServerType.Jedi)
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(
@@ -989,17 +988,17 @@ suite('Language Server Activation - ActivationService', () => {
         });
 
         suite(
-            'If default value of jedi is not being used, then no experiments are used, and python settings value is returned',
+            'If default value of languageServer (Jedi) is not being used, then no experiments are used, and python settings value is returned',
             async () => {
                 [
                     {
-                        testName: 'Returns false when python settings value is false',
-                        pythonSettingsValue: false,
+                        testName: 'Returns false when python settings value is Microsoft (v2)',
+                        pythonSettingsValue: LanguageServerType.Node,
                         expectedResult: false
                     },
                     {
-                        testName: 'Returns true when python settings value is true',
-                        pythonSettingsValue: true,
+                        testName: 'Returns true when python settings value is Jedi',
+                        pythonSettingsValue: LanguageServerType.Jedi,
                         expectedResult: true
                     }
                 ].forEach((testParams) => {
@@ -1014,11 +1013,11 @@ suite('Language Server Activation - ActivationService', () => {
                             .returns(() => undefined)
                             .verifiable(TypeMoq.Times.never());
                         workspaceConfig
-                            .setup((c) => c.inspect<boolean>('jediEnabled'))
+                            .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                             .returns(() => settings as any)
                             .verifiable(TypeMoq.Times.once());
                         pythonSettings
-                            .setup((p) => p.jediEnabled)
+                            .setup((p) => p.languageServer)
                             .returns(() => testParams.pythonSettingsValue)
                             .verifiable(TypeMoq.Times.once());
 
@@ -1151,7 +1150,7 @@ suite('Language Server Activation - ActivationService', () => {
                     test(testName, async () => {
                         workspaceConfig.reset();
                         workspaceConfig
-                            .setup((c) => c.inspect<boolean>('jediEnabled'))
+                            .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                             .returns(() => settings as any)
                             .verifiable(TypeMoq.Times.once());
 
@@ -1172,7 +1171,7 @@ suite('Language Server Activation - ActivationService', () => {
         test('Returns false for settings = undefined', async () => {
             workspaceConfig.reset();
             workspaceConfig
-                .setup((c) => c.inspect<boolean>('jediEnabled'))
+                .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                 .returns(() => undefined as any)
                 .verifiable(TypeMoq.Times.once());
 

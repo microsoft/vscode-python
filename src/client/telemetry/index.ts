@@ -27,6 +27,7 @@ import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
+import { LanguageServerType } from '../activation/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -1135,7 +1136,7 @@ export interface IEventNamePropertyMapping {
         /**
          * Used to track switch between LS and Jedi. Carries the final state after the switch.
          */
-        switchTo?: boolean;
+        switchTo?: LanguageServerType;
     };
     /**
      * Telemetry event sent with details after attempting to download LS

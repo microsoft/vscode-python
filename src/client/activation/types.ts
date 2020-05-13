@@ -65,8 +65,8 @@ export interface IExtensionActivationService {
 
 export enum LanguageServerType {
     Jedi = 'Jedi',
-    Microsoft = 'Microsoft (V1)',
-    Node = 'Microsoft (V2)',
+    Microsoft = 'Microsoft (v1)',
+    Node = 'Microsoft (v2)',
     None = 'None'
 }
 

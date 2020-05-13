@@ -130,28 +130,22 @@ export class LanguageServerExtensionActivationService
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
-        const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
-        if (state.value !== jediEnabled) {
-            await state.updateValue(jediEnabled);
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: languageServer
-            });
-        } else {
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: languageServer
-            });
-        }
+        const state = this.stateFactory.createGlobalPersistentState<boolean | LanguageServerType | undefined>('SWITCH_LS', undefined);
+        await state.updateValue(languageServer);
+        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+            switchTo: languageServer
+        });
     }
 
     /**
-     * Checks if user has not manually set `jediEnabled` setting
+     * Checks if user has not manually set `languageServer` setting
      * @param resource
-     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
+     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `languageServer` setting added
      */
     public isJediUsingDefaultConfiguration(resource: Resource): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+        const settings = this.workspaceService.getConfiguration('python', resource).inspect<LanguageServerType>('languageServer');
         if (!settings) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.languageServer`');
             return false;
         }
         return (
@@ -174,9 +168,9 @@ export class LanguageServerExtensionActivationService
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let enabled = configurationService.getSettings(this.resource).languageServer === LanguageServerType.Jedi;
-        this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
-        return enabled;
+        const lstType = configurationService.getSettings(this.resource).languageServer;
+        this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
+        return lstType === LanguageServerType.Jedi;
     }
 
     protected async onWorkspaceFoldersChanged() {

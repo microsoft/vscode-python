@@ -2073,11 +2073,11 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
-                        "Microsoft (V1)",
-                        "Microsoft (V2)",
+                        "Microsoft (v1)",
+                        "Microsoft (v2)",
                         "None"
                     ],
-                    "default": "Microsoft (V1)",
+                    "default": "Microsoft (v1)",
                     "description": "Defines type of the language server.",
                     "scope": "resource"
                 },
