@@ -72,10 +72,15 @@ function initialize() {
 }
 
 // Set the logging level the extension logs at.
-export function setLoggingLevel(level: LogLevel) {
-    const levelName = resolveLevelName(level, winston.config.npm.levels);
-    if (levelName) {
-        globalLogger.level = levelName;
+export function setLoggingLevel(level: LogLevel | undefined) {
+    if (level) {
+        const levelName = resolveLevelName(level, winston.config.npm.levels);
+        if (levelName) {
+            globalLogger.level = levelName;
+        }
+    } else {
+        // Disable logging.
+        globalLogger.clear();
     }
 }
 

@@ -719,7 +719,7 @@ function isValidPythonPath(pythonPath: string): boolean {
     }
 }
 
-function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLevel {
+function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLevel | undefined {
     switch (setting) {
         case 'info': {
             return LogLevel.Info;
@@ -727,14 +727,14 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType): LogLeve
         case 'warn': {
             return LogLevel.Warn;
         }
-        case 'error': {
-            return LogLevel.Error;
+        case 'off': {
+            return;
         }
         case 'debug': {
             return LogLevel.Debug;
         }
         default: {
-            return LogLevel.Off;
+            return LogLevel.Error;
         }
     }
 }

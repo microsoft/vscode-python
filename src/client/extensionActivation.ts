@@ -98,6 +98,8 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     commonRegisterTypes(serviceManager);
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    setLoggingLevel(configuration.getSettings().logging.level);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
@@ -110,13 +112,11 @@ async function activateLegacy(
     dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
 
     appRegisterTypes(serviceManager, languageServerType);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
-    setLoggingLevel(configuration.getSettings().logging.level);
 
     // "initialize" "services"
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
