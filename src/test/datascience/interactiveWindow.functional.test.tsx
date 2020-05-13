@@ -38,7 +38,7 @@ import {
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { createMessageEvent, waitForUpdate } from './reactHelpers';
+import { createMessageEvent } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -682,7 +682,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Editor Context',
-        async (wrapper) => {
+        async () => {
             // Before we have any cells, verify our contexts are not set
             assert.equal(
                 ioc.getContext(EditorContexts.HaveInteractive),
@@ -704,7 +704,7 @@ Type:      builtin_function_or_method`,
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Get an update promise so we can wait for the add code
-            const updatePromise = waitForUpdate(wrapper, InteractivePanel);
+            const updatePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
             // Send some code to the interactive window
             await interactiveWindow.addCode('a=1\na', Uri.file('foo.py').fsPath, 2);

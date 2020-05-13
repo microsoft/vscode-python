@@ -57,7 +57,6 @@ import {
     runMountedTest,
     setupWebview
 } from './nativeEditorTestHelpers';
-import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addMockData,
@@ -412,7 +411,7 @@ df.head()`;
                                 deleteButton.simulate('click');
                                 return Promise.resolve();
                             },
-                            () => waitForUpdate(wrapper, NativeEditor, 1)
+                            () => Promise.resolve()
                         );
                         assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
                     },
@@ -925,10 +924,7 @@ df.head()`;
                         // This is used in some tests (saving).
                         notebookFile = await createTemporaryFile('.ipynb');
                         await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
-                        await Promise.all([
-                            waitForUpdate(wrapper, NativeEditor, 1),
-                            openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath)
-                        ]);
+                        await openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath);
                     } else {
                         // tslint:disable-next-line: no-invalid-this
                         this.skip();
@@ -1126,7 +1122,7 @@ df.head()`;
                         }
 
                         // Now get the editor for the next cell and click it
-                        update = waitForUpdate(wrapper, NativeEditor, 1);
+                        update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         await update;
 
@@ -1373,7 +1369,7 @@ df.head()`;
                         assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
 
                         // Now hit escape.
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
                         simulateKeyPressOnCell(cellIndex, { code: 'Escape' });
                         await update;
 
@@ -1474,7 +1470,7 @@ df.head()`;
                         const editor = wrapper.find(NativeCell).at(1).find(Editor).first();
                         (editor.instance() as Editor).giveFocus = () => editor.props().focused!();
 
-                        const update = waitForUpdate(wrapper, NativeEditor, 1);
+                        const update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1485,7 +1481,7 @@ df.head()`;
 
                     test("Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
                         // First focus the cell.
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1505,7 +1501,7 @@ df.head()`;
                     }).retries(3);
 
                     test("Pressing 'Shift+Enter' on a selected cell executes the cell and advances to the next cell", async () => {
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1585,7 +1581,7 @@ df.head()`;
                         assert.equal(wrapper.find('NativeCell').length, 3);
 
                         // Give focus
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                         clickCell(1);
                         await update;
                         update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
@@ -1622,7 +1618,7 @@ df.head()`;
                         const secondCell = 1;
 
                         // Set focus to the first cell.
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                         clickCell(firstCell);
                         await update;
                         update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
@@ -1700,7 +1696,7 @@ df.head()`;
                         const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // Set focus to the first cell.
-                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        let update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                         clickCell(0);
                         await update;
                         update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
@@ -1746,7 +1742,7 @@ df.head()`;
 
                         clickCell(0);
                         const addedCell = waitForMessage(ioc, CommonActionType.INSERT_ABOVE_AND_FOCUS_NEW_CELL);
-                        const update = waitForUpdate(wrapper, NativeEditor, 1);
+                        const update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                         simulateKeyPressOnCell(0, { code: 'a' });
                         await Promise.all([update, addedCell]);
 
@@ -1766,7 +1762,7 @@ df.head()`;
 
                         clickCell(1);
                         const addedCell = waitForMessage(ioc, CommonActionType.INSERT_BELOW_AND_FOCUS_NEW_CELL);
-                        const update = waitForUpdate(wrapper, NativeEditor, 1);
+                        const update = waitForMessage(ioc, InteractiveWindowMessages.SelectedCell);
                         simulateKeyPressOnCell(1, { code: 'b' });
                         await Promise.all([update, addedCell]);
 
@@ -1790,7 +1786,7 @@ df.head()`;
                         verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2);
 
                         // Hide the output
-                        update = waitForUpdate(wrapper, NativeEditor, 1);
+                        update = waitForMessage(ioc, InteractiveWindowMessages.OutputToggled);
                         simulateKeyPressOnCell(2, { code: 'o' });
                         await update;
 
@@ -1798,7 +1794,7 @@ df.head()`;
                         assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2));
 
                         // Display the output
-                        update = waitForUpdate(wrapper, NativeEditor, 1);
+                        update = waitForMessage(ioc, InteractiveWindowMessages.OutputToggled);
                         simulateKeyPressOnCell(2, { code: 'o' });
                         await update;
 
@@ -1923,15 +1919,14 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
                             // Unfocus the cell
-                            update = waitForUpdate(wrapper, NativeEditor, 1);
+                            update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
                             simulateKeyPressOnCell(0, { code: 'Escape' });
                             await update;
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
 
                             // Press 'ctrl+z'. This should do nothing
-                            update = waitForUpdate(wrapper, NativeEditor, 1);
                             simulateKeyPressOnCell(0, { code: 'z', ctrlKey: true });
-                            await waitForPromise(update, 100);
+                            await sleep(100);
 
                             // There should be 4 cells and first cell is selected.
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
@@ -1941,7 +1936,8 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
                             // Press 'z' to undo.
-                            update = waitForUpdate(wrapper, NativeEditor, 1);
+                            // Technically not really rendering, but it fires when the cell count changes
+                            update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z' });
                             await update;
 
@@ -1951,7 +1947,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 3);
 
                             // Press 'shift+z' to redo
-                            update = waitForUpdate(wrapper, NativeEditor, 1);
+                            update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z', shiftKey: true });
                             await update;
 
@@ -1963,7 +1959,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
                             // Press 'z' to undo.
-                            update = waitForUpdate(wrapper, NativeEditor, 1);
+                            update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z' });
                             await update;
 

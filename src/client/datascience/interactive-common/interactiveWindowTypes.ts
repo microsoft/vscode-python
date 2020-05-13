@@ -108,6 +108,8 @@ export enum InteractiveWindowMessages {
     NotebookAddCellBelow = 'notebook_add_cell_below',
     ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
+    SelectedCell = 'selected_cell',
+    OutputToggled = 'output_toggled',
     UnfocusedCellEditor = 'unfocused_cell_editor',
     MonacoReady = 'monaco_ready',
     ClearAllOutputs = 'clear_all_outputs',
@@ -585,6 +587,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.DoSave]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.OutputToggled]: never | undefined;
     public [InteractiveWindowMessages.UnfocusedCellEditor]: never | undefined;
     public [InteractiveWindowMessages.MonacoReady]: never | undefined;
     public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
