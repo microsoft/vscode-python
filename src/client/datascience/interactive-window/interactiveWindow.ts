@@ -151,9 +151,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
-
-        // Start the server as soon as we open
-        this.ensureConnectionAndNotebook().ignoreErrors();
     }
 
     public dispose() {
@@ -170,6 +167,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async show(): Promise<void> {
+        // Start the server as soon as we open
+        this.ensureConnectionAndNotebook().ignoreErrors();
+
         // When showing we have to load the web panel. Make sure
         // we use the last file sent through add code.
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());

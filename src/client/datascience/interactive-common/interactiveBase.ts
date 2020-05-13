@@ -1080,7 +1080,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             ]);
             try {
                 notebook = identity
-                    ? await this.notebookProvider.getOrCreateNotebook({ identity: identity.resource, metadata })
+                    ? await this.notebookProvider.getOrCreateNotebook({
+                          identity: identity.resource,
+                          resource,
+                          metadata
+                      })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };

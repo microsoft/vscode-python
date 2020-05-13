@@ -95,8 +95,8 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         // Finally create if needed
-        let resource: Resource = options.identity;
-        if (options.identity.scheme === Identifiers.HistoryPurpose) {
+        let resource: Resource = options.resource;
+        if (options.identity.scheme === Identifiers.HistoryPurpose && !resource) {
             // If we have any workspaces, then use the first available workspace.
             // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
             // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.

@@ -358,7 +358,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                 try {
                     suppressShutdownErrors(session.kernel);
                     // Shutdown may fail if the process has been killed
-                    await waitForPromise(session.shutdown(), 1000);
+                    if (!session.isDisposed) {
+                        await waitForPromise(session.shutdown(), 1000);
+                    }
                 } catch {
                     noop();
                 }
