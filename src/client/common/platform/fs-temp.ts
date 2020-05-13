@@ -30,9 +30,10 @@ export class TemporaryFileSystem implements ITempFileSystem {
     }
 
     // Create a new temp file with the given filename suffix.
-    public createFile(suffix: string): Promise<TemporaryFile> {
+    public createFile(suffix: string, mode?: number): Promise<TemporaryFile> {
         const opts = {
-            postfix: suffix
+            postfix: suffix,
+            mode
         };
         return new Promise<TemporaryFile>((resolve, reject) => {
             this.raw.file(opts, (err, filename, _fd, cleanUp) => {

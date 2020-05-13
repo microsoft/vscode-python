@@ -145,7 +145,7 @@ export class KernelProcess implements IKernelProcess {
     }
 
     private async createAndUpdateConnectionFile() {
-        this.connectionFile = await this.file.createTemporaryFile('.json');
+        this.connectionFile = await this.file.createTemporaryFile('.json', 0o777);
         await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
             encoding: 'utf-8',
             flag: 'w'
