@@ -904,7 +904,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             const setState = this.experimentState.get(exp);
             if (setState === undefined) {
                 // Default to true if not the zmq kernel
-                return exp !== LocalZMQKernel.experiment;
+                //return exp !== LocalZMQKernel.experiment;
+                return true;
             }
             return setState;
         });
