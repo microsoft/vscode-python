@@ -139,7 +139,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     private experimentEnabled(): boolean {
         return (
             this.experimentsManager.inExperiment(LocalZMQKernel.experiment) ||
-            this.configuration.getSettings().insidersChannel !== 'off'
+            (this.configuration.getSettings().insidersChannel &&
+                this.configuration.getSettings().insidersChannel !== 'off')
         );
     }
 
