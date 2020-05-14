@@ -12,7 +12,7 @@ import { Common, OutdatedDebugger } from '../../../common/utils/localize';
 import { IPromptShowState } from './types';
 
 // This situation occurs when user connects to old containers or server where
-// the debugger they had installed ptvsd. We should show a prompt to ask them to update.
+// the debugger they had installed was ptvsd. We should show a prompt to ask them to update.
 class OutdatedDebuggerPrompt implements DebugAdapterTracker {
     constructor(
         private promptCheck: IPromptShowState,
