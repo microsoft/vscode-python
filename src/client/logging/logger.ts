@@ -44,6 +44,7 @@ export function configureLogger(logger: IConfigurableLogger, config: LoggerConfi
             logger.level = levelName;
         }
     }
+
     if (config.file) {
         const formatter = getFormatter();
         const transport = getFileTransport(config.file.logfile, formatter);

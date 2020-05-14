@@ -233,7 +233,7 @@ export interface IMypyCategorySeverity {
 export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
 
 export interface ILoggingSettings {
-    readonly level: LogLevel | undefined;
+    readonly level: LogLevel | 'off';
 }
 export interface ILintingSettings {
     readonly enabled: boolean;

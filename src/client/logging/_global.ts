@@ -72,15 +72,17 @@ function initialize() {
 }
 
 // Set the logging level the extension logs at.
-export function setLoggingLevel(level: LogLevel | undefined) {
-    if (level) {
+export function setLoggingLevel(level: LogLevel | 'off') {
+    if (level === 'off') {
+        // For now we disable all logging. One alternative would be
+        // to only disable logging to the output channel (by removing
+        // the transport from the logger).
+        globalLogger.clear();
+    } else {
         const levelName = resolveLevelName(level, winston.config.npm.levels);
         if (levelName) {
             globalLogger.level = levelName;
         }
-    } else {
-        // Disable logging.
-        globalLogger.clear();
     }
 }
 
