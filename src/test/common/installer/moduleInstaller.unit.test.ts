@@ -55,9 +55,9 @@ const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-r
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
-Both approachs have their benefits.
+Both approaches have their benefits.
 
-Comnbinations of:
+Combinations of:
 1. With and without a workspace.
 2. Http Proxy configuration.
 3. All products.
@@ -464,7 +464,7 @@ suite('Module Installer', () => {
                                         interpreterService.verifyAll();
                                         terminalService.verifyAll();
                                     });
-                                    test(`If 'python.globalModuleInstallation' is not set to true, concanate arguments with '--user' flag and send command to terminal`, async () => {
+                                    test(`If 'python.globalModuleInstallation' is not set to true, concatenate arguments with '--user' flag and send command to terminal`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
                                         info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
