@@ -75,7 +75,7 @@ suite('Shebang detection', () => {
     test('Shebang should be empty when first line is empty when not resolving shebang as interpreter', async () => {
         const [document, line] = createDocument('');
 
-        const shebang = await provider.detectShebang(document.object, true);
+        const shebang = await provider.detectShebang(document.object, false);
 
         document.verifyAll();
         line.verifyAll();
