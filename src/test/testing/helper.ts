@@ -32,7 +32,7 @@ export function lookForTestFile(tests: Tests, testFile: string) {
 // Only "/" (forward slash) in the given filename is affected.
 //
 // This helps with readability in test code.  It allows us to use
-// literals for filenames and dirnames instead of oath.join().
+// literals for filenames and dirnames instead of path.join().
 export function fixPath(filename: string): string {
     return filename.replace(/\//, sep);
 }
