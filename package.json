@@ -2076,7 +2076,7 @@
                         "Microsoft",
                         "None"
                     ],
-                    "default": "Microsoft (v1)",
+                    "default": "Microsoft",
                     "description": "Defines type of the language server.",
                     "scope": "resource"
                 },
