@@ -2073,8 +2073,7 @@
                     "type": "string",
                     "enum": [
                         "Jedi",
-                        "Microsoft (v1)",
-                        "Microsoft (v2)",
+                        "Microsoft",
                         "None"
                     ],
                     "default": "Microsoft (v1)",
