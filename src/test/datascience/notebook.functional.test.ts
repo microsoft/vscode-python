@@ -71,7 +71,7 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
-            const snapshot = takeSnapshot();
+            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -87,6 +87,10 @@ suite('DataScience notebook tests', () => {
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
                 pythonFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            });
+
+            suiteSetup(() => {
+                snapshot = takeSnapshot();
             });
 
             suiteTeardown(() => {

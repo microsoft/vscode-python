@@ -23,7 +23,11 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
     suite(`DataScience Intellisense tests with ${languageServerType} LanguageServer mocked`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
-        const snapshot = takeSnapshot();
+        let snapshot: any;
+
+        suiteSetup(() => {
+            snapshot = takeSnapshot();
+        });
 
         setup(async () => {
             ioc = new DataScienceIocContainer();

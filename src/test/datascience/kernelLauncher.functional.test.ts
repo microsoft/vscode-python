@@ -28,7 +28,12 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonInterpreter | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
-    const snapshot = takeSnapshot();
+    // tslint:disable-next-line: no-any
+    let snapshot: any;
+
+    suiteSetup(() => {
+        snapshot = takeSnapshot();
+    });
 
     setup(async () => {
         ioc = new DataScienceIocContainer();

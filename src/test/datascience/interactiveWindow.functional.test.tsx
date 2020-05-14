@@ -67,7 +67,11 @@ suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
-    const snapshot = takeSnapshot();
+    let snapshot: any;
+
+    suiteSetup(() => {
+        snapshot = takeSnapshot();
+    });
 
     setup(async () => {
         ioc = new DataScienceIocContainer();

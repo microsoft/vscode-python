@@ -31,9 +31,10 @@ const rangeInclusive = require('range-inclusive');
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
-        const snapshot = takeSnapshot();
+        let snapshot: any;
 
         suiteSetup(function () {
+            snapshot = takeSnapshot();
             // These test require python, so only run with a non-mocked jupyter
             const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
             if (!isRollingBuild) {

@@ -101,7 +101,7 @@ suite('DataScience Native Editor', () => {
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
-        const snapshot = takeSnapshot();
+        let snapshot: any;
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
                 const newCell = {
@@ -123,6 +123,9 @@ suite('DataScience Native Editor', () => {
 
                 return newCell;
             }
+            suiteSetup(() => {
+                snapshot = takeSnapshot();
+            });
             suiteTeardown(() => {
                 writeDiffSnapshot(snapshot, `Native ${useCustomEditorApi}`);
             });
