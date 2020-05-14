@@ -492,7 +492,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         try {
             // Make sure to delete any temp files written by native editor storage
             const globPr = promisify(glob);
-            const tempLocation = this.serviceManager.get<IExtensionContext>(IExtensionContext).globalStoragePath;
+            const tempLocation = os.tmpdir;
             const tempFiles = await globPr(`${tempLocation}/*.ipynb`);
             if (tempFiles && tempFiles.length) {
                 await Promise.all(tempFiles.map((t) => fs.remove(t)));

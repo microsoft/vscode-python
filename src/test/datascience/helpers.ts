@@ -3,7 +3,10 @@
 
 'use strict';
 
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import { IDataScienceSettings } from '../../client/common/types';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IDataScienceSettings {
@@ -36,4 +39,19 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         jupyterCommandLineArguments: [],
         widgetScriptSources: []
     };
+}
+
+export function takeSnapshot() {
+    // tslint:disable-next-line: no-require-imports
+    const memwatch = require('@raghb1/node-memwatch');
+    return new memwatch.HeapDiff();
+}
+
+let snapshotCounter = 1;
+// tslint:disable-next-line: no-any
+export function writeDiffSnapshot(snapshot: any, prefix: string) {
+    const diff = snapshot.end();
+    const file = path.join(EXTENSION_ROOT_DIR, 'tmp', `SD-${snapshotCounter}-${prefix}.json`);
+    snapshotCounter += 1;
+    fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
 }

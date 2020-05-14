@@ -24,6 +24,7 @@ import {
 } from '../../client/datascience/types';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -45,6 +46,7 @@ suite('DataScience Debugger tests', () => {
     let ioc: DataScienceIocContainer;
     let lastErrorMessage: string | undefined;
     let jupyterDebuggerService: IJupyterDebugService | undefined;
+    const snapshot = takeSnapshot();
 
     suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
@@ -56,6 +58,10 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'Debugger');
     });
 
     setup(async () => {

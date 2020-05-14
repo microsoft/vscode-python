@@ -3023,6 +3023,7 @@
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@phosphor/widgets": "^1.9.3",
+        "@raghb1/node-memwatch": "^3.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",

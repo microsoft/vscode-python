@@ -10,6 +10,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
@@ -30,6 +31,7 @@ const rangeInclusive = require('range-inclusive');
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
+        const snapshot = takeSnapshot();
 
         suiteSetup(function () {
             // These test require python, so only run with a non-mocked jupyter
@@ -65,9 +67,10 @@ const rangeInclusive = require('range-inclusive');
         });
 
         // Uncomment this to debug hangs on exit
-        //suiteTeardown(() => {
-        //      asyncDump();
-        //});
+        suiteTeardown(() => {
+            //      asyncDump();
+            writeDiffSnapshot(snapshot, `Variable Explorer ${runByLine}`);
+        });
 
         async function addCodeImpartial(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,

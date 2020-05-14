@@ -28,7 +28,7 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { defaultDataScienceSettings } from './helpers';
+import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
 import {
     addCode,
     closeInteractiveWindow,
@@ -67,11 +67,16 @@ suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
+    const snapshot = takeSnapshot();
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         return ioc.activate();
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'Interactive Window');
     });
 
     teardown(async () => {

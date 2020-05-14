@@ -18,6 +18,7 @@ import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockKernelFinder } from './mockKernelFinder';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
@@ -27,6 +28,7 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonInterpreter | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
+    const snapshot = takeSnapshot();
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
@@ -48,6 +50,10 @@ suite('DataScience - Kernel Launcher', () => {
                 env: undefined
             };
         }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'KernelLauncher');
     });
 
     test('Launch from kernelspec', async function () {

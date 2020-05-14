@@ -44,7 +44,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { defaultDataScienceSettings } from './helpers';
+import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import {
@@ -101,6 +101,7 @@ suite('DataScience Native Editor', () => {
 
     [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
+        const snapshot = takeSnapshot();
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
                 const newCell = {
@@ -122,6 +123,9 @@ suite('DataScience Native Editor', () => {
 
                 return newCell;
             }
+            suiteTeardown(() => {
+                writeDiffSnapshot(snapshot, `Native ${useCustomEditorApi}`);
+            });
             suite('Editor tests', () => {
                 const disposables: Disposable[] = [];
                 let ioc: DataScienceIocContainer;

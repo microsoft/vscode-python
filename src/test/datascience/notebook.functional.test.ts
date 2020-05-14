@@ -55,6 +55,7 @@ import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
@@ -70,6 +71,7 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
+            const snapshot = takeSnapshot();
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -85,6 +87,10 @@ suite('DataScience notebook tests', () => {
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
                 pythonFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            });
+
+            suiteTeardown(() => {
+                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {
