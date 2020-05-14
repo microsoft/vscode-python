@@ -21,7 +21,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     }
     public async detectShebang(
         document: TextDocument,
-        resolveSheBangAsInterpreter: boolean = false
+        resolveShebangAsInterpreter: boolean = false
     ): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
         if (firstLine.isEmptyOrWhitespace) {
@@ -33,7 +33,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         }
 
         const shebang = firstLine.text.substr(2).trim();
-        if (resolveSheBangAsInterpreter) {
+        if (resolveShebangAsInterpreter) {
             const pythonPath = await this.getFullyQualifiedPathToInterpreter(shebang, document.uri);
             return typeof pythonPath === 'string' && pythonPath.length > 0 ? pythonPath : undefined;
         } else {

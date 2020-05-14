@@ -114,7 +114,7 @@ export interface IInterpreterDisplay {
 
 export const IShebangCodeLensProvider = Symbol('IShebangCodeLensProvider');
 export interface IShebangCodeLensProvider extends CodeLensProvider {
-    detectShebang(document: TextDocument, resolveSheBangAsInterpreter?: boolean): Promise<string | undefined>;
+    detectShebang(document: TextDocument, resolveShebangAsInterpreter?: boolean): Promise<string | undefined>;
 }
 
 export const IInterpreterHelper = Symbol('IInterpreterHelper');
