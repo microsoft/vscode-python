@@ -1572,6 +1572,19 @@
                     "description": "Automatically update the language server.",
                     "scope": "application"
                 },
+                "python.logging.level": {
+                    "type": "string",
+                    "default": "error",
+                    "enum": [
+                        "off",
+                        "error",
+                        "warn",
+                        "info",
+                        "debug"
+                    ],
+                    "description": "The logging level the extension logs at, defaults to 'error'",
+                    "scope": "machine"
+                },
                 "python.experiments.enabled": {
                     "type": "boolean",
                     "default": true,

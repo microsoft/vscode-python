@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as winston from 'winston';
 import { isCI } from '../common/constants';
 import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
-import { LogLevel } from './levels';
+import { LogLevel, resolveLevelName } from './levels';
 import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
 import { getPythonOutputChannelTransport } from './transports';
@@ -70,7 +71,22 @@ function initialize() {
     }
 }
 
-// Register the output channel transport the logger will log into
+// Set the logging level the extension logs at.
+export function setLoggingLevel(level: LogLevel | 'off') {
+    if (level === 'off') {
+        // For now we disable all logging. One alternative would be
+        // to only disable logging to the output channel (by removing
+        // the transport from the logger).
+        globalLogger.clear();
+    } else {
+        const levelName = resolveLevelName(level, winston.config.npm.levels);
+        if (levelName) {
+            globalLogger.level = levelName;
+        }
+    }
+}
+
+// Register the output channel transport the logger will log into.
 export function addOutputChannelLogging(channel: IOutputChannel) {
     const formatter = getFormatter();
     const transport = getPythonOutputChannelTransport(channel, formatter);
