@@ -157,7 +157,7 @@ export class LanguageClientMiddleware implements Middleware {
         this.connected = false;
     }
 
-    @captureTelemetryForLSPMethod('textDocument/completion', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.completion', debounceFrequentCall)
     public provideCompletionItem(
         document: TextDocument,
         position: Position,
@@ -171,7 +171,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/hover', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.hover', debounceFrequentCall)
     public provideHover(
         document: TextDocument,
         position: Position,
@@ -194,7 +194,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('completionItem/resolve', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('completionItem.resolve', debounceFrequentCall)
     public resolveCompletionItem(
         item: CompletionItem,
         token: CancellationToken,
@@ -205,7 +205,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/signatureHelp', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.signatureHelp', debounceFrequentCall)
     public provideSignatureHelp(
         document: TextDocument,
         position: Position,
@@ -218,7 +218,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/definition', debounceRareCall)
+    @captureTelemetryForLSPMethod('textDocument.definition', debounceRareCall)
     public provideDefinition(
         document: TextDocument,
         position: Position,
@@ -230,7 +230,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/references', debounceRareCall)
+    @captureTelemetryForLSPMethod('textDocument.references', debounceRareCall)
     public provideReferences(
         document: TextDocument,
         position: Position,
@@ -256,7 +256,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/documentSymbol', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.documentSymbol', debounceFrequentCall)
     public provideDocumentSymbols(
         document: TextDocument,
         token: CancellationToken,
@@ -267,7 +267,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('workspace/symbol', debounceRareCall)
+    @captureTelemetryForLSPMethod('workspace.symbol', debounceRareCall)
     public provideWorkspaceSymbols(
         query: string,
         token: CancellationToken,
@@ -278,7 +278,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/codeAction', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.codeAction', debounceFrequentCall)
     public provideCodeActions(
         document: TextDocument,
         range: Range,
@@ -291,7 +291,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/codeLens', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('textDocument.codeLens', debounceFrequentCall)
     public provideCodeLenses(
         document: TextDocument,
         token: CancellationToken,
@@ -302,7 +302,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('codeLens/resolve', debounceFrequentCall)
+    @captureTelemetryForLSPMethod('codeLens.resolve', debounceFrequentCall)
     public resolveCodeLens(
         codeLens: CodeLens,
         token: CancellationToken,
@@ -349,7 +349,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/rename', debounceRareCall)
+    @captureTelemetryForLSPMethod('textDocument.rename', debounceRareCall)
     public provideRenameEdits(
         document: TextDocument,
         position: Position,
@@ -362,7 +362,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/prepareRename', debounceRareCall)
+    @captureTelemetryForLSPMethod('textDocument.prepareRename', debounceRareCall)
     public prepareRename(
         document: TextDocument,
         position: Position,
@@ -400,7 +400,7 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    @captureTelemetryForLSPMethod('textDocument/declaration', debounceRareCall)
+    @captureTelemetryForLSPMethod('textDocument.declaration', debounceRareCall)
     public provideDeclaration(
         document: TextDocument,
         position: VPosition,
