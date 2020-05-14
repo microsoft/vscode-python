@@ -8,7 +8,7 @@
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { noop } from '../../client/common/utils/misc';
-import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
+import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
@@ -51,7 +51,7 @@ suite('Run without Debugging', () => {
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],
-            env: { PYTHONPATH: PTVSD_PATH },
+            env: {},
             envFile: '',
             logToFile: false,
             type: debuggerType,

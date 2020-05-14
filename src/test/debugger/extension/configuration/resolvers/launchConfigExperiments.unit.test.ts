@@ -10,7 +10,7 @@ import { instance, mock, spy, when } from 'ts-mockito';
 import { ApplicationEnvironment } from '../../../../../client/common/application/applicationEnvironment';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../../client/common/crypto';
-import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experiments/groups';
+import { WebAppReload } from '../../../../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../../../../client/common/experiments/manager';
 import { HttpClient } from '../../../../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../../../../client/common/persistentState';
@@ -44,7 +44,6 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
     }
 
     class TestConfiguration {
-        public newDebuggerExperiment: string = '';
         public reloadExperiment: string = '';
         public subProcess?: boolean;
         public args: string[] = [];
@@ -95,7 +94,6 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         clearTelemetryReporter();
     });
 
-    const newDebuggerExperiment = ['experiment', 'control'];
     const reloadExperiment = ['experiment', 'control'];
     const noReloadSwitches = ['--no-reload', '--noreload'];
     const subProcessValues = [undefined, false, true];
@@ -103,15 +101,6 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
     function getExperimentsData(testConfig: TestConfiguration) {
         return [
-            {
-                name:
-                    testConfig.newDebuggerExperiment === 'experiment'
-                        ? DebugAdapterNewPtvsd.experiment
-                        : DebugAdapterNewPtvsd.control,
-                salt: 'DebugAdapterDescriptorFactory',
-                min: 0,
-                max: 0
-            },
             {
                 name: testConfig.reloadExperiment === 'experiment' ? WebAppReload.experiment : WebAppReload.control,
                 salt: 'DebugAdapterDescriptorFactory',
@@ -123,23 +112,20 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
     function createTestConfigurations() {
         const testConfigs: TestConfiguration[] = [];
-        newDebuggerExperiment.forEach((newDbgExp) => {
-            reloadExperiment.forEach((reloadExp) => {
-                subProcessValues.forEach((subProcessValue) => {
-                    noReloadSwitches.forEach((noReloadSwitch) => {
-                        webFramework.forEach((framework) => {
-                            const usingReloadSwitch = ['run', noReloadSwitch, '--other-switch'];
-                            const withoutUsingReloadSwitch = ['run', '--other-switch'];
-                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach((args) => {
-                                testConfigs.push({
-                                    newDebuggerExperiment: newDbgExp,
-                                    reloadExperiment: reloadExp,
-                                    subProcess: subProcessValue,
-                                    args: args,
-                                    framework: framework,
-                                    withoutReloadArgs: ['run', '--other-switch'],
-                                    withReloadArgs: ['run', noReloadSwitch, '--other-switch']
-                                });
+        reloadExperiment.forEach((reloadExp) => {
+            subProcessValues.forEach((subProcessValue) => {
+                noReloadSwitches.forEach((noReloadSwitch) => {
+                    webFramework.forEach((framework) => {
+                        const usingReloadSwitch = ['run', noReloadSwitch, '--other-switch'];
+                        const withoutUsingReloadSwitch = ['run', '--other-switch'];
+                        [usingReloadSwitch, withoutUsingReloadSwitch].forEach((args) => {
+                            testConfigs.push({
+                                reloadExperiment: reloadExp,
+                                subProcess: subProcessValue,
+                                args: args,
+                                framework: framework,
+                                withoutReloadArgs: ['run', '--other-switch'],
+                                withReloadArgs: ['run', noReloadSwitch, '--other-switch']
                             });
                         });
                     });
@@ -153,8 +139,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         // Figure out if we need to expect modification to the debug config. Debug config should be modified
         // only if the user is in debug adapter descriptor experiment, new ptvsd experiment, the reload experiment
         // and finally one of the following web app frameworks (django, flask, pyramid, jinja)
-        const inExperiment =
-            testConfig.newDebuggerExperiment === 'experiment' && testConfig.reloadExperiment === 'experiment';
+        const inExperiment = testConfig.reloadExperiment === 'experiment';
         const knownWebFramework = ['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework);
 
         // Args should only be modified if they meet the 'modification' conditions above AND they have a reload argument
@@ -203,27 +188,22 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
             const expectedEvents: string[] = [];
             const expectedProperties: object[] = [];
-            if (testConfig.newDebuggerExperiment === 'experiment') {
+            if (testConfig.reloadExperiment === 'experiment') {
                 expectedEvents.push(EventName.PYTHON_EXPERIMENTS);
-                expectedProperties.push({ expName: DebugAdapterNewPtvsd.experiment });
+                expectedProperties.push({ expName: WebAppReload.experiment });
 
-                if (testConfig.reloadExperiment === 'experiment') {
-                    expectedEvents.push(EventName.PYTHON_EXPERIMENTS);
-                    expectedProperties.push({ expName: WebAppReload.experiment });
-
-                    if (['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework)) {
-                        expectedEvents.push(EventName.PYTHON_WEB_APP_RELOAD);
-                        expectedProperties.push({
-                            subProcessModified: `${subProcModified}`,
-                            argsModified: `${argsModified}`
-                        });
-                    } else {
-                        // Don't add any event
-                    }
+                if (['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework)) {
+                    expectedEvents.push(EventName.PYTHON_WEB_APP_RELOAD);
+                    expectedProperties.push({
+                        subProcessModified: `${subProcModified}`,
+                        argsModified: `${argsModified}`
+                    });
                 } else {
-                    expectedEvents.push(EventName.PYTHON_EXPERIMENTS);
-                    expectedProperties.push({ expName: WebAppReload.control });
+                    // Don't add any event
                 }
+            } else {
+                expectedEvents.push(EventName.PYTHON_EXPERIMENTS);
+                expectedProperties.push({ expName: WebAppReload.control });
             }
 
             resolverExperiment.modifyConfigurationBasedOnExperiment(config);

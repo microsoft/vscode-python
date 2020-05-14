@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../common/experiments/groups';
+import { WebAppReload } from '../../../../common/experiments/groups';
 import { traceInfo } from '../../../../common/logger';
 import { IExperimentsManager } from '../../../../common/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -17,45 +17,43 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
     constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) {}
 
     public modifyConfigurationBasedOnExperiment(debugConfiguration: LaunchRequestArguments): void {
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
-                if (this.isWebAppConfiguration(debugConfiguration)) {
-                    traceInfo(
-                        `Configuration used for Web App Reload experiment (before):\n${JSON.stringify(
-                            debugConfiguration,
-                            undefined,
-                            4
-                        )}`
-                    );
+        if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
+            if (this.isWebAppConfiguration(debugConfiguration)) {
+                traceInfo(
+                    `Configuration used for Web App Reload experiment (before):\n${JSON.stringify(
+                        debugConfiguration,
+                        undefined,
+                        4
+                    )}`
+                );
 
-                    let subProcessModified: boolean = false;
-                    if (!debugConfiguration.subProcess) {
-                        subProcessModified = true;
-                        debugConfiguration.subProcess = true;
-                    }
-
-                    let argsModified: boolean = false;
-                    const args = debugConfiguration.args.filter((arg) => arg !== '--noreload' && arg !== '--no-reload');
-                    if (args.length !== debugConfiguration.args.length) {
-                        argsModified = true;
-                        debugConfiguration.args = args;
-                    }
-
-                    traceInfo(
-                        `Configuration used for Web App Reload experiment (after):\n${JSON.stringify(
-                            debugConfiguration,
-                            undefined,
-                            4
-                        )}`
-                    );
-                    sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, {
-                        subProcessModified,
-                        argsModified
-                    });
+                let subProcessModified: boolean = false;
+                if (!debugConfiguration.subProcess) {
+                    subProcessModified = true;
+                    debugConfiguration.subProcess = true;
                 }
-            } else {
-                this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
+
+                let argsModified: boolean = false;
+                const args = debugConfiguration.args.filter((arg) => arg !== '--noreload' && arg !== '--no-reload');
+                if (args.length !== debugConfiguration.args.length) {
+                    argsModified = true;
+                    debugConfiguration.args = args;
+                }
+
+                traceInfo(
+                    `Configuration used for Web App Reload experiment (after):\n${JSON.stringify(
+                        debugConfiguration,
+                        undefined,
+                        4
+                    )}`
+                );
+                sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, {
+                    subProcessModified,
+                    argsModified
+                });
             }
+        } else {
+            this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
         }
     }
 

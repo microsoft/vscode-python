@@ -10,10 +10,9 @@ import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, IExperimentsManager, Version } from '../../common/types';
+import { IConfigurationService, Version } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -52,22 +51,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IJupyterDebugService)
         @named(Identifiers.MULTIPLEXING_DEBUGSERVICE)
         private debugService: IJupyterDebugService,
-        @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            this.debuggerPackage = 'debugpy';
-            this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
-            this.waitForDebugClientCode = `import debugpy;debugpy.wait_for_client()`;
-            this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
-            this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
-        } else {
-            this.debuggerPackage = 'ptvsd';
-            this.enableDebuggerCode = `import ptvsd;ptvsd.enable_attach(('localhost', 0))`;
-            this.waitForDebugClientCode = `import ptvsd;ptvsd.wait_for_attach()`;
-            this.tracingEnableCode = `from ptvsd import tracing;tracing(True)`;
-            this.tracingDisableCode = `from ptvsd import tracing;tracing(False)`;
-        }
+        this.debuggerPackage = 'debugpy';
+        this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
+        this.waitForDebugClientCode = `import debugpy;debugpy.wait_for_client()`;
+        this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
+        this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
 
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {

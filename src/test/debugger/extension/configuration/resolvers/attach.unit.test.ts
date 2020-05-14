@@ -10,10 +10,8 @@ import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { DebugAdapterNewPtvsd } from '../../../../../client/common/experiments/groups';
 import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
-import { IConfigurationService, IExperimentsManager } from '../../../../../client/common/types';
-import { Diagnostics } from '../../../../../client/common/utils/localize';
+import { IConfigurationService } from '../../../../../client/common/types';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
@@ -46,7 +44,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-        let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
         const debugOptionsAvailable = getAvailableOptions();
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -60,15 +57,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
             setUpOSMocks(osType, platformService);
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-            experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
-
             debugProvider = new AttachConfigurationResolver(
                 workspaceService.object,
                 documentManager.object,
                 platformService.object,
-                configurationService.object,
-                experimentsManager.object
+                configurationService.object
             );
         });
         function createMoqWorkspaceFolder(folderPath: string) {
@@ -516,37 +509,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 } as any) as DebugConfiguration);
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });
-        });
-
-        test("If not in PtvsdWheels experiment and debugConfiguration does not contain 'processId' field, do not throw error", async () => {
-            const activeFile = 'xyz.py';
-            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
-            setupWorkspaces([defaultWorkspace]);
-            experimentsManager.reset();
-            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
-
-            const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'attach'
-            } as any) as DebugConfiguration);
-            await expect(promise).to.not.be.rejectedWith(Error);
-        });
-
-        test("If not in PtvsdWheels experiment and debugConfiguration contains 'processId' field, throw error", async () => {
-            const activeFile = 'xyz.py';
-            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
-            setupWorkspaces([defaultWorkspace]);
-            experimentsManager.reset();
-            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
-
-            const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
-                request: 'attach',
-                processId: 1234
-            } as any) as DebugConfiguration);
-            await expect(promise).to.be.rejectedWith(Diagnostics.processId());
         });
     });
 });
