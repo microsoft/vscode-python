@@ -37,15 +37,17 @@ suite('DataScience - Kernel Launcher', () => {
         const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
         kernelLauncher = new KernelLauncher(processServiceFactory, file, daemonPool);
         await ioc.activate();
-        pythonInterpreter = await ioc.getJupyterCapableInterpreter();
-        kernelSpec = {
-            argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-            display_name: 'new kernel',
-            language: 'python',
-            name: 'newkernel',
-            path: 'path',
-            env: undefined
-        };
+        if (!ioc.mockJupyter) {
+            pythonInterpreter = await ioc.getJupyterCapableInterpreter();
+            kernelSpec = {
+                argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'new kernel',
+                language: 'python',
+                name: 'newkernel',
+                path: 'path',
+                env: undefined
+            };
+        }
     });
 
     test('Launch from kernelspec', async function () {
