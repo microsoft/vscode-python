@@ -98,9 +98,6 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     commonRegisterTypes(serviceManager);
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
-    setLoggingLevel(configuration.getSettings().logging.level);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
@@ -112,6 +109,10 @@ async function activateLegacy(
     commonRegisterTerminalTypes(serviceManager);
     dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
+    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
+    setLoggingLevel(configuration.getSettings().logging.level);
 
     const languageServerType = configuration.getSettings().languageServer;
 
