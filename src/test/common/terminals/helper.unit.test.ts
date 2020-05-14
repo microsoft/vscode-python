@@ -124,6 +124,20 @@ suite('Terminal Service helpers', () => {
                 expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);
             });
         });
+        test('Ensure spaces in args are quoted', async () => {
+            getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((item) => {
+                const command = 'python3.7.exe';
+                const args = ['a file.py', '1', '2'];
+                const commandPrefix =
+                    item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore
+                        ? '& '
+                        : '';
+                const expectedTerminalCommand = `${commandPrefix}${command} "a file.py" 1 2`;
+
+                const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
+                expect(terminalCommand).to.equal(expectedTerminalCommand, `Incorrect command for Shell ${item.name}`);
+            });
+        });
 
         test('Ensure empty args are ignored', async () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((item) => {
