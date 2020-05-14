@@ -21,3 +21,4 @@ ipyvolume
 beakerx
 bqplot
 K3D
+debugpy
