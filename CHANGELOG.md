@@ -91,8 +91,6 @@
    ([#11221](https://github.com/Microsoft/vscode-python/issues/11221))
 1. Lazy load types from `jupyterlab/services` and similar `npm modules`.
    ([#11297](https://github.com/Microsoft/vscode-python/issues/11297))
-1. Update telemetry on errors and exceptions to use [vscode-extension-telemetry](https://www.npmjs.com/package/vscode-extension-telemetry).
-   ([#11436](https://github.com/Microsoft/vscode-python/issues/11436))
 1. Remove IJMPConnection implementation while maintaining tests written for it.
    ([#11470](https://github.com/Microsoft/vscode-python/issues/11470))
 1. Implement an IJupyterVariables provider for the debugger.
