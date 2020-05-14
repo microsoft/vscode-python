@@ -88,7 +88,7 @@ suite('Shebang detection', () => {
 
         document.verifyAll();
         line.verifyAll();
-        expect(shebang).to.be.equal('HELLO', 'Shebang should be undefined');
+        expect(shebang).to.be.equal('HELLO', 'Shebang should be HELLO');
     });
     test('Shebang should be empty when python path is invalid in shebang', async () => {
         const [document, line] = createDocument('#!HELLO');
