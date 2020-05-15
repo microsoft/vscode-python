@@ -18,7 +18,9 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     IPipEnvService,
-    PIPENV_SERVICE
+    IPoetryService,
+    PIPENV_SERVICE,
+    POETRY_SERVICE
 } from '../../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -32,6 +34,7 @@ suite('Virtual Environment Manager', () => {
     let fs: TypeMoq.IMock<IFileSystem>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let pipEnvService: TypeMoq.IMock<IPipEnvService>;
+    let poetryService: TypeMoq.IMock<IPoetryService>;
     let terminalActivation: TypeMoq.IMock<ITerminalActivationCommandProvider>;
     let platformService: TypeMoq.IMock<IPlatformService>;
 
@@ -44,6 +47,7 @@ suite('Virtual Environment Manager', () => {
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         pipEnvService = TypeMoq.Mock.ofType<IPipEnvService>();
+        poetryService = TypeMoq.Mock.ofType<IPoetryService>();
         terminalActivation = TypeMoq.Mock.ofType<ITerminalActivationCommandProvider>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
 
@@ -59,6 +63,9 @@ suite('Virtual Environment Manager', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
             .returns(() => pipEnvService.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(POETRY_SERVICE)))
+            .returns(() => poetryService.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
             .returns(() => terminalActivation.object);
@@ -289,6 +296,7 @@ suite('Virtual Environment Manager', () => {
     test('Get Environment Type, does not detect the type', async () => {
         const pythonPath = path.join('x', 'b', 'c', 'python');
         virtualEnvMgr.isPipEnvironment = () => Promise.resolve(false);
+        virtualEnvMgr.isPoetryEnvironment = () => Promise.resolve(false);
         virtualEnvMgr.isPyEnvEnvironment = () => Promise.resolve(false);
         virtualEnvMgr.isVenvEnvironment = () => Promise.resolve(false);
         virtualEnvMgr.isVirtualEnvironment = () => Promise.resolve(false);

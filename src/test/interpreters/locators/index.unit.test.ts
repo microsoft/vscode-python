@@ -23,6 +23,7 @@ import {
     InterpreterType,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
+    POETRY_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
@@ -69,6 +70,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
                 locatorsTypes.push(PIPENV_SERVICE);
+                locatorsTypes.push(POETRY_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(KNOWN_PATH_SERVICE);
@@ -132,6 +134,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
                 locatorsTypes.push(PIPENV_SERVICE);
+                locatorsTypes.push(POETRY_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(KNOWN_PATH_SERVICE);
@@ -198,6 +201,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
                 locatorsTypes.push(PIPENV_SERVICE);
+                locatorsTypes.push(POETRY_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(KNOWN_PATH_SERVICE);
