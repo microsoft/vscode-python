@@ -8,7 +8,7 @@
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": true,
+    "enableProposedApi": false,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -102,7 +102,7 @@
                 "path": "./snippets/python.json"
             }
         ],
-        "notebookOutputRenderer": [
+        "remove_prefix_when_vsc_releases_api_notebookOutputRenderer": [
             {
                 "viewType": "jupyter-notebook-renderer",
                 "displayName": "Jupyter Notebook Renderer",
@@ -117,7 +117,7 @@
                 ]
             }
         ],
-        "notebookProvider": [
+        "remove_prefix_when_vsc_releases_api_notebookProvider": [
             {
                 "viewType": "jupyter-notebook",
                 "displayName": "Jupyter Notebook",
@@ -2931,7 +2931,6 @@
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npm run build-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
-        "compile-renderers-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-renderers.config.js",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
         "build-ipywidgets-clean": "node ./src/ipywidgets/scripts/clean.js",
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
