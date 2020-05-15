@@ -118,15 +118,15 @@ gulp.task('validate-packagejson', () => validatePackageJson());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
-async function validatePackageJson(){
+async function validatePackageJson() {
     const json = require('./package.json');
-    if (json.enableProposedApi){
+    if (json.enableProposedApi) {
         throw new Error('package.json has enableProposedApi setting enabled');
     }
-    if (json.contributes.notebookOutputRenderer){
+    if (json.contributes.notebookOutputRenderer) {
         throw new Error('Package.json contains entry for contributes.notebookOutputRenderer');
     }
-    if (json.contributes.notebookProvider){
+    if (json.contributes.notebookProvider) {
         throw new Error('Package.json contains entry for contributes.notebookProvider');
     }
 }
@@ -171,7 +171,7 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
 }
 
 gulp.task('compile-webviews', async () => {
-    buildDataScienceUI(false);
+    await buildDataScienceUI(false);
 });
 
 gulp.task('webpack', async () => {

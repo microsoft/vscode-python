@@ -11,11 +11,13 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { NotebookContentProvider } from './contentProvider';
+import { NotebookKernel } from './notebookKernel';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
  * I.e. this is where we integrate our stuff with VS Code via their extension endpoints.
  */
+
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
@@ -24,7 +26,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(NotebookContentProvider) private readonly notebookContentProvider: NotebookContentProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -71,5 +74,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         this.disposables.push(
             notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
         );
+        this.disposables.push(notebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel));
     }
 }
