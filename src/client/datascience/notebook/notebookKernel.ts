@@ -8,10 +8,10 @@ import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
     NotebookCell,
+    NotebookCellRunState,
     NotebookDocument,
     NotebookKernel as VSCNotebookKernel,
-    Uri,
-    NotebookCellRunState
+    Uri
 } from 'vscode';
 import { createDeferred } from '../../common/utils/async';
 import { StopWatch } from '../../common/utils/stopWatch';
