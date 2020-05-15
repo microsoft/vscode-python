@@ -15,8 +15,7 @@ import {
     Uri
 } from 'vscode';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { NotebookExecutionProvider } from './executionProvider';
-import { notebookModelToNotebookData } from './helpers';
+import { notebookModelToVSCNotebookData } from './helpers';
 
 @injectable()
 export class NotebookContentProvider implements VSCodeNotebookContentProvider {
@@ -24,13 +23,10 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
-    constructor(
-        @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(NotebookExecutionProvider) private readonly executionProvider: NotebookExecutionProvider
-    ) {}
+    constructor(@inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider) {}
     public async openNotebook(uri: Uri): Promise<NotebookData> {
         const model = await this.notebookStorage.load(uri);
-        return notebookModelToNotebookData(model);
+        return notebookModelToVSCNotebookData(model);
     }
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
         const model = await this.notebookStorage.load(document.uri);
@@ -51,11 +47,10 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         }
     }
     public async executeCell(
-        document: NotebookDocument,
-        cell: NotebookCell | undefined,
-        token: CancellationToken
+        _document: NotebookDocument,
+        _cell: NotebookCell | undefined,
+        _token: CancellationToken
     ): Promise<void> {
-        const model = await this.notebookStorage.load(document.uri);
-        await this.executionProvider.executeCell(model, document, cell, token);
+        // Not supported.
     }
 }

@@ -11,8 +11,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { NotebookContentProvider } from './contentProvider';
-import { NotebookKernel } from './notebookKernel';
-import { NotebookOutputRenderer } from './renderer';
 
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
@@ -22,9 +20,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(NotebookContentProvider) private readonly notebookContentProvider: NotebookContentProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
-        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     public async activate(): Promise<void> {
         if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
@@ -45,25 +41,6 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
         this.disposables.push(
             notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
-        );
-        this.disposables.push(notebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel));
-        this.disposables.push(
-            notebook.registerNotebookOutputRenderer(
-                'jupyter-notebook-renderer',
-                {
-                    type: 'display_data',
-                    subTypes: [
-                        'image/png',
-                        'image/jpeg',
-                        'text/html',
-                        'text/plain',
-                        'text/latex',
-                        'application/vnd.plotly.v1+json',
-                        'application/vnd.vega.v5+json'
-                    ]
-                },
-                this.renderer
-            )
         );
     }
 }
