@@ -26,19 +26,41 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
             return;
         }
-        const content = await this.fs.readFile(path.join(this.context.extensionPath, 'package.json'));
-        const updatedContent = content
-            .replace('"enableProposedApi": false', '"enableProposedApi": true')
-            .replace('"remove_prefix_when_vsc_releases_api_notebookOutputRenderer"', '"notebookOutputRenderer"')
-            .replace('"remove_prefix_when_vsc_releases_api_notebookProvider"', '"notebookProvider"');
+        const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
+        const content = JSON.parse(await this.fs.readFile(packageJsonFile));
 
         // This code is temporary.
-        if (content !== updatedContent) {
-            await this.fs.writeFile(path.join(this.context.extensionPath, 'package.json'), updatedContent);
+        if (
+            !content.enableProposedApi ||
+            !Array.isArray(content.contributes.notebookOutputRenderer) ||
+            !Array.isArray(content.contributes.notebookProvider)
+        ) {
+            content.enableProposedApi = true;
+            content.contributes.notebookOutputRenderer = [
+                {
+                    viewType: 'jupyter-notebook-renderer',
+                    displayName: 'Jupyter Notebook Renderer',
+                    mimeTypes: ['text/latex', 'application/vnd.plotly.v1+json', 'application/vnd.vega.v5+json']
+                }
+            ];
+            content.contributes.notebookProvider = [
+                {
+                    viewType: 'jupyter-notebook',
+                    displayName: 'Jupyter Notebook',
+                    selector: [
+                        {
+                            filenamePattern: '*.ipynb'
+                        }
+                    ]
+                }
+            ];
+
+            await this.fs.writeFile(packageJsonFile, JSON.stringify(content, undefined, 4));
             await this.commandManager
                 .executeCommand('python.reloadVSCode', 'Please reload VS Code to use the new VS Code Notebook API')
                 .then(noop, noop);
         }
+
         this.disposables.push(
             notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
         );
