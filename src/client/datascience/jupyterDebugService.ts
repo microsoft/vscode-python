@@ -337,14 +337,21 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private sendMessage(command: string, args?: any): Promise<any> {
         const response = createDeferred<any>();
-        const disposable = this.sessionTerminatedEvent.event(() => response.resolve({ body: {} }));
-        this.protocolParser.once(`response_${command}`, (resp: any) => {
-            this.sendToTrackers(resp);
-            traceInfo(`Received response from debugger: ${JSON.stringify(args)}`);
-            disposable.dispose();
-            response.resolve(resp.body);
+        const disposable = this.sessionTerminatedEvent.event(() => {
+            response.resolve({ body: {} });
         });
-        this.socket?.on('error', (err) => response.reject(err)); // NOSONAR
+        const sequenceNumber = this.sequence;
+        this.protocolParser.on(`response_${command}`, (resp: any) => {
+            if (resp.request_seq === sequenceNumber) {
+                this.sendToTrackers(resp);
+                traceInfo(`Received response from debugger: ${JSON.stringify(args)}`);
+                disposable.dispose();
+                response.resolve(resp.body);
+            }
+        });
+        this.socket?.on('error', (err) => {
+            response.reject(err); // NOSONAR
+        });
         this.emitMessage(command, args).catch((exc) => {
             traceError(`Exception attempting to emit ${command} to debugger: `, exc);
         });

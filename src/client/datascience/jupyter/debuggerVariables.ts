@@ -115,7 +115,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         end: number
     ): Promise<{}> {
         // Run the get dataframe rows script
-        if (!this.debugService.activeDebugSession) {
+        if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
             return {};
         }
@@ -161,7 +161,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
-        } else if (message.type === 'response' && message.command === 'variables') {
+        } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             // If using the interactive debugger, update our variables.
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use

@@ -181,10 +181,11 @@ suite('DataScience Debugger tests', () => {
                 if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
                     // Verify variables work
                     openVariableExplorer(ioc.wrapper);
-                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
+                    await waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
 

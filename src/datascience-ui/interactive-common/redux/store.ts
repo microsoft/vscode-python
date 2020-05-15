@@ -183,7 +183,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables)) {
+        if (
+            (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables) ||
+                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount) &&
+            action.type === InteractiveWindowMessages.GetVariablesResponse
+        ) {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
