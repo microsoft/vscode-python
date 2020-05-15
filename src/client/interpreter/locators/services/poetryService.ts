@@ -147,7 +147,7 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
                 );
                 return;
             }
-            const pythonPath = venv + '/bin/python';
+            const pythonPath = `${venv}/bin/python`;
             return pythonPath && (await this.fs.fileExists(pythonPath)) ? pythonPath : undefined;
             // tslint:disable-next-line:no-empty
         } catch (error) {
@@ -170,16 +170,8 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
             const processService = await this.processServiceFactory.create(Uri.file(rootPath));
             const execName = this.executable;
             const result = await processService.exec(execName, arg, { cwd: rootPath });
-            traceWarning(`=================== POETRY CWD ${rootPath}`);
-            traceWarning(`=================== POETRY EXEC ${execName} - ${arg}`);
-            traceWarning('=================== POETRY STDOUT ', result);
             if (result) {
-                const stdout = result.stdout ? result.stdout.trim() : '';
-                const stderr = result.stderr ? result.stderr.trim() : '';
-                if (stderr.length > 0 && stdout.length === 0) {
-                    throw new Error(stderr);
-                }
-                return stdout;
+                return result.stdout ? result.stdout.trim() : '';
             }
             // tslint:disable-next-line:no-empty
         } catch (error) {

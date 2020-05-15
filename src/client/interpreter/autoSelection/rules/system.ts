@@ -37,7 +37,7 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         const bestInterpreter = this.helper.getBestInterpreter(filteredInterpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
-            bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
+                bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
             }`
         );
         return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
