@@ -227,8 +227,8 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
         expect(options!.commandPrompts).to.be.lengthOf(1);
         expect(options!.commandPrompts[0].prompt).to.be.equal('Open launch.json');
     });
-    test('Ensure we get python path from config when path = ${config:python.interpreterPath}', async () => {
-        const pythonPath = '${config:python.interpreterPath}';
+    test('Ensure we get python path from config when path = ${command:python.interpreterPath}', async () => {
+        const pythonPath = '${command:python.interpreterPath}';
 
         const settings = typemoq.Mock.ofType<IPythonSettings>();
         settings
