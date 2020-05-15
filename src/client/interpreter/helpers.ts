@@ -31,7 +31,6 @@ export function isInterpreterLocatedInWorkspace(interpreter: PythonInterpreter, 
     const resourcePath = fileSystemPaths.normCase(activeWorkspaceUri.fsPath);
     return interpreterPath.startsWith(resourcePath);
 }
-
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;

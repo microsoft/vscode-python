@@ -202,7 +202,7 @@ export type PythonExecutionInfo = {
  * @extends {IPythonExecutionService}
  * @extends {IDisposable}
  */
-export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable { }
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
 
 export class StdErrError extends Error {
     constructor(message: string) {

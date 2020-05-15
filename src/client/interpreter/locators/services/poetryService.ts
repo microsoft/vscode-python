@@ -9,6 +9,7 @@ import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../common/types';
+import { Interpreters } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IServiceContainer } from '../../../ioc/types';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -133,18 +134,14 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
             const version = await this.invokePoetry(['--help'], cwd);
             if (version === undefined) {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                appShell.showWarningMessage(
-                    `Workspace contains pyproject.toml but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`
-                );
+                appShell.showWarningMessage(Interpreters.poetryBinaryMissing().format(this.executable));
                 return;
             }
             // env info -p will be empty if a virtualenv has not been created yet
             const venv = await this.invokePoetry(['env', 'info', '-p'], cwd);
             if (venv === '') {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                appShell.showWarningMessage(
-                    'Workspace contains pyproject.toml but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.'
-                );
+                appShell.showWarningMessage(Interpreters.poetryVenvMissing());
                 return;
             }
             const pythonPath = `${venv}/bin/python`;

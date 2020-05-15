@@ -12,7 +12,14 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { getNamesAndValues } from '../../common/utils/enum';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterLocatorService, InterpreterType, IPipEnvService, PIPENV_SERVICE, IPoetryService, POETRY_SERVICE } from '../contracts';
+import {
+    IInterpreterLocatorService,
+    InterpreterType,
+    IPipEnvService,
+    IPoetryService,
+    PIPENV_SERVICE,
+    POETRY_SERVICE
+} from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 
 const PYENVFILES = ['pyvenv.cfg', path.join('..', 'pyvenv.cfg')];
@@ -46,7 +53,11 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
 
-        if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath) || await this.poetryService.isRelatedPoetryEnvironment(workspaceUri.fsPath, pythonPath))) {
+        if (
+            workspaceUri &&
+            ((await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) ||
+                (await this.poetryService.isRelatedPoetryEnvironment(workspaceUri.fsPath, pythonPath)))
+        ) {
             // In pipenv, return the folder name of the workspace.
             return path.basename(workspaceUri.fsPath);
         }

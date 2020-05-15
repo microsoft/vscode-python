@@ -172,6 +172,15 @@ export namespace Interpreters {
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar'
     );
     export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
+
+    export const poetryVenvMissing = localize(
+        'Interpreters.poetryVenvMissing',
+        'Workspace contains pyproject.toml but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.'
+    );
+    export const poetryBinaryMissing = localize(
+        'Interpreters.poetryBinaryMissing',
+        "Workspace contains pyproject.toml but '{0}' was not found. Make sure '{0}' is on the PATH."
+    );
 }
 
 export namespace InterpreterQuickPickList {
