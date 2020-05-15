@@ -41,7 +41,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private fileSystem: IFileSystem;
     private stderr: string[] = [];
     private connectionDisposed = false;
-    private disposables: Subscription[] = [];
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private readonly launchResult: ObservableExecutionResult<string>,
@@ -76,7 +76,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
         let stderr = '';
         // Listen on stderr for its connection information
-        this.disposables.push(
+        this.subscriptions.push(
             launchResult.out.subscribe(
                 (output: Output<string>) => {
                     if (output.source === 'stderr') {
@@ -96,7 +96,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     public dispose() {
         // tslint:disable-next-line: no-any
         clearTimeout(this.launchTimeout as any);
-        this.disposables.forEach((d) => d.unsubscribe());
+        this.subscriptions.forEach((d) => d.unsubscribe());
     }
 
     public waitForConnection(): Promise<IJupyterConnection> {
