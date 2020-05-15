@@ -3,7 +3,7 @@
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
-import { UseCustomEditorApi } from '../common/constants';
+import { UseCustomEditorApi, UseProposedApi } from '../common/constants';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { IServiceManager } from '../ioc/types';
@@ -90,6 +90,7 @@ import { KernelFinder } from './kernel-launcher/kernelFinder';
 import { KernelLauncher } from './kernel-launcher/kernelLauncher';
 import { IKernelFinder, IKernelLauncher } from './kernel-launcher/types';
 import { MultiplexingDebugService } from './multiplexingDebugService';
+import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -148,8 +149,9 @@ import {
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
-    const useCustomEditorApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, useCustomEditorApi);
+    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi);
+    serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
     serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
@@ -167,7 +169,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetScriptSource);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, NativeEditorRunByLineListener);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-    serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
+    serviceManager.add<INotebookEditor>(INotebookEditor, enableProposedApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);
@@ -206,7 +208,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, OldJupyterVariables, Identifiers.OLD_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, DebuggerVariables, Identifiers.DEBUGGER_VARIABLES);
-    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, useCustomEditorApi ? NativeEditorProvider : NativeEditorProviderOld);
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, enableProposedApi ? NativeEditorProvider : NativeEditorProviderOld);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
@@ -241,6 +243,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
 
     registerGatherTypes(serviceManager);
+    registerNotebookTypes(serviceManager);
 }
 
 export function registerGatherTypes(serviceManager: IServiceManager) {

@@ -4,7 +4,11 @@
         "module": "commonjs",
         "target": "es6",
         "outDir": "out",
-        "lib": ["es6"],
+        "lib": [
+            "es6",
+            "es2018",
+            "ES2019"
+        ],
         "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
@@ -12,5 +16,11 @@
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false
     },
-    "exclude": ["node_modules", ".vscode-test", ".vscode test", "src/datascience-ui", "build"]
+    "exclude": [
+        "node_modules",
+        ".vscode-test",
+        ".vscode test",
+        "src/datascience-ui",
+        "build"
+    ]
 }
