@@ -4,7 +4,6 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import ansiRegex from 'ansi-regex';
 import {
     CellDisplayOutput,
     CellErrorOutput,
@@ -22,6 +21,8 @@ import { traceError, traceWarning } from '../../logging';
 import { ICell, INotebookModel } from '../types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
+// tslint:disable-next-line: no-var-requires no-require-imports
+const ansiRegex = require('ansi-regex');
 
 /**
  * Converts a NotebookModel into VSCode friendly format.
@@ -170,48 +171,42 @@ export function isImagePngOrJpegMimeType(mimeType: string) {
 }
 export function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
     const text = concatMultilineStringOutput(output.text);
-    const includesAngleBracket = text.includes('<');
-    const includesAnsi = ansiRegex().test(text);
+    const hasAngleBrackets = text.includes('<');
+    const hasAnsiChars = ansiRegex().test(text);
 
-    const textOutput: CellStreamOutput = {
-        outputKind: CellOutputKind.Text,
-        text
+    if (!hasAngleBrackets && !hasAnsiChars) {
+        // Plain text output.
+        return {
+            outputKind: CellOutputKind.Text,
+            text
+        };
+    }
+
+    // Format the output, but ensure we have the plain text output as well.
+    const richOutput: CellDisplayOutput = {
+        outputKind: CellOutputKind.Rich,
+        data: {
+            ['text/plain']: text
+        }
     };
-    let richOutput: CellDisplayOutput | undefined;
-    if (text.includes('<')) {
-        richOutput = {
-            outputKind: CellOutputKind.Rich,
-            data : {
-                ['text/html']: ''
-            }
-        };
-    }
-    if (ansiRegex().test(text)) {
-        // ansiToHtml is different between the tests running and webpack. figure out which one
-        const ctor = ansiToHtml instanceof Function ? ansiToHtml : ansiToHtml.default;
-        const converter = new ctor(getAnsiToHtmlOptions());
-        const html = converter.toHtml(text);
-        input = {
-            'text/html': html
-        };
-    }
-    if (includesAngleBracket) {
-    }
 
-    function shouldConvertTextToHtml(output: nbformat.IOutput) {}
-    function converTextToHtml(output: nbformat.IOutput) {
-        if (ansiRegex().test(formatted)) {
-            const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
-            const html = converter.toHtml(formatted);
-            input = {
-                'text/html': html
-            };
+    if (hasAngleBrackets) {
+        // Stream output needs to be wrapped in xmp so it
+        // show literally. Otherwise < chars start a new html element.
+        richOutput.data['text/html'] = `<xmp>${text}</xmp>`;
+    }
+    if (hasAnsiChars) {
+        // ansiToHtml is different between the tests running and webpack. figure out which one
+        try {
+            const ctor = ansiToHtml instanceof Function ? ansiToHtml : ansiToHtml.default;
+            const converter = new ctor(getAnsiToHtmlOptions());
+            richOutput.data['text/html'] = converter.toHtml(text);
+        } catch (ex) {
+            traceError(`Failed to convert Ansi text to HTML, ${text}`, ex);
         }
     }
-    return {
-        outputKind: CellOutputKind.Text,
-        text
-    };
+
+    return richOutput;
 }
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
     return {
