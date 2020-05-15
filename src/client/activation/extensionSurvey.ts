@@ -37,7 +37,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY
-    ) { }
+    ) {}
 
     public async activate(): Promise<void> {
         if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {
