@@ -1,9 +1,10 @@
 import * as fsapi from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from '../../common/logger';
+import { traceError, traceWarning } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { ICurrentProcess } from '../../common/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
@@ -23,6 +24,22 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
         return [] as string[];
     }
+}
+
+export function traceProcessError(
+    platformService: IPlatformService,
+    currentProcess: ICurrentProcess,
+    error: Error,
+    name: string
+) {
+    const enviromentVariableValues: Record<string, string | undefined> = {
+        LC_ALL: currentProcess.env.LC_ALL,
+        LANG: currentProcess.env.LANG
+    };
+    enviromentVariableValues[platformService.pathVariableName] = currentProcess.env[platformService.pathVariableName];
+
+    traceWarning(`Error in invoking ${name}`, error);
+    traceWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
 }
 
 @injectable()
@@ -90,6 +107,9 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     item.type = InterpreterType.Pipenv;
                     item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
                     item.envName = info.envName || item.envName;
+                }
+                if (item.path.includes('pypoetry')) {
+                    item.type = InterpreterType.Poetry;
                 }
             })
         );

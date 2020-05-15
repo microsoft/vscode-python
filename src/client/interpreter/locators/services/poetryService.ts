@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { traceError, traceWarning } from '../../../common/logger';
+import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../common/types';
@@ -21,6 +21,7 @@ import {
     IPoetryService,
     PythonInterpreter
 } from '../../contracts';
+import { traceProcessError } from '../helpers';
 import { IPipEnvServiceHelper } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
@@ -174,15 +175,7 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
         } catch (error) {
             const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-            const enviromentVariableValues: Record<string, string | undefined> = {
-                LC_ALL: currentProc.env.LC_ALL,
-                LANG: currentProc.env.LANG
-            };
-            enviromentVariableValues[platformService.pathVariableName] =
-                currentProc.env[platformService.pathVariableName];
-
-            traceWarning('Error in invoking Poetry', error);
-            traceWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
+            traceProcessError(platformService, currentProc, error, 'Poetry');
         }
     }
 }
