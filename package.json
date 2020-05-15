@@ -2793,6 +2793,12 @@
                         "daily"
                     ],
                     "scope": "application"
+                },
+                "python.showStartPage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the Python Start Page when a new update is released.",
+                    "scope": "application"
                 }
             }
         },

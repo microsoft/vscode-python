@@ -28,7 +28,7 @@ export class IStartPageMapping {
     public [StartPageMessages.RequestReleaseNotes]: IReleaseNotesPackage;
     public [StartPageMessages.SendReleaseNotes]: IReleaseNotesPackage;
     public [StartPageMessages.Started]: never | undefined;
-    public [StartPageMessages.UpdateSettings]: string;
+    public [StartPageMessages.UpdateSettings]: boolean;
     public [StartPageMessages.OpenBlankNotebook]: never | undefined;
     public [StartPageMessages.OpenBlankPythonFile]: never | undefined;
     public [StartPageMessages.OpenInteractiveWindow]: never | undefined;

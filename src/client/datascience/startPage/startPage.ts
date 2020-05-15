@@ -4,12 +4,20 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { EventEmitter, ViewColumn, window } from 'vscode';
-import { IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { commands, ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
+import { IExtensionSingleActivationService } from '../../activation/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { Commands } from '../constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { StartPageMessageListener } from './startPageMessageListener';
@@ -18,7 +26,7 @@ import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
 @injectable()
-export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage {
+export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
 
     constructor(
@@ -28,7 +36,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(IConfigurationService) protected configuration: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IFileSystem) private file: IFileSystem,
-        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
         super(
             configuration,
@@ -45,6 +56,11 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             false,
             false
         );
+    }
+
+    public async activate(): Promise<void> {
+        // tslint:disable-next-line: no-floating-promises
+        this.open();
     }
 
     public dispose(): Promise<void> {
@@ -77,17 +93,52 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 await this.notebookEditorProvider.createNew();
                 break;
             case StartPageMessages.OpenBlankPythonFile:
+                const doc = await this.documentManager.openTextDocument({ language: 'python' });
+                this.documentManager.showTextDocument(doc, 1, true);
                 break;
             case StartPageMessages.OpenInteractiveWindow:
+                const doc2 = await this.documentManager.openTextDocument({
+                    language: 'python',
+                    content: '#%%\nprint("Hello world")'
+                });
+                await this.documentManager.showTextDocument(doc2, 1, true);
+                await this.commandManager.executeCommand(Commands.ShowHistoryPane);
+                this.commandManager.executeCommand(Commands.RunAllCells, '');
                 break;
             case StartPageMessages.OpenCommandPalette:
+                commands.executeCommand('workbench.action.showCommands');
                 break;
             case StartPageMessages.OpenCommandPaletteWithOpenNBSelected:
+                commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
+                const doc4 = await this.documentManager.openTextDocument(
+                    path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'client',
+                        'datascience',
+                        'startPage',
+                        'SampleNotebook',
+                        'Welcome_To_VSCode_Notebooks.ipynb'
+                    )
+                );
+                this.documentManager.showTextDocument(doc4, 1, true);
                 break;
             case StartPageMessages.OpenFileBrowser:
-                window.showOpenDialog({});
+                const uri = await this.appShell.showOpenDialog({
+                    filters: {
+                        Python: ['py', 'ipynb']
+                    },
+                    canSelectMany: false
+                });
+                if (uri) {
+                    const doc3 = await this.documentManager.openTextDocument(uri[0]);
+                    this.documentManager.showTextDocument(doc3);
+                }
+                break;
+            case StartPageMessages.UpdateSettings:
+                await this.configuration.updateSetting('showStartPage', payload, undefined, ConfigurationTarget.Global);
                 break;
             default:
                 break;

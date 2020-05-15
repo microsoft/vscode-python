@@ -21,7 +21,7 @@ interface IStartPageState {
 }
 
 export class StartPage extends React.Component<IStartPageProps, IStartPageState> implements IMessageHandler {
-    private checked = false;
+    private doNotShowAgain = false;
     private releaseNotes: IReleaseNotesPackage = {
         date: '',
         notes: []
@@ -71,16 +71,16 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         <div className="text">Create a Jupyter Notebook</div>
                         <div className="paragraph">
                             - Use "<div className="italics">Shift + Command + P </div>" to open the{' '}
-                            <div className="link" role="button" onClick={this.sendMessage}>
+                            <div className="link" role="button" onClick={this.openCommandPalette}>
                                 Command Palette
                             </div>
                             <br />- Type "
-                            <div className="link italics" role="button" onClick={this.sendMessage}>
+                            <div className="link italics" role="button" onClick={this.openCommandPaletteWithSelection}>
                                 Create new blank Jupyter notebook
                             </div>{' '}
                             "
                             <br />- Explore our{' '}
-                            <div className="link" role="button" onClick={this.sendMessage}>
+                            <div className="link" role="button" onClick={this.openSampleNotebook}>
                                 sample notebook
                             </div>{' '}
                             to learn about notebook features
@@ -88,7 +88,7 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon">
+                    <div className="icon" role="button" onClick={this.createPythonFile}>
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -108,7 +108,7 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon">
+                    <div className="icon" role="button" onClick={this.openInteractiveWindow}>
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -145,13 +145,16 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         for tips and troubleshooting.
                     </div>
                 </div>
-                <div className="row">
-                    <div className="block">
-                        <input type="checkbox" aria-checked={this.checked} className="checkbox"></input>
-                    </div>
-                    <div className="block">
-                        <p>Don't show this page again</p>
-                    </div>
+                <div className="block">
+                    <input
+                        type="checkbox"
+                        aria-checked={this.doNotShowAgain}
+                        className="checkbox"
+                        onClick={this.updateSettings}
+                    ></input>
+                </div>
+                <div className="block">
+                    <p>Don't show this page again</p>
                 </div>
             </div>
         );
@@ -173,18 +176,37 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
         return false;
     };
 
-    private sendMessage = (evt: React.SyntheticEvent<HTMLElement>) => {
-        // tslint:disable-next-line: no-console
-        console.log(evt);
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotes);
-    };
-
     private openBlankNotebook = () => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankNotebook);
     };
 
     private openFileBrowser = () => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
+    };
+
+    private createPythonFile = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankPythonFile);
+    };
+
+    private openCommandPalette = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenCommandPalette);
+    };
+
+    private openCommandPaletteWithSelection = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenCommandPaletteWithOpenNBSelected);
+    };
+
+    private openSampleNotebook = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenSampleNotebook);
+    };
+
+    private openInteractiveWindow = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenInteractiveWindow);
+    };
+
+    private updateSettings = () => {
+        this.doNotShowAgain = !this.doNotShowAgain;
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.UpdateSettings, !this.doNotShowAgain);
     };
 
     private getCurrentReleaseVersion(): string {
