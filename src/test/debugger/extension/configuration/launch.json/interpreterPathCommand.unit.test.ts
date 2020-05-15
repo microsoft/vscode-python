@@ -74,12 +74,4 @@ suite('Interpreter Path Command', () => {
         const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
         expect(setting).to.equal('settingValue');
     });
-
-    test('Replace backward slashes in path to forward slashes', async () => {
-        const args = ['command'];
-        // tslint:disable-next-line: no-any
-        when(configService.getSettings(undefined)).thenReturn({ pythonPath: 'path\\to\\setting' } as any);
-        const setting = interpreterPathCommand._getSelectedInterpreterPath(args);
-        expect(setting).to.equal('path/to/setting');
-    });
 });
