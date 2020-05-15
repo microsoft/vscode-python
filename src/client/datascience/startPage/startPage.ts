@@ -14,12 +14,13 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands } from '../constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
+// import { extensionVersionChanged, openSampleNotebook } from './helpers';
 import { StartPageMessageListener } from './startPageMessageListener';
 import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
@@ -39,7 +40,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(
             configuration,
@@ -59,8 +61,17 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async activate(): Promise<void> {
-        // tslint:disable-next-line: no-floating-promises
-        this.open();
+        const settings = this.configuration.getSettings();
+
+        if (settings.showStartPage) {
+            // Use separate if's to try and avoid reading a file every time
+            const firstTimeOrUpdate = await this.extensionVersionChanged();
+
+            if (firstTimeOrUpdate) {
+                // tslint:disable-next-line: no-floating-promises
+                this.open();
+            }
+        }
     }
 
     public dispose(): Promise<void> {
@@ -90,7 +101,14 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 await this.handleReleaseNotesRequest();
                 break;
             case StartPageMessages.OpenBlankNotebook:
-                await this.notebookEditorProvider.createNew();
+                const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
+
+                if (savedVersion) {
+                    await this.notebookEditorProvider.createNew();
+                } else {
+                    // tslint:disable-next-line: no-floating-promises
+                    this.openSampleNotebook();
+                }
                 break;
             case StartPageMessages.OpenBlankPythonFile:
                 const doc = await this.documentManager.openTextDocument({ language: 'python' });
@@ -112,18 +130,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
-                const doc4 = await this.documentManager.openTextDocument(
-                    path.join(
-                        EXTENSION_ROOT_DIR,
-                        'src',
-                        'client',
-                        'datascience',
-                        'startPage',
-                        'SampleNotebook',
-                        'Welcome_To_VSCode_Notebooks.ipynb'
-                    )
-                );
-                this.documentManager.showTextDocument(doc4, 1, true);
+                // tslint:disable-next-line: no-floating-promises
+                this.openSampleNotebook();
                 break;
             case StartPageMessages.OpenFileBrowser:
                 const uri = await this.appShell.showOpenDialog({
@@ -164,5 +172,40 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             date: scrappedDate[1] + whiteSpace + scrappedDate[2],
             notes: filteredNotes.map((line) => line.substr(3))
         });
+    }
+
+    private async extensionVersionChanged(): Promise<boolean> {
+        const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
+
+        const packageJson = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'package.json'));
+        const searchString = '"version": "';
+        const startIndex = packageJson.indexOf(searchString);
+        const endIndex = packageJson.indexOf('",', startIndex);
+        const version = packageJson.substring(startIndex + searchString.length, endIndex);
+
+        if (savedVersion && savedVersion === version) {
+            // There has not been an update
+            return false;
+        }
+
+        // savedVersion being undefined means this is the first time the user activates the extension.
+        // if savedVersion != version, there was an update
+        this.context.globalState.update('extensionVersion', version);
+        return true;
+    }
+
+    private async openSampleNotebook(): Promise<void> {
+        const sampleNotebook = await this.documentManager.openTextDocument(
+            path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'client',
+                'datascience',
+                'startPage',
+                'SampleNotebook',
+                'Welcome_To_VSCode_Notebooks.ipynb'
+            )
+        );
+        this.documentManager.showTextDocument(sampleNotebook, 1, true);
     }
 }
