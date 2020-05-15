@@ -25,6 +25,10 @@ import {
 } from './executionHelpers';
 import { findMappedNotebookCellModel } from './helpers';
 
+/**
+ * VSC will use this class to execute cells in a notebook.
+ * This is where we hookup Jupyter with a Notebook in VSCode.
+ */
 @injectable()
 export class NotebookKernel implements VSCNotebookKernel {
     private _preloads: Uri[] = [];
