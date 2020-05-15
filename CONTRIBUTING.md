@@ -176,8 +176,8 @@ temporarily modify the `const grep = ` line in
 
 _Launching from VSCode_
 
-In order to set these values when launching the tests from VSCode you should
-edit the `launch.json` file. For example you can add the following to the
+In order to set environment variables when launching the tests from VSCode you
+should edit the `launch.json` file. For example you can add the following to the
 appropriate configuration you want to run to change the interpreter used during
 testing:
 
