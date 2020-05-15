@@ -20,12 +20,14 @@ import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { IntellisenseProvider } from '../../intellisenseProvider';
 import { initializeTokenizer, registerMonacoLanguage } from '../../tokenizer';
-import { queueIncomingAction } from '../helpers';
+import { postActionToExtension, queueIncomingAction } from '../helpers';
 import { CommonActionType, ICodeCreatedAction, IEditCellAction } from './types';
 
+// These two pieces of state can be retained per process (prevents tests from recreating state)
+let onigasmData: ArrayBuffer | undefined;
+let tmLanguageData: string | undefined;
+
 export interface IMonacoState {
-    onigasmData: ArrayBuffer | undefined;
-    tmLanguageData: string | undefined;
     testMode: boolean;
     intellisenseProvider: IntellisenseProvider | undefined;
     postOffice: PostOffice;
@@ -42,6 +44,22 @@ type MonacoReducerArg<T = never | undefined> = ReducerArg<
     CommonActionType | InteractiveWindowMessages,
     BaseReduxActionPayload<T>
 >;
+
+function handleLoaded<T>(arg: MonacoReducerArg<T>): IMonacoState {
+    // Send the requests to get the onigasm and tmlanguage data if necessary
+    if (!onigasmData) {
+        postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
+    }
+    if (!tmLanguageData) {
+        postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest);
+    }
+    // If have both, tell other side monaco is ready
+    if (tmLanguageData && onigasmData) {
+        queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
+    }
+
+    return arg.prevState;
+}
 
 function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
     // If in test mode, register the monaco provider
@@ -80,36 +98,27 @@ function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoRedu
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
     // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
     let typedArray = new Uint8Array(arg.payload.data);
-    if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
-        // Monaco is ready. Initialize the tokenizer
-        finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
-    } else {
+    if (typedArray.length <= 0) {
         // tslint:disable-next-line: no-any
         typedArray = new Uint8Array((arg.payload.data as any).data);
-        // Monaco is ready. Initialize the tokenizer
-        if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
-            // Monaco is ready. Initialize the tokenizer
-            finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
-        }
+    }
+    onigasmData = typedArray.buffer;
+    if (tmLanguageData && onigasmData) {
+        finishTokenizer(onigasmData, tmLanguageData, arg);
     }
 
-    // Make sure we start the intellisense provider
-    return {
-        ...arg.prevState,
-        onigasmData: typedArray.buffer
-    };
+    return arg.prevState;
 }
 
 function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
-    if (arg.prevState.onigasmData && !arg.prevState.tmLanguageData) {
+    tmLanguageData = arg.payload.data;
+
+    if (onigasmData && tmLanguageData) {
         // Monaco is ready. Initialize the tokenizer
-        finishTokenizer(arg.prevState.onigasmData, arg.payload.data, arg);
+        finishTokenizer(onigasmData, arg.payload.data, arg);
     }
 
-    return {
-        ...arg.prevState,
-        tmLanguageData: arg.payload.data
-    };
+    return arg.prevState;
 }
 
 function handleThemeResponse(arg: MonacoReducerArg<IGetMonacoThemeResponse>): IMonacoState {
@@ -163,11 +172,7 @@ function handleUnmount(arg: MonacoReducerArg): IMonacoState {
         arg.prevState.intellisenseProvider.dispose();
     }
 
-    return {
-        ...arg.prevState,
-        onigasmData: undefined,
-        tmLanguageData: undefined
-    };
+    return arg.prevState;
 }
 
 // type MonacoReducerFunctions<T> = {
@@ -190,6 +195,7 @@ class IMonacoActionMapping {
     public [CommonActionType.CODE_CREATED]: MonacoReducerFunc<ICodeCreatedAction>;
     public [CommonActionType.EDIT_CELL]: MonacoReducerFunc<IEditCellAction>;
     public [CommonActionType.UNMOUNT]: MonacoReducerFunc;
+    public [CommonActionType.EDITOR_LOADED]: MonacoReducerFunc;
 }
 
 // Create the map between message type and the actual function to call to update state
@@ -204,7 +210,8 @@ const reducerMap: IMonacoActionMapping = {
     [InteractiveWindowMessages.ResolveCompletionItemResponse]: handleResolveCompletionItemResponse,
     [CommonActionType.CODE_CREATED]: handleCodeCreated,
     [CommonActionType.EDIT_CELL]: handleEditCell,
-    [CommonActionType.UNMOUNT]: handleUnmount
+    [CommonActionType.UNMOUNT]: handleUnmount,
+    [CommonActionType.EDITOR_LOADED]: handleLoaded
 };
 
 export function generateMonacoReducer(
@@ -213,8 +220,6 @@ export function generateMonacoReducer(
 ): Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.
     const defaultState: IMonacoState = {
-        onigasmData: undefined,
-        tmLanguageData: undefined,
         testMode,
         intellisenseProvider: undefined,
         postOffice

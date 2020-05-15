@@ -59,7 +59,7 @@ export function registerMonacoLanguage() {
 
 // Loading the tokenizer is process wide, so don't bother doing it more than once. Creates memory leaks
 // when running tests.
-const loaded: boolean = false;
+let loaded: boolean = false;
 
 // tslint:disable: no-any
 export async function initializeTokenizer(
@@ -68,6 +68,7 @@ export async function initializeTokenizer(
     loadingFinished: (e?: any) => void
 ): Promise<void> {
     if (!loaded) {
+        loaded = true;
         try {
             // Register the language first
             registerMonacoLanguage();
