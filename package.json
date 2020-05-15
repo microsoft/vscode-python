@@ -92,7 +92,8 @@
         "onCommand:python.enableSourceMapSupport",
         "onCustomEditor:NativeEditorProvider.ipynb",
         "onNotebookEditor:jupyter-notebook",
-        "workspaceContains:**/mspythonconfig.json"
+        "workspaceContains:**/mspythonconfig.json",
+        "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
     "contributes": {
