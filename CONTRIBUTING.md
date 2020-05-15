@@ -134,7 +134,9 @@ npm run testMultiWorkspace  # will launch the VSC UI
 #### Customising the Test Run
 
 If you want to change which tests are run or which version of Python is used,
-you can do this by setting environment variables.
+you can do this by setting environment variables. The same variables work when
+running from the command line or launching from within VSCode, though the
+mechanism used to specify them changes a little.
 
 * Setting `CI_PYTHON_PATH` lets you change the version of python the tests are executed with
 * Setting `VSC_PYTHON_CI_TEST_GREP` lets you filter the tests by name
