@@ -145,6 +145,9 @@ export class NotebookKernel implements VSCNotebookKernel {
             updateCellWithErrorStatus(cell, ex);
         }
     }
+    /**
+     * Ensure we handle display data messages that can result in updates to other cells.
+     */
     private handleDisplayDataMessages(model: INotebookModel, document: NotebookDocument, nb?: INotebook) {
         if (nb && !this.registeredIOPubListeners.has(nb)) {
             this.registeredIOPubListeners.add(nb);
