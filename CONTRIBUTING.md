@@ -131,7 +131,7 @@ npm run testSingleWorkspace  # will launch the VSC UI
 npm run testMultiWorkspace  # will launch the VSC UI
 ```
 
-#### Customising the test run
+#### Customising the Test Run
 
 If you want to change which tests are run or which version of Python is used,
 you can do this by setting environment variables.
