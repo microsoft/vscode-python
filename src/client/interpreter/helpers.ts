@@ -114,6 +114,9 @@ export class InterpreterHelper implements IInterpreterHelper {
             case InterpreterType.Pipenv: {
                 return 'pipenv';
             }
+            case InterpreterType.Poetry: {
+                return 'poetry';
+            }
             case InterpreterType.Pyenv: {
                 return 'pyenv';
             }

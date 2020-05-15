@@ -170,6 +170,7 @@ export type InterpreterInfomation = {
     architecture: Architecture;
     sysPrefix: string;
     pipEnvWorkspaceFolder?: string;
+    poetryWorkspaceFolder?: string;
 };
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
@@ -201,7 +202,7 @@ export type PythonExecutionInfo = {
  * @extends {IPythonExecutionService}
  * @extends {IDisposable}
  */
-export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable { }
 
 export class StdErrError extends Error {
     constructor(message: string) {

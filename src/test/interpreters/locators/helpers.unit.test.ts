@@ -21,7 +21,8 @@ import {
 } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { PipEnvServiceHelper } from '../../../client/interpreter/locators/services/pipEnvServiceHelper';
-import { IPipEnvServiceHelper } from '../../../client/interpreter/locators/types';
+import { PoetryServiceHelper } from '../../../client/interpreter/locators/services/poetryServiceHelper';
+import { IPipEnvServiceHelper, IPoetryServiceHelper } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 enum OS {
@@ -36,12 +37,14 @@ suite('Interpreters - Locators Helper', () => {
     let helper: IInterpreterLocatorHelper;
     let fs: TypeMoq.IMock<IFileSystem>;
     let pipEnvHelper: IPipEnvServiceHelper;
+    let poetryHelper: IPoetryServiceHelper;
     let interpreterServiceHelper: TypeMoq.IMock<IInterpreterHelper>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         platform = TypeMoq.Mock.ofType<IPlatformService>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         pipEnvHelper = mock(PipEnvServiceHelper);
+        poetryHelper = mock(PoetryServiceHelper);
         interpreterServiceHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platform.object);
         serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
@@ -49,7 +52,7 @@ suite('Interpreters - Locators Helper', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
             .returns(() => interpreterServiceHelper.object);
 
-        helper = new InterpreterLocatorHelper(fs.object, instance(pipEnvHelper));
+        helper = new InterpreterLocatorHelper(fs.object, instance(pipEnvHelper), instance(poetryHelper));
     });
     test('Ensure default Mac interpreter is not excluded from the list of interpreters', async () => {
         platform.setup((p) => p.isWindows).returns(() => false);

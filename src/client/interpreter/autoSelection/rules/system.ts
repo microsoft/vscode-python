@@ -31,12 +31,13 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
             (int) =>
                 int.type !== InterpreterType.VirtualEnv &&
                 int.type !== InterpreterType.Venv &&
-                int.type !== InterpreterType.Pipenv
+                int.type !== InterpreterType.Pipenv &&
+                int.type !== InterpreterType.Poetry
         );
         const bestInterpreter = this.helper.getBestInterpreter(filteredInterpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${
-                bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
+            bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'
             }`
         );
         return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;

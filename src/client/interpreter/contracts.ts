@@ -12,6 +12,7 @@ export const KNOWN_PATH_SERVICE = 'KnownPathsService';
 export const GLOBAL_VIRTUAL_ENV_SERVICE = 'VirtualEnvService';
 export const WORKSPACE_VIRTUAL_ENV_SERVICE = 'WorkspaceVirtualEnvService';
 export const PIPENV_SERVICE = 'PipEnvService';
+export const POETRY_SERVICE = 'PoetryService';
 export const IInterpreterVersionService = Symbol('IInterpreterVersionService');
 export interface IInterpreterVersionService {
     getVersion(pythonPath: string, defaultValue: string): Promise<string>;
@@ -76,6 +77,7 @@ export enum InterpreterType {
     Conda = 'Conda',
     VirtualEnv = 'VirtualEnv',
     Pipenv = 'PipEnv',
+    Poetry = 'Poetry',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
     WindowsStore = 'WindowsStore'
@@ -130,6 +132,12 @@ export const IPipEnvService = Symbol('IPipEnvService');
 export interface IPipEnvService extends IInterpreterLocatorService {
     executable: string;
     isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean>;
+}
+
+export const IPoetryService = Symbol('IPoetryService');
+export interface IPoetryService extends IInterpreterLocatorService {
+    executable: string;
+    isRelatedPoetryEnvironment(dir: string, pythonPath: string): Promise<boolean>;
 }
 
 export const IInterpreterLocatorHelper = Symbol('IInterpreterLocatorHelper');
