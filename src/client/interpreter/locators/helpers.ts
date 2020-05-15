@@ -5,7 +5,7 @@ import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
-import { IPipEnvServiceHelper, IPoetryServiceHelper } from './types';
+import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
@@ -29,8 +29,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, _: IFi
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper,
-        @inject(IPoetryServiceHelper) private readonly poetryServiceHelper: IPoetryServiceHelper
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
     ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const items = interpreters
@@ -86,19 +85,11 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
         // This stuff needs to be fast.
         await Promise.all(
             items.map(async (item) => {
-                const pipEnvInfo = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
-                if (pipEnvInfo) {
+                const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
+                if (info) {
                     item.type = InterpreterType.Pipenv;
-                    item.pipEnvWorkspaceFolder = pipEnvInfo.workspaceFolder.fsPath;
-                    item.envName = pipEnvInfo.envName || item.envName;
-                    return;
-                }
-                const poetryEnvInfo = await this.poetryServiceHelper.getPoetryInfo(item.path);
-                if (poetryEnvInfo) {
-                    item.type = InterpreterType.Poetry;
-                    item.pipEnvWorkspaceFolder = poetryEnvInfo.workspaceFolder.fsPath;
-                    item.envName = poetryEnvInfo.envName || item.envName;
-                    return;
+                    item.pipEnvWorkspaceFolder = info.workspaceFolder.fsPath;
+                    item.envName = info.envName || item.envName;
                 }
             })
         );

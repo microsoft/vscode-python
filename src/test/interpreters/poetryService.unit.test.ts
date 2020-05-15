@@ -26,9 +26,9 @@ import {
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
+import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { PoetryService } from '../../client/interpreter/locators/services/poetryService';
-import { PoetryServiceHelper } from '../../client/interpreter/locators/services/poetryServiceHelper';
-import { IPoetryServiceHelper } from '../../client/interpreter/locators/types';
+import { IPipEnvServiceHelper } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import * as Telemetry from '../../client/telemetry';
 import { EventName } from '../../client/telemetry/constants';
@@ -59,7 +59,7 @@ suite('Interpreters - Poetry', () => {
             let config: TypeMoq.IMock<IConfigurationService>;
             let settings: TypeMoq.IMock<IPythonSettings>;
             let poetryPathSetting: string;
-            let poetryServiceHelper: IPoetryServiceHelper;
+            let poetryServiceHelper: IPipEnvServiceHelper;
 
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -73,7 +73,7 @@ suite('Interpreters - Poetry', () => {
                 envVarsProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
                 procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                 platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                poetryServiceHelper = mock(PoetryServiceHelper);
+                poetryServiceHelper = mock(PipEnvServiceHelper);
                 processService.setup((x: any) => x.then).returns(() => undefined);
                 procServiceFactory
                     .setup((p) => p.create(TypeMoq.It.isAny()))
@@ -126,7 +126,7 @@ suite('Interpreters - Poetry', () => {
                     .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
                     .returns(() => config.object);
                 serviceContainer
-                    .setup((c) => c.get(TypeMoq.It.isValue(IPoetryServiceHelper), TypeMoq.It.isAny()))
+                    .setup((c) => c.get(TypeMoq.It.isValue(IPipEnvServiceHelper), TypeMoq.It.isAny()))
                     .returns(() => instance(poetryServiceHelper));
 
                 when(poetryServiceHelper.trackWorkspaceFolder(anything(), anything())).thenResolve();

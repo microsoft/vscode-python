@@ -94,7 +94,6 @@ import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/s
 import { PipEnvService } from './locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './locators/services/pipEnvServiceHelper';
 import { PoetryService } from './locators/services/poetryService';
-import { PoetryServiceHelper } from './locators/services/poetryServiceHelper';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
 import { WindowsStoreInterpreter } from './locators/services/windowsStoreInterpreter';
 import {
@@ -102,7 +101,7 @@ import {
     WorkspaceVirtualEnvService
 } from './locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './locators/services/workspaceVirtualEnvWatcherService';
-import { IPipEnvServiceHelper, IPoetryServiceHelper, IPythonInPathCommandProvider } from './locators/types';
+import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from './locators/types';
 import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
@@ -152,7 +151,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-    serviceManager.addSingleton<IPoetryServiceHelper>(IPoetryServiceHelper, PoetryServiceHelper);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

@@ -21,7 +21,7 @@ import {
     IPoetryService,
     PythonInterpreter
 } from '../../contracts';
-import { IPoetryServiceHelper } from '../types';
+import { IPipEnvServiceHelper } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 @injectable()
@@ -31,7 +31,7 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
     private readonly configService: IConfigurationService;
-    private readonly poetryServiceHelper: IPoetryServiceHelper;
+    private readonly poetryServiceHelper: IPipEnvServiceHelper;
 
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PoetryService', serviceContainer, true);
@@ -40,7 +40,7 @@ export class PoetryService extends CacheableLocatorService implements IPoetrySer
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.poetryServiceHelper = this.serviceContainer.get<IPoetryServiceHelper>(IPoetryServiceHelper);
+        this.poetryServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
 
     // tslint:disable-next-line:no-empty

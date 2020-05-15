@@ -15,11 +15,6 @@ export interface IPipEnvServiceHelper {
     getPipEnvInfo(pythonPath: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
     trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void>;
 }
-export const IPoetryServiceHelper = Symbol('IPoetryServiceHelper');
-export interface IPoetryServiceHelper {
-    getPoetryInfo(pythonPath: string): Promise<{ workspaceFolder: Uri; envName: string } | undefined>;
-    trackWorkspaceFolder(pythonPath: string, workspaceFolder: Uri): Promise<void>;
-}
 
 /**
  * Factory to create a hash provider.
