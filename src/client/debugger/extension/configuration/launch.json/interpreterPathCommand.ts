@@ -32,6 +32,8 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
         const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1] ? args[1] : undefined;
         let p = this.configurationService.getSettings(workspaceFolder ? Uri.parse(workspaceFolder) : undefined)
             .pythonPath;
+        // Replace all instances of backslashes with forward slashes to help with certain use cases in `tasks.json`
+        // For instance, when using backslashes `echo path\to\file` command will print `pathtofile`, which is not appropriate.
         p = p.replace(/\\/g, '/');
         return p;
     }

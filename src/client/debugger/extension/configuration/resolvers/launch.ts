@@ -56,10 +56,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
         this.configExperiment.modifyConfigurationBasedOnExperiment(config);
 
-        // const isValid = await this.validateLaunchConfiguration(folder, config);
-        // if (!isValid) {
-        //     return;
-        // }
+        const isValid = await this.validateLaunchConfiguration(folder, config);
+        if (!isValid) {
+            return;
+        }
 
         const dbgConfig = debugConfiguration;
         if (Array.isArray(dbgConfig.debugOptions)) {
