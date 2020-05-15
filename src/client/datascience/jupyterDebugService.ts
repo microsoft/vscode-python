@@ -349,9 +349,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
                 response.resolve(resp.body);
             }
         });
-        this.socket?.on('error', (err) => {
-            response.reject(err); // NOSONAR
-        });
+        this.socket?.on('error', (err) => response.reject(err)); // NOSONAR
         this.emitMessage(command, args).catch((exc) => {
             traceError(`Exception attempting to emit ${command} to debugger: `, exc);
         });
