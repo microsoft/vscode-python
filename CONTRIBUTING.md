@@ -146,8 +146,9 @@ In some tests a Python executable is actually run. The default executable is
 this will almost always mean Python 2 is used, which probably isn't what you
 want.
 
-This environment variable allows setting a specific python interpreter by
-specifying the absolute path to the `python` binary.
+By setting the `CI_PYTHON_PATH` environment variable you can
+control the exact Python executable that gets used.  If the executable
+you specify isn't on `$PATH` then be sure to use an absolute path.
 
 This is also the mechanism for testing against other versions of Python.
 
