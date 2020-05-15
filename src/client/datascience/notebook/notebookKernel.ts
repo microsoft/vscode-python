@@ -88,10 +88,9 @@ export class NotebookKernel implements VSCNotebookKernel {
             if (deferred.completed) {
                 return;
             }
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: What should we do with results?
             deferred.resolve();
             cell.metadata.runState = NotebookCellRunState.Idle;
+
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: TImeout value.
             nb?.interruptKernel(1_000).ignoreErrors();
@@ -116,16 +115,12 @@ export class NotebookKernel implements VSCNotebookKernel {
                     if (token.isCancellationRequested) {
                         return;
                     }
-                    // tslint:disable-next-line: no-suspicious-comment
-                    // TODO: Update model, just as we do when we manage display_id above.
-                    // model.update(updateCell);
                     const rawCellOutput = cells
                         .filter((item) => item.id === cell.uri.fsPath)
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
                     const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
-                    // updateCellOutputInCellModelAndCellData(notebookCellModel, cell, rawCellOutput, model);
                     updateCellOutput(notebookCellModel, rawCellOutput, model);
                 },
                 (error: Partial<Error>) => {
@@ -137,8 +132,6 @@ export class NotebookKernel implements VSCNotebookKernel {
                         ? NotebookCellRunState.Idle
                         : NotebookCellRunState.Success;
                     cell.metadata.lastRunDuration = stopWatch.elapsedTime;
-                    // tslint:disable-next-line: no-suspicious-comment
-                    // TODO:Confirm what we should display in status (Finished, done, or nothing or execution time).
                     cell.metadata.statusMessage = '';
                     deferred.resolve();
                 }

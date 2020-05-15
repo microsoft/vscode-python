@@ -68,11 +68,19 @@ export function handleUpdateDisplayDataMessage(
     });
 }
 
+/**
+ * Updates the VSC cell with the error output.
+ */
 export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>) {
     cell.outputs = [translateErrorOutput(createErrorOutput(ex))];
     cell.metadata.runState = NotebookCellRunState.Error;
 }
 
+/**
+ * Updates our Cell Model with the cell output.
+ * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
+ * (this has nothing to do with VSCode cells), this is out ICell in INotebookModel.
+ */
 export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOutput[], model: INotebookModel) {
     const newOutput = cellOutputsToVSCCellOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
