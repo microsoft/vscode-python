@@ -154,8 +154,9 @@ This is also the mechanism for testing against other versions of Python.
 
 _`VSC_PYTHON_CI_TEST_GREP`_
 
-This environment variable allows providing a pattern which will be matched
-against test names to be run. By default all tests are run.
+This environment variable allows providing a regular expression which will
+be matched against suite and test "names" to be run. By default all tests
+are run.
 
 For example, to run only the tests in the `Sorting` suite (from
 `src/test/format/extension.sort.test.ts`) you would set the value to `Sorting`.
