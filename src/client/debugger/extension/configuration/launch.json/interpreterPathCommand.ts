@@ -21,16 +21,17 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
     public async activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.GetSelectedInterpreterPath, (args) => {
-                return this.getSelectedInterpreterPath(args);
+                return this._getSelectedInterpreterPath(args);
             })
         );
     }
 
-    public getSelectedInterpreterPath(args: { workspaceFolder: string } | string[]): string {
+    public _getSelectedInterpreterPath(args: { workspaceFolder: string } | string[]): string {
         // If `launch.json` is launching this command, `args.workspaceFolder` carries the workspaceFolder
         // If `tasks.json` is launching this command, `args[1]` carries the workspaceFolder
-        const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1];
-        let p = this.configurationService.getSettings(Uri.parse(workspaceFolder)).pythonPath;
+        const workspaceFolder = 'workspaceFolder' in args ? args.workspaceFolder : args[1] ? args[1] : undefined;
+        let p = this.configurationService.getSettings(workspaceFolder ? Uri.parse(workspaceFolder) : undefined)
+            .pythonPath;
         p = p.replace(/\\/g, '/');
         return p;
     }
