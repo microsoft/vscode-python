@@ -266,7 +266,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "DataScience Interactive",
+                // "--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "env": {
