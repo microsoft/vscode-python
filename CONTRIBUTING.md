@@ -141,10 +141,10 @@ you can do this by setting environment variables.
 
 _`CI_PYTHON_PATH`_
 
-By default tests will be executed using the default interpreter for the
-environment they are launched from. When launching from VSCode this will be
-whatever that the default `python` is for your local machine. When launching from
-the command line this will be the version of `python` the shell is using.
+In some tests a Python executable is actually run. The default executable is
+`python` (for now). Unless you've run the tests inside a virtual environment,
+this will almost always mean Python 2 is used, which probably isn't what you
+want.
 
 This environment variable allows setting a specific python interpreter by
 specifying the absolute path to the `python` binary.
