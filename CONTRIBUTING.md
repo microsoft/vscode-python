@@ -159,7 +159,8 @@ be matched against suite and test "names" to be run. By default all tests
 are run.
 
 For example, to run only the tests in the `Sorting` suite (from
-`src/test/format/extension.sort.test.ts`) you would set the value to `Sorting`.
+[`src/test/format/extension.sort.test.ts`](https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/format/extension.sort.test.ts))
+you would set the value to `Sorting`.
 
 Be sure to escape any grep-sensitive characters in your suite name.
 
