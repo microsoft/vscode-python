@@ -12,7 +12,8 @@
     -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) from a `-dev` suffix to `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (🤖)
     -   [ ] Update `requirements.txt` to point to latest release version of [ptvsd](https://github.com/microsoft/ptvsd).
-    -   [ ] Update `languageServerVersionV1` in `package.json` to point to the latest version of the [.NET Language Server](https://github.com/Microsoft/    -   [ ] Update `languageServerVersionV2` in `package.json` to point to the latest version of the [Node Language Server](https://github.com/Microsoft/pyrx).
+    -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/
+github.com/Microsoft/pyrx).
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
         -   [ ] Copy over the "Thanks" section from the previous release
