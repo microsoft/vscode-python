@@ -11,6 +11,7 @@ import {
     CellOutput,
     CellOutputKind,
     CellStreamOutput,
+    NotebookCell,
     NotebookCellData,
     NotebookCellRunState,
     NotebookData
@@ -23,6 +24,38 @@ import { ICell, INotebookModel } from '../types';
 const ansiToHtml = require('ansi-to-html');
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiRegex = require('ansi-regex');
+
+export function findMappedNotebookCellData(source: ICell, cells: NotebookCell[]): NotebookCell {
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
+    // If so, then we have a problem.
+    const found = cells.filter((cell) => source.id === cell.metadata.custom?.cellId);
+
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Once VSC provides API, throw error here.
+    if (!found || !found.length) {
+        traceError(`Unable to find matching cell for ${source}`);
+        return cells[0];
+    }
+
+    return found[0];
+}
+
+export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
+    // If so, then we have a problem.
+    const found = cells.filter((cell) => cell.id === source.metadata.custom?.cellId);
+
+    // tslint:disable-next-line: no-suspicious-comment
+    // TODO: Once VSC provides API, throw error here.
+    if (!found || !found.length) {
+        traceError(`Unable to find matching cell for ${source}`);
+        return cells[0];
+    }
+
+    return found[0];
+}
 
 /**
  * Converts a NotebookModel into VSCode friendly format.
