@@ -9,6 +9,11 @@ steps:
       installVSCEorNPX: 'false'
 
   - task: Gulp@0
+    displayName: 'Validate package.json'
+    inputs:
+      targets: 'validate-packagejson'
+
+  - task: Gulp@0
     displayName: 'Compile and check for errors'
     inputs:
       targets: 'prePublishNonBundle'
