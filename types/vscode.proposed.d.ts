@@ -303,15 +303,6 @@ declare module 'vscode' {
         // backup?(document: NotebookDocument, cancellation: CancellationToken): Thenable<CustomDocumentBackup>;
 
         kernel?: NotebookKernel;
-
-        /**
-         * Responsible for filling in outputs for the cell
-         */
-        executeCell(
-            document: NotebookDocument,
-            cell: NotebookCell | undefined,
-            token: CancellationToken
-        ): Promise<void>;
     }
 
     export interface NotebookKernel {

@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
     EventEmitter,
-    NotebookCell,
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
@@ -17,6 +16,14 @@ import {
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers';
 
+/**
+ * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
+ * Its upto extension authors to read the files and return it in a format that VSCode understands.
+ * Same with the cells and cell output.
+ *
+ * Also responsbile for saving of notebooks.
+ * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
+ */
 @injectable()
 export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentEditEvent>();
@@ -45,12 +52,5 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
-    }
-    public async executeCell(
-        _document: NotebookDocument,
-        _cell: NotebookCell | undefined,
-        _token: CancellationToken
-    ): Promise<void> {
-        // Not supported.
     }
 }
