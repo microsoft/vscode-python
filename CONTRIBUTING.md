@@ -166,7 +166,7 @@ set the value to `Sorting`.
 
 Be sure to escape any grep-sensitive characters in your suite name.
 
-[extension.sort.test.ts]: https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/format/extension.sort.test.ts
+[extension.sort.test.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111e8826a6f06832a7c906c60eadad/src/test/format/extension.sort.test.ts
 
 _Launching from VSCode_
 
