@@ -94,6 +94,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
