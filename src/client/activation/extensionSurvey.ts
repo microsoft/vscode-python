@@ -37,7 +37,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY
-    ) {}
+    ) { }
 
     public async activate(): Promise<void> {
         if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {
@@ -114,7 +114,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
             o: encodeURIComponent(this.platformService.osType), // platform
             v: encodeURIComponent(this.appEnvironment.vscodeVersion),
             e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
-            m: encodeURIComponent(this.appEnvironment.machineId)
+            m: encodeURIComponent(this.appEnvironment.sessionId)
         });
         const url = `https://aka.ms/AA5rjx5?${query}`;
         this.browserService.launch(url);
