@@ -31,7 +31,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper,
         @inject(IPoetryServiceHelper) private readonly poetryServiceHelper: IPoetryServiceHelper
-    ) { }
+    ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const items = interpreters
             .map((item) => {
@@ -91,14 +91,14 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     item.type = InterpreterType.Pipenv;
                     item.pipEnvWorkspaceFolder = pipEnvInfo.workspaceFolder.fsPath;
                     item.envName = pipEnvInfo.envName || item.envName;
-                    return
+                    return;
                 }
                 const poetryEnvInfo = await this.poetryServiceHelper.getPoetryInfo(item.path);
                 if (poetryEnvInfo) {
                     item.type = InterpreterType.Poetry;
                     item.pipEnvWorkspaceFolder = poetryEnvInfo.workspaceFolder.fsPath;
                     item.envName = poetryEnvInfo.envName || item.envName;
-                    return
+                    return;
                 }
             })
         );
