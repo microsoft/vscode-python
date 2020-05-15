@@ -143,7 +143,7 @@ _`CI_PYTHON_PATH`_
 
 By default tests will be executed using the default interpreter for the
 environment they are launched from. When launching from VSCode this will be
-whatever that the default `python` i for your local machine. When launching from
+whatever that the default `python` is for your local machine. When launching from
 the command line this will be the version of `python` the shell is using.
 
 This environment variable allows setting a specific python interpreter by
