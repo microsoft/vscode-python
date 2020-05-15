@@ -495,7 +495,7 @@ jobs:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.0
         with:
-          run: node ./out/test/smokeTest.js
+          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
 
   coverage:
     name: Coverage reports upload

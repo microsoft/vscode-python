@@ -506,7 +506,7 @@ steps:
       npm run package
       npx gulp clean:cleanExceptTests
       cp -r ./tmp/test ./out/test
-      node ./out/test/smokeTest.js
+      node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
