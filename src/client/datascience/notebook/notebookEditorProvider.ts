@@ -114,9 +114,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // We do not need this.
         throw new Error('Not supported');
     }
-    public async createNew(contents?: string): Promise<INotebookEditor> {
-        const model = await this.storage.createNew(contents);
-        await this.onDidOpenNotebookDocument(model.file);
+    public async createNew(_contents?: string): Promise<INotebookEditor> {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: In another branch.
+        // const model = await this.storage.createNew(contents);
+        // await this.onDidOpenNotebookDocument(model.file);
 
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Need to do this.
