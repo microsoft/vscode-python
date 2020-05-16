@@ -7,6 +7,7 @@ import * as uuid from 'uuid/v4';
 
 import { instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -26,7 +27,6 @@ import { createEmptyCell, generateTestCells } from '../../datascience-ui/interac
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageServerCache } from './mockLanguageServerCache';
-import { LanguageServerType } from '../../client/activation/types';
 
 // tslint:disable:no-any unified-signatures
 const TestCellContents = `myvar = """ # Lorem Ipsum

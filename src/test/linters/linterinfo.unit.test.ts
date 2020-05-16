@@ -7,10 +7,10 @@
 
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { LanguageServerType } from '../../client/activation/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PylintLinterInfo } from '../../client/linters/linterInfo';
-import { LanguageServerType } from '../../client/activation/types';
 
 suite('Linter Info - Pylint', () => {
     test('Test disabled when Pylint is explicitly disabled', async () => {

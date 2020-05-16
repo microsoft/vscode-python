@@ -8,6 +8,7 @@ import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -26,7 +27,6 @@ import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
 import { IAvailableLinterActivator, ILinterInfo } from '../../client/linters/types';
-import { LanguageServerType } from '../../client/activation/types';
 
 // tslint:disable:max-func-body-length no-any
 suite('Linter Availability Provider tests', () => {

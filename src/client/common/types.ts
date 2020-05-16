@@ -23,9 +23,9 @@ import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends OutputChannel { }
+export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
-export interface IDocumentSymbolProvider extends DocumentSymbolProvider { }
+export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDisposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
@@ -470,7 +470,7 @@ export interface IHttpClient {
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
-export interface IExtensionContext extends ExtensionContext { }
+export interface IExtensionContext extends ExtensionContext {}
 
 export const IExtensions = Symbol('IExtensions');
 export interface IExtensions {

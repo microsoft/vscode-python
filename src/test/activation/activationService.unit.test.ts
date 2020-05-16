@@ -380,7 +380,7 @@ suite('Language Server Activation - ActivationService', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
                         .returns(() => activator.object);
-                    let diagnostics: IDiagnostic[] = [TypeMoq.It.isAny()];
+                    const diagnostics: IDiagnostic[] = [TypeMoq.It.isAny()];
                     lsNotSupportedDiagnosticService
                         .setup((l) => l.diagnose(undefined))
                         .returns(() => Promise.resolve(diagnostics));
@@ -451,7 +451,7 @@ suite('Language Server Activation - ActivationService', () => {
                     serviceContainer
                         .setup((c) => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
                         .returns(() => activator.object);
-                    let diagnostics: IDiagnostic[] = [TypeMoq.It.isAny()];
+                    const diagnostics: IDiagnostic[] = [TypeMoq.It.isAny()];
                     lsNotSupportedDiagnosticService
                         .setup((l) => l.diagnose(undefined))
                         .returns(() => Promise.resolve(diagnostics));

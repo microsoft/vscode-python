@@ -44,7 +44,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         @inject(ICommandManager) private cmdMgr: ICommandManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
-    ) { }
+    ) {}
 
     public dispose() {
         this.disposables.forEach((disposable) => disposable.dispose());

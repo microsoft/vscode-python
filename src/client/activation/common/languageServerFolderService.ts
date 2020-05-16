@@ -26,7 +26,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly languageServerFolder: string
-    ) { }
+    ) {}
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
@@ -110,7 +110,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
                 minVersion = appEnv.packageJson[key] as string;
             }
             // tslint:disable-next-line: no-empty
-        } catch { }
+        } catch {}
         return minVersion;
     }
 

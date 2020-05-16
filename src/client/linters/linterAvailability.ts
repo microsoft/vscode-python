@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { LanguageServerType } from '../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
@@ -14,7 +15,6 @@ import { Common, Linters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IAvailableLinterActivator, ILinterInfo } from './types';
-import { LanguageServerType } from '../activation/types';
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_CONFIGURE_AVAILABLE_LINTER_PROMPT';
 @injectable()
@@ -25,7 +25,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory
-    ) { }
+    ) {}
 
     /**
      * Check if it is possible to enable an otherwise-unconfigured linter in

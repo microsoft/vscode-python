@@ -3,10 +3,10 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { LanguageServerType } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
-import { LanguageServerType } from '../activation/types';
 
 // tslint:disable:no-any
 

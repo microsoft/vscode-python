@@ -19,7 +19,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) { }
+    ) {}
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
     }

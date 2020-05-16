@@ -7,6 +7,7 @@ import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
+import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -27,7 +28,6 @@ import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
-import { LanguageServerType } from '../activation/types';
 
 /**
  * Checks whether telemetry is supported.
@@ -117,8 +117,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                     typeof data[prop] === 'string'
                         ? data[prop]
                         : typeof data[prop] === 'object'
-                            ? 'object'
-                            : data[prop].toString();
+                        ? 'object'
+                        : data[prop].toString();
             } catch (ex) {
                 traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
             }

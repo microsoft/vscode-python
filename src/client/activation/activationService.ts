@@ -130,7 +130,10 @@ export class LanguageServerExtensionActivationService
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
-        const state = this.stateFactory.createGlobalPersistentState<boolean | LanguageServerType | undefined>('SWITCH_LS', undefined);
+        const state = this.stateFactory.createGlobalPersistentState<boolean | LanguageServerType | undefined>(
+            'SWITCH_LS',
+            undefined
+        );
         await state.updateValue(languageServer);
         sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
             switchTo: languageServer
@@ -143,7 +146,9 @@ export class LanguageServerExtensionActivationService
      * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `languageServer` setting added
      */
     public isJediUsingDefaultConfiguration(resource: Resource): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource).inspect<LanguageServerType>('languageServer');
+        const settings = this.workspaceService
+            .getConfiguration('python', resource)
+            .inspect<LanguageServerType>('languageServer');
         if (!settings) {
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.languageServer`');
             return false;
@@ -283,7 +288,9 @@ export class LanguageServerExtensionActivationService
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1) {
+        if (
+            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
+        ) {
             return;
         }
         const jedi = this.useJedi();

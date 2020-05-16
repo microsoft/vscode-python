@@ -5,11 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
+import { LanguageServerType } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils/random';
-import { LanguageServerType } from '../activation/types';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
@@ -113,6 +113,11 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async enableLanguageServer(): Promise<void> {
-        await this.configuration.updateSetting('languageServer', LanguageServerType.Node, undefined, ConfigurationTarget.Global);
+        await this.configuration.updateSetting(
+            'languageServer',
+            LanguageServerType.Node,
+            undefined,
+            ConfigurationTarget.Global
+        );
     }
 }
