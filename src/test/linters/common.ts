@@ -5,6 +5,7 @@
 import * as os from 'os';
 import * as TypeMoq from 'typemoq';
 import { DiagnosticSeverity, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
@@ -24,7 +25,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { LinterManager } from '../../client/linters/linterManager';
 import { ILinter, ILinterManager, ILintMessage, LinterId } from '../../client/linters/types';
-import { LanguageServerType } from '../../client/activation/types';
 
 export function newMockDocument(filename: string): TypeMoq.IMock<TextDocument> {
     const uri = Uri.file(filename);

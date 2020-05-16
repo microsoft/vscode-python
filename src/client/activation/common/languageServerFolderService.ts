@@ -6,6 +6,7 @@
 import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
+import { IApplicationEnvironment } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { NugetPackage } from '../../common/nuget/types';
@@ -13,13 +14,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import {
+    DotNetLanguageServerFolder,
     FolderVersionPair,
     IDownloadChannelRule,
     ILanguageServerFolderService,
-    ILanguageServerPackageService,
-    DotNetLanguageServerFolder
+    ILanguageServerPackageService
 } from '../types';
-import { IApplicationEnvironment } from '../../common/application/types';
 
 @injectable()
 export abstract class LanguageServerFolderService implements ILanguageServerFolderService {
