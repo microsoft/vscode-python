@@ -4,7 +4,6 @@
 
 import * as React from 'react';
 import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
-import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -16,11 +15,7 @@ export interface IStartPageProps {
     testMode?: boolean;
 }
 
-interface IStartPageState {
-    settings?: IDataScienceExtraSettings;
-}
-
-export class StartPage extends React.Component<IStartPageProps, IStartPageState> implements IMessageHandler {
+export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
     private doNotShowAgain = false;
     private releaseNotes: IReleaseNotesPackage = {
         date: '',
@@ -45,6 +40,7 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
     }
 
     public render() {
+        // tslint:disable: react-a11y-anchors
         return (
             <div className="main-page">
                 <div className="title-row">
@@ -56,7 +52,7 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         />
                     </div>
                     <div className="title">
-                        {getLocString('DataScience.startPage.PythonExtensionTitle', 'Python Extension')}
+                        {getLocString('DataScience.startPage.pythonExtensionTitle', 'Python Extension')}
                     </div>
                 </div>
                 <div className="row">
@@ -68,22 +64,33 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         />
                     </div>
                     <div className="block">
-                        <div className="text">Create a Jupyter Notebook</div>
+                        <div className="text">
+                            {getLocString('DataScience.startPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
+                        </div>
                         <div className="paragraph">
-                            - Use "<div className="italics">Shift + Command + P </div>" to open the{' '}
-                            <div className="link" role="button" onClick={this.openCommandPalette}>
-                                Command Palette
+                            {getLocString('DataScience.startPage.use', '- Use "')}
+                            <div className="italics">
+                                {getLocString('DataScience.startPage.shiftCommandP', 'Shift + Command + P ')}
                             </div>
-                            <br />- Type "
+                            {getLocString('DataScience.startPage.toOpenThe', '" to open the')}{' '}
+                            <div className="link" role="button" onClick={this.openCommandPalette}>
+                                {getLocString('DataScience.startPage.commandPalette', 'Command Palette')}
+                            </div>
+                            <br />
+                            {getLocString('DataScience.startPage.type', '- Type "')}
                             <div className="link italics" role="button" onClick={this.openCommandPaletteWithSelection}>
-                                Create new blank Jupyter notebook
+                                {getLocString(
+                                    'python.command.python.datascience.createnewnotebook.title',
+                                    'Create New Blank Jupyter Notebook'
+                                )}
                             </div>{' '}
                             "
-                            <br />- Explore our{' '}
+                            <br />
+                            {getLocString('DataScience.startPage.exploreOur', '- Explore our')}{' '}
                             <div className="link" role="button" onClick={this.openSampleNotebook}>
-                                sample notebook
+                                {getLocString('DataScience.startPage.sampleNotebook', 'sample notebook')}
                             </div>{' '}
-                            to learn about notebook features
+                            {getLocString('DataScience.startPage.toLearn', 'to learn about notebook features')}
                         </div>
                     </div>
                 </div>
@@ -96,14 +103,19 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         />
                     </div>
                     <div className="block">
-                        <div className="text">Create a Python File</div>
+                        <div className="text">
+                            {getLocString('DataScience.startPage.createAPythonFile', 'Create a Python File')}
+                        </div>
                         <div className="paragraph">
-                            - Create a new file and use the .py extension
+                            {getLocString(
+                                'DataScience.startPage.createANewFile',
+                                '- Create a new file and use the .py extension'
+                            )}
                             <br />-{' '}
                             <div className="link" role="button" onClick={this.openFileBrowser}>
-                                Open a file or workspace
+                                {getLocString('DataScience.startPage.openFileOrWorkspace', 'Open a file or workspace')}
                             </div>{' '}
-                            to continue work
+                            {getLocString('DataScience.startPage.continueWork', 'to continue work')}
                         </div>
                     </div>
                 </div>
@@ -116,33 +128,42 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                         />
                     </div>
                     <div className="block">
-                        <div className="text">Open the interactive Window</div>
+                        <div className="text">
+                            {getLocString('DataScience.startPage.openInteractiveWindow', 'Open the interactive Window')}
+                        </div>
                         <p>
-                            - You can create cells on a python file by typing "#%%"
-                            <br />- Use "Shift + Enter" to run a cell, the output will be shown in the interactive
-                            window
+                            {getLocString(
+                                'DataScience.startPage.interactiveWindowDesc',
+                                '- You can create cells on a python file by typing "#%%"'
+                            )}
+                            <br />
+                            {getLocString(
+                                'DataScience.startPage.interactiveWindowDesc2',
+                                '- Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+                            )}
                         </p>
                     </div>
                 </div>
                 <div className="row">
                     <div className="paragraph">
-                        Take a look at our{' '}
+                        {getLocString('DataScience.startPage.takeALook', 'Take a look at our')}{' '}
                         <a className="link" href="https://aka.ms/AA8dxtb">
-                            {this.getCurrentReleaseVersion()} Release Notes
+                            {this.getCurrentReleaseVersion()}{' '}
+                            {getLocString('DataScience.startPage.releaseNotes', 'Release Notes')}
                         </a>{' '}
-                        to learn more about the latest features
+                        {getLocString('DataScience.startPage.toLearnMore', 'to learn more about the latest features')}
                     </div>
                     {this.renderReleaseNotes()}
                     <div className="paragraph">
-                        Explore more features in our{' '}
+                        {getLocString('DataScience.startPage.exploreMoreFeatures', 'Explore more features in our')}{' '}
                         <a className="link" href="https://aka.ms/AA8dqti">
-                            Tutorials
+                            {getLocString('DataScience.startPage.tutorials', 'Tutorials')}
                         </a>{' '}
-                        or check{' '}
+                        {getLocString('DataScience.startPage.orCheck', 'or check')}{' '}
                         <a className="link" href="https://aka.ms/AA8dxwy">
-                            Documentation
+                            {getLocString('DataScience.startPage.documentation', 'Documentation')}
                         </a>{' '}
-                        for tips and troubleshooting.
+                        {getLocString('DataScience.startPage.forTips', 'for tips and troubleshooting.')}
                     </div>
                 </div>
                 <div className="block">
@@ -154,7 +175,7 @@ export class StartPage extends React.Component<IStartPageProps, IStartPageState>
                     ></input>
                 </div>
                 <div className="block">
-                    <p>Don't show this page again</p>
+                    <p>{getLocString('DataScience.startPage.dontShowAgain', "Don't show this page again")}</p>
                 </div>
             </div>
         );

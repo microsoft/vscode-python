@@ -930,6 +930,54 @@ export namespace DataScience {
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
     export const startPage = localize('DataScience.startPage', 'Python Start');
+    export const pythonExtensionTitle = localize('DataScience.startPage.pythonExtensionTitle', 'Python Extension');
+    export const createJupyterNotebook = localize(
+        'DataScience.startPage.createJupyterNotebook',
+        'Create a Jupyter Notebook'
+    );
+    export const use = localize('DataScience.startPage.use', '- Use "');
+    export const shiftCommandP = localize('DataScience.startPage.shiftCommandP', 'Shift + Command + P ');
+    export const toOpenThe = localize('DataScience.startPage.toOpenThe', ' to open the');
+    export const commandPalette = localize('DataScience.startPage.commandPalette', 'Command Palette');
+    export const type = localize('DataScience.startPage.type', '- Type "');
+    export const exploreOur = localize('DataScience.startPage.exploreOur', '- Explore our');
+    export const sampleNotebook = localize('DataScience.startPage.sampleNotebook', 'sample notebook');
+    export const toLearn = localize('DataScience.startPage.toLearn', 'to learn about notebook features');
+    export const createAPythonFile = localize('DataScience.startPage.createAPythonFile', 'Create a Python File');
+    export const createANewFile = localize(
+        'DataScience.startPage.createANewFile',
+        '- Create a new file and use the .py extension'
+    );
+    export const openFileOrWorkspace = localize(
+        'DataScience.startPage.openFileOrWorkspace',
+        'Open a file or workspace'
+    );
+    export const continueWork = localize('DataScience.startPage.continueWork', 'to continue work');
+    export const openInteractiveWindow = localize(
+        'DataScience.startPage.openInteractiveWindow',
+        'Open the interactive Window'
+    );
+    export const interactiveWindowDesc = localize(
+        'DataScience.startPage.interactiveWindowDesc',
+        '- You can create cells on a python file by typing "#%%"'
+    );
+    export const interactiveWindowDesc2 = localize(
+        'DataScience.startPage.interactiveWindowDesc2',
+        '- Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+    );
+
+    export const takeALook = localize('DataScience.startPage.takeALook', 'Take a look at our');
+    export const releaseNotes = localize('DataScience.startPage.releaseNotes', 'Release Notes');
+    export const toLearnMore = localize('DataScience.startPage.toLearnMore', 'to learn more about the latest features');
+    export const exploreMoreFeatures = localize(
+        'DataScience.startPage.exploreMoreFeatures',
+        'Explore more features in our'
+    );
+    export const tutorials = localize('DataScience.startPage.tutorials', 'Tutorials');
+    export const orCheck = localize('DataScience.startPage.orCheck', 'or check');
+    export const documentation = localize('DataScience.startPage.documentation', 'Documentation');
+    export const forTips = localize('DataScience.startPage.forTips', 'for tips and troubleshooting.');
+    export const dontShowAgain = localize('DataScience.startPage.dontShowAgain', "Don't show this page again");
     export const runByLine = localize('DataScience.runByLine', 'Run by line');
     export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
 }

@@ -53,13 +53,13 @@
 
 .link {
     display: inline;
-    /* color: var(--vscode-button-hoverBackground); */
     color: var(--vscode-debugIcon-continueForeground);
     text-decoration: none;
 }
 
 .link:hover {
     cursor: pointer;
+    color: var(--vscode-button-hoverBackground);
 }
 
 .italics {
