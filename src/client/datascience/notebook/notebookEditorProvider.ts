@@ -18,6 +18,9 @@ import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './executionHelpers';
 import { NotebookEditor } from './notebookEditor';
 
+/**
+ * Class responsbile for activating an registering the necessary event handlers in NotebookEditorProvider.
+ */
 @injectable()
 export class NotebookEditorProviderActivation implements IExtensionSingleActivationService {
     constructor(@inject(INotebookEditorProvider) private readonly provider: INotebookEditorProvider) {}
@@ -30,6 +33,13 @@ export class NotebookEditorProviderActivation implements IExtensionSingleActivat
     }
 }
 
+/**
+ * Notebook Editor provider used by other parts of DS code.
+ * This is an adapter, that takes the VSCode api for editors (did notebook editors open, close save, etc) and
+ * then exposes them in a manner we expect - i.e. INotebookEditorProvider.
+ * This is also responsible for tracking all notebooks that open and then keeping the VS Code notebook models updated with changes we made to our underlying model.
+ * E.g. when cells are executed the results in our model is updated, this tracks those changes and syncs VSC cells with those updates.
+ */
 @injectable()
 export class NotebookEditorProvider implements INotebookEditorProvider {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
@@ -70,17 +80,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public activate() {
         this.disposables.push(notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
-
-        // Swap the uris.
-        this.disposables.push(
-            this.storage.onSavedAs((e) => {
-                const savedEditor = this.notebookEditorsByUri.get(e.old.toString());
-                if (savedEditor) {
-                    this.notebookEditorsByUri.delete(e.old.toString());
-                    this.notebookEditorsByUri.set(e.new.toString(), savedEditor);
-                }
-            })
-        );
 
         // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
         // on this though.
@@ -159,6 +158,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebookesWaitingToBeOpenedByUri.get(uri.toString());
         deferred?.resolve(editor);
         if (!isUri(doc)) {
+            // This is where we ensure changes to our models are propagated back to the VSCode model.
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
             this.notebookEditors.set(doc, editor);
         }
