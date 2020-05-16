@@ -11,6 +11,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
+import { RawKernelSessionStartError } from '../../raw-kernel/rawJupyterSession';
 import {
     IJupyterConnection,
     IJupyterKernelSpec,
@@ -125,7 +126,9 @@ export class KernelSwitcher {
             } catch (ex) {
                 if (
                     isLocalConnection &&
-                    (ex instanceof JupyterSessionStartError || ex instanceof JupyterInvalidKernelError)
+                    (ex instanceof JupyterSessionStartError ||
+                        ex instanceof JupyterInvalidKernelError ||
+                        ex instanceof RawKernelSessionStartError)
                 ) {
                     // Looks like we were unable to start a session for the local connection.
                     // Possibly something wrong with the kernel.

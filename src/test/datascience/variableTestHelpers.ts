@@ -37,7 +37,7 @@ export async function verifyAfterStep(
     docManager.addDocument('a=1\na', file.fsPath);
     const debugPromise = interactive.debugCode('a=1\na', file.fsPath, 1, undefined, undefined);
     await debuggerBroke.promise;
-    const variableRefresh = waitForVariablesUpdated(ioc, 2); // Two times. Once for the initial refresh and another for the values.
+    const variableRefresh = waitForVariablesUpdated(ioc);
     await jupyterDebugger.requestVariables(); // This is necessary because not running inside of VS code. Normally it would do this.
     await variableRefresh;
     wrapper.update();

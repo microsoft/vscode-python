@@ -19,6 +19,7 @@ import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop, sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { waitForMessage } from './testHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
@@ -27,6 +28,7 @@ suite('DataScience DataViewer tests', () => {
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
     let notebook: INotebook | undefined;
+    const snapshot = takeSnapshot();
 
     suiteSetup(function () {
         // DataViewer tests require jupyter to run. Othewrise can't
@@ -38,6 +40,10 @@ suite('DataScience DataViewer tests', () => {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'DataViewer');
     });
 
     setup(async () => {

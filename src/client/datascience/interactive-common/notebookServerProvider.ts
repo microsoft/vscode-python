@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
+import { CancellationError, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -42,7 +42,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         return this._notebookCreated.event;
     }
 
-    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
+    public async getOrCreateServer(
+        options: GetServerOptions,
+        token?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         const serverOptions = this.getNotebookServerOptions();
 
         // If we are just fetching or only want to create for local, see if exists
@@ -50,18 +53,21 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
-            return this.createServer(options);
+            return this.createServer(options, token);
         }
     }
 
-    private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
+    private async createServer(
+        options: GetServerOptions,
+        token?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
         this.allowingUI = options.disableUI ? this.allowingUI : true;
 
         if (!this.serverPromise) {
             // Start a server
-            this.serverPromise = this.startServer();
+            this.serverPromise = this.startServer(token);
         }
         try {
             return await this.serverPromise;
@@ -72,7 +78,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async startServer(): Promise<INotebookServer | undefined> {
+    private async startServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
         const serverOptions = this.getNotebookServerOptions();
 
         traceInfo(`Checking for server existence.`);
@@ -99,7 +105,10 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             }
             // Then actually start the server
             traceInfo(`Starting notebook server.`);
-            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, progressReporter?.token);
+            const result = await this.jupyterExecution.connectToNotebookServer(
+                serverOptions,
+                wrapCancellationTokens(progressReporter?.token, token)
+            );
             traceInfo(`Server started.`);
             return result;
         } catch (e) {

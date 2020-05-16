@@ -295,7 +295,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         const maxOutputSize = this.props.settings.maxOutputSize;
         const outputSizeLimit = 10000;
         const maxTextSize =
-            maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
+            maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0
+                ? maxOutputSize
+                : this.props.settings.enableScrollingForCellOutputs
+                ? 400
+                : undefined;
 
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>

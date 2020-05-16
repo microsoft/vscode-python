@@ -210,7 +210,9 @@ suite('Language Server - Analysis Options', () => {
 
         const expectedSelector = [
             { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+            { scheme: 'untitled', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
         ];
 
         const selector = analysisOptions.getDocumentFilters();
@@ -223,7 +225,9 @@ suite('Language Server - Analysis Options', () => {
 
         const expectedSelector = [
             { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+            { scheme: 'untitled', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder);
@@ -237,7 +241,9 @@ suite('Language Server - Analysis Options', () => {
 
         const expectedSelector = [
             { scheme: 'file', language: PYTHON_LANGUAGE, pattern: `${workspaceFolder1.uri.fsPath}/**/*` },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+            { scheme: 'untitled', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
+            { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
         ];
 
         const selector = analysisOptions.getDocumentFilters(workspaceFolder1);

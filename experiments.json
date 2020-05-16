@@ -126,6 +126,18 @@
         "max": 100
     },
     {
+        "name": "NativeNotebook - experiment",
+        "salt": "NativeNotebook",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "NativeNotebook - control",
+        "salt": "NativeNotebook",
+        "min": 0,
+        "max": 100
+    },
+    {
         "name": "CollectLSRequestTiming - experiment",
         "salt": "CollectLSRequestTiming",
         "min": 0,

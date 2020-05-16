@@ -5,7 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { DebugConfiguration } from 'vscode';
+import { DebugConfiguration, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -72,24 +72,31 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
-            justMyCode: true,
-            // This list should include an exclusion list, but this debugpy issue is preventing that from working:
-            // https://github.com/microsoft/debugpy/issues/226
+            justMyCode: false,
             rules: [
+                {
+                    include: false,
+                    path: '**/*'
+                },
                 {
                     include: true,
                     path: cellHashFileName
                 }
             ]
         };
-        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config);
+        return this.startDebugSession((c) => this.debugService.startRunByLine(c), notebook, config, true);
     }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
-        return this.startDebugSession((c) => this.debugService.startDebugging(undefined, c), notebook, {
-            justMyCode: settings.datascience.debugJustMyCode
-        });
+        return this.startDebugSession(
+            (c) => this.debugService.startDebugging(undefined, c),
+            notebook,
+            {
+                justMyCode: settings.datascience.debugJustMyCode
+            },
+            false
+        );
     }
 
     public async stopDebugging(notebook: INotebook): Promise<void> {
@@ -129,12 +136,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async startDebugSession(
         startCommand: (config: DebugConfiguration) => Thenable<boolean>,
         notebook: INotebook,
-        extraConfig: Partial<DebugConfiguration>
+        extraConfig: Partial<DebugConfiguration>,
+        runByLine: boolean
     ) {
         traceInfo('start debugging');
 
         // Try to connect to this notebook
-        const config = await this.connect(notebook, extraConfig);
+        const config = await this.connect(notebook, runByLine, extraConfig);
         if (config) {
             traceInfo('connected to notebook during debugging');
 
@@ -182,14 +190,17 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async connect(
         notebook: INotebook,
+        runByLine: boolean,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
-        let result = this.configs.get(notebook.identity.toString());
+        const key = notebook.identity.toString();
+        let result = this.configs.get(key);
         if (result) {
-            const settings = this.configService.getSettings(notebook.resource);
-            result.justMyCode = settings.datascience.debugJustMyCode;
-            return result;
+            return {
+                ...result,
+                ...extraConfig
+            };
         }
         traceInfo('enable debugger attach');
 
@@ -203,7 +214,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // If we don't have debugger installed or the version is too old then we need to install it
         if (!debuggerVersion || !this.debuggerMeetsRequirement(debuggerVersion, requiredVersion)) {
-            await this.promptToInstallDebugger(notebook, debuggerVersion);
+            await this.promptToInstallDebugger(notebook, debuggerVersion, runByLine);
         }
 
         // Connect local or remote based on what type of notebook we're talking to
@@ -226,6 +237,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         if (result.port) {
             this.configs.set(notebook.identity.toString(), result);
+
+            // Sign up for any change to the kernel to delete this config.
+            const disposables: Disposable[] = [];
+            const clear = () => {
+                this.configs.delete(key);
+                disposables.forEach((d) => d.dispose());
+            };
+            disposables.push(notebook.onDisposed(clear));
+            disposables.push(notebook.onKernelRestarted(clear));
+            disposables.push(notebook.onKernelChanged(clear));
         }
 
         return result;
@@ -387,10 +408,18 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
-    private async promptToInstallDebugger(notebook: INotebook, oldVersion: Version | undefined): Promise<void> {
-        const promptMessage = oldVersion
-            ? localize.DataScience.jupyterDebuggerInstallUpdate().format(this.debuggerPackage)
+    private async promptToInstallDebugger(
+        notebook: INotebook,
+        oldVersion: Version | undefined,
+        runByLine: boolean
+    ): Promise<void> {
+        const updateMessage = runByLine
+            ? localize.DataScience.jupyterDebuggerInstallUpdateRunByLine().format(this.debuggerPackage)
+            : localize.DataScience.jupyterDebuggerInstallUpdate().format(this.debuggerPackage);
+        const newMessage = runByLine
+            ? localize.DataScience.jupyterDebuggerInstallNewRunByLine().format(this.debuggerPackage)
             : localize.DataScience.jupyterDebuggerInstallNew().format(this.debuggerPackage);
+        const promptMessage = oldVersion ? updateMessage : newMessage;
         const result = await this.appShell.showInformationMessage(
             promptMessage,
             localize.DataScience.jupyterDebuggerInstallYes(),

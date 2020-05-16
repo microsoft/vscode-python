@@ -24,6 +24,7 @@ import {
 } from '../../client/datascience/types';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -45,8 +46,12 @@ suite('DataScience Debugger tests', () => {
     let ioc: DataScienceIocContainer;
     let lastErrorMessage: string | undefined;
     let jupyterDebuggerService: IJupyterDebugService | undefined;
+    // tslint:disable-next-line: no-any
+    let snapshot: any;
 
     suiteSetup(function () {
+        snapshot = takeSnapshot();
+
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
@@ -56,6 +61,10 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'Debugger');
     });
 
     setup(async () => {
@@ -181,10 +190,11 @@ suite('DataScience Debugger tests', () => {
                 if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
                     // Verify variables work
                     openVariableExplorer(ioc.wrapper);
-                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
+                    await waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
 

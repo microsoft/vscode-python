@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { IFileSystem } from '../../../common/platform/types';
@@ -12,6 +13,7 @@ import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IKernelFinder } from '../../kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { detectDefaultKernelName } from './helpers';
 import { KernelService } from './kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
 
@@ -43,11 +45,11 @@ function getQuickPickItemForKernelSpec(
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
-    const path = kernel.metadata?.interpreter?.path || kernel.path;
+    const pickPath = kernel.metadata?.interpreter?.path || kernel.path;
     return {
         label: kernel.display_name || kernel.name || '',
         // If we have a session, use that path
-        detail: kernel.session.path || !path ? kernel.session.path : pathUtils.getDisplayName(path),
+        detail: kernel.session.path || !pickPath ? kernel.session.path : pathUtils.getDisplayName(pickPath),
         description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
@@ -128,6 +130,16 @@ export class InstalledRawKernelSelectionListProvider implements IKernelSelection
         const items = await this.kernelFinder.listKernelSpecs(resource);
         return items
             .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .filter((item) => {
+                // If we have a default kernel name and a non-absolute path just hide the item
+                // Otherwise we end up showing a bunch of "Python 3 - python" default items for
+                // other interpreters
+                const match = detectDefaultKernelName(item.name);
+                if (match) {
+                    return path.isAbsolute(item.path);
+                }
+                return true;
+            })
             .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
     }
 }

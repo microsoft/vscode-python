@@ -219,6 +219,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public dispose(): Promise<void> {
         super.dispose();
+        this.model?.dispose(); // NOSONAR
         return this.close();
     }
 
@@ -303,7 +304,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         await this.loadedPromise.promise;
         if (this.model) {
-            return (await this.model.getJson()).metadata;
+            return this.model.metadata;
         }
     }
 
@@ -640,7 +641,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
-    private async export(cells: ICell[]): Promise<void> {
+    private async export(): Promise<void> {
         const status = this.setStatus(localize.DataScience.convertingToPythonFile(), false);
         // First generate a temporary notebook with these cells.
         let tempFile: TemporaryFile | undefined;
@@ -648,7 +649,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
 
             // Translate the cells into a notebook
-            const content = this.model ? await this.model.getContent(cells) : '';
+            const content = this.model ? this.model.getContent() : '';
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
 
             // Import this file and show it

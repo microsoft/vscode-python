@@ -13,6 +13,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
 import * as NativeHelpers from './nativeEditorTestHelpers';
 import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
@@ -22,11 +23,20 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
     suite(`DataScience Intellisense tests with ${languageServerType} LanguageServer mocked`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
+        let snapshot: any;
+
+        suiteSetup(() => {
+            snapshot = takeSnapshot();
+        });
 
         setup(async () => {
             ioc = new DataScienceIocContainer();
             ioc.registerDataScienceTypes(false, languageServerType);
             return ioc.activate();
+        });
+
+        suiteTeardown(() => {
+            writeDiffSnapshot(snapshot, 'Intellisense');
         });
 
         teardown(async () => {

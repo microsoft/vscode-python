@@ -89,7 +89,8 @@ suite('Data Science - Native Editor Provider', () => {
             [],
             instance(workspace),
             instance(configService),
-            customEditorService.object
+            customEditorService.object,
+            storage.object
         );
 
         return registeredProvider;

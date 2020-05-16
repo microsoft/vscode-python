@@ -76,10 +76,10 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         return result;
     }
 
-    public async getMatchingVariableValue(_notebook: INotebook, name: string): Promise<string | undefined> {
+    public async getMatchingVariable(_notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
-            return this.lastKnownVariables.find((v) => v.name === name)?.value;
+            return this.lastKnownVariables.find((v) => v.name === name);
         }
     }
 
@@ -115,7 +115,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         end: number
     ): Promise<{}> {
         // Run the get dataframe rows script
-        if (!this.debugService.activeDebugSession) {
+        if (!this.debugService.activeDebugSession || targetVariable.columns === undefined) {
             // No active server just return no rows
             return {};
         }
@@ -161,7 +161,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {
             this.debuggingStarted = true;
-        } else if (message.type === 'response' && message.command === 'variables') {
+        } else if (message.type === 'response' && message.command === 'variables' && message.body) {
             // If using the interactive debugger, update our variables.
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Figure out what resource to use
@@ -248,7 +248,7 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
             // tslint:disable-next-line: no-any
             (variable as any).frameId
         );
-        if (results) {
+        if (results && results.result) {
             // Results should be the updated variable.
             return {
                 ...variable,

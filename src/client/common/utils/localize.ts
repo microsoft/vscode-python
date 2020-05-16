@@ -714,9 +714,17 @@ export namespace DataScience {
         'DataScience.jupyterDebuggerInstallNew',
         'Pip module {0} is required for debugging cells. Install {0} and continue to debug cell?'
     );
+    export const jupyterDebuggerInstallNewRunByLine = localize(
+        'DataScience.jupyterDebuggerInstallNewRunByLine',
+        'Pip module {0} is required for running by line. Install {0} and continue to run by line?'
+    );
     export const jupyterDebuggerInstallUpdate = localize(
         'DataScience.jupyterDebuggerInstallUpdate',
         'The version of {0} installed does not support debugging cells. Update {0} to newest version and continue to debug cell?'
+    );
+    export const jupyterDebuggerInstallUpdateRunByLine = localize(
+        'DataScience.jupyterDebuggerInstallUpdateRunByLine',
+        'The version of {0} installed does not support running by line. Update {0} to newest version and continue to run by line?'
     );
     export const jupyterDebuggerInstallYes = localize('DataScience.jupyterDebuggerInstallYes', 'Yes');
     export const jupyterDebuggerInstallNo = localize('DataScience.jupyterDebuggerInstallNo', 'No');
@@ -980,6 +988,10 @@ export namespace DataScience {
     export const dontShowAgain = localize('DataScience.startPage.dontShowAgain', "Don't show this page again");
     export const runByLine = localize('DataScience.runByLine', 'Run by line');
     export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
+    export const rawKernelSessionFailed = localize(
+        'DataScience.rawKernelSessionFailed',
+        'Unable to start session for kernel {0}. Select another kernel to launch with.'
+    );
 }
 
 export namespace DebugConfigStrings {

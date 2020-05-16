@@ -28,7 +28,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import { INotebookEditor, INotebookEditorProvider, INotebookModel, INotebookStorage } from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
+import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
 // opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
@@ -69,9 +70,8 @@ export class NativeEditorProvider
     protected customDocuments = new Map<string, CustomDocument>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private storageAndModels = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
     private executedEditors: Set<string> = new Set<string>();
-    private models = new WeakSet<INotebookModel>();
+    private models = new Set<INotebookModel>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
@@ -81,7 +81,8 @@ export class NativeEditorProvider
         @inject(IDisposableRegistry) protected readonly disposables: IDisposableRegistry,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
-        @inject(ICustomEditorService) private customEditorService: ICustomEditorService
+        @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
     ) {
         traceInfo(`id is ${this._id}`);
         asyncRegistry.push(this);
@@ -100,19 +101,13 @@ export class NativeEditorProvider
         });
     }
 
-    public save(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
-        return this.loadStorage(document.uri).then(async (s) => {
-            if (s) {
-                await s.save(cancellation);
-            }
-        });
+    public async save(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+        const model = await this.loadModel(document.uri);
+        await this.storage.save(model, cancellation);
     }
-    public saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
-        return this.loadStorage(document.uri).then(async (s) => {
-            if (s) {
-                await s.saveAs(targetResource);
-            }
-        });
+    public async saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
+        const model = await this.loadModel(document.uri);
+        await this.storage.saveAs(model, targetResource);
     }
     public applyEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
         return this.loadModel(document.uri).then((s) => {
@@ -132,11 +127,8 @@ export class NativeEditorProvider
         noop();
     }
     public async backup(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
-        return this.loadStorage(document.uri).then(async (s) => {
-            if (s) {
-                await s.backup(cancellation);
-            }
-        });
+        const model = await this.loadModel(document.uri);
+        await this.storage.backup(model, cancellation);
     }
 
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
@@ -146,12 +138,7 @@ export class NativeEditorProvider
 
     public async resolveCustomDocument(document: CustomDocument): Promise<void> {
         this.customDocuments.set(document.uri.fsPath, document);
-        await this.loadStorage(document.uri);
-    }
-
-    public async resolveNativeEditorStorage(document: CustomDocument): Promise<INotebookStorage> {
-        this.customDocuments.set(document.uri.fsPath, document);
-        return this.loadStorage(document.uri);
+        await this.loadModel(document.uri);
     }
 
     public async dispose(): Promise<void> {
@@ -204,9 +191,16 @@ export class NativeEditorProvider
         this.notebookCount += 1;
 
         // Set these contents into the storage before the file opens
-        await this.loadStorage(uri, contents);
+        await this.loadModel(uri, contents);
 
         return this.open(uri);
+    }
+
+    public loadModel(file: Uri, contents?: string) {
+        return this.storage.load(file, contents).then((m) => {
+            this.trackModel(m);
+            return m;
+        });
     }
 
     protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
@@ -242,12 +236,14 @@ export class NativeEditorProvider
 
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
-        // If last editor, dispose of the storage
-        const key = editor.file.toString();
-        if (![...this.openedEditors].find((e) => e.file.toString() === key)) {
-            this.storageAndModels.delete(key);
-        }
         this._onDidCloseNotebookEditor.fire(editor);
+    }
+    private trackModel(model: INotebookModel) {
+        if (!this.models.has(model)) {
+            this.models.add(model);
+            this.disposables.push(model.onDidDispose(() => this.models.delete(model)));
+            this.disposables.push(model.onDidEdit(this.modelEdited.bind(this, model)));
+        }
     }
 
     private onChangedViewState(): void {
@@ -260,15 +256,6 @@ export class NativeEditorProvider
         }
     }
 
-    private async modelChanged(change: NotebookModelChange) {
-        if (change.source === 'user' && change.kind === 'file') {
-            // Update our storage
-            const promise = this.storageAndModels.get(change.oldFile.toString());
-            this.storageAndModels.delete(change.oldFile.toString());
-            this.storageAndModels.set(change.newFile.toString(), promise!);
-        }
-    }
-
     private async modelEdited(model: INotebookModel, change: NotebookModelChange) {
         // Find the document associated with this edit.
         const document = this.customDocuments.get(model.file.fsPath);
@@ -277,43 +264,15 @@ export class NativeEditorProvider
         }
     }
 
-    private async loadModel(file: Uri, contents?: string): Promise<INotebookModel> {
-        const modelAndStorage = await this.loadModelAndStorage(file, contents);
-        return modelAndStorage.model;
-    }
-
-    private async loadStorage(file: Uri, contents?: string): Promise<INotebookStorage> {
-        const modelAndStorage = await this.loadModelAndStorage(file, contents);
-        return modelAndStorage.storage;
-    }
-
-    private loadModelAndStorage(file: Uri, contents?: string) {
-        const key = file.toString();
-        let modelPromise = this.storageAndModels.get(key);
-        if (!modelPromise) {
-            const storage = this.serviceContainer.get<INotebookStorage>(INotebookStorage);
-            modelPromise = storage.load(file, contents).then((m) => {
-                if (!this.models.has(m)) {
-                    this.models.add(m);
-                    this.disposables.push(m.changed(this.modelChanged.bind(this)));
-                    this.disposables.push(storage.onDidEdit(this.modelEdited.bind(this, m)));
-                }
-                return { model: m, storage };
-            });
-            this.storageAndModels.set(key, modelPromise);
-        }
-        return modelPromise;
-    }
-
     private async getNextNewNotebookUri(): Promise<Uri> {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: This will not work, if we close an untitled document.
         // See if we have any untitled storage already
-        const untitledStorage = [...this.storageAndModels.keys()].filter((k) => Uri.parse(k).scheme === 'untitled');
-
+        const untitledStorage = Array.from(this.models.values()).filter((model) => model?.file?.scheme === 'untitled');
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.
         const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
         const fileUri = Uri.file(fileName);
-
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });
     }
