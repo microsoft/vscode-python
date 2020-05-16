@@ -119,13 +119,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // TODO: In another branch.
         // const model = await this.storage.createNew(contents);
         // await this.onDidOpenNotebookDocument(model.file);
-
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Need to do this.
         // Update number of notebooks in the workspace
         // this.notebookCount += 1;
-
-        return this.open(model.file);
+        // return this.open(model.file);
+        // tslint:disable-next-line: no-any
+        return undefined as any;
     }
     protected openedEditor(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;
