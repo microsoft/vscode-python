@@ -141,9 +141,9 @@ export class LanguageServerExtensionActivationService
     }
 
     /**
-     * Checks if user has not manually set `languageServer` setting
+     * Checks if user does not have any `languageServer` setting set.
      * @param resource
-     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `languageServer` setting added
+     * @returns `true` if user is using default configuration, `false` if user has `languageServer` setting added.
      */
     public isJediUsingDefaultConfiguration(resource: Resource): boolean {
         const settings = this.workspaceService

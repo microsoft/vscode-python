@@ -66,15 +66,13 @@ suite('Python Settings', async () => {
             'envFile',
             'poetryPath',
             'insidersChannel',
-            'defaultInterpreterPath'
+            'defaultInterpreterPath',
+            'jediPath'
         ]) {
             config
                 .setup((c) => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
-        }
-        if (sourceSettings.languageServer === LanguageServerType.Jedi) {
-            config.setup((c) => c.get<string>('jediPath')).returns(() => sourceSettings.jediPath);
         }
         for (const name of ['venvFolders']) {
             config
@@ -98,10 +96,7 @@ suite('Python Settings', async () => {
         }
 
         // number settings
-        if (sourceSettings.languageServer === LanguageServerType.Jedi) {
-            config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
-        }
-
+        config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
         // Language server type settings
         config.setup((c) => c.get<LanguageServerType>('languageServer')).returns(() => sourceSettings.languageServer);
 

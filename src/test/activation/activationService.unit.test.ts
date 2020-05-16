@@ -691,7 +691,7 @@ suite('Language Server Activation - ActivationService', () => {
         let platformService: TypeMoq.IMock<IPlatformService>;
         let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-        let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
+        let state: TypeMoq.IMock<IPersistentState<LanguageServerType | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -702,7 +702,7 @@ suite('Language Server Activation - ActivationService', () => {
             cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-            state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
+            state = TypeMoq.Mock.ofType<IPersistentState<LanguageServerType | undefined>>();
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
@@ -773,11 +773,11 @@ suite('Language Server Activation - ActivationService', () => {
             state
                 .setup((s) => s.value)
                 .returns(() => undefined)
-                .verifiable(TypeMoq.Times.exactly(2));
+                .verifiable(TypeMoq.Times.exactly(1));
             state
-                .setup((s) => s.updateValue(TypeMoq.It.isValue(true)))
+                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))
                 .returns(() => {
-                    state.setup((s) => s.value).returns(() => true);
+                    state.setup((s) => s.value).returns(() => LanguageServerType.Jedi);
                     return Promise.resolve();
                 })
                 .verifiable(TypeMoq.Times.once());
@@ -795,10 +795,10 @@ suite('Language Server Activation - ActivationService', () => {
             state.reset();
             state
                 .setup((s) => s.value)
-                .returns(() => true)
-                .verifiable(TypeMoq.Times.exactly(2));
+                .returns(() => LanguageServerType.Jedi)
+                .verifiable(TypeMoq.Times.exactly(1));
             state
-                .setup((s) => s.updateValue(TypeMoq.It.isValue(false)))
+                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Microsoft)))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 
@@ -807,7 +807,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Node);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Microsoft);
 
             state.verifyAll();
         });
@@ -815,10 +815,10 @@ suite('Language Server Activation - ActivationService', () => {
             state.reset();
             state
                 .setup((s) => s.value)
-                .returns(() => false)
-                .verifiable(TypeMoq.Times.exactly(2));
+                .returns(() => LanguageServerType.Microsoft)
+                .verifiable(TypeMoq.Times.exactly(1));
             state
-                .setup((s) => s.updateValue(TypeMoq.It.isValue(true)))
+                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 
@@ -835,8 +835,8 @@ suite('Language Server Activation - ActivationService', () => {
             state.reset();
             state
                 .setup((s) => s.value)
-                .returns(() => true)
-                .verifiable(TypeMoq.Times.exactly(2));
+                .returns(() => LanguageServerType.Jedi)
+                .verifiable(TypeMoq.Times.exactly(1));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve())
@@ -981,10 +981,6 @@ suite('Language Server Activation - ActivationService', () => {
                 .setup((c) => c.inspect<LanguageServerType>('languageServer'))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
-            pythonSettings
-                .setup((p) => p.languageServer)
-                .returns(() => LanguageServerType.Jedi)
-                .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(
                 serviceContainer.object,
@@ -1006,7 +1002,7 @@ suite('Language Server Activation - ActivationService', () => {
                 [
                     {
                         testName: 'Returns false when python settings value is Microsoft',
-                        pythonSettingsValue: LanguageServerType.Node,
+                        pythonSettingsValue: LanguageServerType.Microsoft,
                         expectedResult: false
                     },
                     {

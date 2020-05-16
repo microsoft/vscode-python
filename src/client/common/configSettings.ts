@@ -232,16 +232,14 @@ export class PythonSettings implements IPythonSettings {
         }
         this.languageServer = systemVariables.resolveAny(ls)!;
 
-        if (this.languageServer === LanguageServerType.Jedi) {
-            // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-            this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-            if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-                this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-            } else {
-                this.jediPath = '';
-            }
-            this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
+        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
+            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
+        } else {
+            this.jediPath = '';
         }
+        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
