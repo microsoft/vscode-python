@@ -589,6 +589,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Clear the result if we've run before
                 await this.clearResult(cell.id);
 
+                // Clear 'per run' data passed to WebView before execution
+                if (cell.data.metadata.tags !== undefined) {
+                    const idx = cell.data.metadata.tags.indexOf('outputPrepend', 0);
+                    if (idx > -1) {
+                        cell.data.metadata.tags.splice(idx, 1);
+                    }
+                }
                 const code = concatMultilineStringInput(cell.data.source);
                 // Send to ourselves.
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);

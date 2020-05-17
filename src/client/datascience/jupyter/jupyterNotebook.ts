@@ -1283,8 +1283,8 @@ export class JupyterNotebookBase implements INotebook {
         trimFunc: (str: string) => string
     ) {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        let originalTextLenght = 0;
-        let trimmedTextLenght = 0;
+        let originalTextLength = 0;
+        let trimmedTextLength = 0;
 
         // Clear output if waiting for a clear
         if (clearState.value) {
@@ -1301,12 +1301,12 @@ export class JupyterNotebookBase implements INotebook {
             // tslint:disable-next-line:restrict-plus-operands
             existing.text = existing.text + msg.content.text;
             const originalText = formatStreamText(concatMultilineStringOutput(existing.text));
-            originalTextLenght = originalText.length;
+            originalTextLength = originalText.length;
             existing.text = trimFunc(originalText);
-            trimmedTextLenght = existing.text.length;
+            trimmedTextLength = existing.text.length;
         } else {
             const originalText = formatStreamText(concatMultilineStringOutput(msg.content.text));
-            originalTextLenght = originalText.length;
+            originalTextLength = originalText.length;
             // Create a new stream entry
             const output: nbformat.IStream = {
                 output_type: 'stream',
@@ -1314,14 +1314,14 @@ export class JupyterNotebookBase implements INotebook {
                 text: trimFunc(originalText)
             };
             data.outputs = [...data.outputs, output];
-            trimmedTextLenght = output.text.length;
+            trimmedTextLength = output.text.length;
             cell.data = data;
         }
 
         // If the output was trimmed, we add the 'outputPrepend' metadata tag.
         // Later, the react side will display a message letting the user know
         // the output is trimmed and what setting changes that.
-        if (trimmedTextLenght < originalTextLenght) {
+        if (trimmedTextLength < originalTextLength) {
             if (!data.metadata.tags) {
                 data.metadata.tags = ['outputPrepend'];
             } else {
