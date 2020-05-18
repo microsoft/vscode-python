@@ -108,9 +108,13 @@ export function traceCellResults(prefix: string, results: ICell[]) {
         if (error) {
             traceError(`${prefix} Error : ${error}`);
         } else if (cell.outputs && cell.outputs[0]) {
-            const data = cell.outputs[0].data;
-            const text = cell.outputs[0].text;
-            traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
+            if (cell.outputs[0].output_type.includes('image')) {
+                traceInfo(`${prefix} Output: image`);
+            } else {
+                const data = cell.outputs[0].data;
+                const text = cell.outputs[0].text;
+                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
+            }
         }
     } else {
         traceInfo(`${prefix} no output.`);
