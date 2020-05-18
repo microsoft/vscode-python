@@ -592,7 +592,7 @@ suite('FileSystem', () => {
 
         suite('createWriteStream', () => {
             test('wraps the low-level impl', async () => {
-                const filename = await fix.resolve('x/y/z/spam.py');
+                const filename = await fix.resolve('x/y/z/spam2.py');
                 const expected = fs.createWriteStream(filename);
                 expected.destroy();
 
