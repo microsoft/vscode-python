@@ -19,7 +19,10 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         // tslint:disable-next-line:no-any
         this.onDidChangeCodeLenses = (workspaceService.onDidChangeConfiguration as any) as Event<void>;
     }
-    public async detectShebang(document: TextDocument): Promise<string | undefined> {
+    public async detectShebang(
+        document: TextDocument,
+        resolveShebangAsInterpreter: boolean = false
+    ): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
         if (firstLine.isEmptyOrWhitespace) {
             return;
@@ -30,8 +33,12 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         }
 
         const shebang = firstLine.text.substr(2).trim();
-        const pythonPath = await this.getFullyQualifiedPathToInterpreter(shebang, document.uri);
-        return typeof pythonPath === 'string' && pythonPath.length > 0 ? pythonPath : undefined;
+        if (resolveShebangAsInterpreter) {
+            const pythonPath = await this.getFullyQualifiedPathToInterpreter(shebang, document.uri);
+            return typeof pythonPath === 'string' && pythonPath.length > 0 ? pythonPath : undefined;
+        } else {
+            return typeof shebang === 'string' && shebang.length > 0 ? shebang : undefined;
+        }
     }
     public async provideCodeLenses(document: TextDocument, _token?: CancellationToken): Promise<CodeLens[]> {
         return this.createShebangCodeLens(document);

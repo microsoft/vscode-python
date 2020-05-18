@@ -63,14 +63,32 @@ suite('Shebang detection', () => {
 
         return [doc, line];
     }
-    test('Shebang should be empty when first line is empty', async () => {
+    test('Shebang should be empty when first line is empty when resolving shebang as interpreter', async () => {
         const [document, line] = createDocument('');
 
-        const shebang = await provider.detectShebang(document.object);
+        const shebang = await provider.detectShebang(document.object, true);
 
         document.verifyAll();
         line.verifyAll();
         expect(shebang).to.be.equal(undefined, 'Shebang should be undefined');
+    });
+    test('Shebang should be empty when first line is empty when not resolving shebang as interpreter', async () => {
+        const [document, line] = createDocument('');
+
+        const shebang = await provider.detectShebang(document.object, false);
+
+        document.verifyAll();
+        line.verifyAll();
+        expect(shebang).to.be.equal(undefined, 'Shebang should be undefined');
+    });
+    test('Shebang should be returned as it is when not resolving shebang as interpreter', async () => {
+        const [document, line] = createDocument('#!HELLO');
+
+        const shebang = await provider.detectShebang(document.object, false);
+
+        document.verifyAll();
+        line.verifyAll();
+        expect(shebang).to.be.equal('HELLO', 'Shebang should be HELLO');
     });
     test('Shebang should be empty when python path is invalid in shebang', async () => {
         const [document, line] = createDocument('#!HELLO');
@@ -80,7 +98,7 @@ suite('Shebang detection', () => {
             .returns(() => Promise.reject())
             .verifiable(typemoq.Times.once());
 
-        const shebang = await provider.detectShebang(document.object);
+        const shebang = await provider.detectShebang(document.object, true);
 
         document.verifyAll();
         line.verifyAll();
@@ -95,7 +113,7 @@ suite('Shebang detection', () => {
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
-        const shebang = await provider.detectShebang(document.object);
+        const shebang = await provider.detectShebang(document.object, true);
 
         document.verifyAll();
         line.verifyAll();
@@ -113,7 +131,7 @@ suite('Shebang detection', () => {
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
-        const shebang = await provider.detectShebang(document.object);
+        const shebang = await provider.detectShebang(document.object, true);
 
         document.verifyAll();
         line.verifyAll();
@@ -132,7 +150,7 @@ suite('Shebang detection', () => {
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
-        const shebang = await provider.detectShebang(document.object);
+        const shebang = await provider.detectShebang(document.object, true);
 
         document.verifyAll();
         line.verifyAll();
