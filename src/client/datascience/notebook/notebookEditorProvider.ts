@@ -81,6 +81,17 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.disposables.push(notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
 
+        // Swap the uris.
+        this.disposables.push(
+            this.storage.onSavedAs((e) => {
+                const savedEditor = this.notebookEditorsByUri.get(e.old.toString());
+                if (savedEditor) {
+                    this.notebookEditorsByUri.delete(e.old.toString());
+                    this.notebookEditorsByUri.set(e.new.toString(), savedEditor);
+                }
+            })
+        );
+
         // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
         // on this though.
         const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
@@ -114,18 +125,15 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // We do not need this.
         throw new Error('Not supported');
     }
-    public async createNew(_contents?: string): Promise<INotebookEditor> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: In another branch.
-        // const model = await this.storage.createNew(contents);
-        // await this.onDidOpenNotebookDocument(model.file);
+    public async createNew(contents?: string): Promise<INotebookEditor> {
+        const model = await this.storage.createNew(contents);
+        await this.onDidOpenNotebookDocument(model.file);
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Need to do this.
         // Update number of notebooks in the workspace
         // this.notebookCount += 1;
-        // return this.open(model.file);
-        // tslint:disable-next-line: no-any
-        return undefined as any;
+
+        return this.open(model.file);
     }
     protected openedEditor(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;

@@ -10,6 +10,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
+import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -37,9 +38,11 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
+        disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
@@ -153,6 +156,15 @@ export class NotebookProvider implements INotebookProvider {
         // If we have no editors for this file, then dispose the notebook.
         if (editors.length === 0) {
             await this.disposeNotebook(editor.file);
+        }
+    }
+
+    private async onSavedAs(e: { new: Uri; old: Uri }) {
+        // Swap the Uris when a notebook is saved as a different file.
+        const notebookPromise = this.notebooks.get(e.old.toString());
+        if (notebookPromise) {
+            this.notebooks.set(e.new.toString(), notebookPromise);
+            this.notebooks.delete(e.old.toString());
         }
     }
 

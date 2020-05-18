@@ -16,6 +16,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { IConfigurationService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookModel, INotebookStorage } from '../../../client/datascience/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -26,7 +27,7 @@ suite('Data Science - Native Editor Provider', () => {
     let configService: IConfigurationService;
     let svcContainer: IServiceContainer;
     let editor: typemoq.IMock<INotebookEditor>;
-    let storage: typemoq.IMock<INotebookStorage & INotebookModel>;
+    let storage: typemoq.IMock<INotebookStorageProvider & INotebookModel>;
     let customEditorService: typemoq.IMock<ICustomEditorService>;
     let file: Uri;
     let storageFile: Uri;
@@ -37,7 +38,7 @@ suite('Data Science - Native Editor Provider', () => {
         svcContainer = mock(ServiceContainer);
         configService = mock(ConfigurationService);
         workspace = mock(WorkspaceService);
-        storage = typemoq.Mock.ofType<INotebookStorage & INotebookModel>();
+        storage = typemoq.Mock.ofType<INotebookStorageProvider & INotebookModel>();
         customEditorService = typemoq.Mock.ofType<ICustomEditorService>();
         panel = typemoq.Mock.ofType<WebviewPanel>();
         panel.setup((e) => (e as any).then).returns(() => undefined);
