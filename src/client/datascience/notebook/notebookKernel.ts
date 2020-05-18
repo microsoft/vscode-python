@@ -17,13 +17,13 @@ import { createDeferred } from '../../common/utils/async';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebook, INotebookModel, INotebookProvider } from '../types';
+import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
     updateCellOutput,
     updateCellWithErrorStatus
 } from './executionHelpers';
-import { findMappedNotebookCellModel } from './helpers';
 
 /**
  * VSC will use this class to execute cells in a notebook.
@@ -65,7 +65,6 @@ export class NotebookKernel implements VSCNotebookKernel {
         if (token.isCancellationRequested) {
             return;
         }
-
         const metadata = model.metadata;
         const nb = await this.notebookProvider.getOrCreateNotebook({
             identity: document.uri,

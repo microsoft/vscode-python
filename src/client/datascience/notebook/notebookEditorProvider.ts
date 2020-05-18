@@ -4,18 +4,19 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, notebook, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, notebook, NotebookDocument, NotebookDocumentChangeEvent, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { isUri } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
-import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './executionHelpers';
+import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
 
 /**
@@ -23,12 +24,14 @@ import { NotebookEditor } from './notebookEditor';
  */
 @injectable()
 export class NotebookEditorProviderActivation implements IExtensionSingleActivationService {
-    constructor(@inject(INotebookEditorProvider) private readonly provider: INotebookEditorProvider) {}
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     public async activate(): Promise<void> {
+        // Use container, as we change this during runtime (until we move completely over).
+        const provider = this.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         // The whole purpose is to ensure the NotebookEditorProvider class activates as soon as extension loads.
         // tslint:disable-next-line: no-use-before-declare
-        if (this.provider instanceof NotebookEditorProvider) {
-            this.provider.activate();
+        if (provider instanceof NotebookEditorProvider) {
+            provider.activate();
         }
     }
 }
@@ -80,6 +83,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public activate() {
         this.disposables.push(notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
+        this.disposables.push(notebook.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this));
 
         // Swap the uris.
         this.disposables.push(
@@ -188,5 +192,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this.notebookEditors.delete(doc);
             this.notebookEditorsByUri.delete(doc.uri.toString());
         }
+    }
+    private async onDidChangeNotebookDocument(_e: NotebookDocumentChangeEvent): Promise<void> {
+        // Noop.
     }
 }
