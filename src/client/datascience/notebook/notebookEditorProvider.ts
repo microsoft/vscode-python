@@ -68,7 +68,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private openedNotebookCount: number = 0;
     private readonly notebookEditors = new Map<NotebookDocument, INotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
-    private readonly notebookesWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
+    private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -105,8 +105,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // Wait for editor to get opened up, vscode will notify when it is opened.
         // Further below.
         const deferred = createDeferred<INotebookEditor>();
-        this.notebookesWaitingToBeOpenedByUri.set(file.toString(), deferred);
-        deferred.promise.then(() => this.notebookesWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
+        this.notebooksWaitingToBeOpenedByUri.set(file.toString(), deferred);
+        deferred.promise.then(() => this.notebooksWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
         await this.commandManager.executeCommand('vscode.open', file);
         return deferred.promise;
     }
@@ -157,7 +157,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const model = await this.storage.load(uri);
         // In open method we might be waiting.
         const editor = this.notebookEditorsByUri.get(uri.toString()) || new NotebookEditor(model);
-        const deferred = this.notebookesWaitingToBeOpenedByUri.get(uri.toString());
+        const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());
         deferred?.resolve(editor);
         if (!isUri(doc)) {
             // This is where we ensure changes to our models are propagated back to the VSCode model.
