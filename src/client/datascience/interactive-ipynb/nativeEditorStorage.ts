@@ -35,8 +35,11 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
+function isUntitledFile(file?: Uri) {
+    return file?.scheme === 'untitled';
+}
 export function isUntitled(model?: INotebookModel): boolean {
-    return model?.file?.scheme === 'untitled';
+    return isUntitledFile(model?.file);
 }
 
 class NativeEditorNotebookModel implements INotebookModel {
@@ -455,7 +458,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
     ) {}
     private static isUntitledFile(file: Uri) {
-        return file.scheme === 'untitled' || file.scheme === 'hello';
+        return isUntitledFile(file);
     }
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {

@@ -70,6 +70,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 .executeCommand('python.reloadVSCode', 'Please reload VS Code to use the new VS Code Notebook API')
                 .then(noop, noop);
         }
+
         this.disposables.push(
             notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
         );

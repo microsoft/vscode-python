@@ -1324,7 +1324,7 @@ export class JupyterNotebookBase implements INotebook {
         if (trimmedTextLenght < originalTextLenght) {
             if (!data.metadata.tags) {
                 data.metadata.tags = ['outputPrepend'];
-            } else {
+            } else if (!data.metadata.tags.includes('outputPrepend')) {
                 data.metadata.tags.push('outputPrepend');
             }
         }

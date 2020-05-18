@@ -23,6 +23,7 @@ export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
         Object.keys((output as any).transient).length > 0
     );
 }
+
 /**
  * Updates the cell in notebook model as well as the notebook document.
  * Update notebook document so UI is updated accordingly.

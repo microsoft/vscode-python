@@ -266,8 +266,6 @@ export class NativeEditorProvider
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: This will not work, if we close an untitled document.
         // See if we have any untitled storage already
         const untitledStorage = Array.from(this.models.values()).filter((model) => model && isUntitled(model));
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from

@@ -169,6 +169,7 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
         delete process.env.VSC_PYTHON_FORCE_ANALYZER;
     }
 }
+
 gulp.task('compile-webviews', async () => {
     await buildDataScienceUI(false);
 });
