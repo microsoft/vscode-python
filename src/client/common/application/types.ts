@@ -24,6 +24,13 @@ import {
     InputBoxOptions,
     MessageItem,
     MessageOptions,
+    NotebookContentProvider,
+    NotebookDocument,
+    NotebookDocumentChangeEvent,
+    NotebookEditor,
+    NotebookKernel,
+    NotebookOutputRenderer,
+    NotebookOutputSelector,
     OpenDialogOptions,
     OutputChannel,
     Progress,
@@ -1441,4 +1448,22 @@ export interface IClipboard {
      * Writes text into the clipboard.
      */
     writeText(value: string): Promise<void>;
+}
+
+export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
+export interface IVSCodeNotebook {
+    readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
+    readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+
+    readonly onDidChangeNotebookDocument: Event<NotebookDocumentChangeEvent>;
+    readonly activeNotebookEditor: NotebookEditor | undefined;
+    registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
+
+    registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
+
+    registerNotebookOutputRenderer(
+        id: string,
+        outputSelector: NotebookOutputSelector,
+        renderer: NotebookOutputRenderer
+    ): Disposable;
 }

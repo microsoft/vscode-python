@@ -3,9 +3,8 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { notebook } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { UseProposedApi } from '../../common/constants';
 import { NativeNotebook } from '../../common/experimentGroups';
 import { IFileSystem } from '../../common/platform/types';
@@ -25,6 +24,7 @@ import { NotebookKernel } from './notebookKernel';
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(NotebookContentProvider) private readonly notebookContentProvider: NotebookContentProvider,
@@ -92,8 +92,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
 
         this.disposables.push(
-            notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
+            this.vscNotebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
         );
-        this.disposables.push(notebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel));
+        this.disposables.push(
+            this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+        );
     }
 }

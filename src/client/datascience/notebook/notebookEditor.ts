@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { Event, EventEmitter, notebook, Uri, WebviewPanel } from 'vscode';
+import { Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { IVSCodeNotebook } from '../../common/application/types';
 import { INotebook, INotebookEditor, INotebookModel } from '../types';
 
 export class NotebookEditor implements INotebookEditor {
@@ -36,7 +37,7 @@ export class NotebookEditor implements INotebookEditor {
         return !this.model.isDisposed;
     }
     public get active(): boolean {
-        return notebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
+        return this.vscodeNotebook.activeNotebookEditor?.document.uri.toString() === this.model.file.toString();
     }
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
@@ -48,7 +49,7 @@ export class NotebookEditor implements INotebookEditor {
     private _executed = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
     private executedCode = new EventEmitter<string>();
-    constructor(public readonly model: INotebookModel) {
+    constructor(public readonly model: INotebookModel, private readonly vscodeNotebook: IVSCodeNotebook) {
         model.onDidEdit(() => this._modified.fire(this));
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {

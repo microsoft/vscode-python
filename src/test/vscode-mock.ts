@@ -98,6 +98,9 @@ mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
 mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
 mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
+mockedVSCode.CellKind = vscodeMocks.vscMockExtHostedTypes.CellKind;
+mockedVSCode.CellOutputKind = vscodeMocks.vscMockExtHostedTypes.CellOutputKind;
+mockedVSCode.NotebookCellRunState = vscodeMocks.vscMockExtHostedTypes.NotebookCellRunState;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
