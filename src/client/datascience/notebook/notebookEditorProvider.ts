@@ -158,7 +158,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // In open method we might be waiting.
         const editor = this.notebookEditorsByUri.get(uri.toString()) || new NotebookEditor(model);
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());
-        deferred?.resolve(editor);
+        deferred?.resolve(editor); // NOSONAR
         if (!isUri(doc)) {
             // This is where we ensure changes to our models are propagated back to the VSCode model.
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));

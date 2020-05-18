@@ -4,7 +4,7 @@
 'use strict';
 
 import { Event, EventEmitter, notebook, Uri, WebviewPanel } from 'vscode';
-import { INotebookEditor, INotebookModel } from '../types';
+import { INotebook, INotebookEditor, INotebookModel } from '../types';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -41,7 +41,7 @@ export class NotebookEditor implements INotebookEditor {
     public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
-    public notebook?: import('../types').INotebook | undefined;
+    public notebook?: INotebook | undefined;
     private changedViewState = new EventEmitter<void>();
     private _closed = new EventEmitter<INotebookEditor>();
     private _saved = new EventEmitter<INotebookEditor>();
