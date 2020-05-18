@@ -91,6 +91,18 @@ export class ServiceManager implements IServiceManager {
         }
     }
 
+    public rebindSingleton<T>(
+        serviceIdentifier: interfaces.ServiceIdentifier<T>,
+        constructor: ClassType<T>,
+        name?: string | number | symbol
+    ): void {
+        if (name) {
+            this.container.rebind<T>(serviceIdentifier).to(constructor).inSingletonScope().whenTargetNamed(name);
+        } else {
+            this.container.rebind<T>(serviceIdentifier).to(constructor).inSingletonScope();
+        }
+    }
+
     public rebindInstance<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         instance: T,

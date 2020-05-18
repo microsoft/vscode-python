@@ -56,6 +56,11 @@ export interface IServiceManager extends IDisposable {
         constructor: ClassType<T>,
         name?: string | number | symbol
     ): void;
+    rebindSingleton<T>(
+        serviceIdentifier: interfaces.ServiceIdentifier<T>,
+        constructor: ClassType<T>,
+        name?: string | number | symbol
+    ): void;
     rebindInstance<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         instance: T,

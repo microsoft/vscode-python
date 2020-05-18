@@ -29,6 +29,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
+import { isUntitled } from './nativeEditorStorage';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -265,10 +266,8 @@ export class NativeEditorProvider
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: This will not work, if we close an untitled document.
         // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter((model) => model?.file?.scheme === 'untitled');
+        const untitledStorage = Array.from(this.models.values()).filter((model) => model && isUntitled(model));
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.
         const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;

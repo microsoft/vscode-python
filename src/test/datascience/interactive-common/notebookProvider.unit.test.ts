@@ -8,6 +8,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
+import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import {
     IInteractiveWindowProvider,
     IJupyterNotebookProvider,
@@ -54,6 +55,7 @@ suite('Data Science - NotebookProvider', () => {
         // Set up our settings
         pythonSettings = mock<IPythonSettings>();
         dataScienceSettings = mock<IDataScienceSettings>();
+        const storageProvider = mock<INotebookStorageProvider>();
         when(pythonSettings.datascience).thenReturn(instance(dataScienceSettings));
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');
@@ -66,7 +68,8 @@ suite('Data Science - NotebookProvider', () => {
             instance(disposableRegistry),
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(workspaceService)
+            instance(workspaceService),
+            instance(storageProvider)
         );
     });
 

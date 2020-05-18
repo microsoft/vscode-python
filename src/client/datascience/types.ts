@@ -1020,6 +1020,7 @@ export interface INotebookModel {
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
+    readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;

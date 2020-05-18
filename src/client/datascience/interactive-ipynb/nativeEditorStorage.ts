@@ -21,6 +21,7 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 import detectIndent = require('detect-indent');
 // tslint:disable-next-line:no-require-imports no-var-requires
 import cloneDeep = require('lodash/cloneDeep');
+import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
 
@@ -32,6 +33,13 @@ interface INativeEditorStorageState {
     changeCount: number;
     saveChangeCount: number;
     notebookJson: Partial<nbformat.INotebookContent>;
+}
+
+function isUntitledFile(file?: Uri) {
+    return file?.scheme === 'untitled';
+}
+export function isUntitled(model?: INotebookModel): boolean {
+    return isUntitledFile(model?.file);
 }
 
 class NativeEditorNotebookModel implements INotebookModel {
@@ -52,13 +60,16 @@ class NativeEditorNotebookModel implements INotebookModel {
     }
 
     public get isUntitled(): boolean {
-        return this.file.scheme === 'untitled';
+        return isUntitled(this);
     }
     public get cells(): ICell[] {
         return this._state.cells;
     }
     public get onDidEdit(): Event<NotebookModelChange> {
         return this._editEventEmitter.event;
+    }
+    public get metadata(): nbformat.INotebookMetadata | undefined {
+        return this._state.notebookJson.metadata;
     }
     private _disposed = new EventEmitter<void>();
     private _isDisposed?: boolean;
@@ -96,7 +107,6 @@ class NativeEditorNotebookModel implements INotebookModel {
         this._isDisposed = true;
         this._disposed.fire();
     }
-
     public clone(file: Uri) {
         return new NativeEditorNotebookModel(
             file,
@@ -114,9 +124,6 @@ class NativeEditorNotebookModel implements INotebookModel {
     }
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
-    }
-    public get metadata(): nbformat.INotebookMetadata | undefined {
-        return this._state.notebookJson.metadata;
     }
 
     public getContent(): string {
@@ -182,13 +189,18 @@ class NativeEditorNotebookModel implements INotebookModel {
             case 'save':
                 this._state.saveChangeCount = this._state.changeCount;
                 break;
+            case 'saveAs':
+                this._state.saveChangeCount = this._state.changeCount;
+                this._state.changeCount = this._state.saveChangeCount = 0;
+                this._state.file = change.target;
+                break;
             default:
                 break;
         }
 
         // Dirty state comes from undo. At least VS code will track it that way. However
         // skip file changes as we don't forward those to VS code
-        if (change.kind !== 'save') {
+        if (change.kind !== 'save' && change.kind !== 'saveAs') {
             this._state.changeCount += 1;
         }
 
@@ -433,6 +445,10 @@ class NativeEditorNotebookModel implements INotebookModel {
 
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
+    public get onSavedAs(): Event<{ new: Uri; old: Uri }> {
+        return this.savedAs.event;
+    }
+    private readonly savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -442,25 +458,35 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
     ) {}
     private static isUntitledFile(file: Uri) {
-        return file.scheme === 'untitled';
+        return isUntitledFile(file);
     }
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
         return this.loadFromFile(file, possibleContents);
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
-        await this.saveAs(model, model.file);
-    }
-
-    public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const contents = model.getContent();
-        await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
+        await this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8');
         model.update({
             source: 'user',
             kind: 'save',
             oldDirty: model.isDirty,
             newDirty: false
         });
+    }
+
+    public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
+        const old = model.file;
+        const contents = model.getContent();
+        await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
+        model.update({
+            source: 'user',
+            kind: 'saveAs',
+            oldDirty: model.isDirty,
+            newDirty: false,
+            target: file
+        });
+        this.savedAs.fire({ new: file, old });
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
         // Should send to extension context storage path
@@ -657,7 +683,10 @@ export class NativeEditorStorage implements INotebookStorage {
                 return data.contents;
             }
         } catch (exc) {
-            traceError(`Exception reading from temporary storage for ${key}`, exc);
+            // No need to log error if file doesn't exist.
+            if (!isFileNotFoundError(exc)) {
+                traceError(`Exception reading from temporary storage for ${key}`, exc);
+            }
         }
     }
 
