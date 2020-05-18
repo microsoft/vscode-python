@@ -16,11 +16,12 @@ import {
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
-// import { extensionVersionChanged, openSampleNotebook } from './helpers';
 import { StartPageMessageListener } from './startPageMessageListener';
 import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
@@ -29,7 +30,10 @@ const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'vie
 @injectable()
 export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
-
+    private timer: StopWatch;
+    private actionTaken = false;
+    private actionTakenOnFirstTime = false;
+    private firstTime = false;
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -58,6 +62,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             false,
             false
         );
+        this.timer = new StopWatch();
     }
 
     public async activate(): Promise<void> {
@@ -68,6 +73,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             const firstTimeOrUpdate = await this.extensionVersionChanged();
 
             if (firstTimeOrUpdate) {
+                this.firstTime = true;
                 // tslint:disable-next-line: no-floating-promises
                 this.open();
             }
@@ -80,6 +86,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async open(): Promise<void> {
+        sendTelemetryEvent(Telemetry.StartPageViewed);
         await this.loadWebPanel(process.cwd());
         // open webview
         await super.show(true);
@@ -90,6 +97,13 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async close(): Promise<void> {
+        if (!this.actionTaken) {
+            sendTelemetryEvent(Telemetry.StartPageClosedWithoutAction);
+        }
+        if (this.actionTakenOnFirstTime) {
+            sendTelemetryEvent(Telemetry.StartPageUsedAnActionOnFirstTime);
+        }
+        sendTelemetryEvent(Telemetry.StartPageTime, this.timer.elapsedTime);
         // Fire our event
         this.closedEvent.fire(this);
     }
@@ -101,6 +115,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 await this.handleReleaseNotesRequest();
                 break;
             case StartPageMessages.OpenBlankNotebook:
+                sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
+                this.setTelemetryFlags();
+
                 const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
 
                 if (savedVersion) {
@@ -111,10 +128,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 }
                 break;
             case StartPageMessages.OpenBlankPythonFile:
+                sendTelemetryEvent(Telemetry.StartPageOpenBlankPythonFile);
+                this.setTelemetryFlags();
+
                 const doc = await this.documentManager.openTextDocument({ language: 'python' });
                 this.documentManager.showTextDocument(doc, 1, true);
                 break;
             case StartPageMessages.OpenInteractiveWindow:
+                sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
+                this.setTelemetryFlags();
+
                 const doc2 = await this.documentManager.openTextDocument({
                     language: 'python',
                     content: '#%%\nprint("Hello world")'
@@ -124,16 +147,28 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 this.commandManager.executeCommand(Commands.RunAllCells, '');
                 break;
             case StartPageMessages.OpenCommandPalette:
+                sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
+                this.setTelemetryFlags();
+
                 commands.executeCommand('workbench.action.showCommands');
                 break;
             case StartPageMessages.OpenCommandPaletteWithOpenNBSelected:
+                sendTelemetryEvent(Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected);
+                this.setTelemetryFlags();
+
                 commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
+                sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
+                this.setTelemetryFlags();
+
                 // tslint:disable-next-line: no-floating-promises
                 this.openSampleNotebook();
                 break;
             case StartPageMessages.OpenFileBrowser:
+                sendTelemetryEvent(Telemetry.StartPageOpenFileBrowser);
+                this.setTelemetryFlags();
+
                 const uri = await this.appShell.showOpenDialog({
                     filters: {
                         Python: ['py', 'ipynb']
@@ -146,6 +181,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 }
                 break;
             case StartPageMessages.UpdateSettings:
+                if (payload === false) {
+                    sendTelemetryEvent(Telemetry.StartPageClickedDontShowAgain);
+                }
                 await this.configuration.updateSetting('showStartPage', payload, undefined, ConfigurationTarget.Global);
                 break;
             default:
@@ -207,5 +245,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             )
         );
         this.documentManager.showTextDocument(sampleNotebook, 1, true);
+    }
+
+    private setTelemetryFlags() {
+        if (this.firstTime) {
+            this.actionTakenOnFirstTime = true;
+        }
+        this.actionTaken = true;
     }
 }
