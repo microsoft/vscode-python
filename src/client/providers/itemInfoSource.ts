@@ -6,7 +6,6 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import { RestTextConverter } from '../common/markdown/restTextConverter';
 import { JediFactory } from '../languageServices/jediProxyFactory';
-import { traceError } from '../logging';
 import * as proxy from './jediProxy';
 
 export class LanguageItemInfo {
