@@ -1321,12 +1321,16 @@ export class JupyterNotebookBase implements INotebook {
         // If the output was trimmed, we add the 'outputPrepend' metadata tag.
         // Later, the react side will display a message letting the user know
         // the output is trimmed and what setting changes that.
+        // * If data.metadata.tags is undefined, define it so the following
+        //   code is can rely on it being defined.
+        if (data.metadata.tags === undefined) {
+            data.metadata.tags = [];
+        }
+
+        data.metadata.tags = data.metadata.tags.filter((t) => t !== 'outputPrepend');
+
         if (trimmedTextLength < originalTextLength) {
-            if (!data.metadata.tags) {
-                data.metadata.tags = ['outputPrepend'];
-            } else {
-                data.metadata.tags.push('outputPrepend');
-            }
+            data.metadata.tags.push('outputPrepend');
         }
     }
 
