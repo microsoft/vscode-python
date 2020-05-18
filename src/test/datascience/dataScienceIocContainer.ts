@@ -490,6 +490,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public async dispose(): Promise<void> {
+        this.commandManager.dispose();
         try {
             // Make sure to delete any temp files written by native editor storage
             const globPr = promisify(glob);
