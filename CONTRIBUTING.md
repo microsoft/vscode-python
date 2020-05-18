@@ -162,7 +162,8 @@ are run.
 
 For example, to run only the tests in the `Sorting` suite (from
 [`src/test/format/extension.sort.test.ts`][extension.sort.test.ts]) you would
-set the value to `Sorting`.
+set the value to `Sorting`. To run the `ProcessService` and `ProcessService Observable`
+tests which relate to `stderr` handling, you might use the value `ProcessService.*stderr`.
 
 Be sure to escape any grep-sensitive characters in your suite name.
 
