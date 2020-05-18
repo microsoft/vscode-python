@@ -130,14 +130,23 @@ export class LanguageServerExtensionActivationService
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
     public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
-        const state = this.stateFactory.createGlobalPersistentState<boolean | LanguageServerType | undefined>(
+        const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>(
             'SWITCH_LS',
             undefined
         );
-        await state.updateValue(languageServer);
-        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-            switchTo: languageServer
-        });
+        if (typeof state.value !== 'string') {
+            await state.updateValue(languageServer);
+        }
+        if (state.value !== languageServer) {
+            await state.updateValue(languageServer);
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+                switchTo: languageServer
+            });
+        } else {
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+                lsStartup: languageServer
+            });
+        }
     }
 
     /**
@@ -165,13 +174,17 @@ export class LanguageServerExtensionActivationService
      * @returns `true` if user is using jedi, `false` if user is using language server
      */
     public useJedi(): boolean {
+        // Check if `languageServer` setting is missing (default configuration).
         if (this.isJediUsingDefaultConfiguration(this.resource)) {
+            // If user is assigned to an experiment (i.e. use LS), return false.
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
             // Send telemetry if user is in control group
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
+            return true; // Do use Jedi as it is default.
         }
+        // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const lstType = configurationService.getSettings(this.resource).languageServer;
         this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
