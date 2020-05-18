@@ -369,6 +369,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return super.ensureConnectionAndNotebook();
     }
+
     private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
         if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
