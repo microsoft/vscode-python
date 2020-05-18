@@ -381,6 +381,7 @@ import { registerInterpreterTypes } from '../../client/interpreter/serviceRegist
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
+import { traceInfo } from '../../client/logging';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -1249,8 +1250,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.forceSettingsChanged(undefined, list[0].path);
 
                     // Log this all the time. Useful in determining why a test may not pass.
+                    const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
+                    traceInfo(message);
                     // tslint:disable-next-line: no-console
-                    console.log(`Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`);
+                    console.log(message);
 
                     // Also set this as the interpreter to use for jupyter
                     await this.serviceManager
