@@ -480,7 +480,7 @@ suite('Language Server Activation - ActivationService', () => {
                 });
                 if (languageServerType !== LanguageServerType.Jedi) {
                     test('Revert to jedi when LS activation fails', async () => {
-                        pythonSettings.setup((p) => p.languageServer).returns(() => languageServerType);
+                        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                         const activatorLS = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                         const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                         const activationService = new LanguageServerExtensionActivationService(
@@ -499,7 +499,7 @@ suite('Language Server Activation - ActivationService', () => {
                             .setup((c) =>
                                 c.get(
                                     TypeMoq.It.isValue(ILanguageServerActivator),
-                                    TypeMoq.It.isValue(languageServerType)
+                                    TypeMoq.It.isValue(LanguageServerType.Microsoft)
                                 )
                             )
                             .returns(() => activatorLS.object)
@@ -773,7 +773,7 @@ suite('Language Server Activation - ActivationService', () => {
             state
                 .setup((s) => s.value)
                 .returns(() => undefined)
-                .verifiable(TypeMoq.Times.exactly(1));
+                .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))
                 .returns(() => {
@@ -796,7 +796,7 @@ suite('Language Server Activation - ActivationService', () => {
             state
                 .setup((s) => s.value)
                 .returns(() => LanguageServerType.Jedi)
-                .verifiable(TypeMoq.Times.exactly(1));
+                .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Node)))
                 .returns(() => Promise.resolve())
@@ -816,7 +816,7 @@ suite('Language Server Activation - ActivationService', () => {
             state
                 .setup((s) => s.value)
                 .returns(() => LanguageServerType.Node)
-                .verifiable(TypeMoq.Times.exactly(1));
+                .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))
                 .returns(() => Promise.resolve())
@@ -836,7 +836,7 @@ suite('Language Server Activation - ActivationService', () => {
             state
                 .setup((s) => s.value)
                 .returns(() => LanguageServerType.Jedi)
-                .verifiable(TypeMoq.Times.exactly(1));
+                .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve())
