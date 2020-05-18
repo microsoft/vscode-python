@@ -64,12 +64,10 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
             this.disposables
         );
 
-        // Ensure we save into back for hotexit, if it is not an untitled file.
-        if (!model.isUntitled) {
-            const fileSettings = this.workspaceService.getConfiguration('files', model.file);
-            const saveToHotExitDebounced = debounce(() => this.autoSaveNotebookInHotExitFile(model, fileSettings), 250);
-            this._autoSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
-        }
+        // Ensure we save into back for hotexit
+        const fileSettings = this.workspaceService.getConfiguration('files', model.file);
+        const saveToHotExitDebounced = debounce(() => this.autoSaveNotebookInHotExitFile(model, fileSettings), 250);
+        this._autoSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
         model.changed((e) => {
             const debouncedHotExitSave = this._autoSaveNotebookInHotExitFile.get(model);
             if (e.newDirty && debouncedHotExitSave) {

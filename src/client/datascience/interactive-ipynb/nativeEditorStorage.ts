@@ -642,18 +642,13 @@ export class NativeEditorStorage implements INotebookStorage {
             const contents = await this.fileSystem.readFile(filePath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
-            if (
-                data &&
-                data.lastModifiedTimeMs &&
-                !NativeEditorStorage.isUntitledFile(file) &&
-                file.scheme === 'file'
-            ) {
+            if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
                 const stat = await this.fileSystem.stat(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
             }
-            if (data && !NativeEditorStorage.isUntitledFile(file) && data.contents) {
+            if (data && data.contents) {
                 return data.contents;
             }
         } catch (exc) {
@@ -671,18 +666,13 @@ export class NativeEditorStorage implements INotebookStorage {
             }
 
             // Check whether the file has been modified since the last time the contents were saved.
-            if (
-                data &&
-                data.lastModifiedTimeMs &&
-                !NativeEditorStorage.isUntitledFile(file) &&
-                file.scheme === 'file'
-            ) {
+            if (data && data.lastModifiedTimeMs && file.scheme === 'file') {
                 const stat = await this.fileSystem.stat(file.fsPath);
                 if (stat.mtime > data.lastModifiedTimeMs) {
                     return;
                 }
             }
-            if (data && !NativeEditorStorage.isUntitledFile(file) && data.contents) {
+            if (data && data.contents) {
                 return data.contents;
             }
         } catch {
@@ -690,9 +680,9 @@ export class NativeEditorStorage implements INotebookStorage {
         }
     }
 
-    private async getStoredContentsFromLocalStorage(file: Uri, key: string): Promise<string | undefined> {
+    private async getStoredContentsFromLocalStorage(_file: Uri, key: string): Promise<string | undefined> {
         const workspaceData = this.localStorage.get<string>(key);
-        if (workspaceData && !NativeEditorStorage.isUntitledFile(file)) {
+        if (workspaceData) {
             // Make sure to clear so we don't use this again.
             this.localStorage.update(key, undefined);
 

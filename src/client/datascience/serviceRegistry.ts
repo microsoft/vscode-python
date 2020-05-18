@@ -45,6 +45,7 @@ import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProvide
 import { NativeEditorRunByLineListener } from './interactive-ipynb/nativeEditorRunByLineListener';
 import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
+import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
 import { INotebookStorageProvider, NotebookStorageProvider } from './interactive-ipynb/notebookStorageProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
@@ -197,6 +198,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, JupyterInterpreterSelectionCommand);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreWarmActivatedJupyterEnvironmentVariables);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NativeEditorViewTracker);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
