@@ -10,6 +10,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
@@ -30,8 +31,10 @@ const rangeInclusive = require('range-inclusive');
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
+        let snapshot: any;
 
         suiteSetup(function () {
+            snapshot = takeSnapshot();
             // These test require python, so only run with a non-mocked jupyter
             const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
             if (!isRollingBuild) {
@@ -65,9 +68,10 @@ const rangeInclusive = require('range-inclusive');
         });
 
         // Uncomment this to debug hangs on exit
-        //suiteTeardown(() => {
-        //      asyncDump();
-        //});
+        suiteTeardown(() => {
+            //      asyncDump();
+            writeDiffSnapshot(snapshot, `Variable Explorer ${runByLine}`);
+        });
 
         async function addCodeImpartial(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
@@ -325,6 +329,7 @@ myDict = {'a': 1}`;
 
                 // Restart the kernel and repeat
                 const interactive = await getOrCreateInteractiveWindow(ioc);
+
                 const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                 await interactive.restartKernel();
                 await variablesComplete; // Restart should cause a variable refresh

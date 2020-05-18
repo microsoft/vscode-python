@@ -20,10 +20,10 @@ export async function updateSetting(setting: string, value: any) {
         .update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 export async function removeLanguageServerFiles() {
-    const folders = await getLanaguageServerFolders();
+    const folders = await getLanguageServerFolders();
     await Promise.all(folders.map((item) => fs.remove(item).catch(noop)));
 }
-async function getLanaguageServerFolders(): Promise<string[]> {
+async function getLanguageServerFolders(): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
         glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
             ex ? reject(ex) : resolve(matches.map((item) => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));

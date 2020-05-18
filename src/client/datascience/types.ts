@@ -1045,6 +1045,7 @@ export type GetServerOptions = {
  * Options for getting a notebook
  */
 export type GetNotebookOptions = {
+    resource?: Uri;
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;

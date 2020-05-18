@@ -10,7 +10,7 @@ import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
 import { IDisposable } from '../../common/types';
 import { INotebookModelModifyChange } from '../interactive-common/interactiveWindowTypes';
 import { ICell, INotebookModel } from '../types';
-import { findMappedNotebookCellData, translateCellOutputs, translateErrorOutput } from './helpers';
+import { cellOutputsToVSCCellOutputs, findMappedNotebookCellData, translateErrorOutput } from './helpers';
 
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
@@ -65,69 +65,25 @@ export function handleUpdateDisplayDataMessage(
             return;
         }
 
-        // Find the same cells in original notebook and update the output.
-        // const uiCellToUpdate = findMappedNotebookCellData(cellToCheck, document.cells);
-        // updateCellOutputInCellModelAndCellData(cellToCheck, uiCellToUpdate, changedOutputs, model);
         updateCellOutput(cellToCheck, changedOutputs, model);
     });
 }
 
+/**
+ * Updates the VSC cell with the error output.
+ */
 export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>) {
     cell.outputs = [translateErrorOutput(createErrorOutput(ex))];
     cell.metadata.runState = NotebookCellRunState.Error;
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO:Confirm what we should display in status.
-    cell.metadata.statusMessage = 'Kaboom';
 }
 
-// export function updateCellOutputInCellModelAndCellData(
-//     notebookCellModel: ICell,
-//     notebookCellData: NotebookCellData,
-//     outputs: nbformat.IOutput[],
-//     model: INotebookModel
-// ) {
-//     const newOutput = translateCellOutputs(outputs);
-//     // If there was no output and still no output, then nothing to do.
-//     if (
-//         Array.isArray(notebookCellModel.data.outputs) &&
-//         notebookCellModel.data.outputs.length === 0 &&
-//         newOutput.length === 0 &&
-//         notebookCellData.outputs.length === 0
-//     ) {
-//         return;
-//     }
-//     // Compare outputs (at the end of the day everything is serializable).
-//     // Hence this is a safe comparison.
-//     if (
-//         Array.isArray(notebookCellModel.data.outputs) &&
-//         notebookCellModel.data.outputs.length === newOutput.length &&
-//         notebookCellModel.data.outputs.length === notebookCellData.outputs.length &&
-//         JSON.stringify(notebookCellData.outputs) === JSON.stringify(newOutput)
-//     ) {
-//         return;
-//     }
-
-//     notebookCellData.outputs = newOutput;
-
-//     // Update our model.
-//     const newCell: ICell = {
-//         ...notebookCellModel,
-//         data: {
-//             ...notebookCellModel.data,
-//             outputs
-//         }
-//     };
-//     const updateCell: INotebookModelModifyChange = {
-//         kind: 'modify',
-//         newCells: [newCell],
-//         oldCells: [notebookCellModel],
-//         newDirty: true,
-//         oldDirty: model.isDirty === true,
-//         source: 'user'
-//     };
-//     model.update(updateCell);
-// }
-
+/**
+ * Responsible for syncing changes from our model into the VS Code cells.
+ * Eg. when executing a cell, we update our model with the output, and here we react to those events and update the VS Code output.
+ * This way, all updates to VSCode cells can happen in one place (here), and we can focus on updating just the Cell model with the data.
+ * Here we only keep the outputs in sync. The assumption is that we won't be adding cells directly.
+ * If adding cells and the like then please use VSC api to manipulate cells, else we have 2 ways of doing the same thing and that could lead to issues.
+ */
 export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
     document: NotebookDocument,
     model: INotebookModel
@@ -142,7 +98,10 @@ export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
             if (!uiCellToUpdate) {
                 continue;
             }
-            const newOutput = Array.isArray(cell.data.outputs) ? translateCellOutputs(cell.data.outputs as any) : [];
+            const newOutput = Array.isArray(cell.data.outputs)
+                ? // tslint:disable-next-line: no-any
+                  cellOutputsToVSCCellOutputs(cell.data.outputs as any)
+                : [];
             // If there were no cells and still no cells, nothing to update.
             if (newOutput.length === 0 && uiCellToUpdate.outputs.length === 0) {
                 return;
@@ -159,8 +118,13 @@ export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
     });
 }
 
+/**
+ * Updates our Cell Model with the cell output.
+ * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
+ * (this has nothing to do with VSCode cells), this is out ICell in INotebookModel.
+ */
 export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOutput[], model: INotebookModel) {
-    const newOutput = translateCellOutputs(outputs);
+    const newOutput = cellOutputsToVSCCellOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
     if (
         Array.isArray(notebookCellModel.data.outputs) &&

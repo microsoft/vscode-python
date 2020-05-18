@@ -52,10 +52,9 @@ if (ssExports && ssExports.createStylesheet) {
     };
 }
 
-import { ComponentClass, configure, ReactWrapper } from 'enzyme';
+import { configure } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
-import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 
@@ -436,92 +435,6 @@ function copyProps(src: any, target: any) {
     props.forEach((p: string) => {
         target[p] = src[p];
     });
-}
-
-function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>): Promise<void> {
-    return new Promise((resolve, reject) => {
-        if (component) {
-            let originalUpdateFunc = component.componentDidUpdate;
-            if (originalUpdateFunc) {
-                originalUpdateFunc = originalUpdateFunc.bind(component);
-            }
-
-            // tslint:disable-next-line:no-any
-            component.componentDidUpdate = (prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: any) => {
-                // When the component updates, call the original function and resolve our promise
-                if (originalUpdateFunc) {
-                    originalUpdateFunc(prevProps, prevState, snapshot);
-                }
-
-                // Reset our update function
-                component.componentDidUpdate = originalUpdateFunc;
-
-                // Finish the promise
-                resolve();
-            };
-        } else {
-            reject('Cannot find the component for waitForComponentDidUpdate');
-        }
-    });
-}
-
-export function waitForRender<P, S, C>(
-    component: React.Component<P, S, C>,
-    numberOfRenders: number = 1
-): Promise<void> {
-    // tslint:disable-next-line:promise-must-complete
-    return new Promise((resolve, reject) => {
-        if (component) {
-            let originalRenderFunc = component.render;
-            if (originalRenderFunc) {
-                originalRenderFunc = originalRenderFunc.bind(component);
-            }
-            let renderCount = 0;
-            component.render = () => {
-                let result: React.ReactNode = null;
-
-                // When the render occurs, call the original function and resolve our promise
-                if (originalRenderFunc) {
-                    result = originalRenderFunc();
-                }
-                renderCount += 1;
-
-                if (renderCount === numberOfRenders) {
-                    // Reset our render function
-                    component.render = originalRenderFunc;
-                    resolve();
-                }
-
-                return result;
-            };
-        } else {
-            reject('Cannot find the component for waitForRender');
-        }
-    });
-}
-
-export async function waitForUpdate<P, S, C>(
-    wrapper: ReactWrapper<P, S, C>,
-    mainClass: ComponentClass<P>,
-    numberOfRenders: number = 1
-): Promise<void> {
-    const mainObj = wrapper.find(mainClass).instance();
-    if (mainObj) {
-        // Hook the render first.
-        const renderPromise = waitForRender(mainObj, numberOfRenders);
-
-        // First wait for the update
-        await waitForComponentDidUpdate(mainObj);
-
-        // Force a render
-        wrapper.update();
-
-        // Wait for the render
-        await renderPromise;
-
-        // Force a render
-        wrapper.update();
-    }
 }
 
 // map of string chars to keycodes and whether or not shift has to be hit

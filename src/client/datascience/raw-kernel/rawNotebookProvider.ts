@@ -56,11 +56,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
     // Check to see if we have all that we need for supporting raw kernel launch
     public async supported(): Promise<boolean> {
-        const zmqOk = await this.zmqSupported();
-
-        return zmqOk && this.localLaunch() && this.experimentsManager.inExperiment(LocalZMQKernel.experiment)
-            ? true
-            : false;
+        return this.localLaunch() && this.experimentEnabled() && (await this.zmqSupported()) ? true : false;
     }
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
@@ -139,6 +135,15 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         return false;
     }
 
+    // Enable if we are in our experiment or in the insiders channel
+    private experimentEnabled(): boolean {
+        return (
+            this.experimentsManager.inExperiment(LocalZMQKernel.experiment) ||
+            (this.configuration.getSettings().insidersChannel &&
+                this.configuration.getSettings().insidersChannel !== 'off')
+        );
+    }
+
     // Check to see if this machine supports our local ZMQ launching
     private async zmqSupported(): Promise<boolean> {
         if (this._zmqSupported !== undefined) {
@@ -148,6 +153,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         try {
             await import('zeromq');
             traceInfo(`ZMQ install verified.`);
+            sendTelemetryEvent(Telemetry.ZMQSupported);
             this._zmqSupported = true;
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);

@@ -18,6 +18,7 @@ import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockKernelFinder } from './mockKernelFinder';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
@@ -27,6 +28,12 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonInterpreter | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
+    // tslint:disable-next-line: no-any
+    let snapshot: any;
+
+    suiteSetup(() => {
+        snapshot = takeSnapshot();
+    });
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
@@ -37,15 +44,21 @@ suite('DataScience - Kernel Launcher', () => {
         const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
         kernelLauncher = new KernelLauncher(processServiceFactory, file, daemonPool);
         await ioc.activate();
-        pythonInterpreter = await ioc.getJupyterCapableInterpreter();
-        kernelSpec = {
-            argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-            display_name: 'new kernel',
-            language: 'python',
-            name: 'newkernel',
-            path: 'path',
-            env: undefined
-        };
+        if (!ioc.mockJupyter) {
+            pythonInterpreter = await ioc.getJupyterCapableInterpreter();
+            kernelSpec = {
+                argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'new kernel',
+                language: 'python',
+                name: 'newkernel',
+                path: 'path',
+                env: undefined
+            };
+        }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'KernelLauncher');
     });
 
     test('Launch from kernelspec', async function () {

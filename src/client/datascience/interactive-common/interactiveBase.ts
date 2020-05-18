@@ -781,9 +781,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // For a restart, tell our window to reset
             if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
                 this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-                if (this._notebook) {
-                    this.jupyterDebugger.onRestart(this._notebook);
-                }
             }
 
             traceInfo(`Sys info for ${this.id} ${reason} complete`);
@@ -1081,7 +1078,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             ]);
             try {
                 notebook = identity
-                    ? await this.notebookProvider.getOrCreateNotebook({ identity: identity.resource, metadata })
+                    ? await this.notebookProvider.getOrCreateNotebook({
+                          identity: identity.resource,
+                          resource,
+                          metadata
+                      })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };

@@ -1787,7 +1787,7 @@
                 "python.dataScience.maxOutputSize": {
                     "type": "number",
                     "default": 400,
-                    "description": "Maximum size (in pixels) of text output in the Python Interactive window and Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
+                    "description": "Maximum size (in pixels) of text output in the Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
                     "scope": "resource"
                 },
                 "python.dataScience.alwaysScrollOnNewCell": {
@@ -1799,7 +1799,7 @@
                 "python.dataScience.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables scrolling for large cell outputs.",
+                    "description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Python Interactive Window.",
                     "scope": "resource"
                 },
                 "python.dataScience.errorBackgroundColor": {
@@ -2100,7 +2100,7 @@
                 "python.jediPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
+                    "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory). Note: since Jedi depends on Parso, if using this setting you will need to ensure a suitable version of Parso is available.",
                     "scope": "resource"
                 },
                 "python.languageServer": {
@@ -2943,6 +2943,7 @@
         "test:unittests:cover": "nyc --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
         "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --opts ./build/.mocha.functional.perf.opts",
+        "test:functional:memleak": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
         "test:functional:cover": "npm run test:functional",
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
@@ -3053,6 +3054,7 @@
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@phosphor/widgets": "^1.9.3",
+        "@raghb1/node-memwatch": "^3.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",

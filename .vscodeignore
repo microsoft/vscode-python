@@ -105,6 +105,5 @@ scripts/**
 src/**
 test/**
 tmp/**
-tpn/**
 typings/**
 types/**

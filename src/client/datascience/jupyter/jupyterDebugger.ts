@@ -5,7 +5,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { DebugConfiguration } from 'vscode';
+import { DebugConfiguration, Disposable } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -72,10 +72,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     public startRunByLine(notebook: INotebook, cellHashFileName: string): Promise<void> {
         traceInfo(`Running by line for ${cellHashFileName}`);
         const config: Partial<DebugConfiguration> = {
-            justMyCode: true,
-            // This list should include an exclusion list, but this debugpy issue is preventing that from working:
-            // https://github.com/microsoft/debugpy/issues/226
+            justMyCode: false,
             rules: [
+                {
+                    include: false,
+                    path: '**/*'
+                },
                 {
                     include: true,
                     path: cellHashFileName
@@ -192,11 +194,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
-        let result = this.configs.get(notebook.identity.toString());
+        const key = notebook.identity.toString();
+        let result = this.configs.get(key);
         if (result) {
-            const settings = this.configService.getSettings(notebook.resource);
-            result.justMyCode = settings.datascience.debugJustMyCode;
-            return result;
+            return {
+                ...result,
+                ...extraConfig
+            };
         }
         traceInfo('enable debugger attach');
 
@@ -233,6 +237,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         if (result.port) {
             this.configs.set(notebook.identity.toString(), result);
+
+            // Sign up for any change to the kernel to delete this config.
+            const disposables: Disposable[] = [];
+            const clear = () => {
+                this.configs.delete(key);
+                disposables.forEach((d) => d.dispose());
+            };
+            disposables.push(notebook.onDisposed(clear));
+            disposables.push(notebook.onKernelRestarted(clear));
+            disposables.push(notebook.onKernelChanged(clear));
         }
 
         return result;

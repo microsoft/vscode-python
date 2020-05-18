@@ -1991,6 +1991,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
     /**
+     * Telemetry event sent when the ZMQ native binaries do work.
+     */
+    [Telemetry.ZMQSupported]: undefined | never;
+    /**
      * Telemetry event sent with name of a Widget that is used.
      */
     [Telemetry.HashedIPyWidgetNameUsed]: {

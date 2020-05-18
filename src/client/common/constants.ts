@@ -7,7 +7,6 @@ export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE },
-    { scheme: 'hello', language: PYTHON_LANGUAGE },
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
     { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
 ];

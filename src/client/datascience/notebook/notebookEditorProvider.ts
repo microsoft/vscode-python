@@ -18,6 +18,9 @@ import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './executionHelpers';
 import { NotebookEditor } from './notebookEditor';
 
+/**
+ * Class responsbile for activating an registering the necessary event handlers in NotebookEditorProvider.
+ */
 @injectable()
 export class NotebookEditorProviderActivation implements IExtensionSingleActivationService {
     constructor(@inject(INotebookEditorProvider) private readonly provider: INotebookEditorProvider) {}
@@ -30,6 +33,13 @@ export class NotebookEditorProviderActivation implements IExtensionSingleActivat
     }
 }
 
+/**
+ * Notebook Editor provider used by other parts of DS code.
+ * This is an adapter, that takes the VSCode api for editors (did notebook editors open, close save, etc) and
+ * then exposes them in a manner we expect - i.e. INotebookEditorProvider.
+ * This is also responsible for tracking all notebooks that open and then keeping the VS Code notebook models updated with changes we made to our underlying model.
+ * E.g. when cells are executed the results in our model is updated, this tracks those changes and syncs VSC cells with those updates.
+ */
 @injectable()
 export class NotebookEditorProvider implements INotebookEditorProvider {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
@@ -58,7 +68,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private openedNotebookCount: number = 0;
     private readonly notebookEditors = new Map<NotebookDocument, INotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
-    private readonly notebookesWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
+    private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -106,8 +116,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // Wait for editor to get opened up, vscode will notify when it is opened.
         // Further below.
         const deferred = createDeferred<INotebookEditor>();
-        this.notebookesWaitingToBeOpenedByUri.set(file.toString(), deferred);
-        deferred.promise.then(() => this.notebookesWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
+        this.notebooksWaitingToBeOpenedByUri.set(file.toString(), deferred);
+        deferred.promise.then(() => this.notebooksWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
         await this.commandManager.executeCommand('vscode.open', file);
         return deferred.promise;
     }
@@ -116,9 +126,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         throw new Error('Not supported');
     }
     public async createNew(contents?: string): Promise<INotebookEditor> {
+        // tslint:disable-next-line: no-suspicious-comment
         const model = await this.storage.createNew(contents);
         await this.onDidOpenNotebookDocument(model.file);
-
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Need to do this.
         // Update number of notebooks in the workspace
@@ -156,9 +166,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const model = await this.storage.load(uri);
         // In open method we might be waiting.
         const editor = this.notebookEditorsByUri.get(uri.toString()) || new NotebookEditor(model);
-        const deferred = this.notebookesWaitingToBeOpenedByUri.get(uri.toString());
-        deferred?.resolve(editor);
+        const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());
+        deferred?.resolve(editor); // NOSONAR
         if (!isUri(doc)) {
+            // This is where we ensure changes to our models are propagated back to the VSCode model.
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
             this.notebookEditors.set(doc, editor);
         }

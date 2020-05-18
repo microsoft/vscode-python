@@ -37,7 +37,8 @@ export class SetShebangInterpreterCommand extends BaseInterpreterSelectorCommand
 
     protected async setShebangInterpreter(): Promise<void> {
         const shebang = await this.shebangCodeLensProvider.detectShebang(
-            this.documentManager.activeTextEditor!.document
+            this.documentManager.activeTextEditor!.document,
+            true
         );
         if (!shebang) {
             return;
