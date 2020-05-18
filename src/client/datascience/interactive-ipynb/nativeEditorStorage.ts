@@ -200,7 +200,7 @@ class NativeEditorNotebookModel implements INotebookModel {
 
         // Dirty state comes from undo. At least VS code will track it that way. However
         // skip file changes as we don't forward those to VS code
-        if (change.kind !== 'save') {
+        if (change.kind !== 'save' && change.kind !== 'saveAs') {
             this._state.changeCount += 1;
         }
 
