@@ -89,7 +89,25 @@ export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
     document: NotebookDocument,
     model: INotebookModel
 ): IDisposable {
-    return model.changed((change) => {
+    let wasUntitledNotebook = model.isUntitled;
+    let stopSyncingOutput = false;
+    const disposable = model.changed((change) => {
+        if (stopSyncingOutput) {
+            return;
+        }
+        if (change.kind === 'saveAs') {
+            if (wasUntitledNotebook) {
+                wasUntitledNotebook = false;
+                // User saved untitled file as a real file.
+                return;
+            } else {
+                // Ok, user save a normal notebook as another name.
+                // Stop monitoring changes.
+                stopSyncingOutput = true;
+                disposable.dispose();
+                return;
+            }
+        }
         // We're only interested in updates to cells.
         if (change.kind !== 'modify') {
             return;
@@ -117,6 +135,8 @@ export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
             uiCellToUpdate.outputs = newOutput;
         }
     });
+
+    return disposable;
 }
 
 /**
