@@ -39,10 +39,10 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(INotebookStorageProvider) storagepPovider: INotebookStorageProvider
+        @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
-        disposables.push(storagepPovider.onSavedAs(this.onSavedAs, this));
+        disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
