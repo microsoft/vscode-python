@@ -169,29 +169,6 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
         delete process.env.VSC_PYTHON_FORCE_ANALYZER;
     }
 }
-async function buildRenderers(forceBundleAnalyzer = false) {
-    if (forceBundleAnalyzer) {
-        process.env.VSC_PYTHON_FORCE_ANALYZER = 1;
-    }
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-renderers.config.js',
-            '--mode',
-            'development'
-            // '--watch'
-        ],
-        webpackEnv
-    );
-    if (forceBundleAnalyzer) {
-        delete process.env.VSC_PYTHON_FORCE_ANALYZER;
-    }
-}
-
 gulp.task('compile-webviews', async () => {
     await buildDataScienceUI(false);
 });

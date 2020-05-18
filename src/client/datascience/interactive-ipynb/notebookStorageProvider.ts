@@ -10,6 +10,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { INotebookModel, INotebookStorage } from '../types';
+import { isUntitled } from './nativeEditorStorage';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -74,13 +75,13 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: This will not work, if we close an untitled document.
         // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter((model) => model?.file?.scheme === 'untitled');
+        const untitledStorage = Array.from(this.models.values()).filter(isUntitled);
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.
         const fileName = `${DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
-        return fileUri.with({ scheme: 'hello', path: fileName });
+        return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 
     private trackModel(model: INotebookModel) {

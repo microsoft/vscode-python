@@ -246,15 +246,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 }
 
 export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
-    let documentFileName = document.uri.fsPath;
-    if (document.uri.scheme === 'vscode-notebook-cell') {
-        try {
-            documentFileName = Uri.parse(JSON.parse(document.uri.query).notebook).fsPath;
-        } catch (ex) {
-            traceError(`Failed to parse NotebookCell Uri ${document.uri.toString()}`, ex);
-        }
-    }
-    const ext = path.extname(documentFileName);
+    const ext = path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
@@ -262,7 +254,7 @@ export async function getTempFileWithDocumentContents(document: TextDocument, fs
     // as the original one and then removed.
 
     // tslint:disable-next-line:no-require-imports
-    const fileName = `${documentFileName}.${md5(document.uri.fsPath)}${ext}`;
+    const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
     try {
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {

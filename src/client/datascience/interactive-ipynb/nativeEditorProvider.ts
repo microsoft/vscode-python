@@ -275,6 +275,6 @@ export class NativeEditorProvider
         const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
-        return fileUri.with({ scheme: 'hello', path: fileName });
+        return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 }

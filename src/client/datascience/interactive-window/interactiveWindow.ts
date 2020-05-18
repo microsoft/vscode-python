@@ -274,16 +274,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
         return undefined;
     }
-    public ensureConnectionAndNotebook(): Promise<void> {
-        // Keep track of users who have used interactive window in a worksapce folder.
-        // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart) {
-            this.trackedJupyterStart = true;
-            const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
-            store.updateValue(true).ignoreErrors();
-        }
-        return super.ensureConnectionAndNotebook();
-    }
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         await super.addSysInfo(reason);
 
@@ -369,7 +359,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-
+    protected ensureConnectionAndNotebook(): Promise<void> {
+        // Keep track of users who have used interactive window in a worksapce folder.
+        // To be used if/when changing workflows related to startup of jupyter.
+        if (!this.trackedJupyterStart) {
+            this.trackedJupyterStart = true;
+            const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
+            store.updateValue(true).ignoreErrors();
+        }
+        return super.ensureConnectionAndNotebook();
+    }
     private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
         if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
             sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
