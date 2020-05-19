@@ -69,7 +69,7 @@ export class KernelProcess implements IKernelProcess {
         }
         this.launchedOnce = true;
 
-        //await this.createAndUpdateConnectionFile();
+        // Update our connection arguments in the kernel spec
         this.updateConnectionArgs();
 
         const exeObs = await this.launchAsObservable();
