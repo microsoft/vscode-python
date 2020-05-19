@@ -12,8 +12,8 @@ import { IExtensionActivationManager, ILanguageServerExtension } from './activat
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
-import { ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -95,30 +95,41 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
+    // Core registrations (non-feature specific).
     commonRegisterTypes(serviceManager);
+    platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
+
+    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson
+        .enableProposedApi;
+    serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
+
+    // Feature specific registrations.
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
     formattersRegisterTypes(serviceManager);
-    platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
-    dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
+
+    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    await abExperiments.activate();
+
+    // Register datascience types after experiments have loaded.
+    // To ensure we can register types based on experiments.
+    dataScienceRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
 
+    // Language feature registrations.
     appRegisterTypes(serviceManager, languageServerType);
     providersRegisterTypes(serviceManager);
     activationRegisterTypes(serviceManager, languageServerType);
 
     // "initialize" "services"
-
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    await abExperiments.activate();
 
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.initialize();

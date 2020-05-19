@@ -7,7 +7,12 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IVSCodeNotebook
+} from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
@@ -46,6 +51,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let tokenSource: CancellationTokenSource;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
+    let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new MockPythonSettings(undefined, new MockAutoSelectionService());
     const disposables: Disposable[] = [];
@@ -63,6 +69,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
+        vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -95,6 +102,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             widgetScriptSources: []
         };
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
+        vscodeNotebook.setup((d) => d.activeNotebookEditor).returns(() => undefined);
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -890,7 +898,8 @@ testing2`;
             commandManager.object,
             disposables,
             debugService.object,
-            fileSystem.object
+            fileSystem.object,
+            vscodeNotebook.object
         );
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

@@ -6,8 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE, UseProposedApi } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { EditorContexts } from '../constants';
@@ -28,7 +28,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(UseProposedApi) private readonly useProposedApi: boolean
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -67,8 +69,19 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
+        if (this.useProposedApi) {
+            this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
+            this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
+            this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
+            this.docManager.onDidChangeActiveTextEditor(this.onDidChangeVSCodeNotebook, this, this.disposables);
+        }
     }
 
+    private onDidChangeVSCodeNotebook() {
+        this.isPythonFileActive = !this.vscodeNotebook.activeNotebookEditor;
+        this.nativeContext.set(!!this.vscodeNotebook.activeNotebookEditor).ignoreErrors();
+        this.updateMergedContexts();
+    }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
         this.interactiveContext.set(!!e).ignoreErrors();
         this.updateMergedContexts();
@@ -78,7 +91,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
-        this.isPythonFileActive = e?.document.languageId === PYTHON_LANGUAGE;
+        this.isPythonFileActive =
+            e?.document.languageId === PYTHON_LANGUAGE && !this.vscodeNotebook.activeNotebookEditor;
         this.updateMergedContexts();
     }
     private updateMergedContexts() {

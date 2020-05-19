@@ -140,7 +140,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
         return this.open(model.file);
     }
-    protected openedEditor(editor: INotebookEditor): void {
+    private onEditorOpened(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;
         if (!this.executedEditors.has(editor.file.fsPath)) {
             editor.executed(this.onExecuted.bind(this));
@@ -169,7 +169,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const uri = isUri(doc) ? doc : doc.uri;
         const model = await this.storage.load(uri);
         // In open method we might be waiting.
-        const editor = this.notebookEditorsByUri.get(uri.toString()) || new NotebookEditor(model, this.vscodeNotebook);
+        let editor = this.notebookEditorsByUri.get(uri.toString());
+        if (!editor) {
+            editor = new NotebookEditor(model, this.vscodeNotebook);
+            this.onEditorOpened(editor);
+        }
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());
         deferred?.resolve(editor); // NOSONAR
         if (!isUri(doc)) {

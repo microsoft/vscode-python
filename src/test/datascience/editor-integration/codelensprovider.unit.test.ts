@@ -4,7 +4,12 @@
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IVSCodeNotebook
+} from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
@@ -24,6 +29,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let tokenSource: CancellationTokenSource;
+    let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -37,9 +43,11 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);
         pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => undefined);
         commandManager
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve());
@@ -53,7 +61,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             commandManager.object,
             disposables,
             debugService.object,
-            fileSystem.object
+            fileSystem.object,
+            vscodeNotebook.object
         );
     });
 
