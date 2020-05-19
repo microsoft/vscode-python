@@ -135,6 +135,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
     const transformPromise = forceLoad();
 
+    // tslint:disable-next-line: cyclomatic-complexity
     return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
@@ -154,6 +155,10 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
+        }
+        if (previousSelection.selectedCellId !== currentSelection.selectedCellId && currentSelection.selectedCellId) {
+            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+            sendMessage(InteractiveWindowMessages.SelectedCell, { cellId: action.payload.cellId });
         }
         // Special case for unfocusing a cell
         if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
@@ -178,7 +183,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables)) {
+        if (
+            (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables) ||
+                prevState.variables.currentExecutionCount !== afterState.variables.currentExecutionCount) &&
+            action.type === InteractiveWindowMessages.GetVariablesResponse
+        ) {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
@@ -202,6 +211,21 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
+        }
+
+        // Hiding/displaying output
+        const prevHidingOutput = prevState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
+        const afterHidingOutput = afterState.main.cellVMs.filter((c) => c.hideOutput).map((c) => c.cell.id);
+        if (!fastDeepEqual(prevHidingOutput, afterHidingOutput)) {
+            // Send async so happens after the render is actually finished.
+            sendMessage(InteractiveWindowMessages.OutputToggled);
+        }
+
+        // Entering break state in a native cell
+        const prevBreak = prevState.main.cellVMs.find((cvm) => cvm.currentStack);
+        const newBreak = afterState.main.cellVMs.find((cvm) => cvm.currentStack);
+        if (prevBreak !== newBreak || !fastDeepEqual(prevBreak?.currentStack, newBreak?.currentStack)) {
+            sendMessage(InteractiveWindowMessages.ShowingIp);
         }
 
         if (action.type !== 'action.postOutgoingMessage') {

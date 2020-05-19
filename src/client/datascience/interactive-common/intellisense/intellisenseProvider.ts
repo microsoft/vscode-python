@@ -8,7 +8,6 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
-    CancellationToken,
     CancellationTokenSource,
     CompletionItem,
     Event,
@@ -18,6 +17,7 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 import { concatMultilineStringInput } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
@@ -176,14 +176,14 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return this.documentPromise.promise;
     }
 
-    protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
+    protected async getLanguageServer(token: CancellationToken): Promise<ILanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
         const resource =
             this.potentialResource ||
             (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
 
         // Interpreter should be the interpreter currently active in the notebook
-        const activeNotebook = await this.getNotebook();
+        const activeNotebook = await this.getNotebook(token);
         const interpreter = activeNotebook
             ? activeNotebook.getMatchingInterpreter()
             : await this.interpreterService.getActiveInterpreter(resource);
@@ -237,7 +237,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
-        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(token), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideCompletionItems(document, docPos, token, context);
@@ -258,9 +258,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         token: CancellationToken
     ): Promise<monacoEditor.languages.Hover> {
         const [languageServer, document, variableHover] = await Promise.all([
-            this.getLanguageServer(),
+            this.getLanguageServer(token),
             this.getDocument(),
-            this.getVariableHover(wordAtPosition)
+            this.getVariableHover(wordAtPosition, token)
         ]);
         if (!variableHover && languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -282,7 +282,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.SignatureHelp> {
-        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(token), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideSignatureHelp(
@@ -309,7 +309,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionItem> {
-        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(token), this.getDocument()]);
         if (languageServer && languageServer.resolveCompletionItem && document) {
             const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
 
@@ -335,7 +335,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         // For the dot net language server, we have to send extra data to the language server
         if (document) {
             // Broadcast an update to the language server
-            const languageServer = await this.getLanguageServer();
+            const languageServer = await this.getLanguageServer(CancellationToken.None);
             if (languageServer && languageServer.handleChanges && languageServer.handleOpen) {
                 if (!this.sentOpenDocument) {
                     this.sentOpenDocument = true;
@@ -470,7 +470,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cancelToken: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
         try {
-            const [activeNotebook, document] = await Promise.all([this.getNotebook(), this.getDocument()]);
+            const [activeNotebook, document] = await Promise.all([this.getNotebook(cancelToken), this.getDocument()]);
             if (activeNotebook && document) {
                 const data = document.getCellData(cellId);
 
@@ -742,20 +742,23 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         this.potentialResource = identity.owningResource ? identity.owningResource : this.potentialResource;
     }
 
-    private async getNotebook(): Promise<INotebook | undefined> {
+    private async getNotebook(token: CancellationToken): Promise<INotebook | undefined> {
         return this.notebookIdentity
-            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true })
+            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true, token })
             : undefined;
     }
 
-    private async getVariableHover(wordAtPosition: string | undefined): Promise<Hover | undefined> {
+    private async getVariableHover(
+        wordAtPosition: string | undefined,
+        token: CancellationToken
+    ): Promise<Hover | undefined> {
         if (wordAtPosition) {
-            const notebook = await this.getNotebook();
+            const notebook = await this.getNotebook(token);
             if (notebook) {
-                const value = await this.variableProvider.getMatchingVariableValue(notebook, wordAtPosition);
+                const value = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition, token);
                 if (value) {
                     return {
-                        contents: [`${wordAtPosition} : ${value}`]
+                        contents: [`${wordAtPosition}: ${value.type} = ${value.value}`]
                     };
                 }
             }

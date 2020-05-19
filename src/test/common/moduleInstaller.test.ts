@@ -37,7 +37,6 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments';
-import '../../client/common/extensions';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -144,9 +143,7 @@ import { closeActiveWindows, initializeTest } from './../initialize';
 
 chai_use(chaiAsPromised);
 
-const isolated = path
-    .join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py')
-    .fileToCommandArgument();
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

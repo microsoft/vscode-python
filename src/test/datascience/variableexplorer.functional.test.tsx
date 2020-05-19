@@ -10,6 +10,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
@@ -19,7 +20,7 @@ import {
     waitForMessage,
     waitForVariablesUpdated
 } from './testHelpers';
-import { verifyAfterStep, verifyVariables } from './variableTestHelpers';
+import { verifyAfterStep, verifyCanFetchData, verifyVariables } from './variableTestHelpers';
 
 // tslint:disable: no-var-requires no-require-imports
 const rangeInclusive = require('range-inclusive');
@@ -30,8 +31,10 @@ const rangeInclusive = require('range-inclusive');
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
         let createdNotebook = false;
+        let snapshot: any;
 
         suiteSetup(function () {
+            snapshot = takeSnapshot();
             // These test require python, so only run with a non-mocked jupyter
             const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
             if (!isRollingBuild) {
@@ -65,9 +68,10 @@ const rangeInclusive = require('range-inclusive');
         });
 
         // Uncomment this to debug hangs on exit
-        //suiteTeardown(() => {
-        //      asyncDump();
-        //});
+        suiteTeardown(() => {
+            //      asyncDump();
+            writeDiffSnapshot(snapshot, `Variable Explorer ${runByLine}`);
+        });
 
         async function addCodeImpartial(
             wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
@@ -158,7 +162,7 @@ value = 'hello world'`;
                 verifyVariables(wrapper, targetVariables);
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
             }
         );
 
@@ -253,7 +257,7 @@ value = 'hello world'`;
                 verifyVariables(wrapper, targetVariables);
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
             }
         );
 
@@ -317,11 +321,15 @@ myDict = {'a': 1}`;
                 verifyVariables(wrapper, targetVariables);
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
 
                 // Restart the kernel and repeat
                 const interactive = await getOrCreateInteractiveWindow(ioc);
+
                 const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                 await interactive.restartKernel();
                 await variablesComplete; // Restart should cause a variable refresh
@@ -335,11 +343,14 @@ myDict = {'a': 1}`;
                 verifyVariables(wrapper, targetVariables);
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
             }
         );
 
@@ -456,11 +467,14 @@ Name: 0, dtype: float64`,
                 // Step into the first cell over again. Should have the same variables
                 if (runByLine) {
                     targetVariables[7].value = 'array([1., 2., 3.])'; // Debugger shows np array differently
-                    await verifyAfterStep(ioc, wrapper, targetVariables);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, targetVariables);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
             }
         );
 
@@ -523,11 +537,47 @@ Name: 0, dtype: float64`,
                     const nonValued = targetVariables.map((v) => {
                         return { ...v, value: undefined };
                     });
-                    await verifyAfterStep(ioc, wrapper, nonValued);
+                    await verifyAfterStep(ioc, wrapper, () => {
+                        verifyVariables(wrapper, nonValued);
+                        return Promise.resolve();
+                    });
                 }
             },
             () => {
-                return ioc;
+                return Promise.resolve(ioc);
+            }
+        );
+
+        runInteractiveTest(
+            'Variable explorer - DataFrameInfo and Rows',
+            async (wrapper) => {
+                const basicCode: string = `import numpy as np
+import pandas as pd
+mynpArray = np.array([1.0, 2.0, 3.0])
+myDataframe = pd.DataFrame(mynpArray)
+mySeries = myDataframe[0]
+`;
+
+                openVariableExplorer(wrapper);
+
+                await addCodeImpartial(wrapper, 'a=1\na');
+                await addCodeImpartial(wrapper, basicCode, true);
+
+                await verifyCanFetchData(ioc, 2, 'myDataframe', [1, 2, 3]);
+                await verifyCanFetchData(ioc, 2, 'mynpArray', [1, 2, 3]);
+                await verifyCanFetchData(ioc, 2, 'mySeries', [1, 2, 3]);
+
+                // Step into the first cell over again. Should have the same variables
+                if (runByLine) {
+                    await verifyAfterStep(ioc, wrapper, async (_w) => {
+                        await verifyCanFetchData(ioc, 2, 'myDataframe', [1, 2, 3]);
+                        await verifyCanFetchData(ioc, 2, 'mynpArray', [1, 2, 3]);
+                        await verifyCanFetchData(ioc, 2, 'mySeries', [1, 2, 3]);
+                    });
+                }
+            },
+            () => {
+                return Promise.resolve(ioc);
             }
         );
     });

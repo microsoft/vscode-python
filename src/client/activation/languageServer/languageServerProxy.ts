@@ -73,7 +73,12 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             if (settings.downloadLanguageServer) {
                 this.languageClient.onTelemetry((telemetryEvent) => {
                     const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
+                    const formattedProperties = {
+                        ...telemetryEvent.Properties,
+                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                    };
+                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
                 });
             }
             await this.registerTestServices();

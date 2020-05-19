@@ -5,8 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionActivationService } from '../../activation/types';
+import { LocalZMQKernel } from '../../common/experimentGroups';
 import '../../common/extensions';
-import { IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import {
     IInteractiveWindowProvider,
@@ -23,9 +24,13 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookAndInteractiveWindowUsageTracker)
         private readonly usageTracker: INotebookAndInteractiveWindowUsageTracker,
-        @inject(KernelDaemonPool) private readonly kernelDaemonPool: KernelDaemonPool
+        @inject(KernelDaemonPool) private readonly kernelDaemonPool: KernelDaemonPool,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
     public async activate(_resource: Resource): Promise<void> {
+        if (!this.experimentsManager.inExperiment(LocalZMQKernel.experiment)) {
+            return;
+        }
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.preWarmKernelDaemonPool, this));
         this.disposables.push(
             this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.preWarmKernelDaemonPool, this)

@@ -8,10 +8,12 @@ import { ICommandNameArgumentTypeMapping } from '../../client/common/application
 import { ICommandManager } from '../../client/common/application/types';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-
 export class MockCommandManager implements ICommandManager {
     private commands: Map<string, (...args: any[]) => any> = new Map<string, (...args: any[]) => any>();
 
+    public dispose() {
+        this.commands.clear();
+    }
     public registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]

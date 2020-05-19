@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
-import { Event, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable } from '../../common/types';
@@ -62,22 +62,26 @@ export class KernelVariables implements IJupyterVariables {
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
-    public async getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined> {
+    public async getMatchingVariable(
+        notebook: INotebook,
+        name: string,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
         const cache = this.notebookState.get(notebook.identity);
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
-                match = await this.getVariableValueFromKernel(match, notebook);
+                match = await this.getVariableValueFromKernel(match, notebook, token);
             }
-            return match?.value;
+            return match;
         } else {
             // No items in the cache yet, just ask for the names
-            const names = await this.getVariableNamesFromKernel(notebook);
+            const names = await this.getVariableNamesFromKernel(notebook, token);
             if (names) {
                 const matchName = names.find((n) => n === name);
                 if (matchName) {
-                    const match = await this.getVariableValueFromKernel(
+                    return this.getVariableValueFromKernel(
                         {
                             name,
                             value: undefined,
@@ -88,9 +92,9 @@ export class KernelVariables implements IJupyterVariables {
                             shape: '',
                             truncated: true
                         },
-                        notebook
+                        notebook,
+                        token
                     );
-                    return match.value;
                 }
             }
         }
@@ -142,7 +146,7 @@ export class KernelVariables implements IJupyterVariables {
         return this.deserializeJupyterResult(results);
     }
 
-    private async importDataFrameScripts(notebook: INotebook): Promise<void> {
+    private async importDataFrameScripts(notebook: INotebook, token?: CancellationToken): Promise<void> {
         const key = notebook.identity.toString();
         if (!this.importedDataFrameScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
@@ -156,14 +160,18 @@ export class KernelVariables implements IJupyterVariables {
             disposables.push(notebook.onKernelRestarted(handler));
 
             const fullCode = `${DataFrameLoading.DataFrameSysImport}\n${DataFrameLoading.DataFrameInfoImport}\n${DataFrameLoading.DataFrameRowImport}\n${DataFrameLoading.VariableInfoImport}`;
-            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+            await notebook.execute(fullCode, Identifiers.EmptyFileName, 0, uuid(), token, true);
             this.importedDataFrameScripts.set(notebook.identity.toString(), true);
         }
     }
 
-    private async getFullVariable(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    private async getFullVariable(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        token?: CancellationToken
+    ): Promise<IJupyterVariable> {
         // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(notebook);
+        await this.importDataFrameScripts(notebook, token);
 
         // Then execute a call to get the info and turn it into JSON
         const results = await notebook.execute(
@@ -171,7 +179,7 @@ export class KernelVariables implements IJupyterVariables {
             Identifiers.EmptyFileName,
             0,
             uuid(),
-            undefined,
+            token,
             true
         );
 
@@ -356,13 +364,13 @@ export class KernelVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariableNamesFromKernel(notebook: INotebook): Promise<string[]> {
+    private async getVariableNamesFromKernel(notebook: INotebook, token?: CancellationToken): Promise<string[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
 
         // Now execute the query
         if (notebook) {
-            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+            const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
             const text = this.extractJupyterResultText(cells);
 
             // Apply the expression to it
@@ -379,11 +387,12 @@ export class KernelVariables implements IJupyterVariables {
 
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
-        notebook: INotebook
+        notebook: INotebook,
+        token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };
         if (notebook) {
-            const output = await notebook.inspect(targetVariable.name);
+            const output = await notebook.inspect(targetVariable.name, token);
 
             // Should be a text/plain inside of it (at least IPython does this)
             if (output && output.hasOwnProperty('text/plain')) {

@@ -114,7 +114,22 @@ gulp.task('checkNativeDependencies', (done) => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
+gulp.task('validate-packagejson', () => validatePackageJson());
+
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
+
+async function validatePackageJson() {
+    const json = require('./package.json');
+    if (json.enableProposedApi) {
+        throw new Error('package.json has enableProposedApi setting enabled');
+    }
+    if (json.contributes.notebookOutputRenderer) {
+        throw new Error('Package.json contains entry for contributes.notebookOutputRenderer');
+    }
+    if (json.contributes.notebookProvider) {
+        throw new Error('Package.json contains entry for contributes.notebookProvider');
+    }
+}
 
 async function buildIPyWidgets() {
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
@@ -156,7 +171,7 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
 }
 
 gulp.task('compile-webviews', async () => {
-    buildDataScienceUI(false);
+    await buildDataScienceUI(false);
 });
 
 gulp.task('webpack', async () => {
@@ -287,7 +302,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/any-promise/register.js',
                 'WARNING in ./node_modules/log4js/lib/appenders/index.js',
-                'WARNING in ./node_modules/log4js/lib/clustering.js'
+                'WARNING in ./node_modules/log4js/lib/clustering.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
             ];
         case 'extension':
             return [
@@ -300,10 +317,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'remove-files-plugin@1.4.0:',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js'
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
             ];
         case 'debugAdapter':
-            return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
+            return [
+                'WARNING in ./node_modules/vscode-uri/lib/index.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+            ];
         default:
             throw new Error('Unknown WebPack Configuration');
     }

@@ -17,7 +17,8 @@ import {
 } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
-const JunitXmlArg = '--junitxml';
+const JunitXmlArgOld = '--junitxml';
+const JunitXmlArg = '--junit-xml';
 @injectable()
 export class TestManagerRunner implements ITestManagerRunner {
     private readonly argsService: IArgumentsService;
@@ -57,11 +58,12 @@ export class TestManagerRunner implements ITestManagerRunner {
             const xmlLogResult = await this.getJUnitXmlFile(args);
             const xmlLogFile = xmlLogResult.filePath;
             deleteJUnitXmlFile = xmlLogResult.dispose;
-            // Remove the '--junixml' if it exists, and add it with our path.
-            const testArgs = this.argsService.filterArguments(args, [JunitXmlArg]);
+            // Remove the '--junitxml' or '--junit-xml' if it exists, and add it with our path.
+            const testArgs = this.argsService.filterArguments(args, [JunitXmlArg, JunitXmlArgOld]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${xmlLogFile}`);
 
             testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+            testArgs.splice(0, 0, '--override-ini', 'junit_family=xunit1');
 
             // Positional arguments control the tests to be run.
             testArgs.push(...testPaths);

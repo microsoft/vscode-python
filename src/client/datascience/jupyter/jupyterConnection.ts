@@ -4,6 +4,7 @@
 import '../../common/extensions';
 
 import { ChildProcess } from 'child_process';
+import { Subscription } from 'rxjs';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
@@ -40,13 +41,14 @@ export class JupyterConnectionWaiter implements IDisposable {
     private fileSystem: IFileSystem;
     private stderr: string[] = [];
     private connectionDisposed = false;
+    private subscriptions: Subscription[] = [];
 
     constructor(
         private readonly launchResult: ObservableExecutionResult<string>,
         private readonly notebookDir: string,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
-        private readonly cancelToken?: CancellationToken
+        private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
@@ -74,24 +76,27 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
         let stderr = '';
         // Listen on stderr for its connection information
-        launchResult.out.subscribe(
-            (output: Output<string>) => {
-                if (output.source === 'stderr') {
-                    stderr += output.out;
-                    this.stderr.push(output.out);
-                    this.extractConnectionInformation(stderr);
-                } else {
-                    this.output(output.out);
-                }
-            },
-            (e) => this.rejectStartPromise(e.message),
-            // If the process dies, we can't extract connection information.
-            () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode))
+        this.subscriptions.push(
+            launchResult.out.subscribe(
+                (output: Output<string>) => {
+                    if (output.source === 'stderr') {
+                        stderr += output.out;
+                        this.stderr.push(output.out);
+                        this.extractConnectionInformation(stderr);
+                    } else {
+                        this.output(output.out);
+                    }
+                },
+                (e) => this.rejectStartPromise(e.message),
+                // If the process dies, we can't extract connection information.
+                () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode))
+            )
         );
     }
     public dispose() {
         // tslint:disable-next-line: no-any
         clearTimeout(this.launchTimeout as any);
+        this.subscriptions.forEach((d) => d.unsubscribe());
     }
 
     public waitForConnection(): Promise<IJupyterConnection> {
@@ -104,11 +109,11 @@ export class JupyterConnectionWaiter implements IDisposable {
     }
 
     // tslint:disable-next-line:no-any
-    private output = (data: any) => {
+    private output(data: any) {
         if (!this.connectionDisposed) {
             traceInfo(data.toString('utf8'));
         }
-    };
+    }
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
     // tslint:disable-next-line:no-any

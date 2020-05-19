@@ -145,9 +145,9 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         return undefined;
     }
 
-    public async getNotebook(resource: Uri): Promise<INotebook | undefined> {
+    public async getNotebook(resource: Uri, token?: CancellationToken): Promise<INotebook | undefined> {
         const server = await this.serverFactory.get();
-        return server.getNotebook(resource);
+        return server.getNotebook(resource, token);
     }
 
     public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {

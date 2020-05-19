@@ -36,11 +36,11 @@ export function createMarkdownCell(code: string | string[]): nbformat.IMarkdownC
     };
 }
 
-export function createErrorOutput(error: Error): nbformat.IError {
+export function createErrorOutput(error: Partial<Error>): nbformat.IError {
     return {
         output_type: 'error',
-        ename: error.name,
-        evalue: error.message,
+        ename: error.name || error.message || 'Error',
+        evalue: error.message || error.name || 'Error',
         traceback: (error.stack || '').splitLines()
     };
 }

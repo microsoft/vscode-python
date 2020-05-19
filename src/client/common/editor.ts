@@ -193,7 +193,11 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
         // tslint:disable-next-line:switch-default
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
-                if (beforeLines[line - 1].length === 0 && beforeLines[start.line - 1].length === 0) {
+                if (
+                    beforeLines[line - 1].length === 0 &&
+                    beforeLines[start.line - 1] &&
+                    beforeLines[start.line - 1].length === 0
+                ) {
                     // We're asked to delete an empty line which only contains `/\r?\n/g`. The last line is also empty.
                     // Delete the `\n` from the last line instead of deleting `\n` from the current line
                     // This change ensures that the last line in the file, which won't contain `\n` is deleted

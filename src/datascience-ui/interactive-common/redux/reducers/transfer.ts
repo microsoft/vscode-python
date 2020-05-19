@@ -291,8 +291,6 @@ export namespace Transfer {
         postActionToExtension(arg, CssMessages.GetMonacoThemeRequest, {
             isDark: arg.prevState.baseTheme !== 'vscode-light'
         });
-        postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
-        postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest);
         return arg.prevState;
     }
 

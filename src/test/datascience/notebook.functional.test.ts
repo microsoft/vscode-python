@@ -55,6 +55,7 @@ import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
@@ -70,6 +71,7 @@ suite('DataScience notebook tests', () => {
             let ioc: DataScienceIocContainer;
             let modifiedConfig = false;
             const baseUri = Uri.file('foo.py');
+            let snapshot: any;
 
             // tslint:disable-next-line: no-function-expression
             setup(async function () {
@@ -85,6 +87,14 @@ suite('DataScience notebook tests', () => {
                 await ioc.activate();
                 notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
                 pythonFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            });
+
+            suiteSetup(() => {
+                snapshot = takeSnapshot();
+            });
+
+            suiteTeardown(() => {
+                writeDiffSnapshot(snapshot, `Notebook ${useRawKernel}`);
             });
 
             teardown(async () => {
@@ -365,7 +375,8 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
                 const pythonService = await createPythonService(2);
 
-                if (pythonService) {
+                // Skip test for older python and on windows. Getting E_PROTO on windows.
+                if (pythonService && os.platform() !== 'win32') {
                     // We will only connect if we allow for self signed cert connections
                     ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 

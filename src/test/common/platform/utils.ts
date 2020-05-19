@@ -196,9 +196,6 @@ export class FSFixture extends CleanupFixture {
         try {
             await fsextra.remove(filename);
         } catch (err) {
-            if (!(await fsextra.pathExists(filename))) {
-                return;
-            }
             console.log(`failure while deleting ${filename}: ${err}`);
         }
     }

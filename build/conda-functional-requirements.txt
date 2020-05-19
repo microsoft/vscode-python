@@ -8,7 +8,6 @@ black ; python_version>='3.6'
 yapf
 pylint
 pycodestyle
-prospector
 pydocstyle
 nose
 pytest==4.6.9 # Last version of pytest with Python 2.7 support
@@ -18,7 +17,10 @@ django
 isort
 pathlib2>=2.2.0 ; python_version<'3.6' # Python 2.7 compatibility (pytest)
 pythreejs
+ipysheet
 ipyvolume
 beakerx
+py4j
 bqplot
 K3D
+debugpy

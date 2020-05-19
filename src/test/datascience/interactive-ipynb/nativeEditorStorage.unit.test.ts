@@ -39,8 +39,9 @@ import {
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
+import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookServerOptions } from '../../../client/datascience/types';
+import { ICell, IJupyterExecution, INotebookModel, INotebookServerOptions } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
@@ -105,7 +106,8 @@ suite('DataScience - Native Editor Storage', () => {
     let wroteToFileEvent: EventEmitter<string> = new EventEmitter<string>();
     let filesConfig: MockWorkspaceConfiguration | undefined;
     let testIndex = 0;
-    let storage: NativeEditorStorage;
+    let model: INotebookModel;
+    let storage: NotebookStorageProvider;
     const disposables: IDisposable[] = [];
     const baseUri = Uri.parse('file:///foo.ipynb');
     const baseFile = `{
@@ -363,16 +365,16 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     function createStorage() {
-        return new NativeEditorStorage(
+        const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento,
-            instance(workspace),
-            []
+            localMemento
         );
+
+        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
     }
 
     teardown(() => {
@@ -382,10 +384,10 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     function insertCell(index: number, code: string) {
-        return storage.update({
+        return model.update({
             source: 'user',
             kind: 'insert',
-            oldDirty: storage.isDirty,
+            oldDirty: model.isDirty,
             newDirty: true,
             cell: createEmptyCell(code, 1),
             index
@@ -393,10 +395,10 @@ suite('DataScience - Native Editor Storage', () => {
     }
 
     function swapCells(first: string, second: string) {
-        return storage.update({
+        return model.update({
             source: 'user',
             kind: 'swap',
-            oldDirty: storage.isDirty,
+            oldDirty: model.isDirty,
             newDirty: true,
             firstCellId: first,
             secondCellId: second
@@ -404,10 +406,10 @@ suite('DataScience - Native Editor Storage', () => {
     }
 
     function editCell(changes: IEditorContentChange[], cell: ICell, _newCode: string) {
-        return storage.update({
+        return model.update({
             source: 'user',
             kind: 'edit',
-            oldDirty: storage.isDirty,
+            oldDirty: model.isDirty,
             newDirty: true,
             forward: changes,
             reverse: changes,
@@ -416,10 +418,10 @@ suite('DataScience - Native Editor Storage', () => {
     }
 
     function removeCell(index: number, cell: ICell) {
-        return storage.update({
+        return model.update({
             source: 'user',
             kind: 'remove',
-            oldDirty: storage.isDirty,
+            oldDirty: model.isDirty,
             newDirty: true,
             index,
             cell
@@ -427,37 +429,37 @@ suite('DataScience - Native Editor Storage', () => {
     }
 
     function deleteAllCells() {
-        return storage.update({
+        return model.update({
             source: 'user',
             kind: 'remove_all',
-            oldDirty: storage.isDirty,
+            oldDirty: model.isDirty,
             newDirty: true,
-            oldCells: storage.cells,
+            oldCells: model.cells,
             newCellId: '1'
         });
     }
 
     test('Create new editor and add some cells', async () => {
-        await storage.load(baseUri);
+        model = await storage.load(baseUri);
         insertCell(0, '1');
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(4);
-        expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
         expect(cells[0].id).to.be.match(/1/);
     });
 
     test('Move cells around', async () => {
-        await storage.load(baseUri);
+        model = await storage.load(baseUri);
         swapCells('NotebookImport#0', 'NotebookImport#1');
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(3);
-        expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
         expect(cells[0].id).to.be.match(/NotebookImport#1/);
     });
 
     test('Edit/delete cells', async () => {
-        await storage.load(baseUri);
-        expect(storage.isDirty).to.be.equal(false, 'Editor should not be dirty');
+        model = await storage.load(baseUri);
+        expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editCell(
             [
                 {
@@ -476,28 +478,28 @@ suite('DataScience - Native Editor Storage', () => {
                     }
                 }
             ],
-            storage.cells[1],
+            model.cells[1],
             'a'
         );
-        let cells = storage.cells;
+        let cells = model.cells;
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
         expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
-        expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
         removeCell(0, cells[0]);
-        cells = storage.cells;
+        cells = model.cells;
         expect(cells).to.be.lengthOf(2);
         expect(cells[0].id).to.be.match(/NotebookImport#1/);
         deleteAllCells();
-        cells = storage.cells;
+        cells = model.cells;
         expect(cells).to.be.lengthOf(1);
     });
 
     test('Editing a file and closing will keep contents', async () => {
         await filesConfig?.update('autoSave', 'off');
 
-        await storage.load(baseUri);
-        expect(storage.isDirty).to.be.equal(false, 'Editor should not be dirty');
+        model = await storage.load(baseUri);
+        expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editCell(
             [
                 {
@@ -516,7 +518,7 @@ suite('DataScience - Native Editor Storage', () => {
                     }
                 }
             ],
-            storage.cells[1],
+            model.cells[1],
             'a'
         );
 
@@ -525,13 +527,13 @@ suite('DataScience - Native Editor Storage', () => {
 
         // Recreate
         storage = createStorage();
-        await storage.load(baseUri);
+        model = await storage.load(baseUri);
 
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
         expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
-        expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 
     test('Opening file with local storage but no global will still open with old contents', async () => {
@@ -545,10 +547,10 @@ suite('DataScience - Native Editor Storage', () => {
 
         // Put the regular file into the local storage
         await localMemento.update(`notebook-storage-${file.toString()}`, differentFile);
-        await storage.load(file);
+        model = await storage.load(file);
 
         // It should load with that value
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(2);
     });
 
@@ -566,10 +568,10 @@ suite('DataScience - Native Editor Storage', () => {
             contents: differentFile,
             lastModifiedTimeMs: Date.now()
         });
-        await storage.load(file);
+        model = await storage.load(file);
 
         // It should load with that value
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(2);
     });
 
@@ -596,10 +598,10 @@ suite('DataScience - Native Editor Storage', () => {
             lastModifiedTimeMs: Date.now()
         });
 
-        await storage.load(file);
+        model = await storage.load(file);
 
         // It should load with that value
-        const cells = storage.cells;
+        const cells = model.cells;
         expect(cells).to.be.lengthOf(2);
 
         // And global storage should be empty

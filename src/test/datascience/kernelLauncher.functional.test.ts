@@ -6,7 +6,6 @@ import { assert } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
@@ -18,6 +17,7 @@ import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockKernelFinder } from './mockKernelFinder';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
@@ -27,25 +27,36 @@ suite('DataScience - Kernel Launcher', () => {
     let pythonInterpreter: PythonInterpreter | undefined;
     let kernelSpec: IJupyterKernelSpec;
     let kernelFinder: MockKernelFinder;
+    // tslint:disable-next-line: no-any
+    let snapshot: any;
+
+    suiteSetup(() => {
+        snapshot = takeSnapshot();
+    });
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
-        const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
-        kernelLauncher = new KernelLauncher(processServiceFactory, file, daemonPool);
+        kernelLauncher = new KernelLauncher(processServiceFactory, daemonPool);
         await ioc.activate();
-        pythonInterpreter = await ioc.getJupyterCapableInterpreter();
-        kernelSpec = {
-            argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-            display_name: 'new kernel',
-            language: 'python',
-            name: 'newkernel',
-            path: 'path',
-            env: undefined
-        };
+        if (!ioc.mockJupyter) {
+            pythonInterpreter = await ioc.getJupyterCapableInterpreter();
+            kernelSpec = {
+                argv: [pythonInterpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+                display_name: 'new kernel',
+                language: 'python',
+                name: 'newkernel',
+                path: 'path',
+                env: undefined
+            };
+        }
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'KernelLauncher');
     });
 
     test('Launch from kernelspec', async function () {

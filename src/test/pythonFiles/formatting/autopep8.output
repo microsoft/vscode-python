@@ -1,11 +1,12 @@
---- original/.\src\test\pythonFiles\formatting\autoPep8FileToFormat.py
-+++ fixed/.\src\test\pythonFiles\formatting\autoPep8FileToFormat.py
-@@ -1,21 +1,31 @@
+--- original/C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py
++++ fixed/C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py
+@@ -1,22 +1,32 @@
+
 -import math, sys;
 +import math
 +import sys
 +
- 
+
  def example1():
 -    ####This is a long comment. This should be wrapped to fit within 72 characters.
 -    some_tuple=(   1,2, 3,'a'  );

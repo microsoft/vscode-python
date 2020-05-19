@@ -113,7 +113,10 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         if (fileContents.indexOf('"console": "none"') > 0) {
             diagnostics.push(new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConsoleTypeDiagnostic, resource));
         }
-        if (fileContents.indexOf('{config:python.pythonPath}') > 0) {
+        if (
+            fileContents.indexOf('{config:python.pythonPath}') > 0 ||
+            fileContents.indexOf('{config:python.interpreterPath}') > 0
+        ) {
             diagnostics.push(
                 new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConfigPythonPathDiagnostic, resource, false)
             );
@@ -169,7 +172,12 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
                 fileContents = this.findAndReplace(
                     fileContents,
                     '{config:python.pythonPath}',
-                    '{config:python.interpreterPath}'
+                    '{command:python.interpreterPath}'
+                );
+                fileContents = this.findAndReplace(
+                    fileContents,
+                    '{config:python.interpreterPath}',
+                    '{command:python.interpreterPath}'
                 );
                 break;
             }

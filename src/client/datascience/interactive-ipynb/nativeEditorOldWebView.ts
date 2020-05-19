@@ -5,7 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Memento, Uri, WebviewPanel } from 'vscode';
+import { CancellationTokenSource, Memento, Uri, WebviewPanel } from 'vscode';
 
 import {
     IApplicationShell,
@@ -49,8 +49,8 @@ import {
     IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
-import { NativeEditorStorage } from './nativeEditorStorage';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
+import { INotebookStorageProvider } from './notebookStorageProvider';
 
 enum AskForSaveResult {
     Yes,
@@ -97,7 +97,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
     ) {
         super(
             listeners,
@@ -200,8 +201,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             const filesConfig = this.workspaceService.getConfiguration('files', this.file);
             const autoSave = filesConfig.get('autoSave', 'off');
             if (autoSave === 'off') {
-                const model = this.model as NativeEditorStorage;
-                await model.storeContentsInHotExitFile();
+                await this.storage.backup(this.model, new CancellationTokenSource().token);
             }
             this.commandManager.executeCommand(Commands.OpenNotebookNonCustomEditor, this.model.file).then(noop, noop);
         }

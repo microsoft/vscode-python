@@ -28,7 +28,7 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { defaultDataScienceSettings } from './helpers';
+import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
 import {
     addCode,
     closeInteractiveWindow,
@@ -38,7 +38,7 @@ import {
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { createMessageEvent, waitForUpdate } from './reactHelpers';
+import { createMessageEvent } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -67,11 +67,20 @@ suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
+    let snapshot: any;
+
+    suiteSetup(() => {
+        snapshot = takeSnapshot();
+    });
 
     setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         return ioc.activate();
+    });
+
+    suiteTeardown(() => {
+        writeDiffSnapshot(snapshot, 'Interactive Window');
     });
 
     teardown(async () => {
@@ -611,7 +620,7 @@ Type:      builtin_function_or_method`,
             if (!ioc.mockJupyter) {
                 const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
                 const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
-                const interpreters = await ioc.getJupyterInterpreters();
+                const interpreters = await ioc.getFunctionalTestInterpreters();
                 if (interpreters.length < 2) {
                     // tslint:disable-next-line: no-console
                     console.log(
@@ -682,7 +691,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Editor Context',
-        async (wrapper) => {
+        async () => {
             // Before we have any cells, verify our contexts are not set
             assert.equal(
                 ioc.getContext(EditorContexts.HaveInteractive),
@@ -704,7 +713,7 @@ Type:      builtin_function_or_method`,
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Get an update promise so we can wait for the add code
-            const updatePromise = waitForUpdate(wrapper, InteractivePanel);
+            const updatePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
             // Send some code to the interactive window
             await interactiveWindow.addCode('a=1\na', Uri.file('foo.py').fsPath, 2);

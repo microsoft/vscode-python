@@ -6,7 +6,7 @@ import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 import { Telemetry } from '../../datascience/constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -27,10 +27,16 @@ import {
     Product,
     ProductType
 } from '../types';
-import { isResource } from '../utils/misc';
+import { isResource, noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    InterpreterUri,
+    IProductPathService,
+    IProductService
+} from './types';
 
 export { Product } from '../types';
 
@@ -346,6 +352,49 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
 }
 
 export class DataScienceInstaller extends BaseInstaller {
+    // Override base installer to support a more DS-friendly streamlined installation.
+    public async install(
+        product: Product,
+        interpreterUri?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
+        // Precondition
+        if (isResource(interpreterUri)) {
+            throw new Error('All data science packages require an interpreter be passed in');
+        }
+
+        // At this point we know that `interpreterUri` is of type PythonInterpreter
+        const interpreter = interpreterUri as PythonInterpreter;
+
+        // Get a list of known installation channels, pip, conda, etc.
+        const channels: IModuleInstaller[] = await this.serviceContainer
+            .get<IInstallationChannelManager>(IInstallationChannelManager)
+            .getInstallationChannels();
+
+        // Pick an installerModule based on whether the interpreter is conda or not. Default is pip.
+        let installerModule;
+        if (interpreter.type === 'Conda') {
+            installerModule = channels.find((v) => v.name === 'Conda');
+        } else {
+            installerModule = channels.find((v) => v.name === 'Pip');
+        }
+
+        const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
+        if (!installerModule) {
+            this.appShell
+                .showErrorMessage(localize.DataScience.couldNotInstallLibrary().format(moduleName))
+                .then(noop, noop);
+            return InstallerResponse.Ignore;
+        }
+
+        await installerModule
+            .installModule(moduleName, interpreter, cancel)
+            .catch((ex) => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+
+        return this.isInstalled(product, interpreter).then((isInstalled) =>
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
+        );
+    }
     protected async promptToInstallImplementation(
         product: Product,
         resource?: InterpreterUri,

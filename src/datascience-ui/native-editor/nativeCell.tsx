@@ -572,12 +572,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.sendCommand(NativeMouseCommandTelemetry.DeleteCell);
         };
         const runbyline = () => {
+            this.props.focusCell(cellId);
             this.props.runByLine(cellId);
         };
         const cont = () => {
             this.props.continue(cellId);
         };
         const step = () => {
+            this.props.focusCell(cellId);
             this.props.step(cellId);
         };
         const gatherDisabled =
