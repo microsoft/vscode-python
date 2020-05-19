@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-// tslint:disable:no-reference no-any import-name no-any function-name
-/// <reference path="./vscode-extension-telemetry.d.ts" />
+
 import type { JSONObject } from '@phosphor/coreutils';
 import * as stackTrace from 'stack-trace';
-import TelemetryReporter from 'vscode-extension-telemetry';
+// tslint:disable-next-line: import-name
+import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
@@ -27,10 +27,12 @@ import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
 
+// tslint:disable: no-any
+
 /**
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
- * Withiin DA, there's a completely different way to send telemetry.
+ * Within DA, there's a completely different way to send telemetry.
  * @returns {boolean}
  */
 function isTelemetrySupported(): boolean {
@@ -80,14 +82,12 @@ function getTelemetryReporter() {
     const extensionId = PVSC_EXTENSION_ID;
     // tslint:disable-next-line:no-require-imports
     const extensions = (require('vscode') as typeof import('vscode')).extensions;
-    // tslint:disable-next-line:no-non-null-assertion
     const extension = extensions.getExtension(extensionId)!;
-    // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 
 export function clearTelemetryReporter() {
@@ -108,8 +108,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     let customProperties: Record<string, string> = {};
     let eventNameSent = eventName as string;
 
-    if (ex && (eventName as any) !== 'ERROR') {
-        // When sending `ERROR` telemetry event no need to send custom properties.
+    if (ex) {
+        // When sending telemetry events for exceptions no need to send custom properties.
         // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
@@ -147,7 +147,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
-            `Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties
             )} `
         );
