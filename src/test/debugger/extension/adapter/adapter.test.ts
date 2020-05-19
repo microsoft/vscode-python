@@ -57,20 +57,47 @@ suite('Debugger Integration', () => {
         // prettier-ignore
         'launch': ['launch a file', [...defaultScriptArgs, outFile]],
         // prettier-ignore
-        'attach': ['attach to a local port', defaultScriptArgs]
-        // We are starting with just launch and attach...
-        //'attach to PID': ['attach to a local PID', defaultScriptArgs]
+        'attach': ['attach to a local port', defaultScriptArgs],
+        'attach to PID': ['attach to a local PID', defaultScriptArgs]
         // For now we do not worry about "test" debugging.
     };
 
     suite('run to end', () => {
         for (const kind of Object.keys(tests)) {
+            if (kind === 'attach to PID') {
+                // Attach-to-pid is still a little finicky
+                // so we're skipping it for now.
+                continue;
+            }
             const [configName, scriptArgs] = tests[kind];
             test(kind, async () => {
                 const session = fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
                 await session.start();
                 // Any debugger ops would go here.
                 await new Promise((r) => setTimeout(r, 300)); // 0.3 seconds
+                await setDone();
+                const result = await session.waitUntilDone();
+
+                expect(result.exitCode).to.equal(0, 'bad exit code');
+                const output = result.stdout !== '' ? result.stdout : fs.readFileSync(outFile).toString();
+                expect(output.trim().endsWith('done!')).to.equal(true, `bad output\n${output}`);
+            });
+        }
+    });
+
+    suite('handles breakpoint', () => {
+        for (const kind of ['launch', 'attach']) {
+            if (kind === 'attach') {
+                // The test isn't working quite right for attach
+                // so we skip it for now.
+                continue;
+            }
+            const [configName, scriptArgs] = tests[kind];
+            test(kind, async () => {
+                const session = fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
+                const bp = session.addBreakpoint(file, 21); // line: "time.sleep()"
+                await session.start();
+                await session.waitForBreakpoint(bp);
                 await setDone();
                 const result = await session.waitUntilDone();
 

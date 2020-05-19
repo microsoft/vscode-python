@@ -9,6 +9,7 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { sleep } from '../../client/common/utils/async';
 import { getDebugpyLauncherArgs } from '../../client/debugger/extension/adapter/remoteLaunchers';
@@ -27,43 +28,33 @@ export function getConfig(name: string): vscode.DebugConfiguration {
     throw Error(`debug config "${name}" not found`);
 }
 
-// See: https://microsoft.github.io/debug-adapter-protocol/specification#arrow_left-output-event
-interface IDAPOutputMessage {
-    type: 'event';
-    event: 'output';
-    body: {
-        category?: string; // stdout, stderr, console, etc.
-        output: string;
-    };
-}
+type DAPSource = 'vscode' | 'debugpy';
+type DAPHandler = (src: DAPSource, msg: DebugProtocol.ProtocolMessage) => void;
+
+type TrackedDebugger = {
+    id: number;
+    output: ProcOutput;
+    dapHandler?: DAPHandler;
+    session?: vscode.DebugSession;
+    exitCode?: number;
+};
 
 class DebugAdapterTracker {
     constructor(
-        // VS Code provides the session through the factory.
-        public readonly session: vscode.DebugSession,
+        // This contains all the state.
         private readonly tracked: TrackedDebugger
     ) {}
 
+    // debugpy -> VS Code
+    // tslint:disable-next-line:no-any
+    public onDidSendMessage(message: any): void {
+        this.onDAPMessage('debugpy', message as DebugProtocol.ProtocolMessage);
+    }
+
+    // VS Code -> debugpy
     // tslint:disable-next-line:no-any
     public onWillReceiveMessage(message: any): void {
-        // Un-comment this to see the DAP messages sent from debugpy:
-        //console.log('|', message, '|');
-        const msg = message as IDAPOutputMessage;
-        if (msg.type !== 'event' || msg.event !== 'output') {
-            return;
-        }
-        if (msg.body.category === undefined) {
-            msg.body.category = 'stdout';
-        }
-
-        const data = Buffer.from(msg.body.output, 'utf-8');
-        if (msg.body.category === 'stdout') {
-            this.tracked.output.addStdout(data);
-        } else if (msg.body.category === 'stderr') {
-            this.tracked.output.addStderr(data);
-        } else {
-            // Ignore it.
-        }
+        this.onDAPMessage('vscode', message as DebugProtocol.ProtocolMessage);
     }
 
     public onExit(code: number | undefined, signal: string | undefined): void {
@@ -79,16 +70,39 @@ class DebugAdapterTracker {
     // The following vscode.DebugAdapterTracker methods are not implemented:
     //
     //  * onWillStartSession(): void;
-    //  * onDidSendMessage(message: any): void;
     //  * onWillStopSession(): void;
     //  * onError(error: Error): void;
-}
 
-type TrackedDebugger = {
-    id: number;
-    output: ProcOutput;
-    exitCode?: number;
-};
+    private onDAPMessage(src: DAPSource, msg: DebugProtocol.ProtocolMessage) {
+        // Unomment this to see the DAP messages sent between VS Code and debugpy:
+        //console.log(`| DAP (${src === 'vscode' ? 'VS Code -> debugpy' : 'debugpy -> VS Code'})\n`, msg, '\n| DAP');
+
+        // See: https://microsoft.github.io/debug-adapter-protocol/specification
+        if (this.tracked.dapHandler) {
+            this.tracked.dapHandler(src, msg);
+        }
+        if (msg.type === 'event') {
+            const event = ((msg as unknown) as DebugProtocol.Event).event;
+            if (event === 'output') {
+                this.onOutputEvent((msg as unknown) as DebugProtocol.OutputEvent);
+            }
+        }
+    }
+
+    private onOutputEvent(msg: DebugProtocol.OutputEvent) {
+        if (msg.body.category === undefined) {
+            msg.body.category = 'stdout';
+        }
+        const data = Buffer.from(msg.body.output, 'utf-8');
+        if (msg.body.category === 'stdout') {
+            this.tracked.output.addStdout(data);
+        } else if (msg.body.category === 'stderr') {
+            this.tracked.output.addStderr(data);
+        } else {
+            // Ignore it.
+        }
+    }
+}
 
 class Debuggers {
     private nextID = 0;
@@ -107,6 +121,22 @@ class Debuggers {
         this.tracked[id] = { id, output };
         config._test_session_id = id;
         return id;
+    }
+
+    public setDAPHandler(id: number, handler: DAPHandler) {
+        const tracked = this.tracked[id];
+        if (tracked !== undefined) {
+            tracked.dapHandler = handler;
+        }
+    }
+
+    public getSession(id: number): vscode.DebugSession | undefined {
+        const tracked = this.tracked[id];
+        if (tracked === undefined) {
+            return undefined;
+        } else {
+            return tracked.session;
+        }
     }
 
     public async waitUntilDone(id: number): Promise<ProcResult> {
@@ -135,7 +165,8 @@ class Debuggers {
         const id = session.configuration._test_session_id;
         const tracked = this.tracked[id];
         if (tracked !== undefined) {
-            return new DebugAdapterTracker(session, tracked);
+            tracked.session = session;
+            return new DebugAdapterTracker(tracked);
         } else if (id !== undefined) {
             // This should not have happened, but we don't worry about
             // it for now.
@@ -147,6 +178,8 @@ const debuggers = new Debuggers();
 
 class DebuggerSession {
     private started: boolean = false;
+    private raw: vscode.DebugSession | undefined;
+    private stopped: { breakpoint: boolean; threadId: number } | undefined;
     constructor(
         public readonly id: number,
         public readonly config: vscode.DebugConfiguration,
@@ -164,6 +197,8 @@ class DebuggerSession {
         //console.log('|', session.config, '|');
         const started = await vscode.debug.startDebugging(this.wsRoot, this.config);
         expect(started).to.be.equal(true, 'Debugger did not sart');
+        this.raw = debuggers.getSession(this.id);
+        expect(this.raw).to.not.equal(undefined, 'session not set');
     }
 
     public async waitUntilDone(): Promise<ProcResult> {
@@ -171,6 +206,51 @@ class DebuggerSession {
             return this.proc.waitUntilDone();
         } else {
             return debuggers.waitUntilDone(this.id);
+        }
+    }
+
+    public addBreakpoint(filename: string, line: number, ch?: number): vscode.Breakpoint {
+        // The arguments are 1-indexed.
+        const loc = new vscode.Location(
+            vscode.Uri.file(filename),
+            // VS Code wants 0-indexed line and column numbers.
+            // We default to the beginning of the line.
+            new vscode.Position(line - 1, ch ? ch - 1 : 0)
+        );
+        const bp = new vscode.SourceBreakpoint(loc);
+        vscode.debug.addBreakpoints([bp]);
+        return bp;
+    }
+
+    public async waitForBreakpoint(bp: vscode.Breakpoint, opts: { clear: boolean } = { clear: true }) {
+        while (!this.stopped || !this.stopped.breakpoint) {
+            await sleep(10); // milliseconds
+        }
+        if (opts.clear) {
+            vscode.debug.removeBreakpoints([bp]);
+            await this.raw!.customRequest('continue', { threadId: this.stopped.threadId });
+            this.stopped = undefined;
+        }
+    }
+
+    public handleDAPMessage(_src: DAPSource, baseMsg: DebugProtocol.ProtocolMessage) {
+        if (baseMsg.type === 'event') {
+            const event = ((baseMsg as unknown) as DebugProtocol.Event).event;
+            if (event === 'stopped') {
+                const msg = (baseMsg as unknown) as DebugProtocol.StoppedEvent;
+                this.stopped = {
+                    breakpoint: msg.body.reason === 'breakpoint',
+                    threadId: (msg.body.threadId as unknown) as number
+                };
+            } else {
+                // For now there aren't any other events we care about.
+            }
+        } else if (baseMsg.type === 'request') {
+            // For now there aren't any requests we care about.
+        } else if (baseMsg.type === 'response') {
+            // For now there aren't any responses we care about.
+        } else {
+            // This shouldn't happen but for now we don't worry about it.
         }
     }
 
@@ -231,7 +311,9 @@ export class DebuggerFixture extends PythonFixture {
             throw Error(`unsupported request type "${config.request}"`);
         }
         const id = debuggers.track(config);
-        return new DebuggerSession(id, config, wsRoot, proc);
+        const session = new DebuggerSession(id, config, wsRoot, proc);
+        debuggers.setDAPHandler(id, (src, msg) => session.handleDAPMessage(src, msg));
+        return session;
     }
 
     public getLaunchTarget(filename: string, args: string[]): vscode.DebugConfiguration {
@@ -289,7 +371,6 @@ export class DebuggerFixture extends PythonFixture {
 
 import * as request from 'request';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
 import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DEBUGGER_TIMEOUT } from './common/constants';
 
