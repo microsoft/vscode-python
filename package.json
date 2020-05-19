@@ -1770,6 +1770,12 @@
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
+                "python.dataScience.alwaysScrollOnNewCell": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
+                    "scope": "resource"
+                },
                 "python.dataScience.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
