@@ -127,6 +127,62 @@
                 "command": "python.datascience.runcurrentcellandaddbelow",
                 "key": "alt+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused"
+            },
+            {
+                "mac": "F",
+                "win": "F",
+                "linux": "F",
+                "key": "F",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.find"
+            },
+            {
+                "mac": "K",
+                "win": "K",
+                "linux": "K",
+                "key": "K",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "list.focusUp"
+            },
+            {
+                "mac": "J",
+                "win": "J",
+                "linux": "J",
+                "key": "J",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "list.focusDown"
+            },
+            {
+                "mac": "A",
+                "win": "A",
+                "linux": "A",
+                "key": "A",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.insertCodeCellAbove"
+            },
+            {
+                "mac": "B",
+                "win": "B",
+                "linux": "B",
+                "key": "B",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.insertCodeCellBelow"
+            },
+            {
+                "mac": "D D",
+                "win": "D D",
+                "linux": "D D",
+                "key": "D D",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.delete"
+            },
+            {
+                "mac": "Z",
+                "win": "Z",
+                "linux": "Z",
+                "key": "Z",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.undo"
             }
         ],
         "commands": [
