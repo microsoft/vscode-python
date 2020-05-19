@@ -11,6 +11,7 @@ import {
     setPythonPathInWorkspaceRoot
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
+import { initializeLoggerForTests } from './test-logger';
 
 export * from './constants';
 export * from './ciConstants';
@@ -21,6 +22,8 @@ const workspace3Uri = vscode.Uri.file(path.join(multirootPath, 'workspace3'));
 
 //First thing to be executed.
 process.env.VSC_PYTHON_CI_TEST = '1';
+
+initializeLoggerForTests();
 
 // Ability to use custom python environments for testing
 export async function initializePython() {

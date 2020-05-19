@@ -14,7 +14,9 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { unzip } from './common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants';
+import { initializeLoggerForTests } from './test-logger';
 
+initializeLoggerForTests();
 class TestRunner {
     public async start() {
         console.log('Start Test Runner');

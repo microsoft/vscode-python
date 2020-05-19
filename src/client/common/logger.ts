@@ -1,7 +1,9 @@
 // These are all just temporary aliases, for backward compatibility
+
+export { traceDecorators } from '../logging/_global';
+
 // and to avoid churn.
 export {
-    traceDecorators,
     logError as traceError,
     logInfo as traceInfo,
     logVerbose as traceVerbose,
