@@ -4,6 +4,7 @@
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { LanguageServerType } from '../activation/types';
+import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
@@ -77,16 +78,36 @@ export class LinterInfo implements ILinterInfo {
 }
 
 export class PylintLinterInfo extends LinterInfo {
-    constructor(configService: IConfigurationService, configFileNames: string[] = []) {
+    constructor(
+        configService: IConfigurationService,
+        private readonly workspaceService: IWorkspaceService,
+        configFileNames: string[] = []
+    ) {
         super(Product.pylint, 'pylint', configService, configFileNames);
     }
     public isEnabled(resource?: Uri): boolean {
-        const enabled = super.isEnabled(resource);
+        // We want to be sure the setting is not default since default is `true` and hence
+        // missing setting yields `true`. When setting is missing and LS is non-Jedi,
+        // we want default to be `false`. So inspection here makes sure we are not getting
+        // `true` because there is no setting and LS is active.
+        const enabled = super.isEnabled(resource); // Is it enabled by settings?
         const usingJedi = this.configService.getSettings(resource).languageServer === LanguageServerType.Jedi;
-        if (!enabled || !usingJedi) {
+        if (usingJedi) {
+            // In Jedi case adhere to default behavior. Missing setting means `enabled`.
+            return enabled;
+        }
+        // If we're using LS, then by default Pylint is disabled unless user provided
+        // the value. We have to resort to direct inspection of settings here.
+        const configuration = this.workspaceService.getConfiguration('python', resource);
+        const inspection = configuration.inspect<boolean>(this.enabledSettingName);
+        if (
+            !inspection ||
+            (inspection.globalValue === undefined &&
+                inspection.workspaceFolderValue === undefined &&
+                inspection.workspaceValue === undefined)
+        ) {
             return false;
         }
-        // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
-        return this.configService.getSettings(resource).linting?.pylintEnabled;
+        return enabled;
     }
 }

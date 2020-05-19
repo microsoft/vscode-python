@@ -8,21 +8,26 @@
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { LanguageServerType } from '../../client/activation/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PylintLinterInfo } from '../../client/linters/linterInfo';
 
 suite('Linter Info - Pylint', () => {
-    test('Test disabled when Pylint is explicitly disabled', async () => {
-        const config = mock(ConfigurationService);
-        const linterInfo = new PylintLinterInfo(instance(config), []);
+    const workspace = mock(WorkspaceService);
+    const config = mock(ConfigurationService);
 
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: false } } as any);
+    test('Test disabled when Pylint is explicitly disabled', async () => {
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
+
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: false },
+            languageServer: LanguageServerType.Jedi
+        } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
     test('Test disabled when Jedi is enabled and Pylint is explicitly disabled', async () => {
-        const config = mock(ConfigurationService);
-        const linterInfo = new PylintLinterInfo(instance(config), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
@@ -32,8 +37,7 @@ suite('Linter Info - Pylint', () => {
         expect(linterInfo.isEnabled()).to.be.false;
     });
     test('Test enabled when Jedi is enabled and Pylint is explicitly enabled', async () => {
-        const config = mock(ConfigurationService);
-        const linterInfo = new PylintLinterInfo(instance(config), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
@@ -43,44 +47,19 @@ suite('Linter Info - Pylint', () => {
         expect(linterInfo.isEnabled()).to.be.true;
     });
     test('Test disabled when using Language Server and Pylint is not configured', async () => {
-        const config = mock(ConfigurationService);
-        const linterInfo = new PylintLinterInfo(instance(config), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
             languageServer: LanguageServerType.Node
         } as any);
 
+        const pythonConfig = {
+            // tslint:disable-next-line:no-empty
+            inspect: () => {}
+        };
+        when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+
         expect(linterInfo.isEnabled()).to.be.false;
-    });
-    const testsForisEnabled = [
-        {
-            testName: 'When workspaceFolder setting is provided',
-            inspection: { workspaceFolderValue: true }
-        },
-        {
-            testName: 'When workspace setting is provided',
-            inspection: { workspaceValue: true }
-        },
-        {
-            testName: 'When global setting is provided',
-            inspection: { globalValue: true }
-        }
-    ];
-
-    suite('Test is enabled when using Language Server and Pylint is configured', () => {
-        testsForisEnabled.forEach((testParams) => {
-            test(testParams.testName, async () => {
-                const config = mock(ConfigurationService);
-                const linterInfo = new PylintLinterInfo(instance(config), []);
-
-                when(config.getSettings(anything())).thenReturn({
-                    linting: { pylintEnabled: true },
-                    languageServer: LanguageServerType.Node
-                } as any);
-
-                expect(linterInfo.isEnabled()).to.be.true;
-            });
-        });
     });
 });

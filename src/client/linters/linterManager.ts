@@ -45,7 +45,7 @@ export class LinterManager implements ILinterManager {
         this.linters = [
             new LinterInfo(Product.bandit, 'bandit', this.configService),
             new LinterInfo(Product.flake8, 'flake8', this.configService),
-            new PylintLinterInfo(this.configService, ['.pylintrc', 'pylintrc']),
+            new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
             new LinterInfo(Product.mypy, 'mypy', this.configService),
             new LinterInfo(Product.pycodestyle, 'pycodestyle', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
