@@ -90,6 +90,9 @@ class NativeEditorNotebookModel implements INotebookModel {
     public get metadata(): nbformat.INotebookMetadata | undefined {
         return this._state.notebookJson.metadata;
     }
+    public get id() {
+        return this._id;
+    }
     private _disposed = new EventEmitter<void>();
     private _isDisposed?: boolean;
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
@@ -101,6 +104,8 @@ class NativeEditorNotebookModel implements INotebookModel {
         cells: [],
         notebookJson: {}
     };
+
+    private _id = uuid();
 
     constructor(
         file: Uri,
@@ -167,7 +172,7 @@ class NativeEditorNotebookModel implements INotebookModel {
 
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
-            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
+            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this } as any);
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
         if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
