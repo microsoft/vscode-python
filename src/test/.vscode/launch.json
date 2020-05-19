@@ -25,7 +25,13 @@
             "name": "attach to a local PID",
             "type": "python",
             "request": "attach",
-            "processId": "${env:CI_DEBUGPY_PORT}"
+            "processId": "${env:CI_DEBUGPY_PORT}",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
         }
     ]
 }

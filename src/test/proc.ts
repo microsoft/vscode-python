@@ -77,7 +77,7 @@ export class Proc {
 
 export function spawn(executable: string, ...args: string[]) {
     // Un-comment this to see the executed command:
-    //console.debug(`|${executable} ${args.join(' ')}|`);
+    //console.log(`|${executable} ${args.join(' ')}|`);
     const output = new ProcOutput();
     const raw = cp.spawn(executable, args);
     raw.stdout.on('data', (data: Buffer) => output.addStdout(data));

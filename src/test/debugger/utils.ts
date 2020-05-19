@@ -31,7 +31,6 @@ export function getConfig(name: string): vscode.DebugConfiguration {
 interface IDAPOutputMessage {
     type: 'event';
     event: 'output';
-    // tslint:disable-next-line:no-any
     body: {
         category?: string; // stdout, stderr, console, etc.
         output: string;
@@ -222,6 +221,9 @@ export class DebuggerFixture extends PythonFixture {
                 config.processId = proc.pid;
             } else {
                 throw Error(`unsupported attach config "${configName}"`);
+            }
+            if (wsRoot && config.pathMappings) {
+                config.pathMappings.localRoot = wsRoot.uri.fsPath;
             }
         } else {
             throw Error(`unsupported request type "${config.request}"`);

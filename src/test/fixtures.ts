@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-console
-
 import * as fs from 'fs-extra';
 import { sleep } from '../client/common/utils/async';
 import { PYTHON_PATH } from './common';
@@ -41,7 +39,9 @@ export class CleanupFixture {
                         await res;
                     }
                 } catch (err) {
+                    // tslint:disable-next-line:no-console
                     console.error(`cleanup ${i + 1} failed: ${err}`);
+                    // tslint:disable-next-line:no-console
                     console.error('moving on...');
                 }
             })
