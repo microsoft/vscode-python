@@ -371,9 +371,7 @@ suite('DataScience - Native Editor Storage', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento,
-            instance(workspace),
-            []
+            localMemento
         );
 
         return new NotebookStorageProvider(notebookStorage, [], instance(workspace));

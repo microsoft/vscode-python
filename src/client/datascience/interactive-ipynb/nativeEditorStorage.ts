@@ -8,14 +8,7 @@ import { concatMultilineStringInput, splitMultilineString } from '../../../datas
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    GLOBAL_MEMENTO,
-    ICryptoUtils,
-    IDisposableRegistry,
-    IExtensionContext,
-    IMemento,
-    WORKSPACE_MEMENTO
-} from '../../common/types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
@@ -156,10 +149,6 @@ class NativeEditorNotebookModel implements INotebookModel {
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
-            if (this.isDirty) {
-                // Save to temp storage so we don't lose the file if the user exits VS code
-                this.saveToStorage().ignoreErrors();
-            }
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
         if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
