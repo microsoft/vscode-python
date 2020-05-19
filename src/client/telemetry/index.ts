@@ -12,6 +12,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
+import { Architecture } from '../common/utils/platform';
 import { StopWatch } from '../common/utils/stopWatch';
 import {
     JupyterCommands,
@@ -905,6 +906,12 @@ export interface IEventNamePropertyMapping {
          * @type {string}
          */
         pipVersion?: string;
+        /**
+         * The bit-ness of the python interpreter represented using architecture.
+         *
+         * @type {Architecture}
+         */
+        architecture?: Architecture;
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**
