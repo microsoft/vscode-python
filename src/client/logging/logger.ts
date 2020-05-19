@@ -5,6 +5,7 @@
 import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
+import { isCI } from '../common/constants';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
@@ -34,6 +35,26 @@ export function createLogger(config?: LoggerConfig) {
 interface IConfigurableLogger {
     level: string;
     add(transport: Transport): void;
+}
+
+export function getPreDefinedConfiguration(): LoggerConfig {
+    const config: LoggerConfig = {};
+
+    // Do not log to console if running tests and we're not
+    // asked to do so.
+    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
+        config.console = {};
+        // In CI there's no need for the label.
+        if (!isCI) {
+            config.console.label = 'Python Extension:';
+        }
+    }
+    if (process.env.VSC_PYTHON_LOG_FILE) {
+        config.file = {
+            logfile: process.env.VSC_PYTHON_LOG_FILE
+        };
+    }
+    return config;
 }
 
 // Set up a logger just the way we like it.

@@ -23,6 +23,9 @@ import {
     TEST_TIMEOUT
 } from './constants';
 import { initialize } from './initialize';
+import { initializeLogger } from './testLogger';
+
+initializeLogger();
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
