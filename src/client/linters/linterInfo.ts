@@ -4,7 +4,6 @@
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IWorkspaceService } from '../common/application/types';
 import { ExecutionInfo, IConfigurationService, Product } from '../common/types';
 import { ILinterInfo, LinterId } from './types';
 
@@ -78,11 +77,7 @@ export class LinterInfo implements ILinterInfo {
 }
 
 export class PylintLinterInfo extends LinterInfo {
-    constructor(
-        configService: IConfigurationService,
-        private readonly workspaceService: IWorkspaceService,
-        configFileNames: string[] = []
-    ) {
+    constructor(configService: IConfigurationService, configFileNames: string[] = []) {
         super(Product.pylint, 'pylint', configService, configFileNames);
     }
     public isEnabled(resource?: Uri): boolean {
