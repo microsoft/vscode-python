@@ -3,10 +3,13 @@
 import * as path from 'path';
 import { runTests } from 'vscode-test';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
+import { initializeLogger } from './testLogger';
 
 const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_PYTHON_CI_TEST = '1';
+
+initializeLogger();
 
 function start() {
     console.log('*'.repeat(100));
