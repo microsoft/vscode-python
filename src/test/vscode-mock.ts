@@ -40,6 +40,7 @@ export function initialize() {
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
+    generateNotebookMocks();
 
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
@@ -113,3 +114,9 @@ packageJson.setup((p) => p.contributes).returns(() => contributes.object);
 contributes.setup((p) => p.debuggers).returns(() => [{ aiKey: '' }]);
 extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => extension.object);
 mockedVSCode.extensions = extensions.object;
+
+function generateNotebookMocks() {
+    const mockedObj = TypeMoq.Mock.ofType<{}>();
+    (mockedVSCode as any).notebook = mockedObj.object;
+    (mockedVSCodeNamespaces as any).notebook = mockedObj as any;
+}
