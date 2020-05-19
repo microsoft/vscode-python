@@ -87,21 +87,11 @@ export class PylintLinterInfo extends LinterInfo {
     }
     public isEnabled(resource?: Uri): boolean {
         const enabled = super.isEnabled(resource);
-        if (!enabled || this.configService.getSettings(resource).languageServer === LanguageServerType.Jedi) {
-            return enabled;
-        }
-        // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
-        const inspection = this.workspaceService
-            .getConfiguration('python', resource)
-            .inspect<boolean>('linting.pylintEnabled');
-        if (
-            !inspection ||
-            (inspection.globalValue === undefined &&
-                inspection.workspaceFolderValue === undefined &&
-                inspection.workspaceValue === undefined)
-        ) {
+        const usingJedi = this.configService.getSettings(resource).languageServer === LanguageServerType.Jedi;
+        if (!enabled || !usingJedi) {
             return false;
         }
-        return enabled;
+        // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
+        return this.configService.getSettings(resource).linting?.pylintEnabled;
     }
 }
