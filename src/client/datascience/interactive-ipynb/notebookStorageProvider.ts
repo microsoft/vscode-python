@@ -10,7 +10,6 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { INotebookModel, INotebookStorage } from '../types';
-import { isUntitled } from './nativeEditorStorage';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -28,6 +27,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
     private models = new Set<INotebookModel>();
     private readonly disposables: IDisposable[] = [];
+    private nextUntitledNotebookCounter = 1;
     private readonly _autoSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
@@ -72,13 +72,9 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: This will not work, if we close an untitled document.
-        // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter(isUntitled);
-        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
-        // our map, so we'll keep creating new untitled notebooks.
-        const fileName = `${DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
+        const fileName = `${DataScience.untitledNotebookFileName()}-${this.nextUntitledNotebookCounter}.ipynb`;
+        // Next time we should use a new value.
+        this.nextUntitledNotebookCounter = this.nextUntitledNotebookCounter + 1;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });

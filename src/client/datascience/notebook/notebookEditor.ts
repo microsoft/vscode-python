@@ -3,9 +3,13 @@
 
 'use strict';
 
-import { Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { CellKind, Event, EventEmitter, NotebookDocument, Uri, WebviewPanel } from 'vscode';
+import { CancellationTokenSource } from 'vscode-jsonrpc';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { noop } from '../../common/utils/misc';
 import { INotebook, INotebookEditor, INotebookModel } from '../types';
+import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
@@ -49,20 +53,26 @@ export class NotebookEditor implements INotebookEditor {
     private _executed = new EventEmitter<INotebookEditor>();
     private _modified = new EventEmitter<INotebookEditor>();
     private executedCode = new EventEmitter<string>();
-    constructor(public readonly model: INotebookModel, private readonly vscodeNotebook: IVSCodeNotebook) {
+    constructor(
+        public readonly model: INotebookModel,
+        private readonly document: NotebookDocument,
+        private readonly vscodeNotebook: IVSCodeNotebook,
+        private readonly executionService: INotebookExecutionService,
+        private readonly commandManager: ICommandManager
+    ) {
         model.onDidEdit(() => this._modified.fire(this));
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
         // Not used.
     }
     public runAllCells(): void {
-        throw new Error('Method not implemented.');
+        this.executionService.executeAllCells(this.document, new CancellationTokenSource().token).catch(noop);
     }
     public runSelectedCell(): void {
-        throw new Error('Method not implemented.');
+        this.commandManager.executeCommand('notebook.cell.execute').then(noop, noop);
     }
     public addCellBelow(): void {
-        throw new Error('Method not implemented.');
+        this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
     }
     public show(): Promise<void> {
         throw new Error('Method not implemented.');
@@ -74,13 +84,19 @@ export class NotebookEditor implements INotebookEditor {
         throw new Error('Method not implemented.');
     }
     public undoCells(): void {
-        throw new Error('Method not implemented.');
+        this.commandManager.executeCommand('notebook.undo').then(noop, noop);
     }
     public redoCells(): void {
-        throw new Error('Method not implemented.');
+        this.commandManager.executeCommand('notebook.redo').then(noop, noop);
     }
     public removeAllCells(): void {
-        throw new Error('Method not implemented.');
+        this.vscodeNotebook.activeNotebookEditor?.edit((editor) => {
+            const totalLength = this.document.cells.length;
+            editor.insert(this.document.cells.length, '', PYTHON_LANGUAGE, CellKind.Code, [], undefined);
+            for (let i = totalLength - 1; i >= 0; i = i - 1) {
+                editor.delete(i);
+            }
+        });
     }
     public interruptKernel(): Promise<void> {
         throw new Error('Method not implemented.');

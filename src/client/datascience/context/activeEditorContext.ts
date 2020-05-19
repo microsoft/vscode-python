@@ -7,9 +7,10 @@ import { inject, injectable } from 'inversify';
 import { TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE, UseProposedApi } from '../../common/constants';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { NativeNotebook } from '../../common/experimentGroups';
+import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { EditorContexts } from '../constants';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../types';
 
@@ -22,6 +23,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrInteractiveContext: ContextKey;
     private pythonOrNativeContext: ContextKey;
     private pythonOrInteractiveOrNativeContext: ContextKey;
+    private hasNativeNotebookCells: ContextKey;
     private isPythonFileActive: boolean = false;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
@@ -30,7 +32,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
-        @inject(UseProposedApi) private readonly useProposedApi: boolean
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -48,6 +50,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             EditorContexts.IsPythonOrInteractiveOrNativeActive,
             this.commandManager
         );
+        this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -69,7 +72,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
-        if (this.useProposedApi) {
+        if (this.experiments.inExperiment(NativeNotebook.experiment)) {
             this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
             this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
             this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
@@ -77,9 +80,18 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
 
+    private udpateNativeNotebookCellContext() {
+        if (!this.experiments.inExperiment(NativeNotebook.experiment)) {
+            return;
+        }
+        this.hasNativeNotebookCells
+            .set((this.vscodeNotebook.activeNotebookEditor?.document?.cells?.length || 0) >= 0)
+            .ignoreErrors();
+    }
     private onDidChangeVSCodeNotebook() {
         this.isPythonFileActive = !this.vscodeNotebook.activeNotebookEditor;
         this.nativeContext.set(!!this.vscodeNotebook.activeNotebookEditor).ignoreErrors();
+        this.udpateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
@@ -93,6 +105,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive =
             e?.document.languageId === PYTHON_LANGUAGE && !this.vscodeNotebook.activeNotebookEditor;
+        this.udpateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
     private updateMergedContexts() {

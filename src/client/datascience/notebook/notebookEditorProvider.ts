@@ -18,6 +18,7 @@ import { INotebookStorageProvider } from '../interactive-ipynb/notebookStoragePr
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
+import { INotebookExecutionService } from './types';
 
 /**
  * Class responsbile for activating an registering the necessary event handlers in NotebookEditorProvider.
@@ -77,7 +78,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(INotebookExecutionService) private readonly executionService: INotebookExecutionService
     ) {
         disposables.push(this);
     }
@@ -123,7 +125,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = createDeferred<INotebookEditor>();
         this.notebooksWaitingToBeOpenedByUri.set(file.toString(), deferred);
         deferred.promise.then(() => this.notebooksWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
+
+        // Tell VSC to open the notebook, at which point it will fire a callback when a notebook document has been opened.
+        // Then our promise will get resolved.
         await this.commandManager.executeCommand('vscode.open', file);
+
+        // This gets resolved when we have handled the opening of the notebook.
         return deferred.promise;
     }
     public async show(_file: Uri): Promise<INotebookEditor | undefined> {
@@ -132,7 +139,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     public async createNew(contents?: string): Promise<INotebookEditor> {
         const model = await this.storage.createNew(contents);
-        await this.onDidOpenNotebookDocument(model.file);
+
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: Need to do this.
         // Update number of notebooks in the workspace
@@ -165,13 +172,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
     }
 
-    private async onDidOpenNotebookDocument(doc: NotebookDocument | Uri): Promise<void> {
-        const uri = isUri(doc) ? doc : doc.uri;
+    private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
+        const uri = doc.uri;
         const model = await this.storage.load(uri);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
-            editor = new NotebookEditor(model, this.vscodeNotebook);
+            editor = new NotebookEditor(model, doc, this.vscodeNotebook, this.executionService, this.commandManager);
             this.onEditorOpened(editor);
         }
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());

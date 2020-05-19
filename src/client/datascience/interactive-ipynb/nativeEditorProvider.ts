@@ -22,14 +22,12 @@ import {
     IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
-import { isUntitled } from './nativeEditorStorage';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -185,16 +183,12 @@ export class NativeEditorProvider
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
-        // Create a new URI for the dummy file using our root workspace path
-        const uri = await this.getNextNewNotebookUri();
-
         // Update number of notebooks in the workspace
         this.notebookCount += 1;
 
-        // Set these contents into the storage before the file opens
-        await this.loadModel(uri, contents);
+        const model = await this.storage.createNew(contents);
 
-        return this.open(uri);
+        return this.open(model.file);
     }
 
     public loadModel(file: Uri, contents?: string) {
@@ -263,16 +257,5 @@ export class NativeEditorProvider
         if (document) {
             this._onDidEdit.fire({ document, edit: change });
         }
-    }
-
-    private async getNextNewNotebookUri(): Promise<Uri> {
-        // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter((model) => model && isUntitled(model));
-        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
-        // our map, so we'll keep creating new untitled notebooks.
-        const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
-        const fileUri = Uri.file(fileName);
-        // Turn this back into an untitled
-        return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 }
