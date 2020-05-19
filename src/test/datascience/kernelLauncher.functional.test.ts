@@ -6,7 +6,6 @@ import { assert } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
@@ -39,10 +38,9 @@ suite('DataScience - Kernel Launcher', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         kernelFinder = new MockKernelFinder(ioc.serviceContainer.get<IKernelFinder>(IKernelFinder));
-        const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         const processServiceFactory = ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         const daemonPool = ioc.serviceContainer.get<KernelDaemonPool>(KernelDaemonPool);
-        kernelLauncher = new KernelLauncher(processServiceFactory, file, daemonPool);
+        kernelLauncher = new KernelLauncher(processServiceFactory, daemonPool);
         await ioc.activate();
         if (!ioc.mockJupyter) {
             pythonInterpreter = await ioc.getJupyterCapableInterpreter();
