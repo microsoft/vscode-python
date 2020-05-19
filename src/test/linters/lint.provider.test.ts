@@ -5,6 +5,7 @@
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -50,6 +51,7 @@ suite('Linting - Provider', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let linterInstaller: TypeMoq.IMock<IInstaller>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let workspaceConfig: TypeMoq.IMock<vscode.WorkspaceConfiguration>;
 
     suiteSetup(initialize);
     setup(async () => {
@@ -80,6 +82,7 @@ suite('Linting - Provider', () => {
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup((x) => x.linting).returns(() => lintSettings.object);
+        settings.setup((p) => p.languageServer).returns(() => LanguageServerType.Jedi);
 
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -87,7 +90,14 @@ suite('Linting - Provider', () => {
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         linterInstaller = TypeMoq.Mock.ofType<IInstaller>();
+
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspaceConfig = TypeMoq.Mock.ofType<vscode.WorkspaceConfiguration>();
+        workspaceService
+            .setup((w) => w.getConfiguration('python', TypeMoq.It.isAny()))
+            .returns(() => workspaceConfig.object);
+        workspaceService.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
+
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
