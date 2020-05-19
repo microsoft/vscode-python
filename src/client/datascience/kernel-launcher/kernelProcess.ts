@@ -7,7 +7,6 @@ import * as tcpPortUsed from 'tcp-port-used';
 import { Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
@@ -39,7 +38,6 @@ export class KernelProcess implements IKernelProcess {
         return this.kernelSpec.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
     }
     private _process?: ChildProcess;
-    private connectionFile?: TemporaryFile;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
     private launchedOnce?: boolean;
@@ -49,7 +47,6 @@ export class KernelProcess implements IKernelProcess {
     private readonly originalKernelSpec: IJupyterKernelSpec;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
-        private readonly file: IFileSystem,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec,
@@ -128,7 +125,6 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire();
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
-        swallowExceptions(() => this.connectionFile?.dispose());
     }
 
     // Make sure that the heartbeat channel is open for connections
@@ -145,6 +141,8 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
+    // Instead of having to use a connection file update our local copy of the kernelspec to launch
+    // directly with command line arguments
     private updateConnectionArgs() {
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
@@ -164,6 +162,7 @@ export class KernelProcess implements IKernelProcess {
         this._kernelSpec.argv.push(...this.addConnectionArgs());
     }
 
+    // Add the command line arguments
     private addConnectionArgs(): string[] {
         const newConnectionArgs: string[] = [];
 
@@ -172,30 +171,12 @@ export class KernelProcess implements IKernelProcess {
         newConnectionArgs.push(`--control=${this._connection.control_port}`);
         newConnectionArgs.push(`--hb=${this._connection.hb_port}`);
         newConnectionArgs.push(`--Session.signature_scheme="${this._connection.signature_scheme}"`);
-        //newConnectionArgs.push(`--Session.key='b"${this._connection.key}"'`); // Note we need the 'b here at the start
-        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start
+        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start for a byte string
         newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
         newConnectionArgs.push(`--transport="${this._connection.transport}"`);
         newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
 
         return newConnectionArgs;
-    }
-
-    private async createAndUpdateConnectionFile() {
-        // Create the connection file so that any user can destroy it. The kernel will
-        // actually read it, delete it, and recreate it with more restricted permissions
-        this.connectionFile = await this.file.createTemporaryFile('.json', 0o777);
-        await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
-            encoding: 'utf-8',
-            flag: 'w'
-        });
-
-        // Update the args in the kernelspec to include the conenction file.
-        const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
-        if (indexOfConnectionFile === -1) {
-            throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
-        }
-        this._kernelSpec.argv[indexOfConnectionFile] = this.connectionFile.filePath;
     }
 
     private async launchAsObservable() {
