@@ -149,7 +149,7 @@ suite('StartPage tests', () => {
     const startPageDom =
         '<div class="title-row"><div class="title-icon"><i class="image-button-image"></i></div><div class="title">';
 
-    runMountedTest('', async (wrapper) => {
+    runMountedTest('Load Start Page', async (wrapper) => {
         await waitForStartPage(wrapper);
         const dom = wrapper.getDOMNode();
         assert.ok(dom.innerHTML.includes(startPageDom), 'DOM is not loading correctly');
