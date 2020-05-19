@@ -29,7 +29,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
-import { isUntitled } from './nativeEditorStorage';
+import { getNextUntitledCounter } from './nativeEditorStorage';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -76,6 +76,7 @@ export class NativeEditorProvider
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
+    private untitledCounter = 1;
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) protected readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -192,13 +193,15 @@ export class NativeEditorProvider
         this.notebookCount += 1;
 
         // Set these contents into the storage before the file opens
-        await this.loadModel(uri, contents);
+        await this.loadModel(uri, contents, true);
 
         return this.open(uri);
     }
 
-    public loadModel(file: Uri, contents?: string) {
-        return this.storage.load(file, contents).then((m) => {
+    public loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+        // Every time we load a new untitled file, up the counter past the max value for this counter
+        this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
+        return this.storage.load(file, contents, skipDirtyContents).then((m) => {
             this.trackModel(m);
             return m;
         });
@@ -266,11 +269,8 @@ export class NativeEditorProvider
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter((model) => model && isUntitled(model));
-        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
-        // our map, so we'll keep creating new untitled notebooks.
-        const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
+        // Just use the current counter. Counter will be incremented after actually opening a file.
+        const fileName = `${localize.DataScience.untitledNotebookFileName()}-${this.untitledCounter}.ipynb`;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });

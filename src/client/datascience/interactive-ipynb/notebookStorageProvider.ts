@@ -10,7 +10,7 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { INotebookModel, INotebookStorage } from '../types';
-import { isUntitled } from './nativeEditorStorage';
+import { getNextUntitledCounter } from './nativeEditorStorage';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -24,6 +24,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public get onSavedAs() {
         return this._savedAs.event;
     }
+    private static untitledCounter = 1;
     private readonly _savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
     private models = new Set<INotebookModel>();
@@ -50,10 +51,15 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public backup(model: INotebookModel, cancellation: CancellationToken) {
         return this.storage.backup(model, cancellation);
     }
-    public load(file: Uri, contents?: string | undefined): Promise<INotebookModel> {
+    public load(file: Uri, contents?: string | undefined, skipDirtyContents?: boolean): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {
-            const promise = this.storage.load(file, contents);
+            // Every time we load a new untitled file, up the counter past the max value for this counter
+            NotebookStorageProvider.untitledCounter = getNextUntitledCounter(
+                file,
+                NotebookStorageProvider.untitledCounter
+            );
+            const promise = this.storage.load(file, contents, skipDirtyContents);
             promise.then(this.trackModel.bind(this)).catch(noop);
             this.storageAndModels.set(key, promise);
         }
@@ -68,17 +74,14 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public async createNew(contents?: string): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
-        return this.load(uri, contents);
+
+        // Always skip loading from the hot exit file. When creating a new file we want a new file.
+        return this.load(uri, contents, true);
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: This will not work, if we close an untitled document.
-        // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter(isUntitled);
-        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
-        // our map, so we'll keep creating new untitled notebooks.
-        const fileName = `${DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
+        // Just use the current counter. Counter will be incremented after actually opening a file.
+        const fileName = `${DataScience.untitledNotebookFileName()}-${NotebookStorageProvider.untitledCounter}.ipynb`;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });

@@ -42,6 +42,25 @@ export function isUntitled(model?: INotebookModel): boolean {
     return isUntitledFile(model?.file);
 }
 
+export function getNextUntitledCounter(file: Uri | undefined, currentValue: number): number {
+    if (file && isUntitledFile(file)) {
+        const basename = path.basename(file.fsPath, 'ipynb');
+        const extname = path.extname(file.fsPath);
+        if (extname.toLowerCase() === '.ipynb') {
+            // See if ends with -<n>
+            const match = /.*-(\d+)/.exec(basename);
+            if (match && match[1]) {
+                const fileValue = parseInt(match[1], 10);
+                if (fileValue) {
+                    return Math.max(currentValue, fileValue + 1);
+                }
+            }
+        }
+    }
+
+    return currentValue;
+}
+
 class NativeEditorNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
@@ -461,8 +480,8 @@ export class NativeEditorStorage implements INotebookStorage {
         return isUntitledFile(file);
     }
 
-    public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
-        return this.loadFromFile(file, possibleContents);
+    public async load(file: Uri, possibleContents?: string, skipDirtyContents?: boolean): Promise<INotebookModel> {
+        return this.loadFromFile(file, possibleContents, skipDirtyContents);
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
@@ -473,6 +492,7 @@ export class NativeEditorStorage implements INotebookStorage {
             oldDirty: model.isDirty,
             newDirty: false
         });
+        this.clearHotExit(model.file).ignoreErrors();
     }
 
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
@@ -487,6 +507,7 @@ export class NativeEditorStorage implements INotebookStorage {
             target: file
         });
         this.savedAs.fire({ new: file, old });
+        this.clearHotExit(old).ignoreErrors();
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
         // Should send to extension context storage path
@@ -508,16 +529,23 @@ export class NativeEditorStorage implements INotebookStorage {
 
         return this.writeToStorage(filePath, specialContents, cancelToken);
     }
+
+    private async clearHotExit(file: Uri): Promise<void> {
+        const key = this.getStorageKey(file);
+        const filePath = this.getHashedFileName(key);
+        return this.writeToStorage(filePath, undefined);
+    }
+
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
             if (!cancelToken?.isCancellationRequested) {
                 if (contents) {
                     await this.fileSystem.createDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
-                        return this.fileSystem.writeFile(filePath, contents);
+                        return await this.fileSystem.writeFile(filePath, contents);
                     }
-                } else {
-                    return this.fileSystem.deleteFile(filePath);
+                } else if (await this.fileSystem.fileExists(filePath)) {
+                    return await this.fileSystem.deleteFile(filePath);
                 }
             }
         } catch (exc) {
@@ -561,7 +589,11 @@ export class NativeEditorStorage implements INotebookStorage {
             noop();
         }
     }
-    private async loadFromFile(file: Uri, possibleContents?: string): Promise<INotebookModel> {
+    private async loadFromFile(
+        file: Uri,
+        possibleContents?: string,
+        skipDirtyContents?: boolean
+    ): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
             const contents = NativeEditorStorage.isUntitledFile(file)
@@ -569,7 +601,7 @@ export class NativeEditorStorage implements INotebookStorage {
                 : await this.fileSystem.readFile(file.fsPath);
 
             // See if this file was stored in storage prior to shutdown
-            const dirtyContents = await this.getStoredContents(file);
+            const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
                 return this.loadContents(file, dirtyContents, true);

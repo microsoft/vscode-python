@@ -40,12 +40,15 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
     }
 
     private onClosedEditor(editor: INotebookEditor) {
-        // Save this as a file that should not be reopened in this workspace
-        const list = this.workspaceMemento.get<string[]>(MEMENTO_KEY) || [];
+        // Save this as a file that should not be reopened in this workspace if this is the
+        // last editor for this file
         const fileKey = editor.file.toString();
-        this.workspaceMemento.update(
-            MEMENTO_KEY,
-            list.filter((e) => e !== fileKey)
-        );
+        if (!this.editorProvider.editors.find((e) => e.file.toString() === fileKey && e !== editor)) {
+            const list = this.workspaceMemento.get<string[]>(MEMENTO_KEY) || [];
+            this.workspaceMemento.update(
+                MEMENTO_KEY,
+                list.filter((e) => e !== fileKey)
+            );
+        }
     }
 }
