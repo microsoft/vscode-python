@@ -13,6 +13,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment } from './application/types';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
+import { NativeNotebook } from './experimentGroups';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
 import {
@@ -150,6 +151,13 @@ export class ExperimentsManager implements IExperimentsManager {
         this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
+                // User cannot belong to NotebookExperiment if they are not using Insiders.
+                if (
+                    (experiment.name === NativeNotebook.experiment || experiment.name === NativeNotebook.control) &&
+                    this.appEnvironment.channel !== 'insiders'
+                ) {
+                    continue;
+                }
                 try {
                     if (
                         this._experimentsOptedOutFrom.includes('All') ||
