@@ -72,7 +72,8 @@ export class KernelProcess implements IKernelProcess {
         }
         this.launchedOnce = true;
 
-        await this.createAndUpdateConnectionFile();
+        //await this.createAndUpdateConnectionFile();
+        this.updateConnectionArgs();
 
         const exeObs = await this.launchAsObservable();
 
@@ -142,6 +143,42 @@ export class KernelProcess implements IKernelProcess {
             traceError('Timed out waiting to get a heartbeat from kernel process.');
             throw new Error('Timed out waiting to get a heartbeat from kernel process.');
         }
+    }
+
+    private updateConnectionArgs() {
+        // First check to see if we have a kernelspec that expects a connection file,
+        // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
+        const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
+        if (
+            indexOfConnectionFile === -1 ||
+            indexOfConnectionFile === 0 ||
+            this._kernelSpec.argv[indexOfConnectionFile - 1] !== '-f'
+        ) {
+            throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
+        }
+
+        // Slice out -f and the connection file from the args
+        this._kernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
+
+        // Add in our connection command line args
+        this._kernelSpec.argv.push(...this.addConnectionArgs());
+    }
+
+    private addConnectionArgs(): string[] {
+        const newConnectionArgs: string[] = [];
+
+        newConnectionArgs.push(`--ip=${this._connection.ip}`);
+        newConnectionArgs.push(`--stdin=${this._connection.stdin_port}`);
+        newConnectionArgs.push(`--control=${this._connection.control_port}`);
+        newConnectionArgs.push(`--hb=${this._connection.hb_port}`);
+        newConnectionArgs.push(`--Session.signature_scheme="${this._connection.signature_scheme}"`);
+        //newConnectionArgs.push(`--Session.key='b"${this._connection.key}"'`); // Note we need the 'b here at the start
+        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start
+        newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
+        newConnectionArgs.push(`--transport="${this._connection.transport}"`);
+        newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
+
+        return newConnectionArgs;
     }
 
     private async createAndUpdateConnectionFile() {
