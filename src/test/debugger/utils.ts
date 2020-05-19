@@ -160,6 +160,8 @@ class DebuggerSession {
         }
         this.started = true;
 
+        // Un-comment this to see the debug config used in this session:
+        //console.log('|', session.config, '|');
         const started = await vscode.debug.startDebugging(this.wsRoot, this.config);
         expect(started).to.be.equal(true, 'Debugger did not sart');
     }
