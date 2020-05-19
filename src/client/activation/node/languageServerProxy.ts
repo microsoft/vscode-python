@@ -99,12 +99,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             if (settings.downloadLanguageServer) {
                 this.languageClient.onTelemetry((telemetryEvent) => {
                     const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes with a period so they don't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
-                    };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
                 });
             }
             await this.registerTestServices();

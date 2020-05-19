@@ -73,12 +73,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
             if (settings.downloadLanguageServer) {
                 this.languageClient.onTelemetry((telemetryEvent) => {
                     const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes with a period so they don't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
-                    };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
                 });
             }
             await this.registerTestServices();
@@ -94,8 +89,8 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         this.extensionLoadedArgs.add(args || '');
         this.startupCompleted.promise
             .then(() =>
-                this.languageClient!.sendRequest('python.loadExtension', args).then(noop, (ex) =>
-                    traceError('Request python.loadExtension failed', ex)
+                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, (ex) =>
+                    traceError('Request python/loadExtension failed', ex)
                 )
             )
             .ignoreErrors();
