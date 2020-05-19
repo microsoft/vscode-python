@@ -5,10 +5,12 @@
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento, Uri } from 'vscode';
+import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorNotebookModel } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorViewTracker } from '../../client/datascience/interactive-ipynb/nativeEditorViewTracker';
-import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { MockMemento } from '../mocks/mementos';
 
 suite('DataScience - View tracker', () => {
@@ -16,31 +18,41 @@ suite('DataScience - View tracker', () => {
     let editor1: INotebookEditor;
     let editor2: INotebookEditor;
     let untitled1: INotebookEditor;
+    let untitledModel: INotebookModel;
     let memento: Memento;
     let openedList: string[];
     let editorList: INotebookEditor[];
     let openEvent: EventEmitter<INotebookEditor>;
     let closeEvent: EventEmitter<INotebookEditor>;
+    let untitledChangeEvent: EventEmitter<NotebookModelChange>;
     const file1 = Uri.file('foo.ipynb');
     const file2 = Uri.file('bar.ipynb');
     const untitledFile = Uri.parse('untitled://untitled.ipynb');
     setup(() => {
         openEvent = new EventEmitter<INotebookEditor>();
         closeEvent = new EventEmitter<INotebookEditor>();
+        untitledChangeEvent = new EventEmitter<NotebookModelChange>();
         openedList = [];
         editorList = [];
         editorProvider = mock(NativeEditorProvider);
+        untitledModel = mock(NativeEditorNotebookModel);
         when(editorProvider.open(anything())).thenCall((f) => {
             const key = f.toString();
             openedList.push(f.toString());
+            // tslint:disable-next-line: no-unnecessary-initializer
+            let editorInstance: INotebookEditor | undefined = undefined;
             if (key === file1.toString()) {
-                editorList.push(instance(editor1));
+                editorInstance = instance(editor1);
             }
             if (key === file2.toString()) {
-                editorList.push(instance(editor2));
+                editorInstance = instance(editor2);
             }
             if (key === untitledFile.toString()) {
-                editorList.push(instance(untitled1));
+                editorInstance = instance(untitled1);
+            }
+            if (editorInstance) {
+                editorList.push(editorInstance);
+                openEvent.fire(editorInstance);
             }
             return Promise.resolve();
         });
@@ -55,10 +67,14 @@ suite('DataScience - View tracker', () => {
         when(editor1.file).thenReturn(file1);
         untitled1 = mock(NativeEditor);
         when(untitled1.file).thenReturn(untitledFile);
+        when(untitled1.model).thenReturn(instance(untitledModel));
+        when(untitledModel.file).thenReturn(untitledFile);
+        when(untitledModel.changed).thenReturn(untitledChangeEvent.event);
         memento = new MockMemento();
     });
 
     function activate(): Promise<void> {
+        openedList = [];
         const viewTracker = new NativeEditorViewTracker(instance(editorProvider), memento, []);
         return viewTracker.activate();
     }
@@ -95,7 +111,12 @@ suite('DataScience - View tracker', () => {
         open(instance(untitled1));
         open(instance(editor2));
         await activate();
-        expect(openedList).to.include(untitledFile.toString(), 'First file did not open');
+        expect(openedList).to.not.include(untitledFile.toString(), 'First file should not open because not modified');
+        expect(openedList).to.include(file2.toString(), 'Second file did not open');
+        open(instance(untitled1));
+        untitledChangeEvent.fire({ kind: 'clear', oldCells: [], oldDirty: false, newDirty: false, source: 'user' });
+        await activate();
+        expect(openedList).to.include(untitledFile.toString(), 'First file open because not modified');
         expect(openedList).to.include(file2.toString(), 'Second file did not open');
     });
     test('Opening more than once does not cause more than one open on reactivate', async () => {

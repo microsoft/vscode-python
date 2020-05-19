@@ -61,7 +61,8 @@ export function getNextUntitledCounter(file: Uri | undefined, currentValue: numb
     return currentValue;
 }
 
-class NativeEditorNotebookModel implements INotebookModel {
+// Exported for test mocks
+export class NativeEditorNotebookModel implements INotebookModel {
     public get onDidDispose() {
         return this._disposed.event;
     }
@@ -172,7 +173,7 @@ class NativeEditorNotebookModel implements INotebookModel {
 
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
-            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this } as any);
+            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
         }
         // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
         if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
@@ -604,6 +605,11 @@ export class NativeEditorStorage implements INotebookStorage {
             const contents = NativeEditorStorage.isUntitledFile(file)
                 ? possibleContents
                 : await this.fileSystem.readFile(file.fsPath);
+
+            // If skipping dirty contents, delete the dirty hot exit file now
+            if (skipDirtyContents) {
+                await this.clearHotExit(file);
+            }
 
             // See if this file was stored in storage prior to shutdown
             const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file);

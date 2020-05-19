@@ -4,13 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../common/application/types';
-import { workspaceFolderKeysForWhichTheCopyIsDone_Key } from '../../common/interpreterPathService';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';

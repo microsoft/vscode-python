@@ -279,5 +279,11 @@ suite('DataScience - Native Editor Provider', () => {
         cells = model!.cells;
         expect(cells).to.be.lengthOf(2);
         expect(concatMultilineStringInput(cells[0].data.source)).to.be.eq('a=1');
+
+        // Act like another reboot but create a new file
+        provider = createNotebookProvider();
+        await provider.createNew();
+        cells = model!.cells;
+        expect(cells).to.be.lengthOf(1);
     });
 });
