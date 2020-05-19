@@ -11,7 +11,6 @@ import {
     CellOutput,
     CellOutputKind,
     CellStreamOutput,
-    NotebookCell,
     NotebookCellData,
     NotebookCellRunState,
     NotebookData
@@ -24,38 +23,6 @@ import { ICell, INotebookModel } from '../types';
 const ansiToHtml = require('ansi-to-html');
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiRegex = require('ansi-regex');
-
-export function findMappedNotebookCellData(source: ICell, cells: NotebookCell[]): NotebookCell {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
-    // If so, then we have a problem.
-    const found = cells.filter((cell) => source.id === cell.metadata.custom?.cellId);
-
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Once VSC provides API, throw error here.
-    if (!found || !found.length) {
-        traceError(`Unable to find matching cell for ${source}`);
-        return cells[0];
-    }
-
-    return found[0];
-}
-
-export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
-    // If so, then we have a problem.
-    const found = cells.filter((cell) => cell.id === source.metadata.custom?.cellId);
-
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Once VSC provides API, throw error here.
-    if (!found || !found.length) {
-        traceError(`Unable to find matching cell for ${source}`);
-        return cells[0];
-    }
-
-    return found[0];
-}
 
 /**
  * Converts a NotebookModel into VSCode friendly format.
@@ -77,15 +44,17 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
             runnable: true,
             displayOrder: [
                 'application/vnd.*',
-                'application/json',
-                'application/javascript',
+                'application/vdom.*',
+                'application/geo+json',
+                'application/x-nteract-model-debug+json',
                 'text/html',
-                'image/svg+xml',
+                'application/javascript',
+                'text/latex',
                 'text/markdown',
+                'application/json',
                 'image/svg+xml',
                 'image/png',
                 'image/jpeg',
-                'text/latex',
                 'text/plain'
             ]
         }
@@ -104,7 +73,7 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
             runState: NotebookCellRunState.Idle,
-            runnable: true,
+            runnable: cell.data.cell_type === 'code',
             custom: {
                 cellId: cell.id
             }
@@ -150,8 +119,8 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  * @param {nbformat.IDisplayData} output
  * @returns {(CellDisplayOutput | undefined)}
  */
-export function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
-    const mimeTypes = Object.keys(output.data);
+function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
+    const mimeTypes = Object.keys(output.data || {});
     // If no mimetype data, then there's nothing to display.
     if (!mimeTypes.length) {
         return;
@@ -161,17 +130,18 @@ export function translateDisplayDataOutput(output: nbformat.IDisplayData): CellD
     const data = { ...output.data };
     if (mimeTypes.some(isImagePngOrJpegMimeType) && shouldConvertImageToHtml(output) && !output.data['text/html']) {
         const mimeType = 'image/png' in data ? 'image/png' : 'image/jpeg';
-        const needsBackground = typeof output.metadata.needs_background === 'string';
-        const backgroundColor = output.metadata.needs_background === 'light' ? 'white' : 'black';
+        const metadata = output.metadata || {};
+        const needsBackground = typeof metadata.needs_background === 'string';
+        const backgroundColor = metadata.needs_background === 'light' ? 'white' : 'black';
         const divStyle = needsBackground ? `background-color:${backgroundColor};` : '';
         const imgSrc = `data:${mimeType};base64,${output.data[mimeType]}`;
 
         let height = '';
         let width = '';
         let imgStyle = '';
-        if (output && output.metadata[mimeType] && typeof output.metadata[mimeType] === 'object') {
+        if (metadata[mimeType] && typeof metadata[mimeType] === 'object') {
             // tslint:disable-next-line: no-any
-            const imageMetadata = output.metadata[mimeType] as any;
+            const imageMetadata = metadata[mimeType] as any;
             height = imageMetadata.height ? `height=${imageMetadata.height}` : '';
             width = imageMetadata.width ? `width=${imageMetadata.width}` : '';
             if (imageMetadata.unconfined === true) {
@@ -193,16 +163,13 @@ export function translateDisplayDataOutput(output: nbformat.IDisplayData): CellD
 }
 
 function shouldConvertImageToHtml(output: nbformat.IDisplayData) {
-    return (
-        typeof output.metadata.needs_background === 'string' ||
-        output.metadata['image/png'] ||
-        output.metadata['image/jpeg']
-    );
+    const metadata = output.metadata || {};
+    return typeof metadata.needs_background === 'string' || metadata['image/png'] || metadata['image/jpeg'];
 }
-export function isImagePngOrJpegMimeType(mimeType: string) {
+function isImagePngOrJpegMimeType(mimeType: string) {
     return mimeType === 'image/png' || mimeType === 'image/jpeg';
 }
-export function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
+function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
     const text = concatMultilineStringOutput(output.text);
     const hasAngleBrackets = text.includes('<');
     const hasAnsiChars = ansiRegex().test(text);

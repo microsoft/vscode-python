@@ -383,6 +383,7 @@ import { registerInterpreterTypes } from '../../client/interpreter/serviceRegist
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
+import { traceInfo } from '../../client/logging';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -403,6 +404,7 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
+import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
@@ -491,6 +493,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public async dispose(): Promise<void> {
+        // Make sure to disable all command handling during dispose. Don't want
+        // anything to startup again.
+        this.commandManager.dispose();
         try {
             // Make sure to delete any temp files written by native editor storage
             const globPr = promisify(glob);
@@ -796,6 +801,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
         this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
+        this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
             IInteractiveWindowListener
         ]);
@@ -1247,8 +1253,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.forceSettingsChanged(undefined, list[0].path);
 
                     // Log this all the time. Useful in determining why a test may not pass.
+                    const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
+                    traceInfo(message);
                     // tslint:disable-next-line: no-console
-                    console.log(`Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`);
+                    console.log(message);
 
                     // Also set this as the interpreter to use for jupyter
                     await this.serviceManager

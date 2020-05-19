@@ -3,14 +3,17 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { notebook } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager } from '../../common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import { UseProposedApi } from '../../common/constants';
 import { NativeNotebook } from '../../common/experimentGroups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { IServiceManager } from '../../ioc/types';
+import { INotebookEditorProvider } from '../types';
 import { NotebookContentProvider } from './contentProvider';
+import { NotebookEditorProvider } from './notebookEditorProvider';
 import { NotebookKernel } from './notebookKernel';
 
 /**
@@ -21,13 +24,16 @@ import { NotebookKernel } from './notebookKernel';
 @injectable()
 export class NotebookIntegration implements IExtensionSingleActivationService {
     constructor(
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(NotebookContentProvider) private readonly notebookContentProvider: NotebookContentProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel
+        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel,
+        @inject(IServiceManager) private readonly serviceManager: IServiceManager,
+        @inject(UseProposedApi) private readonly useProposedApi: boolean
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -36,6 +42,20 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
             return;
         }
+
+        // This condition is temporary.
+        // If user belongs to the experiment, then make the necessary changes to package.json.
+        // Once the API is final, we won't need to modify the package.json.
+        if (
+            this.serviceManager.get<IExperimentsManager>(IExperimentsManager).inExperiment(NativeNotebook.experiment) &&
+            this.useProposedApi
+        ) {
+            this.serviceManager.rebindSingleton<INotebookEditorProvider>(
+                INotebookEditorProvider,
+                NotebookEditorProvider
+            );
+        }
+
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
         const content = JSON.parse(await this.fs.readFile(packageJsonFile));
 
@@ -72,8 +92,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
 
         this.disposables.push(
-            notebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
+            this.vscNotebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
         );
-        this.disposables.push(notebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel));
+        this.disposables.push(
+            this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+        );
     }
 }

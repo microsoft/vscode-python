@@ -2,12 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import * as fs from 'fs-extra';
 import { noop } from 'jquery';
-import * as os from 'os';
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
@@ -21,7 +17,6 @@ import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
-    let connectionFile: string;
     let rawKernel: RawKernel;
     const connectionInfo = {
         shell_port: 57718,
@@ -67,8 +62,6 @@ suite('DataScience raw kernel tests', () => {
             .getInterpreterDetails(ioc.getSettings().pythonPath);
         assert.ok(interpreter, 'No jupyter interpreter found');
         // Start our kernel
-        connectionFile = path.join(os.tmpdir(), `tmp_${Date.now()}_k.json`);
-        await fs.writeFile(connectionFile, JSON.stringify(connectionInfo), { encoding: 'utf-8', flag: 'w' });
         const kernelSpec: IJupyterKernelSpec = {
             argv: [interpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             metadata: {
@@ -83,7 +76,6 @@ suite('DataScience raw kernel tests', () => {
         };
         kernelProcess = new KernelProcess(
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
-            ioc.get<IFileSystem>(IFileSystem),
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
             kernelSpec,
@@ -97,11 +89,6 @@ suite('DataScience raw kernel tests', () => {
     async function disconnectFromKernel() {
         if (kernelProcess) {
             await kernelProcess.dispose().catch(noop);
-            try {
-                await fs.remove(connectionFile);
-            } catch {
-                noop();
-            }
         }
     }
 

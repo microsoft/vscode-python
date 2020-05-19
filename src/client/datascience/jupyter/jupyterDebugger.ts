@@ -17,6 +17,7 @@ import { IConfigurationService, IExperimentsManager, Version } from '../../commo
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { traceCellResults } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -164,27 +165,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             if (importResults.length === 0 || importResults[0].state === CellState.error) {
                 traceWarning(`${this.debuggerPackage} not found in path.`);
             } else {
-                this.traceCellResults('import startup', importResults);
+                traceCellResults('import startup', importResults);
             }
 
             // Then enable tracing
             await this.executeSilently(notebook, this.tracingEnableCode);
-        }
-    }
-
-    private traceCellResults(prefix: string, results: ICell[]) {
-        if (results.length > 0 && results[0].data.cell_type === 'code') {
-            const cell = results[0].data as nbformat.ICodeCell;
-            const error = cell.outputs && cell.outputs[0] ? cell.outputs[0].evalue : undefined;
-            if (error) {
-                traceError(`${prefix} Error : ${error}`);
-            } else if (cell.outputs && cell.outputs[0]) {
-                const data = cell.outputs[0].data;
-                const text = cell.outputs[0].text;
-                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
-            }
-        } else {
-            traceInfo(`${prefix} no output.`);
         }
     }
 
@@ -322,7 +307,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 notebook,
                 `import sys\r\nsys.path.extend([${debuggerPathList}])\r\nsys.path`
             );
-            this.traceCellResults('Appending paths', result);
+            traceCellResults('Appending paths', result);
         }
     }
 
@@ -369,7 +354,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         purpose: 'parsePtvsdVersionInfo' | 'parseDebugpyVersionInfo' | 'pythonVersionInfo'
     ): Version | undefined {
         if (cells.length < 1 || cells[0].state !== CellState.finished) {
-            this.traceCellResults(purpose, cells);
+            traceCellResults(purpose, cells);
             return undefined;
         }
 
@@ -397,7 +382,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             }
         }
 
-        this.traceCellResults(purpose, cells);
+        traceCellResults(purpose, cells);
 
         return undefined;
     }
@@ -452,7 +437,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 return;
             }
         }
-        this.traceCellResults(`Installing ${this.debuggerPackage}`, debuggerInstallResults);
+        traceCellResults(`Installing ${this.debuggerPackage}`, debuggerInstallResults);
         sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
         traceError(`Failed to install ${this.debuggerPackage}`);
         // Failed to install debugger, throw to exit debugging

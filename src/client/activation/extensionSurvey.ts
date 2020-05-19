@@ -114,7 +114,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
             o: encodeURIComponent(this.platformService.osType), // platform
             v: encodeURIComponent(this.appEnvironment.vscodeVersion),
             e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
-            m: encodeURIComponent(this.appEnvironment.machineId)
+            m: encodeURIComponent(this.appEnvironment.sessionId)
         });
         const url = `https://aka.ms/AA5rjx5?${query}`;
         this.browserService.launch(url);
