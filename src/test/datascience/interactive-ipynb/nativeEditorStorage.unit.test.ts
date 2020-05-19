@@ -17,6 +17,7 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 
+import { CellSlice } from '../../../../types/@msrvida-python-program-analysis';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
@@ -110,6 +111,7 @@ suite('DataScience - Native Editor Storage', () => {
     let storage: NotebookStorageProvider;
     const disposables: IDisposable[] = [];
     const baseUri = Uri.parse('file:///foo.ipynb');
+    const untiledUri = Uri.parse('untitled:///untitled-1.ipynb');
     const baseFile = `{
  "cells": [
   {
@@ -384,12 +386,14 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     function insertCell(index: number, code: string) {
+        const cell = createEmptyCell(undefined, 1);
+        cell.data.source = code;
         return model.update({
             source: 'user',
             kind: 'insert',
             oldDirty: model.isDirty,
             newDirty: true,
-            cell: createEmptyCell(code, 1),
+            cell,
             index
         });
     }
@@ -533,6 +537,24 @@ suite('DataScience - Native Editor Storage', () => {
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
         expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
+    });
+
+    test('Editing a new file and closing will keep contents', async () => {
+        model = await storage.load(untiledUri, undefined, true);
+        expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
+        insertCell(0, 'a=1');
+
+        // Wait for a second so it has time to update
+        await sleep(1000);
+
+        // Recreate
+        storage = createStorage();
+        model = await storage.load(untiledUri);
+
+        const cells = model.cells;
+        expect(cells).to.be.lengthOf(2);
+        expect(concatMultilineStringInput(cells[0].data.source)).to.be.equals('a=1');
         expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 

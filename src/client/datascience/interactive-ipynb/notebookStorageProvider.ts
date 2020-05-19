@@ -113,8 +113,8 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         });
     }
     private async autoSaveNotebookInHotExitFile(model: INotebookModel, filesConfig: WorkspaceConfiguration) {
-        // We need to backup, only if auto save if turned off.
-        if (filesConfig.get('autoSave', 'off') !== 'off') {
+        // We need to backup, only if auto save if turned off and not an untitled file.
+        if (filesConfig.get('autoSave', 'off') !== 'off' && !model.isUntitled) {
             return;
         }
         await this.storage.backup(model, new CancellationTokenSource().token);

@@ -192,7 +192,8 @@ export class NativeEditorProvider
         // Update number of notebooks in the workspace
         this.notebookCount += 1;
 
-        // Set these contents into the storage before the file opens
+        // Set these contents into the storage before the file opens. Make sure not
+        // load from the memento storage though as this is an entirely brand new file.
         await this.loadModel(uri, contents, true);
 
         return this.open(uri);

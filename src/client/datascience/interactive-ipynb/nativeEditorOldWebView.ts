@@ -200,7 +200,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             // Skip doing this if auto save is enabled.
             const filesConfig = this.workspaceService.getConfiguration('files', this.file);
             const autoSave = filesConfig.get('autoSave', 'off');
-            if (autoSave === 'off') {
+            if (autoSave === 'off' || this.isUntitled) {
                 await this.storage.backup(this.model, new CancellationTokenSource().token);
             }
             this.commandManager.executeCommand(Commands.OpenNotebookNonCustomEditor, this.model.file).then(noop, noop);

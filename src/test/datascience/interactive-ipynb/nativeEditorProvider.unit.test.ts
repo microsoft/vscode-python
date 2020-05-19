@@ -22,7 +22,7 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Native Editor Provider', () => {
+suite('DataScience - Native Editor Provider', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let svcContainer: IServiceContainer;
