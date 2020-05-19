@@ -444,7 +444,7 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             this.lastCaptured.set(method, now);
             this.eventCount += 1;
 
-            // Replace all slashes in the method name, or the property will be swallowed by vscode-extension-telemetry.
+            // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
             const formattedMethod = method.replace(/\//g, '.');
 
             const properties = {
