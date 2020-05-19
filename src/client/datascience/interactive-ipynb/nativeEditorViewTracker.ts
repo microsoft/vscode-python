@@ -39,8 +39,8 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         // Skip untitled files. They have to be changed first.
         if (!list.includes(fileKey) && (!isUntitled(editor.model) || editor.model?.isDirty)) {
             this.workspaceMemento.update(MEMENTO_KEY, [...list, fileKey]);
-        } else if (isUntitled(editor.model)) {
-            editor.model?.changed(this.onUntitledChanged.bind(this, editor.file));
+        } else if (isUntitled(editor.model) && editor.model) {
+            editor.model.changed(this.onUntitledChanged.bind(this, editor.file));
         }
     }
 
