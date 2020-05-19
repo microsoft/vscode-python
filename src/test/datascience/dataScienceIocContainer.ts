@@ -68,6 +68,7 @@ import {
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
 import { ClipboardService } from '../../client/common/application/clipboard';
+import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -79,6 +80,7 @@ import {
     ILiveShareApi,
     ILiveShareTestingApi,
     ITerminalManager,
+    IVSCodeNotebook,
     IWebPanel,
     IWebPanelMessageListener,
     IWebPanelOptions,
@@ -830,6 +832,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
         this.serviceManager.addSingleton<KernelDaemonPool>(KernelDaemonPool, KernelDaemonPool);
         this.serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
+        this.serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
         this.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             CTagsProductPathService,
