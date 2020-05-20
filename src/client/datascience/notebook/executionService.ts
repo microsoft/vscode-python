@@ -67,6 +67,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
             getOnly: false
         });
 
+        if (!nb) {
+            throw new Error('Unable to get Notebook object to run cell');
+        }
+
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: How can nb be null?
         // We should throw an exception or change return type to be non-nullable.
@@ -105,8 +109,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
             throw new Error('Unable to find corresonding Cell in Model');
         }
         try {
-            nb?.clear(cell.uri.fsPath);
-            const observable = nb?.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
+            nb.clear(cell.uri.fsPath); // NOSONAR
+            const observable = nb.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
             observable?.subscribe(
                 (cells) => {
                     if (token.isCancellationRequested) {
@@ -146,7 +150,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             this.registeredIOPubListeners.add(nb);
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-            nb?.registerIOPubListener(async (msg) => {
+            nb.registerIOPubListener(async (msg) => {
                 if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
                     handleUpdateDisplayDataMessage(msg, model, document);
                 }
