@@ -1024,7 +1024,7 @@ export interface INotebookStorage {
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    load(file: Uri, contents?: string): Promise<INotebookModel>;
+    load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
 }
 type WebViewViewState = {
     readonly visible: boolean;

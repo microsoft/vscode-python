@@ -22,12 +22,14 @@ import {
     IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
+import { getNextUntitledCounter } from './nativeEditorStorage';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
@@ -74,6 +76,7 @@ export class NativeEditorProvider
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
+    private untitledCounter = 1;
     constructor(
         @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) protected readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -183,16 +186,23 @@ export class NativeEditorProvider
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
+        // Create a new URI for the dummy file using our root workspace path
+        const uri = await this.getNextNewNotebookUri();
+
         // Update number of notebooks in the workspace
         this.notebookCount += 1;
 
-        const model = await this.storage.createNew(contents);
+        // Set these contents into the storage before the file opens. Make sure not
+        // load from the memento storage though as this is an entirely brand new file.
+        await this.loadModel(uri, contents, true);
 
-        return this.open(model.file);
+        return this.open(uri);
     }
 
-    public loadModel(file: Uri, contents?: string) {
-        return this.storage.load(file, contents).then((m) => {
+    public loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+        // Every time we load a new untitled file, up the counter past the max value for this counter
+        this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
+        return this.storage.load(file, contents, skipDirtyContents).then((m) => {
             this.trackModel(m);
             return m;
         });
@@ -257,5 +267,13 @@ export class NativeEditorProvider
         if (document) {
             this._onDidEdit.fire({ document, edit: change });
         }
+    }
+
+    private async getNextNewNotebookUri(): Promise<Uri> {
+        // Just use the current counter. Counter will be incremented after actually opening a file.
+        const fileName = `${DataScience.untitledNotebookFileName()}-${this.untitledCounter}.ipynb`;
+        const fileUri = Uri.file(fileName);
+        // Turn this back into an untitled
+        return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 }
