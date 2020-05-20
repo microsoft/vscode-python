@@ -23,7 +23,7 @@ import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidg
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
+// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name no-console
 const request = require('request');
 const sanitize = require('sanitize-filename');
 
@@ -113,9 +113,7 @@ suite('DataScience - ipywidget - CDN', () => {
 
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
-            setup(function () {
-                // tslint:disable-next-line: no-invalid-this
-                this.skip();
+            setup(() => {
                 const connection: IJupyterConnection = {
                     type: 'jupyter',
                     baseUrl: '',
@@ -164,6 +162,8 @@ suite('DataScience - ipywidget - CDN', () => {
                         updateCDNSettings(cdn);
                         let downloadCount = 0;
                         nock(baseUrl)
+                            .log(console.log)
+
                             .get(`/${getUrl}`)
                             .reply(200, () => {
                                 downloadCount += 1;
@@ -190,7 +190,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl).get(`/${getUrl}`).replyWithError('404');
+                        nock(baseUrl).log(console.log).get(`/${getUrl}`).replyWithError('404');
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -230,8 +230,9 @@ suite('DataScience - ipywidget - CDN', () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
                         when(httpClient.exists(anything())).thenResolve(true);
-                        nock(baseUrl).get(`/${getUrl}`).twice().replyWithError('Not found');
+                        nock(baseUrl).log(console.log).get(`/${getUrl}`).twice().replyWithError('Not found');
                         nock(baseUrl)
+                            .log(console.log)
                             .get(`/${getUrl}`)
                             .thrice()
                             .reply(200, () => {

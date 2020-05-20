@@ -1377,7 +1377,9 @@ plt.show()`,
                     public onKernelRestarted() {
                         // Do nothing on restarted
                     }
-
+                    public dispose() {
+                        noop();
+                    }
                     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
                             cellInputs.push(concatMultilineStringInput(cell.data.source));

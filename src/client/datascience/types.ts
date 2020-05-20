@@ -249,7 +249,7 @@ export interface INotebookServerOptions {
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger {
+export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
     onKernelRestarted(): void;
