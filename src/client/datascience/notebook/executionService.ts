@@ -84,7 +84,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         );
     }
     public cancelPendingExecutions(document: NotebookDocument): void {
-        this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel());
+        this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
     }
     private async executeIndividualCell(
         model: INotebookModel,
@@ -104,7 +104,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         }
         // If kernel is restarted while executing, then abort execution.
         const cancelExecutionCancellation = new CancellationTokenSource();
-        this.pendingExecutionCancellations.get(document.uri.fsPath)?.push(cancelExecutionCancellation);
+        this.pendingExecutionCancellations.get(document.uri.fsPath)?.push(cancelExecutionCancellation); // NOSONAR
 
         // Replace token with a wrapped cancellation, which will wrap cancellation due to restarts.
         const wrappedToken = wrapCancellationTokens(token, cancelExecutionCancellation.token, cancelExecution.token);
@@ -138,7 +138,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             if (token.isCancellationRequested) {
                 // tslint:disable-next-line: no-suspicious-comment
                 // TODO: TImeout value.
-                nb?.interruptKernel(1_000).ignoreErrors();
+                nb?.interruptKernel(1_000).ignoreErrors(); // NOSONAR
             }
         });
 
@@ -191,8 +191,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
             // Ensure we remove the cancellation.
             const cancellations = this.pendingExecutionCancellations.get(document.uri.fsPath);
             const index = cancellations?.indexOf(cancelExecutionCancellation) ?? -1;
-            if (index >= 0) {
-                cancellations?.splice(index, 1);
+            if (cancellations && index >= 0) {
+                cancellations.splice(index, 1);
             }
         }
     }

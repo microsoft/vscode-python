@@ -112,7 +112,7 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
-        this.vscodeNotebook.activeNotebookEditor?.edit((editor) => {
+        this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
             const totalLength = this.document.cells.length;
             editor.insert(this.document.cells.length, '', PYTHON_LANGUAGE, CellKind.Code, [], undefined);
             for (let i = totalLength - 1; i >= 0; i = i - 1) {
