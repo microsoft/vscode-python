@@ -30,9 +30,8 @@ export class NotebookEditorUI extends BaseWebUI {
 
     public async executeCell(cellIndex: number): Promise<void> {
         const renderedPromise = this.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
-        const executedPromise = this.waitForMessage(CommonActionType.EXECUTE_CELL);
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
-        await Promise.all([runButton.click({ button: 'left' }), renderedPromise, executedPromise]);
+        await Promise.all([runButton.click({ button: 'left' }), renderedPromise]);
     }
 
     public async cellHasOutput(cellIndex: number): Promise<boolean> {
