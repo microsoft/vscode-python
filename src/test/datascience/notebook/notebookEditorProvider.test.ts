@@ -3,8 +3,8 @@
 
 'use strict';
 
-suite('XXX', () => {
-    test('xxx', () => {
+suite('DataScience - Insiders', () => {
+    test('Notebook Load', () => {
         console.error('Yello');
     });
 });
