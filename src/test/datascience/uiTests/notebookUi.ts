@@ -6,7 +6,6 @@
 import { assert } from 'chai';
 import { ElementHandle } from 'playwright-chromium';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
