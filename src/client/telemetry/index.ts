@@ -70,7 +70,7 @@ function getTelemetryReporter() {
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
 }
 
 export function clearTelemetryReporter() {
@@ -99,7 +99,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
         eventNameSent = 'ERROR';
         customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     } else {
         if (properties) {
             const data = properties as any;
