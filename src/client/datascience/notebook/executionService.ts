@@ -30,14 +30,12 @@ import { INotebookExecutionService } from './types';
 @injectable()
 export class NotebookExecutionService implements INotebookExecutionService {
     private registeredIOPubListeners = new WeakSet<INotebook>();
-    private _notebookProvider!: INotebookProvider;
+    private _notebookProvider?: INotebookProvider;
     private pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
     private get notebookProvider(): INotebookProvider {
-        if (this._notebookProvider) {
-            return this._notebookProvider;
-        }
-        this._notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
-        return this._notebookProvider;
+        this._notebookProvider =
+            this._notebookProvider || this.serviceContainer.get<INotebookProvider>(INotebookProvider);
+        return this._notebookProvider!;
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,

@@ -19,7 +19,7 @@ import { IExtensionTestApi } from '../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - Executionxxx', function () {
+suite('DataScience - VSCode Notebook - Execution', function () {
     this.timeout(15_000);
 
     let api: IExtensionTestApi;
