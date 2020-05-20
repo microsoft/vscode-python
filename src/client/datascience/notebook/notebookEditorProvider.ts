@@ -61,8 +61,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public get editors(): INotebookEditor[] {
         return [...this.openedEditors];
     }
-    // Note, this constant has to match the value used in the package.json to register the webview custom editor.
-    public static readonly customEditorViewType = 'NativeEditorProvider.ipynb';
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
