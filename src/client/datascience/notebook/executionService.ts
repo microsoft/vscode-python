@@ -8,10 +8,13 @@ import { inject, injectable } from 'inversify';
 import { Subscription } from 'rxjs';
 import { CancellationToken, NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { CancellationTokenSource } from 'vscode-jsonrpc';
+import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { createDeferred } from '../../common/utils/async';
+import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
+import { Commands } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebook, INotebookModel, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './cellUpdateHelpers';
@@ -39,7 +42,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
         const model = await this.notebookStorage.load(document.uri);
@@ -136,9 +140,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
             // Interrupt kernel only if original cancellation was cancelled.
             if (token.isCancellationRequested) {
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: TImeout value.
-                nb?.interruptKernel(1_000).ignoreErrors(); // NOSONAR
+                this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
             }
         });
 
