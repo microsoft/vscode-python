@@ -13,7 +13,7 @@ import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
 
-suite('DataScience - VSCOde Notebook (Insiders)', function () {
+suite('DataScience - VSCode Notebook (Insiders)', function () {
     // tslint:disable-next-line: no-invalid-this
     this.timeout(5_000);
 
