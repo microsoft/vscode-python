@@ -154,7 +154,7 @@ export class ExperimentsManager implements IExperimentsManager {
                 // User cannot belong to NotebookExperiment if they are not using Insiders.
                 if (
                     (experiment.name === NativeNotebook.experiment || experiment.name === NativeNotebook.control) &&
-                    this.appEnvironment.channel !== 'insiders'
+                    this.appEnvironment.channel === 'stable'
                 ) {
                     continue;
                 }
