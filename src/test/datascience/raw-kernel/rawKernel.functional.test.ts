@@ -211,6 +211,7 @@ suite('IANHU DataScience raw kernel tests', () => {
         let executeResult = replies.find((r) => r.header.msg_type === 'execute_result');
         assert.ok(executeResult, 'Result not found');
         await shutdown();
+        await sleep(2500); // Give time for the shutdown to go across
         //rawKernel = await connectToKernel(57418);
         rawKernel = await connectToKernel2(connectionInfo2);
         replies = await requestExecute(rawKernel, 'a=1\na');
