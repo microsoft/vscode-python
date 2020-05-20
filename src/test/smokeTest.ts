@@ -12,7 +12,6 @@ import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
-import { LanguageServerType } from '../client/activation/types';
 import { unzip } from './common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants';
 
@@ -32,7 +31,8 @@ class TestRunner {
         await this.launchTest(env);
     }
     private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.languageServer": ${enable ? LanguageServerType.Node : LanguageServerType.Jedi} }`;
+        // Work around CI issue when tests unable to resolve `../client/activation/types`
+        const settings = `{ "python.languageServer": ${enable ? 'Node' : 'Jedi'} }`;
         await fs.ensureDir(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
         );
