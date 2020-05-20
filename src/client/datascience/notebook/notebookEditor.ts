@@ -90,6 +90,9 @@ export class NotebookEditor implements INotebookEditor {
         this.commandManager.executeCommand('notebook.redo').then(noop, noop);
     }
     public removeAllCells(): void {
+        if (!this.vscodeNotebook.activeNotebookEditor) {
+            return;
+        }
         this.vscodeNotebook.activeNotebookEditor?.edit((editor) => {
             const totalLength = this.document.cells.length;
             editor.insert(this.document.cells.length, '', PYTHON_LANGUAGE, CellKind.Code, [], undefined);
