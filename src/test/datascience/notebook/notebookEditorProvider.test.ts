@@ -13,22 +13,26 @@ import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
 
-suite('DataScience - Insiders', function () {
+suite('DataScience - VSCOde Notebook (Insiders)', function () {
     // tslint:disable-next-line: no-invalid-this
     this.timeout(5_000);
+
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
     const testIPynb = Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb'));
     const disposables: IDisposable[] = [];
+    let oldValueFor_disableJupyterAutoStart: undefined | boolean = false;
     suiteSetup(async () => {
         api = await initialize();
+        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        oldValueFor_disableJupyterAutoStart = configSettings.getSettings(undefined).datascience.disableJupyterAutoStart;
     });
     setup(async () => {
         await initializeTest();
+        // Reset for tests, do this everytime, as things can change due to config changes etc.
         const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        // Disable for faster tests.
         configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -40,7 +44,12 @@ suite('DataScience - Insiders', function () {
         }
         await closeActiveWindows();
     });
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(async () => {
+        // Restore.
+        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = oldValueFor_disableJupyterAutoStart;
+        await closeActiveWindows();
+    });
 
     test('Create empty notebook', async () => {
         assert.isUndefined(editorProvider.activeEditor);
@@ -69,6 +78,17 @@ suite('DataScience - Insiders', function () {
 
         assert.isTrue(notebookOpened);
         assert.isTrue(activeNotebookChanged);
+    });
+    test('Closing a notebook will fire necessary events and clear state', async () => {
+        let notebookClosed = false;
+        editorProvider.onDidCloseNotebookEditor(() => (notebookClosed = true), undefined, disposables);
+
+        await editorProvider.createNew();
+        await closeActiveWindows();
+
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+        assert.isTrue(notebookClosed);
     });
     test('Open a notebook using our API', async () => {
         assert.isUndefined(editorProvider.activeEditor);

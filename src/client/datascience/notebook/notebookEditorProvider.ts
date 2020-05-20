@@ -191,7 +191,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidCloseNotebookDocument(doc: NotebookDocument | Uri): Promise<void> {
         const editor = isUri(doc) ? this.notebookEditorsByUri.get(doc.toString()) : this.notebookEditors.get(doc);
         if (editor) {
-            this.openedEditors.delete(editor);
+            this.closedEditor(editor);
             editor.dispose();
             if (editor.model) {
                 editor.model.dispose();
