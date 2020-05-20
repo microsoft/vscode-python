@@ -45,8 +45,8 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'Insider Notebook':
-              TestsToRun: 'testSingleWorkspace'
+            'VS Code Insider':
+              TestsToRun: 'testSingleWorkspaceInsiders'
               NeedsPythonTestReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
