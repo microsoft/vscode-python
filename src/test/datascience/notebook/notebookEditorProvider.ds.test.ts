@@ -33,8 +33,6 @@ suite('DataScience - VSCode Notebook', function () {
         }
         const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         oldValueFor_disableJupyterAutoStart = configSettings.getSettings(undefined).datascience.disableJupyterAutoStart;
-        // tslint:disable-next-line: no-invalid-this
-        return this.skip();
     });
     setup(async () => {
         await initializeTest();
