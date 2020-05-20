@@ -45,6 +45,9 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
+            'Insider Notebook':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
