@@ -15,7 +15,7 @@ import { createDeferredFromPromise, sleep } from '../../../client/common/utils/a
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookExecutionService } from '../../../client/datascience/notebook/types';
 import { ICell, INotebook, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi } from '../../common';
+import { FakeClock, IExtensionTestApi } from '../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
 
 // tslint:disable: no-any no-invalid-this
@@ -31,6 +31,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
     let commandManager: ICommandManager;
     let originalGetOrCreateNotebook: INotebookProvider['getOrCreateNotebook'];
     let originalExecuteCellObservable: INotebookExecutionService['executeCell'];
+    let fakeTimer: FakeClock;
     suiteSetup(async function () {
         api = await initialize();
         notebook = mock<INotebook>();
@@ -50,6 +51,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
     });
     setup(async () => {
         await initializeTest();
+        fakeTimer = new FakeClock();
         // Reset for tests, do this everytime, as things can change due to config changes etc.
         const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
@@ -59,6 +61,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         originalExecuteCellObservable = executionService.executeCell;
     });
     teardown(async () => {
+        fakeTimer.uninstall();
         executionService.executeCell = originalExecuteCellObservable;
         while (disposables.length) {
             disposables.pop()?.dispose(); // NOSONAR;
@@ -74,7 +77,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         await closeActiveWindows();
     });
 
-    test('Selecting VSCode Command will run cell', async () => {
+    test('Selecting VSCode Command will run cellxxx', async () => {
         // Open the notebook
         const editor = ((await editorProvider.createNew()) as unknown) as NotebookEditor;
         assert.isOk(editor);
@@ -85,10 +88,10 @@ suite('DataScience - VSCode Notebook - Execution', function () {
             cellExecuted = true;
         };
 
+        fakeTimer.install();
         await commandManager.executeCommand('notebook.cell.execute');
+        await fakeTimer.wait();
 
-        // Wait for 5s, and cell is still running.
-        await sleep(1); // Wait for event loop to catchup.
         assert.isTrue(cellExecuted);
     });
     test('Executing cell in Editor will cell', async () => {
@@ -107,7 +110,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         await sleep(10); // Wait for VSCode command to get executed.
         assert.isTrue(cellExecuted);
     });
-    test('Cancelling token will cancel cell execution', async () => {
+    test('Cancelling token will cancel cell executionxxx', async () => {
         // Open the notebook
         const editor = ((await editorProvider.createNew()) as unknown) as NotebookEditor;
         assert.isOk(editor);
@@ -130,8 +133,10 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
 
         // Interrupt the kernel.
+        fakeTimer.install();
         cancellation.cancel();
-        await sleep(1); // Wait for event loop to catchup.
+        await fakeTimer.wait();
+
         assert.isTrue(deferred.completed);
         assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
     });
