@@ -3,8 +3,166 @@
 
 'use strict';
 
-suite('DataScience - Insiders', () => {
-    test('Notebook Load', () => {
-        console.error('Yello');
+import { assert } from 'chai';
+import * as path from 'path';
+import { Uri } from 'vscode';
+import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { IConfigurationService, IDisposable } from '../../../client/common/types';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
+import { IExtensionTestApi } from '../../common';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
+
+suite('DataScience - Insiders', function () {
+    // tslint:disable-next-line: no-invalid-this
+    this.timeout(5_000);
+    let api: IExtensionTestApi;
+    let vscodeNotebook: IVSCodeNotebook;
+    let editorProvider: INotebookEditorProvider;
+    let commandManager: ICommandManager;
+    const testIPynb = Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb'));
+    const disposables: IDisposable[] = [];
+    suiteSetup(async () => {
+        api = await initialize();
+    });
+    setup(async () => {
+        await initializeTest();
+        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        // Disable for faster tests.
+        configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+        commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+    });
+    teardown(async () => {
+        while (disposables.length) {
+            disposables.pop()?.dispose(); // NOSONAR;
+        }
+        await closeActiveWindows();
+    });
+    suiteTeardown(closeActiveWindows);
+
+    test('Create empty notebook', async () => {
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+
+        const editor = await editorProvider.createNew();
+
+        assert.equal(editorProvider.editors.length, 1);
+        assert.isOk(editor);
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+        assert.isOk(editorProvider.activeEditor);
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor.file.fsPath.toLowerCase()
+        );
+        assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), editor.file.fsPath.toLowerCase());
+    });
+
+    test('Create empty notebook will fire necessary events', async () => {
+        let notebookOpened = false;
+        let activeNotebookChanged = false;
+        editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
+        editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
+
+        await editorProvider.createNew();
+
+        assert.isTrue(notebookOpened);
+        assert.isTrue(activeNotebookChanged);
+    });
+    test('Open a notebook using our API', async () => {
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+
+        const editor = await editorProvider.open(testIPynb);
+
+        assert.equal(editorProvider.editors.length, 1);
+        assert.isOk(editor);
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+        assert.isOk(editorProvider.activeEditor);
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor.file.fsPath.toLowerCase()
+        );
+        assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), editor.file.fsPath.toLowerCase());
+    });
+    test('Open a notebook using our API will fire necessary events', async () => {
+        let notebookOpened = false;
+        let activeNotebookChanged = false;
+        editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
+        editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
+
+        await editorProvider.open(testIPynb);
+
+        assert.isTrue(notebookOpened);
+        assert.isTrue(activeNotebookChanged);
+    });
+    test('Open a notebook using VS Code API', async () => {
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+
+        await commandManager.executeCommand('vscode.open', testIPynb);
+
+        assert.equal(editorProvider.editors.length, 1);
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+        assert.isOk(editorProvider.activeEditor);
+        assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
+    });
+    test('Open a notebook using VSC API then ours yields the same editor', async () => {
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+
+        await commandManager.executeCommand('vscode.open', testIPynb);
+
+        assert.equal(editorProvider.editors.length, 1);
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            testIPynb.fsPath.toLowerCase()
+        );
+        assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
+
+        // Opening again with our will do nothing (it will return the existing editor).
+        const editor = await editorProvider.open(testIPynb);
+
+        assert.equal(editorProvider.editors.length, 1);
+        assert.equal(editor.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
+    });
+    test('Active notebook points to the currently active editor', async () => {
+        const editor1 = await editorProvider.createNew();
+
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor1.file.fsPath.toLowerCase()
+        );
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editorProvider.activeEditor?.file.fsPath.toLowerCase()
+        );
+
+        const editor2 = await editorProvider.createNew();
+        assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), editor2.file.fsPath.toLowerCase());
+    });
+    test('Create two blank notebooks', async () => {
+        const editor1 = await editorProvider.createNew();
+
+        assert.equal(editor1.file.scheme, 'untitled');
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor1.file.fsPath.toLowerCase()
+        );
+
+        const editor2 = await editorProvider.createNew();
+
+        assert.equal(editor2.file.scheme, 'untitled');
+        assert.equal(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor2.file.fsPath.toLowerCase()
+        );
+        assert.notEqual(
+            vscodeNotebook.activeNotebookEditor?.document.uri.fsPath.toLowerCase(),
+            editor1.file.fsPath.toLowerCase()
+        );
     });
 });

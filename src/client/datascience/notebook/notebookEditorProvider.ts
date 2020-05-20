@@ -122,9 +122,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     public async open(file: Uri): Promise<INotebookEditor> {
         // Wait for editor to get opened up, vscode will notify when it is opened.
         // Further below.
-        const deferred = createDeferred<INotebookEditor>();
-        this.notebooksWaitingToBeOpenedByUri.set(file.toString(), deferred);
-        deferred.promise.then(() => this.notebooksWaitingToBeOpenedByUri.delete(file.toString())).ignoreErrors();
+        if (!this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
+            this.notebooksWaitingToBeOpenedByUri.set(file.toString(), createDeferred<INotebookEditor>());
+        }
+        const deferred = this.notebooksWaitingToBeOpenedByUri.get(file.toString())!;
 
         // Tell VSC to open the notebook, at which point it will fire a callback when a notebook document has been opened.
         // Then our promise will get resolved.
@@ -152,20 +153,16 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!this.executedEditors.has(editor.file.fsPath)) {
             editor.executed(this.onExecuted.bind(this));
         }
-        this.disposables.push(editor.onDidChangeViewState(this.onChangedViewState, this));
         this.openedEditors.add(editor);
         editor.closed(this.closedEditor.bind(this));
         this._onDidOpenNotebookEditor.fire(editor);
+        this._onDidChangeActiveNotebookEditor.fire(editor);
     }
 
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
     }
-    private onChangedViewState(): void {
-        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
-    }
-
     private onExecuted(editor: INotebookEditor): void {
         if (editor) {
             this.executedEditors.add(editor.file.fsPath);
@@ -181,8 +178,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             editor = new NotebookEditor(model, doc, this.vscodeNotebook, this.executionService, this.commandManager);
             this.onEditorOpened(editor);
         }
-        const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString());
-        deferred?.resolve(editor); // NOSONAR
+        if (!this.notebooksWaitingToBeOpenedByUri.get(uri.toString())) {
+            this.notebooksWaitingToBeOpenedByUri.set(uri.toString(), createDeferred<INotebookEditor>());
+        }
+        const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
+        deferred.resolve(editor);
         if (!isUri(doc)) {
             // This is where we ensure changes to our models are propagated back to the VSCode model.
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
@@ -193,6 +193,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidCloseNotebookDocument(doc: NotebookDocument | Uri): Promise<void> {
         const editor = isUri(doc) ? this.notebookEditorsByUri.get(doc.toString()) : this.notebookEditors.get(doc);
         if (editor) {
+            this.openedEditors.delete(editor);
             editor.dispose();
             if (editor.model) {
                 editor.model.dispose();
@@ -200,9 +201,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         if (isUri(doc)) {
             this.notebookEditorsByUri.delete(doc.toString());
+            this.notebooksWaitingToBeOpenedByUri.delete(doc.toString());
         } else {
             this.notebookEditors.delete(doc);
             this.notebookEditorsByUri.delete(doc.uri.toString());
+            this.notebooksWaitingToBeOpenedByUri.delete(doc.uri.toString());
         }
     }
     private async onDidChangeNotebookDocument(_e: NotebookDocumentChangeEvent): Promise<void> {

@@ -423,6 +423,7 @@ steps:
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspaceInsiders'))
     env:
       DISPLAY: :10
+      VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
