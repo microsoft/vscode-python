@@ -206,7 +206,7 @@ suite('DataScience - VSCode Notebook', function () {
         editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
         editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
 
-        await editorProvider.open(testIPynb);
+        await editorProvider.createNew();
 
         assert.isTrue(notebookOpened);
         assert.isTrue(activeNotebookChanged);
