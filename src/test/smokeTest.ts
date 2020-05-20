@@ -31,8 +31,11 @@ class TestRunner {
         await this.launchTest(env);
     }
     private async enableLanguageServer(enable: boolean) {
-        // Work around CI issue when tests unable to resolve `../client/activation/types`
-        const settings = `{ "python.languageServer": ${enable ? 'Node' : 'Jedi'} }`;
+        // When running smoke tests, we won't have access to unbundled files.
+        const types = await import('../client/activation/types');
+        const settings = `{ "python.languageServer": ${
+            enable ? types.LanguageServerType.Node : types.LanguageServerType.Jedi
+        } }`;
         await fs.ensureDir(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
         );
