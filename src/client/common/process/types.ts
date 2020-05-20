@@ -163,7 +163,7 @@ export interface IPythonExecutionFactory {
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
-export type InterpreterInfomation = {
+export type InterpreterInformation = {
     path: string;
     version?: Version;
     sysVersion: string;
@@ -174,7 +174,7 @@ export type InterpreterInfomation = {
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
-    getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
+    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;

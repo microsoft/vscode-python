@@ -1,6 +1,67 @@
 # Changelog
 
-## 2020.5.0-rc (5 May 2020)
+## 2020.5.1 (19 May 2020)
+
+### Fixes
+
+1. Do not execute shebang as an interpreter until user has clicked on the codelens enclosing the shebang.
+   ([#11687](https://github.com/Microsoft/vscode-python/issues/11687))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.5.0 (12 May 2020)
 
 ### Enhancements
 
@@ -59,6 +120,7 @@
 1. Hide progress indicator once `Interactive Window` has loaded.
    ([#11065](https://github.com/Microsoft/vscode-python/issues/11065))
 1. Do not perform pipenv interpreter discovery on extension activation.
+   Fix for [CVE-2020-1171](https://portal.msrc.microsoft.com/en-us/security-guidance/advisory/CVE-2020-1171).
    ([#11127](https://github.com/Microsoft/vscode-python/issues/11127))
 1. Ensure arguments are included in log messages when using decorators.
    ([#11153](https://github.com/Microsoft/vscode-python/issues/11153))
@@ -78,6 +140,12 @@
    ([#11576](https://github.com/Microsoft/vscode-python/issues/11576))
 1. Ensure kernel daemons are disposed correctly when closing notebooks.
    ([#11579](https://github.com/Microsoft/vscode-python/issues/11579))
+1. When VS quits, make sure to save contents of notebook for next reopen.
+   ([#11557](https://github.com/Microsoft/vscode-python/issues/11557))
+1. Fix scrolling when clicking in the interactive window to not jump around.
+   ([#11554](https://github.com/Microsoft/vscode-python/issues/11554))
+1. Setting "Data Science: Run Startup Commands" is now limited to being a user setting.
+   Fix for [CVE-2020-1192](https://portal.msrc.microsoft.com/en-us/security-guidance/advisory/CVE-2020-1192).
 
 ### Code Health
 

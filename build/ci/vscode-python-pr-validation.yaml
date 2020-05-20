@@ -45,6 +45,9 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
+            'DataScience':
+              TestsToRun: 'testDataScience'
+              NeedsPythonTestReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true

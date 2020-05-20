@@ -223,6 +223,13 @@ export class JupyterNotebookBase implements INotebook {
                 await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
         }
+        this.loggers.forEach((d) => {
+            // tslint:disable-next-line: no-any
+            if ((d as any).dispose) {
+                // tslint:disable-next-line: no-any
+                (d as any).dispose();
+            }
+        });
         this.disposed.fire();
     }
 

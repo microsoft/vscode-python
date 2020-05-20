@@ -28,6 +28,7 @@ import {
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
+    INotebookModel,
     KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
@@ -340,6 +341,7 @@ export interface INotebookModelChange {
     oldDirty: boolean;
     newDirty: boolean;
     source: 'undo' | 'user' | 'redo';
+    model?: INotebookModel;
 }
 
 export interface INotebookModelSaved extends INotebookModelChange {

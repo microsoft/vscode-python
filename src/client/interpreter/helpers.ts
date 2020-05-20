@@ -4,7 +4,7 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { FileSystemPaths } from '../common/platform/fs-paths';
-import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
+import { InterpreterInformation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
@@ -88,7 +88,7 @@ export class InterpreterHelper implements IInterpreterHelper {
         try {
             const info = await processService
                 .getInterpreterInformation()
-                .catch<InterpreterInfomation | undefined>(() => undefined);
+                .catch<InterpreterInformation | undefined>(() => undefined);
             if (!info) {
                 return;
             }

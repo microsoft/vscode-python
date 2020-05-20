@@ -15,7 +15,7 @@ import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import {
-    InterpreterInfomation,
+    InterpreterInformation,
     IProcessLogger,
     IPythonExecutionService,
     Output
@@ -124,7 +124,7 @@ suite('Daemon - Python Daemon Pool', () => {
             PythonDaemonExecutionService.prototype,
             'getInterpreterInformation'
         );
-        const interpreterInfoFromDaemon: InterpreterInfomation = { pythonPath: 1 } as any;
+        const interpreterInfoFromDaemon: InterpreterInformation = { pythonPath: 1 } as any;
         // Delay returning interpreter info for 2 seconds.
         getInterpreterInformationStub.resolves(interpreterInfoFromDaemon);
 
@@ -162,8 +162,8 @@ suite('Daemon - Python Daemon Pool', () => {
             PythonDaemonExecutionService.prototype,
             'getInterpreterInformation'
         );
-        const interpreterInfoFromDaemon: InterpreterInfomation = { pythonPath: 1 } as any;
-        const interpreterInfoFromPythonProc: InterpreterInfomation = { pythonPath: 2 } as any;
+        const interpreterInfoFromDaemon: InterpreterInformation = { pythonPath: 1 } as any;
+        const interpreterInfoFromPythonProc: InterpreterInformation = { pythonPath: 2 } as any;
 
         try {
             // Delay returning interpreter info for 1.5 seconds.

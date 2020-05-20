@@ -416,6 +416,17 @@ steps:
     env:
       DISPLAY: :10
 
+  # Run the single workspace tests in VS Code Insiders.
+  - script: |
+      npm run testDataScience
+    displayName: 'Run DataScience Tests in VSCode Insiders'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'))
+    env:
+      DISPLAY: :10
+      VSC_PYTHON_CI_TEST_VSC_CHANNEL: 'insiders'
+      VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE: 'true'
+      TEST_FILES_SUFFIX: 'ds.test'
+
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
     displayName: 'Publish single workspace tests results'

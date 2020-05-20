@@ -14,6 +14,7 @@ import { IApplicationEnvironment } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
+import { NativeNotebook } from '../../client/common/experimentGroups';
 import {
     configUri,
     downloadedExperimentStorageKey,
@@ -880,6 +881,37 @@ suite('A/B experiments', () => {
                 expManager.populateUserExperiments();
                 assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
             });
+        });
+        test('NativeNotebook Experiment are not loaded in VSC Insiders', async () => {
+            const storageValue = [
+                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
+                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+            ];
+            experimentStorage.setup((n) => n.value).returns(() => storageValue);
+            when(appEnvironment.machineId).thenReturn('101');
+            when(appEnvironment.channel).thenReturn('stable');
+            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
+            expManager.populateUserExperiments();
+            assert.deepEqual(expManager.userExperiments, []);
+        });
+        test('NativeNotebook Experiment are loaded in VSC Insiders', async () => {
+            const storageValue = [
+                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
+                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+            ];
+            experimentStorage.setup((n) => n.value).returns(() => storageValue);
+            when(appEnvironment.machineId).thenReturn('101');
+            when(appEnvironment.channel).thenReturn('insiders');
+            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
+            expManager.populateUserExperiments();
+            assert.deepEqual(expManager.userExperiments, [
+                {
+                    max: 94,
+                    min: 79,
+                    name: 'NativeNotebook - control',
+                    salt: 'salt'
+                }
+            ]);
         });
     });
 

@@ -7,15 +7,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
-import {
-    ConfigurationChangeEvent,
-    ConfigurationTarget,
-    EventEmitter,
-    FileType,
-    TextEditor,
-    Uri,
-    WorkspaceConfiguration
-} from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri } from 'vscode';
 
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
@@ -47,47 +39,9 @@ import { InterpreterService } from '../../../client/interpreter/interpreterServi
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
+import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
-class MockWorkspaceConfiguration implements WorkspaceConfiguration {
-    private map: Map<string, any> = new Map<string, any>();
-
-    // tslint:disable: no-any
-    public get(key: string): any;
-    public get<T>(section: string): T | undefined;
-    public get<T>(section: string, defaultValue: T): T;
-    public get(section: any, defaultValue?: any): any;
-    public get(section: string, defaultValue?: any): any {
-        if (this.map.has(section)) {
-            return this.map.get(section);
-        }
-        return arguments.length > 1 ? defaultValue : (undefined as any);
-    }
-    public has(_section: string): boolean {
-        return false;
-    }
-    public inspect<T>(
-        _section: string
-    ):
-        | {
-              key: string;
-              defaultValue?: T | undefined;
-              globalValue?: T | undefined;
-              workspaceValue?: T | undefined;
-              workspaceFolderValue?: T | undefined;
-          }
-        | undefined {
-        return;
-    }
-    public update(
-        section: string,
-        value: any,
-        _configurationTarget?: boolean | ConfigurationTarget | undefined
-    ): Promise<void> {
-        this.map.set(section, value);
-        return Promise.resolve();
-    }
-}
 
 // tslint:disable: max-func-body-length
 suite('DataScience - Native Editor Storage', () => {
@@ -110,6 +64,7 @@ suite('DataScience - Native Editor Storage', () => {
     let storage: NotebookStorageProvider;
     const disposables: IDisposable[] = [];
     const baseUri = Uri.parse('file:///foo.ipynb');
+    const untiledUri = Uri.parse('untitled:///untitled-1.ipynb');
     const baseFile = `{
  "cells": [
   {
@@ -384,12 +339,14 @@ suite('DataScience - Native Editor Storage', () => {
     });
 
     function insertCell(index: number, code: string) {
+        const cell = createEmptyCell(undefined, 1);
+        cell.data.source = code;
         return model.update({
             source: 'user',
             kind: 'insert',
             oldDirty: model.isDirty,
             newDirty: true,
-            cell: createEmptyCell(code, 1),
+            cell,
             index
         });
     }
@@ -533,6 +490,24 @@ suite('DataScience - Native Editor Storage', () => {
         expect(cells).to.be.lengthOf(3);
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
         expect(concatMultilineStringInput(cells[1].data.source)).to.be.equals('b=2\nab');
+        expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
+    });
+
+    test('Editing a new file and closing will keep contents', async () => {
+        model = await storage.load(untiledUri, undefined, true);
+        expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
+        insertCell(0, 'a=1');
+
+        // Wait for a second so it has time to update
+        await sleep(1000);
+
+        // Recreate
+        storage = createStorage();
+        model = await storage.load(untiledUri);
+
+        const cells = model.cells;
+        expect(cells).to.be.lengthOf(2);
+        expect(concatMultilineStringInput(cells[0].data.source)).to.be.equals('a=1');
         expect(model.isDirty).to.be.equal(true, 'Editor should be dirty');
     });
 

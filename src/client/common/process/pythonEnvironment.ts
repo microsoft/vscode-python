@@ -10,7 +10,7 @@ import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
 import {
     ExecutionResult,
-    InterpreterInfomation,
+    InterpreterInformation,
     IProcessService,
     PythonExecutionInfo,
     ShellOptions,
@@ -24,7 +24,7 @@ function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecuti
 }
 
 class PythonEnvironment {
-    private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
+    private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
     constructor(
         protected readonly pythonPath: string,
@@ -48,7 +48,7 @@ class PythonEnvironment {
         return getExecutionInfo(python, pythonArgs);
     }
 
-    public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
+    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         if (this.cachedInterpreterInformation === null) {
             this.cachedInterpreterInformation = await this.getInterpreterInformationImpl();
         }
@@ -80,7 +80,7 @@ class PythonEnvironment {
         return true;
     }
 
-    private async getInterpreterInformationImpl(): Promise<InterpreterInfomation | undefined> {
+    private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
         try {
             const execInfo = this.getExecutionInfo();
             const [args, parse] = internalScripts.interpreterInfo();

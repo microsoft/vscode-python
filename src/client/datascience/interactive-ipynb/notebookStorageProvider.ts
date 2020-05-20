@@ -4,13 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, CancellationTokenSource, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookModel, INotebookStorage } from '../types';
-import { isUntitled } from './nativeEditorStorage';
+import { getNextUntitledCounter } from './nativeEditorStorage';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -24,6 +25,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public get onSavedAs() {
         return this._savedAs.event;
     }
+    private static untitledCounter = 1;
     private readonly _savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
     private readonly storageAndModels = new Map<string, Promise<INotebookModel>>();
     private models = new Set<INotebookModel>();
@@ -50,12 +52,16 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public backup(model: INotebookModel, cancellation: CancellationToken) {
         return this.storage.backup(model, cancellation);
     }
-    public load(file: Uri, contents?: string | undefined): Promise<INotebookModel> {
+    public load(file: Uri, contents?: string | undefined, skipDirtyContents?: boolean): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {
-            const promise = this.storage.load(file, contents);
-            promise.then(this.trackModel.bind(this)).catch(noop);
-            this.storageAndModels.set(key, promise);
+            // Every time we load a new untitled file, up the counter past the max value for this counter
+            NotebookStorageProvider.untitledCounter = getNextUntitledCounter(
+                file,
+                NotebookStorageProvider.untitledCounter
+            );
+            const promise = this.storage.load(file, contents, skipDirtyContents);
+            this.storageAndModels.set(key, promise.then(this.trackModel.bind(this)));
         }
         return this.storageAndModels.get(key)!;
     }
@@ -68,23 +74,20 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public async createNew(contents?: string): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
-        return this.load(uri, contents);
+
+        // Always skip loading from the hot exit file. When creating a new file we want a new file.
+        return this.load(uri, contents, true);
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: This will not work, if we close an untitled document.
-        // See if we have any untitled storage already
-        const untitledStorage = Array.from(this.models.values()).filter(isUntitled);
-        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
-        // our map, so we'll keep creating new untitled notebooks.
-        const fileName = `${DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
+        // Just use the current counter. Counter will be incremented after actually opening a file.
+        const fileName = `${DataScience.untitledNotebookFileName()}-${NotebookStorageProvider.untitledCounter}.ipynb`;
         const fileUri = Uri.file(fileName);
         // Turn this back into an untitled
         return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 
-    private trackModel(model: INotebookModel) {
+    private trackModel(model: INotebookModel): INotebookModel {
         this.disposables.push(model);
         this.models.add(model);
         // When a model is no longer used, ensure we remove it from the cache.
@@ -98,24 +101,29 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
             this.disposables
         );
 
-        // Ensure we save into back for hotexit, if it is not an untitled file.
-        if (!model.isUntitled) {
-            const fileSettings = this.workspaceService.getConfiguration('files', model.file);
-            const saveToHotExitDebounced = debounce(() => this.autoSaveNotebookInHotExitFile(model, fileSettings), 250);
-            this._autoSaveNotebookInHotExitFile.set(model, saveToHotExitDebounced);
-        }
-        model.changed((e) => {
-            const debouncedHotExitSave = this._autoSaveNotebookInHotExitFile.get(model);
-            if (e.newDirty && debouncedHotExitSave) {
-                debouncedHotExitSave();
-            }
-        });
+        // Ensure we save into back for hotexit
+        this.disposables.push(model.changed(this.modelChanged.bind(this, model)));
+        return model;
     }
-    private async autoSaveNotebookInHotExitFile(model: INotebookModel, filesConfig: WorkspaceConfiguration) {
-        // We need to backup, only if auto save if turned off.
-        if (filesConfig.get('autoSave', 'off') !== 'off') {
+
+    private modelChanged(model: INotebookModel, e: NotebookModelChange) {
+        const actualModel = e.model || model; // Test mocks can screw up bound values.
+        if (actualModel) {
+            let debounceFunc = this._autoSaveNotebookInHotExitFile.get(actualModel);
+            if (!debounceFunc) {
+                debounceFunc = debounce(this.autoSaveNotebookInHotExitFile.bind(this, actualModel), 250);
+                this._autoSaveNotebookInHotExitFile.set(actualModel, debounceFunc);
+            }
+            debounceFunc();
+        }
+    }
+    private autoSaveNotebookInHotExitFile(model: INotebookModel) {
+        // Refetch settings each time as they can change before the debounce can happen
+        const fileSettings = this.workspaceService.getConfiguration('files', model.file);
+        // We need to backup, only if auto save if turned off and not an untitled file.
+        if (fileSettings.get('autoSave', 'off') !== 'off' && !model.isUntitled) {
             return;
         }
-        await this.storage.backup(model, new CancellationTokenSource().token);
+        this.storage.backup(model, CancellationToken.None).ignoreErrors();
     }
 }
