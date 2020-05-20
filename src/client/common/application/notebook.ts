@@ -97,9 +97,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     }
     public isCell(textDocument: TextDocument) {
         return (
-            textDocument.fileName.toLowerCase().includes('.ipynb') &&
-            textDocument.uri.query.includes('notebook') &&
-            textDocument.uri.query.includes('cell')
+            (textDocument.uri.fsPath.toLowerCase().includes('.ipynb') &&
+                textDocument.uri.query.includes('notebook') &&
+                textDocument.uri.query.includes('cell')) ||
+            textDocument.uri.scheme.includes('vscode-notebook-cell')
         );
     }
     private addEventHandlers() {
