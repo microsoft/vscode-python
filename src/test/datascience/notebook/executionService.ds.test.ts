@@ -55,6 +55,10 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         if (appEnv.extensionChannel === 'stable') {
             return this.skip();
         }
+        // Reset for tests, do this everytime, as things can change due to config changes etc.
+        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        oldValueFor_disableJupyterAutoStart = configSettings.getSettings(undefined).datascience.disableJupyterAutoStart;
+        configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
     });
     setup(async () => {
         sinon.restore();
@@ -70,7 +74,6 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         fakeTimer = new FakeClock();
         // Reset for tests, do this everytime, as things can change due to config changes etc.
         const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        oldValueFor_disableJupyterAutoStart = configSettings.getSettings(undefined).datascience.disableJupyterAutoStart;
         configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         executionService = api.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
