@@ -67,8 +67,11 @@ function createWebViewPanel(): WebviewPanel {
         ?.setup((w) =>
             w.createWebviewPanel(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
         )
-        // tslint:disable-next-line: no-any
-        .returns(() => webViewPanel as any);
+        .returns(() => {
+            traceInfo(`Mock webview ${JSON.stringify(webViewPanel)} should be returned.`);
+            // tslint:disable-next-line: no-any
+            return webViewPanel as any;
+        });
 
     // tslint:disable-next-line: no-any
     return webViewPanel as any;
