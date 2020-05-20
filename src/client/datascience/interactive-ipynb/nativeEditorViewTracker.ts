@@ -6,6 +6,11 @@ import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { isUntitled } from './nativeEditorStorage';
 
 const MEMENTO_KEY = 'nativeEditorViewTracking';
+/**
+ * This class tracks opened notebooks and stores the list of files in a memento. On next activation
+ * this list of files is then opened.
+ * Untitled files are tracked too, but they should only open if they're dirty.
+ */
 @injectable()
 export class NativeEditorViewTracker implements IExtensionSingleActivationService {
     constructor(
