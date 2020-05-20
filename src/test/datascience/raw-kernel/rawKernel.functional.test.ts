@@ -15,7 +15,7 @@ import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
-suite('DataScience raw kernel tests', () => {
+suite('IANHU DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let rawKernel: RawKernel;
     const connectionInfo = {
@@ -31,6 +31,32 @@ suite('DataScience raw kernel tests', () => {
         kernel_name: 'python3',
         version: 5.1
     };
+    const connectionInfo1 = {
+        shell_port: 57719,
+        iopub_port: 57720,
+        stdin_port: 57718,
+        control_port: 57722,
+        hb_port: 57721,
+        ip: '127.0.0.1',
+        key: 'c29c2121-d277576c2c035f0aceeb5068',
+        transport: 'tcp',
+        signature_scheme: 'hmac-sha256',
+        kernel_name: 'python3',
+        version: 5.1
+    };
+    const connectionInfo2 = {
+        shell_port: 57419,
+        iopub_port: 57420,
+        stdin_port: 57418,
+        control_port: 57422,
+        hb_port: 57421,
+        ip: '127.0.0.1',
+        key: 'b7cfa237-dd8c-4c9d-a826-8e0805c21c17',
+        transport: 'tcp',
+        signature_scheme: 'hmac-sha256',
+        kernel_name: 'python3',
+        version: 5.1
+    };
     let kernelProcess: KernelProcess;
     setup(async function () {
         ioc = new DataScienceIocContainer();
@@ -40,7 +66,8 @@ suite('DataScience raw kernel tests', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            rawKernel = await connectToKernel(57718);
+            //rawKernel = await connectToKernel(57718);
+            rawKernel = await connectToKernel2(connectionInfo1);
         }
     });
 
@@ -49,6 +76,36 @@ suite('DataScience raw kernel tests', () => {
         await ioc.dispose();
     });
 
+    async function connectToKernel2(targetConnectionInfo: any): Promise<RawKernel> {
+        // Find our jupyter interpreter
+        const interpreter = await ioc
+            .get<IInterpreterService>(IInterpreterService)
+            .getInterpreterDetails(ioc.getSettings().pythonPath);
+        assert.ok(interpreter, 'No jupyter interpreter found');
+        // Start our kernel
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [interpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            metadata: {
+                interpreter
+            },
+            display_name: '',
+            env: undefined,
+            language: 'python',
+            name: '',
+            path: interpreter!.path,
+            id: uuid()
+        };
+        kernelProcess = new KernelProcess(
+            ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
+            ioc.get<KernelDaemonPool>(KernelDaemonPool),
+            targetConnectionInfo as any,
+            kernelSpec,
+            undefined,
+            interpreter
+        );
+        await kernelProcess.launch();
+        return createRawKernel(kernelProcess, uuid());
+    }
     async function connectToKernel(startPort: number): Promise<RawKernel> {
         connectionInfo.stdin_port = startPort;
         connectionInfo.shell_port = startPort + 1;
@@ -154,7 +211,8 @@ suite('DataScience raw kernel tests', () => {
         let executeResult = replies.find((r) => r.header.msg_type === 'execute_result');
         assert.ok(executeResult, 'Result not found');
         await shutdown();
-        rawKernel = await connectToKernel(57418);
+        //rawKernel = await connectToKernel(57418);
+        rawKernel = await connectToKernel2(connectionInfo2);
         replies = await requestExecute(rawKernel, 'a=1\na');
         executeResult = replies.find((r) => r.header.msg_type === 'execute_result');
         assert.ok(executeResult, 'Result not found');
