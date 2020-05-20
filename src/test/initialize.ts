@@ -3,6 +3,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExtensionApi } from '../client/api';
+import { sleep } from '../client/common/utils/async';
 import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
@@ -62,6 +63,28 @@ export async function initializeTest(): Promise<any> {
     }
 }
 export async function closeActiveWindows(): Promise<void> {
+    await closeWindowsInteral();
+    await closeActiveNotebooks();
+}
+export async function closeActiveNotebooks(): Promise<void> {
+    function notebooksAreOpen() {
+        if (Array.isArray(vscode.notebook.visibleNotebookEditors) && vscode.notebook.visibleNotebookEditors.length) {
+            return true;
+        }
+        return !!vscode.notebook.activeNotebookEditor;
+    }
+    if (!vscode.env.appName.toLowerCase().includes('insiders') || !notebooksAreOpen()) {
+        return;
+    }
+    // Work around VS Code issues (somethimes notebooks do not get closed).
+    // Hence keep trying.
+    for (let counter = 0; counter <= 5 && notebooksAreOpen(); counter += 1) {
+        await sleep(counter * 100);
+        await closeWindowsInteral();
+    }
+}
+
+async function closeWindowsInteral() {
     return new Promise<void>((resolve, reject) => {
         // Attempt to fix #1301.
         // Lets not waste too much time.

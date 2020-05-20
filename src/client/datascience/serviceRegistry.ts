@@ -163,6 +163,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, notebookEditorProvider);
     if (!useVSCodeNotebookAPI) {
         serviceManager.add<INotebookEditor>(INotebookEditor, enableProposedApi ? NativeEditor : NativeEditorOldWebView);
+        // These are never going to be required for new VSC NB.
+        serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
+        serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     }
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
@@ -171,7 +174,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DebugListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
@@ -239,7 +241,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
-    serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);

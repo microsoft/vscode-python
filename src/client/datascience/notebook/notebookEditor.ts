@@ -4,7 +4,6 @@
 'use strict';
 
 import { CellKind, ConfigurationTarget, Event, EventEmitter, NotebookDocument, Uri, WebviewPanel } from 'vscode';
-import { CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';
@@ -85,7 +84,7 @@ export class NotebookEditor implements INotebookEditor {
         // Not used.
     }
     public runAllCells(): void {
-        this.executionService.executeAllCells(this.document, new CancellationTokenSource().token).catch(noop);
+        this.commandManager.executeCommand('notebook.execute').then(noop, noop);
     }
     public runSelectedCell(): void {
         this.commandManager.executeCommand('notebook.cell.execute').then(noop, noop);
@@ -210,11 +209,6 @@ export class NotebookEditor implements INotebookEditor {
     }
     private async restartKernelInternal(notebook: INotebook): Promise<void> {
         this.restartingKernel = true;
-
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO:
-        // First we need to finish all outstanding cells.
-        // this.finishOutstandingCells();
 
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus(), true, undefined, undefined);
