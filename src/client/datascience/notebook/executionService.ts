@@ -5,7 +5,10 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import { Subscription } from 'rxjs';
 import { CancellationToken, NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
+import { CancellationTokenSource } from 'vscode-jsonrpc';
+import { wrapCancellationTokens } from '../../common/cancellation';
 import { createDeferred } from '../../common/utils/async';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -28,6 +31,7 @@ import { INotebookExecutionService } from './types';
 export class NotebookExecutionService implements INotebookExecutionService {
     private registeredIOPubListeners = new WeakSet<INotebook>();
     private _notebookProvider!: INotebookProvider;
+    private pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
     private get notebookProvider(): INotebookProvider {
         if (this._notebookProvider) {
             return this._notebookProvider;
@@ -41,35 +45,75 @@ export class NotebookExecutionService implements INotebookExecutionService {
     ) {}
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
         const model = await this.notebookStorage.load(document.uri);
-        await this.executeIndividualCell(model, document, cell, token);
+        if (token.isCancellationRequested) {
+            return;
+        }
+        const nb = await this.notebookProvider.getOrCreateNotebook({
+            identity: document.uri,
+            resource: document.uri,
+            metadata: model.metadata,
+            disableUI: false,
+            getOnly: false
+        });
+        if (token.isCancellationRequested) {
+            return;
+        }
+        if (!nb) {
+            throw new Error('Unable to get Notebook object to run cell');
+        }
+        await this.executeIndividualCell(model, document, cell, nb, token);
     }
     public async executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void> {
         const model = await this.notebookStorage.load(document.uri);
+        if (token.isCancellationRequested) {
+            return;
+        }
+        const nb = await this.notebookProvider.getOrCreateNotebook({
+            identity: document.uri,
+            resource: document.uri,
+            metadata: model.metadata,
+            disableUI: false,
+            getOnly: false
+        });
+        if (token.isCancellationRequested) {
+            return;
+        }
+        if (!nb) {
+            throw new Error('Unable to get Notebook object to run cell');
+        }
         await Promise.all(
-            document.cells.map((cellToExecute) => this.executeIndividualCell(model, document, cellToExecute, token))
+            document.cells.map((cellToExecute) => this.executeIndividualCell(model, document, cellToExecute, nb, token))
         );
     }
-
+    public cancelPendingExecutions(document: NotebookDocument): void {
+        this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel());
+    }
     private async executeIndividualCell(
         model: INotebookModel,
         document: NotebookDocument,
         cell: NotebookCell,
+        nb: INotebook,
         token: CancellationToken
     ): Promise<void> {
         if (token.isCancellationRequested) {
             return;
         }
-        const metadata = model.metadata;
-        const nb = await this.notebookProvider.getOrCreateNotebook({
-            identity: document.uri,
-            metadata,
-            disableUI: false,
-            getOnly: false
-        });
 
-        if (!nb) {
-            throw new Error('Unable to get Notebook object to run cell');
+        // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).
+        const cancelExecution = new CancellationTokenSource();
+        if (!this.pendingExecutionCancellations.has(document.uri.fsPath)) {
+            this.pendingExecutionCancellations.set(document.uri.fsPath, []);
         }
+        // If kernel is restarted while executing, then abort execution.
+        const cancelExecutionCancellation = new CancellationTokenSource();
+        this.pendingExecutionCancellations.get(document.uri.fsPath)?.push(cancelExecutionCancellation);
+
+        // Replace token with a wrapped cancellation, which will wrap cancellation due to restarts.
+        const wrappedToken = wrapCancellationTokens(token, cancelExecutionCancellation.token, cancelExecution.token);
+        const disposable = nb?.onKernelRestarted(() => {
+            cancelExecutionCancellation.cancel();
+            disposable.dispose();
+        });
 
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: How can nb be null?
@@ -81,7 +125,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         const deferred = createDeferred();
         const stopWatch = new StopWatch();
 
-        token.onCancellationRequested(() => {
+        wrappedToken.onCancellationRequested(() => {
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: Is this the right thing to do?
             // I think it is, as we have a stop button.
@@ -92,9 +136,12 @@ export class NotebookExecutionService implements INotebookExecutionService {
             deferred.resolve();
             cell.metadata.runState = NotebookCellRunState.Idle;
 
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: TImeout value.
-            nb?.interruptKernel(1_000).ignoreErrors();
+            // Interrupt kernel only if original cancellation was cancelled.
+            if (token.isCancellationRequested) {
+                // tslint:disable-next-line: no-suspicious-comment
+                // TODO: TImeout value.
+                nb?.interruptKernel(1_000).ignoreErrors();
+            }
         });
 
         cell.metadata.runStartTime = new Date().getTime();
@@ -108,12 +155,13 @@ export class NotebookExecutionService implements INotebookExecutionService {
             // Similarly we might want to handle deletions.
             throw new Error('Unable to find corresonding Cell in Model');
         }
+        let subscription: Subscription | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
             const observable = nb.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
-            observable?.subscribe(
+            subscription = observable?.subscribe(
                 (cells) => {
-                    if (token.isCancellationRequested) {
+                    if (wrappedToken.isCancellationRequested) {
                         return;
                     }
                     const rawCellOutput = cells
@@ -129,7 +177,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     deferred.resolve();
                 },
                 () => {
-                    cell.metadata.runState = token.isCancellationRequested
+                    cell.metadata.runState = wrappedToken.isCancellationRequested
                         ? NotebookCellRunState.Idle
                         : NotebookCellRunState.Success;
                     cell.metadata.lastRunDuration = stopWatch.elapsedTime;
@@ -140,6 +188,14 @@ export class NotebookExecutionService implements INotebookExecutionService {
             await deferred.promise;
         } catch (ex) {
             updateCellWithErrorStatus(cell, ex);
+        } finally {
+            subscription?.unsubscribe(); // NOSONAR
+            // Ensure we remove the cancellation.
+            const cancellations = this.pendingExecutionCancellations.get(document.uri.fsPath);
+            const index = cancellations?.indexOf(cancelExecutionCancellation) ?? -1;
+            if (index >= 0) {
+                cancellations?.splice(index, 1);
+            }
         }
     }
     /**

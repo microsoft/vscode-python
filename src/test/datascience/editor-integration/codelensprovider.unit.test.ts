@@ -128,13 +128,11 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         targetCodeWatcher
             .setup((tc) => tc.getCodeLenses())
             .returns(() => [])
-            .verifiable(TypeMoq.Times.exactly(2));
-        targetCodeWatcher.setup((tc) => tc.getFileName()).returns(() => 'test.py');
-        targetCodeWatcher.setup((tc) => tc.getVersion()).returns(() => 1);
+            .verifiable(TypeMoq.Times.never());
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(() => targetCodeWatcher.object)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.never());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

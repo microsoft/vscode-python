@@ -13,14 +13,9 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
-// Temporarily use VSCode insiders, when running Notebook tests.
 const channel = (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
     ? 'insiders'
     : 'stable';
-if (channel === 'insiders') {
-    // Run only a subset of tests, those with the word insiders in it.
-    process.env.VSC_PYTHON_CI_TEST_GREP = 'Insiders';
-}
 
 function start() {
     console.log('*'.repeat(100));

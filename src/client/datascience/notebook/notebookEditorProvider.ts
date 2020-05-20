@@ -4,18 +4,18 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument, NotebookDocumentChangeEvent, Uri } from 'vscode';
+import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
-import { IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { isUri } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { INotebookEditor, INotebookEditorProvider } from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
@@ -77,7 +77,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookExecutionService) private readonly executionService: INotebookExecutionService
+        @inject(INotebookExecutionService) private readonly executionService: INotebookExecutionService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
     ) {
         disposables.push(this);
     }
@@ -118,11 +122,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
+        if (this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
+            return this.notebooksWaitingToBeOpenedByUri.get(file.toString())!.promise;
+        }
+
         // Wait for editor to get opened up, vscode will notify when it is opened.
         // Further below.
-        if (!this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
-            this.notebooksWaitingToBeOpenedByUri.set(file.toString(), createDeferred<INotebookEditor>());
-        }
+        this.notebooksWaitingToBeOpenedByUri.set(file.toString(), createDeferred<INotebookEditor>());
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(file.toString())!;
 
         // Tell VSC to open the notebook, at which point it will fire a callback when a notebook document has been opened.
@@ -173,7 +179,18 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
-            editor = new NotebookEditor(model, doc, this.vscodeNotebook, this.executionService, this.commandManager);
+            const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
+            editor = new NotebookEditor(
+                model,
+                doc,
+                this.vscodeNotebook,
+                this.executionService,
+                this.commandManager,
+                notebookProvider,
+                this.statusProvider,
+                this.appShell,
+                this.configurationService
+            );
             this.onEditorOpened(editor);
         }
         if (!this.notebooksWaitingToBeOpenedByUri.get(uri.toString())) {
@@ -206,7 +223,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this.notebooksWaitingToBeOpenedByUri.delete(doc.uri.toString());
         }
     }
-    private async onDidChangeNotebookDocument(_e: NotebookDocumentChangeEvent): Promise<void> {
+    private async onDidChangeNotebookDocument(): Promise<void> {
         // Noop.
     }
 }

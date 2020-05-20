@@ -24,9 +24,12 @@ import {
     InputBoxOptions,
     MessageItem,
     MessageOptions,
+    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
+    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
+    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
+    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
-    NotebookDocumentChangeEvent,
     NotebookEditor,
     NotebookKernel,
     NotebookOutputRenderer,
@@ -1450,12 +1453,23 @@ export interface IClipboard {
     writeText(value: string): Promise<void>;
 }
 
+export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
+export type NotebookCellMoveEvent = { type: 'moveCell' } & VSCNotebookCellMoveEvent;
+export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
+export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
+
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
 
-    readonly onDidChangeNotebookDocument: Event<NotebookDocumentChangeEvent>;
+    readonly onDidChangeNotebookDocument: Event<
+        | NotebookCellsChangeEvent
+        | NotebookCellMoveEvent
+        | NotebookCellOutputsChangeEvent
+        | NotebookCellLanguageChangeEvent
+    >;
+    readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
     /**
      * Whether the current document is aCell.

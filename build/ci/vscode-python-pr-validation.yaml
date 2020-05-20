@@ -45,8 +45,8 @@ stages:
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
-            'VS Code Insider':
-              TestsToRun: 'testSingleWorkspaceInsiders'
+            'DataScience':
+              TestsToRun: 'testDataScience'
               NeedsPythonTestReqs: true
             'Smoke':
               TestsToRun: 'testSmoke'
