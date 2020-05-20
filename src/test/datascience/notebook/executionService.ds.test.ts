@@ -9,7 +9,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Subject } from 'rxjs';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationTokenSource, NotebookCellRunState } from 'vscode';
-import { IApplicationEnvironment, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { IConfigurationService, IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
