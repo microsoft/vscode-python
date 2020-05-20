@@ -18,40 +18,14 @@ import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 suite('IANHU DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let rawKernel: RawKernel;
-    //const connectionInfo = {
-    //shell_port: 57718,
-    //iopub_port: 57719,
-    //stdin_port: 57720,
-    //control_port: 57721,
-    //hb_port: 57722,
-    //ip: '127.0.0.1',
-    //key: 'c29c2121-d277576c2c035f0aceeb5068',
-    //transport: 'tcp',
-    //signature_scheme: 'hmac-sha256',
-    //kernel_name: 'python3',
-    //version: 5.1
-    //};
-    const connectionInfo1 = {
-        shell_port: 57719,
-        iopub_port: 57720,
-        stdin_port: 57718,
-        control_port: 57722,
-        hb_port: 57721,
+    const connectionInfo = {
+        shell_port: 57718,
+        iopub_port: 57719,
+        stdin_port: 57720,
+        control_port: 57721,
+        hb_port: 57722,
         ip: '127.0.0.1',
         key: 'c29c2121-d277576c2c035f0aceeb5068',
-        transport: 'tcp',
-        signature_scheme: 'hmac-sha256',
-        kernel_name: 'python3',
-        version: 5.1
-    };
-    const connectionInfo2 = {
-        shell_port: 57419,
-        iopub_port: 57420,
-        stdin_port: 57418,
-        control_port: 57422,
-        hb_port: 57421,
-        ip: '127.0.0.1',
-        key: 'b7cfa237-dd8c-4c9d-a826-8e0805c21c17',
         transport: 'tcp',
         signature_scheme: 'hmac-sha256',
         kernel_name: 'python3',
@@ -66,8 +40,7 @@ suite('IANHU DataScience raw kernel tests', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            //rawKernel = await connectToKernel(57718);
-            rawKernel = await connectToKernel2(connectionInfo1);
+            rawKernel = await connectToKernel(57718);
         }
     });
 
@@ -76,7 +49,13 @@ suite('IANHU DataScience raw kernel tests', () => {
         await ioc.dispose();
     });
 
-    async function connectToKernel2(targetConnectionInfo: any): Promise<RawKernel> {
+    async function connectToKernel(startPort: number): Promise<RawKernel> {
+        connectionInfo.stdin_port = startPort;
+        connectionInfo.shell_port = startPort + 1;
+        connectionInfo.iopub_port = startPort + 2;
+        connectionInfo.hb_port = startPort + 3;
+        connectionInfo.control_port = startPort + 4;
+
         // Find our jupyter interpreter
         const interpreter = await ioc
             .get<IInterpreterService>(IInterpreterService)
@@ -98,7 +77,7 @@ suite('IANHU DataScience raw kernel tests', () => {
         kernelProcess = new KernelProcess(
             ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
-            targetConnectionInfo as any,
+            connectionInfo as any,
             kernelSpec,
             undefined,
             interpreter
@@ -106,42 +85,6 @@ suite('IANHU DataScience raw kernel tests', () => {
         await kernelProcess.launch();
         return createRawKernel(kernelProcess, uuid());
     }
-    //async function connectToKernel(startPort: number): Promise<RawKernel> {
-    //connectionInfo.stdin_port = startPort;
-    //connectionInfo.shell_port = startPort + 1;
-    //connectionInfo.iopub_port = startPort + 2;
-    //connectionInfo.hb_port = startPort + 3;
-    //connectionInfo.control_port = startPort + 4;
-
-    //// Find our jupyter interpreter
-    //const interpreter = await ioc
-    //.get<IInterpreterService>(IInterpreterService)
-    //.getInterpreterDetails(ioc.getSettings().pythonPath);
-    //assert.ok(interpreter, 'No jupyter interpreter found');
-    //// Start our kernel
-    //const kernelSpec: IJupyterKernelSpec = {
-    //argv: [interpreter!.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
-    //metadata: {
-    //interpreter
-    //},
-    //display_name: '',
-    //env: undefined,
-    //language: 'python',
-    //name: '',
-    //path: interpreter!.path,
-    //id: uuid()
-    //};
-    //kernelProcess = new KernelProcess(
-    //ioc.get<IProcessServiceFactory>(IProcessServiceFactory),
-    //ioc.get<KernelDaemonPool>(KernelDaemonPool),
-    //connectionInfo as any,
-    //kernelSpec,
-    //undefined,
-    //interpreter
-    //);
-    //await kernelProcess.launch();
-    //return createRawKernel(kernelProcess, uuid());
-    //}
 
     async function disconnectFromKernel() {
         if (kernelProcess) {
@@ -212,8 +155,7 @@ suite('IANHU DataScience raw kernel tests', () => {
         assert.ok(executeResult, 'Result not found');
         await shutdown();
         await sleep(2500); // Give time for the shutdown to go across
-        //rawKernel = await connectToKernel(57418);
-        rawKernel = await connectToKernel2(connectionInfo2);
+        rawKernel = await connectToKernel(57418);
         replies = await requestExecute(rawKernel, 'a=1\na');
         executeResult = replies.find((r) => r.header.msg_type === 'execute_result');
         assert.ok(executeResult, 'Result not found');
