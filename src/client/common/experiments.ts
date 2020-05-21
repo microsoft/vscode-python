@@ -190,7 +190,7 @@ export class ExperimentsManager implements IExperimentsManager {
             remainingExpriments
                 .filter((experiment) => this.isUserInRange(experiment.min, experiment.max, experiment.salt))
                 .filter((experiment) => !this.userExperiments.some((existing) => existing.salt === experiment.salt))
-                .map((experiment) => this.userExperiments.push(experiment));
+                .forEach((experiment) => this.userExperiments.push(experiment));
         }
     }
 
