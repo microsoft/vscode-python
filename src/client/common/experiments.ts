@@ -150,6 +150,8 @@ export class ExperimentsManager implements IExperimentsManager {
     public populateUserExperiments(): void {
         this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
+            const remainingExpriments: ABExperiments = [];
+            // First process experiments in order of user preference (if they have opted out or opted in).
             for (const experiment of this.experimentStorage.value) {
                 // User cannot belong to NotebookExperiment if they are not using Insiders.
                 if (
@@ -176,13 +178,19 @@ export class ExperimentsManager implements IExperimentsManager {
                             expNameOptedInto: experiment.name
                         });
                         this.userExperiments.push(experiment);
-                    } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
-                        this.userExperiments.push(experiment);
+                    } else {
+                        remainingExpriments.push(experiment);
                     }
                 } catch (ex) {
                     traceError(`Failed to populate experiment list for experiment '${experiment.name}'`, ex);
                 }
             }
+
+            // Add users (based on algorithm) to experiments they haven't already opted out of or opted into.
+            remainingExpriments
+                .filter((experiment) => this.isUserInRange(experiment.min, experiment.max, experiment.salt))
+                .filter((experiment) => !this.userExperiments.some((existing) => existing.salt === experiment.salt))
+                .map((experiment) => this.userExperiments.push(experiment));
         }
     }
 

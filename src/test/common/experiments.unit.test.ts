@@ -843,6 +843,17 @@ suite('A/B experiments', () => {
         },
         {
             testName:
+                'User experiments list contains the experiment user has opened into and not the control experiment even if user is in the control experiment range',
+            experimentStorageValue: [
+                { name: 'control', salt: 'salt', min: 0, max: 100 },
+                { name: 'experiment', salt: 'salt', min: 0, max: 0 }
+            ],
+            hash: 8187,
+            experimentsOptedInto: ['experiment'],
+            expectedResult: [{ name: 'experiment', salt: 'salt', min: 0, max: 0 }]
+        },
+        {
+            testName:
                 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
