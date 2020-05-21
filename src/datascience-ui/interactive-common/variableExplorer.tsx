@@ -56,10 +56,20 @@ interface IGridRow {
     buttons: IButtonCellValue;
 }
 
+interface IVariableExplorerState {
+    height: number;
+    isResizing: boolean;
+}
+
 // tslint:disable:no-any
-export class VariableExplorer extends React.Component<IVariableExplorerProps> {
+export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
     private divRef: React.RefObject<HTMLDivElement>;
     private pageSize: number = -1;
+
+    // Used for handling resizing
+    private minHeight: number = 50;
+    private dragOffset: number = 50;
+    private initialHeight: number = 300;
 
     // These values keep track of variable requests so we don't make the same ones over and over again
     // Note: This isn't in the redux state because the requests will come before the state
@@ -80,6 +90,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
 
     constructor(prop: IVariableExplorerProps) {
         super(prop);
+
+        this.state = { height: this.initialHeight, isResizing: false };
+        this.handleResizeMouseDown = this.handleResizeMouseDown.bind(this);
+        this.handleResizeMouseUp = this.handleResizeMouseUp.bind(this);
+        this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
+        this.stopResize = this.stopResize.bind(this);
+
         this.gridColumns = [
             {
                 key: 'name',
@@ -132,6 +149,19 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         this.divRef = React.createRef<HTMLDivElement>();
     }
 
+    /*public componentDidMount() {
+        const variableExplorer: HTMLElement | null = document.getElementById('variable-panel');
+        this.setState({
+            height: variableExplorer!.offsetHeight
+        });
+        //document.addEventListener('mouseout', this.stopResize);
+    }*/
+
+    public componentWillUnmount() {
+        this.stopResize();
+        document.removeEventListener('mouseout', this.stopResize);
+    }
+
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
@@ -141,32 +171,49 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
             return true;
         }
+        if (this.state.isResizing) {
+            return true;
+        }
         return false;
     }
 
     public render() {
         const contentClassName = `variable-explorer-content`;
 
-        const fontSizeStyle: React.CSSProperties = {
-            fontSize: `${this.props.fontSize.toString()}px`
-        };
+        const explorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
+        const height = this.state.height;
+
+        // add properties to explorer styles if applicable
+        if (height && height !== 0) {
+            Object.assign(explorerStyles, { height: height });
+        }
+        if (this.state.isResizing) {
+            Object.assign(explorerStyles, { cursor: 'ns-resize' });
+        }
 
         return (
-            <div className="variable-explorer" ref={this.divRef} style={fontSizeStyle}>
-                <div className="variable-explorer-menu-bar">
-                    <label className="inputLabel variable-explorer-label">
-                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                    </label>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.closeVariableExplorer}
-                        className="variable-explorer-close-button"
-                        tooltip={getLocString('DataScience.close', 'Close')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
-                    </ImageButton>
+            <div id="variable-explorer-wrapper">
+                <div className="variable-explorer" id="variable-explorer" ref={this.divRef} style={explorerStyles}>
+                    <div className="variable-explorer-menu-bar">
+                        <label className="inputLabel variable-explorer-label">
+                            {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                        </label>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.closeVariableExplorer}
+                            className="variable-explorer-close-button"
+                            tooltip={getLocString('DataScience.close', 'Close')}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Cancel}
+                            />
+                        </ImageButton>
+                    </div>
+                    <div className={contentClassName}>{this.renderGrid()}</div>
                 </div>
-                <div className={contentClassName}>{this.renderGrid()}</div>
+                <div id="variable-divider" role="separator" onMouseDown={this.handleResizeMouseDown} />
             </div>
         );
     }
@@ -204,6 +251,47 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     />
                 </div>
             );
+        }
+    }
+
+    private stopResize() {
+        this.setState({
+            isResizing: false
+        });
+    }
+
+    private handleResizeMouseDown() {
+        this.setState({
+            isResizing: true
+        });
+        document.addEventListener('mouseup', this.handleResizeMouseUp);
+        document.addEventListener('mousemove', this.handleResizeMouseMove);
+    }
+
+    private handleResizeMouseUp() {
+        this.stopResize();
+        document.removeEventListener('mousemove', this.handleResizeMouseMove);
+        document.removeEventListener('mouseup', this.handleResizeMouseUp);
+    }
+
+    private handleResizeMouseMove(e: any) {
+        if (!this.state.isResizing) {
+            return; // exit if not in resize mode
+        }
+
+        const variablePanel: HTMLElement | null = document.getElementById('variable-explorer');
+        const parentOffset: Element | null = document.getElementById('variable-explorer-wrapper');
+        const relY: number = e.pageY - parentOffset!.scrollTop;
+        const addHeight: number = relY - variablePanel!.offsetHeight;
+        const updatedHeight: number = this.state.height + addHeight - this.dragOffset;
+
+        if (updatedHeight >= this.minHeight) {
+            this.setState({
+                height: updatedHeight
+            });
+        } else {
+            // don't update if height is too small
+            //this.stopResize();
         }
     }
 

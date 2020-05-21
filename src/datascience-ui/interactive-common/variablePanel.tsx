@@ -45,7 +45,6 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                         supportsDebugging={this.props.supportsDebugging}
                     />
                 </div>
-                <div id="variable-divider" />
             </div>
         );
     }
