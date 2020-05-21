@@ -85,7 +85,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             return;
         }
         this.hasNativeNotebookCells
-            .set((this.vscodeNotebook.activeNotebookEditor?.document?.cells?.length || 0) >= 0)
+            .set((this.vscodeNotebook.activeNotebookEditor?.document?.cells?.length || 0) > 0)
             .ignoreErrors();
     }
     private onDidChangeVSCodeNotebook() {
