@@ -2,7 +2,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IExtensionApi } from '../client/api';
+import type { IExtensionApi } from '../client/api';
 import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
