@@ -15,7 +15,7 @@ import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { requestExecute, requestInspect } from './rawKernelTestHelpers';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
-suite('IANHU DataScience raw kernel tests', () => {
+suite('DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let rawKernel: RawKernel;
     const connectionInfo = {
