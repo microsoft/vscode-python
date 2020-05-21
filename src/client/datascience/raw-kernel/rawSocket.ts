@@ -141,7 +141,12 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     ) {
         // tslint:disable-next-line: await-promise
         for await (const msg of readable) {
-            this.onIncomingMessage(channel, msg);
+            // Make sure to quit if we are disposed.
+            if (this.closed) {
+                break;
+            } else {
+                this.onIncomingMessage(channel, msg);
+            }
         }
     }
 
@@ -186,9 +191,15 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                     const serialized = this.serialize(message);
                     return Promise.all(this.receiveHooks.map((p) => p(serialized)));
                 })
-                .then(() => this.onmessage({ data: message, type: 'message', target: this }));
+                .then(() => this.fireOnMessage(message));
         } else {
-            this.msgChain = this.msgChain.then(() => this.onmessage({ data: message, type: 'message', target: this }));
+            this.msgChain = this.msgChain.then(() => this.fireOnMessage(message));
+        }
+    }
+
+    private fireOnMessage(message: any) {
+        if (!this.closed) {
+            this.onmessage({ data: message, type: 'message', target: this });
         }
     }
 
