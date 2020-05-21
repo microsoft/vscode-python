@@ -1121,7 +1121,7 @@ export interface IEventNamePropertyMapping {
          */
         lsStartup?: LanguageServerType;
         /**
-         * Used to track switch between LS and Jedi. Carries the final state after the switch.
+         * Used to track switch between language servers. Carries the final state after the switch.
          */
         switchTo?: LanguageServerType;
     };
