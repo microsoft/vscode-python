@@ -2,7 +2,7 @@
     margin: 5px;
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
-    overflow: scroll;
+    overflow: hidden;
 }
 
 #variable-explorer-data-grid {
