@@ -15,6 +15,8 @@ export interface IStartPageProps {
     testMode?: boolean;
 }
 
+// Front end of the Pyhton extension start page.
+// In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
     private doNotShowAgain = false;
     private releaseNotes: IReleaseNotesPackage = {
@@ -22,9 +24,11 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         notes: []
     };
     private postOffice: PostOffice = new PostOffice();
+    private iconClass: string;
 
     constructor(props: IStartPageProps) {
         super(props);
+        this.iconClass = this.props.baseTheme === 'vscode-dark' ? 'icon icon-dark' : 'icon icon-light';
     }
 
     public componentDidMount() {
@@ -56,7 +60,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon" onClick={this.openBlankNotebook} role="button">
+                    <div className={this.iconClass} onClick={this.openBlankNotebook} role="button">
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -95,7 +99,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon" role="button" onClick={this.createPythonFile}>
+                    <div className={this.iconClass} role="button" onClick={this.createPythonFile}>
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -120,7 +124,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                 </div>
                 <div className="row">
-                    <div className="icon" role="button" onClick={this.openInteractiveWindow}>
+                    <div className={this.iconClass} role="button" onClick={this.openInteractiveWindow}>
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
                             class="image-button-image"
@@ -183,15 +187,31 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
 
     // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
-        switch (msg) {
-            case StartPageMessages.SendReleaseNotes:
-                this.releaseNotes.date = payload.date;
-                this.releaseNotes.notes = payload.notes;
-                this.setState({});
-                break;
+        if (msg === StartPageMessages.SendReleaseNotes) {
+            this.releaseNotes.date = payload.date;
+            this.releaseNotes.notes = payload.notes;
+            this.setState({});
+        }
 
-            default:
-                break;
+        if (msg === StartPageMessages.UpdateSettings) {
+            let settings;
+            try {
+                settings = JSON.parse(payload);
+            } catch {
+                settings = undefined;
+            }
+
+            if (
+                settings &&
+                settings.extraSettings &&
+                settings.extraSettings.theme &&
+                (settings.extraSettings.theme as string).toLowerCase().includes('light')
+            ) {
+                this.iconClass = 'icon icon-light';
+            } else {
+                this.iconClass = 'icon icon-dark';
+            }
+            this.setState({});
         }
 
         return false;

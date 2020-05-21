@@ -16,8 +16,14 @@
     width: 45px;
     padding: 20px 25px 20px 25px;
     margin-right: 10px;
+}
+
+.icon-dark {
     background-color: #1a1a1a;
-    /* background-color: var(--vscode-activityBar-background); ??? */
+}
+
+.icon-light {
+    background-color: #efefef;
 }
 
 .icon:hover {

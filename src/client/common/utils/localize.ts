@@ -986,6 +986,7 @@ export namespace DataScience {
     export const documentation = localize('DataScience.startPage.documentation', 'Documentation');
     export const forTips = localize('DataScience.startPage.forTips', 'for tips and troubleshooting.');
     export const dontShowAgain = localize('DataScience.startPage.dontShowAgain', "Don't show this page again");
+    export const helloWorld = localize('DataScience.startPage.helloWorld', 'Hello world');
     export const runByLine = localize('DataScience.runByLine', 'Run by line');
     export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
     export const rawKernelSessionFailed = localize(

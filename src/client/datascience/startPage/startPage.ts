@@ -13,6 +13,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
+import { ExtensionChannel } from '../../common/insidersBuild/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -27,6 +28,8 @@ import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
+// Class that opens, disposes and handles messages and actions for the Python Extension Start Page.
+// It also runs when the extension activates.
 @injectable()
 export class StartPage extends WebViewHost<IStartPageMapping> implements IStartPage, IExtensionSingleActivationService {
     protected closedEvent: EventEmitter<IStartPage> = new EventEmitter<IStartPage>();
@@ -68,20 +71,22 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     public async activate(): Promise<void> {
         const settings = this.configuration.getSettings();
 
-        if (settings.showStartPage) {
-            // Use separate if's to try and avoid reading a file every time
+        if (settings.showStartPage && settings.insidersChannel === ExtensionChannel.off) {
+            // extesionVersionChanged() reads CHANGELOG.md
+            // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();
 
             if (firstTimeOrUpdate) {
                 this.firstTime = true;
-                // tslint:disable-next-line: no-floating-promises
-                this.open();
+                this.open().ignoreErrors();
             }
         }
     }
 
     public dispose(): Promise<void> {
-        super.dispose();
+        if (!this.isDisposed) {
+            super.dispose();
+        }
         return this.close();
     }
 
@@ -123,8 +128,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 if (savedVersion) {
                     await this.notebookEditorProvider.createNew();
                 } else {
-                    // tslint:disable-next-line: no-floating-promises
-                    this.openSampleNotebook();
+                    this.openSampleNotebook().ignoreErrors();
                 }
                 break;
             case StartPageMessages.OpenBlankPythonFile:
@@ -140,7 +144,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
                 const doc2 = await this.documentManager.openTextDocument({
                     language: 'python',
-                    content: '#%%\nprint("Hello world")'
+                    content: `#%%\nprint("${localize.DataScience.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
                 await this.commandManager.executeCommand(Commands.ShowHistoryPane);
@@ -162,8 +166,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
                 this.setTelemetryFlags();
 
-                // tslint:disable-next-line: no-floating-promises
-                this.openSampleNotebook();
+                this.openSampleNotebook().ignoreErrors();
                 break;
             case StartPageMessages.OpenFileBrowser:
                 sendTelemetryEvent(Telemetry.StartPageOpenFileBrowser);
@@ -193,10 +196,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         super.onMessage(message, payload);
     }
 
+    // This gets the most recent Enhancements and date from CHANGELOG.md
     private async handleReleaseNotesRequest() {
         const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
-        const changelogEnding = changelog.indexOf('### Fixes');
-        const startOfLog = changelog.substring(0, changelogEnding);
+        const changelogBeginning = changelog.indexOf('### Enhancements');
+        const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
+        const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
 
         const whiteSpace = ' ';
         const dateEnd = startOfLog.indexOf(')');

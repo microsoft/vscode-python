@@ -519,6 +519,7 @@
     "DataScience.startPage.documentation": "Documentation",
     "DataScience.startPage.forTips": "for tips and troubleshooting.",
     "DataScience.startPage.dontShowAgain": "Don't show this page again",
+    "DataScience.startPage.helloWorld": "Hello world",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed.",
     "DataScience.runByLine": "Run by line",
     "DataScience.continueRunByLine": "Stop",
