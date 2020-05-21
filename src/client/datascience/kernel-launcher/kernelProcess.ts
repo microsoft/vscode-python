@@ -181,7 +181,8 @@ export class KernelProcess implements IKernelProcess {
             newConnectionArgs.push(`--log-level=10`);
         }
 
-        // We still put in the tmp name to make sure the kernel picks a valid connection file name.
+        // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
+        // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
         newConnectionArgs.push(`--f=${tmp.tmpNameSync({ postfix: '.json' })}`);
 
         return newConnectionArgs;
