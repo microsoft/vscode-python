@@ -3,7 +3,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { sleep } from '../client/common/utils/async';
 import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
@@ -12,6 +11,7 @@ import {
     setPythonPathInWorkspaceRoot
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
+import { sleep } from './core';
 
 export * from './constants';
 export * from './ciConstants';
