@@ -40,7 +40,7 @@ import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
-suite('DataScience Debugger tests', () => {
+suite('IANHU DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
     const postDisposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
@@ -170,6 +170,14 @@ suite('DataScience Debugger tests', () => {
         // Debug this code. We should either hit the breakpoint or stop on entry
         const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
             let breakPromise = createDeferred<void>();
+
+            let newLensPromise = createDeferred<void>();
+            let newLensDispose;
+            const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+            if (codeLensProvider.onDidChangeCodeLenses) {
+                newLensDispose = codeLensProvider.onDidChangeCodeLenses(() => newLensPromise.resolve());
+            }
+
             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
@@ -184,7 +192,10 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
 
+                await waitForPromise(newLensPromise.promise, 10_000);
+
                 verifyCodeLenses(expectedBreakLine);
+                newLensDispose?.dispose();
 
                 // Step if allowed
                 if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
@@ -205,10 +216,18 @@ suite('DataScience Debugger tests', () => {
                     stepAndVerify();
                 }
 
+                newLensPromise = createDeferred<void>();
+                if (codeLensProvider.onDidChangeCodeLenses) {
+                    newLensDispose = codeLensProvider.onDidChangeCodeLenses(() => newLensPromise.resolve());
+                }
+
                 // Verify break location
                 await jupyterDebuggerService!.continue();
 
+                await waitForPromise(newLensPromise.promise, 10_000);
+
                 verifyCodeLenses(undefined);
+                newLensDispose?.dispose();
             }
         });
 
