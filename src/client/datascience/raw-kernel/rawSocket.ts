@@ -173,8 +173,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private onIncomingMessage(channel: string, data: any) {
-        // Decode the message
-        const message = wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any;
+        // Decode the message if still possible.
+        const message = this.closed
+            ? {}
+            : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
 
         // Make sure it has a channel on it
         message.channel = channel;
