@@ -24,6 +24,9 @@ import * as path from 'path';
 import * as request from 'request';
 import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
 import { unzip } from './common';
+import { initializeLogger } from './testLogger';
+
+initializeLogger();
 
 const NamedRegexp = require('named-js-regexp');
 const del = require('del');

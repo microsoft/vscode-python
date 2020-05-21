@@ -57,3 +57,5 @@ function monkeypatchConsole() {
         };
     }
 }
+
+module.exports = initializeLogger;
