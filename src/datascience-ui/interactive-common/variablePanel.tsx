@@ -30,22 +30,18 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
 
     public render() {
         return (
-            <div id="variable-panel">
-                <div id="variable-panel-padding">
-                    <VariableExplorer
-                        fontSize={this.props.fontSize}
-                        variables={this.props.variables}
-                        debugging={this.props.debugging}
-                        baseTheme={this.props.baseTheme}
-                        skipDefault={this.props.skipDefault}
-                        showDataExplorer={this.props.showDataExplorer}
-                        closeVariableExplorer={this.props.closeVariableExplorer}
-                        pageIn={this.props.pageIn}
-                        executionCount={this.props.executionCount}
-                        supportsDebugging={this.props.supportsDebugging}
-                    />
-                </div>
-            </div>
+            <VariableExplorer
+                fontSize={this.props.fontSize}
+                variables={this.props.variables}
+                debugging={this.props.debugging}
+                baseTheme={this.props.baseTheme}
+                skipDefault={this.props.skipDefault}
+                showDataExplorer={this.props.showDataExplorer}
+                closeVariableExplorer={this.props.closeVariableExplorer}
+                pageIn={this.props.pageIn}
+                executionCount={this.props.executionCount}
+                supportsDebugging={this.props.supportsDebugging}
+            />
         );
     }
 }
