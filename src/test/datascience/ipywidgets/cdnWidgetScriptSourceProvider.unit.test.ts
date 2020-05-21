@@ -143,14 +143,9 @@ suite('DataScience - ipywidget - CDN', () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
                     let baseUrl = '';
-                    let getUrl = '';
                     let scriptUri = '';
                     setup(() => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        getUrl =
-                            cdn === 'unpkg.com'
-                                ? `${moduleName}@${moduleVersion}/dist/index`
-                                : `${moduleName}@${moduleVersion}/dist/index.js`;
                         scriptUri = generateScriptName(moduleName, moduleVersion);
                     });
                     teardown(() => {
@@ -164,7 +159,7 @@ suite('DataScience - ipywidget - CDN', () => {
                         nock(baseUrl)
                             .log(console.log)
 
-                            .get(`/${getUrl}`)
+                            .get(/.*/)
                             .reply(200, () => {
                                 downloadCount += 1;
                                 return createStreamFromString('foo');
@@ -190,7 +185,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl).log(console.log).get(`/${getUrl}`).replyWithError('404');
+                        nock(baseUrl).log(console.log).get(/.*/).replyWithError('404');
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -213,7 +208,7 @@ suite('DataScience - ipywidget - CDN', () => {
                             return false;
                         });
                         nock(baseUrl)
-                            .get(`/${getUrl}`)
+                            .get(/.*/)
                             .reply(200, () => {
                                 return createStreamFromString('foo');
                             });
@@ -230,10 +225,10 @@ suite('DataScience - ipywidget - CDN', () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
                         when(httpClient.exists(anything())).thenResolve(true);
-                        nock(baseUrl).log(console.log).get(`/${getUrl}`).twice().replyWithError('Not found');
+                        nock(baseUrl).log(console.log).get(/.*/).twice().replyWithError('Not found');
                         nock(baseUrl)
                             .log(console.log)
-                            .get(`/${getUrl}`)
+                            .get(/.*/)
                             .thrice()
                             .reply(200, () => {
                                 retryCount = 3;
