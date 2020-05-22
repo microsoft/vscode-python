@@ -37,7 +37,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 // tslint:disable:max-func-body-length no-any
 
 suite('Language Server Activation - ActivationService', () => {
-    [LanguageServerType.Jedi, LanguageServerType.Node].forEach((languageServerType) => {
+    [LanguageServerType.Jedi, LanguageServerType.Microsoft].forEach((languageServerType) => {
         suite(
             `Test activation - ${
                 languageServerType === LanguageServerType.Jedi ? 'Jedi is enabled' : 'Jedi is disabled'
@@ -155,7 +155,7 @@ suite('Language Server Activation - ActivationService', () => {
                         lsSupported &&
                         activatorName !== LanguageServerType.Jedi
                     ) {
-                        activatorName = LanguageServerType.Node;
+                        activatorName = LanguageServerType.Microsoft;
                     }
 
                     let diagnostics: IDiagnostic[];
@@ -200,7 +200,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                         .verifiable(TypeMoq.Times.once());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -229,7 +229,7 @@ suite('Language Server Activation - ActivationService', () => {
                     // Toggle the value in the setting and invoke the callback.
                     languageServerType =
                         languageServerType === LanguageServerType.Jedi
-                            ? LanguageServerType.Node
+                            ? LanguageServerType.Microsoft
                             : LanguageServerType.Jedi;
                     await callbackHandler(event.object);
 
@@ -239,7 +239,7 @@ suite('Language Server Activation - ActivationService', () => {
                 }
 
                 test('LS is supported', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -250,7 +250,7 @@ suite('Language Server Activation - ActivationService', () => {
                     await testActivation(activationService, activator, true);
                 });
                 test('LS is not supported', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -262,7 +262,7 @@ suite('Language Server Activation - ActivationService', () => {
                 });
 
                 test('Activator must be activated', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -273,7 +273,7 @@ suite('Language Server Activation - ActivationService', () => {
                     await testActivation(activationService, activator);
                 });
                 test('Activator must be deactivated', async () => {
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -311,7 +311,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                         .verifiable(TypeMoq.Times.once());
 
-                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Node);
+                    pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Microsoft);
                     const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(
                         serviceContainer.object,
@@ -798,7 +798,7 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => LanguageServerType.Jedi)
                 .verifiable(TypeMoq.Times.exactly(2));
             state
-                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Node)))
+                .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Microsoft)))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
 
@@ -807,7 +807,7 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Node);
+            await activationService.sendTelemetryForChosenLanguageServer(LanguageServerType.Microsoft);
 
             state.verifyAll();
         });
@@ -815,7 +815,7 @@ suite('Language Server Activation - ActivationService', () => {
             state.reset();
             state
                 .setup((s) => s.value)
-                .returns(() => LanguageServerType.Node)
+                .returns(() => LanguageServerType.Microsoft)
                 .verifiable(TypeMoq.Times.exactly(2));
             state
                 .setup((s) => s.updateValue(TypeMoq.It.isValue(LanguageServerType.Jedi)))

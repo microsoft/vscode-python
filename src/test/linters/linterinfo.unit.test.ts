@@ -51,7 +51,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            languageServer: LanguageServerType.Node
+            languageServer: LanguageServerType.Microsoft
         } as any);
 
         const pythonConfig = {

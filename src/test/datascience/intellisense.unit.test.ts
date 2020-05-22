@@ -69,7 +69,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         const variableProvider = mock(JupyterVariables);
 
-        pythonSettings.languageServer = LanguageServerType.Node;
+        pythonSettings.languageServer = LanguageServerType.Microsoft;
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem

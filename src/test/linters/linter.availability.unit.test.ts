@@ -62,9 +62,9 @@ suite('Linter Availability Provider tests', () => {
         workspaceServiceMock.verifyAll();
     });
 
-    test('Availability feature is enabled when global default for languageServer is Node.', async () => {
+    test('Availability feature is enabled when global default for languageServer is Microsoft.', async () => {
         // set expectations
-        const languageServerValue = LanguageServerType.Node;
+        const languageServerValue = LanguageServerType.Microsoft;
         const expectedResult = true;
 
         // arrange
@@ -386,7 +386,7 @@ suite('Linter Availability Provider tests', () => {
     // Options to test the implementation of the IAvailableLinterActivator.
     // All options default to values that would otherwise allow the prompt to appear.
     class AvailablityTestOverallOptions {
-        public languageServerValue = LanguageServerType.Node;
+        public languageServerValue = LanguageServerType.Microsoft;
         public pylintUserEnabled?: boolean;
         public pylintWorkspaceEnabled?: boolean;
         public pylintWorkspaceFolderEnabled?: boolean;

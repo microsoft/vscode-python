@@ -115,7 +115,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     public async enableLanguageServer(): Promise<void> {
         await this.configuration.updateSetting(
             'languageServer',
-            LanguageServerType.Node,
+            LanguageServerType.Microsoft,
             undefined,
             ConfigurationTarget.Global
         );

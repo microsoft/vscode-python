@@ -32,7 +32,7 @@ class TestRunner {
     }
     private async enableLanguageServer(enable: boolean) {
         // When running smoke tests, we won't have access to unbundled files.
-        const settings = `{ "python.languageServer": ${enable ? '"Node"' : '"Jedi"'} }`;
+        const settings = `{ "python.languageServer": ${enable ? '"Microsoft"' : '"Jedi"'} }`;
         await fs.ensureDir(
             path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
         );
