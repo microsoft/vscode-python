@@ -114,6 +114,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             let ast = parseTree(fileContent);
             let jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
             const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
+            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
             const formattingOptions: FormattingOptions = {
                 tabSize: 4,
                 insertSpaces: true
@@ -124,9 +125,14 @@ export class UpdateTestSettingService implements IExtensionActivationService {
                 // `jediEnabled` is missing or is true. Default is true, so assume Jedi.
                 edits = modify(fileContent, languageServerPath, LanguageServerType.Jedi, { formattingOptions });
             } else {
-                // `jediEnabled` is false. Set `languageServer` to Microsoft.
-                edits = modify(fileContent, languageServerPath, LanguageServerType.Microsoft, { formattingOptions });
+                // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
+                if (!languageServerNode) {
+                    edits = modify(fileContent, languageServerPath, LanguageServerType.Microsoft, {
+                        formattingOptions
+                    });
+                }
             }
+
             fileContent = applyEdits(fileContent, edits);
             // Remove jediEnabled
             ast = parseTree(fileContent);
