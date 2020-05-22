@@ -170,6 +170,42 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
     }
 }
 
+gulp.task('compile-ipywidgets', async () => {
+    await buildIPyWidgets();
+});
+
+gulp.task('compile-notebooks', async () => {
+    await spawnAsync(
+        'npm',
+        [
+            'run',
+            'webpack',
+            '--',
+            '--config',
+            './build/webpack/webpack.datascience-ui-notebooks.config.js',
+            '--mode',
+            'production'
+        ],
+        webpackEnv
+    );
+});
+
+gulp.task('compile-viewers', async () => {
+    await spawnAsync(
+        'npm',
+        [
+            'run',
+            'webpack',
+            '--',
+            '--config',
+            './build/webpack/webpack.datascience-ui-viewers.config.js',
+            '--mode',
+            'production'
+        ],
+        webpackEnv
+    );
+});
+
 gulp.task('compile-webviews', async () => {
     await buildDataScienceUI(false);
 });
@@ -351,7 +387,7 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
-gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
+gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
 
 gulp.task('installPythonRequirements', async () => {
     const args = [

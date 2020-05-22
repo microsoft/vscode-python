@@ -78,7 +78,7 @@ module.exports = [
         entry: path.join(outDir, 'index.js'),
         output: {
             filename: 'ipywidgets.js',
-            path: path.resolve(outDir, 'dist'),
+            path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebooks'),
             publicPath: 'built/',
             library: 'vscIPyWidgets',
             libraryTarget: 'window'
