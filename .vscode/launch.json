@@ -16,7 +16,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],
@@ -183,7 +183,7 @@
             ]
         },
         {
-            "name": "Tests (DataScience, *.ds.test.ts)",
+            "name": "Tests (DataScience, *.ds.test.ts)c",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -195,7 +195,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_GREP": "xxx", // Modify this to run a subset of the single workspace tests
                 "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "ds.test"
             },
@@ -204,7 +204,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ]

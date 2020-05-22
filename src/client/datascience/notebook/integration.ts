@@ -11,6 +11,7 @@ import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../
 import { noop } from '../../common/utils/misc';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookKernel } from './notebookKernel';
+import { NotebookOutputRenderer } from './renderer';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -27,7 +28,8 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel
+        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel,
+        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
@@ -77,6 +79,32 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         );
         this.disposables.push(
             this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+        );
+        this.disposables.push(
+            this.vscNotebook.registerNotebookOutputRenderer(
+                'jupyter-notebook-renderer',
+                {
+                    type: 'display_data',
+                    subTypes: [
+                        'application/geo+json',
+                        'application/vdom.v1+json',
+                        'application/vnd.dataresource+json',
+                        'application/vnd.plotly.v1+json',
+                        'application/vnd.vega.v2+json',
+                        'application/vnd.vega.v3+json',
+                        'application/vnd.vega.v4+json',
+                        'application/vnd.vega.v5+json',
+                        'application/vnd.vegalite.v1+json',
+                        'application/vnd.vegalite.v2+json',
+                        'application/vnd.vegalite.v3+json',
+                        'application/x-nteract-model-debug+json',
+                        'image/gif',
+                        'text/latex',
+                        'text/vnd.plotly.v1+html'
+                    ]
+                },
+                this.renderer
+            )
         );
     }
 }
