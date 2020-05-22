@@ -6,7 +6,7 @@
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
-    "languageServerVersion": "0.5.30",
+    "languageServerVersionV1": "0.5.30",
     "publisher": "ms-python",
     "enableProposedApi": false,
     "author": {
