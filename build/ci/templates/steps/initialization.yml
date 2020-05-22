@@ -19,6 +19,7 @@ parameters:
   sqlite: 'false'
   installVSCEorNPX: 'true'
   enableGather: 'false'
+  installpip: 'true'
 
 steps:
   - bash: |
@@ -83,7 +84,7 @@ steps:
       path: $(npm_config_cache)
       restoreKeys: |
         npm | $(Agent.OS)
-      displayName: Cache npm
+    displayName: Cache npm
 
   - task: Npm@1
     displayName: 'npm ci'
@@ -132,6 +133,7 @@ steps:
 
   - bash: python -m pip install -U pip
     displayName: 'Install pip'
+    condition: and(succeeded(), eq('${{ parameters.installpip }}', 'true'))
   # # Show all versions installed/available on PATH if in verbose mode.
   # # Example command line (windows pwsh):
   # # > Write-Host Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
