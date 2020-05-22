@@ -18,7 +18,7 @@ const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 
 // Any build on the CI is considered production mode.
-const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 
 function getEntry(isNotebook) {
     if (isNotebook) {
@@ -63,30 +63,30 @@ function getPlugins(isNotebook) {
             })
         );
     } else {
-        const definePlugin = new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        });
+    const definePlugin = new webpack.DefinePlugin({
+        'process.env': {
+            NODE_ENV: JSON.stringify('production')
+        }
+    });
 
-        plugins.push(
-            ...(isProdBuild ? [definePlugin] : []),
-            ...[
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/plot/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'plotViewer'],
-                    filename: 'index.plotViewer.html'
-                }),
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/data-explorer/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'dataExplorer'],
-                    filename: 'index.dataExplorer.html'
-                })
-            ]
-        );
-    }
+    plugins.push(
+        ...(isProdBuild ? [definePlugin] : [])
+        //         ...[
+        //             new HtmlWebpackPlugin({
+        //                 template: 'src/datascience-ui/plot/index.html',
+        //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
+        //                 chunks: ['commons', 'plotViewer'],
+        //                 filename: 'index.plotViewer.html'
+        //             }),
+        //             new HtmlWebpackPlugin({
+        //                 template: 'src/datascience-ui/data-explorer/index.html',
+        //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
+        //                 chunks: ['commons', 'dataExplorer'],
+        //                 filename: 'index.dataExplorer.html'
+        //             })
+        //         ]
+    );
+    // }
 
     return plugins;
 }
@@ -99,6 +99,10 @@ function buildConfiguration(isNotebook) {
         // Include files only for notebooks.
         filesToCopy.push(
             ...[
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
                 {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
                     to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'common', 'node_modules')

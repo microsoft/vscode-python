@@ -97,6 +97,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                         'application/vnd.vegalite.v1+json',
                         'application/vnd.vegalite.v2+json',
                         'application/vnd.vegalite.v3+json',
+                        'application/vnd.vegalite.v4+json',
                         'application/x-nteract-model-debug+json',
                         'image/gif',
                         'text/latex',

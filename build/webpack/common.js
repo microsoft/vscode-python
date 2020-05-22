@@ -41,6 +41,7 @@ exports.nodeModulesToExternalize = [
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
+    process.env.VSC_PYTHON_FORCE_ANALYZER = '1';
     // Only run the analyzer on a local machine or if required
     if (!constants.isCI || process.env.VSC_PYTHON_FORCE_ANALYZER) {
         plugins.push(
