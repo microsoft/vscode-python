@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
@@ -201,10 +201,62 @@ suite('Application Diagnostics - Check Test Settings', () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);
             when(fs.writeFile(__filename, anything())).thenResolve();
 
-            await diagnosticService.fixSettingInFile(__filename);
+            const actualContent = await diagnosticService.fixSettingInFile(__filename, false);
 
             verify(fs.readFile(__filename)).once();
-            verify(fs.writeFile(__filename, item.expectedContents)).once();
+            verify(fs.writeFile(__filename, anyString())).once();
+            expect(nows(actualContent)).to.be.equal(nows(item.expectedContents));
         });
     });
+
+    [
+        {
+            testTitle: 'No jediEnabled setting.',
+            contents: '{}',
+            expectedContent: '{ "python.languageServer": "Jedi" }'
+        },
+        {
+            testTitle: 'jediEnabled: true, no languageServer setting',
+            contents: '{ "python.jediEnabled": true }',
+            expectedContent: '{"python.languageServer": "Jedi"}'
+        },
+        {
+            testTitle: 'jediEnabled: true, languageServer setting present',
+            contents: '{ "python.jediEnabled": true }',
+            expectedContent: '{"python.languageServer": "Jedi"}'
+        },
+        {
+            testTitle: 'jediEnabled: false, no languageServer setting',
+            contents: '{ "python.jediEnabled": false }',
+            expectedContent: '{"python.languageServer": "Microsoft"}'
+        },
+        {
+            testTitle: 'jediEnabled: false, languageServer is Microsoft',
+            contents: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft" }',
+            expectedContent: '{"python.languageServer": "Microsoft"}'
+        },
+        {
+            testTitle: 'jediEnabled: false, languageServer is None',
+            contents: '{ "python.jediEnabled": false, "python.languageServer": "None" }',
+            expectedContent: '{"python.languageServer": "None"}'
+        },
+        {
+            testTitle: 'jediEnabled: false, languageServer is Jedi',
+            contents: '{ "python.jediEnabled": false, "python.languageServer": "Jedi" }',
+            expectedContent: '{"python.languageServer": "Jedi"}'
+        }
+    ].forEach((item) => {
+        test(item.testTitle, async () => {
+            when(fs.readFile(__filename)).thenResolve(item.contents);
+
+            const actualContent = await diagnosticService.fixSettingInFile(__filename);
+
+            expect(nows(actualContent)).to.equal(nows(item.expectedContent));
+            verify(fs.readFile(__filename)).once();
+        });
+    });
+
+    function nows(s: string): string {
+        return s.replace(/\s*/g, '');
+    }
 });

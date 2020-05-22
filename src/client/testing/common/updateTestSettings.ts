@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
@@ -13,6 +13,8 @@ import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO: rename the class since it is not used just for test settings
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
     constructor(
@@ -50,7 +52,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         return result.filter((item) => item.needsFixing).map((item) => item.file);
     }
     @swallowExceptions('Failed to update settings.json')
-    public async fixSettingInFile(filePath: string) {
+    public async fixSettingInFile(filePath: string, fixLanguageServer = true): Promise<string> {
         let fileContents = await this.fs.readFile(filePath);
 
         const setting = new RegExp('"python\\.unitTest', 'g');
@@ -72,8 +74,46 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
         fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
 
+        if (fixLanguageServer) {
+            // `python.jediEnabled` is deprecated:
+            //   - `true` or missing then set to `languageServer: Jedi`.
+            //   - `false` and `languageServer` is present, do nothing.
+            //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
+            // `jediEnabled` is then removed.
+            try {
+                const settings = JSON.parse(fileContents);
+                let changed = false;
+
+                if (settings[`python.jediEnabled`] === undefined) {
+                    // `jediEnabled` is missing. Default was true, so assume Jedi.
+                    if (!settings['python.languageServer']) {
+                        settings['python.languageServer'] = LanguageServerType.Jedi;
+                        changed = true;
+                    }
+                } else {
+                    if (settings[`python.jediEnabled`]) {
+                        settings['python.languageServer'] = LanguageServerType.Jedi;
+                    } else {
+                        // `jediEnabled` is false. If no `languageServer`, set it to Microsoft.
+                        if (!settings['python.languageServer']) {
+                            settings['python.languageServer'] = LanguageServerType.Microsoft;
+                        }
+                    }
+                    settings[`python.jediEnabled`] = undefined;
+                    changed = true;
+                }
+
+                if (changed) {
+                    fileContents = JSON.stringify(settings, null, 4);
+                }
+                // tslint:disable-next-line:no-empty
+            } catch {}
+        }
+
         await this.fs.writeFile(filePath, fileContents);
+        return fileContents;
     }
+
     public async doesFileNeedToBeFixed(filePath: string) {
         try {
             const contents = await this.fs.readFile(filePath);
