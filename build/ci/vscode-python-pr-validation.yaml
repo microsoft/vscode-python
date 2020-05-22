@@ -28,6 +28,7 @@ stages:
   # required value is "TestsToRun".
 
   - stage: Compile
+    dependsOn: []
     jobs:
       - template: templates/jobs/dev_compile.yml
 

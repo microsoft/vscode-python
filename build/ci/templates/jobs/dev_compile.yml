@@ -12,11 +12,55 @@ jobs:
           workingDirectory: $(Build.SourcesDirectory)
           compile: 'false'
           installVSCEorNPX: 'false'
+          installpip: 'false'
 
       - task: Gulp@0
         displayName: 'Compile and check for errors'
         inputs:
           targets: 'compile'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/node_modules
+          artifactName: Extension
+
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          archiveType: 'zip' # Options: zip, 7z, tar, wim
+          archiveFile: '$(Build.SourcesDirectory)/extension.zip' 
+          replaceExistingArchive: true 
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/extension.zip
+          artifactName: ExtensionZip
+
+      - task: DeleteFiles@1
+        inputs:
+          SourceFolder: $(Build.SourcesDirectory)/out
+          Contents: '*' 
+          RemoveSourceFolder: 'true'
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          artifact: ExtensionZip
+          path: $(Build.SourcesDirectory)
+          
+      - bash: |
+          ls
+        displayName: 'Copy ./.nyc_output'
+
+      - task: ExtractFiles@1
+        inputs:
+          archiveFilePatterns: '*.zip' 
+          destinationFolder: $(Build.SourcesDirectory)/out
+          cleanDestinationFolder: false
+          
+      - bash: |
+          cd out
+          ls
+        displayName: 'Copy ./.nyc_output'
 
   - job: IPyWidgets
     pool:
@@ -28,11 +72,30 @@ jobs:
           workingDirectory: $(Build.SourcesDirectory)
           compile: 'false'
           installVSCEorNPX: 'false'
+          installpip: 'false'
 
       - task: Gulp@0
         displayName: 'Compile and check for errors'
         inputs:
           targets: 'compile-ipywidgets'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/out
+          artifactName: IPyWidgets
+
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          archiveType: 'zip' # Options: zip, 7z, tar, wim
+          archiveFile: '$(Build.SourcesDirectory)/IPyWidets.zip' 
+          replaceExistingArchive: true 
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/IPyWidets.zip
+          artifactName: IPyWidetsZip
+
 
   - job: Notebbooks
     pool:
@@ -44,11 +107,32 @@ jobs:
           workingDirectory: $(Build.SourcesDirectory)
           compile: 'false'
           installVSCEorNPX: 'false'
+          installpip: 'false'
 
       - task: Gulp@0
         displayName: 'Compile and check for errors'
         inputs:
           targets: 'compile-notebooks'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/out
+          artifactName: Notebooks
+
+
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          archiveType: 'zip' # Options: zip, 7z, tar, wim
+          archiveFile: '$(Build.SourcesDirectory)/Notebooks.zip' 
+          replaceExistingArchive: true 
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/Notebooks.zip
+          artifactName: NotebooksZip
+
+
 
   - job: Viewers
     pool:
@@ -60,8 +144,29 @@ jobs:
           workingDirectory: $(Build.SourcesDirectory)
           compile: 'false'
           installVSCEorNPX: 'false'
+          installpip: 'false'
 
       - task: Gulp@0
         displayName: 'Compile and check for errors'
         inputs:
           targets: 'compile-viewers'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/out
+          artifactName: Viewers
+
+      - task: ArchiveFiles@2
+        inputs:
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          archiveType: 'zip' # Options: zip, 7z, tar, wim
+          archiveFile: '$(Build.SourcesDirectory)/Viewers.zip' 
+          replaceExistingArchive: true 
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(Build.SourcesDirectory)/Viewers.zip
+          artifactName: ViewersZip
+
+
+
