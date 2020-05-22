@@ -943,48 +943,32 @@ export namespace DataScience {
         'DataScience.startPage.createJupyterNotebook',
         'Create a Jupyter Notebook'
     );
-    export const use = localize('DataScience.startPage.use', '- Use "');
-    export const shiftCommandP = localize('DataScience.startPage.shiftCommandP', 'Shift + Command + P ');
-    export const toOpenThe = localize('DataScience.startPage.toOpenThe', ' to open the');
-    export const commandPalette = localize('DataScience.startPage.commandPalette', 'Command Palette');
-    export const type = localize('DataScience.startPage.type', '- Type "');
-    export const exploreOur = localize('DataScience.startPage.exploreOur', '- Explore our');
-    export const sampleNotebook = localize('DataScience.startPage.sampleNotebook', 'sample notebook');
-    export const toLearn = localize('DataScience.startPage.toLearn', 'to learn about notebook features');
+    export const notebookDescription = localize(
+        'DataScience.startPage.notebookDescription',
+        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+    );
     export const createAPythonFile = localize('DataScience.startPage.createAPythonFile', 'Create a Python File');
-    export const createANewFile = localize(
-        'DataScience.startPage.createANewFile',
-        '- Create a new file and use the .py extension'
+    export const pythonFileDescription = localize(
+        'DataScience.startPage.pythonFileDescription',
+        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
     );
-    export const openFileOrWorkspace = localize(
-        'DataScience.startPage.openFileOrWorkspace',
-        'Open a file or workspace'
-    );
-    export const continueWork = localize('DataScience.startPage.continueWork', 'to continue work');
     export const openInteractiveWindow = localize(
         'DataScience.startPage.openInteractiveWindow',
         'Open the interactive Window'
     );
     export const interactiveWindowDesc = localize(
         'DataScience.startPage.interactiveWindowDesc',
-        '- You can create cells on a python file by typing "#%%"'
-    );
-    export const interactiveWindowDesc2 = localize(
-        'DataScience.startPage.interactiveWindowDesc2',
-        '- Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+        '- You can create cells on a python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
     );
 
-    export const takeALook = localize('DataScience.startPage.takeALook', 'Take a look at our');
-    export const releaseNotes = localize('DataScience.startPage.releaseNotes', 'Release Notes');
-    export const toLearnMore = localize('DataScience.startPage.toLearnMore', 'to learn more about the latest features');
-    export const exploreMoreFeatures = localize(
-        'DataScience.startPage.exploreMoreFeatures',
-        'Explore more features in our'
+    export const releaseNotes = localize(
+        'DataScience.startPage.releaseNotes',
+        'Take a look at our <a class="link" href={0}>{1} Release Notes</a> to learn more about the latest features'
     );
-    export const tutorials = localize('DataScience.startPage.tutorials', 'Tutorials');
-    export const orCheck = localize('DataScience.startPage.orCheck', 'or check');
-    export const documentation = localize('DataScience.startPage.documentation', 'Documentation');
-    export const forTips = localize('DataScience.startPage.forTips', 'for tips and troubleshooting.');
+    export const exploreMoreFeatures = localize(
+        'DataScience.startPage.tutorialAndDoc',
+        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
+    );
     export const dontShowAgain = localize('DataScience.startPage.dontShowAgain', "Don't show this page again");
     export const helloWorld = localize('DataScience.startPage.helloWorld', 'Hello world');
     export const runByLine = localize('DataScience.runByLine', 'Run by line');

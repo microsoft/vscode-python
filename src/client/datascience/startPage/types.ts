@@ -8,12 +8,13 @@ export interface IStartPage {
 export interface IReleaseNotesPackage {
     date: string;
     notes: string[];
+    showAgainSetting: boolean;
 }
 
 export namespace StartPageMessages {
     export const Started = SharedMessages.Started;
     export const UpdateSettings = SharedMessages.UpdateSettings;
-    export const RequestReleaseNotes = 'RequestReleaseNotes';
+    export const RequestReleaseNotesAndShowAgainSetting = 'RequestReleaseNotesAndShowAgainSetting';
     export const SendReleaseNotes = 'SendReleaseNotes';
     export const OpenBlankNotebook = 'OpenBlankNotebook';
     export const OpenBlankPythonFile = 'OpenBlankPythonFile';
@@ -25,7 +26,7 @@ export namespace StartPageMessages {
 }
 
 export class IStartPageMapping {
-    public [StartPageMessages.RequestReleaseNotes]: IReleaseNotesPackage;
+    public [StartPageMessages.RequestReleaseNotesAndShowAgainSetting]: IReleaseNotesPackage;
     public [StartPageMessages.SendReleaseNotes]: IReleaseNotesPackage;
     public [StartPageMessages.Started]: never | undefined;
     public [StartPageMessages.UpdateSettings]: boolean;

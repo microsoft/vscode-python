@@ -116,7 +116,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     // tslint:disable-next-line: no-any
     public async onMessage(message: string, payload: any) {
         switch (message) {
-            case StartPageMessages.RequestReleaseNotes:
+            case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
                 await this.handleReleaseNotesRequest();
                 break;
             case StartPageMessages.OpenBlankNotebook:
@@ -198,22 +198,24 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     // This gets the most recent Enhancements and date from CHANGELOG.md
     private async handleReleaseNotesRequest() {
+        const settings = this.configuration.getSettings();
         const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
         const changelogBeginning = changelog.indexOf('### Enhancements');
         const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
         const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
 
         const whiteSpace = ' ';
-        const dateEnd = startOfLog.indexOf(')');
-        const dateBegin = startOfLog.indexOf('(');
-        const scrappedDate = startOfLog.substring(dateBegin + 1, dateEnd).split(whiteSpace);
+        const dateEnd = changelog.indexOf(')');
+        const dateBegin = changelog.indexOf('(');
+        const scrappedDate = changelog.substring(dateBegin + 1, dateEnd).split(whiteSpace);
 
         const scrappedNotes = startOfLog.splitLines();
         const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.'));
 
         await this.postMessage(StartPageMessages.SendReleaseNotes, {
             date: scrappedDate[1] + whiteSpace + scrappedDate[2],
-            notes: filteredNotes.map((line) => line.substr(3))
+            notes: filteredNotes.map((line) => line.substr(3)),
+            showAgainSetting: settings.showStartPage
         });
     }
 

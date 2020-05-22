@@ -3,6 +3,7 @@
 'use strict';
 
 import * as React from 'react';
+import '../../client/common/extensions';
 import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
@@ -18,10 +19,10 @@ export interface IStartPageProps {
 // Front end of the Pyhton extension start page.
 // In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
-    private doNotShowAgain = false;
     private releaseNotes: IReleaseNotesPackage = {
         date: '',
-        notes: []
+        notes: [],
+        showAgainSetting: false
     };
     private postOffice: PostOffice = new PostOffice();
     private iconClass: string;
@@ -32,15 +33,21 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     }
 
     public componentDidMount() {
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotes);
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.RequestReleaseNotesAndShowAgainSetting);
     }
 
+    // tslint:disable: no-any
     public componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
         // Tell the plot viewer code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
+
+        (window as any).openFileBrowser = this.openFileBrowser.bind(this);
+        (window as any).openCommandPalette = this.openCommandPalette.bind(this);
+        (window as any).openCommandPaletteWithSelection = this.openCommandPaletteWithSelection.bind(this);
+        (window as any).openSampleNotebook = this.openSampleNotebook.bind(this);
     }
 
     public render() {
@@ -71,31 +78,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         <div className="text">
                             {getLocString('DataScience.startPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
-                        <div className="paragraph">
-                            {getLocString('DataScience.startPage.use', '- Use "')}
-                            <div className="italics">
-                                {getLocString('DataScience.startPage.shiftCommandP', 'Shift + Command + P ')}
-                            </div>
-                            {getLocString('DataScience.startPage.toOpenThe', '" to open the')}{' '}
-                            <div className="link" role="button" onClick={this.openCommandPalette}>
-                                {getLocString('DataScience.startPage.commandPalette', 'Command Palette')}
-                            </div>
-                            <br />
-                            {getLocString('DataScience.startPage.type', '- Type "')}
-                            <div className="link italics" role="button" onClick={this.openCommandPaletteWithSelection}>
-                                {getLocString(
-                                    'python.command.python.datascience.createnewnotebook.title',
-                                    'Create New Blank Jupyter Notebook'
-                                )}
-                            </div>{' '}
-                            "
-                            <br />
-                            {getLocString('DataScience.startPage.exploreOur', '- Explore our')}{' '}
-                            <div className="link" role="button" onClick={this.openSampleNotebook}>
-                                {getLocString('DataScience.startPage.sampleNotebook', 'sample notebook')}
-                            </div>{' '}
-                            {getLocString('DataScience.startPage.toLearn', 'to learn about notebook features')}
-                        </div>
+                        {this.renderNotebookDescription()}
                     </div>
                 </div>
                 <div className="row">
@@ -110,17 +93,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         <div className="text">
                             {getLocString('DataScience.startPage.createAPythonFile', 'Create a Python File')}
                         </div>
-                        <div className="paragraph">
-                            {getLocString(
-                                'DataScience.startPage.createANewFile',
-                                '- Create a new file and use the .py extension'
-                            )}
-                            <br />-{' '}
-                            <div className="link" role="button" onClick={this.openFileBrowser}>
-                                {getLocString('DataScience.startPage.openFileOrWorkspace', 'Open a file or workspace')}
-                            </div>{' '}
-                            {getLocString('DataScience.startPage.continueWork', 'to continue work')}
-                        </div>
+                        {this.renderPythonFileDescription()}
                     </div>
                 </div>
                 <div className="row">
@@ -135,45 +108,18 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         <div className="text">
                             {getLocString('DataScience.startPage.openInteractiveWindow', 'Open the interactive Window')}
                         </div>
-                        <p>
-                            {getLocString(
-                                'DataScience.startPage.interactiveWindowDesc',
-                                '- You can create cells on a python file by typing "#%%"'
-                            )}
-                            <br />
-                            {getLocString(
-                                'DataScience.startPage.interactiveWindowDesc2',
-                                '- Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
-                            )}
-                        </p>
+                        {this.renderInteractiveWindowDescription()}
                     </div>
                 </div>
                 <div className="row">
-                    <div className="paragraph">
-                        {getLocString('DataScience.startPage.takeALook', 'Take a look at our')}{' '}
-                        <a className="link" href="https://aka.ms/AA8dxtb">
-                            {this.getCurrentReleaseVersion()}{' '}
-                            {getLocString('DataScience.startPage.releaseNotes', 'Release Notes')}
-                        </a>{' '}
-                        {getLocString('DataScience.startPage.toLearnMore', 'to learn more about the latest features')}
-                    </div>
+                    {this.renderReleaseNotesLink()}
                     {this.renderReleaseNotes()}
-                    <div className="paragraph">
-                        {getLocString('DataScience.startPage.exploreMoreFeatures', 'Explore more features in our')}{' '}
-                        <a className="link" href="https://aka.ms/AA8dqti">
-                            {getLocString('DataScience.startPage.tutorials', 'Tutorials')}
-                        </a>{' '}
-                        {getLocString('DataScience.startPage.orCheck', 'or check')}{' '}
-                        <a className="link" href="https://aka.ms/AA8dxwy">
-                            {getLocString('DataScience.startPage.documentation', 'Documentation')}
-                        </a>{' '}
-                        {getLocString('DataScience.startPage.forTips', 'for tips and troubleshooting.')}
-                    </div>
+                    {this.renderTutorialAndDoc()}
                 </div>
                 <div className="block">
                     <input
                         type="checkbox"
-                        aria-checked={this.doNotShowAgain}
+                        aria-checked={!this.releaseNotes.showAgainSetting}
                         className="checkbox"
                         onClick={this.updateSettings}
                     ></input>
@@ -190,6 +136,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         if (msg === StartPageMessages.SendReleaseNotes) {
             this.releaseNotes.date = payload.date;
             this.releaseNotes.notes = payload.notes;
+            this.releaseNotes.showAgainSetting = payload.showAgainSetting;
             this.setState({});
         }
 
@@ -217,12 +164,94 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         return false;
     };
 
+    public openFileBrowser() {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
+    }
+
+    private renderNotebookDescription(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'DataScience.startPage.notebookDescription',
+                        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+                    ).format('openCommandPalette()', 'openCommandPaletteWithSelection()', 'openSampleNotebook()')
+                }}
+            />
+        );
+    }
+
+    private renderPythonFileDescription(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'DataScience.startPage.pythonFileDescription',
+                        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+                    ).format('openFileBrowser()')
+                }}
+            />
+        );
+    }
+
+    private renderInteractiveWindowDescription(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <p
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'DataScience.startPage.interactiveWindowDesc',
+                        '- You can create cells on a python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+                    )
+                }}
+            />
+        );
+    }
+
+    private renderReleaseNotesLink(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'DataScience.startPage.releaseNotes',
+                        'Take a look at our <a class="link" href={0}>{1} Release Notes</a> to learn more about the latest features'
+                    ).format('https://aka.ms/AA8dxtb', this.releaseNotes.date)
+                }}
+            />
+        );
+    }
+
+    private renderReleaseNotes(): JSX.Element {
+        const notes: JSX.Element[] = [];
+        this.releaseNotes.notes.forEach((rel, index) => {
+            notes.push(<li key={index}>{rel}</li>);
+        });
+        return <ul>{notes}</ul>;
+    }
+
+    private renderTutorialAndDoc(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'DataScience.startPage.tutorialAndDoc',
+                        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
+                    ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy')
+                }}
+            />
+        );
+    }
+
     private openBlankNotebook = () => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenBlankNotebook);
-    };
-
-    private openFileBrowser = () => {
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
     };
 
     private createPythonFile = () => {
@@ -246,19 +275,10 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     };
 
     private updateSettings = () => {
-        this.doNotShowAgain = !this.doNotShowAgain;
-        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.UpdateSettings, !this.doNotShowAgain);
+        this.releaseNotes.showAgainSetting = !this.releaseNotes.showAgainSetting;
+        this.postOffice.sendMessage<IStartPageMapping>(
+            StartPageMessages.UpdateSettings,
+            this.releaseNotes.showAgainSetting
+        );
     };
-
-    private getCurrentReleaseVersion(): string {
-        return this.releaseNotes.date;
-    }
-
-    private renderReleaseNotes(): JSX.Element {
-        const notes: JSX.Element[] = [];
-        this.releaseNotes.notes.forEach((rel, index) => {
-            notes.push(<li key={index}>{rel}</li>);
-        });
-        return <ul>{notes}</ul>;
-    }
 }
