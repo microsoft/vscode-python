@@ -205,7 +205,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
 
             verify(fs.readFile(__filename)).once();
             verify(fs.writeFile(__filename, anyString())).once();
-            expect(nows(actualContent)).to.be.equal(nows(item.expectedContents));
+            expect(actualContent).to.be.equal(item.expectedContents);
         });
     });
 
