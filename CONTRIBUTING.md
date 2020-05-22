@@ -172,8 +172,8 @@ environment variable is ignored.  If that happens then you will need to
 temporarily modify the `const grep = ` line in
 [`src/test/index.ts`][src/test/index.ts].
 
-[extension.sort.test.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111e8826a6f06832a7c906c60eadad/src/test/format/extension.sort.test.ts
-[src/test/index.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111e8826a6f06832a7c906c60eadad/src/test/index.ts#L64
+[extension.sort.test.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/format/extension.sort.test.ts
+[src/test/index.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/index.ts#L64
 
 _Launching from VSCode_
 
