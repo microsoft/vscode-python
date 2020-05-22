@@ -7,7 +7,6 @@ import * as React from 'react';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { VariableExplorer } from './variableExplorer';
 
-import './variablePanel.css';
 export interface IVariablePanelProps {
     baseTheme: string;
     busy: boolean;
