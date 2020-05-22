@@ -161,19 +161,17 @@ be matched against suite and test "names" to be run. By default all tests
 are run.
 
 For example, to run only the tests in the `Sorting` suite (from
-[`src/test/format/extension.sort.test.ts`][extension.sort.test.ts]) you would
-set the value to `Sorting`. To run the `ProcessService` and `ProcessService Observable`
-tests which relate to `stderr` handling, you might use the value `ProcessService.*stderr`.
+[`src/test/format/extension.sort.test.ts`](https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/format/extension.sort.test.ts))
+you would set the value to `Sorting`. To run the `ProcessService` and
+`ProcessService Observable` tests which relate to `stderr` handling, you might
+use the value `ProcessService.*stderr`.
 
 Be sure to escape any grep-sensitive characters in your suite name.
 
 In some rare cases in the "system" tests the `VSC_PYTHON_CI_TEST_GREP`
 environment variable is ignored.  If that happens then you will need to
 temporarily modify the `const grep = ` line in
-[`src/test/index.ts`][src/test/index.ts].
-
-[extension.sort.test.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/format/extension.sort.test.ts
-[src/test/index.ts]: https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/index.ts#L64
+[`src/test/index.ts`](https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/index.ts#L64).
 
 _Launching from VSCode_
 
