@@ -24,7 +24,8 @@ function getEntry(isNotebook) {
     if (isNotebook) {
         return {
             nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
         };
     }
 
