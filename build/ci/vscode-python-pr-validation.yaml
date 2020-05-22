@@ -28,8 +28,8 @@ stages:
   # required value is "TestsToRun".
 
   - stage: Compile
-  jobs:
-    - template: templates/jobs/dev_compile.yml
+    jobs:
+      - template: templates/jobs/dev_compile.yml
 
 
   - stage: Linux
