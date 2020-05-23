@@ -116,6 +116,8 @@ function buildConfiguration(isNotebook) {
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
         optimization: {
+            removeAvailableModules: false,
+            removeEmptyChunks: false,
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
             moduleIds: 'hashed', // (doesn't re-generate bundles unnecessarily) https://webpack.js.org/configuration/optimization/#optimizationmoduleids.
@@ -212,7 +214,8 @@ function buildConfiguration(isNotebook) {
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
-            extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
+            extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
+            symlinks: false
         },
 
         module: {
@@ -221,9 +224,11 @@ function buildConfiguration(isNotebook) {
                 {
                     test: /\.tsx?$/,
                     use: {
-                        loader: 'awesome-typescript-loader',
+                        loader: 'ts-loader',
                         options: {
-                            configFileName,
+                            transpileOnly: true,
+                            experimentalWatchApi: true,
+                            configFile: configFileName,
                             reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
                         }
                     }
