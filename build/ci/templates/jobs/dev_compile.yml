@@ -54,7 +54,7 @@ jobs:
       - task: ExtractFiles@1
         inputs:
           archiveFilePatterns: '$(Build.SourcesDirectory)/Extension.zip' 
-          destinationFolder: $(Build.SourcesDirectory)/out
+          destinationFolder: $(Build.SourcesDirectory)
           cleanDestinationFolder: false
           
       - bash: |
