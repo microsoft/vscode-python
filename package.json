@@ -8,7 +8,7 @@
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": true,
+    "enableProposedApi": false,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -2962,7 +2962,7 @@
                 }
             ]
         },
-        "notebookOutputRenderer": [
+        "xnotebookOutputRenderer": [
             {
                 "viewType": "jupyter-notebook-renderer",
                 "displayName": "Jupyter Notebook Renderer",
@@ -2986,7 +2986,7 @@
                 ]
             }
         ],
-        "notebookProvider": [
+        "xnotebookProvider": [
             {
                 "viewType": "jupyter-notebook",
                 "displayName": "Jupyter Notebook",
