@@ -157,8 +157,8 @@ gulp.task('compile-notebooks', async () => {
     await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
-gulp.task('compile-renderers', async () => {
-    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-renderers.config.js');
+gulp.task('compile-transforms', async () => {
+    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-transforms.config.js');
 });
 
 gulp.task('compile-monaco', async () => {
@@ -343,7 +343,7 @@ gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
 gulp.task(
     'prePublishNonBundle',
-    gulp.parallel('compile', 'compile-ipywidgets', 'compile-renderers', 'compile-monaco', 'compile-notebooks')
+    gulp.parallel('compile', 'compile-ipywidgets', 'compile-transforms', 'compile-monaco', 'compile-notebooks')
 );
 
 gulp.task('installPythonRequirements', async () => {

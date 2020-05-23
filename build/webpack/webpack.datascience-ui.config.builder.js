@@ -23,14 +23,15 @@ const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 function getEntry(buildType) {
     if (buildType === 'monaco') {
         return {
-            monaco: ['babel-polyfill', 'monaco-editor/esm/vs/editor/editor.api']
+            monaco: ['babel-polyfill', 'src/datascience-ui/common/pyvscMonacoEditor.ts']
         };
-    } else if (buildType === 'renderers') {
+    } else if (buildType === 'transforms') {
         return {
-            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
+            pyvscTransforms: ['babel-polyfill', `./src/datascience-ui/renderers/transforms.tsx`]
         };
     } else {
         return {
+            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
             nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
             interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
             plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
@@ -115,11 +116,11 @@ function buildConfiguration(buildType) {
     }
     return {
         context: constants.ExtensionRootDir,
-        entry: getEntry(),
+        entry: getEntry(buildType),
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
-            filename: '[name].js',
-            chunkFilename: `[name].bundle.js`
+            filename: `[name].${buildType}.js`,
+            chunkFilename: `[name].${buildType}.bundle.js`
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
@@ -140,7 +141,7 @@ function buildConfiguration(buildType) {
                         name: 'commons',
                         chunks: 'initial',
                         minChunks: 2, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
-                        filename: '[name].initial.bundle.js'
+                        // filename: `[name].${buildType}.initial.bundle.js`
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
                     // This will ensure nteract (just some of the nteract) goes into a separate bundle.
@@ -149,6 +150,7 @@ function buildConfiguration(buildType) {
                         name: 'nteract',
                         chunks: 'all',
                         minChunks: 2,
+                        // filename: `[name].${buildType}.nteract.bundle.js`,
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
@@ -165,6 +167,7 @@ function buildConfiguration(buildType) {
                         name: 'plotly',
                         chunks: 'all',
                         minChunks: 1,
+                        // filename: `[name].${buildType}.plotly.bundle.js`,
                         test(module, _chunks) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
@@ -217,7 +220,7 @@ function buildConfiguration(buildType) {
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
-            ...getPlugins()
+            ...getPlugins(buildType)
         ],
         externals: ['log4js', 'pyvscTransforms', 'pyvscMonacoEditorApi'],
         resolve: {
@@ -290,4 +293,4 @@ function buildConfiguration(buildType) {
 
 exports.notebooks = buildConfiguration('notebook');
 exports.monaco = buildConfiguration('monaco');
-exports.renderers = buildConfiguration('renderers');
+exports.transforms = buildConfiguration('transforms');
