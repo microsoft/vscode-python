@@ -52,12 +52,6 @@ steps:
       path: $(Build.SourcesDirectory)
     condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: ViewersZip
-      path: $(Build.SourcesDirectory)
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
-
   - task: ExtractFiles@1
     inputs:
       archiveFilePatterns: '$(Build.SourcesDirectory)/*.zip'

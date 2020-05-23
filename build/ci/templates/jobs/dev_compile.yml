@@ -21,10 +21,10 @@ jobs:
 
       - task: ArchiveFiles@2
         inputs:
-          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out'
           archiveType: 'zip' # Options: zip, 7z, tar, wim
-          archiveFile: '$(Build.SourcesDirectory)/Extension.zip' 
-          replaceExistingArchive: true 
+          archiveFile: '$(Build.SourcesDirectory)/Extension.zip'
+          replaceExistingArchive: true
 
       - task: PublishPipelineArtifact@1
         inputs:
@@ -50,10 +50,10 @@ jobs:
 
       - task: ArchiveFiles@2
         inputs:
-          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out'
           archiveType: 'zip' # Options: zip, 7z, tar, wim
-          archiveFile: '$(Build.SourcesDirectory)/IPyWidets.zip' 
-          replaceExistingArchive: true 
+          archiveFile: '$(Build.SourcesDirectory)/IPyWidets.zip'
+          replaceExistingArchive: true
 
       - task: PublishPipelineArtifact@1
         inputs:
@@ -80,46 +80,13 @@ jobs:
 
       - task: ArchiveFiles@2
         inputs:
-          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
+          rootFolderOrFile: '$(Build.SourcesDirectory)/out'
           archiveType: 'zip' # Options: zip, 7z, tar, wim
-          archiveFile: '$(Build.SourcesDirectory)/Notebooks.zip' 
-          replaceExistingArchive: true 
+          archiveFile: '$(Build.SourcesDirectory)/Notebooks.zip'
+          replaceExistingArchive: true
 
       - task: PublishPipelineArtifact@1
         inputs:
           targetPath: $(Build.SourcesDirectory)/Notebooks.zip
           artifactName: NotebooksZip
-
-
-
-  - job: Viewers
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: ../steps/initialization.yml
-        parameters:
-          PythonVersion: $(PythonVersion)
-          workingDirectory: $(Build.SourcesDirectory)
-          compile: 'false'
-          installVSCEorNPX: 'false'
-          installpip: 'false'
-
-      - task: Gulp@0
-        displayName: 'Compile and check for errors'
-        inputs:
-          targets: 'compile-viewers'
-
-      - task: ArchiveFiles@2
-        inputs:
-          rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
-          archiveType: 'zip' # Options: zip, 7z, tar, wim
-          archiveFile: '$(Build.SourcesDirectory)/Viewers.zip' 
-          replaceExistingArchive: true 
-
-      - task: PublishPipelineArtifact@1
-        inputs:
-          targetPath: $(Build.SourcesDirectory)/Viewers.zip
-          artifactName: ViewersZip
-
-
 
