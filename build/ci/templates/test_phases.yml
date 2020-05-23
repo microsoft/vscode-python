@@ -33,46 +33,46 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
       sqlite: 'true'
+    condition: and(succeeded(), eq(variables['sqlite'], 'true')
+
+  - template: steps/initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
+      sqlite: 'false'
+    condition: and(succeeded(), eq(variables['sqlite'], 'false')
 
 
   - task: DownloadPipelineArtifact@2
     inputs:
         artifact: ExtensionZip
         path: $(Build.SourcesDirectory)
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
         
   - task: DownloadPipelineArtifact@2
     inputs:
         artifact: IPyWidetsZip
         path: $(Build.SourcesDirectory)        
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
         
   - task: DownloadPipelineArtifact@2
     inputs:
         artifact: NotebooksZip
         path: $(Build.SourcesDirectory)
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
         
   - task: DownloadPipelineArtifact@2
     inputs:
         artifact: ViewersZip
         path: $(Build.SourcesDirectory)
-        
-  - bash: |
-        ls
-    displayName: 'Copy ./.nyc_output'
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
   - task: ExtractFiles@1
     inputs:
         archiveFilePatterns: '$(Build.SourcesDirectory)/*.zip' 
         destinationFolder: $(Build.SourcesDirectory)
         cleanDestinationFolder: false
-      
-  # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
-  # This produces the .js files required into the out/ folder.
-  # Example command line (windows pwsh):
-  # > gulp prePublishNonBundle
-  - task: Gulp@0
-    displayName: 'gulp prePublishNonBundle'
-    inputs:
-      targets: 'prePublishNonBundle'
     condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
   # Run the typescript unit tests.
