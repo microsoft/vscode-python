@@ -5,9 +5,8 @@
 
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
-import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
-import { Resource } from '../../common/types';
+import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';

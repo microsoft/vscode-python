@@ -20,20 +20,29 @@ const configFileName = 'tsconfig.datascience-ui.json';
 // Any build on the CI is considered production mode.
 const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 
-function getEntry() {
-    return {
-        nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-        interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
-        renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
-        plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
-    };
+function getEntry(buildType) {
+    if (buildType === 'monaco') {
+        return {
+            monaco: ['babel-polyfill', 'monaco-editor/esm/vs/editor/editor.api']
+        };
+    } else if (buildType === 'renderers') {
+        return {
+            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
+        };
+    } else {
+        return {
+            nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+            plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
+            dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+        };
+    }
 }
 
-function getPlugins() {
+function getPlugins(buildType) {
     const plugins = [];
     if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins('notebook'));
+        plugins.push(...common.getDefaultPlugins(buildType));
     }
 
     if (isNotebook) {
@@ -79,13 +88,13 @@ function getPlugins() {
                 chunks: ['commons', 'dataExplorer'],
                 filename: 'index.dataExplorer.html'
             })
-        ]
-    );
+        );
+    }
 
     return plugins;
 }
 
-function buildConfiguration() {
+function buildConfiguration(buildType) {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = 'notebook';
     const filesToCopy = [];
@@ -164,24 +173,24 @@ function buildConfiguration() {
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
                             );
                         }
-                    },
-                    // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
-                    // This is only a solution for SSH.
-                    // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
-                    // This solution doesn't improve UX, as we still need to wait for monaco to load.
-                    monaco: {
-                        name: 'monaco',
-                        chunks: 'all',
-                        minChunks: 1,
-                        test(module, _chunks) {
-                            // `module.resource` contains the absolute path of the file on disk.
-                            // Look for `node_modules/monaco...`.
-                            const path = require('path');
-                            return (
-                                module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
-                            );
-                        }
                     }
+                    // // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
+                    // // This is only a solution for SSH.
+                    // // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
+                    // // This solution doesn't improve UX, as we still need to wait for monaco to load.
+                    // monaco: {
+                    //     name: 'monaco',
+                    //     chunks: 'all',
+                    //     minChunks: 1,
+                    //     test(module, _chunks) {
+                    //         // `module.resource` contains the absolute path of the file on disk.
+                    //         // Look for `node_modules/monaco...`.
+                    //         const path = require('path');
+                    //         return (
+                    //             module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
+                    //         );
+                    //     }
+                    // }
                 }
             },
             chunkIds: 'named'
@@ -210,7 +219,7 @@ function buildConfiguration() {
             }),
             ...getPlugins()
         ],
-        externals: ['log4js', 'pyvscTransforms'],
+        externals: ['log4js', 'pyvscTransforms', 'pyvscMonacoEditorApi'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
@@ -279,5 +288,6 @@ function buildConfiguration() {
     };
 }
 
-exports.notebooks = buildConfiguration(true);
-exports.viewers = buildConfiguration(false);
+exports.notebooks = buildConfiguration('notebook');
+exports.monaco = buildConfiguration('monaco');
+exports.renderers = buildConfiguration('renderers');

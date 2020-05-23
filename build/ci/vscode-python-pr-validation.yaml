@@ -27,15 +27,7 @@ stages:
   # define.  They are detailed in templates/test_phases.yml.  The only
   # required value is "TestsToRun".
 
-  - stage: Compile
-    dependsOn: []
-    jobs:
-      - template: templates/jobs/dev_compile.yml
-
-
   - stage: Linux
-    dependsOn: 
-      - Compile
     jobs:
       - job: 'Py3x'
         dependsOn: []
@@ -91,8 +83,6 @@ stages:
           - template: templates/test_phases.yml
 
   - stage: Mac
-    dependsOn: 
-      - Compile
     jobs:
       - job: 'Py3x'
         dependsOn: []
@@ -110,8 +100,6 @@ stages:
           - template: templates/test_phases.yml
 
   - stage: Windows
-    dependsOn: 
-      - Compile
     jobs:
       - job: 'Py3x'
         dependsOn: []

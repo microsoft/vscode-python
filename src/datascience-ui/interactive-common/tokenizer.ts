@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { wireTmGrammars } from 'monaco-editor-textmate';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'pyvscMonacoEditorApi';
 import { Registry } from 'monaco-textmate';
 import { loadWASM } from 'onigasm';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';

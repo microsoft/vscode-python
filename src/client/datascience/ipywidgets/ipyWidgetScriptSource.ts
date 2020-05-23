@@ -5,7 +5,6 @@
 import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
 import { inject, injectable } from 'inversify';
-import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
@@ -13,6 +12,7 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import {
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     IExtensionContext,
     IHttpClient,

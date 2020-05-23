@@ -4,12 +4,11 @@
 import * as cors from 'cors';
 import * as express from 'express';
 import * as http from 'http';
-import { IDisposable } from 'monaco-editor';
 import * as path from 'path';
 import * as socketIO from 'socket.io';
 import { env, Event, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { IWebPanel, IWebPanelOptions } from '../../../client/common/application/types';
-import { IDisposableRegistry } from '../../../client/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';

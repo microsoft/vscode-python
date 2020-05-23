@@ -3,7 +3,7 @@
 'use strict';
 
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import * as monacoEditor from 'pyvscMonacoEditorApi';
 import * as React from 'react';
 import { isTestExecution } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
