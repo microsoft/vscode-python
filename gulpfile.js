@@ -144,7 +144,6 @@ async function buildDataScienceUI(forceBundleAnalyzer = false) {
     }
     await buildIPyWidgets();
     await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-notebooks.config.js');
-    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-viewers.config.js');
     if (forceBundleAnalyzer) {
         delete process.env.VSC_PYTHON_FORCE_ANALYZER;
     }
@@ -156,10 +155,6 @@ gulp.task('compile-ipywidgets', async () => {
 
 gulp.task('compile-notebooks', async () => {
     await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-notebooks.config.js');
-});
-
-gulp.task('compile-viewers', async () => {
-    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
 gulp.task('compile-webviews', async () => {
@@ -179,11 +174,6 @@ gulp.task('webpack', async () => {
     await buildWebPack(
         'production',
         ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'],
-        webpackEnv
-    );
-    await buildWebPack(
-        'production',
-        ['--config', './build/webpack/webpack.datascience-ui-viewers.config.js'],
         webpackEnv
     );
     // Run both in parallel, for faster process on CI.
@@ -343,7 +333,7 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
-gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-ipywidgets', 'compile-notebooks'));
 
 gulp.task('installPythonRequirements', async () => {
     const args = [

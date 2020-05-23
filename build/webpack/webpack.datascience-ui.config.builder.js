@@ -20,25 +20,20 @@ const configFileName = 'tsconfig.datascience-ui.json';
 // Any build on the CI is considered production mode.
 const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 
-function getEntry(isNotebook) {
-    if (isNotebook) {
-        return {
-            nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
-            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
-        };
-    }
-
+function getEntry() {
     return {
+        nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
+        interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+        renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
         plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
         dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
     };
 }
 
-function getPlugins(isNotebook) {
+function getPlugins() {
     const plugins = [];
     if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+        plugins.push(...common.getDefaultPlugins('notebook'));
     }
 
     if (isNotebook) {
@@ -70,30 +65,29 @@ function getPlugins(isNotebook) {
     });
 
     plugins.push(
-        ...(isProdBuild ? [definePlugin] : [])
-        //         ...[
-        //             new HtmlWebpackPlugin({
-        //                 template: 'src/datascience-ui/plot/index.html',
-        //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
-        //                 chunks: ['commons', 'plotViewer'],
-        //                 filename: 'index.plotViewer.html'
-        //             }),
-        //             new HtmlWebpackPlugin({
-        //                 template: 'src/datascience-ui/data-explorer/index.html',
-        //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
-        //                 chunks: ['commons', 'dataExplorer'],
-        //                 filename: 'index.dataExplorer.html'
-        //             })
-        //         ]
+        ...(isProdBuild ? [definePlugin] : []),
+        ...[
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/plot/index.html',
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                chunks: ['commons', 'plotViewer'],
+                filename: 'index.plotViewer.html'
+            }),
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/data-explorer/index.html',
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                chunks: ['commons', 'dataExplorer'],
+                filename: 'index.dataExplorer.html'
+            })
+        ]
     );
-    // }
 
     return plugins;
 }
 
-function buildConfiguration(isNotebook) {
+function buildConfiguration() {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
-    const bundleFolder = isNotebook ? 'notebook' : 'viewers';
+    const bundleFolder = 'notebook';
     const filesToCopy = [];
     if (isNotebook) {
         // Include files only for notebooks.
@@ -112,7 +106,7 @@ function buildConfiguration(isNotebook) {
     }
     return {
         context: constants.ExtensionRootDir,
-        entry: getEntry(isNotebook),
+        entry: getEntry(),
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
@@ -136,7 +130,7 @@ function buildConfiguration(isNotebook) {
                     commons: {
                         name: 'commons',
                         chunks: 'initial',
-                        minChunks: isNotebook ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
+                        minChunks: 2, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
                         filename: '[name].initial.bundle.js'
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
@@ -214,9 +208,9 @@ function buildConfiguration(isNotebook) {
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
-            ...getPlugins(isNotebook)
+            ...getPlugins()
         ],
-        externals: ['log4js'],
+        externals: ['log4js', 'pyvscTransforms'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],

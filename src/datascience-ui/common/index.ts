@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
+import type { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { noop } from '../../client/common/utils/misc';
 
 const SingleQuoteMultiline = "'''";
@@ -235,4 +235,12 @@ function extractComments(lines: string[]): string[] {
         (_s) => noop()
     );
     return result;
+}
+
+export function isIPyWidgetOutput(data: {}): boolean {
+    return (
+        data &&
+        (data as Object).hasOwnProperty &&
+        (data as Object).hasOwnProperty('application/vnd.jupyter.widget-view+json')
+    );
 }
