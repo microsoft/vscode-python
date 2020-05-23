@@ -28,12 +28,12 @@ jobs:
         inputs:
           rootFolderOrFile: '$(Build.SourcesDirectory)/out' 
           archiveType: 'zip' # Options: zip, 7z, tar, wim
-          archiveFile: '$(Build.SourcesDirectory)/extension.zip' 
+          archiveFile: '$(Build.SourcesDirectory)/Extension.zip' 
           replaceExistingArchive: true 
 
       - task: PublishPipelineArtifact@1
         inputs:
-          targetPath: $(Build.SourcesDirectory)/extension.zip
+          targetPath: $(Build.SourcesDirectory)/Extension.zip
           artifactName: ExtensionZip
 
       - task: DeleteFiles@1
@@ -53,7 +53,7 @@ jobs:
 
       - task: ExtractFiles@1
         inputs:
-          archiveFilePatterns: '*.zip' 
+          archiveFilePatterns: '$(Build.SourcesDirectory)/Extension.zip' 
           destinationFolder: $(Build.SourcesDirectory)/out
           cleanDestinationFolder: false
           
