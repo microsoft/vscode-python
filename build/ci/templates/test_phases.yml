@@ -33,7 +33,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
       sqlite: 'true'
-    condition: and(succeeded(), eq(variables['sqlite'], 'true')
+    condition: and(succeeded(), eq(variables['sqlite'], 'true'))
 
   - template: steps/initialization.yml
     parameters:
@@ -41,7 +41,7 @@ steps:
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
       sqlite: 'false'
-    condition: and(succeeded(), eq(variables['sqlite'], 'false')
+    condition: and(succeeded(), eq(variables['sqlite'], 'false'))
 
 
   - task: DownloadPipelineArtifact@2
