@@ -134,37 +134,17 @@ async function validatePackageJson() {
 async function buildIPyWidgets() {
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
+
+async function buildWebPackIgnoreErrors(configFile) {
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+}
 async function buildDataScienceUI(forceBundleAnalyzer = false) {
     if (forceBundleAnalyzer) {
         process.env.VSC_PYTHON_FORCE_ANALYZER = 1;
     }
     await buildIPyWidgets();
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-notebooks.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-viewers.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
+    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-notebooks.config.js');
+    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-viewers.config.js');
     if (forceBundleAnalyzer) {
         delete process.env.VSC_PYTHON_FORCE_ANALYZER;
     }
@@ -175,35 +155,11 @@ gulp.task('compile-ipywidgets', async () => {
 });
 
 gulp.task('compile-notebooks', async () => {
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-notebooks.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
+    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
 gulp.task('compile-viewers', async () => {
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-viewers.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
+    await buildWebPackIgnoreErrors('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
 gulp.task('compile-webviews', async () => {
