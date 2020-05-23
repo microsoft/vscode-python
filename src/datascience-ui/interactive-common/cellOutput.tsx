@@ -5,6 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as fastDeepEqual from 'fast-deep-equal';
+import { getRichestMimetype, getTransform, isMimeTypeSupported } from 'pyvscTransforms';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
@@ -16,7 +17,6 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -26,7 +26,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import { Widget } from '@phosphor/widgets';
 import { noop } from '../../client/common/utils/misc';
 import { WIDGET_MIMETYPE } from '../../client/datascience/ipywidgets/constants';
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
+import { concatMultilineStringInput, concatMultilineStringOutput, isIPyWidgetOutput } from '../common';
 import { TrimmedOutputMessage } from './trimmedOutputLink';
 
 interface ICellOutputProps {

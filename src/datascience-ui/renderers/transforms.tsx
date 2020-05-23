@@ -160,11 +160,3 @@ export function isMimeTypeSupported(mimeType: string): boolean {
     const match = mimeTypeToImport.find((m) => m.mimeType === mimeType);
     return match ? true : false;
 }
-
-export function isIPyWidgetOutput(data: {}): boolean {
-    return (
-        data &&
-        (data as Object).hasOwnProperty &&
-        (data as Object).hasOwnProperty('application/vnd.jupyter.widget-view+json')
-    );
-}
