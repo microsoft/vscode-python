@@ -44,17 +44,17 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
             runnable: true,
             displayOrder: [
                 'application/vnd.*',
-                'application/vdom.*',
                 'application/geo+json',
                 'application/x-nteract-model-debug+json',
                 'text/html',
-                'application/javascript',
+                'application/vdom.*',
                 'text/latex',
                 'text/markdown',
-                'application/json',
+                'application/javascript',
                 'image/svg+xml',
                 'image/png',
                 'image/jpeg',
+                'application/json',
                 'text/plain'
             ]
         }

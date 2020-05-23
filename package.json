@@ -8,7 +8,7 @@
     },
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": false,
+    "enableProposedApi": true,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -2961,12 +2961,48 @@
                     "when": "testsDiscovered"
                 }
             ]
-        }
+        },
+        "notebookOutputRenderer": [
+            {
+                "viewType": "jupyter-notebook-renderer",
+                "displayName": "Jupyter Notebook Renderer",
+                "mimeTypes": [
+                    "application/geo+json",
+                    "application/vdom.v1+json",
+                    "application/vnd.dataresource+json",
+                    "application/vnd.plotly.v1+json",
+                    "application/vnd.vega.v2+json",
+                    "application/vnd.vega.v3+json",
+                    "application/vnd.vega.v4+json",
+                    "application/vnd.vega.v5+json",
+                    "application/vnd.vegalite.v1+json",
+                    "application/vnd.vegalite.v2+json",
+                    "application/vnd.vegalite.v3+json",
+                    "application/vnd.vegalite.v4+json",
+                    "application/x-nteract-model-debug+json",
+                    "image/gif",
+                    "text/latex",
+                    "text/vnd.plotly.v1+html"
+                ]
+            }
+        ],
+        "notebookProvider": [
+            {
+                "viewType": "jupyter-notebook",
+                "displayName": "Jupyter Notebook",
+                "selector": [
+                    {
+                        "filenamePattern": "*.ipynb"
+                    }
+                ]
+            }
+        ]
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "npm run build-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "npm run build-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-notebooks.js --watch",
+        "compile-webviews": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-notebooks.config.js",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
         "build-ipywidgets-clean": "node ./src/ipywidgets/scripts/clean.js",
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",

@@ -18,13 +18,14 @@ const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 
 // Any build on the CI is considered production mode.
-const isProdBuild = constants.isCI || process.argv.includes('--mode');
+const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 
 function getEntry(isNotebook) {
     if (isNotebook) {
         return {
             nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
         };
     }
 
@@ -40,52 +41,52 @@ function getPlugins(isNotebook) {
         plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
     }
 
-    if (isNotebook) {
-        plugins.push(
-            new MonacoWebpackPlugin({
-                languages: [] // force to empty so onigasm will be used
-            }),
-            new HtmlWebpackPlugin({
-                template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
-                chunks: [],
-                filename: 'index.html'
-            }),
-            new HtmlWebpackPlugin({
-                template: 'src/datascience-ui/native-editor/index.html',
-                chunks: ['monaco', 'commons', 'nativeEditor'],
-                filename: 'index.nativeEditor.html'
-            }),
-            new HtmlWebpackPlugin({
-                template: 'src/datascience-ui/history-react/index.html',
-                chunks: ['monaco', 'commons', 'interactiveWindow'],
-                filename: 'index.interactiveWindow.html'
-            })
-        );
-    } else {
-        const definePlugin = new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        });
+    // if (isNotebook) {
+    //     plugins.push(
+    //         new MonacoWebpackPlugin({
+    //             languages: [] // force to empty so onigasm will be used
+    //         }),
+    //         new HtmlWebpackPlugin({
+    //             template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
+    //             chunks: [],
+    //             filename: 'index.html'
+    //         }),
+    //         new HtmlWebpackPlugin({
+    //             template: 'src/datascience-ui/native-editor/index.html',
+    //             chunks: ['monaco', 'commons', 'nativeEditor'],
+    //             filename: 'index.nativeEditor.html'
+    //         }),
+    //         new HtmlWebpackPlugin({
+    //             template: 'src/datascience-ui/history-react/index.html',
+    //             chunks: ['monaco', 'commons', 'interactiveWindow'],
+    //             filename: 'index.interactiveWindow.html'
+    //         })
+    //     );
+    // } else {
+    // const definePlugin = new webpack.DefinePlugin({
+    //     'process.env': {
+    //         NODE_ENV: JSON.stringify('production')
+    //     }
+    // });
 
-        plugins.push(
-            ...(isProdBuild ? [definePlugin] : []),
-            ...[
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/plot/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'plotViewer'],
-                    filename: 'index.plotViewer.html'
-                }),
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/data-explorer/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'dataExplorer'],
-                    filename: 'index.dataExplorer.html'
-                })
-            ]
-        );
-    }
+    // plugins.push(
+    //     ...(isProdBuild ? [definePlugin] : [])
+    //     //         ...[
+    //     //             new HtmlWebpackPlugin({
+    //     //                 template: 'src/datascience-ui/plot/index.html',
+    //     //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
+    //     //                 chunks: ['commons', 'plotViewer'],
+    //     //                 filename: 'index.plotViewer.html'
+    //     //             }),
+    //     //             new HtmlWebpackPlugin({
+    //     //                 template: 'src/datascience-ui/data-explorer/index.html',
+    //     //                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
+    //     //                 chunks: ['commons', 'dataExplorer'],
+    //     //                 filename: 'index.dataExplorer.html'
+    //     //             })
+    //     //         ]
+    // );
+    // // }
 
     return plugins;
 }
