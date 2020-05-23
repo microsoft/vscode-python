@@ -27,21 +27,21 @@
 # 'venvTests'
 
 steps:
-  - template: steps/initialization.yml
-    parameters:
-      PythonVersion: $(PythonVersion)
-      workingDirectory: $(Build.SourcesDirectory)
-      compile: 'false'
-      sqlite: 'true'
-    condition: and(succeeded(), eq(variables['sqlite'], 'true'))
+  - ${{ if eq(variables['sqlite'], 'true') }}:
+    - template: steps/initialization.yml
+      parameters:
+        PythonVersion: $(PythonVersion)
+        workingDirectory: $(Build.SourcesDirectory)
+        compile: 'false'
+        sqlite: 'true'
 
-  - template: steps/initialization.yml
-    parameters:
-      PythonVersion: $(PythonVersion)
-      workingDirectory: $(Build.SourcesDirectory)
-      compile: 'false'
-      sqlite: 'false'
-    condition: and(succeeded(), eq(variables['sqlite'], 'false'))
+  - ${{ if eq(variables['sqlite'], 'false') }}:
+    - template: steps/initialization.yml
+      parameters:
+        PythonVersion: $(PythonVersion)
+        workingDirectory: $(Build.SourcesDirectory)
+        compile: 'false'
+        sqlite: 'false'
 
 
   - task: DownloadPipelineArtifact@2
