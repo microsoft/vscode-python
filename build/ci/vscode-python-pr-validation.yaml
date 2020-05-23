@@ -45,20 +45,25 @@ stages:
               TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
+              sqlite: false
             'Functional':
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
+              sqlite: true
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
+              sqlite: true
             'DataScience':
               TestsToRun: 'testDataScience'
               NeedsPythonTestReqs: true
+              sqlite: true
             'Smoke':
               TestsToRun: 'testSmoke'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
+              sqlite: true
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
@@ -73,11 +78,13 @@ stages:
               # Note: "pythonInternalTools" tests are 3.7+.
               TestsToRun: 'testUnitTests, pythonUnitTests'
               NeedsPythonTestReqs: true
+              sqlite: false
             'Functional':
               PythonVersion: '2.7'
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
+              sqlite: true
         pool:
           vmImage: 'ubuntu-16.04'
         steps:
@@ -96,6 +103,7 @@ stages:
               TestsToRun: 'testfunctional, testSingleWorkspace'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
+              sqlite: true
         pool:
           vmImage: '$(vmImageMacOS)'
         steps:
@@ -115,9 +123,11 @@ stages:
               TestsToRun: 'testfunctional'
               NeedsPythonTestReqs: true
               NeedsPythonFunctionalReqs: true
+              sqlite: true
             'Single Workspace':
               TestsToRun: 'testSingleWorkspace'
               NeedsPythonTestReqs: true
+              sqlite: true
         pool:
           vmImage: 'vs2017-win2016'
         steps:
