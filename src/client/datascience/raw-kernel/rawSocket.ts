@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
-import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { traceError } from '../../common/logger';
+import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IKernelConnection } from '../kernel-launcher/types';
 import { IWebSocketLike } from '../kernelSocketWrapper';

@@ -20,50 +20,61 @@ const configFileName = 'tsconfig.datascience-ui.json';
 // Any build on the CI is considered production mode.
 const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
 
-function getEntry() {
-    return {
-        nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-        interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
-        renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`],
-        plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
-    };
+function getEntry(buildType) {
+    if (buildType === 'monaco') {
+        return {
+            monaco: ['babel-polyfill', 'monaco-editor/esm/vs/editor/editor.api']
+        };
+    } else if (buildType === 'renderers') {
+        return {
+            renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
+        };
+    } else {
+        return {
+            nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
+            plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
+            dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+        };
+    }
 }
 
-function getPlugins() {
+function getPlugins(buildType) {
     const plugins = [];
     if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins('notebook'));
+        plugins.push(...common.getDefaultPlugins(buildType));
     }
-
     plugins.push(
-        new MonacoWebpackPlugin({
-            languages: [] // force to empty so onigasm will be used
-        }),
-        new HtmlWebpackPlugin({
-            template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
-            chunks: [],
-            filename: 'index.html'
-        }),
-        new HtmlWebpackPlugin({
-            template: 'src/datascience-ui/native-editor/index.html',
-            chunks: ['monaco', 'commons', 'nativeEditor'],
-            filename: 'index.nativeEditor.html'
-        }),
-        new HtmlWebpackPlugin({
-            template: 'src/datascience-ui/history-react/index.html',
-            chunks: ['monaco', 'commons', 'interactiveWindow'],
-            filename: 'index.interactiveWindow.html'
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify('production')
+            }
         })
     );
-    const definePlugin = new webpack.DefinePlugin({
-        'process.env': {
-            NODE_ENV: JSON.stringify('production')
-        }
-    });
 
-    plugins.push(
-        ...[
+    if (buildType === 'monaco') {
+        plugins.push(
+            new MonacoWebpackPlugin({
+                languages: [] // force to empty so onigasm will be used
+            })
+        );
+    } else if (buildType === 'notebook') {
+        plugins.push(
+            new HtmlWebpackPlugin({
+                template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
+                chunks: [],
+                filename: 'index.html'
+            }),
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/native-editor/index.html',
+                chunks: ['monaco', 'commons', 'nativeEditor'],
+                filename: 'index.nativeEditor.html'
+            }),
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/history-react/index.html',
+                chunks: ['monaco', 'commons', 'interactiveWindow'],
+                filename: 'index.interactiveWindow.html'
+            }),
             new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/plot/index.html',
                 indexUrl: `${constants.ExtensionRootDir}/out/1`,
@@ -76,26 +87,28 @@ function getPlugins() {
                 chunks: ['commons', 'dataExplorer'],
                 filename: 'index.dataExplorer.html'
             })
-        ]
-    );
+        );
+    }
 
     return plugins;
 }
 
-function buildConfiguration() {
+function buildConfiguration(buildType) {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = 'notebook';
     const filesToCopy = [];
-    // Include files only for notebooks.
-    filesToCopy.push(
-        ...[
-            {
-                from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
-                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'common', 'node_modules')
-            }
-        ]
-    );
-    return {
+    if (buildType === 'notebook') {
+        // Include files only for notebooks.
+        filesToCopy.push(
+            ...[
+                {
+                    from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'common', 'node_modules')
+                }
+            ]
+        );
+    }
+    const config = {
         context: constants.ExtensionRootDir,
         entry: getEntry(),
         output: {
@@ -155,24 +168,24 @@ function buildConfiguration() {
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
                             );
                         }
-                    },
-                    // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
-                    // This is only a solution for SSH.
-                    // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
-                    // This solution doesn't improve UX, as we still need to wait for monaco to load.
-                    monaco: {
-                        name: 'monaco',
-                        chunks: 'all',
-                        minChunks: 1,
-                        test(module, _chunks) {
-                            // `module.resource` contains the absolute path of the file on disk.
-                            // Look for `node_modules/monaco...`.
-                            const path = require('path');
-                            return (
-                                module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
-                            );
-                        }
                     }
+                    // // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
+                    // // This is only a solution for SSH.
+                    // // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
+                    // // This solution doesn't improve UX, as we still need to wait for monaco to load.
+                    // monaco: {
+                    //     name: 'monaco',
+                    //     chunks: 'all',
+                    //     minChunks: 1,
+                    //     test(module, _chunks) {
+                    //         // `module.resource` contains the absolute path of the file on disk.
+                    //         // Look for `node_modules/monaco...`.
+                    //         const path = require('path');
+                    //         return (
+                    //             module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
+                    //         );
+                    //     }
+                    // }
                 }
             },
             chunkIds: 'named'
@@ -201,7 +214,7 @@ function buildConfiguration() {
             }),
             ...getPlugins()
         ],
-        externals: ['log4js', 'pyvscTransforms'],
+        externals: ['log4js', 'pyvscTransforms', 'pyvscMonacoEditorApi'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
@@ -268,7 +281,19 @@ function buildConfiguration() {
             ]
         }
     };
+
+    if (buildType === 'monaco') {
+        // No split chunking for monaco bundle (its already a separate bundle).
+        delete config.optimization.splitChunks;
+    }
+    if (buildType === 'notebook') {
+        // No split chunking for nteract and plotly, that happens in the renderers bundle.
+        delete config.optimization.splitChunks.cacheGroups.nteract;
+        delete config.optimization.splitChunks.cacheGroups.plotly;
+    }
+    return config;
 }
 
-exports.notebooks = buildConfiguration(true);
-exports.viewers = buildConfiguration(false);
+exports.notebooks = buildConfiguration('notebook');
+exports.monaco = buildConfiguration('monaco');
+exports.renderers = buildConfiguration('renderers');

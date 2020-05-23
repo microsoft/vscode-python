@@ -5,10 +5,10 @@
 
 import * as fs from 'fs-extra';
 import * as getFreePort from 'get-port';
-import { IDisposable } from 'monaco-editor';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, Uri, ViewColumn, WebviewPanel } from 'vscode';
+import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
 import { traceInfo } from '../../../client/logging';
@@ -79,11 +79,12 @@ function createWebViewPanel(): WebviewPanel {
 
 export async function openNotebook(
     ioc: DataScienceIocContainer,
-    disposables: IDisposable[],
+    disposables: (IDisposable | IAsyncDisposable)[],
     notebookFileContents: string
 ) {
     traceInfo(`Opening notebook for UI tests...`);
-    const notebookFile = await createNotebookFileWithContents(notebookFileContents, disposables);
+    // tslint:disable-next-line: no-any
+    const notebookFile = await createNotebookFileWithContents(notebookFileContents, disposables as any);
     traceInfo(`Notebook UI Tests: have file`);
 
     const notebookUI = new NotebookEditorUI();

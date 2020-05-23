@@ -34,31 +34,6 @@ steps:
       compile: 'false'
       sqlite: $(sqlite)
 
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: ExtensionZip
-      path: $(Build.SourcesDirectory)
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
-
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: IPyWidetsZip
-      path: $(Build.SourcesDirectory)
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
-
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      artifact: NotebooksZip
-      path: $(Build.SourcesDirectory)
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
-
-  - task: ExtractFiles@1
-    inputs:
-      archiveFilePatterns: '$(Build.SourcesDirectory)/*.zip'
-      destinationFolder: $(Build.SourcesDirectory)
-      cleanDestinationFolder: false
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
-
   # Run the typescript unit tests.
   #
   # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
