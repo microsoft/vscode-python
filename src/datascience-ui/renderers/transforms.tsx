@@ -1,3 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+// This must be on top, do not change. Required by webpack.
+import '../common/main';
+// This must be on top, do not change. Required by webpack.
+
 /* tslint:disable */
 import * as React from 'react';
 import Loadable, { LoadableComponent } from '@loadable/component';
