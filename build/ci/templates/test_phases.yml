@@ -62,7 +62,7 @@ steps:
   - task: ExtractFiles@1
     inputs:
         archiveFilePatterns: '$(Build.SourcesDirectory)/*.zip' 
-        destinationFolder: $(Build.SourcesDirectory)/out
+        destinationFolder: $(Build.SourcesDirectory)
         cleanDestinationFolder: false
       
   # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
