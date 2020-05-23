@@ -28,6 +28,7 @@ stages:
   # required value is "TestsToRun".
 
   - stage: Linux
+    dependsOn: []
     jobs:
       - job: 'Py3x'
         dependsOn: []
@@ -83,6 +84,7 @@ stages:
           - template: templates/test_phases.yml
 
   - stage: Mac
+    dependsOn: []
     jobs:
       - job: 'Py3x'
         dependsOn: []
@@ -100,6 +102,7 @@ stages:
           - template: templates/test_phases.yml
 
   - stage: Windows
+    dependsOn: []
     jobs:
       - job: 'Py3x'
         dependsOn: []
