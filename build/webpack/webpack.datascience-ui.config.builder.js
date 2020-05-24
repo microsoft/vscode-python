@@ -140,7 +140,7 @@ function buildConfiguration(buildType) {
                     commons: {
                         name: 'commons',
                         chunks: 'initial',
-                        minChunks: 2, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
+                        minChunks: 2 // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
                         // filename: `[name].${buildType}.initial.bundle.js`
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
@@ -176,24 +176,24 @@ function buildConfiguration(buildType) {
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
                             );
                         }
+                    },
+                    // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
+                    // This is only a solution for SSH.
+                    // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
+                    // This solution doesn't improve UX, as we still need to wait for monaco to load.
+                    monaco: {
+                        name: 'monaco',
+                        chunks: 'all',
+                        minChunks: 1,
+                        test(module, _chunks) {
+                            // `module.resource` contains the absolute path of the file on disk.
+                            // Look for `node_modules/monaco...`.
+                            const path = require('path');
+                            return (
+                                module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
+                            );
+                        }
                     }
-                    // // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
-                    // // This is only a solution for SSH.
-                    // // Ideal solution would be to dynamically load monaoc `await import`, that way it will benefit UX and SSH.
-                    // // This solution doesn't improve UX, as we still need to wait for monaco to load.
-                    // monaco: {
-                    //     name: 'monaco',
-                    //     chunks: 'all',
-                    //     minChunks: 1,
-                    //     test(module, _chunks) {
-                    //         // `module.resource` contains the absolute path of the file on disk.
-                    //         // Look for `node_modules/monaco...`.
-                    //         const path = require('path');
-                    //         return (
-                    //             module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
-                    //         );
-                    //     }
-                    // }
                 }
             },
             chunkIds: 'named'

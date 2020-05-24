@@ -4,8 +4,8 @@
 import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports no-var-requires
 const cloneDeep = require('lodash/cloneDeep');
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
-import * as monacoEditor from 'pyvscMonacoEditorApi';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDataScienceSettings } from '../../client/common/types';

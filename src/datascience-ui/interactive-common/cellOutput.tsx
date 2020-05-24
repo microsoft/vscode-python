@@ -5,7 +5,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as fastDeepEqual from 'fast-deep-equal';
-import { getRichestMimetype, getTransform, isMimeTypeSupported } from 'pyvscTransforms';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
@@ -15,6 +14,7 @@ import { WidgetManager } from '../ipywidgets';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { getRichestMimetype, getTransform, isMimeTypeSupported } from '../renderers/transforms';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
 

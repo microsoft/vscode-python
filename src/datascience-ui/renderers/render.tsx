@@ -5,10 +5,10 @@
 
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { JSONObject } from '@phosphor/coreutils';
-import { getTransform } from 'pyvscTransforms';
 import * as React from 'react';
 import { concatMultilineStringOutput } from '../common';
 import { fixLatexEquations } from '../interactive-common/latexManipulation';
+import { getTransform } from './transforms';
 
 export interface ICellOutputProps {
     output: nbformat.IOutput;

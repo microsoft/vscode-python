@@ -5,8 +5,6 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
-
-import { forceLoad } from 'pyvscTransforms';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -19,6 +17,7 @@ import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
+import { forceLoad } from '../../renderers/transforms';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
