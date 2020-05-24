@@ -341,10 +341,7 @@ gulp.task('verifyBundle', async () => {
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
-gulp.task(
-    'prePublishNonBundle',
-    gulp.parallel('compile', 'compile-ipywidgets', 'compile-transforms', 'compile-monaco', 'compile-notebooks')
-);
+gulp.task('prePublishNonBundle', gulp.parallel('compile', 'compile-ipywidgets', 'compile-notebooks'));
 
 gulp.task('installPythonRequirements', async () => {
     const args = [
