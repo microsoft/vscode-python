@@ -13,7 +13,7 @@ import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
-import { ExperimentsManager } from '../../../../client/common/experiments';
+import { ExperimentsManager } from '../../../../client/common/experiments/manager';
 import { BrowserService } from '../../../../client/common/net/browser';
 import { HttpClient } from '../../../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../../../client/common/persistentState';

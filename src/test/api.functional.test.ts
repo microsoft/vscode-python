@@ -12,7 +12,7 @@ import { Uri } from 'vscode';
 import { buildApi } from '../client/api';
 import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-import { ExperimentsManager } from '../client/common/experiments';
+import { ExperimentsManager } from '../client/common/experiments/manager';
 import { IConfigurationService, IExperimentsManager } from '../client/common/types';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';

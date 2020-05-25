@@ -29,7 +29,7 @@ import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegi
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
-import { ExperimentsManager } from '../../client/common/experiments';
+import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
