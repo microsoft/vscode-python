@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
 import { DEFAULT_INTERPRETER_SETTING } from '../constants';
-import { DeprecatePythonPath } from '../experimentGroups';
+import { DeprecatePythonPath } from '../experiments/experimentGroups';
 import { IExperimentsManager, IInterpreterPathService, Resource } from '../types';
 
 type VSCodeType = typeof import('vscode');

@@ -5,7 +5,7 @@
 
 import * as TypeMoq from 'typemoq';
 import { AATesting } from '../../client/activation/aaTesting';
-import { ValidateABTesting } from '../../client/common/experimentGroups';
+import { ValidateABTesting } from '../../client/common/experiments/experimentGroups';
 import { IExperimentsManager } from '../../client/common/types';
 
 suite('A/A Testing', () => {

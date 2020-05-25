@@ -9,7 +9,7 @@ import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vs
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { RunByLine } from '../../client/common/experimentGroups';
+import { RunByLine } from '../../client/common/experiments/experimentGroups';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
