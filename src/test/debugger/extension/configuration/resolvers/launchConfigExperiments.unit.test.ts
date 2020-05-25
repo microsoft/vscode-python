@@ -11,7 +11,7 @@ import { ApplicationEnvironment } from '../../../../../client/common/application
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experimentGroups';
-import { ExperimentsManager } from '../../../../../client/common/experiments';
+import { ExperimentsManager } from '../../../../../client/common/experiments/manager';
 import { HttpClient } from '../../../../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../../../../client/common/persistentState';
 import { FileSystem } from '../../../../../client/common/platform/fileSystem';

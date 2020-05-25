@@ -9,7 +9,7 @@ import { Disposable } from 'vscode';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { ICommandManager } from '../../client/common/application/types';
 import { AlwaysDisplayTestExplorerGroups } from '../../client/common/experimentGroups';
-import { ExperimentsManager } from '../../client/common/experiments';
+import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { IDisposableRegistry, IExperimentsManager } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { IServiceContainer } from '../../client/ioc/types';

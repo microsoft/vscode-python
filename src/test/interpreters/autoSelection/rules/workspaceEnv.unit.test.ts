@@ -14,7 +14,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
-import { ExperimentsManager } from '../../../../client/common/experiments';
+import { ExperimentsManager } from '../../../../client/common/experiments/manager';
 import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';

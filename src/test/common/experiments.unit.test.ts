@@ -22,7 +22,7 @@ import {
     experimentStorageKey,
     isDownloadedStorageValidKey,
     oldExperimentSalts
-} from '../../client/common/experiments';
+} from '../../client/common/experiments/manager';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
