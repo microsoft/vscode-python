@@ -14,7 +14,7 @@ import { IApplicationEnvironment } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
-import { NativeNotebook } from '../../client/common/experimentGroups';
+import { NativeNotebook } from '../../client/common/experiments/experimentGroups';
 import {
     configUri,
     downloadedExperimentStorageKey,

@@ -12,7 +12,6 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { NativeNotebook } from '../experimentGroups';
 import { traceDecorators, traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import {
@@ -29,6 +28,7 @@ import {
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
 import { Experiments } from '../utils/localize';
+import { NativeNotebook } from './experimentGroups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
