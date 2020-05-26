@@ -23,7 +23,6 @@ import {
     IJupyterDebugService,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { traceInfo } from '../../client/logging';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -42,7 +41,7 @@ import { verifyVariables } from './variableTestHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
-suite('IANHU DataScience Debugger tests', () => {
+suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
     const postDisposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
@@ -173,6 +172,7 @@ suite('IANHU DataScience Debugger tests', () => {
         const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
             let breakPromise = createDeferred<void>();
 
+            // Make sure that our code lens provider has signaled a change before we check the lenses
             let newLensPromise = createDeferred<void>();
             let newLensDispose;
             const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
@@ -249,12 +249,6 @@ suite('IANHU DataScience Debugger tests', () => {
     function verifyCodeLenses(expectedBreakLine: number | undefined) {
         // We should have three debug code lenses which should all contain the break line
         const codeLenses = getCodeLenses();
-
-        codeLenses.forEach((lens) => {
-            traceInfo('***** IANHU *****');
-            traceInfo(lens.command?.title);
-            traceInfo(lens.range.start);
-        });
 
         if (expectedBreakLine) {
             assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
