@@ -131,7 +131,8 @@ export enum InteractiveWindowMessages {
     Continue = 'continue',
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
-    ShowingIp = 'showing_ip'
+    ShowingIp = 'showing_ip',
+    KernelIdle = 'kernel_idle'
 }
 
 export enum IPyWidgetMessages {
@@ -618,4 +619,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowContinue]: ICell;
     public [InteractiveWindowMessages.Step]: never | undefined;
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
+    public [InteractiveWindowMessages.KernelIdle]: never | undefined;
 }

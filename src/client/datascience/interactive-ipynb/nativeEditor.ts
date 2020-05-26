@@ -234,6 +234,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // relative files next to the notebook.
         await super.loadWebPanel(path.dirname(this.file.fsPath), webViewPanel);
 
+        // Start the server as soon as we open
+        this.ensureConnectionAndNotebook().ignoreErrors();
+
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
     }
