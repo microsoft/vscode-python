@@ -204,16 +204,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
         const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
 
-        const whiteSpace = ' ';
-        const dateEnd = changelog.indexOf(')');
-        const dateBegin = changelog.indexOf('(');
-        const scrappedDate = changelog.substring(dateBegin + 1, dateEnd).split(whiteSpace);
-
         const scrappedNotes = startOfLog.splitLines();
         const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.'));
 
         await this.postMessage(StartPageMessages.SendReleaseNotes, {
-            date: scrappedDate[1] + whiteSpace + scrappedDate[2],
             notes: filteredNotes.map((line) => line.substr(3)),
             showAgainSetting: settings.showStartPage
         });

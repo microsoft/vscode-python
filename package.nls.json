@@ -500,7 +500,7 @@
     "DataScience.startPage.pythonFileDescription": "- Create a new file and use the .py extension<br />- <div class=\"link\" role=\"button\" onclick={0}>Open a file or workspace</div> to continue work",
     "DataScience.startPage.openInteractiveWindow": "Open the interactive Window",
     "DataScience.startPage.interactiveWindowDesc": "- You can create cells on a python file by typing \"#%%\" <br /> - Use \"Shift + Enter\" to run a cell, the output will be shown in the interactive window",
-    "DataScience.startPage.releaseNotes": "Take a look at our <a class=\"link\" href={0}>{1} Release Notes</a> to learn more about the latest features",
+    "DataScience.startPage.releaseNotes": "Take a look at our <a class=\"link\" href={0}>Release Notes</a> to learn more about the latest features",
     "DataScience.startPage.tutorialAndDoc": "Explore more features in our <a class=\"link\" href={0}>Tutorials</a> or check <a class=\"link\" href={1}>Documentation</a> for tips and troubleshooting.",
     "DataScience.startPage.dontShowAgain": "Don't show this page again",
     "DataScience.startPage.helloWorld": "Hello world",

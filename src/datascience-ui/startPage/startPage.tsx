@@ -20,7 +20,6 @@ export interface IStartPageProps {
 // In general it consists of its render method and methods that send and receive messages.
 export class StartPage extends React.Component<IStartPageProps> implements IMessageHandler {
     private releaseNotes: IReleaseNotesPackage = {
-        date: '',
         notes: [],
         showAgainSetting: false
     };
@@ -44,6 +43,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // Tell the plot viewer code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
 
+        // Bind some functions to the window, as we need them to be accessible with clean HTML to use translations
         (window as any).openFileBrowser = this.openFileBrowser.bind(this);
         (window as any).openCommandPalette = this.openCommandPalette.bind(this);
         (window as any).openCommandPaletteWithSelection = this.openCommandPaletteWithSelection.bind(this);
@@ -134,7 +134,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         if (msg === StartPageMessages.SendReleaseNotes) {
-            this.releaseNotes.date = payload.date;
             this.releaseNotes.notes = payload.notes;
             this.releaseNotes.showAgainSetting = payload.showAgainSetting;
             this.setState({});
@@ -220,8 +219,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'DataScience.startPage.releaseNotes',
-                        'Take a look at our <a class="link" href={0}>{1} Release Notes</a> to learn more about the latest features'
-                    ).format('https://aka.ms/AA8dxtb', this.releaseNotes.date)
+                        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+                    ).format('https://aka.ms/AA8dxtb')
                 }}
             />
         );

@@ -963,7 +963,7 @@ export namespace DataScience {
 
     export const releaseNotes = localize(
         'DataScience.startPage.releaseNotes',
-        'Take a look at our <a class="link" href={0}>{1} Release Notes</a> to learn more about the latest features'
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
     );
     export const exploreMoreFeatures = localize(
         'DataScience.startPage.tutorialAndDoc',

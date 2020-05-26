@@ -6,7 +6,6 @@ export interface IStartPage {
 }
 
 export interface IReleaseNotesPackage {
-    date: string;
     notes: string[];
     showAgainSetting: boolean;
 }
