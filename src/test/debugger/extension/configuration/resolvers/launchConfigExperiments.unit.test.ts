@@ -10,7 +10,7 @@ import { instance, mock, spy, when } from 'ts-mockito';
 import { ApplicationEnvironment } from '../../../../../client/common/application/applicationEnvironment';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../../../client/common/crypto';
-import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experiments/experimentGroups';
+import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../../../../client/common/experiments/manager';
 import { HttpClient } from '../../../../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../../../../client/common/persistentState';
