@@ -3034,6 +3034,7 @@
         "pdfkit": "^0.11.0",
         "pidusage": "^1.2.0",
         "portfinder": "^1.0.25",
+        "react-draggable": "^4.4.2",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",

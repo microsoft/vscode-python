@@ -32,6 +32,7 @@ const ConnectedNativeCell = getConnectedNativeCell();
 export class NativeEditor extends React.Component<INativeEditorProps> {
     private renderCount: number = 0;
     private waitingForLoadRender = true;
+    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -96,7 +97,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header id="main-panel-toolbar">
+                <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
@@ -171,6 +172,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            toolbar: this.mainPanelToolbarRef,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
                     ? this.props.settings.variableOptions.enableDuringDebugger
@@ -298,8 +300,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0
                 ? maxOutputSize
                 : this.props.settings.enableScrollingForCellOutputs
-                ? 400
-                : undefined;
+                    ? 400
+                    : undefined;
 
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>

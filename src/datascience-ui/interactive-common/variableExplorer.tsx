@@ -19,6 +19,9 @@ import * as AdazzleReactDataGrid from 'react-data-grid';
 import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
 import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
+// tslint:disable-next-line: import-name
+import Draggable from 'react-draggable';
+
 import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
@@ -29,6 +32,7 @@ interface IVariableExplorerProps {
     supportsDebugging: boolean;
     fontSize: number;
     executionCount: number;
+    toolbar: React.RefObject<HTMLDivElement>;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     pageIn(startIndex: number, pageSize: number): void;
@@ -59,17 +63,18 @@ interface IGridRow {
 interface IVariableExplorerState {
     wrapHeight: number;
     gridHeight: number;
-    isResizing: boolean;
 }
 
 // tslint:disable:no-any
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
-    private divRef: React.RefObject<HTMLDivElement>;
+    private variableExplorerRef: React.RefObject<HTMLDivElement>;
+    private variableExplorerMenuBarRef: React.RefObject<HTMLDivElement>;
+    private variablePanelRef: React.RefObject<HTMLDivElement>;
+
     private pageSize: number = -1;
 
     // Used for handling resizing
     private minGridHeight: number = 200;
-    private rowHeight: number = this.props.fontSize + 9;
 
     // These values keep track of variable requests so we don't make the same ones over and over again
     // Note: This isn't in the redux state because the requests will come before the state
@@ -91,11 +96,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     constructor(prop: IVariableExplorerProps) {
         super(prop);
 
-        this.state = { wrapHeight: 0, gridHeight: this.minGridHeight, isResizing: false };
-        this.handleResizeMouseDown = this.handleResizeMouseDown.bind(this);
-        this.handleResizeMouseUp = this.handleResizeMouseUp.bind(this);
+        this.state = {
+            wrapHeight: 0,
+            gridHeight: this.minGridHeight
+        };
+
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
-        this.stopResize = this.stopResize.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
 
         this.gridColumns = [
@@ -147,15 +153,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             }
         ];
 
-        this.divRef = React.createRef<HTMLDivElement>();
+        this.variableExplorerRef = React.createRef<HTMLDivElement>();
+        this.variablePanelRef = React.createRef<HTMLDivElement>();
+        this.variableExplorerMenuBarRef = React.createRef<HTMLDivElement>();
     }
 
     public componentDidMount() {
         this.setInitialHeight();
-    }
-
-    public componentWillUnmount() {
-        this.stopResize();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
@@ -167,59 +171,54 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
             return true;
         }
-        if (this.state.isResizing) {
-            return true;
-        }
+
         return false;
     }
 
     public render() {
-        const contentClassName: string = `variable-explorer-content`;
-        const variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
-        const wrapHeight: number = this.state.wrapHeight;
+        const contentClassName = `variable-explorer-content`;
+        const wrapHeight = this.state.wrapHeight;
+        let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
 
         // add properties to explorer styles
-        if (wrapHeight && wrapHeight !== 0) {
-            Object.assign(variableExplorerStyles, { height: wrapHeight });
-        }
-        // change cursor to vertical resize
-        if (this.state.isResizing) {
-            document.body.style.cursor = 'ns-resize';
+        if (wrapHeight !== 0) {
+            variableExplorerStyles = { ...variableExplorerStyles, height: wrapHeight };
         }
 
         return (
-            <div id="variable-panel" onLoad={this.setInitialHeight}>
-                <div id="variable-panel-padding">
-                    <div
-                        className="variable-explorer"
-                        id="variable-explorer"
-                        ref={this.divRef}
-                        style={variableExplorerStyles}
-                    >
-                        <div className="variable-explorer-menu-bar" id="variable-explorer-menu-bar">
-                            <label className="inputLabel variable-explorer-label">
-                                {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                            </label>
-                            <ImageButton
-                                baseTheme={this.props.baseTheme}
-                                onClick={this.props.closeVariableExplorer}
-                                className="variable-explorer-close-button"
-                                tooltip={getLocString('DataScience.close', 'Close')}
+            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove}>
+                <span>
+                    <div id="variable-panel" ref={this.variablePanelRef}>
+                        <div id="variable-panel-padding">
+                            <div
+                                className="variable-explorer"
+                                ref={this.variableExplorerRef}
+                                style={variableExplorerStyles}
                             >
-                                <Image
-                                    baseTheme={this.props.baseTheme}
-                                    class="image-button-image"
-                                    image={ImageName.Cancel}
-                                />
-                            </ImageButton>
+                                <div className="variable-explorer-menu-bar" ref={this.variableExplorerMenuBarRef}>
+                                    <label className="inputLabel variable-explorer-label">
+                                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                                    </label>
+                                    <ImageButton
+                                        baseTheme={this.props.baseTheme}
+                                        onClick={this.props.closeVariableExplorer}
+                                        className="variable-explorer-close-button"
+                                        tooltip={getLocString('DataScience.close', 'Close')}
+                                    >
+                                        <Image
+                                            baseTheme={this.props.baseTheme}
+                                            class="image-button-image"
+                                            image={ImageName.Cancel}
+                                        />
+                                    </ImageButton>
+                                </div>
+                                <div className={contentClassName}>{this.renderGrid()}</div>
+                            </div>
                         </div>
-                        <div id="variable-grid" className={contentClassName}>
-                            {this.renderGrid()}
-                        </div>
+                        <div id="variable-divider" className="handle-resize" />
                     </div>
-                </div>
-                <div id="variable-divider" role="separator" onMouseDown={this.handleResizeMouseDown} />
-            </div>
+                </span>
+            </Draggable>
         );
     }
 
@@ -248,8 +247,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         rowGetter={this.getRow}
                         rowsCount={this.props.variables.length}
                         minHeight={this.state.gridHeight}
-                        headerRowHeight={this.rowHeight}
-                        rowHeight={this.rowHeight}
+                        headerRowHeight={this.getRowHeight()}
+                        rowHeight={this.getRowHeight()}
                         onRowDoubleClick={this.rowDoubleClick}
                         emptyRowsView={VariableExplorerEmptyRowsView}
                         rowRenderer={VariableExplorerRowRenderer}
@@ -259,68 +258,48 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
+    private getRowHeight() {
+        return this.props.fontSize + 9;
+    }
+
     private setInitialHeight() {
-        const variablePanel: HTMLElement | null = document.getElementById('variable-panel');
+        const variablePanel = this.variablePanelRef.current;
         if (!variablePanel) {
             return;
         }
         this.setState({
-            wrapHeight: variablePanel!.offsetHeight
+            wrapHeight: variablePanel.offsetHeight
         });
-    }
-
-    private stopResize() {
-        this.setState({
-            isResizing: false
-        });
-        document.body.style.cursor = 'auto';
-        document.removeEventListener('mouseleave', this.stopResize);
-        document.removeEventListener('mousemove', this.handleResizeMouseMove);
-        document.removeEventListener('mouseup', this.handleResizeMouseUp);
-    }
-
-    private handleResizeMouseDown() {
-        this.setState({
-            isResizing: true
-        });
-        document.addEventListener('mouseleave', this.stopResize);
-        document.addEventListener('mousemove', this.handleResizeMouseMove);
-        document.addEventListener('mouseup', this.handleResizeMouseUp);
-    }
-
-    private handleResizeMouseUp() {
-        this.stopResize();
     }
 
     private handleResizeMouseMove(e: any) {
-        if (!this.state.isResizing) {
-            return;
-        }
         this.setVariableExplorerHeight(e);
         this.setVariableGridHeight();
+        this.forceUpdate();
     }
 
     private setVariableExplorerHeight(e: MouseEvent) {
-        const variableExplorerMenuBar: HTMLElement | null = document.getElementById('variable-explorer-menu-bar');
-        const variablePanel: HTMLElement | null = document.getElementById('variable-panel');
-        const variableExplorer: HTMLElement | null = document.getElementById('variable-explorer');
-        const mainPanelToolBar: HTMLElement | null = document.getElementById('main-panel-toolbar');
+        const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
+        const variablePanel = this.variablePanelRef.current;
+        const variableExplorer = this.variableExplorerRef.current;
 
         if (!variableExplorerMenuBar || !variablePanel || !variableExplorer) {
             return;
         }
 
-        let toolBarHeight: number = 0;
+        // toolbar exists outside of component and we need to capture the height of it
+        const mainPanelToolBar = this.props.toolbar.current;
+        let toolBarHeight = 0;
         if (mainPanelToolBar) {
-            toolBarHeight = mainPanelToolBar!.offsetHeight;
+            toolBarHeight = mainPanelToolBar.offsetHeight;
         }
 
-        const relY: number = e.pageY - variableExplorer!.clientTop;
-        const addHeight: number = relY - variablePanel!.offsetHeight;
-        const updatedHeight: number = this.state.wrapHeight + addHeight - toolBarHeight;
+        const relY = e.pageY - variableExplorer.clientTop;
+        const addHeight = relY - variablePanel.offsetHeight - toolBarHeight;
+        const updatedHeight = this.state.wrapHeight + addHeight;
 
         // min height is one row of visible data
-        const minHeight: number = this.rowHeight * 2 + variableExplorerMenuBar!.clientHeight;
+        const minHeight = this.getRowHeight() * 2 + variableExplorerMenuBar.clientHeight;
 
         if (updatedHeight >= minHeight) {
             this.setState({
@@ -330,15 +309,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private setVariableGridHeight() {
-        const variableExplorerMenuBar: HTMLElement | null = document.getElementById('variable-explorer-menu-bar');
-        const variableExplorer: HTMLElement | null = document.getElementById('variable-explorer');
+        const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
+        const variableExplorer = this.variableExplorerRef.current;
 
         if (!variableExplorerMenuBar || !variableExplorer) {
             return;
         }
 
-        const updatedHeight: number =
-            variableExplorer!.clientHeight - variableExplorerMenuBar!.clientHeight - this.rowHeight;
+        const updatedHeight = variableExplorer.clientHeight - variableExplorerMenuBar.clientHeight;
 
         this.setState({
             gridHeight: updatedHeight
@@ -394,8 +372,11 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private computePageSize(): number {
         if (this.pageSize === -1) {
             // Based on font size and height of the main div
-            if (this.divRef.current) {
-                this.pageSize = Math.max(16, Math.round(this.divRef.current.offsetHeight / this.props.fontSize));
+            if (this.variableExplorerRef.current) {
+                this.pageSize = Math.max(
+                    16,
+                    Math.round(this.variableExplorerRef.current.offsetHeight / this.props.fontSize)
+                );
             } else {
                 this.pageSize = 50;
             }
