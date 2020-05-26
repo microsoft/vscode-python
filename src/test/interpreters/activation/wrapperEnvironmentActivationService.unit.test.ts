@@ -8,7 +8,7 @@ import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { ExperimentsManager } from '../../../client/common/experiments';
+import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ICryptoUtils, IExperimentsManager, IExtensionContext, Resource } from '../../../client/common/types';

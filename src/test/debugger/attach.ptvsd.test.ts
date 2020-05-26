@@ -13,7 +13,7 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../client/common/experiments/groups';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../client/common/types';

@@ -13,7 +13,7 @@ import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
-import { LocalZMQKernel } from '../../../client/common/experimentGroups';
+import { LocalZMQKernel } from '../../../client/common/experiments/groups';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';

@@ -9,7 +9,7 @@ import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/ch
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { LSControl, LSEnabled } from '../common/experimentGroups';
+import { LSControl, LSEnabled } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import {
     IConfigurationService,

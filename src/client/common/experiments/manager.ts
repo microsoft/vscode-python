@@ -8,24 +8,27 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IConfigurationService, IHttpClient, IPythonSettings } from '../common/types';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { IApplicationEnvironment } from './application/types';
-import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
-import { traceDecorators, traceError } from './logger';
-import { IFileSystem } from './platform/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
+import { IApplicationEnvironment } from '../application/types';
+import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceDecorators, traceError } from '../logger';
+import { IFileSystem } from '../platform/types';
 import {
     ABExperiments,
+    IConfigurationService,
     ICryptoUtils,
     IExperimentsManager,
+    IHttpClient,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory
-} from './types';
-import { sleep } from './utils/async';
-import { swallowExceptions } from './utils/decorators';
-import { Experiments } from './utils/localize';
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../types';
+import { sleep } from '../utils/async';
+import { swallowExceptions } from '../utils/decorators';
+import { Experiments } from '../utils/localize';
+import { NativeNotebook } from './groups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';

@@ -9,7 +9,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
 import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
-import { ShowExtensionSurveyPrompt } from '../../client/common/experimentGroups';
+import { ShowExtensionSurveyPrompt } from '../../client/common/experiments/groups';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
 import {

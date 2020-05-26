@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
-import { AlwaysDisplayTestExplorerGroups } from '../common/experimentGroups';
+import { AlwaysDisplayTestExplorerGroups } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import {
