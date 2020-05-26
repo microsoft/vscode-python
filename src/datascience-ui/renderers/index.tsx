@@ -13,8 +13,8 @@ import * as ReactDOM from 'react-dom';
 import '../../client/common/extensions';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { getTransform } from '../interactive-common/transforms';
 import type { IVsCodeApi } from '../react-common/postOffice';
+import { CellOutput } from './render';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
 function renderOutput(
@@ -34,9 +34,7 @@ function renderOutput(
     }
     tag.parentElement?.removeChild(tag);
 
-    const Transform = getTransform(mimeType);
-    // tslint:disable-next-line: no-use-before-declare
-    ReactDOM.render(React.createElement(Transform, { data: output.data }, null), container);
+    ReactDOM.render(React.createElement(CellOutput, { mimeType, output }, null), container);
 }
 
 function renderOnLoad() {
