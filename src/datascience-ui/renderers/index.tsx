@@ -34,9 +34,9 @@ function renderOutput(
         container.innerHTML = '';
     } else {
         container = document.createElement('div');
-        tag.parentNode?.insertBefore(container, tag.nextSibling);
+        tag.parentNode?.insertBefore(container, tag.nextSibling); // NOSONAR
     }
-    tag.parentElement?.removeChild(tag);
+    tag.parentElement?.removeChild(tag); // NOSONAR
 
     ReactDOM.render(React.createElement(CellOutput, { mimeType, output }, null), container);
 }
@@ -53,7 +53,7 @@ function renderOnLoad() {
 
 // tslint:disable-next-line: no-any
 function postToExtension(type: string, payload: any) {
-    acquireVsCodeApi().postMessage({ type, payload });
+    acquireVsCodeApi().postMessage({ type, payload }); // NOSONAR
 }
 function linkHandler(href: string) {
     if (href.startsWith('data:image/png')) {
