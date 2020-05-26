@@ -6,7 +6,6 @@
 import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
-import { IApplicationEnvironment } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { NugetPackage } from '../../common/nuget/types';
@@ -14,7 +13,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import {
-    DotNetLanguageServerFolder,
     FolderVersionPair,
     IDownloadChannelRule,
     ILanguageServerFolderService,
@@ -53,7 +51,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
 
     @traceDecorators.verbose('Get latest version of Language Server')
     public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
-        const minVersion = this.getMinimalLanguageServerVersion(DotNetLanguageServerFolder);
+        const minVersion = this.getMinimalLanguageServerVersion();
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
             ILanguageServerPackageService
         );
@@ -102,17 +100,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
             : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
     }
 
-    protected getMinimalLanguageServerVersion(key: string): string {
-        let minVersion = '0.0.0';
-        try {
-            const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-            if (appEnv) {
-                minVersion = appEnv.packageJson[key] as string;
-            }
-            // tslint:disable-next-line: no-empty
-        } catch {}
-        return minVersion;
-    }
+    protected abstract getMinimalLanguageServerVersion(): string;
 
     private getDownloadChannel() {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(

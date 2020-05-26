@@ -73,9 +73,6 @@ export enum LanguageServerType {
 export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
 
-// Must match languageServerVersion* keys in package.json
-export const DotNetLanguageServerMinVersionKey = 'languageServerVersion';
-
 // tslint:disable-next-line: interface-name
 export interface DocumentHandler {
     handleOpen(document: TextDocument): void;

@@ -4,9 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { IApplicationEnvironment } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
-import { DotNetLanguageServerFolder, DotNetLanguageServerMinVersionKey } from '../types';
+import { DotNetLanguageServerFolder } from '../types';
+
+// Must match languageServerVersion* keys in package.json
+const DotNetLanguageServerMinVersionKey = 'languageServerVersion';
 
 @injectable()
 export class DotNetLanguageServerFolderService extends LanguageServerFolderService {
@@ -15,6 +19,14 @@ export class DotNetLanguageServerFolderService extends LanguageServerFolderServi
     }
 
     protected getMinimalLanguageServerVersion(): string {
-        return super.getMinimalLanguageServerVersion(DotNetLanguageServerMinVersionKey);
+        let minVersion = '0.0.0';
+        try {
+            const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+            if (appEnv) {
+                minVersion = appEnv.packageJson[DotNetLanguageServerMinVersionKey] as string;
+            }
+            // tslint:disable-next-line: no-empty
+        } catch {}
+        return minVersion;
     }
 }

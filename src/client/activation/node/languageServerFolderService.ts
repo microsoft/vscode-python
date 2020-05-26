@@ -15,6 +15,6 @@ export class NodeLanguageServerFolderService extends LanguageServerFolderService
     }
 
     protected getMinimalLanguageServerVersion(): string {
-        return '0.0.1'; // super.getMinimalLanguageServerVersion(NodeLanguageServerMinVersionKey);
+        return '0.0.0';
     }
 }
