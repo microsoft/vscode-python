@@ -68,7 +68,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private pageSize: number = -1;
 
     // Used for handling resizing
-    private minGridHeight: number = 100;
+    private minGridHeight: number = 200;
     private rowHeight: number = this.props.fontSize + 9;
 
     // These values keep track of variable requests so we don't make the same ones over and over again
