@@ -239,6 +239,15 @@ suite('FileSystem - raw', () => {
     });
 
     suite('createReadStream', () => {
+        setup(function () {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO(GH-10031) This appears to be producing
+            // false negative test results, so we're skipping
+            // it for now.
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        });
+
         test('returns the correct ReadStream', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const expected = fs.createReadStream(filename);
@@ -258,14 +267,12 @@ suite('FileSystem - raw', () => {
 
     suite('createWriteStream', () => {
         setup(function () {
-            if (OSX) {
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO(GH-10031) This appears to be producing
-                // false negative test results, so we're skipping
-                // it for now.
-                // tslint:disable-next-line:no-invalid-this
-                this.skip();
-            }
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO(GH-10031) This appears to be producing
+            // false negative test results, so we're skipping
+            // it for now.
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
         });
 
         async function writeToStream(filename: string, write: (str: fs.WriteStream) => void) {
