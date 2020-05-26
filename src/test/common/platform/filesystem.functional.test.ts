@@ -16,7 +16,6 @@ import {
     DOES_NOT_EXIST,
     fixPath,
     FSFixture,
-    OSX,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
     WINDOWS
