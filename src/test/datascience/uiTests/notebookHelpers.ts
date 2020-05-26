@@ -16,7 +16,6 @@ import { traceInfo } from '../../../client/logging';
 import { createTemporaryFile } from '../../utils/fs';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
-import { waitForMessage } from '../testHelpers';
 import { NotebookEditorUI } from './notebookUi';
 import { WebServer } from './webBrowserPanel';
 
