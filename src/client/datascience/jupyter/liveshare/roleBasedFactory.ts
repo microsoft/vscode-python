@@ -73,7 +73,8 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         const oldDispose = obj.dispose.bind(obj);
         obj.dispose = () => {
             objDisposed = true;
-            this.createPromise = undefined;
+            // Make sure we don't destroy the create promise. Otherwise
+            // dispose will end up causing the creation code to run again.
             return oldDispose();
         };
 
