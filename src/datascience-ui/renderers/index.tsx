@@ -17,6 +17,10 @@ import type { IVsCodeApi } from '../react-common/postOffice';
 import { CellOutput } from './render';
 export declare function acquireVsCodeApi(): IVsCodeApi;
 
+/**
+ * Called from renderer to render output.
+ * This will be exposed as a public method on window for renderer to render output.
+ */
 function renderOutput(
     tag: HTMLScriptElement,
     mimeType: string,
@@ -37,6 +41,10 @@ function renderOutput(
     ReactDOM.render(React.createElement(CellOutput, { mimeType, output }, null), container);
 }
 
+/**
+ * Possible the pre-render scripts load late, after we have attempted to render output from notebook.
+ * At this point look through all such scripts and render the output.
+ */
 function renderOnLoad() {
     document
         .querySelectorAll<HTMLScriptElement>('script[type="application/vscode-jupyter+json"]')
@@ -63,6 +71,7 @@ function initialize(global: Record<string, any>) {
     renderOnLoad();
 }
 
+// Expose necessary hooks for client renderer to render output.
 // tslint:disable-next-line: no-any
 (window as any).renderOutput = renderOutput;
 initialize(window);

@@ -54,9 +54,9 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
                 ${JSON.stringify(outputToSend)}
             </script>
             <script type="text/javascript">
+                // Possible pre-render script has not yet loaded.
                 if (window['vscode-jupyter']){
                     try {
-                        debugger;
                         const tag = document.getElementById("${id}");
                         window['vscode-jupyter']['renderOutput'](tag, '${mimeType}', JSON.parse(tag.innerHTML));
                     } catch (ex){
