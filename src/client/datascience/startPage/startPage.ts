@@ -4,8 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { commands, ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
-import { TextDocument } from 'vscode';
+import { commands, ConfigurationTarget, EventEmitter, TextDocument, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationShell,
