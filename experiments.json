@@ -177,13 +177,13 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 0
+        "max": 4
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
         "min": 100,
-        "max": 100
+        "max": 96
     },
     {
         "name": "RunByLine - control",
