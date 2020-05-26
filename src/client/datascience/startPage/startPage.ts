@@ -205,7 +205,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
 
         const scrappedNotes = startOfLog.splitLines();
-        const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.'));
+        const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.')).slice(0, 5);
 
         await this.postMessage(StartPageMessages.SendReleaseNotes, {
             notes: filteredNotes.map((line) => line.substr(3)),
