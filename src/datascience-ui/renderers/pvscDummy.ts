@@ -2,3 +2,4 @@
 // Licensed under the MIT License.
 
 // Temporary work around for https://github.com/microsoft/vscode/issues/98106
+// @ts-ignore
