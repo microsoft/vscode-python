@@ -14,8 +14,7 @@ import { RunByLine } from '../../client/common/experimentGroups';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { Identifiers } from '../../client/datascience/constants';
-import { Commands } from '../../client/datascience/constants';
+import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     IDataScienceCodeLensProvider,
