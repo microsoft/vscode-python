@@ -937,7 +937,7 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const startPage = localize('DataScience.startPage', 'Python Start');
+    export const startPage = localize('DataScience.startPage', 'Python - Get Started');
     export const pythonExtensionTitle = localize('DataScience.startPage.pythonExtensionTitle', 'Python Extension');
     export const createJupyterNotebook = localize(
         'DataScience.startPage.createJupyterNotebook',
@@ -954,11 +954,11 @@ export namespace DataScience {
     );
     export const openInteractiveWindow = localize(
         'DataScience.startPage.openInteractiveWindow',
-        'Open the interactive Window'
+        'Open the Interactive Window'
     );
     export const interactiveWindowDesc = localize(
         'DataScience.startPage.interactiveWindowDesc',
-        '- You can create cells on a python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+        '- You can create cells on a Python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
     );
 
     export const releaseNotes = localize(

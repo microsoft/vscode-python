@@ -106,7 +106,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text">
-                            {getLocString('DataScience.startPage.openInteractiveWindow', 'Open the interactive Window')}
+                            {getLocString('DataScience.startPage.openInteractiveWindow', 'Open the Interactive Window')}
                         </div>
                         {this.renderInteractiveWindowDescription()}
                     </div>
@@ -204,7 +204,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'DataScience.startPage.interactiveWindowDesc',
-                        '- You can create cells on a python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+                        '- You can create cells on a Python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
                     )
                 }}
             />

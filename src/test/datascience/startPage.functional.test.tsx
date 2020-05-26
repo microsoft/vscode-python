@@ -14,6 +14,7 @@ suite('StartPage tests', () => {
     let ioc: DataScienceIocContainer;
 
     setup(async () => {
+        process.env.UITEST_DISABLE_INSIDERS = '1';
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         await ioc.activate();
