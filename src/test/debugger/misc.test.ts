@@ -6,7 +6,7 @@
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 import { noop } from '../../client/common/utils/misc';
-import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
+import { DebuggerTypeName } from '../../client/debugger/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
@@ -55,7 +55,6 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         stopOnEntry: boolean = false,
         showReturnValue: boolean = true
     ): LaunchRequestArguments {
-        const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
         const options = ({
             program: path.join(debugFilesPath, pythonFile),
@@ -65,7 +64,6 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugOptions: [DebugOptions.RedirectOutput],
             pythonPath: PYTHON_PATH,
             args: [],
-            env,
             envFile: '',
             logToFile: false,
             type: debuggerType
@@ -74,9 +72,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         return options;
     }
 
-    // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('Should run program to the end', async function () {
-        return this.skip();
+    test('Should run program to the end', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
@@ -84,14 +80,12 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugClient.waitForEvent('terminated')
         ]);
     });
-    // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('test stderr output for Python', async function () {
-        return this.skip();
+
+    test('test stderr output for Python', async () => {
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('stdErrOutput.py', false)),
             debugClient.waitForEvent('initialized'),
-            //TODO: ptvsd does not differentiate.
             debugClient.assertOutput('stderr', 'error output'),
             debugClient.waitForEvent('terminated')
         ]);
