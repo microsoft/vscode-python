@@ -9,6 +9,7 @@ import { Disposable } from 'vscode';
 import { nbformat } from '@jupyterlab/coreutils';
 import { LanguageServerType } from '../../client/activation/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
@@ -16,7 +17,14 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
 import * as NativeHelpers from './nativeEditorTestHelpers';
-import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
+import {
+    addMockData,
+    enterEditorKey,
+    getInteractiveEditor,
+    getNativeEditor,
+    typeCode,
+    waitForMessage
+} from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [LanguageServerType.Microsoft, LanguageServerType.Node].forEach((languageServerType) => {
@@ -449,8 +457,10 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             'Hover on notebook',
             async (wrapper) => {
                 // Create an notebook so that it listens to the results.
+                const kernelIdle = waitForMessage(ioc, InteractiveWindowMessages.KernelIdle);
                 const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
                 await notebook.show();
+                await kernelIdle;
 
                 // Cause a hover event over the first character
                 await waitForHover('Native', wrapper, 1, 1);

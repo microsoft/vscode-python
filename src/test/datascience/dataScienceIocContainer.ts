@@ -1024,6 +1024,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
 
             this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
@@ -1523,7 +1524,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            disableJupyterAutoStart: true,
+            disableJupyterAutoStart: false,
             widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
         };
         pythonSettings.jediEnabled = false;

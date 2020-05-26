@@ -55,6 +55,13 @@ use(chaiAsPromised);
             }
 
             ioc.registerDataScienceTypes();
+
+            // Make sure we force auto start (we wait for kernel idle before running)
+            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                ...ioc.getSettings().datascience,
+                disableJupyterAutoStart: false
+            });
+
             await ioc.activate();
         });
         teardown(async () => {
