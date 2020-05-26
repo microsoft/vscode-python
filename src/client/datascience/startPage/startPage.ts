@@ -5,6 +5,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { commands, ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
+import { TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
     IApplicationShell,
@@ -234,17 +235,34 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async openSampleNotebook(): Promise<void> {
-        const sampleNotebook = await this.documentManager.openTextDocument(
-            path.join(
-                EXTENSION_ROOT_DIR,
-                'src',
-                'client',
-                'datascience',
-                'startPage',
-                'SampleNotebook',
-                localize.DataScience.sampleNotebook()
-            )
+        const localizedFilePath = path.join(
+            EXTENSION_ROOT_DIR,
+            'src',
+            'client',
+            'datascience',
+            'startPage',
+            'SampleNotebook',
+            localize.DataScience.sampleNotebook()
         );
+
+        let sampleNotebook: TextDocument;
+
+        if (await this.file.fileExists(localizedFilePath)) {
+            sampleNotebook = await this.documentManager.openTextDocument(localizedFilePath);
+        } else {
+            sampleNotebook = await this.documentManager.openTextDocument(
+                path.join(
+                    EXTENSION_ROOT_DIR,
+                    'src',
+                    'client',
+                    'datascience',
+                    'startPage',
+                    'SampleNotebook',
+                    'Welcome_To_VSCode_Notebooks.ipynb'
+                )
+            );
+        }
+
         this.documentManager.showTextDocument(sampleNotebook, 1, true);
     }
 
