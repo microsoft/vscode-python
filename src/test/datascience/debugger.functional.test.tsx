@@ -22,6 +22,7 @@ import {
     IJupyterDebugService,
     IJupyterExecution
 } from '../../client/datascience/types';
+import { traceInfo } from '../../client/logging';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -247,6 +248,12 @@ suite('IANHU DataScience Debugger tests', () => {
     function verifyCodeLenses(expectedBreakLine: number | undefined) {
         // We should have three debug code lenses which should all contain the break line
         const codeLenses = getCodeLenses();
+
+        codeLenses.forEach((lens) => {
+            traceInfo('***** IANHU *****');
+            traceInfo(lens.command?.title);
+            traceInfo(lens.range.start);
+        });
 
         if (expectedBreakLine) {
             assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
