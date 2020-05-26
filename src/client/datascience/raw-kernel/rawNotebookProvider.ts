@@ -6,7 +6,7 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
-import { LocalZMQKernel } from '../../common/experimentGroups';
+import { LocalZMQKernel } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IExperimentsManager, Resource } from '../../common/types';

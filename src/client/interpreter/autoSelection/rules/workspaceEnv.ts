@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';

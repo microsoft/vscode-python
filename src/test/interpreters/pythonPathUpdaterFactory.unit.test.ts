@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
-import { DeprecatePythonPath } from '../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../client/common/types';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';

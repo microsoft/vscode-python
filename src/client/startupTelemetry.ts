@@ -3,7 +3,7 @@
 
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
-import { DeprecatePythonPath } from './common/experimentGroups';
+import { DeprecatePythonPath } from './common/experiments/groups';
 import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
 import {

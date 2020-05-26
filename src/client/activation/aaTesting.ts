@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ValidateABTesting } from '../common/experimentGroups';
+import { ValidateABTesting } from '../common/experiments/groups';
 import { IExperimentsManager } from '../common/types';
 import { IExtensionSingleActivationService } from './types';
 

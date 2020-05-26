@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DeprecatePythonPath } from '../common/experimentGroups';
+import { DeprecatePythonPath } from '../common/experiments/groups';
 import { traceError } from '../common/logger';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';

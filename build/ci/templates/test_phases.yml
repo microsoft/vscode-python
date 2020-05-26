@@ -419,6 +419,7 @@ steps:
   # Run the single workspace tests in VS Code Insiders.
   - script: |
       npm run testDataScience
+    continueOnError: true
     displayName: 'Run DataScience Tests in VSCode Insiders'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDataScience'))
     env:

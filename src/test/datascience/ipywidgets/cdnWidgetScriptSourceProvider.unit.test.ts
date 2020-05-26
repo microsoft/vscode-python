@@ -23,7 +23,7 @@ import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidg
 import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
 import { IJupyterConnection, ILocalResourceUriConverter, INotebook } from '../../../client/datascience/types';
 
-// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
+// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name no-console
 const request = require('request');
 const sanitize = require('sanitize-filename');
 
@@ -113,9 +113,7 @@ suite('DataScience - ipywidget - CDN', () => {
 
     [true, false].forEach((localLaunch) => {
         suite(localLaunch ? 'Local Jupyter Server' : 'Remote Jupyter Server', () => {
-            setup(function () {
-                // tslint:disable-next-line: no-invalid-this
-                this.skip();
+            setup(() => {
                 const connection: IJupyterConnection = {
                     type: 'jupyter',
                     baseUrl: '',
@@ -145,14 +143,9 @@ suite('DataScience - ipywidget - CDN', () => {
                     const moduleName = 'HelloWorld';
                     const moduleVersion = '1';
                     let baseUrl = '';
-                    let getUrl = '';
                     let scriptUri = '';
                     setup(() => {
                         baseUrl = cdn === 'unpkg.com' ? unpgkUrl : jsdelivrUrl;
-                        getUrl =
-                            cdn === 'unpkg.com'
-                                ? `${moduleName}@${moduleVersion}/dist/index`
-                                : `${moduleName}@${moduleVersion}/dist/index.js`;
                         scriptUri = generateScriptName(moduleName, moduleVersion);
                     });
                     teardown(() => {
@@ -164,7 +157,9 @@ suite('DataScience - ipywidget - CDN', () => {
                         updateCDNSettings(cdn);
                         let downloadCount = 0;
                         nock(baseUrl)
-                            .get(`/${getUrl}`)
+                            .log(console.log)
+
+                            .get(/.*/)
                             .reply(200, () => {
                                 downloadCount += 1;
                                 return createStreamFromString('foo');
@@ -190,7 +185,7 @@ suite('DataScience - ipywidget - CDN', () => {
                     });
                     test('No script source if package does not exist on CDN', async () => {
                         updateCDNSettings(cdn);
-                        nock(baseUrl).get(`/${getUrl}`).replyWithError('404');
+                        nock(baseUrl).log(console.log).get(/.*/).replyWithError('404');
 
                         const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
@@ -213,7 +208,7 @@ suite('DataScience - ipywidget - CDN', () => {
                             return false;
                         });
                         nock(baseUrl)
-                            .get(`/${getUrl}`)
+                            .get(/.*/)
                             .reply(200, () => {
                                 return createStreamFromString('foo');
                             });
@@ -230,9 +225,10 @@ suite('DataScience - ipywidget - CDN', () => {
                         let retryCount = 0;
                         updateCDNSettings(cdn);
                         when(httpClient.exists(anything())).thenResolve(true);
-                        nock(baseUrl).get(`/${getUrl}`).twice().replyWithError('Not found');
+                        nock(baseUrl).log(console.log).get(/.*/).twice().replyWithError('Not found');
                         nock(baseUrl)
-                            .get(`/${getUrl}`)
+                            .log(console.log)
+                            .get(/.*/)
                             .thrice()
                             .reply(200, () => {
                                 retryCount = 3;

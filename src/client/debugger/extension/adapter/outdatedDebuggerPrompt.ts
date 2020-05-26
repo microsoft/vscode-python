@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../common/experiments/groups';
 import { IBrowserService, IExperimentsManager } from '../../../common/types';
 import { Common, OutdatedDebugger } from '../../../common/utils/localize';
 import { IPromptShowState } from './types';

@@ -8,7 +8,7 @@ import { TextDocument } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { DEFAULT_INTERPRETER_SETTING, PYTHON_LANGUAGE } from '../common/constants';
-import { DeprecatePythonPath } from '../common/experimentGroups';
+import { DeprecatePythonPath } from '../common/experiments/groups';
 import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IExperimentsManager, IInterpreterPathService, Resource } from '../common/types';

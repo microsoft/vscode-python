@@ -19,7 +19,7 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { LocalZMQKernel } from '../../client/common/experimentGroups';
+import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../client/common/process/types';
@@ -1377,7 +1377,9 @@ plt.show()`,
                     public onKernelRestarted() {
                         // Do nothing on restarted
                     }
-
+                    public dispose() {
+                        noop();
+                    }
                     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
                         if (!silent) {
                             cellInputs.push(concatMultilineStringInput(cell.data.source));

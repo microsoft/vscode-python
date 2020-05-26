@@ -10,7 +10,7 @@ import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell } from '../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExperimentsManager, Version } from '../../common/types';

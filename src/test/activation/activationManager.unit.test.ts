@@ -16,8 +16,8 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { DeprecatePythonPath } from '../../client/common/experimentGroups';
-import { ExperimentsManager } from '../../client/common/experiments';
+import { DeprecatePythonPath } from '../../client/common/experiments/groups';
+import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';

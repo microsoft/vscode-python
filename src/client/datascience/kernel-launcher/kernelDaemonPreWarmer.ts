@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionActivationService } from '../../activation/types';
-import { LocalZMQKernel } from '../../common/experimentGroups';
+import { LocalZMQKernel } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';

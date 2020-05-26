@@ -16,7 +16,7 @@ import {
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { LSControl, LSEnabled } from '../../client/common/experimentGroups';
+import { LSControl, LSEnabled } from '../../client/common/experiments/groups';
 import { IPlatformService } from '../../client/common/platform/types';
 import {
     IConfigurationService,

@@ -11,7 +11,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
-import { DeprecatePythonPath } from '../experimentGroups';
+import { DeprecatePythonPath } from '../experiments/groups';
 import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
 
 @injectable()

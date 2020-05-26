@@ -17,7 +17,7 @@ import {
     ILanguageServerProxy
 } from '../../../client/activation/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentsManager } from '../../../client/common/experiments';
+import { ExperimentsManager } from '../../../client/common/experiments/manager';
 import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';

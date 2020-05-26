@@ -10,13 +10,14 @@ import { CancellationToken, NotebookCell, NotebookCellRunState, NotebookDocument
 import { CancellationTokenSource } from 'vscode-jsonrpc';
 import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
+import '../../common/extensions';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { INotebook, INotebookModel, INotebookProvider } from '../types';
+import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
@@ -43,7 +44,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {}
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
         const model = await this.notebookStorage.load(document.uri);
@@ -175,6 +177,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
                     deferred.resolve();
+                    this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
                 () => {
                     cell.metadata.runState = wrappedToken.isCancellationRequested
@@ -188,6 +191,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             await deferred.promise;
         } catch (ex) {
             updateCellWithErrorStatus(cell, ex);
+            this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
             subscription?.unsubscribe(); // NOSONAR
             // Ensure we remove the cancellation.

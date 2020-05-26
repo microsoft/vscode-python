@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { NativeNotebook } from '../../common/experimentGroups';
+import { NativeNotebook } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { EditorContexts } from '../constants';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../types';
@@ -85,7 +85,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             return;
         }
         this.hasNativeNotebookCells
-            .set((this.vscodeNotebook.activeNotebookEditor?.document?.cells?.length || 0) >= 0)
+            .set((this.vscodeNotebook.activeNotebookEditor?.document?.cells?.length || 0) > 0)
             .ignoreErrors();
     }
     private onDidChangeVSCodeNotebook() {

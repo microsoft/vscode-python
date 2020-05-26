@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { DeprecatePythonPath } from '../../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IExperimentsManager } from '../../../client/common/types';
