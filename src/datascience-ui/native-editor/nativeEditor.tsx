@@ -160,6 +160,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+        let toolbarHeight = 0;
+        if (this.mainPanelToolbarRef.current) {
+            toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
+        }
         return {
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
@@ -172,7 +176,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
-            toolbar: this.mainPanelToolbarRef,
+            offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
                     ? this.props.settings.variableOptions.enableDuringDebugger

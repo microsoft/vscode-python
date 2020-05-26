@@ -17,7 +17,7 @@ export interface IVariablePanelProps {
     debugging: boolean;
     supportsDebugging: boolean;
     fontSize: number;
-    toolbar: React.RefObject<HTMLDivElement>;
+    offsetHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     pageIn(startIndex: number, pageSize: number): void;
@@ -31,7 +31,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
     public render() {
         return (
             <VariableExplorer
-                toolbar={this.props.toolbar}
+                offsetHeight={this.props.offsetHeight}
                 fontSize={this.props.fontSize}
                 variables={this.props.variables}
                 debugging={this.props.debugging}

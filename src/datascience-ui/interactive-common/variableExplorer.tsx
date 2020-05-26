@@ -32,7 +32,7 @@ interface IVariableExplorerProps {
     supportsDebugging: boolean;
     fontSize: number;
     executionCount: number;
-    toolbar: React.RefObject<HTMLDivElement>;
+    offsetHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     pageIn(startIndex: number, pageSize: number): void;
@@ -287,15 +287,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return;
         }
 
-        // toolbar exists outside of component and we need to capture the height of it
-        const mainPanelToolBar = this.props.toolbar.current;
-        let toolBarHeight = 0;
-        if (mainPanelToolBar) {
-            toolBarHeight = mainPanelToolBar.offsetHeight;
-        }
-
         const relY = e.pageY - variableExplorer.clientTop;
-        const addHeight = relY - variablePanel.offsetHeight - toolBarHeight;
+        const addHeight = relY - variablePanel.offsetHeight - this.props.offsetHeight;
         const updatedHeight = this.state.wrapHeight + addHeight;
 
         // min height is one row of visible data
