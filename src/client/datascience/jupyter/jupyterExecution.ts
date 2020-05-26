@@ -260,6 +260,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         traceInfo(`Killing server because of error ${err}`);
                         await result.dispose();
                     }
+                    // If this is occurring during shutdown, don't worry about it.
+                    if (this.disposed) {
+                        return;
+                    }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
