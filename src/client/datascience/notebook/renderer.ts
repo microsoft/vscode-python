@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
-
 import { injectable } from 'inversify';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CellOutput, CellOutputKind, NotebookOutputRenderer as VSCNotebookOutputRenderer, Uri } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 @injectable()
 export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
@@ -14,35 +14,19 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
     }
     private _preloads: Uri[] = [];
     constructor() {
-        //     const rootPath = notebookEditorProvider.activeNotebookEditor
-        //         ?.asWebviewUri(
-        //             Uri.file('/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/out/datascience-ui/notebook')
-        //         )
-        //         .toString();
-        //     const contents = `
-        // console.error('Hello There');
-        // // Public path that will be used by webpack.
-        // window.__PVSC_Public_Path = "${rootPath}/";
-        // console.error('Hello There2');
-        // `;
-        //     fs.writeFileSync('/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/wow.js', contents);
-        this._preloads.push(Uri.file('/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/wow.js'));
-        this._preloads.push(Uri.file('/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/wow2.js'));
-        this._preloads.push(
-            Uri.file(
-                '/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/out/datascience-ui/notebook/renderers.js'
-            )
-        );
+        const dataScienceUIFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui');
+        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'pvscDummy.js')));
+        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'main.js')));
+        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'renderers.js')));
     }
 
     // @ts-ignore
     public render(document: NotebookDocument, output: CellOutput, mimeType: string) {
         let outputToSend = output;
-        // Send only what we need.
         if (output.outputKind === CellOutputKind.Rich && mimeType in output.data) {
             outputToSend = {
                 ...output,
-                // Ignore other mimetypes.
+                // Send only what we need & ignore other mimetypes.
                 data: {
                     [mimeType]: output.data[mimeType]
                 }
