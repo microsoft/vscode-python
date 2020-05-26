@@ -242,7 +242,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 'datascience',
                 'startPage',
                 'SampleNotebook',
-                'Welcome_To_VSCode_Notebooks.ipynb'
+                localize.DataScience.sampleNotebook()
             )
         );
         this.documentManager.showTextDocument(sampleNotebook, 1, true);

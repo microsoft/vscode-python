@@ -971,6 +971,9 @@ export namespace DataScience {
     );
     export const dontShowAgain = localize('DataScience.startPage.dontShowAgain', "Don't show this page again");
     export const helloWorld = localize('DataScience.startPage.helloWorld', 'Hello world');
+    // When localizing sampleNotebook, the translated notebook must also be included in
+    // src\client\datascience\startPage\SampleNotebook\*
+    export const sampleNotebook = localize('DataScience.startPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
     export const runByLine = localize('DataScience.runByLine', 'Run by line');
     export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
     export const rawKernelSessionFailed = localize(
