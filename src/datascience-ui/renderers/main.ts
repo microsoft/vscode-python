@@ -14,6 +14,8 @@ if (scriptSrcs.length) {
     const paths = src.split('/');
     // Remove file name portion from path.
     paths.pop();
+    // Remove `renderers` name portion from path.
+    paths.pop();
     // tslint:disable-next-line: no-any
-    (window as any).__PVSC_Public_Path = `${paths.join('/')}/out/datascience-ui/notebook/`;
+    (window as any).__PVSC_Public_Path = `${paths.join('/')}/datascience-ui/notebook/`;
 }
