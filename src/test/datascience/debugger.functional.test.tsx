@@ -8,12 +8,14 @@ import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { expect } from 'chai';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { RunByLine } from '../../client/common/experimentGroups';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Identifiers } from '../../client/datascience/constants';
+import { Commands } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     IDataScienceCodeLensProvider,
@@ -257,11 +259,24 @@ suite('IANHU DataScience Debugger tests', () => {
 
         if (expectedBreakLine) {
             assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
+            expect(codeLenses[0].command!.command).to.be.equal(Commands.DebugContinue);
+            expect(codeLenses[1].command!.command).to.be.equal(Commands.DebugStop);
+            expect(codeLenses[2].command!.command).to.be.equal(Commands.DebugStepOver);
             codeLenses.forEach((codeLens) => {
                 assert.ok(codeLens.range.contains(new Position(expectedBreakLine - 1, 0)));
             });
         } else {
-            assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses continue');
+            // Two options, either we are in Debug-Run mode and expect no lenses.
+            // Or we are in Design mode and expect run - run below - debug cell - goto
+            if (codeLenses.length !== 4) {
+                assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses debug - run');
+            } else {
+                assert.equal(codeLenses.length, 4, 'Incorrect number of debug code lenses design after debug');
+                expect(codeLenses[0].command!.command).to.be.equal(Commands.RunCell);
+                expect(codeLenses[1].command!.command).to.be.equal(Commands.RunCellAndAllBelow);
+                expect(codeLenses[2].command!.command).to.be.equal(Commands.DebugCell);
+                expect(codeLenses[3].command!.command).to.be.equal(Commands.ScrollToCell);
+            }
         }
     }
 
