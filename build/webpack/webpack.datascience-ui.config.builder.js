@@ -18,7 +18,7 @@ const configFileName = 'tsconfig.datascience-ui.json';
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
-const isProdBuild = true; //constants.isCI || process.argv.includes('--mode');
+const isProdBuild = constants.isCI || process.argv.includes('--mode');
 
 function getEntry(isNotebook) {
     if (isNotebook) {
@@ -106,10 +106,10 @@ function buildConfiguration(isNotebook) {
         // Include files only for notebooks.
         filesToCopy.push(
             ...[
-                // {
-                //     from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                //     to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-                // },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
                 {
                     from: path.join(constants.ExtensionRootDir, 'node_modules/font-awesome/**/*'),
                     to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'common', 'node_modules')
