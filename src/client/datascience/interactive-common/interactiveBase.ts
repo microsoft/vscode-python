@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { RunByLine, WebHostNotebook } from '../../common/experiments/experimentGroups';
+import { RunByLine, WebHostNotebook } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -1132,16 +1132,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
         const statusChangeHandler = async (status: ServerStatus) => {
             const kernelSpec = notebook.getKernelSpec();
+            const name = kernelSpec?.display_name || kernelSpec?.name || '';
 
-            if (kernelSpec) {
-                const name = kernelSpec.display_name || kernelSpec.name;
-
-                await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                    jupyterServerStatus: status,
-                    localizedUri: this.getServerUri(notebook.connection),
-                    displayName: name
-                });
-            }
+            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: status,
+                localizedUri: this.getServerUri(notebook.connection),
+                displayName: name
+            });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);
         this.disposables.push(notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));

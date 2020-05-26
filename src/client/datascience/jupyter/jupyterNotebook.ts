@@ -323,7 +323,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         );
 
-        if (cancelToken) {
+        if (cancelToken && cancelToken.onCancellationRequested) {
             this.disposableRegistry.push(
                 cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError()))
             );

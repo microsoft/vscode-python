@@ -166,6 +166,9 @@ export abstract class BasePythonDaemon {
         return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
     }
     protected sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params?: P): Thenable<R> {
+        if (!this.isAlive) {
+            traceError('Daemon is handling a request after death.');
+        }
         // Throw an error if the connection has been closed.
         return Promise.race([this.connection.sendRequest(type, params), this.connectionClosedDeferred.promise]);
     }

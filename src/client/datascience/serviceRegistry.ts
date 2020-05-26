@@ -4,7 +4,7 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
-import { NativeNotebook } from '../common/experiments/experimentGroups';
+import { NativeNotebook } from '../common/experiments/groups';
 import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';

@@ -4,8 +4,9 @@
 
 import { ChildProcess } from 'child_process';
 import * as tcpPortUsed from 'tcp-port-used';
+import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
@@ -175,6 +176,14 @@ export class KernelProcess implements IKernelProcess {
         newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
         newConnectionArgs.push(`--transport="${this._connection.transport}"`);
         newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
+        if (isTestExecution()) {
+            // Extra logging for tests
+            newConnectionArgs.push(`--log-level=10`);
+        }
+
+        // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
+        // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
+        newConnectionArgs.push(`--f=${tmp.tmpNameSync({ postfix: '.json' })}`);
 
         return newConnectionArgs;
     }

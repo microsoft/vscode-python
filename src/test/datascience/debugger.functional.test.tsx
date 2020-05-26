@@ -8,12 +8,13 @@ import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { expect } from 'chai';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { RunByLine } from '../../client/common/experiments/experimentGroups';
+import { RunByLine } from '../../client/common/experiments/groups';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { Identifiers } from '../../client/datascience/constants';
+import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     IDataScienceCodeLensProvider,
@@ -170,6 +171,15 @@ suite('DataScience Debugger tests', () => {
         // Debug this code. We should either hit the breakpoint or stop on entry
         const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
             let breakPromise = createDeferred<void>();
+
+            // Make sure that our code lens provider has signaled a change before we check the lenses
+            let newLensPromise = createDeferred<void>();
+            let newLensDispose;
+            const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+            if (codeLensProvider.onDidChangeCodeLenses) {
+                newLensDispose = codeLensProvider.onDidChangeCodeLenses(() => newLensPromise.resolve());
+            }
+
             disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
@@ -184,7 +194,10 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
 
+                await waitForPromise(newLensPromise.promise, 10_000);
+
                 verifyCodeLenses(expectedBreakLine);
+                newLensDispose?.dispose();
 
                 // Step if allowed
                 if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
@@ -205,10 +218,18 @@ suite('DataScience Debugger tests', () => {
                     stepAndVerify();
                 }
 
+                newLensPromise = createDeferred<void>();
+                if (codeLensProvider.onDidChangeCodeLenses) {
+                    newLensDispose = codeLensProvider.onDidChangeCodeLenses(() => newLensPromise.resolve());
+                }
+
                 // Verify break location
                 await jupyterDebuggerService!.continue();
 
+                await waitForPromise(newLensPromise.promise, 10_000);
+
                 verifyCodeLenses(undefined);
+                newLensDispose?.dispose();
             }
         });
 
@@ -231,11 +252,24 @@ suite('DataScience Debugger tests', () => {
 
         if (expectedBreakLine) {
             assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
+            expect(codeLenses[0].command!.command).to.be.equal(Commands.DebugContinue);
+            expect(codeLenses[1].command!.command).to.be.equal(Commands.DebugStop);
+            expect(codeLenses[2].command!.command).to.be.equal(Commands.DebugStepOver);
             codeLenses.forEach((codeLens) => {
                 assert.ok(codeLens.range.contains(new Position(expectedBreakLine - 1, 0)));
             });
         } else {
-            assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses continue');
+            // Two options, either we are in Debug-Run mode and expect no lenses.
+            // Or we are in Design mode and expect run - run below - debug cell - goto
+            if (codeLenses.length !== 4) {
+                assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses debug - run');
+            } else {
+                assert.equal(codeLenses.length, 4, 'Incorrect number of debug code lenses design after debug');
+                expect(codeLenses[0].command!.command).to.be.equal(Commands.RunCell);
+                expect(codeLenses[1].command!.command).to.be.equal(Commands.RunCellAndAllBelow);
+                expect(codeLenses[2].command!.command).to.be.equal(Commands.DebugCell);
+                expect(codeLenses[3].command!.command).to.be.equal(Commands.ScrollToCell);
+            }
         }
     }
 

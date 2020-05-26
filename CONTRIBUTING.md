@@ -124,18 +124,6 @@ Note: System tests are those in files with extension `.test*.ts` but which are n
 1. Run the tests via `npm run` or the Debugger launch options (you can "Start Without Debugging").
 1. **Note** you will be running tests under the default Python interpreter for the system.
 
-_Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`._
-
-Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you _must_ use this.
-
-In the launch.json file, you can add the following to the appropriate configuration you want to run to easily change the interpreter used during testing:
-
-```js
-    "env":{
-        "CI_PYTHON_PATH": "/absolute/path/to/interpreter/of/choice/python"
-    }
-```
-
 You can also run the tests from the command-line (after compiling):
 
 ```shell
@@ -143,23 +131,70 @@ npm run testSingleWorkspace  # will launch the VSC UI
 npm run testMultiWorkspace  # will launch the VSC UI
 ```
 
-...note this will use the Python interpreter that your current shell is making use of, no need to set `CI_PYTHON_PATH` here.
+#### Customising the Test Run
 
-_To limit system tests to a specific suite_
+If you want to change which tests are run or which version of Python is used,
+you can do this by setting environment variables. The same variables work when
+running from the command line or launching from within VSCode, though the
+mechanism used to specify them changes a little.
 
-If you are running system tests (we call them _system_ tests, others call them _integration_ or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
+* Setting `CI_PYTHON_PATH` lets you change the version of python the tests are executed with
+* Setting `VSC_PYTHON_CI_TEST_GREP` lets you filter the tests by name
 
-https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/index.ts#L21
+_`CI_PYTHON_PATH`_
 
-...and identify the test suite you want to run/debug like this:
+In some tests a Python executable is actually run. The default executable is
+`python` (for now). Unless you've run the tests inside a virtual environment,
+this will almost always mean Python 2 is used, which probably isn't what you
+want.
 
-```ts
-const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
+By setting the `CI_PYTHON_PATH` environment variable you can
+control the exact Python executable that gets used.  If the executable
+you specify isn't on `$PATH` then be sure to use an absolute path.
+
+This is also the mechanism for testing against other versions of Python.
+
+_`VSC_PYTHON_CI_TEST_GREP`_
+
+This environment variable allows providing a regular expression which will
+be matched against suite and test "names" to be run. By default all tests
+are run.
+
+For example, to run only the tests in the `Sorting` suite (from
+[`src/test/format/extension.sort.test.ts`](https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/format/extension.sort.test.ts))
+you would set the value to `Sorting`. To run the `ProcessService` and
+`ProcessService Observable` tests which relate to `stderr` handling, you might
+use the value `ProcessService.*stderr`.
+
+Be sure to escape any grep-sensitive characters in your suite name.
+
+In some rare cases in the "system" tests the `VSC_PYTHON_CI_TEST_GREP`
+environment variable is ignored.  If that happens then you will need to
+temporarily modify the `const grep = ` line in
+[`src/test/index.ts`](https://github.com/Microsoft/vscode-python/blob/84f9c7a174111/src/test/index.ts#L64).
+
+_Launching from VSCode_
+
+In order to set environment variables when launching the tests from VSCode you
+should edit the `launch.json` file. For example you can add the following to the
+appropriate configuration you want to run to change the interpreter used during
+testing:
+
+```js
+    "env": {
+        "CI_PYTHON_PATH": "/absolute/path/to/interpreter/of/choice/python"
+    }
 ```
 
-...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
+_On the command line_
 
-And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
+The mechanism to set environment variables on the command line will vary based
+on your system, however most systems support a syntax like the following for
+setting a single variable for a subprocess:
+
+```shell
+VSC_PYTHON_CI_TEST_GREP=Sorting npm run testSingleWorkspace
+```
 
 ### Testing Python Scripts
 

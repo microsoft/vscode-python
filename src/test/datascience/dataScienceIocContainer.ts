@@ -96,7 +96,7 @@ import { EXTENSION_ROOT_DIR, UseCustomEditorApi, UseProposedApi } from '../../cl
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
-import { LocalZMQKernel } from '../../client/common/experiments/experimentGroups';
+import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -1024,6 +1024,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            when(this.kernelServiceMock.getKernelSpecs(anything(), anything())).thenResolve([]);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
 
             this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
@@ -1523,7 +1524,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            disableJupyterAutoStart: true,
+            disableJupyterAutoStart: false,
             widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
         };
         pythonSettings.jediEnabled = false;

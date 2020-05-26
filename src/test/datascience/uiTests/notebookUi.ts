@@ -6,7 +6,6 @@
 import { assert } from 'chai';
 import { ElementHandle } from 'playwright-chromium';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
@@ -25,14 +24,13 @@ export class NotebookEditorUI extends BaseWebUI {
 
     public async clearOutput(): Promise<void> {
         const runButton = await this.getMainToolbarButton(MainToolbarButton.clearOutput);
-        await runButton.click({ button: 'left' });
+        await runButton.click({ button: 'left', force: true });
     }
 
     public async executeCell(cellIndex: number): Promise<void> {
         const renderedPromise = this.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
-        const executedPromise = this.waitForMessage(CommonActionType.EXECUTE_CELL);
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
-        await Promise.all([runButton.click({ button: 'left' }), renderedPromise, executedPromise]);
+        await Promise.all([runButton.click({ button: 'left', force: true }), renderedPromise]);
     }
 
     public async cellHasOutput(cellIndex: number): Promise<boolean> {

@@ -13,7 +13,7 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { DeprecatePythonPath } from '../../../../client/common/experiments/experimentGroups';
+import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../../../client/common/experiments/manager';
 import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
