@@ -33,7 +33,7 @@ _Please provide as much info as you readily know_
 -   **Jupyter server running:** Local | Remote | N/A
 -   **Extension version:** 20YY.MM.#####-xxx
 -   **VS Code version:** #.##
--   **Setting python.jediEnabled:** true | false
+-   **Setting python.languageServer:** Jedi | Microsoft | None
 -   **Python and/or Anaconda version:** #.#.#
 -   **OS:** Windows | Mac | Linux (distro):
 -   **Virtual environment:** conda | venv | virtualenv | N/A | ...
@@ -46,4 +46,4 @@ Toggle Developer Tools). For better details, run the "Enable source map support 
 extension debugging" command in VS Code at least once beforehand.
 ------------------------------------------------------------------------------------------------->
 
-Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
+Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer, @joyceerhl

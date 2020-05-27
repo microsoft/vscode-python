@@ -1534,7 +1534,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             disableJupyterAutoStart: false,
             widgetScriptSources: ['jsdelivr.com', 'unpkg.com']
         };
-        pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;
         const folders = ['Envs', '.virtualenvs'];
         pythonSettings.venvFolders = folders;

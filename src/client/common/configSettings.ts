@@ -86,7 +86,6 @@ export class PythonSettings implements IPythonSettings {
     }
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
     public downloadLanguageServer = true;
-    public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
     public envFile = '';
@@ -223,26 +222,24 @@ export class PythonSettings implements IPythonSettings {
         this.downloadLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('downloadLanguageServer', true)
         )!;
-        this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         this.autoUpdateLanguageServer = systemVariables.resolveAny(
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
-        if (this.jediEnabled) {
-            // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-            this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
-            if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
-                this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
-            } else {
-                this.jediPath = '';
-            }
-            this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
-        }
 
         let ls = pythonSettings.get<LanguageServerType>('languageServer');
         if (!ls) {
             ls = LanguageServerType.Jedi;
         }
         this.languageServer = systemVariables.resolveAny(ls)!;
+
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
+        if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
+            this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
+        } else {
+            this.jediPath = '';
+        }
+        this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;

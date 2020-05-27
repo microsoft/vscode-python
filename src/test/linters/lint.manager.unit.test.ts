@@ -11,6 +11,8 @@ import { IConfigurationService, IPythonSettings } from '../../client/common/type
 import { IServiceContainer } from '../../client/ioc/types';
 import { LinterManager } from '../../client/linters/linterManager';
 
+const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+
 // setup class instance
 class TestLinterManager extends LinterManager {
     public enableUnconfiguredLintersCallCount: number = 0;
@@ -23,17 +25,27 @@ class TestLinterManager extends LinterManager {
 function getServiceContainerMockForLinterManagerTests(): TypeMoq.IMock<IServiceContainer> {
     // setup test mocks
     const serviceContainerMock = TypeMoq.Mock.ofType<IServiceContainer>();
-    const configMock = TypeMoq.Mock.ofType<IConfigurationService>();
+
     const pythonSettingsMock = TypeMoq.Mock.ofType<IPythonSettings>();
+    const configMock = TypeMoq.Mock.ofType<IConfigurationService>();
     configMock.setup((cm) => cm.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettingsMock.object);
     serviceContainerMock.setup((c) => c.get(IConfigurationService)).returns(() => configMock.object);
+
+    const pythonConfig = {
+        // tslint:disable-next-line:no-empty
+        inspect: () => {}
+    };
+    workspaceService
+        .setup((x) => x.getConfiguration('python', TypeMoq.It.isAny()))
+        // tslint:disable-next-line:no-any
+        .returns(() => pythonConfig as any);
+    serviceContainerMock.setup((c) => c.get(IWorkspaceService)).returns(() => workspaceService.object);
 
     return serviceContainerMock;
 }
 
 // tslint:disable-next-line:max-func-body-length
 suite('Lint Manager Unit Tests', () => {
-    const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
     test('Linter manager isLintingEnabled checks availability when silent = false.', async () => {
         // set expectations
         const expectedCallCount = 1;

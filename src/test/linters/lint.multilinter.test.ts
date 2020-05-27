@@ -5,6 +5,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { ConfigurationTarget, DiagnosticCollection, Uri, window, workspace } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { ICommandManager } from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
@@ -91,6 +92,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         await closeActiveWindows();
         const document = await workspace.openTextDocument(path.join(pythoFilesPath, 'print.py'));
         await window.showTextDocument(document);
+        await configService.updateSetting('languageServer', LanguageServerType.Jedi, workspaceUri);
         await configService.updateSetting('linting.enabled', true, workspaceUri);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
         await configService.updateSetting('linting.pylintEnabled', true, workspaceUri);

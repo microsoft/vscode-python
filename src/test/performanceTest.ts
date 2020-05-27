@@ -22,6 +22,7 @@ import * as download from 'download';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as request from 'request';
+import { LanguageServerType } from '../client/activation/types';
 import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
 import { unzip } from './common';
 
@@ -72,7 +73,9 @@ class TestRunner {
         await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
     }
     private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.jediEnabled": ${!enable} }`;
+        const settings = `{ "python.languageServer": "${
+            enable ? LanguageServerType.Microsoft : LanguageServerType.Jedi
+        }" }`;
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
 

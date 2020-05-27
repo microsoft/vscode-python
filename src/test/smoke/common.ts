@@ -33,13 +33,13 @@ async function getLanguageServerFolders(): Promise<string[]> {
 export function isJediEnabled() {
     const resource = vscode.workspace.workspaceFolders![0].uri;
     const settings = vscode.workspace.getConfiguration('python', resource);
-    return settings.get<boolean>('jediEnabled') === true;
+    return settings.get<string>('languageServer') === 'Jedi';
 }
 export async function enableJedi(enable: boolean | undefined) {
     if (isJediEnabled() === enable) {
         return;
     }
-    await updateSetting('jediEnabled', enable);
+    await updateSetting('languageServer', 'Jedi');
 }
 export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDocument> {
     const textDocument = await vscode.workspace.openTextDocument(file);

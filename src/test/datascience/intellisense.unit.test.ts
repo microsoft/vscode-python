@@ -7,6 +7,7 @@ import * as uuid from 'uuid/v4';
 
 import { instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -68,7 +69,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         const variableProvider = mock(JupyterVariables);
 
-        pythonSettings.jediEnabled = false;
+        pythonSettings.languageServer = LanguageServerType.Microsoft;
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
         workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
         fileSystem
