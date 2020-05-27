@@ -11,9 +11,9 @@ export class NotebookModelEditEvent implements CustomDocumentEditEvent {
         this.label = change.kind;
     }
     public undo(): void | Thenable<void> {
-        this.model.applyEdits([{ ...this.change, source: 'undo' }]);
+        return this.model.undoEdits([{ ...this.change, source: 'undo' }]);
     }
     public redo(): void | Thenable<void> {
-        this.model.undoEdits([{ ...this.change, source: 'redo' }]);
+        return this.model.applyEdits([{ ...this.change, source: 'redo' }]);
     }
 }

@@ -90,12 +90,24 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        "onCustomEditor:NativeEditorProvider.ipynb",
+        "onCustomEditor:ms-python.python.notebook.ipynb",
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:**/mspythonconfig.json"
     ],
     "main": "./out/client/extension",
     "contributes": {
+        "customEditors": [
+            {
+              "viewType": "ms-python.python.notebook.ipynb",
+              "displayName": "Jupyter Notebook",
+              "selector": [
+                {
+                  "filenamePattern": "*.ipynb"
+                }
+              ],
+              "priority": "default"
+            }
+          ],
         "snippets": [
             {
                 "language": "python",

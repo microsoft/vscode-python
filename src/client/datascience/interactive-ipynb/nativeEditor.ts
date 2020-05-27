@@ -552,8 +552,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async modelChanged(change: NotebookModelChange) {
         if (change.source !== 'user') {
-            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
-            await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
+            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change. Remove the
+            // the model so this doesn't have to be stringified
+            await this.postMessage(InteractiveWindowMessages.UpdateModel, { ...change, model: undefined });
         }
 
         // Use the current state of the model to indicate dirty (not the message itself)
