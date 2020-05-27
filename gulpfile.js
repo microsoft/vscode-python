@@ -140,11 +140,11 @@ async function buildIPyWidgets() {
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
 gulp.task('compile-notebooks', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', '', false);
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
 gulp.task('compile-viewers', async () => {
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', '', false);
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
 gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
@@ -154,9 +154,9 @@ gulp.task(
     gulp.series('compile-webviews', () => checkDatascienceDependencies())
 );
 
-async function buildWebPackForDevOrProduction(configFile, isProductionBuild, configName) {
-    if (isProductionBuild) {
-        await buildWebPack(configName, ['--config', configFile], webpackEnv);
+async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
+    if (configNameForProductionBuilds) {
+        await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
     } else {
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
     }
@@ -165,40 +165,25 @@ gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPackForDevOrProduction(
         './build/webpack/webpack.extension.dependencies.config.js',
-        'production',
-        true
+        true,
+        'production'
     );
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
-    await buildWebPackForDevOrProduction(
-        './build/webpack/webpack.datascience-ui-notebooks.config.js',
-        'production',
-        true
-    );
-    await buildWebPackForDevOrProduction(
-        './build/webpack/webpack.datascience-ui-viewers.config.js',
-        'production',
-        true
-    );
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPackForDevOrProduction(
-            './build/webpack/webpack.extension.config.js',
-            'extension',
-            true
-        );
-        const buildDebugAdapter = buildWebPackForDevOrProduction(
-            './build/webpack/webpack.debugAdapter.config.js',
-            'debugAdapter',
-            true
-        );
-        await Promise.all([buildExtension, buildDebugAdapter]);
+        await Promise.all([
+            buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension'),
+            buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter')
+        ]);
     } else {
-        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension', true);
-        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter', true);
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter');
     }
 });
 
