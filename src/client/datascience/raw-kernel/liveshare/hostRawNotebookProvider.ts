@@ -15,7 +15,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../../common/types';
@@ -63,10 +62,9 @@ export class HostRawNotebookProvider
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
-        experimentsManager: IExperimentsManager,
         rawNotebookSupported: IRawNotebookSupportedService
     ) {
-        super(liveShare, asyncRegistry, configService, experimentsManager, rawNotebookSupported);
+        super(liveShare, asyncRegistry, rawNotebookSupported);
     }
 
     public async dispose(): Promise<void> {

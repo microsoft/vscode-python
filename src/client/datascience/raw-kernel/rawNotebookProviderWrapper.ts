@@ -13,7 +13,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../common/types';
@@ -46,7 +45,6 @@ type RawNotebookProviderClassType = {
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
-        experimentsManager: IExperimentsManager,
         rawKernelSupported: IRawNotebookSupportedService
     ): IRawNotebookProviderInterface;
 };
@@ -72,7 +70,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
@@ -94,7 +91,6 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelSelector,
             progressReporter,
             outputChannel,
-            experimentsManager,
             rawNotebookSupported
         );
     }
