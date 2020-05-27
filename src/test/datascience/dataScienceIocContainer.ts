@@ -1314,6 +1314,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return setting;
     }
 
+    public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IDataScienceSettings>) {
+        this.forceSettingsChanged(undefined, this.getSettings().pythonPath, {
+            ...this.getSettings().datascience,
+            ...dataScienceSettings
+        });
+    }
+
     public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
         const settings = this.getSettings(resource) as any;
         settings.pythonPath = newPath;

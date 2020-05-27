@@ -253,6 +253,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             ) as any
         };
 
+        traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 }

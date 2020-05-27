@@ -378,7 +378,10 @@ suite('DataScience notebook tests', () => {
                 // Skip test for older python and on windows. Getting E_PROTO on windows.
                 if (pythonService) {
                     // We will only connect if we allow for self signed cert connections
-                    ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+                    ioc.forceDataScienceSettingsChanged({
+                        allowUnauthorizedRemoteConnection: true,
+                        jupyterLaunchTimeout: 60000
+                    });
 
                     const connectionFound = createDeferred();
                     const pemFile = path.join(
