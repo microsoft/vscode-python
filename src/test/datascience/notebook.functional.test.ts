@@ -528,7 +528,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();
 
-                if (pythonService) {
+                if (pythonService && !useRawKernel) {
                     const connectionFound = createDeferred();
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,

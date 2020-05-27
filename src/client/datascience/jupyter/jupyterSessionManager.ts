@@ -47,35 +47,39 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     ) {}
 
     public async dispose() {
-        if (this.contentsManager) {
-            traceInfo('SessionManager - dispose contents manager');
-            this.contentsManager.dispose();
-            this.contentsManager = undefined;
-        }
-        if (this.sessionManager && !this.sessionManager.isDisposed) {
-            traceInfo('ShutdownSessionAndConnection - dispose session manager');
-            // Make sure it finishes startup.
-            await this.sessionManager.ready;
+        try {
+            if (this.contentsManager) {
+                traceInfo('SessionManager - dispose contents manager');
+                this.contentsManager.dispose();
+                this.contentsManager = undefined;
+            }
+            if (this.sessionManager && !this.sessionManager.isDisposed) {
+                traceInfo('ShutdownSessionAndConnection - dispose session manager');
+                // Make sure it finishes startup.
+                await this.sessionManager.ready;
 
-            // tslint:disable-next-line: no-any
-            const sessionManager = this.sessionManager as any;
-            this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
-            this.sessionManager = undefined;
+                // tslint:disable-next-line: no-any
+                const sessionManager = this.sessionManager as any;
+                this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
+                this.sessionManager = undefined;
 
-            // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
-            // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
-            if (sessionManager._specs) {
-                sessionManager._specs = {};
+                // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
+                // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
+                if (sessionManager._specs) {
+                    sessionManager._specs = {};
+                }
+                if (sessionManager._sessions && sessionManager._sessions.clear) {
+                    sessionManager._sessions.clear();
+                }
+                if (sessionManager._pollModels) {
+                    this.clearPoll(sessionManager._pollModels);
+                }
+                if (sessionManager._pollSpecs) {
+                    this.clearPoll(sessionManager._pollSpecs);
+                }
             }
-            if (sessionManager._sessions && sessionManager._sessions.clear) {
-                sessionManager._sessions.clear();
-            }
-            if (sessionManager._pollModels) {
-                this.clearPoll(sessionManager._pollModels);
-            }
-            if (sessionManager._pollSpecs) {
-                this.clearPoll(sessionManager._pollSpecs);
-            }
+        } catch (e) {
+            traceError(`Exception on session manager shutdown: `, e);
         }
     }
 
