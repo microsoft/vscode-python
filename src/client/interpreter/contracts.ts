@@ -1,6 +1,6 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
-import { InterpreterInfomation } from '../common/process/types';
+import { InterpreterInformation } from '../common/process/types';
 import { Resource } from '../common/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
@@ -80,7 +80,7 @@ export enum InterpreterType {
     Venv = 'Venv',
     WindowsStore = 'WindowsStore'
 }
-export type PythonInterpreter = InterpreterInfomation & {
+export type PythonInterpreter = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;
     type: InterpreterType;

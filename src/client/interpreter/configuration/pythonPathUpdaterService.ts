@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
 import { traceError } from '../../common/logger';
-import { InterpreterInfomation, IPythonExecutionFactory } from '../../common/process/types';
+import { InterpreterInformation, IPythonExecutionFactory } from '../../common/process/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -52,7 +52,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         trigger: 'ui' | 'shebang' | 'load',
         pythonPath: string | undefined
     ) {
-        const telemtryProperties: PythonInterpreterTelemetry = {
+        const telemetryProperties: PythonInterpreterTelemetry = {
             failed,
             trigger
         };
@@ -60,20 +60,23 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             const processService = await this.executionFactory.create({ pythonPath });
             const infoPromise = processService
                 .getInterpreterInformation()
-                .catch<InterpreterInfomation | undefined>(() => undefined);
+                .catch<InterpreterInformation | undefined>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService
                 .getPipVersion(pythonPath)
                 .then((value) => (value.length === 0 ? undefined : value))
                 .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
-            if (info && info.version) {
-                telemtryProperties.pythonVersion = info.version.raw;
+            if (info) {
+                telemetryProperties.architecture = info.architecture;
+                if (info.version) {
+                    telemetryProperties.pythonVersion = info.version.raw;
+                }
             }
             if (pipVersion) {
-                telemtryProperties.pipVersion = pipVersion;
+                telemetryProperties.pipVersion = pipVersion;
             }
         }
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER, duration, telemtryProperties);
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER, duration, telemetryProperties);
     }
     private getPythonUpdaterService(configTarget: ConfigurationTarget, wkspace?: Uri) {
         switch (configTarget) {

@@ -9,7 +9,7 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import {
     ExecutionResult,
-    InterpreterInfomation,
+    InterpreterInformation,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
@@ -24,7 +24,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         this.procService = new ProcessService(new BufferDecoder());
     }
 
-    public getInterpreterInformation(): Promise<InterpreterInfomation> {
+    public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve({
             path: '',
             version: new SemVer('3.6.0-beta'),

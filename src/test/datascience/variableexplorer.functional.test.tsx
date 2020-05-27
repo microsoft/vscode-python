@@ -6,7 +6,7 @@ import * as React from 'react';
 import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Disposable } from 'vscode';
 
-import { RunByLine } from '../../client/common/experimentGroups';
+import { RunByLine } from '../../client/common/experiments/groups';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';

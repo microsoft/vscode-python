@@ -6,7 +6,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as querystring from 'querystring';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
-import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
+import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';

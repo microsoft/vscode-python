@@ -9,11 +9,12 @@ import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
-import { IApplicationEnvironment } from '../../client/common/application/types';
-import { PythonSettings } from '../../client/common/configSettings';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { CryptoUtils } from '../../client/common/crypto';
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
+import { IApplicationEnvironment } from '../../../client/common/application/types';
+import { PythonSettings } from '../../../client/common/configSettings';
+import { ConfigurationService } from '../../../client/common/configuration/service';
+import { CryptoUtils } from '../../../client/common/crypto';
+import { NativeNotebook } from '../../../client/common/experiments/groups';
 import {
     configUri,
     downloadedExperimentStorageKey,
@@ -21,11 +22,11 @@ import {
     experimentStorageKey,
     isDownloadedStorageValidKey,
     oldExperimentSalts
-} from '../../client/common/experiments';
-import { HttpClient } from '../../client/common/net/httpClient';
-import { PersistentStateFactory } from '../../client/common/persistentState';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
+} from '../../../client/common/experiments/manager';
+import { HttpClient } from '../../../client/common/net/httpClient';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../client/common/platform/types';
 import {
     ICryptoUtils,
     IExperiments,
@@ -33,10 +34,10 @@ import {
     IOutputChannel,
     IPersistentState,
     IPersistentStateFactory
-} from '../../client/common/types';
-import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
-import { sleep } from '../common';
-import { noop } from '../core';
+} from '../../../client/common/types';
+import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
+import { sleep } from '../../common';
+import { noop } from '../../core';
 
 // tslint:disable: max-func-body-length
 
@@ -842,6 +843,17 @@ suite('A/B experiments', () => {
         },
         {
             testName:
+                'User experiments list contains the experiment user has opened into and not the control experiment even if user is in the control experiment range',
+            experimentStorageValue: [
+                { name: 'control', salt: 'salt', min: 0, max: 100 },
+                { name: 'experiment', salt: 'salt', min: 0, max: 0 }
+            ],
+            hash: 8187,
+            experimentsOptedInto: ['experiment'],
+            expectedResult: [{ name: 'experiment', salt: 'salt', min: 0, max: 0 }]
+        },
+        {
+            testName:
                 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
@@ -880,6 +892,37 @@ suite('A/B experiments', () => {
                 expManager.populateUserExperiments();
                 assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
             });
+        });
+        test('NativeNotebook Experiment are not loaded in VSC Insiders', async () => {
+            const storageValue = [
+                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
+                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+            ];
+            experimentStorage.setup((n) => n.value).returns(() => storageValue);
+            when(appEnvironment.machineId).thenReturn('101');
+            when(appEnvironment.channel).thenReturn('stable');
+            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
+            expManager.populateUserExperiments();
+            assert.deepEqual(expManager.userExperiments, []);
+        });
+        test('NativeNotebook Experiment are loaded in VSC Insiders', async () => {
+            const storageValue = [
+                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
+                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+            ];
+            experimentStorage.setup((n) => n.value).returns(() => storageValue);
+            when(appEnvironment.machineId).thenReturn('101');
+            when(appEnvironment.channel).thenReturn('insiders');
+            when(crypto.createHash(anything(), 'number', anything())).thenReturn(8187);
+            expManager.populateUserExperiments();
+            assert.deepEqual(expManager.userExperiments, [
+                {
+                    max: 94,
+                    min: 79,
+                    name: 'NativeNotebook - control',
+                    salt: 'salt'
+                }
+            ]);
         });
     });
 

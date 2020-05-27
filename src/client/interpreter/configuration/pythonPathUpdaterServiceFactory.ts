@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { DeprecatePythonPath } from '../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { GlobalPythonPathUpdaterService } from './services/globalUpdaterService';

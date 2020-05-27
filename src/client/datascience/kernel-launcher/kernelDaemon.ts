@@ -63,6 +63,9 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         args: string[],
         options: SpawnOptions
     ): Promise<ObservableExecutionResult<string>> {
+        if (this.killed) {
+            throw new Error('Restarting a dead daemon');
+        }
         if (options.throwOnStdErr) {
             throw new Error("'throwOnStdErr' not supported in spawnOptions for KernelDaemon.start");
         }

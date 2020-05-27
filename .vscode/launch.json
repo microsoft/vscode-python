@@ -24,7 +24,7 @@
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
-                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE" : "1",
+                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_PYTHON_LOG_TELEMETRY": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
@@ -171,6 +171,33 @@
             ],
             "env": {
                 "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Tests (DataScience, *.ds.test.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--disable-extensions",
+                "--enable-proposed-api",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
+                "TEST_FILES_SUFFIX": "ds.test"
             },
             "stopOnEntry": false,
             "sourceMaps": true,

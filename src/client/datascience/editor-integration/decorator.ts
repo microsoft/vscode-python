@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IDocumentManager } from '../../common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateCellRangesFromDocument } from '../cellFactory';
@@ -20,7 +20,8 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private configuration: IConfigurationService
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(IVSCodeNotebook) private vsCodeNotebook: IVSCodeNotebook
     ) {
         this.computeDecorations();
         disposables.push(this);
@@ -100,6 +101,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             editor &&
             editor.document &&
             editor.document.languageId === PYTHON_LANGUAGE &&
+            !this.vsCodeNotebook.activeNotebookEditor &&
             this.activeCellTop &&
             this.cellSeparatorType &&
             this.activeCellBottom

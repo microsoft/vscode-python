@@ -3,7 +3,7 @@
 'use strict';
 import {
     ExecutionResult,
-    InterpreterInfomation,
+    InterpreterInformation,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
@@ -19,7 +19,7 @@ export class MockPythonService implements IPythonExecutionService {
         this.interpreter = interpreter;
     }
 
-    public getInterpreterInformation(): Promise<InterpreterInfomation> {
+    public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve(this.interpreter);
     }
 

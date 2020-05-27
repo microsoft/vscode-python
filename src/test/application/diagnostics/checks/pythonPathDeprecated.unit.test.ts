@@ -28,7 +28,7 @@ import {
     IDiagnosticHandlerService
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, Resource } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';

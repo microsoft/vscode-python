@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../common/experiments/groups';
 import { traceInfo } from '../../../../common/logger';
 import { IExperimentsManager } from '../../../../common/types';
 import { sendTelemetryEvent } from '../../../../telemetry';

@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, workspace } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import {
     CTagsProductPathService,
@@ -133,6 +134,12 @@ suite('Multiroot Linting', () => {
 
     async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        await config.updateSetting(
+            'languageServer',
+            LanguageServerType.Jedi,
+            Uri.file(multirootPath),
+            ConfigurationTarget.Global
+        );
         await Promise.all([
             config.updateSetting(setting, global, Uri.file(multirootPath), ConfigurationTarget.Global),
             config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace)

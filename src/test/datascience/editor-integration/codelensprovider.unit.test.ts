@@ -4,7 +4,12 @@
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    IVSCodeNotebook
+} from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
@@ -24,6 +29,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let tokenSource: CancellationTokenSource;
+    let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -37,9 +43,11 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         dataScienceSettings.setup((d) => d.enabled).returns(() => true);
         pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => undefined);
         commandManager
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve());
@@ -53,7 +61,8 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             commandManager.object,
             disposables,
             debugService.object,
-            fileSystem.object
+            fileSystem.object,
+            vscodeNotebook.object
         );
     });
 
@@ -97,6 +106,33 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(() => targetCodeWatcher.object)
             .verifiable(TypeMoq.Times.once());
+        documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
+
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+        codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
+
+        // getCodeLenses should be called twice, but getting the code watcher only once due to same doc
+        targetCodeWatcher.verifyAll();
+        serviceContainer.verifyAll();
+    });
+    test('Should not Initialize Code Lenses when a Native Notebook is open', () => {
+        // Create our document
+        const document = TypeMoq.Mock.ofType<TextDocument>();
+        document.setup((d) => d.fileName).returns(() => 'test.py');
+        document.setup((d) => d.version).returns(() => 1);
+        vscodeNotebook.reset();
+        // tslint:disable-next-line: no-any
+        vscodeNotebook.setup((c) => c.activeNotebookEditor).returns(() => ({} as any));
+
+        const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
+        targetCodeWatcher
+            .setup((tc) => tc.getCodeLenses())
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.never());
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(() => targetCodeWatcher.object)
+            .verifiable(TypeMoq.Times.never());
         documentManager.setup((d) => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

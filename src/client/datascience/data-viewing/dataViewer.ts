@@ -9,7 +9,7 @@ import { ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { WebHostNotebook } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';

@@ -28,7 +28,7 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../../../client/common/constants';
-import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, IExtensions, Resource } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
 import { IServiceContainer } from '../../../../client/ioc/types';

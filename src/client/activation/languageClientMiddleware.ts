@@ -60,7 +60,7 @@ import {
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
 import { HiddenFilePrefix } from '../common/constants';
-import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experimentGroups';
+import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experiments/groups';
 import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';

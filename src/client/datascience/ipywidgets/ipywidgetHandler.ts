@@ -12,7 +12,7 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { EnableIPyWidgets } from '../../common/experimentGroups';
+import { EnableIPyWidgets } from '../../common/experiments/groups';
 import { traceError, traceInfo } from '../../common/logger';
 import { IDisposableRegistry, IExperimentsManager, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';

@@ -228,6 +228,16 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.ShowingIp);
         }
 
+        // Kernel state changing
+        const afterKernel = afterState.main.kernel;
+        const prevKernel = prevState.main.kernel;
+        if (
+            afterKernel.jupyterServerStatus !== prevKernel.jupyterServerStatus &&
+            afterKernel.jupyterServerStatus === ServerStatus.Idle
+        ) {
+            sendMessage(InteractiveWindowMessages.KernelIdle);
+        }
+
         if (action.type !== 'action.postOutgoingMessage') {
             sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
         }

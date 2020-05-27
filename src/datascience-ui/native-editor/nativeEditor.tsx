@@ -32,6 +32,7 @@ const ConnectedNativeCell = getConnectedNativeCell();
 export class NativeEditor extends React.Component<INativeEditorProps> {
     private renderCount: number = 0;
     private waitingForLoadRender = true;
+    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef();
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -96,7 +97,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header id="main-panel-toolbar">
+                <header ref={this.mainPanelToolbarRef} id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
@@ -159,6 +160,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+        let toolbarHeight = 0;
+        if (this.mainPanelToolbarRef.current) {
+            toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
+        }
         return {
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
@@ -171,6 +176,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
                     ? this.props.settings.variableOptions.enableDuringDebugger

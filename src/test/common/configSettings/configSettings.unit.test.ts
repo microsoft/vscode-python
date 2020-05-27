@@ -66,15 +66,13 @@ suite('Python Settings', async () => {
             'envFile',
             'poetryPath',
             'insidersChannel',
-            'defaultInterpreterPath'
+            'defaultInterpreterPath',
+            'jediPath'
         ]) {
             config
                 .setup((c) => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
-        }
-        if (sourceSettings.jediEnabled) {
-            config.setup((c) => c.get<string>('jediPath')).returns(() => sourceSettings.jediPath);
         }
         for (const name of ['venvFolders']) {
             config
@@ -84,7 +82,7 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer']) {
+        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer']) {
             config
                 .setup((c) => c.get<boolean>(name, true))
                 // tslint:disable-next-line:no-any
@@ -98,10 +96,7 @@ suite('Python Settings', async () => {
         }
 
         // number settings
-        if (sourceSettings.jediEnabled) {
-            config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
-        }
-
+        config.setup((c) => c.get<number>('jediMemoryLimit')).returns(() => sourceSettings.jediMemoryLimit);
         // Language server type settings
         config.setup((c) => c.get<LanguageServerType>('languageServer')).returns(() => sourceSettings.languageServer);
 
@@ -153,7 +148,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
+        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
             async (settingName) => {
                 testIfValueIsUpdated(settingName, true);
             }

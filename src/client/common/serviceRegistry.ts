@@ -41,7 +41,7 @@ import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
-import { ExperimentsManager } from './experiments';
+import { ExperimentsManager } from './experiments/manager';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,

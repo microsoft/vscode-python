@@ -8,24 +8,27 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IConfigurationService, IHttpClient, IPythonSettings } from '../common/types';
-import { sendTelemetryEvent } from '../telemetry';
-import { EventName } from '../telemetry/constants';
-import { IApplicationEnvironment } from './application/types';
-import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
-import { traceDecorators, traceError } from './logger';
-import { IFileSystem } from './platform/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
+import { IApplicationEnvironment } from '../application/types';
+import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceDecorators, traceError } from '../logger';
+import { IFileSystem } from '../platform/types';
 import {
     ABExperiments,
+    IConfigurationService,
     ICryptoUtils,
     IExperimentsManager,
+    IHttpClient,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory
-} from './types';
-import { sleep } from './utils/async';
-import { swallowExceptions } from './utils/decorators';
-import { Experiments } from './utils/localize';
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../types';
+import { sleep } from '../utils/async';
+import { swallowExceptions } from '../utils/decorators';
+import { Experiments } from '../utils/localize';
+import { NativeNotebook } from './groups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
@@ -149,7 +152,16 @@ export class ExperimentsManager implements IExperimentsManager {
     public populateUserExperiments(): void {
         this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
+            const remainingExpriments: ABExperiments = [];
+            // First process experiments in order of user preference (if they have opted out or opted in).
             for (const experiment of this.experimentStorage.value) {
+                // User cannot belong to NotebookExperiment if they are not using Insiders.
+                if (
+                    (experiment.name === NativeNotebook.experiment || experiment.name === NativeNotebook.control) &&
+                    this.appEnvironment.channel === 'stable'
+                ) {
+                    continue;
+                }
                 try {
                     if (
                         this._experimentsOptedOutFrom.includes('All') ||
@@ -168,13 +180,19 @@ export class ExperimentsManager implements IExperimentsManager {
                             expNameOptedInto: experiment.name
                         });
                         this.userExperiments.push(experiment);
-                    } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
-                        this.userExperiments.push(experiment);
+                    } else {
+                        remainingExpriments.push(experiment);
                     }
                 } catch (ex) {
                     traceError(`Failed to populate experiment list for experiment '${experiment.name}'`, ex);
                 }
             }
+
+            // Add users (based on algorithm) to experiments they haven't already opted out of or opted into.
+            remainingExpriments
+                .filter((experiment) => this.isUserInRange(experiment.min, experiment.max, experiment.salt))
+                .filter((experiment) => !this.userExperiments.some((existing) => existing.salt === experiment.salt))
+                .forEach((experiment) => this.userExperiments.push(experiment));
         }
     }
 

@@ -7,7 +7,7 @@ import { inject, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../../common/constants';
-import { DeprecatePythonPath } from '../../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, IExtensions, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';

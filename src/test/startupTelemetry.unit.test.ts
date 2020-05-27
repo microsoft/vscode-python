@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../client/common/application/types';
-import { DeprecatePythonPath } from '../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../client/common/types';
 import { IServiceContainer } from '../client/ioc/types';
 import { hasUserDefinedPythonPath } from '../client/startupTelemetry';

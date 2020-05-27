@@ -140,6 +140,12 @@ export interface INotebookServer extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
+// Provides a service to determine if raw notebook is supported or not
+export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
+export interface IRawNotebookSupportedService {
+    supported(): Promise<boolean>;
+}
+
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
@@ -249,7 +255,7 @@ export interface INotebookServerOptions {
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger {
+export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
     onKernelRestarted(): void;
@@ -1024,7 +1030,7 @@ export interface INotebookStorage {
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    load(file: Uri, contents?: string): Promise<INotebookModel>;
+    load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
 }
 type WebViewViewState = {
     readonly visible: boolean;

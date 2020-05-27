@@ -4,7 +4,7 @@
 'use strict';
 
 import { isTestExecution } from './common/constants';
-import { DebugAdapterNewPtvsd } from './common/experimentGroups';
+import { DebugAdapterNewPtvsd } from './common/experiments/groups';
 import { traceError } from './common/logger';
 import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
 import {

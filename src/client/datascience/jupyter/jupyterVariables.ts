@@ -5,7 +5,7 @@ import type { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, named } from 'inversify';
 
 import { Event, EventEmitter } from 'vscode';
-import { RunByLine } from '../../common/experimentGroups';
+import { RunByLine } from '../../common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../constants';

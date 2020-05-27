@@ -223,6 +223,7 @@ export class JupyterNotebookBase implements INotebook {
                 await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
         }
+        this.loggers.forEach((d) => d.dispose());
         this.disposed.fire();
     }
 
@@ -322,7 +323,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         );
 
-        if (cancelToken) {
+        if (cancelToken && cancelToken.onCancellationRequested) {
             this.disposableRegistry.push(
                 cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError()))
             );

@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { Cancellation } from '../../common/cancellation';
 import { PYTHON } from '../../common/constants';
-import { RunByLine } from '../../common/experimentGroups';
+import { RunByLine } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import { IExperimentsManager } from '../../common/types';
 import { sleep } from '../../common/utils/async';
@@ -20,7 +20,7 @@ import { ICell, IJupyterVariables, INotebookExecutionLogger, INotebookProvider }
 export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProvider {
     private runFiles = new Set<string>();
     private enabled = false;
-    private registeredHoverProvider = false;
+    private hoverProviderRegistration: vscode.Disposable | undefined;
 
     constructor(
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
@@ -31,7 +31,9 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
     }
 
     public dispose() {
-        noop();
+        if (this.hoverProviderRegistration) {
+            this.hoverProviderRegistration.dispose();
+        }
     }
 
     // tslint:disable-next-line: no-any
@@ -71,10 +73,13 @@ export class HoverProvider implements INotebookExecutionLogger, vscode.HoverProv
     }
 
     private initializeHoverProvider() {
-        if (!this.registeredHoverProvider) {
-            this.registeredHoverProvider = true;
+        if (!this.hoverProviderRegistration) {
             if (this.enabled) {
-                vscode.languages.registerHoverProvider(PYTHON, this);
+                this.hoverProviderRegistration = vscode.languages.registerHoverProvider(PYTHON, this);
+            } else {
+                this.hoverProviderRegistration = {
+                    dispose: noop
+                };
             }
         }
     }

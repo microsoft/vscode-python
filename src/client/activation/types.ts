@@ -70,6 +70,9 @@ export enum LanguageServerType {
     None = 'None'
 }
 
+export const DotNetLanguageServerFolder = 'languageServer';
+export const NodeLanguageServerFolder = 'nodeLanguageServer';
+
 // tslint:disable-next-line: interface-name
 export interface DocumentHandler {
     handleOpen(document: TextDocument): void;

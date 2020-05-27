@@ -194,6 +194,7 @@
     "react-color",
     "react-data-grid",
     "react-dom",
+    "react-draggable",
     "react-hot-loader",
     "react-is",
     "react-json-tree",

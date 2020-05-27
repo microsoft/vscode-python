@@ -11,7 +11,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experimentGroups';
+import { WebHostNotebook } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';

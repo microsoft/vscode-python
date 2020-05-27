@@ -31,6 +31,7 @@ export class MockJupyterSession implements IJupyterSession {
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
     private lastRequest: MockJupyterRequest | undefined;
+    private _status = ServerStatus.Busy;
     constructor(
         cellDictionary: Record<string, ICell>,
         timedelay: number,
@@ -39,6 +40,8 @@ export class MockJupyterSession implements IJupyterSession {
     ) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
+        // Switch to idle after a timeout
+        setTimeout(() => this.changeStatus(ServerStatus.Idle), 100);
     }
 
     public get onRestarted(): Event<void> {
@@ -53,7 +56,7 @@ export class MockJupyterSession implements IJupyterSession {
     }
 
     public get status(): ServerStatus {
-        return ServerStatus.Idle;
+        return this._status;
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -268,6 +271,11 @@ export class MockJupyterSession implements IJupyterSession {
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         noop();
+    }
+
+    private changeStatus(newStatus: ServerStatus) {
+        this._status = newStatus;
+        this.onStatusChangedEvent.fire(newStatus);
     }
 
     private findCell = (code: string): ICell => {

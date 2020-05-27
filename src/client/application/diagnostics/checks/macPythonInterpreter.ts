@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, DiagnosticSeverity, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
 import {

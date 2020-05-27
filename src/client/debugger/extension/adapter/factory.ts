@@ -13,7 +13,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../common/experiments/groups';
 import { traceVerbose } from '../../../common/logger';
 import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
