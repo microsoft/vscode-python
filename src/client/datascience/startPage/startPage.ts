@@ -136,7 +136,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 this.setTelemetryFlags();
 
                 const doc = await this.documentManager.openTextDocument({ language: 'python' });
-                this.documentManager.showTextDocument(doc, 1, true);
+                await this.documentManager.showTextDocument(doc, 1, true);
                 break;
             case StartPageMessages.OpenInteractiveWindow:
                 sendTelemetryEvent(Telemetry.StartPageOpenInteractiveWindow);
@@ -147,20 +147,19 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     content: `#%%\nprint("${localize.DataScience.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
-                await this.commandManager.executeCommand(Commands.ShowHistoryPane);
-                this.commandManager.executeCommand(Commands.RunAllCells, '');
+                await this.commandManager.executeCommand(Commands.RunAllCells, '');
                 break;
             case StartPageMessages.OpenCommandPalette:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
                 this.setTelemetryFlags();
 
-                commands.executeCommand('workbench.action.showCommands');
+                await commands.executeCommand('workbench.action.showCommands');
                 break;
             case StartPageMessages.OpenCommandPaletteWithOpenNBSelected:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected);
                 this.setTelemetryFlags();
 
-                commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
+                await commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
                 sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
@@ -180,7 +179,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 });
                 if (uri) {
                     const doc3 = await this.documentManager.openTextDocument(uri[0]);
-                    this.documentManager.showTextDocument(doc3);
+                    await this.documentManager.showTextDocument(doc3);
                 }
                 break;
             case StartPageMessages.UpdateSettings:
@@ -229,7 +228,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
         // savedVersion being undefined means this is the first time the user activates the extension.
         // if savedVersion != version, there was an update
-        this.context.globalState.update('extensionVersion', version);
+        await this.context.globalState.update('extensionVersion', version);
         return true;
     }
 
@@ -262,7 +261,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             );
         }
 
-        this.documentManager.showTextDocument(sampleNotebook, 1, true);
+        await this.documentManager.showTextDocument(sampleNotebook, 1, true);
     }
 
     private setTelemetryFlags() {
