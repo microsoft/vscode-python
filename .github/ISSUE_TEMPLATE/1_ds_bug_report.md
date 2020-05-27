@@ -46,4 +46,4 @@ Toggle Developer Tools). For better details, run the "Enable source map support 
 extension debugging" command in VS Code at least once beforehand.
 ------------------------------------------------------------------------------------------------->
 
-Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
+Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer, @joyceerhl
