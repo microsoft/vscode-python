@@ -2,4 +2,5 @@
 // Licensed under the MIT License.
 
 // Temporary work around for https://github.com/microsoft/vscode/issues/98106
-// @ts-ignore
+// tslint:disable-next-line: no-console
+console.log('pvscDummy loaded for renderer');

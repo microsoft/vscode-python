@@ -39,7 +39,6 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
             </script>
             <script type="text/javascript">
                 // Possible pre-render script has not yet loaded.
-                debugger;
                 if (window['vscode-jupyter']){
                     try {
                         const tag = document.getElementById("${id}");
