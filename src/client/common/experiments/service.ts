@@ -40,8 +40,8 @@ export class ExperimentService implements IExperimentService {
         // Users can only opt in or out of experiment groups, not control groups.
         const optInto = this.settings.experiments.optInto;
         const optOutFrom = this.settings.experiments.optOutFrom;
-        this._optInto = optInto.filter((exp) => exp.endsWith('control'));
-        this._optOutFrom = optOutFrom.filter((exp) => exp.endsWith('control'));
+        this._optInto = optInto.filter((exp) => !exp.endsWith('control'));
+        this._optOutFrom = optOutFrom.filter((exp) => !exp.endsWith('control'));
 
         // Don't initialize the experiment service if the extension's experiments setting is disabled.
         const enabled = this.settings.experiments.enabled;
@@ -76,8 +76,6 @@ export class ExperimentService implements IExperimentService {
             return false;
         }
 
-        const isFlightEnabled = this.experimentationService.isCachedFlightEnabled(flight);
-
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
         if (this._optOutFrom.includes('All') || this._optOutFrom.includes(flight)) {
@@ -96,6 +94,6 @@ export class ExperimentService implements IExperimentService {
             return true;
         }
 
-        return isFlightEnabled;
+        return this.experimentationService.isCachedFlightEnabled(flight);
     }
 }
