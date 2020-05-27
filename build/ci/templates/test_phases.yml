@@ -46,6 +46,16 @@ steps:
   # Example command line (windows pwsh):
   # > gulp prePublishNonBundle
   - task: Gulp@0
+    displayName: 'gulp compile'
+    inputs:
+      targets: 'compile'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
+
+  # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
+  # This produces the .js files required into the out/ folder.
+  # Example command line (windows pwsh):
+  # > gulp prePublishNonBundle
+  - task: Gulp@0
     displayName: 'gulp prePublishNonBundle'
     inputs:
       targets: 'prePublishNonBundle'
@@ -60,7 +70,7 @@ steps:
   - bash: |
       npm run test:unittests:cover
     displayName: 'run test:unittests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'), not(contains(variables['TestsToRun'], 'testUnitTests')))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
