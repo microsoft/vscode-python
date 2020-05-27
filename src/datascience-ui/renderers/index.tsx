@@ -3,10 +3,19 @@
 
 'use strict';
 
+console.error('Loaded index.tsx00');
 // This must be on top, do not change. Required by webpack.
-import '../common/main';
-// This must be on top, do not change. Required by webpack.
+declare let __webpack_public_path__: string;
 
+// tslint:disable-next-line: no-any
+if ((window as any).__PVSC_Public_Path) {
+    // This variable tells Webpack to this as the root path used to request webpack bundles.
+    // tslint:disable-next-line: no-any
+    __webpack_public_path__ = (window as any).__PVSC_Public_Path;
+}
+
+// This must be on top, do not change. Required by webpack.
+console.error('Loaded index.tsx');
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -15,7 +24,9 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { handleLinkClick } from '../interactive-common/handlers';
 import type { IVsCodeApi } from '../react-common/postOffice';
 import { CellOutput } from './render';
+console.error('Loaded index.tsx2');
 export declare function acquireVsCodeApi(): IVsCodeApi;
+console.error('Loaded index.tsx3');
 
 /**
  * Called from renderer to render output.
@@ -46,6 +57,7 @@ function renderOutput(
  * At this point look through all such scripts and render the output.
  */
 function renderOnLoad() {
+    console.error('Loaded index.tsx6');
     document
         .querySelectorAll<HTMLScriptElement>('script[type="application/vscode-jupyter+json"]')
         .forEach((tag) => renderOutput(tag, tag.dataset.mimeType as string, JSON.parse(tag.innerHTML)));
@@ -65,12 +77,14 @@ function linkHandler(href: string) {
 
 // tslint:disable-next-line: no-any
 function initialize(global: Record<string, any>) {
+    console.error('Loaded index.tsx5');
     global['vscode-jupyter'] = {};
     global['vscode-jupyter'].renderOutput = renderOutput;
     document.addEventListener('click', (e) => handleLinkClick(e, linkHandler), true);
     renderOnLoad();
 }
 
+console.error('Loaded index.tsx4');
 // Expose necessary hooks for client renderer to render output.
 // tslint:disable-next-line: no-any
 (window as any).renderOutput = renderOutput;

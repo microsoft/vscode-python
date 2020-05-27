@@ -17,7 +17,7 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
         const dataScienceUIFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui');
         this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'pvscDummy.js')));
         this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'main.js')));
-        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'renderers.js')));
+        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'notebook', 'renderers.js')));
     }
 
     // @ts-ignore
@@ -39,10 +39,11 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
             </script>
             <script type="text/javascript">
                 // Possible pre-render script has not yet loaded.
+                debugger;
                 if (window['vscode-jupyter']){
                     try {
                         const tag = document.getElementById("${id}");
-                        window['vscode-jupyter']['renderOutput'](tag, '${mimeType}', JSON.parse(tag.innerHTML));
+                        window['vscode-jupyter']['renderOutput'](tag);
                     } catch (ex){
                         console.error("Failed to render ${mimeType}", ex);
                     }

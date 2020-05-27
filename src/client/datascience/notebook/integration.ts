@@ -53,7 +53,24 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 {
                     viewType: 'jupyter-notebook-renderer',
                     displayName: 'Jupyter Notebook Renderer',
-                    mimeTypes: ['text/latex', 'application/vnd.plotly.v1+json', 'application/vnd.vega.v5+json']
+                    mimeTypes: [
+                        'application/geo+json',
+                        'application/vdom.v1+json',
+                        'application/vnd.dataresource+json',
+                        'application/vnd.plotly.v1+json',
+                        'application/vnd.vega.v2+json',
+                        'application/vnd.vega.v3+json',
+                        'application/vnd.vega.v4+json',
+                        'application/vnd.vega.v5+json',
+                        'application/vnd.vegalite.v1+json',
+                        'application/vnd.vegalite.v2+json',
+                        'application/vnd.vegalite.v3+json',
+                        'application/vnd.vegalite.v4+json',
+                        'application/x-nteract-model-debug+json',
+                        'image/gif',
+                        'text/latex',
+                        'text/vnd.plotly.v1+html'
+                    ]
                 }
             ];
             content.contributes.notebookProvider = [
