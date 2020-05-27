@@ -191,11 +191,11 @@ gulp.task('webpack', async () => {
     if (isCI) {
         await Promise.all([
             buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension'),
-            buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter')
+            buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter')
         ]);
     } else {
         await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
-        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter');
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter');
     }
 });
 
