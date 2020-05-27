@@ -4,16 +4,16 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { commands, ConfigurationTarget, EventEmitter, TextDocument, ViewColumn } from 'vscode';
+import { ConfigurationTarget, EventEmitter, TextDocument, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import {
+    IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
     IWebPanelProvider,
     IWorkspaceService
 } from '../../common/application/types';
-import { ExtensionChannel } from '../../common/insidersBuild/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -48,7 +48,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
     ) {
         super(
             configuration,
@@ -69,18 +70,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     public async activate(): Promise<void> {
-        const settings = this.configuration.getSettings();
-
-        if (settings.showStartPage && settings.insidersChannel === ExtensionChannel.off) {
-            // extesionVersionChanged() reads CHANGELOG.md
-            // So we use separate if's to try and avoid reading a file every time
-            const firstTimeOrUpdate = await this.extensionVersionChanged();
-
-            if (firstTimeOrUpdate) {
-                this.firstTime = true;
-                this.open().ignoreErrors();
-            }
-        }
+        this.activateBackground().ignoreErrors();
     }
 
     public dispose(): Promise<void> {
@@ -153,13 +143,17 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPalette);
                 this.setTelemetryFlags();
 
-                await commands.executeCommand('workbench.action.showCommands');
+                await this.commandManager.executeCommand('workbench.action.showCommands');
                 break;
             case StartPageMessages.OpenCommandPaletteWithOpenNBSelected:
                 sendTelemetryEvent(Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected);
                 this.setTelemetryFlags();
 
-                await commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
+                await this.commandManager.executeCommand(
+                    'workbench.action.quickOpen',
+                    '>Create New Blank Jupyter Notebook'
+                );
+                // await commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
                 sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
@@ -195,6 +189,21 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         super.onMessage(message, payload);
     }
 
+    private async activateBackground(): Promise<void> {
+        const settings = this.configuration.getSettings();
+
+        if (settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
+            // extesionVersionChanged() reads CHANGELOG.md
+            // So we use separate if's to try and avoid reading a file every time
+            const firstTimeOrUpdate = await this.extensionVersionChanged();
+
+            if (firstTimeOrUpdate) {
+                this.firstTime = true;
+                this.open().ignoreErrors();
+            }
+        }
+    }
+
     // This gets the most recent Enhancements and date from CHANGELOG.md
     private async handleReleaseNotesRequest() {
         const settings = this.configuration.getSettings();
@@ -214,12 +223,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     private async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
-
-        const packageJson = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'package.json'));
-        const searchString = '"version": "';
-        const startIndex = packageJson.indexOf(searchString);
-        const endIndex = packageJson.indexOf('",', startIndex);
-        const version = packageJson.substring(startIndex + searchString.length, endIndex);
+        const version = this.appEnvironment.packageJson.version;
 
         if (savedVersion && savedVersion === version) {
             // There has not been an update
@@ -233,31 +237,14 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async openSampleNotebook(): Promise<void> {
-        const localizedFilePath = path.join(
-            EXTENSION_ROOT_DIR,
-            'src',
-            'client',
-            'datascience',
-            'startPage',
-            'SampleNotebook',
-            localize.DataScience.sampleNotebook()
-        );
-
+        const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.DataScience.sampleNotebook());
         let sampleNotebook: TextDocument;
 
         if (await this.file.fileExists(localizedFilePath)) {
             sampleNotebook = await this.documentManager.openTextDocument(localizedFilePath);
         } else {
             sampleNotebook = await this.documentManager.openTextDocument(
-                path.join(
-                    EXTENSION_ROOT_DIR,
-                    'src',
-                    'client',
-                    'datascience',
-                    'startPage',
-                    'SampleNotebook',
-                    'Welcome_To_VSCode_Notebooks.ipynb'
-                )
+                path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Welcome_To_VSCode_Notebooks.ipynb')
             );
         }
 
