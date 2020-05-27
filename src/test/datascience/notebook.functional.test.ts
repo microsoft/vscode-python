@@ -375,8 +375,8 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
                 const pythonService = await createPythonService(2);
 
-                // Skip test for older python and on windows. Getting E_PROTO on windows.
-                if (pythonService) {
+                // Skip test for older python and raw kernel
+                if (pythonService && !useRawKernel) {
                     // We will only connect if we allow for self signed cert connections
                     ioc.forceDataScienceSettingsChanged({
                         allowUnauthorizedRemoteConnection: true,
@@ -416,12 +416,19 @@ suite('DataScience notebook tests', () => {
                         }
                     );
                     disposables.push(exeResult);
-                    exeResult.out.subscribe((output: Output<string>) => {
-                        const connectionURL = getIPConnectionInfo(output.out);
-                        if (connectionURL) {
-                            connectionFound.resolve(connectionURL);
+                    exeResult.out.subscribe(
+                        (output: Output<string>) => {
+                            traceInfo(`Remote server output: ${output.out}`);
+                            const connectionURL = getIPConnectionInfo(output.out);
+                            if (connectionURL) {
+                                connectionFound.resolve(connectionURL);
+                            }
+                        },
+                        (e) => {
+                            traceInfo(`Remote server error: ${e}`);
+                            connectionFound.reject(e);
                         }
-                    });
+                    );
 
                     const connString = await connectionFound.promise;
                     const uri = connString as string;

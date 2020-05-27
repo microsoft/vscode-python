@@ -5,8 +5,9 @@ import type { ContentsManager, ServerConnection, Session, SessionManager } from 
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { traceInfo } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IOutputChannel } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
@@ -162,8 +163,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         try {
-            // Ask the session manager to refresh its list of kernel specs.
-            await this.sessionManager.refreshSpecs();
+            // Ask the session manager to refresh its list of kernel specs. This might never
+            // come back so only wait for ten seconds.
+            await Promise.race([sleep(10_000), this.sessionManager.refreshSpecs()]);
 
             // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
             const kernelspecs =
@@ -175,7 +177,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 const spec = kernelspecs[k];
                 return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });
-        } catch {
+        } catch (e) {
+            traceError(`SessionManager:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
             return [];
         }
