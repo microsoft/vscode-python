@@ -14,10 +14,10 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
     }
     private _preloads: Uri[] = [];
     constructor() {
-        const dataScienceUIFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui');
-        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'pvscDummy.js')));
-        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'renderers', 'main.js')));
-        this._preloads.push(Uri.file(path.join(dataScienceUIFolder, 'notebook', 'renderers.js')));
+        const renderersFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers');
+        this._preloads.push(Uri.file(path.join(renderersFolder, 'pvscDummy.js')));
+        this._preloads.push(Uri.file(path.join(renderersFolder, 'main.js')));
+        this._preloads.push(Uri.file(path.join(renderersFolder, 'renderers.js')));
     }
 
     // @ts-ignore
@@ -34,7 +34,7 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
         }
         const id = uuid();
         return `
-            <script id="${id}" data-mimeType="${mimeType}" type="application/vscode-jupyter+json">
+            <script id="${id}" data-mime-type="${mimeType}" type="application/vscode-jupyter+json">
                 ${JSON.stringify(outputToSend)}
             </script>
             <script type="text/javascript">

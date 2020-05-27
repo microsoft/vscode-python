@@ -11,17 +11,16 @@ const scriptSrcs = Array.from(document.querySelectorAll('script'))
     .filter((item) => !!item);
 
 if (scriptSrcs.length) {
-    console.error('main loaded');
-    const src = scriptSrcs[0]!;
-    const paths = src.split('/');
-    // Remove file name portion from path.
-    paths.pop();
-    // Remove `renderers` name portion from path.
-    paths.pop();
-    console.error(paths);
-    // tslint:disable-next-line: no-any
-    (window as any).__PVSC_Public_Path = `${paths.join('/')}/notebook/`;
-    console.error('(window as any).__PVSC_Public_Path');
-    // tslint:disable-next-line: no-any
-    console.error((window as any).__PVSC_Public_Path);
+    try {
+        const src = scriptSrcs[0]!;
+        const paths = src.split('/');
+        // Remove file name portion from path.
+        paths.pop();
+        Object.assign(window, { __PVSC_Public_Path: `${paths.join('/')}/` });
+        console.log(`window.__PVSC_Public_Path = ${(window as any).__PVSC_Public_Path}`);
+    } catch (ex) {
+        console.error('Unable to initialize window.__PVSC_Public_Path', ex);
+    }
+} else {
+    console.error('Unable to initialize window.__PVSC_Public_Path');
 }

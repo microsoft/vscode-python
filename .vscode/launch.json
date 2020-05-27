@@ -15,7 +15,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             // "preLaunchTask": "Compile",
             "skipFiles": [
@@ -45,7 +45,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Inject DS WebBrowser UI",
             "env": {
@@ -69,7 +69,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile"
         },
@@ -103,7 +103,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/client/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Compile",
@@ -127,7 +127,7 @@
             "smartStep": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "env": {
@@ -157,7 +157,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -182,7 +182,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -210,7 +210,7 @@
             "sourceMaps": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -233,7 +233,7 @@
             "smartStep": true,
             "outFiles": [
                 "${workspaceFolder}/out/**/*",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -258,7 +258,7 @@
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -284,7 +284,7 @@
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -321,7 +321,7 @@
             },
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -357,7 +357,7 @@
             },
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js",
-                "!${workspaceFolder}/out/node_modules**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
