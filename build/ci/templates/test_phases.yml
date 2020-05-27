@@ -32,7 +32,7 @@ steps:
       PythonVersion: $(PythonVersion)
       workingDirectory: $(Build.SourcesDirectory)
       compile: 'false'
-      sqlite: 'true'
+      sqlite: $(NeedsIPythonReqs)
 
   # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
   # This produces the .js files required into the out/ folder.

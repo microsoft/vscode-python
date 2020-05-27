@@ -376,7 +376,7 @@ suite('DataScience notebook tests', () => {
                 const pythonService = await createPythonService(2);
 
                 // Skip test for older python and on windows. Getting E_PROTO on windows.
-                if (pythonService && os.platform() !== 'win32') {
+                if (pythonService) {
                     // We will only connect if we allow for self signed cert connections
                     ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 

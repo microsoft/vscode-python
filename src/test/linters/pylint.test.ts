@@ -6,7 +6,16 @@ import { Container } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, DiagnosticSeverity, OutputChannel, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import {
+    CancellationTokenSource,
+    DiagnosticSeverity,
+    OutputChannel,
+    TextDocument,
+    Uri,
+    WorkspaceConfiguration,
+    WorkspaceFolder
+} from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
@@ -34,6 +43,8 @@ suite('Linting - Pylint', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
     let execService: TypeMoq.IMock<IPythonToolExecutionService>;
     let config: TypeMoq.IMock<IConfigurationService>;
+    let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let serviceContainer: ServiceContainer;
 
     setup(() => {
@@ -67,7 +78,16 @@ suite('Linting - Pylint', () => {
             IInterpreterAutoSeletionProxyService,
             MockAutoSelectionService
         );
+
+        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pythonSettings.setup((p) => p.languageServer).returns(() => LanguageServerType.Jedi);
+
         config = TypeMoq.Mock.ofType<IConfigurationService>();
+        config.setup((c) => c.getSettings()).returns(() => pythonSettings.object);
+
+        workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspace.setup((w) => w.getConfiguration('python')).returns(() => workspaceConfig.object);
+
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         const linterManager = new LinterManager(serviceContainer, workspace.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, linterManager);
@@ -198,6 +218,7 @@ suite('Linting - Pylint', () => {
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup((x) => x.linting).returns(() => lintSettings);
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
         config.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         await pylinter.lint(document.object, new CancellationTokenSource().token);
@@ -244,6 +265,7 @@ suite('Linting - Pylint', () => {
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup((x) => x.linting).returns(() => lintSettings);
+        settings.setup((x) => x.languageServer).returns(() => LanguageServerType.Jedi);
         config.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         const messages = await pylinter.lint(document.object, new CancellationTokenSource().token);

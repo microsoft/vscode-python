@@ -8,6 +8,7 @@ import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -29,9 +30,9 @@ import { IAvailableLinterActivator, ILinterInfo } from '../../client/linters/typ
 
 // tslint:disable:max-func-body-length no-any
 suite('Linter Availability Provider tests', () => {
-    test('Availability feature is disabled when global default for jediEnabled=true.', async () => {
+    test('Availability feature is disabled when global default for languageServer === Jedi.', async () => {
         // set expectations
-        const jediEnabledValue = true;
+        const languageServerValue = LanguageServerType.Jedi;
         const expectedResult = false;
 
         // arrange
@@ -42,7 +43,7 @@ suite('Linter Availability Provider tests', () => {
             configServiceMock,
             factoryMock
         ] = getDependenciesForAvailabilityTests();
-        setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
+        setupConfigurationServiceForJediSettingsTest(languageServerValue, configServiceMock);
 
         // call
         const availabilityProvider = new AvailableLinterActivator(
@@ -56,14 +57,14 @@ suite('Linter Availability Provider tests', () => {
         // check expectaions
         expect(availabilityProvider.isFeatureEnabled).is.equal(
             expectedResult,
-            'Avaialability feature should be disabled when python.jediEnabled is true'
+            'Avaialability feature should be disabled when python.languageServer is Jedi'
         );
         workspaceServiceMock.verifyAll();
     });
 
-    test('Availability feature is enabled when global default for jediEnabled=false.', async () => {
+    test('Availability feature is enabled when global default for languageServer is Microsoft.', async () => {
         // set expectations
-        const jediEnabledValue = false;
+        const languageServerValue = LanguageServerType.Microsoft;
         const expectedResult = true;
 
         // arrange
@@ -74,7 +75,7 @@ suite('Linter Availability Provider tests', () => {
             configServiceMock,
             factoryMock
         ] = getDependenciesForAvailabilityTests();
-        setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
+        setupConfigurationServiceForJediSettingsTest(languageServerValue, configServiceMock);
 
         const availabilityProvider = new AvailableLinterActivator(
             appShellMock.object,
@@ -86,7 +87,7 @@ suite('Linter Availability Provider tests', () => {
 
         expect(availabilityProvider.isFeatureEnabled).is.equal(
             expectedResult,
-            'Avaialability feature should be enabled when python.jediEnabled defaults to false'
+            'Avaialability feature should be enabled when python.languageServer defaults to non-Jedi'
         );
         workspaceServiceMock.verifyAll();
     });
@@ -385,7 +386,7 @@ suite('Linter Availability Provider tests', () => {
     // Options to test the implementation of the IAvailableLinterActivator.
     // All options default to values that would otherwise allow the prompt to appear.
     class AvailablityTestOverallOptions {
-        public jediEnabledValue: boolean = false;
+        public languageServerValue = LanguageServerType.Microsoft;
         public pylintUserEnabled?: boolean;
         public pylintWorkspaceEnabled?: boolean;
         public pylintWorkspaceFolderEnabled?: boolean;
@@ -433,7 +434,7 @@ suite('Linter Availability Provider tests', () => {
             .returns(async () => options.linterIsInstalled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
-        setupConfigurationServiceForJediSettingsTest(options.jediEnabledValue, configServiceMock);
+        setupConfigurationServiceForJediSettingsTest(options.languageServerValue, configServiceMock);
         setupWorkspaceMockForLinterConfiguredTests(
             options.pylintUserEnabled,
             options.pylintWorkspaceEnabled,
@@ -460,7 +461,7 @@ suite('Linter Availability Provider tests', () => {
     test('Overall implementation does not change configuration when feature disabled', async () => {
         // set expectations
         const testOpts = new AvailablityTestOverallOptions();
-        testOpts.jediEnabledValue = true;
+        testOpts.languageServerValue = LanguageServerType.Jedi;
         const expectedResult = false;
 
         // arrange
@@ -469,7 +470,7 @@ suite('Linter Availability Provider tests', () => {
         // perform test
         expect(expectedResult).to.equal(
             result,
-            'promptIfLinterAvailable should not change any configuration when python.jediEnabled is true.'
+            'promptIfLinterAvailable should not change any configuration when python.languageServer is Jedi.'
         );
     });
 
@@ -803,14 +804,14 @@ function setupWorkspaceMockForLinterConfiguredTests(
 }
 
 function setupConfigurationServiceForJediSettingsTest(
-    jediEnabledValue: boolean,
+    languageServerValue: LanguageServerType,
     configServiceMock: TypeMoq.IMock<IConfigurationService>
 ): [TypeMoq.IMock<IConfigurationService>, TypeMoq.IMock<IPythonSettings>] {
     if (!configServiceMock) {
         configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
     }
     const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-    pythonSettings.setup((ps) => ps.jediEnabled).returns(() => jediEnabledValue);
+    pythonSettings.setup((ps) => ps.languageServer).returns(() => languageServerValue);
 
     configServiceMock.setup((cs) => cs.getSettings()).returns(() => pythonSettings.object);
     return [configServiceMock, pythonSettings];

@@ -6,6 +6,7 @@ import * as stackTrace from 'stack-trace';
 // tslint:disable-next-line: import-name
 import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
 
+import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
@@ -1118,11 +1119,11 @@ export interface IEventNamePropertyMapping {
         /**
          * The startup value of the language server setting
          */
-        lsStartup?: boolean;
+        lsStartup?: LanguageServerType;
         /**
-         * Used to track switch between LS and Jedi. Carries the final state after the switch.
+         * Used to track switch between language servers. Carries the final state after the switch.
          */
-        switchTo?: boolean;
+        switchTo?: LanguageServerType;
     };
     /**
      * Telemetry event sent with details after attempting to download LS
@@ -1216,7 +1217,7 @@ export interface IEventNamePropertyMapping {
         lsVersion?: string;
     };
     /**
-     * Telemetry event sent when user specified None to the language server and jediEnabled is false.
+     * Telemetry event sent when user specified None to the language server.
      */
     [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
     /**

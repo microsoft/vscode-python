@@ -29,6 +29,7 @@ function mapStateToProps(state: IStore): IMainWithVariables {
 
 export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
@@ -66,7 +67,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header id="main-panel-toolbar">
+                <header id="main-panel-toolbar" ref={this.mainPanelToolbarRef}>
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
@@ -300,6 +301,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+        let toolbarHeight = 0;
+        if (this.mainPanelToolbarRef.current) {
+            toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
+        }
         return {
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
@@ -312,6 +317,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
                     ? this.props.settings.variableOptions.enableDuringDebugger

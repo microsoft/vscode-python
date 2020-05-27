@@ -5,7 +5,6 @@
 
 // Note to editors, if you change this file you have to restart compile-webviews.
 // It doesn't reload the config otherwise.
-
 const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -16,6 +15,7 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
@@ -35,7 +35,14 @@ function getEntry(isNotebook) {
 }
 
 function getPlugins(isNotebook) {
-    const plugins = [];
+    const plugins = [
+        new ForkTsCheckerWebpackPlugin({
+            checkSyntacticErrors: true,
+            tsconfig: configFileName,
+            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+            memoryLimit: 9096
+        })
+    ];
     if (isProdBuild) {
         plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
     }
@@ -221,16 +228,30 @@ function buildConfiguration(isNotebook) {
 
         module: {
             rules: [
-                // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
                 {
                     test: /\.tsx?$/,
-                    use: {
-                        loader: 'awesome-typescript-loader',
-                        options: {
-                            configFileName,
-                            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
+                    use: [
+                        { loader: 'cache-loader' },
+                        {
+                            loader: 'thread-loader',
+                            options: {
+                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                workers: require('os').cpus().length - 1,
+                                workerNodeArgs: ['--max-old-space-size=9096'],
+                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                            }
+                        },
+                        {
+                            loader: 'ts-loader',
+                            options: {
+                                happyPackMode: true, // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported to webpack
+                                configFile: configFileName,
+                                // Faster (turn on only on CI, for dev we don't need this).
+                                transpileOnly: true,
+                                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
+                            }
                         }
-                    }
+                    ]
                 },
                 {
                     test: /\.svg$/,

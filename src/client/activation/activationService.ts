@@ -35,7 +35,6 @@ import {
     LanguageServerType
 } from './types';
 
-const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 
@@ -130,32 +129,37 @@ export class LanguageServerExtensionActivationService
         }
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
-    public async sendTelemetryForChosenLanguageServer(jediEnabled: boolean): Promise<void> {
-        const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
-        if (typeof state.value !== 'boolean') {
-            await state.updateValue(jediEnabled);
+    public async sendTelemetryForChosenLanguageServer(languageServer: LanguageServerType): Promise<void> {
+        const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>(
+            'SWITCH_LS',
+            undefined
+        );
+        if (typeof state.value !== 'string') {
+            await state.updateValue(languageServer);
         }
-        if (state.value !== jediEnabled) {
-            await state.updateValue(jediEnabled);
+        if (state.value !== languageServer) {
+            await state.updateValue(languageServer);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: jediEnabled
+                switchTo: languageServer
             });
         } else {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: jediEnabled
+                lsStartup: languageServer
             });
         }
     }
 
     /**
-     * Checks if user has not manually set `jediEnabled` setting
+     * Checks if user does not have any `languageServer` setting set.
      * @param resource
-     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
+     * @returns `true` if user is using default configuration, `false` if user has `languageServer` setting added.
      */
     public isJediUsingDefaultConfiguration(resource: Resource): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+        const settings = this.workspaceService
+            .getConfiguration('python', resource)
+            .inspect<LanguageServerType>('languageServer');
         if (!settings) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.languageServer`');
             return false;
         }
         return (
@@ -170,19 +174,21 @@ export class LanguageServerExtensionActivationService
      * @returns `true` if user is using jedi, `false` if user is using language server
      */
     public useJedi(): boolean {
+        // Check if `languageServer` setting is missing (default configuration).
         if (this.isJediUsingDefaultConfiguration(this.resource)) {
+            // If user is assigned to an experiment (i.e. use LS), return false.
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
             // Send telemetry if user is in control group
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
+            return true; // Do use Jedi as it is default.
         }
+        // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let enabled = configurationService.getSettings(this.resource).jediEnabled;
-        const languageServerType = configurationService.getSettings(this.resource).languageServer;
-        enabled = enabled || languageServerType === LanguageServerType.Jedi;
-        this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
-        return enabled;
+        const lstType = configurationService.getSettings(this.resource).languageServer;
+        this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
+        return lstType === LanguageServerType.Jedi;
     }
 
     protected async onWorkspaceFoldersChanged() {
@@ -296,7 +302,6 @@ export class LanguageServerExtensionActivationService
             ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
         if (
-            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
             workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
         ) {
             return;

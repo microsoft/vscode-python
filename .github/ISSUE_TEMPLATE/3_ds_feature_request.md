@@ -15,4 +15,4 @@ request template instead of this one. ***Thank you!***
 
 ## Description
 
-Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
+Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer, @joyceerhl
