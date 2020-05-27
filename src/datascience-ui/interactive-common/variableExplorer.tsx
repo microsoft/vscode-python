@@ -106,6 +106,20 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.gridColumns = [
             {
+                key: 'buttons',
+                name: '',
+                type: 'boolean',
+                width: 34,
+                sortable: false,
+                resizable: false,
+                formatter: (
+                    <VariableExplorerButtonCellFormatter
+                        showDataExplorer={this.props.showDataExplorer}
+                        baseTheme={this.props.baseTheme}
+                    />
+                )
+            },
+            {
                 key: 'name',
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
@@ -136,20 +150,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 width: 300,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
-            },
-            {
-                key: 'buttons',
-                name: '',
-                type: 'boolean',
-                width: 34,
-                sortable: false,
-                resizable: false,
-                formatter: (
-                    <VariableExplorerButtonCellFormatter
-                        showDataExplorer={this.props.showDataExplorer}
-                        baseTheme={this.props.baseTheme}
-                    />
-                )
             }
         ];
 
