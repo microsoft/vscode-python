@@ -4,6 +4,8 @@
 'use strict';
 
 // This must be on top, do not change. Required by webpack.
+// tslint:disable-next-line: no-var-requires no-require-imports
+// require('../common/main');
 declare let __webpack_public_path__: string;
 
 // tslint:disable-next-line: no-any
@@ -12,8 +14,8 @@ if ((window as any).__PVSC_Public_Path) {
     // tslint:disable-next-line: no-any
     __webpack_public_path__ = (window as any).__PVSC_Public_Path;
 }
-
 // This must be on top, do not change. Required by webpack.
+
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
