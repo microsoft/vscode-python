@@ -166,7 +166,6 @@ export interface IPythonSettings {
     readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly showStartPage: boolean;
-    readonly jediEnabled: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
