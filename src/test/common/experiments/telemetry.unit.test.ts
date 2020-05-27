@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+'use strict';
+
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ExperimentationTelemetry } from '../../../client/common/experiments/telemetry';

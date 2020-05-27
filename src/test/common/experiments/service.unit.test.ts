@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
@@ -140,15 +142,6 @@ suite('Experimentation service', () => {
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
         });
     });
-
-    /**
-     * + when calling inExperiment with opt in and opt out empty it should return the value of isCachedFlightEnabled
-     * + when calling constructor with experiments disabled then inExperiment should return false
-     * + when calling inExperiment with opt out with all it should return false (check telemetry sent)
-     * + when calling inExperiment with exp name in opt out it should return false even if isCachedFlightEnabled return true (check telemetry sent)
-     * when calling inExperiment with opt in with all it should return true (check telemetry sent)
-     * when calling inExperiment with exp name in opt in it should return true even if isCachedFlightEnabled is false (check telemetry sent)
-     */
 
     suite('In-experiment check', () => {
         const experiment = 'Test Experiment - experiment';
