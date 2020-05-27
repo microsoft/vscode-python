@@ -146,6 +146,7 @@ import {
     IPlotViewer,
     IPlotViewerProvider,
     IRawNotebookProvider,
+    IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder
 } from './types';
