@@ -151,7 +151,23 @@ gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-noteboo
 
 gulp.task(
     'check-datascience-dependencies',
-    gulp.series('compile-webviews', () => checkDatascienceDependencies())
+    gulp.series(
+        (done) => {
+            if (process.env.VSC_PYTHON_FORCE_ANALYZER) {
+                process.env.XVSC_PYTHON_FORCE_ANALYZER = '1';
+            }
+            process.env.VSC_PYTHON_FORCE_ANALYZER = '1';
+            done();
+        },
+        'compile-webviews',
+        () => checkDatascienceDependencies(),
+        (done) => {
+            if (!process.env.XVSC_PYTHON_FORCE_ANALYZER) {
+                delete process.env.VSC_PYTHON_FORCE_ANALYZER;
+            }
+            done();
+        }
+    )
 );
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
