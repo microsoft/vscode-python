@@ -101,6 +101,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
+import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -157,8 +158,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
     const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
     const context = serviceManager.get<IExtensionContext>(IExtensionContext);
-    const insidersBuild = context.extensionPath.toLocaleLowerCase().includes('insiders');
-    // tslint:disable-next-line: no-any
+    const insidersBuild = context.globalStoragePath.toLocaleLowerCase().includes('insiders');
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi && insidersBuild);
 
     // This condition is temporary.
@@ -192,6 +192,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+    serviceManager.addSingleton<IRawNotebookSupportedService>(IRawNotebookSupportedService, RawNotebookSupportedService);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
