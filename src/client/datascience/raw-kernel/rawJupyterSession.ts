@@ -116,7 +116,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                 );
             }
         } catch (error) {
-            sendTelemetryEvent(Telemetry.RawKernelSessionStartException);
+            sendTelemetryEvent(Telemetry.RawKernelSessionStartException, undefined, undefined, error);
             traceError(`Failed to connect raw kernel session: ${error}`);
             this.connected = false;
             throw error;
