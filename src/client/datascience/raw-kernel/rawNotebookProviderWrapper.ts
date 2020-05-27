@@ -24,7 +24,7 @@ import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBas
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider } from '../types';
+import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -46,7 +46,8 @@ type RawNotebookProviderClassType = {
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
-        experimentsManager: IExperimentsManager
+        experimentsManager: IExperimentsManager,
+        rawKernelSupported: IRawNotebookSupportedService
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -71,7 +72,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -92,7 +94,8 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelSelector,
             progressReporter,
             outputChannel,
-            experimentsManager
+            experimentsManager,
+            rawNotebookSupported
         );
     }
 

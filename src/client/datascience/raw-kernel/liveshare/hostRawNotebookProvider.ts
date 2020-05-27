@@ -35,7 +35,8 @@ import {
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
-    IRawNotebookProvider
+    IRawNotebookProvider,
+    IRawNotebookSupportedService
 } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 import { RawJupyterSession } from '../rawJupyterSession';
@@ -62,9 +63,10 @@ export class HostRawNotebookProvider
         private kernelSelector: KernelSelector,
         private progressReporter: ProgressReporter,
         private outputChannel: IOutputChannel,
-        experimentsManager: IExperimentsManager
+        experimentsManager: IExperimentsManager,
+        rawNotebookSupported: IRawNotebookSupportedService
     ) {
-        super(liveShare, asyncRegistry, configService, experimentsManager);
+        super(liveShare, asyncRegistry, configService, experimentsManager, rawNotebookSupported);
     }
 
     public async dispose(): Promise<void> {

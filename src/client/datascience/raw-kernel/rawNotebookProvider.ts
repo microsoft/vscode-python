@@ -14,7 +14,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Settings, Telemetry } from '../constants';
-import { INotebook, IRawConnection, IRawNotebookProvider } from '../types';
+import { INotebook, IRawConnection, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 
 export class RawConnection implements IRawConnection {
     public readonly type = 'raw';
@@ -45,7 +45,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         _liveShare: ILiveShareApi,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configuration: IConfigurationService,
-        private experimentsManager: IExperimentsManager
+        private experimentsManager: IExperimentsManager,
+        private rawNotebookSupportedService: IRawNotebookSupportedService
     ) {
         this.asyncRegistry.push(this);
     }
@@ -56,7 +57,8 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
 
     // Check to see if we have all that we need for supporting raw kernel launch
     public async supported(): Promise<boolean> {
-        return this.localLaunch() && this.experimentEnabled() && (await this.zmqSupported()) ? true : false;
+        return this.rawNotebookSupportedService.supported();
+        //return this.localLaunch() && this.experimentEnabled() && (await this.zmqSupported()) ? true : false;
     }
 
     @captureTelemetry(Telemetry.RawKernelCreatingNotebook, undefined, true)
