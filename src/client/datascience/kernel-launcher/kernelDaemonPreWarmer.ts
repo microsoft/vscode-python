@@ -7,12 +7,13 @@ import { inject, injectable } from 'inversify';
 import { IExtensionActivationService } from '../../activation/types';
 import { LocalZMQKernel } from '../../common/experiments/groups';
 import '../../common/extensions';
-import { IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import {
     IInteractiveWindowProvider,
     INotebookAndInteractiveWindowUsageTracker,
-    INotebookEditorProvider
+    INotebookEditorProvider,
+    IRawNotebookProvider
 } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
@@ -25,12 +26,21 @@ export class KernelDaemonPreWarmer implements IExtensionActivationService {
         @inject(INotebookAndInteractiveWindowUsageTracker)
         private readonly usageTracker: INotebookAndInteractiveWindowUsageTracker,
         @inject(KernelDaemonPool) private readonly kernelDaemonPool: KernelDaemonPool,
+        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
     public async activate(_resource: Resource): Promise<void> {
-        if (!this.experimentsManager.inExperiment(LocalZMQKernel.experiment)) {
+        // Check with the raw notebook provider to see if we are supported
+        // If not, don't bother with prewarming
+        // Also respect the disable autostart setting to not do any prewarming for the user
+        if (
+            !(await this.rawNotebookProvider.supported()) ||
+            this.configService.getSettings().datascience.disableJupyterAutoStart
+        ) {
             return;
         }
+
         this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.preWarmKernelDaemonPool, this));
         this.disposables.push(
             this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.preWarmKernelDaemonPool, this)
