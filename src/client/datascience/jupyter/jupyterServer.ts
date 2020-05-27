@@ -15,7 +15,7 @@ import {
     IOutputChannel,
     Resource
 } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
+import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -154,7 +154,9 @@ export class JupyterServerBase implements INotebookServer {
         await Promise.all(notebooks.map((n) => n?.dispose()));
         traceInfo(`Shut down session manager`);
         if (this.sessionManager) {
-            await this.sessionManager.dispose();
+            // Session manager in remote case may take too long to shutdown. Don't wait that
+            // long.
+            await Promise.race([sleep(10_000), this.sessionManager.dispose()]);
             this.sessionManager = undefined;
         }
 
