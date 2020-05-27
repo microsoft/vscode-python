@@ -1,6 +1,6 @@
 variables:
   PythonVersion: '3.8' # Always use latest version.
-  NodeVersion: '12.4.0' # Check version of node used in VS Code.
+  NodeVersion: '12.8.1' # Check version of node used in VS Code.
   NpmVersion: '6.13.4'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
