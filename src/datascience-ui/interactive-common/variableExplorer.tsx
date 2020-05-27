@@ -103,6 +103,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
+        this.saveCurrentSize = this.saveCurrentSize.bind(this);
+        this.restorePreviousSize = this.restorePreviousSize.bind(this);
 
         this.gridColumns = [
             {
@@ -159,7 +161,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public componentDidMount() {
-        this.setInitialHeight();
+        this.restorePreviousSize();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
@@ -186,7 +188,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         return (
-            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove}>
+            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
                 <span>
                     <div id="variable-panel" ref={this.variablePanelRef}>
                         <div id="variable-panel-padding">
@@ -255,6 +257,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     />
                 </div>
             );
+        }
+    }
+
+    private saveCurrentSize() {
+        //const vscode = acquireVsCodeApi();
+        //vscode.setState(this.state);
+    }
+
+    private restorePreviousSize() {
+        const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
+        const vscode = acquireVsCodeApi();
+        const lastState = vscode.getState();
+        if (lastState) {
+            vscode.setState(lastState);
+        } else {
+            this.setInitialHeight();
         }
     }
 
