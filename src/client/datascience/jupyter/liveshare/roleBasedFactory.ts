@@ -88,6 +88,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                         ? vsls.Role.Guest
                         : vsls.Role.Host;
                 if (newRole !== role) {
+                    this.createPromise = undefined;
                     obj.dispose().ignoreErrors();
                 }
 
