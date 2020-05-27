@@ -102,6 +102,7 @@ gulp.task('output:clean', () => del(['coverage']));
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
+gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -112,9 +113,8 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 
-gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
-
 gulp.task('validate-packagejson', () => validatePackageJson());
+gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
@@ -132,86 +132,73 @@ async function validatePackageJson() {
 }
 
 async function buildIPyWidgets() {
+    // if the output ipywidgest file exists, then no need to re-build.
+    // Barely changes. If making changes, then re-build manually.
+    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
+        return;
+    }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
-async function buildDataScienceUI(forceBundleAnalyzer = false) {
-    if (forceBundleAnalyzer) {
-        process.env.VSC_PYTHON_FORCE_ANALYZER = 1;
-    }
-    await buildIPyWidgets();
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-notebooks.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-viewers.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
-    if (forceBundleAnalyzer) {
-        delete process.env.VSC_PYTHON_FORCE_ANALYZER;
-    }
-}
-
-gulp.task('compile-webviews', async () => {
-    await buildDataScienceUI(false);
+gulp.task('compile-notebooks', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', '', false);
 });
 
+gulp.task('compile-viewers', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', '', false);
+});
+
+gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+
+gulp.task(
+    'check-datascience-dependencies',
+    gulp.series('compile-webviews', () => checkDatascienceDependencies())
+);
+
+async function buildWebPackForDevOrProduction(configFile, isProductionBuild, configName) {
+    if (isProductionBuild) {
+        await buildWebPack(configName, ['--config', configFile], webpackEnv);
+    } else {
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+    }
+}
 gulp.task('webpack', async () => {
     // Build node_modules.
-    await buildWebPack(
+    await buildWebPackForDevOrProduction(
+        './build/webpack/webpack.extension.dependencies.config.js',
         'production',
-        ['--config', './build/webpack/webpack.extension.dependencies.config.js'],
-        webpackEnv
+        true
     );
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
-    await buildWebPack(
+    await buildWebPackForDevOrProduction(
+        './build/webpack/webpack.datascience-ui-notebooks.config.js',
         'production',
-        ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'],
-        webpackEnv
+        true
     );
-    await buildWebPack(
+    await buildWebPackForDevOrProduction(
+        './build/webpack/webpack.datascience-ui-viewers.config.js',
         'production',
-        ['--config', './build/webpack/webpack.datascience-ui-viewers.config.js'],
-        webpackEnv
+        true
     );
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack(
+        const buildExtension = buildWebPackForDevOrProduction(
+            './build/webpack/webpack.extension.config.js',
             'extension',
-            ['--config', './build/webpack/webpack.extension.config.js'],
-            webpackEnv
+            true
         );
-        const buildDebugAdapter = buildWebPack(
+        const buildDebugAdapter = buildWebPackForDevOrProduction(
+            './build/webpack/webpack.debugAdapter.config.js',
             'debugAdapter',
-            ['--config', './build/webpack/webpack.debugadapter.config.js'],
-            webpackEnv
+            true
         );
         await Promise.all([buildExtension, buildDebugAdapter]);
     } else {
-        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension', true);
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugAdapter.config.js', 'debugAdapter', true);
     }
 });
 
@@ -518,8 +505,6 @@ function spawnAsync(command, args, env, rejectOnStdErr = false) {
  *
  */
 async function checkDatascienceDependencies() {
-    await buildDataScienceUI(true);
-
     const existingModulesFileName = 'package.datascience-ui.dependencies.json';
     const existingModulesFile = path.join(__dirname, existingModulesFileName);
     const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then((data) => data.toString()));
