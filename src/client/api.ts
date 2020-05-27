@@ -26,7 +26,7 @@ export interface IExtensionApi {
         /**
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
          * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
-         * E.g `['/Users/..../pythonVSCode/pythonFiles/ptvsd_launcher.py', '--host', 'localhost', '--port', '57039', '--wait']`
+         * E.g `['/Users/..../pythonVSCode/pythonFiles/lib/python/debugpy', '--listen', 'localhost:57039', '--wait-for-client']`
          * @param {string} host
          * @param {number} port
          * @param {boolean} [waitUntilDebuggerAttaches=true]

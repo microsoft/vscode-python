@@ -32,7 +32,6 @@ const ISOLATED = _ISOLATED;
 //
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
-//  * ptvsd_launcher.py  (used only for the old debug adapter)
 
 export * as testing_tools from './testing_tools';
 export * as vscode_datascience_helpers from './vscode_datascience_helpers';

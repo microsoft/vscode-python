@@ -213,7 +213,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test("Don't pass the --log-dir argument to PTVSD if configuration.logToFile is set to false", async () => {
+    test("Don't pass the --log-dir argument to debugger if configuration.logToFile is set to false", async () => {
         const session = createSession({ logToFile: false });
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [debugAdapterPath]);
 

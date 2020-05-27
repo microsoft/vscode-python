@@ -346,7 +346,7 @@ gulp.task('installPythonRequirements', async () => {
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
-gulp.task('installNewDebugpy', async () => {
+gulp.task('installDebugpy', async () => {
     // Install dependencies needed for 'install_debugpy.py'
     const depsArgs = [
         '-m',
@@ -392,37 +392,7 @@ gulp.task('installNewDebugpy', async () => {
     rmrf.sync('./pythonFiles/lib/temp');
 });
 
-// Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
-// until all users have migrated to the new debug adapter + new DEBUGPY (specified in requirements.txt)
-// See https://github.com/microsoft/vscode-python/issues/7136
-gulp.task('installOldPtvsd', async () => {
-    const args = [
-        '-m',
-        'pip',
-        '--disable-pip-version-check',
-        'install',
-        '-t',
-        './pythonFiles/lib/python/old_ptvsd',
-        '--no-cache-dir',
-        '--implementation',
-        'py',
-        '--no-deps',
-        '--upgrade',
-        'ptvsd==4.3.2'
-    ];
-    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
-        .then(() => true)
-        .catch((ex) => {
-            console.error("Failed to install PTVSD using 'python3'", ex);
-            return false;
-        });
-    if (!success) {
-        console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch((ex) => console.error("Failed to install PTVSD using 'python'", ex));
-    }
-});
-
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewDebugpy'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installDebugpy'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');

@@ -37,7 +37,6 @@ const pythonShellCommand = `_sysexec = sys.executable\r\n_quoted_sysexec = '"' +
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
-    private requiredPtvsdVersion: Version = { major: 4, minor: 3, patch: 0, build: [], prerelease: [], raw: '' };
     private requiredDebugpyVersion: Version = { major: 1, minor: 0, patch: 0, build: [], prerelease: [], raw: '' };
     private configs: Map<string, DebugConfiguration> = new Map<string, DebugConfiguration>();
     private readonly debuggerPackage: string;
@@ -184,8 +183,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // Check the version of debugger that we have already installed
         const debuggerVersion = await this.debuggerCheck(notebook);
-        const requiredVersion =
-            this.debuggerPackage === 'ptvsd' ? this.requiredPtvsdVersion : this.requiredDebugpyVersion;
+        const requiredVersion = this.requiredDebugpyVersion;
 
         // If we don't have debugger installed or the version is too old then we need to install it
         if (!debuggerVersion || !this.debuggerMeetsRequirement(debuggerVersion, requiredVersion)) {
@@ -238,10 +236,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      * @memberof JupyterDebugger
      */
     private async getDebuggerPath(_notebook: INotebook): Promise<string> {
-        if (this.debuggerPackage === 'ptvsd') {
-            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
-        }
-
         // We are here so this is NOT python 3.7, return debugger without wheels
         return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
     }
@@ -335,13 +329,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         const debuggerVersionResults = await this.executeSilently(notebook, code);
-        const purpose = this.debuggerPackage === 'ptvsd' ? 'parsePtvsdVersionInfo' : 'parseDebugpyVersionInfo';
+        const purpose = 'parseDebugpyVersionInfo';
         return this.parseVersionInfo(debuggerVersionResults, purpose);
     }
 
     private parseVersionInfo(
         cells: ICell[],
-        purpose: 'parsePtvsdVersionInfo' | 'parseDebugpyVersionInfo' | 'pythonVersionInfo'
+        purpose: 'parseDebugpyVersionInfo' | 'pythonVersionInfo'
     ): Version | undefined {
         if (cells.length < 1 || cells[0].state !== CellState.finished) {
             traceCellResults(purpose, cells);

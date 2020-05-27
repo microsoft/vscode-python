@@ -160,7 +160,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
             this.cleanTemp = cleanup;
         });
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
-        this.addCell(`import ptvsd;ptvsd.enable_attach(('localhost', 0))`);
         this.addCell(`import debugpy;debugpy.listen(('localhost', 0))`);
         this.addCell("matplotlib.style.use('dark_background')");
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);

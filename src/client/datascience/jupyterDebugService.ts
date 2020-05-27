@@ -33,8 +33,8 @@ import { IJupyterDebugService } from './types';
 // tslint:disable:no-any
 
 // For debugging set these environment variables
-// PYDEV_DEBUG=True
-// PTVSD_LOG_DIR=<dir that already exists>
+// PYDEVD_DEBUG=True
+// DEBUGPY_LOG_DIR=<dir that already exists>
 // PYDEVD_DEBUG_FILE=<dir that exists, but new file allowed>
 class JupyterDebugSession implements DebugSession {
     private _name = 'JupyterDebugSession';

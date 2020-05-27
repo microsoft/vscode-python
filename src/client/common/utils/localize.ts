@@ -1146,7 +1146,7 @@ export namespace Testing {
 export namespace OutdatedDebugger {
     export const outdatedDebuggerMessage = localize(
         'OutdatedDebugger.updateDebuggerMessage',
-        'We noticed you are attaching to ptvsd (Python debugger), which will be deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
+        'We noticed you are attaching to ptvsd (Python debugger), which was deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).'
     );
 }
 

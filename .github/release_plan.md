@@ -5,12 +5,12 @@
 
 # Release candidate (Monday, XXX XX)
 
--   [ ] Announce the code freeze (not just to team but also to ptvsd and language server)
+-   [ ] Announce the code freeze (not just to team but also to debugger and language server)
 -   [ ] Update master for the release
     -   [ ] Create a branch against `master` for a pull request
     -   [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) from a `-dev` suffix to `-rc` (🤖)
     -   [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (🤖)
-    -   [ ] Update `requirements.txt` to point to latest release version of [ptvsd](https://github.com/microsoft/ptvsd).
+    -   [ ] Extension will pick up latest version of `debugpy`. If you need to pin to a particular version see `install_debugpy.py`.
     -   [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the [Language Server](https://github.com/Microsoft/python-language-server).
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
@@ -18,7 +18,7 @@
         -   [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in requirements.json)
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
-        -   [ ] Add any relevant news entries for ptvsd and the language server if they were updated
+        -   [ ] Add any relevant news entries for `debugpy` and the language server if they were updated
     -   [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (see team notes)
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) as appropriate
     -   [ ] Create a pull request against `master` (🤖)
