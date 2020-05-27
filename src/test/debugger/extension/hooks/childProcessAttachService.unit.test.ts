@@ -43,9 +43,13 @@ suite('Debug - Attach to Child Process', () => {
         const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(true as any);
+        when(shell.showErrorMessage(anything())).thenResolve();
+
         await attachService.attach(data, session);
+
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
+        verify(shell.showErrorMessage(anything())).never();
     });
     test('Message is displayed if debugger is not launched', async () => {
         const data: AttachRequestArguments = {
