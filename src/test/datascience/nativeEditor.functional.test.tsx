@@ -44,7 +44,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import {
