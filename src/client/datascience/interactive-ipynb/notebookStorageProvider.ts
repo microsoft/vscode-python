@@ -52,6 +52,12 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public backup(model: INotebookModel, cancellation: CancellationToken) {
         return this.storage.backup(model, cancellation);
     }
+    public revert(model: INotebookModel, cancellation: CancellationToken) {
+        return this.storage.revert(model, cancellation);
+    }
+    public deleteBackup(model: INotebookModel) {
+        return this.storage.deleteBackup(model);
+    }
     public load(file: Uri, contents?: string | undefined, skipDirtyContents?: boolean): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {

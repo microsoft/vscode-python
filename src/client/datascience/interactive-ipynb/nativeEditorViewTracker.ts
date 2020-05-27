@@ -1,6 +1,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { UseCustomEditorApi } from '../../common/constants';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 import { isUntitled } from './nativeEditorStorage';
@@ -16,10 +17,13 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
     constructor(
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly workspaceMemento: Memento,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean
     ) {
-        disposableRegistry.push(editorProvider.onDidOpenNotebookEditor(this.onOpenedEditor.bind(this)));
-        disposableRegistry.push(editorProvider.onDidCloseNotebookEditor(this.onClosedEditor.bind(this)));
+        if (!useCustomEditorApi) {
+            disposableRegistry.push(editorProvider.onDidOpenNotebookEditor(this.onOpenedEditor.bind(this)));
+            disposableRegistry.push(editorProvider.onDidCloseNotebookEditor(this.onClosedEditor.bind(this)));
+        }
     }
 
     public async activate(): Promise<void> {
@@ -27,13 +31,15 @@ export class NativeEditorViewTracker implements IExtensionSingleActivationServic
         const set = new Set<string>(this.workspaceMemento.get<string[]>(MEMENTO_KEY) || []);
         await this.workspaceMemento.update(MEMENTO_KEY, undefined);
 
-        // Then open each one.
-        set.forEach((l) => {
-            const uri = Uri.parse(l);
-            if (uri) {
-                this.editorProvider.open(uri).ignoreErrors();
-            }
-        });
+        // Then open each one if not using the custom editor api
+        if (!this.useCustomEditorApi) {
+            set.forEach((l) => {
+                const uri = Uri.parse(l);
+                if (uri) {
+                    this.editorProvider.open(uri).ignoreErrors();
+                }
+            });
+        }
     }
 
     private onOpenedEditor(editor: INotebookEditor) {

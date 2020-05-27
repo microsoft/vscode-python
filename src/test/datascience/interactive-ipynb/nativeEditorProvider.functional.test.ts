@@ -168,7 +168,7 @@ suite('DataScience - Native Editor Provider', () => {
         editor.setup((e) => (e as any).then).returns(() => undefined);
         customEditorService.setup((e) => (e as any).then).returns(() => undefined);
         customEditorService
-            .setup((c) => c.registerCustomEditorProvider(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((c) => c.registerCustomEditorProvider2(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((_a1, _a2, _a3) => {
                 return { dispose: noop };
             });

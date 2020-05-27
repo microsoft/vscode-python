@@ -7,9 +7,10 @@ import { CancellationToken, Disposable, Event, EventEmitter, Uri, WebviewPanel }
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
     CustomDocument,
+    CustomDocumentBackup,
+    CustomDocumentBackupContext,
     CustomDocumentEditEvent,
-    CustomDocumentRevert,
-    CustomEditorEditingDelegate,
+    CustomDocumentOpenContext,
     CustomEditorProvider,
     ICustomEditorService,
     IWorkspaceService
@@ -23,24 +24,19 @@ import {
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
+import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
 // opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
 @injectable()
-export class NativeEditorProvider
-    implements
-        INotebookEditorProvider,
-        CustomEditorProvider,
-        IAsyncDisposable,
-        CustomEditorEditingDelegate<NotebookModelChange> {
+export class NativeEditorProvider implements INotebookEditorProvider, CustomEditorProvider, IAsyncDisposable {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
@@ -53,10 +49,7 @@ export class NativeEditorProvider
     public get activeEditor(): INotebookEditor | undefined {
         return this.editors.find((e) => e.visible && e.active);
     }
-    public get editingDelegate(): CustomEditorEditingDelegate<NotebookModelChange> {
-        return this;
-    }
-    public get onDidEdit(): Event<CustomDocumentEditEvent<NotebookModelChange>> {
+    public get onDidChangeCustomDocument(): Event<CustomDocumentEditEvent> {
         return this._onDidEdit.event;
     }
 
@@ -67,7 +60,7 @@ export class NativeEditorProvider
     public static readonly customEditorViewType = 'NativeEditorProvider.ipynb';
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
-    protected readonly _onDidEdit = new EventEmitter<CustomDocumentEditEvent<NotebookModelChange>>();
+    protected readonly _onDidEdit = new EventEmitter<CustomDocumentEditEvent>();
     protected customDocuments = new Map<string, CustomDocument>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
@@ -97,40 +90,49 @@ export class NativeEditorProvider
         }
 
         // Register for the custom editor service.
-        customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
-            enableFindWidget: true,
-            retainContextWhenHidden: true
+        customEditorService.registerCustomEditorProvider2(NativeEditorProvider.customEditorViewType, this, {
+            webviewOptions: {
+                enableFindWidget: true,
+                retainContextWhenHidden: true
+            },
+            supportsMultipleEditorsPerDocument: true
         });
     }
 
-    public async save(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+    public async openCustomDocument(
+        uri: Uri,
+        _context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
+        _cancellation: CancellationToken
+    ): Promise<CustomDocument> {
+        const model = await this.loadModel(uri);
+        return {
+            uri,
+            dispose: () => model.dispose()
+        };
+    }
+    public async saveCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
         await this.storage.save(model, cancellation);
     }
-    public async saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
+    public async saveCustomDocumentAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
         await this.storage.saveAs(model, targetResource);
     }
-    public applyEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(document.uri).then((s) => {
-            if (s) {
-                edits.forEach((e) => s.update({ ...e, source: 'redo' }));
-            }
-        });
+    public async revertCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+        const model = await this.loadModel(document.uri);
+        await this.storage.revert(model, cancellation);
     }
-    public undoEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(document.uri).then((s) => {
-            if (s) {
-                edits.forEach((e) => s.update({ ...e, source: 'undo' }));
-            }
-        });
-    }
-    public async revert(_document: CustomDocument, _edits: CustomDocumentRevert<NotebookModelChange>): Promise<void> {
-        noop();
-    }
-    public async backup(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+    public async backupCustomDocument(
+        document: CustomDocument,
+        _context: CustomDocumentBackupContext,
+        cancellation: CancellationToken
+    ): Promise<CustomDocumentBackup> {
         const model = await this.loadModel(document.uri);
         await this.storage.backup(model, cancellation);
+        return {
+            id: document.uri.toString(), // This is used to restore on an open
+            delete: () => this.storage.deleteBackup(model) // This cleans up after save has happened.
+        };
     }
 
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
@@ -265,7 +267,7 @@ export class NativeEditorProvider
         // Find the document associated with this edit.
         const document = this.customDocuments.get(model.file.fsPath);
         if (document) {
-            this._onDidEdit.fire({ document, edit: change });
+            this._onDidEdit.fire(new NotebookModelEditEvent(document, model, change));
         }
     }
 

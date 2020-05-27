@@ -5,7 +5,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
 import { NativeNotebook } from '../common/experiments/groups';
-import { IExperimentsManager } from '../common/types';
+import { IExperimentsManager, IExtensionContext } from '../common/types';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { IServiceManager } from '../ioc/types';
@@ -101,7 +101,6 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
-import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -146,7 +145,6 @@ import {
     IPlotViewer,
     IPlotViewerProvider,
     IRawNotebookProvider,
-    IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder
 } from './types';
@@ -158,7 +156,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
     const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi);
+    const context = serviceManager.get<IExtensionContext>(IExtensionContext);
+    const insidersBuild = context.extensionPath.toLocaleLowerCase().includes('insiders');
+    // tslint:disable-next-line: no-any
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi && insidersBuild);
 
     // This condition is temporary.
     const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : enableProposedApi ? NativeEditorProvider : NativeEditorProviderOld;
@@ -191,7 +192,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
-    serviceManager.addSingleton<IRawNotebookSupportedService>(IRawNotebookSupportedService, RawNotebookSupportedService);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);

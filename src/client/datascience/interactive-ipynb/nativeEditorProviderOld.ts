@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -14,6 +14,7 @@ import {
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { IDataScienceErrorHandler, INotebookEditor } from '../types';
@@ -57,7 +58,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.cmdManager.registerCommand(Commands.SaveNotebookNonCustomEditor, async (resource: Uri) => {
                 const customDocument = this.customDocuments.get(resource.fsPath);
                 if (customDocument) {
-                    await this.save(customDocument, new CancellationTokenSource().token);
+                    await this.saveCustomDocument(customDocument, new CancellationTokenSource().token);
                 }
             })
         );
@@ -67,7 +68,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
                 async (resource: Uri, targetResource: Uri) => {
                     const customDocument = this.customDocuments.get(resource.fsPath);
                     if (customDocument) {
-                        await this.saveAs(customDocument, targetResource);
+                        await this.saveCustomDocumentAs(customDocument, targetResource);
                         this.customDocuments.delete(resource.fsPath);
                         this.customDocuments.set(targetResource.fsPath, { ...customDocument, uri: targetResource });
                     }
@@ -97,8 +98,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             // Required for old editor
             this.customDocuments.set(file.fsPath, {
                 uri: file,
-                viewType: NativeEditorProvider.customEditorViewType,
-                onDidDispose: new EventEmitter<void>().event
+                dispose: noop
             });
         }
 

@@ -519,6 +519,15 @@ export class NativeEditorStorage implements INotebookStorage {
         // Should send to extension context storage path
         return this.storeContentsInHotExitFile(model, cancellation);
     }
+
+    public async revert(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
+        // Revert to what is in the hot exit file
+        await this.loadFromFile(model.file);
+    }
+
+    public async deleteBackup(model: INotebookModel): Promise<void> {
+        return this.clearHotExit(model.file);
+    }
     /**
      * Stores the uncommitted notebook changes into a temporary location.
      * Also keep track of the current time. This way we can check whether changes were
