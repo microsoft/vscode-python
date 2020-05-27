@@ -163,11 +163,7 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
 }
 gulp.task('webpack', async () => {
     // Build node_modules.
-    await buildWebPackForDevOrProduction(
-        './build/webpack/webpack.extension.dependencies.config.js',
-        true,
-        'production'
-    );
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
