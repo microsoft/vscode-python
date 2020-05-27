@@ -17,7 +17,7 @@ import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
-import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
+import { DEBUGGER_PATH, DebuggerTypeName } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
 import {
@@ -31,13 +31,7 @@ import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
-const fileToDebug = path.join(
-    EXTENSION_ROOT_DIR,
-    'src',
-    'testMultiRootWkspc',
-    'workspace5',
-    'remoteDebugger-start-with-ptvsd.py'
-);
+const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start.py');
 
 suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
@@ -67,17 +61,11 @@ suite('Debugging - Attach Debugger', () => {
         const port = await getFreePort({ host: 'localhost', port: 3000 });
         const env = { ...process.env };
 
-        // Set the path for PTVSD to be picked up.
-        // tslint:disable-next-line:no-string-literal
-        env['PYTHONPATH'] = PTVSD_PATH;
         const pythonArgs = [
-            '-m',
-            'ptvsd',
-            '--host',
-            'localhost',
-            '--wait',
-            '--port',
-            `${port}`,
+            DEBUGGER_PATH,
+            '--listen',
+            `localhost:${port}`,
+            '--wait-for-client',
             fileToDebug.fileToCommandArgument()
         ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });

@@ -22,7 +22,6 @@ cucumber-report.json
 **/.venv*/
 port.txt
 precommit.hook
-pythonFiles/experimental/ptvsd/**
 pythonFiles/lib/**
 debug_coverage*/**
 languageServer/**
@@ -38,7 +37,7 @@ xunit-test-results.xml
 build/ci/performance/performance-results.json
 !build/
 debug*.log
-ptvsd*.log
+debugpy*.log
 pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**

@@ -320,7 +320,7 @@ class FailingTests(unittest.TestCase):
         -   [ ] `Debug Test` works
         -   [ ] Module/suite setup methods are also run (run the `test_setup` method to verify)
 -   [ ] while debugging tests, an uncaught exception in a test does not
-        cause ptvsd to raise SystemExit
+        cause `debugpy` to raise `SystemExit` exception.
 
 #### [`pytest`](https://code.visualstudio.com/docs/python/unit-testing#_pytest-configuration-settings)
 
