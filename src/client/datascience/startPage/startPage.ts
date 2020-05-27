@@ -223,9 +223,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     private async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
-        const version = this.appEnvironment.packageJson.version;
+        const version: string = this.appEnvironment.packageJson.version;
 
-        if (savedVersion && savedVersion === version) {
+        if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
             // There has not been an update
             return false;
         }
@@ -234,6 +234,28 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         // if savedVersion != version, there was an update
         await this.context.globalState.update('extensionVersion', version);
         return true;
+    }
+
+    private savedVersionisOlder(savedVersion: string, actualVersion: string): boolean {
+        const saved = savedVersion.split('.');
+        const actual = actualVersion.split('.');
+
+        switch (true) {
+            case Number(actual[0]) > Number(saved[0]):
+                return true;
+            case Number(actual[0]) < Number(saved[0]):
+                return false;
+            case Number(actual[1]) > Number(saved[1]):
+                return true;
+            case Number(actual[1]) < Number(saved[1]):
+                return false;
+            case Number(actual[2][0]) > Number(saved[2][0]):
+                return true;
+            case Number(actual[2][0]) < Number(saved[2][0]):
+                return false;
+            default:
+                return true;
+        }
     }
 
     private async openSampleNotebook(): Promise<void> {
