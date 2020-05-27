@@ -8,7 +8,7 @@ import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
 import { swallowExceptions } from '../../../common/utils/decorators';
 import { AttachRequestArguments } from '../../types';
 import { DebuggerEvents } from './constants';
-import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
+import { IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
 
 /**
  * This class is responsible for automatically attaching the debugger to any
@@ -29,10 +29,8 @@ export class ChildProcessAttachEventHandler implements IDebugSessionEventHandler
             return;
         }
 
-        let data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration);
-        if (event.event === DebuggerEvents.ChildProcessLaunched) {
-            data = event.body! as ChildProcessLaunchData;
-        } else if (
+        let data: AttachRequestArguments & DebugConfiguration;
+        if (
             event.event === DebuggerEvents.PtvsdAttachToSubprocess ||
             event.event === DebuggerEvents.DebugpyAttachToSubprocess
         ) {
