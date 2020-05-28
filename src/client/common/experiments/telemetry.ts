@@ -14,13 +14,13 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
     }
 
     public postEvent(eventName: string, properties: Map<string, string>): void {
-        // Add shared properties to telemetry props (we may overwrite existing ones).
-        Object.assign(properties, this.sharedProperties);
-
         const formattedProperties: { [key: string]: string } = {};
         properties.forEach((value, key) => {
             formattedProperties[key] = value;
         });
+
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(formattedProperties, this.sharedProperties);
 
         // tslint:disable-next-line: no-any
         sendTelemetryEvent(eventName as any, undefined, formattedProperties);
