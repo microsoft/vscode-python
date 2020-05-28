@@ -4,17 +4,16 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import {
+import type {
     CellDisplayOutput,
     CellErrorOutput,
-    CellKind,
     CellOutput,
-    CellOutputKind,
     CellStreamOutput,
     NotebookCellData,
-    NotebookCellRunState,
     NotebookData
-} from 'vscode';
+} from 'vscode-proposed';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceWarning } from '../../logging';
@@ -67,12 +66,13 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
     }
 
     return {
-        cellKind: cell.data.cell_type === 'code' ? CellKind.Code : CellKind.Markdown,
+        cellKind:
+            cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
         language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
         metadata: {
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-            runState: NotebookCellRunState.Idle,
+            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
             runnable: cell.data.cell_type === 'code',
             custom: {
                 cellId: cell.id
@@ -157,7 +157,7 @@ function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayO
         ] = `<div class='display' style="overflow:scroll;${divStyle}"><img src="${imgSrc}" ${imgStyle} ${height} ${width}></div>`;
     }
     return {
-        outputKind: CellOutputKind.Rich,
+        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data
     };
 }
@@ -177,14 +177,14 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
     if (!hasAngleBrackets && !hasAnsiChars) {
         // Plain text output.
         return {
-            outputKind: CellOutputKind.Text,
+            outputKind: vscodeNotebookEnums.CellOutputKind.Text,
             text
         };
     }
 
     // Format the output, but ensure we have the plain text output as well.
     const richOutput: CellDisplayOutput = {
-        outputKind: CellOutputKind.Rich,
+        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data: {
             ['text/plain']: text
         }
@@ -212,7 +212,7 @@ export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
     return {
         ename: output.ename,
         evalue: output.evalue,
-        outputKind: CellOutputKind.Error,
+        outputKind: vscodeNotebookEnums.CellOutputKind.Error,
         traceback: output.traceback
     };
 }

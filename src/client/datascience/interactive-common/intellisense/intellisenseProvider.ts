@@ -755,11 +755,15 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (wordAtPosition) {
             const notebook = await this.getNotebook(token);
             if (notebook) {
-                const value = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition, token);
-                if (value) {
-                    return {
-                        contents: [`${wordAtPosition}: ${value.type} = ${value.value}`]
-                    };
+                try {
+                    const value = await this.variableProvider.getMatchingVariable(notebook, wordAtPosition, token);
+                    if (value) {
+                        return {
+                            contents: [`${wordAtPosition}: ${value.type} = ${value.value}`]
+                        };
+                    }
+                } catch (exc) {
+                    traceError(`Exception attempting to retrieve hover for variables`, exc);
                 }
             }
         }

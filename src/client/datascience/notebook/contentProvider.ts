@@ -4,15 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import {
-    CancellationToken,
-    EventEmitter,
+import { CancellationToken, EventEmitter, Uri } from 'vscode';
+import type {
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
-    NotebookDocumentEditEvent,
-    Uri
-} from 'vscode';
+    NotebookDocumentEditEvent
+} from 'vscode-proposed';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers';
 

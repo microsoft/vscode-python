@@ -73,7 +73,8 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         const oldDispose = obj.dispose.bind(obj);
         obj.dispose = () => {
             objDisposed = true;
-            this.createPromise = undefined;
+            // Make sure we don't destroy the create promise. Otherwise
+            // dispose will end up causing the creation code to run again.
             return oldDispose();
         };
 
@@ -87,6 +88,10 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                         ? vsls.Role.Guest
                         : vsls.Role.Host;
                 if (newRole !== role) {
+                    // Also have to clear the create promise so we
+                    // run the create code again.
+                    this.createPromise = undefined;
+
                     obj.dispose().ignoreErrors();
                 }
 

@@ -9,13 +9,10 @@ import cloneDeep = require('lodash/cloneDeep');
 import { Subject } from 'rxjs';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import {
-    CancellationToken,
-    CancellationTokenSource,
-    NotebookCell,
-    NotebookCellRunState,
-    NotebookDocument
-} from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
 import { IConfigurationService, IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
@@ -146,7 +143,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         // Wait for 5s, and verify cell is still running.
         await sleep(5_000);
         assert.isFalse(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         // Interrupt the kernel.
         fakeTimer.install();
@@ -154,7 +151,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         await fakeTimer.wait();
 
         assert.isTrue(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     });
     test('Cancelling token will interrupt kernel', async () => {
         // Open the notebook
@@ -179,7 +176,7 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         // Wait for 5s, and verify cell is still running.
         await sleep(5_000);
         assert.isFalse(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         // Interrupt the kernel.
         fakeTimer.install();
@@ -207,12 +204,12 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         // Wait for 5s, and verify cell is still running.
         await sleep(5_000);
         assert.isFalse(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         // Interrupt the kernel.
         await editor.interruptKernel();
         assert.isTrue(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     });
     test('Restarting kernel will cancel cell execution', async () => {
         // Open the notebook
@@ -233,11 +230,11 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         // Wait for 5s, and verify cell is still running.
         await sleep(5_000);
         assert.isFalse(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         await editor.restartKernel();
         assert.isTrue(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     });
     test('Interrupting kernel will cancel all pending cells', async () => {
         // Open the notebook
@@ -262,15 +259,15 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         await sleep(5_000);
         assert.isFalse(deferred1.completed);
         assert.isFalse(deferred2.completed);
-        assert.equal(cell1.metadata.runState, NotebookCellRunState.Running);
-        assert.equal(cell2.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell1.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
+        assert.equal(cell2.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         // Interrupt the kernel.
         await editor.interruptKernel();
         assert.isTrue(deferred1.completed);
         assert.isTrue(deferred2.completed);
-        assert.equal(cell1.metadata.runState, NotebookCellRunState.Idle);
-        assert.equal(cell2.metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(cell1.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+        assert.equal(cell2.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     });
     test('Interrupting kernel will cancel cell execution in notebook', async () => {
         // Open the notebook
@@ -291,14 +288,14 @@ suite('DataScience - VSCode Notebook - Execution', function () {
         // Wait for 5s, and verify cell is still running.
         await sleep(5_000);
         assert.isFalse(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Running);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
 
         // Interrupt the kernel.
         fakeTimer.install();
         await editor.interruptKernel();
         await fakeTimer.wait();
         assert.isTrue(deferred.completed);
-        assert.equal(cell.metadata.runState, NotebookCellRunState.Idle);
+        assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     });
     test('Errors thrown while starting a cell execution are handled by error handler', async () => {
         // Open the notebook

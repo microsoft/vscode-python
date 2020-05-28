@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { CancellationToken, NotebookCell, NotebookDocument } from 'vscode';
+import type { CancellationToken } from 'vscode';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 
 export const INotebookExecutionService = Symbol('INotebookExecutionService');
 export interface INotebookExecutionService {

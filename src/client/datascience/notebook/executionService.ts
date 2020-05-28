@@ -6,8 +6,8 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { Subscription } from 'rxjs';
-import { CancellationToken, NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { CancellationTokenSource } from 'vscode-jsonrpc';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import '../../common/extensions';
@@ -26,6 +26,8 @@ import {
     updateCellWithErrorStatus
 } from './executionHelpers';
 import { INotebookExecutionService } from './types';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * VSC will use this class to execute cells in a notebook.
@@ -138,7 +140,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 return;
             }
             deferred.resolve();
-            cell.metadata.runState = NotebookCellRunState.Idle;
+            cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
 
             // Interrupt kernel only if original cancellation was cancelled.
             if (token.isCancellationRequested) {
@@ -147,7 +149,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         });
 
         cell.metadata.runStartTime = new Date().getTime();
-        cell.metadata.runState = NotebookCellRunState.Running;
+        cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
 
         if (!findMappedNotebookCellModel(cell, model.cells)) {
             // tslint:disable-next-line: no-suspicious-comment
@@ -181,8 +183,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 },
                 () => {
                     cell.metadata.runState = wrappedToken.isCancellationRequested
-                        ? NotebookCellRunState.Idle
-                        : NotebookCellRunState.Success;
+                        ? vscodeNotebookEnums.NotebookCellRunState.Idle
+                        : vscodeNotebookEnums.NotebookCellRunState.Success;
                     cell.metadata.lastRunDuration = stopWatch.elapsedTime;
                     cell.metadata.statusMessage = '';
                     deferred.resolve();

@@ -5,12 +5,15 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CellKind, NotebookCellRunState, NotebookContentProvider as VSCodeNotebookContentProvider, Uri } from 'vscode';
+import { Uri } from 'vscode';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
-
+// tslint:disable: no-any
 suite('Data Science - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
@@ -57,14 +60,14 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
         assert.deepEqual(notebook.cells, [
             {
-                cellKind: CellKind.Code,
+                cellKind: (vscodeNotebookEnums as any).CellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
                 metadata: {
                     editable: true,
                     executionOrder: 10,
-                    runState: NotebookCellRunState.Idle,
+                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: true,
                     custom: {
                         cellId: 'MyCellId1'
@@ -72,14 +75,14 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 }
             },
             {
-                cellKind: CellKind.Markdown,
+                cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
-                    runState: NotebookCellRunState.Idle,
+                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: false,
                     custom: {
                         cellId: 'MyCellId2'

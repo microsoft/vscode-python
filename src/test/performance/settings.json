@@ -1,1 +1,1 @@
-{ "python.jediEnabled": true }
+{ "python.languageServer": "Jedi" }

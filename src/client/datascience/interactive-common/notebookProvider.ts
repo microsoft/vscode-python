@@ -88,6 +88,11 @@ export class NotebookProvider implements INotebookProvider {
             return this.notebooks.get(options.identity.fsPath)!!;
         }
 
+        // If get only, don't create a notebook
+        if (options.getOnly) {
+            return undefined;
+        }
+
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first

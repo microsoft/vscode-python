@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { NotebookCell, NotebookDocument } from 'vscode';
+import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { IDisposable } from '../../common/types';
 import { traceError } from '../../logging';
 import { ICell, INotebookModel } from '../types';

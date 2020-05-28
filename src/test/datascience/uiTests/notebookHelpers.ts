@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, Uri, ViewColumn, WebviewPanel } from 'vscode';
 import { noop } from '../../../client/common/utils/misc';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
 import { traceInfo } from '../../../client/logging';
 import { createTemporaryFile } from '../../utils/fs';
@@ -116,9 +117,14 @@ export async function openNotebook(
     const webViewPanel = createWebViewPanel();
     traceInfo(`Notebook UI Tests: about to open editor`);
 
+    const kernelIdle = notebookUI.waitForMessageAfterServer(InteractiveWindowMessages.KernelIdle);
     const notebookEditor = await openNotebookEditor(ioc, notebookFileContents, notebookFile);
     traceInfo(`Notebook UI Tests: have editor`);
     await uiLoaded;
     traceInfo(`Notebook UI Tests: UI complete`);
+
+    // Wait for kernel to be idle before finishing. (Prevents early shutdown problems in tests)
+    await kernelIdle;
+
     return { notebookEditor, webViewPanel, notebookUI };
 }

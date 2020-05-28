@@ -1132,16 +1132,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
         const statusChangeHandler = async (status: ServerStatus) => {
             const kernelSpec = notebook.getKernelSpec();
+            const name = kernelSpec?.display_name || kernelSpec?.name || '';
 
-            if (kernelSpec) {
-                const name = kernelSpec.display_name || kernelSpec.name;
-
-                await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                    jupyterServerStatus: status,
-                    localizedUri: this.getServerUri(notebook.connection),
-                    displayName: name
-                });
-            }
+            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: status,
+                localizedUri: this.getServerUri(notebook.connection),
+                displayName: name
+            });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);
         this.disposables.push(notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));

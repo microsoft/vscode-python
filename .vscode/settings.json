@@ -45,7 +45,7 @@
         "source.fixAll.eslint": true,
         "source.fixAll.tslint": true
     },
-    "python.jediEnabled": false,
+    "python.languageServer": "Microsoft",
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
     "python.linting.pylintEnabled": false,

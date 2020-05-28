@@ -42,6 +42,7 @@ export enum OSType {
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
     | 'pythonPath'
+    | 'languageServer'
     | 'linting.lintOnSave'
     | 'linting.enabled'
     | 'linting.pylintEnabled'
@@ -61,7 +62,6 @@ export type PythonSettingKeys =
     | 'testing.pytestEnabled'
     | 'testing.unittestEnabled'
     | 'envFile'
-    | 'jediEnabled'
     | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 

@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { CellKind, ConfigurationTarget, Event, EventEmitter, NotebookDocument, Uri, WebviewPanel } from 'vscode';
+import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import type { NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService } from '../../common/types';

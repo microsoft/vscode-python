@@ -34,8 +34,12 @@ stages:
         dependsOn: []
         strategy:
           matrix:
+            'NodeUnit':
+              TestsToRun: 'testUnitTests'
+              NeedsPythonTestReqs: false
+              NeedsIPythonReqs: false
             'Unit':
-              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              TestsToRun: 'pythonUnitTests, pythonInternalTools, pythonIPythonTests'
               NeedsPythonTestReqs: true
               NeedsIPythonReqs: true
             'Functional':
@@ -64,7 +68,7 @@ stages:
             'Unit':
               PythonVersion: '2.7'
               # Note: "pythonInternalTools" tests are 3.7+.
-              TestsToRun: 'testUnitTests, pythonUnitTests'
+              TestsToRun: 'pythonUnitTests'
               NeedsPythonTestReqs: true
             'Functional':
               PythonVersion: '2.7'

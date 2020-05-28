@@ -1,5 +1,5 @@
 {
-    "python.linting.pylintEnabled": true,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": false,
     "python.workspaceSymbols.enabled": false,
     "python.testing.nosetestArgs": [],
@@ -20,12 +20,11 @@
     "python.formatting.provider": "yapf",
     "python.linting.pylintUseMinimalCheckers": false,
     "python.pythonPath": "python",
-    // Do not set this to true/false even when LS is the default, else
-    // it will result in LS being downloaded on CI and slow down tests significantly.
-    // We have other tests on CI for testing downloading of CI with this setting enabled.
-    // "python.jediEnabled": true
-    // Temporarily set to ensure we can run tests with this turned on.
     "python.experiments.optInto": [
         "NativeNotebook - experiment"
     ],
+    // Do not set this to "Microsoft", else it will result in LS being downloaded on CI
+    // and that slows down tests significantly. We have other tests on CI for testing
+    // downloading of LS with this setting enabled.
+    "python.languageServer": "Jedi"
 }
