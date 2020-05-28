@@ -3,7 +3,6 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { sha256 } from 'hash.js';
-import { shutdown } from 'log4js';
 import * as nock from 'nock';
 import * as path from 'path';
 import { Readable } from 'stream';
@@ -66,8 +65,9 @@ suite('DataScience - ipywidget - CDN', () => {
         );
     }
 
-    shutdown(() => {
+    suiteTeardown(() => {
         clearDiskCache();
+        nock.cleanAll();
     });
 
     function createStreamFromString(str: string) {
