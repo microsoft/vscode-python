@@ -162,8 +162,9 @@ suite('DataScience - ipywidget - CDN', () => {
                             downloadCount += 1;
                             return createStreamFromString('foo');
                         });
-                        
+                    console.log('Step1');
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                    console.log('Step2');
 
                     assert.deepEqual(
                         value,
@@ -174,8 +175,10 @@ suite('DataScience - ipywidget - CDN', () => {
                         },
                         'Widget source does not match'
                     );
+                    console.log('Step3');
 
                     const value2 = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                    console.log('Step4');
 
                     assert.deepEqual(
                         value2,
@@ -186,6 +189,7 @@ suite('DataScience - ipywidget - CDN', () => {
                         },
                         'Widget source does not match (not cached)'
                     );
+                    console.log('Step5');
 
                     assert.equal(downloadCount, 1, 'Downloaded more than once');
                 });
@@ -222,7 +226,9 @@ suite('DataScience - ipywidget - CDN', () => {
                         .reply(200, () => {
                             return createStreamFromString('foo');
                         });
+                    console.log('Step1');
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                    console.log('Step2');
 
                     assert.deepEqual(
                         value,
