@@ -7,7 +7,7 @@ import { IExperimentationTelemetry } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
 
 export class ExperimentationTelemetry implements IExperimentationTelemetry {
-    private readonly sharedProperties: { [key: string]: string } = {};
+    private readonly sharedProperties: Record<string, string> = {};
 
     public setSharedProperty(name: string, value: string): void {
         this.sharedProperties[name] = value;
@@ -15,9 +15,7 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
 
     public postEvent(eventName: string, properties: Map<string, string>): void {
         // Add shared properties to telemetry props (we may overwrite existing ones).
-        for (const [key, value] of Object.entries(this.sharedProperties)) {
-            properties.set(key, value);
-        }
+        Object.assign(properties, this.sharedProperties);
 
         const formattedProperties: { [key: string]: string } = {};
         properties.forEach((value, key) => {

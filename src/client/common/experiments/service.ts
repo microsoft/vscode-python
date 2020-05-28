@@ -23,7 +23,7 @@ export class ExperimentService implements IExperimentService {
     public _optOutFrom: string[] = [];
 
     private readonly experimentationService?: IExperimentationService;
-    private settings!: IPythonSettings;
+    private readonly settings: IPythonSettings;
 
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
