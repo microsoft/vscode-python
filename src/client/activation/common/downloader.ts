@@ -61,7 +61,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
         if (this.lsFolderService.isBundled()) {
             // Sanity check; a bundled LS should never be downloaded.
-            traceError('Attempted to download bundled langauge server');
+            traceError('Attempted to download bundled language server');
             return;
         }
 

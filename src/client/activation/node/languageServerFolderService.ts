@@ -7,10 +7,15 @@ import { inject, injectable } from 'inversify';
 import * as semver from 'semver';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { NugetPackage } from '../../common/nuget/types';
-import { Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
-import { FolderVersionPair, ILanguageServerFolderService, NodeLanguageServerFolder } from '../types';
+import {
+    BundledLanguageServerFolder,
+    FolderVersionPair,
+    ILanguageServerFolderService,
+    NodeLanguageServerFolder
+} from '../types';
 
 // Must match languageServerVersion* keys in package.json
 export const NodeLanguageServerVersionKey = 'languageServerVersionV2';
@@ -32,13 +37,19 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationEnvironment) appEnv: IApplicationEnvironment
     ) {
         this.fallback = new FallbackNodeLanguageServerFolderService(serviceContainer);
 
-        const config = workspaceService.getConfiguration('python');
-        if (!config.get<string>('packageName')) {
+        // downloadLanguageServer is a bit of a misnomer; if false then this indicates that a local
+        // development copy should be run instead of a "real" build, telemetry discarded, etc.
+        // So, we require it to be true, even though in the bundled case no real download happens.
+        if (
+            configService.getSettings().downloadLanguageServer &&
+            !workspaceService.getConfiguration('python').get<string>('packageName')
+        ) {
             const ver = appEnv.packageJson[NodeLanguageServerVersionKey] as string;
             this._bundledVersion = semver.parse(ver) || undefined;
         }
@@ -54,7 +65,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
 
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         if (this._bundledVersion) {
-            return NodeLanguageServerFolder;
+            return BundledLanguageServerFolder;
         }
         return this.fallback.getLanguageServerFolderName(resource);
     }
@@ -68,7 +79,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
 
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         if (this._bundledVersion) {
-            return { path: NodeLanguageServerFolder, version: this._bundledVersion };
+            return { path: BundledLanguageServerFolder, version: this._bundledVersion };
         }
         return this.fallback.getCurrentLanguageServerDirectory();
     }
