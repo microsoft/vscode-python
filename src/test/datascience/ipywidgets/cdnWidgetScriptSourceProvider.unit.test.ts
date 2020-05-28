@@ -162,22 +162,30 @@ suite('DataScience - ipywidget - CDN', () => {
                             downloadCount += 1;
                             return createStreamFromString('foo');
                         });
-
+                        
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value, {
-                        moduleName: 'HelloWorld',
-                        scriptUri,
-                        source: 'cdn'
-                    });
+                    assert.deepEqual(
+                        value,
+                        {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        },
+                        'Widget source does not match'
+                    );
 
                     const value2 = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value2, {
-                        moduleName: 'HelloWorld',
-                        scriptUri,
-                        source: 'cdn'
-                    });
+                    assert.deepEqual(
+                        value2,
+                        {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        },
+                        'Widget source does not match (not cached)'
+                    );
 
                     assert.equal(downloadCount, 1, 'Downloaded more than once');
                 });
@@ -187,9 +195,13 @@ suite('DataScience - ipywidget - CDN', () => {
 
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value, {
-                        moduleName: 'HelloWorld'
-                    });
+                    assert.deepEqual(
+                        value,
+                        {
+                            moduleName: 'HelloWorld'
+                        },
+                        'Widget source should not exist'
+                    );
                 });
                 test('Script source if package does not exist on both CDNs', async () => {
                     // Add the other cdn (the opposite of the working one)
@@ -212,11 +224,15 @@ suite('DataScience - ipywidget - CDN', () => {
                         });
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value, {
-                        moduleName: 'HelloWorld',
-                        scriptUri,
-                        source: 'cdn'
-                    });
+                    assert.deepEqual(
+                        value,
+                        {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        },
+                        'Widget source does not match'
+                    );
                 });
 
                 test('Retry if busy', async () => {
@@ -236,11 +252,15 @@ suite('DataScience - ipywidget - CDN', () => {
                     // Then see if we can get it still.
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value, {
-                        moduleName: 'HelloWorld',
-                        scriptUri,
-                        source: 'cdn'
-                    });
+                    assert.deepEqual(
+                        value,
+                        {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        },
+                        'Widget source does not match'
+                    );
                     assert.equal(retryCount, 3, 'Did not actually retry');
                 });
                 test('Script source already on disk', async () => {
@@ -256,11 +276,15 @@ suite('DataScience - ipywidget - CDN', () => {
                     // Then see if we can get it still.
                     const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
 
-                    assert.deepEqual(value, {
-                        moduleName: 'HelloWorld',
-                        scriptUri,
-                        source: 'cdn'
-                    });
+                    assert.deepEqual(
+                        value,
+                        {
+                            moduleName: 'HelloWorld',
+                            scriptUri,
+                            source: 'cdn'
+                        },
+                        'Widget source does not match'
+                    );
                 });
             });
         });
