@@ -54,6 +54,7 @@ suite('Node Language Server Folder Service', () => {
         );
 
         expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
+        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
     });
 
     test('Invalid version', () => {
@@ -69,6 +70,7 @@ suite('Node Language Server Folder Service', () => {
         );
 
         expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
+        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
     });
 
     test('downloadLanguageServer set to false', () => {
@@ -84,6 +86,7 @@ suite('Node Language Server Folder Service', () => {
         );
 
         expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
+        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
     });
 
     suite('Valid configuration', () => {
@@ -99,6 +102,10 @@ suite('Node Language Server Folder Service', () => {
                 workspaceService.object,
                 appEnvironment.object
             );
+        });
+
+        test('isBundled is true', () => {
+            expect(folderService.isBundled()).to.be.equal(true, 'isBundled should be true');
         });
 
         test('Parsed version is correct', () => {
