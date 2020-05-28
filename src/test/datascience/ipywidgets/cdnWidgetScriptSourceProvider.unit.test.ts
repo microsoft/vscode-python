@@ -113,7 +113,8 @@ suite('DataScience - ipywidget - CDN', () => {
 
     [true, false].forEach((localLaunch) => {
         (['unpkg.com', 'jsdelivr.com'] as WidgetCDNs[]).forEach((cdn) => {
-            suite(localLaunch ? `Local Jupyter Server ${cdn}` : `Remote Jupyter Server ${cdn}`, () => {
+            const suiteTitle = localLaunch ? `Local Jupyter Server ${cdn}` : `Remote Jupyter Server ${cdn}`;
+            suite(suiteTitle, () => {
                 initialize();
                 const moduleName = 'HelloWorld';
                 const moduleVersion = '1';
@@ -151,47 +152,52 @@ suite('DataScience - ipywidget - CDN', () => {
                 function updateCDNSettings(...values: WidgetCDNs[]) {
                     settings.datascience.widgetScriptSources = values;
                 }
-                test('Ensure widget script is downloaded once and cached', async () => {
-                    updateCDNSettings(cdn);
-                    let downloadCount = 0;
-                    nock(baseUrl)
-                        .log(console.log)
+                test(`Ensure widget script is downloaded once and cached (${suiteTitle})`, async () => {
+                    try {
+                        updateCDNSettings(cdn);
+                        let downloadCount = 0;
+                        nock(baseUrl)
+                            .log(console.log)
 
-                        .get(/.*/)
-                        .reply(200, () => {
-                            downloadCount += 1;
-                            return createStreamFromString('foo');
-                        });
-                    console.log('Step1');
-                    const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-                    console.log('Step2');
+                            .get(/.*/)
+                            .reply(200, () => {
+                                downloadCount += 1;
+                                return createStreamFromString('foo');
+                            });
+                        console.log('Step1');
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                        console.log('Step2');
 
-                    assert.deepEqual(
-                        value,
-                        {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        },
-                        'Widget source does not match'
-                    );
-                    console.log('Step3');
+                        assert.deepEqual(
+                            value,
+                            {
+                                moduleName: 'HelloWorld',
+                                scriptUri,
+                                source: 'cdn'
+                            },
+                            'Widget source does not match'
+                        );
+                        console.log('Step3');
 
-                    const value2 = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-                    console.log('Step4');
+                        const value2 = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                        console.log('Step4');
 
-                    assert.deepEqual(
-                        value2,
-                        {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        },
-                        'Widget source does not match (not cached)'
-                    );
-                    console.log('Step5');
+                        assert.deepEqual(
+                            value2,
+                            {
+                                moduleName: 'HelloWorld',
+                                scriptUri,
+                                source: 'cdn'
+                            },
+                            'Widget source does not match (not cached)'
+                        );
+                        console.log('Step5');
 
-                    assert.equal(downloadCount, 1, 'Downloaded more than once');
+                        assert.equal(downloadCount, 1, 'Downloaded more than once');
+                    } catch (ex) {
+                        console.error('Failed CDN Test', ex);
+                        throw ex;
+                    }
                 });
                 test('No script source if package does not exist on CDN', async () => {
                     updateCDNSettings(cdn);
@@ -207,38 +213,43 @@ suite('DataScience - ipywidget - CDN', () => {
                         'Widget source should not exist'
                     );
                 });
-                test('Script source if package does not exist on both CDNs', async () => {
-                    // Add the other cdn (the opposite of the working one)
-                    const cdns =
-                        cdn === 'unpkg.com'
-                            ? ([cdn, 'jsdelivr.com'] as WidgetCDNs[])
-                            : ([cdn, 'unpkg.com'] as WidgetCDNs[]);
-                    updateCDNSettings(cdns[0], cdns[1]);
-                    // Make only one cdn available
-                    when(httpClient.exists(anything())).thenCall((a) => {
-                        if (a.includes(cdn[0])) {
-                            return true;
-                        }
-                        return false;
-                    });
-                    nock(baseUrl)
-                        .get(/.*/)
-                        .reply(200, () => {
-                            return createStreamFromString('foo');
+                test(`Script source if package does not exist on both CDNs (${suiteTitle})`, async () => {
+                    try {
+                        // Add the other cdn (the opposite of the working one)
+                        const cdns =
+                            cdn === 'unpkg.com'
+                                ? ([cdn, 'jsdelivr.com'] as WidgetCDNs[])
+                                : ([cdn, 'unpkg.com'] as WidgetCDNs[]);
+                        updateCDNSettings(cdns[0], cdns[1]);
+                        // Make only one cdn available
+                        when(httpClient.exists(anything())).thenCall((a) => {
+                            if (a.includes(cdn[0])) {
+                                return true;
+                            }
+                            return false;
                         });
-                    console.log('Step1');
-                    const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
-                    console.log('Step2');
+                        nock(baseUrl)
+                            .get(/.*/)
+                            .reply(200, () => {
+                                return createStreamFromString('foo');
+                            });
+                        console.log('Step1');
+                        const value = await scriptSourceProvider.getWidgetScriptSource(moduleName, moduleVersion);
+                        console.log('Step2');
 
-                    assert.deepEqual(
-                        value,
-                        {
-                            moduleName: 'HelloWorld',
-                            scriptUri,
-                            source: 'cdn'
-                        },
-                        'Widget source does not match'
-                    );
+                        assert.deepEqual(
+                            value,
+                            {
+                                moduleName: 'HelloWorld',
+                                scriptUri,
+                                source: 'cdn'
+                            },
+                            'Widget source does not match'
+                        );
+                    } catch (ex) {
+                        console.error('Failed CDN', ex);
+                        throw ex;
+                    }
                 });
 
                 test('Retry if busy', async () => {
