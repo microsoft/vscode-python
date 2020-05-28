@@ -275,6 +275,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
+    private update() {
+        this.setState({ resized: true });
+    }
+
     private saveCurrentSize() {
         // uses redux
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
@@ -289,13 +293,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         const prevState = vscode.getState();
-        if (prevState && 'containerHeight' in prevState && 'gridHeight' in prevState) {
+        if (
+            prevState &&
+            Object.keys(prevState).length === 2 &&
+            'containerHeight' in prevState &&
+            'gridHeight' in prevState
+        ) {
             this.setState(prevState);
         }
-    }
-
-    private update() {
-        this.setState({ resized: true });
     }
 
     private getRowHeight() {
