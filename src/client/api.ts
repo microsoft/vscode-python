@@ -67,6 +67,12 @@ export interface IExtensionApi {
         getExecutionCommand(resource?: Resource): string[] | undefined;
     };
     datascience: {
+        /**
+         * Launches Data Viewer component.
+         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
+         * @param {string} title Data Viewer title
+         * @returns {Promise<IDataViewer>}
+         */
         showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
     };
 }

@@ -27,12 +27,13 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
     public async create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 
-        // Create the data explorer (this should show the window)
+        // Create the data explorer
         const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
         try {
             // Then load the data.
             this.activeExplorers.push(dataExplorer);
 
+            // Show the window and the data
             await dataExplorer.showData(dataProvider, title);
             result = dataExplorer;
         } finally {

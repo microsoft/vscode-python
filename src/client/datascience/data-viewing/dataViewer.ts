@@ -73,6 +73,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         if (!this.isDisposed) {
+            // Save the data provider
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
@@ -94,6 +95,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         super.dispose();
 
         if (this.dataProvider) {
+            // Call dispose on the data provider
             this.dataProvider.dispose();
             this.dataProvider = undefined;
         }

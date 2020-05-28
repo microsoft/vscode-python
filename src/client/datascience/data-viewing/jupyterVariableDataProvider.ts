@@ -23,6 +23,12 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         private notebook: INotebook
     ) {}
 
+    /**
+     * Normalizes column types to the types the UI component understands.
+     * Defaults to 'string'.
+     * @param columns
+     * @returns Array of columns with normalized type
+     */
     private static getNormalizedColumns(columns: { key: string; type: string }[]): { key: string; type: ColumnType }[] {
         return columns.map((column: { key: string; type: string }) => {
             let normalizedType: ColumnType;
@@ -88,6 +94,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     }
 
     private async ensureInitialized(): Promise<void> {
+        // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized) {
             await this.dependencyService.checkAndInstallMissingDependencies(this.notebook.getMatchingInterpreter());
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
