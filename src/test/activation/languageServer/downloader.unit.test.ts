@@ -269,6 +269,7 @@ suite('Language Server Activation - Downloader', () => {
         setup(() => {
             appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
+            folderService.setup((f) => f.isBundled()).returns(() => false);
             output = TypeMoq.Mock.ofType<IOutputChannel>();
             fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
             platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);

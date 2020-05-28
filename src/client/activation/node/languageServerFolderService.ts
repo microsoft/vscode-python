@@ -48,6 +48,10 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
         return this._bundledVersion;
     }
 
+    public isBundled(): boolean {
+        return !!this._bundledVersion;
+    }
+
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         if (this._bundledVersion) {
             return NodeLanguageServerFolder;

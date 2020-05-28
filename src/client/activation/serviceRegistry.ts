@@ -41,7 +41,6 @@ import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
 import { NodeLanguageServerActivator } from './node/activator';
 import { NodeLanguageServerAnalysisOptions } from './node/analysisOptions';
-import { NodeLanguageServerDownloader } from './node/downloader';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
 import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
 import {
@@ -150,7 +149,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             ILanguageServerPackageService,
             DotNetLanguageServerPackageService
         );
-        serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
         registerDotNetTypes(serviceManager);
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerAnalysisOptions>(
@@ -189,7 +187,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
             ILanguageServerPackageService,
             NodeLanguageServerPackageService
         );
-        serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, NodeLanguageServerDownloader);
     } else if (languageServerType === LanguageServerType.None) {
         serviceManager.add<ILanguageServerActivator>(
             ILanguageServerActivator,
@@ -213,6 +210,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         DownloadBetaChannelRule,
         LanguageServerDownloadChannel.stable
     );
+    serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
 
     serviceManager.addSingleton<ILanguageServerOutputChannel>(
         ILanguageServerOutputChannel,

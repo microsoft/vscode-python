@@ -116,6 +116,7 @@ export interface ILanguageServerFolderService {
     getLanguageServerFolderName(resource: Resource): Promise<string>;
     getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
+    isBundled(): boolean;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
