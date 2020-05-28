@@ -11,12 +11,14 @@ import {
     CellFetchAllLimit,
     CellFetchSizeFirst,
     CellFetchSizeSubsequent,
+    ColumnType,
     DataViewerMessages,
+    IDataFrameInfo,
     IDataViewerMapping,
     IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
-import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
@@ -198,7 +200,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
-            const variable = payload as IJupyterVariable;
+            const variable = payload as IDataFrameInfo;
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
@@ -285,9 +287,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[] {
+    private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
         if (variable.columns) {
-            return variable.columns.map((c: { key: string; type: string }, i: number) => {
+            return variable.columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),

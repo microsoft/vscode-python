@@ -29,6 +29,7 @@ import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '.
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
+import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -780,6 +781,15 @@ export interface IJupyterVariable {
     indexColumn?: string;
 }
 
+export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
+export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {}
+
+export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
+export interface IJupyterVariableDataProviderFactory extends Function {
+    // tslint:disable-next-line: callable-types
+    (variable: IJupyterVariable, notebook: INotebook): IJupyterVariableDataProvider;
+}
+
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
@@ -819,14 +829,14 @@ export interface IJupyterVariablesResponse {
     pageResponse: IJupyterVariable[];
 }
 
-export const IDataViewerProvider = Symbol('IDataViewerProvider');
-export interface IDataViewerProvider {
-    create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer>;
+export const IDataViewerFactory = Symbol('IDataViewerFactory');
+export interface IDataViewerFactory {
+    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
 }
-export const IDataViewer = Symbol('IDataViewer');
 
+export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
-    showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void>;
+    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');

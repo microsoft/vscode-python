@@ -19,7 +19,8 @@ import { Identifiers } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
-import { DataViewerProvider } from './data-viewing/dataViewerProvider';
+import { DataViewerFactory } from './data-viewing/dataViewerFactory';
+import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataProvider';
 import { DataScience } from './datascience';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
@@ -115,7 +116,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDataViewer,
-    IDataViewerProvider,
+    IDataViewerFactory,
     IDebugLocationTracker,
     IGatherLogger,
     IGatherProvider,
@@ -132,8 +133,12 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterVariable,
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    INotebook,
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
@@ -206,7 +211,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
-    serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
@@ -256,6 +261,13 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
+    serviceManager.addFactory<IJupyterVariableDataProvider>(IJupyterVariableDataProviderFactory, (context) => {
+        return (variable: IJupyterVariable, notebook: INotebook) => {
+            const variableManager: IJupyterVariables = context.container.getNamed<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES);
+            const dependencyService: DataViewerDependencyService = context.container.get(DataViewerDependencyService);
+            return new JupyterVariableDataProvider(variableManager, dependencyService, variable, notebook);
+        };
+    });
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

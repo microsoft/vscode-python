@@ -5,6 +5,7 @@ import './cellFormatter.css';
 
 import * as React from 'react';
 import * as ReactDOMServer from 'react-dom/server';
+import { ColumnType } from '../../client/datascience/data-viewing/types';
 import { ISlickRow } from './reactSlickGrid';
 
 interface ICellFormatterProps {
@@ -23,15 +24,11 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
             // tslint:disable-next-line: no-any
             const columnType = (this.props.columnDef as any).type;
             switch (columnType) {
-                case 'bool':
+                case ColumnType.Bool:
                     return this.renderBool(this.props.value as boolean);
                     break;
 
-                case 'integer':
-                case 'float':
-                case 'int64':
-                case 'float64':
-                case 'number':
+                case ColumnType.Number:
                     return this.renderNumber(this.props.value as number);
                     break;
 

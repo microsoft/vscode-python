@@ -7,6 +7,8 @@ import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experiments/groups';
 import { traceError } from './common/logger';
 import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
+import { IDataViewerDataProvider } from './datascience/data-viewing/types';
+import { IDataViewer, IDataViewerFactory } from './datascience/types';
 import {
     getDebugpyLauncherArgs,
     getDebugpyPackagePath,
@@ -64,6 +66,9 @@ export interface IExtensionApi {
          */
         getExecutionCommand(resource?: Resource): string[] | undefined;
     };
+    datascience: {
+        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+    };
 }
 
 export function buildApi(
@@ -117,6 +122,12 @@ export function buildApi(
                 const pythonPath = configurationService.getSettings(resource).pythonPath;
                 // If pythonPath equals an empty string, no interpreter is set.
                 return pythonPath === '' ? undefined : [pythonPath];
+            }
+        },
+        datascience: {
+            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string) {
+                const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
+                return dataViewerProviderService.create(dataProvider, title);
             }
         }
     };

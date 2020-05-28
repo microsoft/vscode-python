@@ -179,7 +179,8 @@ import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/co
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
-import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
+import { DataViewerFactory } from '../../client/datascience/data-viewing/dataViewerFactory';
+import { JupyterVariableDataProvider } from '../../client/datascience/data-viewing/jupyterVariableDataProvider';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
@@ -262,7 +263,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDataViewer,
-    IDataViewerProvider,
+    IDataViewerFactory,
     IDebugLocationTracker,
     IGatherLogger,
     IGatherProvider,
@@ -279,8 +280,12 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterVariable,
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
+    INotebook,
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
@@ -608,7 +613,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
-        this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+        this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
+        this.serviceManager.addFactory<IJupyterVariableDataProvider>(IJupyterVariableDataProviderFactory, (context) => {
+            return (variable: IJupyterVariable, notebook: INotebook) => {
+                const variableManager: IJupyterVariables = context.container.getNamed<IJupyterVariables>(
+                    IJupyterVariables,
+                    Identifiers.ALL_VARIABLES
+                );
+                const dependencyService: DataViewerDependencyService = context.container.get(
+                    DataViewerDependencyService
+                );
+                return new JupyterVariableDataProvider(variableManager, dependencyService, variable, notebook);
+            };
+        });
+        this.serviceManager.add<IJupyterVariableDataProvider>(
+            IJupyterVariableDataProvider,
+            JupyterVariableDataProvider
+        );
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);

@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
@@ -16,18 +16,23 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { HelpLinks, Identifiers, Telemetry } from '../constants';
+import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IDataViewer, IJupyterVariable, IJupyterVariables, INotebook, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IDataViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
-import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types';
+import {
+    DataViewerMessages,
+    IDataFrameInfo,
+    IDataViewerDataProvider,
+    IDataViewerMapping,
+    IGetRowsRequest
+} from './types';
 
 const dataExplorereDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class DataViewer extends WebViewHost<IDataViewerMapping> implements IDataViewer, IDisposable {
-    private notebook: INotebook | undefined;
-    private variable: IJupyterVariable | undefined;
+    private dataProvider: IDataViewerDataProvider | undefined;
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
 
@@ -37,7 +42,6 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean
@@ -57,33 +61,41 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             useCustomEditorApi,
             false
         );
-
-        // Load the web panel using our current directory as we don't expect to load any other files
-        super.loadWebPanel(process.cwd()).catch(traceError);
     }
 
-    public async showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void> {
+    private static trimTitle(title: string): string {
+        const TRIM_LENGTH = 40;
+        if (title && title.length > TRIM_LENGTH) {
+            title = `${title.substr(0, TRIM_LENGTH)}...`;
+        }
+        return title;
+    }
+
+    public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         if (!this.isDisposed) {
-            // Save notebook this is tied to
-            this.notebook = notebook;
+            this.dataProvider = dataProvider;
 
-            // Fill in our variable's beginning data
-            this.variable = await this.prepVariable(variable, notebook);
+            // Load the web panel using our current directory as we don't expect to load any other files
+            await super.loadWebPanel(process.cwd()).catch(traceError);
 
-            // Create our new title with the variable name
-            let newTitle = `${localize.DataScience.dataExplorerTitle()} - ${variable.name}`;
-            const TRIM_LENGTH = 40;
-            if (newTitle.length > TRIM_LENGTH) {
-                newTitle = `${newTitle.substr(0, TRIM_LENGTH)}...`;
-            }
-
-            super.setTitle(newTitle);
+            super.setTitle(DataViewer.trimTitle(title));
 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
+            const dataFrameInfo = await this.prepDataFrameInfo(dataProvider);
+
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, this.variable).ignoreErrors();
+            this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
+        }
+    }
+
+    public dispose(): void {
+        super.dispose();
+
+        if (this.dataProvider) {
+            this.dataProvider.dispose();
+            this.dataProvider = undefined;
         }
     }
 
@@ -109,9 +121,9 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         super.onMessage(message, payload);
     }
 
-    private async prepVariable(variable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    private async prepDataFrameInfo(dataProvider: IDataViewerDataProvider): Promise<IDataFrameInfo> {
         this.rowsTimer = new StopWatch();
-        const output = await this.variableManager.getDataFrameInfo(variable, notebook);
+        const output = await dataProvider.getDataFrameInfo();
 
         // Log telemetry about number of rows
         try {
@@ -131,13 +143,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
     private async getAllRows() {
         return this.wrapRequest(async () => {
-            if (this.variable && this.variable.rowCount && this.notebook) {
-                const allRows = await this.variableManager.getDataFrameRows(
-                    this.variable,
-                    this.notebook,
-                    0,
-                    this.variable.rowCount
-                );
+            if (this.dataProvider) {
+                const allRows = await this.dataProvider.getAllRows();
                 this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
             }
@@ -146,12 +153,10 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
     private getRowChunk(request: IGetRowsRequest) {
         return this.wrapRequest(async () => {
-            if (this.variable && this.variable.rowCount && this.notebook) {
-                const rows = await this.variableManager.getDataFrameRows(
-                    this.variable,
-                    this.notebook,
+            if (this.dataProvider) {
+                const rows = await this.dataProvider.getRows(
                     request.start,
-                    Math.min(request.end, this.variable.rowCount)
+                    Math.min(request.end, (await this.dataProvider.getDataFrameInfo()).rowCount)
                 );
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,
