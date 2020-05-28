@@ -16,7 +16,7 @@ import { FolderVersionPair, ILanguageServerFolderService, NodeLanguageServerFold
 export const NodeLanguageServerVersionKey = 'languageServerVersionV2';
 
 class FallbackNodeLanguageServerFolderService extends LanguageServerFolderService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer) {
         super(serviceContainer, NodeLanguageServerFolder);
     }
 
