@@ -63,29 +63,29 @@ export class ExperimentService implements IExperimentService {
         );
     }
 
-    public async inExperiment(flight: string): Promise<boolean> {
+    public async inExperiment(experiment: string): Promise<boolean> {
         if (!this.experimentationService) {
             return false;
         }
 
         // Currently the service doesn't support opting in and out of experiments,
         // so we need to perform these checks and send the corresponding telemetry manually.
-        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(flight)) {
+        if (this._optOutFrom.includes('All') || this._optOutFrom.includes(experiment)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                expNameOptedOutOf: flight
+                expNameOptedOutOf: experiment
             });
 
             return false;
         }
 
-        if (this._optInto.includes('All') || this._optInto.includes(flight)) {
+        if (this._optInto.includes('All') || this._optInto.includes(experiment)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                expNameOptedInto: flight
+                expNameOptedInto: experiment
             });
 
             return true;
         }
 
-        return this.experimentationService.isCachedFlightEnabled(flight);
+        return this.experimentationService.isCachedFlightEnabled(experiment);
     }
 }
