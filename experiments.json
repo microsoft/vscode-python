@@ -182,8 +182,8 @@
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 100,
-        "max": 96
+        "min": 96,
+        "max": 100
     },
     {
         "name": "RunByLine - control",
