@@ -35,6 +35,7 @@ interface IVariableExplorerProps {
     offsetHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
+    setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -74,7 +75,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private pageSize: number = -1;
 
     // Used for handling resizing
-    private minGridHeight: number = 200;
+    private defaultGridHeight: number = 200;
 
     // These values keep track of variable requests so we don't make the same ones over and over again
     // Note: This isn't in the redux state because the requests will come before the state
@@ -98,7 +99,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             wrapHeight: 0,
-            gridHeight: this.minGridHeight
+            gridHeight: this.defaultGridHeight
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
@@ -162,6 +163,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     public componentDidMount() {
         this.restorePreviousSize();
+        this.setInitialHeight();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
@@ -188,7 +190,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
 
         return (
-            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
+            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove}>
                 <span>
                     <div id="variable-panel" ref={this.variablePanelRef}>
                         <div id="variable-panel-padding">
@@ -265,16 +267,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         //vscode.setState(this.state);
     }
 
-    private restorePreviousSize() {
-        const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
-        const vscode = acquireVsCodeApi();
-        const lastState = vscode.getState();
-        if (lastState) {
-            vscode.setState(lastState);
-        } else {
-            this.setInitialHeight();
-        }
-    }
+    private restorePreviousSize() {}
 
     private getRowHeight() {
         return this.props.fontSize + 9;

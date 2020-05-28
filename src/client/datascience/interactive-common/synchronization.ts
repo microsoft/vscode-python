@@ -83,7 +83,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.TOGGLE_INPUT_BLOCK]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [CommonActionType.TOGGLE_LINE_NUMBERS]: MessageType.syncWithLiveShare,
     [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncWithLiveShare,
-    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncWithLiveShare,
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.other,
+    [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: MessageType.syncWithLiveShare,
     [CommonActionType.UNFOCUS_CELL]: MessageType.syncWithLiveShare,
     [CommonActionType.UNMOUNT]: MessageType.other,
     [CommonActionType.PostOutgoingMessage]: MessageType.other,
@@ -194,6 +195,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
     [InteractiveWindowMessages.VariablesComplete]: MessageType.other,
+    [InteractiveWindowMessages.VariableExplorerHeight]: MessageType.other,
     [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: MessageType.other,
     [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: MessageType.other,
     // Types from CssMessages
