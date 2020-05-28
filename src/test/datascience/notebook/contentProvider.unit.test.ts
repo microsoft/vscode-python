@@ -14,7 +14,7 @@ import { INotebookStorageProvider } from '../../../client/datascience/interactiv
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 // tslint:disable: no-any
-suite('Data Science - NativeNotebook ContentProviderxxx', () => {
+suite('Data Science - NativeNotebook ContentProvider', () => {
     let storageProvider: INotebookStorageProvider;
     let contentProvider: VSCodeNotebookContentProvider;
     const fileUri = Uri.file('a.ipynb');
