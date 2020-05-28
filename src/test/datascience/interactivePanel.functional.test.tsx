@@ -99,8 +99,11 @@ suite('DataScience Interactive Panel', () => {
                 sortAscending: true,
                 sortColumn: '',
                 variables: [],
-                visible: true
+                visible: true,
+                containerHeight: 0,
+                gridHeight: 200
             },
+            setVariableExplorerHeight: noopAny,
             editorOptions: {},
             settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any
         };

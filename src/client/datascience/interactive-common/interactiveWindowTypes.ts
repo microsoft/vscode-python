@@ -11,6 +11,7 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
+    IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
@@ -132,7 +133,8 @@ export enum InteractiveWindowMessages {
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
-    KernelIdle = 'kernel_idle'
+    KernelIdle = 'kernel_idle',
+    VariableExplorerHeight = 'VariableExplorerHeight'
 }
 
 export enum IPyWidgetMessages {
@@ -546,6 +548,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
+    public [InteractiveWindowMessages.VariableExplorerHeight]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
