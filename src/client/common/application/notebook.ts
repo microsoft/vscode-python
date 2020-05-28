@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, GlobPattern, TextDocument, window } from 'vscode';
 import type {
     notebook,
+    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
     NotebookDocument,
     NotebookEditor,
@@ -17,19 +18,15 @@ import { IDisposableRegistry } from '../types';
 import {
     IVSCodeNotebook,
     NotebookCellLanguageChangeEvent,
-    NotebookCellMoveEvent,
     NotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent
 } from './types';
 
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
-    private readonly _onDidChangeNotebookDocument = new EventEmitter<
-        | NotebookCellsChangeEvent
-        | NotebookCellMoveEvent
-        | NotebookCellOutputsChangeEvent
-        | NotebookCellLanguageChangeEvent
-    >();
+    public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
+        return this.notebook.onDidChangeActiveNotebookEditor;
+    }
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
         return this.notebook.onDidOpenNotebookDocument;
     }
@@ -40,17 +37,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         return this.notebook.visibleNotebookEditors;
     }
     public get onDidChangeNotebookDocument(): Event<
-        | NotebookCellsChangeEvent
-        | NotebookCellMoveEvent
-        | NotebookCellOutputsChangeEvent
-        | NotebookCellLanguageChangeEvent
+        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     > {
-        // Temporarily disabled as API is not yet
-        // Bogus if, to satisyf compiler and ensure addEventHandlers method is used.
-        if (process.env.SOME_BOGUS_ENV_VAR) {
-            this.addEventHandlers();
-        }
-
+        this.addEventHandlers();
         return this._onDidChangeNotebookDocument.event;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
@@ -72,8 +61,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         return this.notebook.activeNotebookEditor;
     }
-    private addedEventHandlers?: boolean;
-    private _notebook?: typeof notebook;
     private get notebook() {
         if (!this._notebook) {
             // tslint:disable-next-line: no-require-imports
@@ -81,6 +68,12 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         return this._notebook!;
     }
+    private readonly _onDidChangeNotebookDocument = new EventEmitter<
+        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
+    >();
+    private addedEventHandlers?: boolean;
+    private _notebook?: typeof notebook;
+    private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
@@ -118,12 +111,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
                 this.notebook.onDidChangeCellOutputs((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
                 ),
-                this.notebook.onDidChangeNotebookCells((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCells' })
-                ),
-                this.notebook.onDidMoveNotebookCell((e) =>
-                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'moveCell' })
-                )
+                this.notebook.onDidChangeNotebookCells((e) => {
+                    if (this.handledCellChanges.has(e)) {
+                        return;
+                    }
+                    this.handledCellChanges.add(e);
+                    this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCells' });
+                })
             ]
         );
     }

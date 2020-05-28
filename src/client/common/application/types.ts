@@ -60,7 +60,6 @@ import {
 } from 'vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
-    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
@@ -1456,7 +1455,6 @@ export interface IClipboard {
 }
 
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
-export type NotebookCellMoveEvent = { type: 'moveCell' } & VSCNotebookCellMoveEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
 export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
 
@@ -1464,12 +1462,9 @@ export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-
+    readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     readonly onDidChangeNotebookDocument: Event<
-        | NotebookCellsChangeEvent
-        | NotebookCellMoveEvent
-        | NotebookCellOutputsChangeEvent
-        | NotebookCellLanguageChangeEvent
+        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     >;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
