@@ -17,7 +17,12 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(properties, this.sharedProperties);
 
+        const formattedProperties: { [key: string]: string } = {};
+        properties.forEach((value, key) => {
+            formattedProperties[key] = value;
+        });
+
         // tslint:disable-next-line: no-any
-        sendTelemetryEvent(eventName as any, undefined, properties);
+        sendTelemetryEvent(eventName as any, undefined, formattedProperties);
     }
 }
