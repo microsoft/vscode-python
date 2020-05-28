@@ -62,7 +62,7 @@ interface IGridRow {
 }
 
 interface IVariableExplorerState {
-    wrapHeight: number;
+    containerHeight: number;
     gridHeight: number;
 }
 
@@ -98,7 +98,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         super(prop);
 
         this.state = {
-            wrapHeight: 0,
+            containerHeight: 0,
             gridHeight: this.defaultGridHeight
         };
 
@@ -163,7 +163,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     public componentDidMount() {
         this.restorePreviousSize();
-        this.setInitialHeight();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
@@ -181,16 +180,16 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     public render() {
         const contentClassName = `variable-explorer-content`;
-        const wrapHeight = this.state.wrapHeight;
+        const containerHeight = this.state.containerHeight;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
 
         // add properties to explorer styles
-        if (wrapHeight !== 0) {
-            variableExplorerStyles = { ...variableExplorerStyles, height: wrapHeight };
+        if (containerHeight !== 0) {
+            variableExplorerStyles = { ...variableExplorerStyles, height: containerHeight };
         }
 
         return (
-            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove}>
+            <Draggable handle=".handle-resize" onDrag={this.handleResizeMouseMove} onStop={this.saveCurrentSize}>
                 <span>
                     <div id="variable-panel" ref={this.variablePanelRef}>
                         <div id="variable-panel-padding">
@@ -263,11 +262,18 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private saveCurrentSize() {
-        //const vscode = acquireVsCodeApi();
-        //vscode.setState(this.state);
+        this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
     }
 
-    private restorePreviousSize() {}
+    private restorePreviousSize() {
+        const prevState = (window as any).acquireVSCodeApi.getState();
+        if (prevState && 'containerHeight' in prevState && 'gridHeight' in prevState) {
+            this.setState(prevState);
+        } else {
+            this.setInitialHeight();
+        }
+        this.forceUpdate();
+    }
 
     private getRowHeight() {
         return this.props.fontSize + 9;
@@ -279,7 +285,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return;
         }
         this.setState({
-            wrapHeight: variablePanel.offsetHeight
+            containerHeight: variablePanel.offsetHeight
         });
     }
 
@@ -300,14 +306,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         const relY = e.pageY - variableExplorer.clientTop;
         const addHeight = relY - variablePanel.offsetHeight - this.props.offsetHeight;
-        const updatedHeight = this.state.wrapHeight + addHeight;
+        const updatedHeight = this.state.containerHeight + addHeight;
 
         // min height is one row of visible data
         const minHeight = this.getRowHeight() * 2 + variableExplorerMenuBar.clientHeight;
 
         if (updatedHeight >= minHeight) {
             this.setState({
-                wrapHeight: updatedHeight
+                containerHeight: updatedHeight
             });
         }
     }

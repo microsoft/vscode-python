@@ -77,6 +77,7 @@ export class PostOffice implements IDisposable {
         // tslint:disable-next-line:no-typeof-undefined
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
+            (window as any).acquireVSCodeApi = this.vscodeApi;
         }
         if (!this.registered) {
             this.registered = true;
