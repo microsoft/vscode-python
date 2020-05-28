@@ -7,13 +7,14 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
-import { Extensions } from '../../../client/common/application/extensions';
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
+import { Channel, IApplicationEnvironment } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { PVSC_EXTENSION_ID } from '../../../client/common/constants';
 import { ExperimentService } from '../../../client/common/experiments/service';
-import { IConfigurationService, IExtensions } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
+import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { MockMemento } from '../../mocks/mementos';
 
 // tslint:disable: no-unused-expression
@@ -22,12 +23,12 @@ suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
 
     let configurationService: IConfigurationService;
-    let extensions: IExtensions;
+    let appEnvironment: IApplicationEnvironment;
     let globalMemento: MockMemento;
 
     setup(() => {
         configurationService = mock(ConfigurationService);
-        extensions = mock(Extensions);
+        appEnvironment = mock(ApplicationEnvironment);
         globalMemento = new MockMemento();
     });
 
@@ -46,11 +47,10 @@ suite('Experimentation service', () => {
         } as any);
     }
 
-    function configureExtensionVersion(version: string) {
-        when(extensions.getExtension(PVSC_EXTENSION_ID)).thenReturn({
-            packageJSON: { version }
-            // tslint:disable-next-line: no-any
-        } as any);
+    function configureApplicationEnvironment(channel: Channel, version: string) {
+        when(appEnvironment.channel).thenReturn(channel);
+        when(appEnvironment.extensionName).thenReturn(PVSC_EXTENSION_ID_FOR_TESTS);
+        when(appEnvironment.packageJson).thenReturn({ version });
     }
 
     suite('Initialization', () => {
@@ -58,9 +58,9 @@ suite('Experimentation service', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
 
-            new ExperimentService(instance(configurationService), instance(extensions), globalMemento);
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledOnce(getExperimentationServiceStub);
         });
@@ -69,9 +69,9 @@ suite('Experimentation service', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(false, [], []);
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
 
-            new ExperimentService(instance(configurationService), instance(extensions), globalMemento);
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.notCalled(getExperimentationServiceStub);
         });
@@ -80,13 +80,13 @@ suite('Experimentation service', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
 
-            new ExperimentService(instance(configurationService), instance(extensions), globalMemento);
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
-                PVSC_EXTENSION_ID,
+                PVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
                 tasClient.TargetPopulation.Public,
                 sinon.match.any,
@@ -95,18 +95,18 @@ suite('Experimentation service', () => {
         });
 
         test('Users with an Insiders version of the extension should be the Insiders target population', () => {
-            const version = '1.2.3-dev';
+            // const version = '1.2.3-dev';
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);
-            configureExtensionVersion(version);
+            configureApplicationEnvironment('insiders', extensionVersion);
 
-            new ExperimentService(instance(configurationService), instance(extensions), globalMemento);
+            new ExperimentService(instance(configurationService), instance(appEnvironment), globalMemento);
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
-                PVSC_EXTENSION_ID,
-                version,
+                PVSC_EXTENSION_ID_FOR_TESTS,
+                extensionVersion,
                 tasClient.TargetPopulation.Insiders,
                 sinon.match.any,
                 globalMemento
@@ -117,11 +117,11 @@ suite('Experimentation service', () => {
             sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, ['Foo - experiment', 'Bar - control'], []);
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
 
@@ -131,11 +131,11 @@ suite('Experimentation service', () => {
         test('Users can only opt out of experiment groups', () => {
             sinon.stub(tasClient, 'getExperimentationService');
             configureSettings(true, [], ['Foo - experiment', 'Bar - control']);
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
 
@@ -157,7 +157,7 @@ suite('Experimentation service', () => {
                     telemetryEvents.push(telemetry);
                 });
 
-            configureExtensionVersion(extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion);
         });
 
         teardown(() => {
@@ -181,7 +181,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);
@@ -197,7 +197,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);
@@ -213,7 +213,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);
@@ -233,7 +233,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);
@@ -253,7 +253,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);
@@ -273,7 +273,7 @@ suite('Experimentation service', () => {
 
             const experimentService = new ExperimentService(
                 instance(configurationService),
-                instance(extensions),
+                instance(appEnvironment),
                 globalMemento
             );
             const result = await experimentService.inExperiment(experiment);

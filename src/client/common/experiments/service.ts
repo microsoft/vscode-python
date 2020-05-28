@@ -8,15 +8,8 @@ import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { PVSC_EXTENSION_ID } from '../constants';
-import {
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IExperimentService,
-    IExtensions,
-    IMemento,
-    IPythonSettings
-} from '../types';
+import { IApplicationEnvironment } from '../application/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IMemento, IPythonSettings } from '../types';
 import { ExperimentationTelemetry } from './telemetry';
 
 export class ExperimentService implements IExperimentService {
@@ -34,7 +27,7 @@ export class ExperimentService implements IExperimentService {
 
     constructor(
         @inject(IConfigurationService) readonly configurationService: IConfigurationService,
-        @inject(IExtensions) readonly extensions: IExtensions,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalState: Memento
     ) {
         this.settings = configurationService.getSettings(undefined);
@@ -51,12 +44,9 @@ export class ExperimentService implements IExperimentService {
             return;
         }
 
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
-        const version = extension.packageJSON.version!;
-
         let targetPopulation: TargetPopulation;
 
-        if (/dev/gi.test(version)) {
+        if (this.appEnvironment.channel === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;
@@ -65,8 +55,8 @@ export class ExperimentService implements IExperimentService {
         const telemetryReporter = new ExperimentationTelemetry();
 
         this.experimentationService = getExperimentationService(
-            PVSC_EXTENSION_ID,
-            version,
+            this.appEnvironment.extensionName,
+            this.appEnvironment.packageJson.version!,
             targetPopulation,
             telemetryReporter,
             globalState
