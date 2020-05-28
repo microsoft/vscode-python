@@ -12,7 +12,6 @@ import {
 } from '../../../client/activation/node/languageServerFolderService';
 import { NodeLanguageServerFolder } from '../../../client/activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable:max-func-body-length
