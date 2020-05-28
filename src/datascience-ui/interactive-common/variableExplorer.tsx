@@ -22,6 +22,7 @@ import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 // tslint:disable-next-line: import-name
 import Draggable from 'react-draggable';
 
+import { CommonAction, IVariableExplorerHeight } from './redux/reducers/types';
 import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
@@ -35,7 +36,7 @@ interface IVariableExplorerProps {
     offsetHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
-    setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
+    setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -64,6 +65,7 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    resized: boolean;
 }
 
 // tslint:disable:no-any
@@ -99,7 +101,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: 0,
-            gridHeight: this.defaultGridHeight
+            gridHeight: this.defaultGridHeight,
+            resized: false
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
@@ -162,6 +165,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public componentDidMount() {
+        if (this.state.containerHeight === 0) {
+            this.setInitialHeight();
+            this.update();
+        }
+    }
+
+    public componentWillMount() {
         this.restorePreviousSize();
     }
 
@@ -172,6 +182,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return true;
         }
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
+            return true;
+        }
+        if (this.state.resized) {
+            this.setState({ resized: false });
             return true;
         }
 
@@ -262,17 +276,26 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private saveCurrentSize() {
+        // uses redux
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
     }
 
     private restorePreviousSize() {
-        const prevState = (window as any).acquireVSCodeApi.getState();
+        const vscode = (window as any).acquireVSCodeApi;
+
+        if (!vscode) {
+            // acquireVSCodeApi may not have been called yet
+            return;
+        }
+
+        const prevState = vscode.getState();
         if (prevState && 'containerHeight' in prevState && 'gridHeight' in prevState) {
             this.setState(prevState);
-        } else {
-            this.setInitialHeight();
         }
-        this.forceUpdate();
+    }
+
+    private update() {
+        this.setState({ resized: true });
     }
 
     private getRowHeight() {
@@ -292,7 +315,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private handleResizeMouseMove(e: any) {
         this.setVariableExplorerHeight(e);
         this.setVariableGridHeight();
-        this.forceUpdate();
+        this.update();
     }
 
     private setVariableExplorerHeight(e: MouseEvent) {
@@ -320,13 +343,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     private setVariableGridHeight() {
         const variableExplorerMenuBar = this.variableExplorerMenuBarRef.current;
-        const variableExplorer = this.variableExplorerRef.current;
 
-        if (!variableExplorerMenuBar || !variableExplorer) {
+        if (!variableExplorerMenuBar) {
             return;
         }
 
-        const updatedHeight = variableExplorer.clientHeight - variableExplorerMenuBar.clientHeight;
+        const updatedHeight = this.state.containerHeight - variableExplorerMenuBar.clientHeight;
 
         this.setState({
             gridHeight: updatedHeight

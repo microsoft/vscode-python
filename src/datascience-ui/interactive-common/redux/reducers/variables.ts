@@ -102,7 +102,7 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
     const containerHeight = arg.payload.data.containerHeight;
     const gridHeight = arg.payload.data.gridHeight;
     const vscode = (window as any).acquireVSCodeApi;
-    vscode.setState({ containerHeight: containerHeight, gridHeight: gridHeight });
+    vscode.setState({ containerHeight, gridHeight });
 
     return {
         ...arg.prevState,
