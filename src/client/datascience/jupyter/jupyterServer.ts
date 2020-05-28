@@ -157,7 +157,10 @@ export class JupyterServerBase implements INotebookServer {
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
                 // long.
-                await Promise.race([sleep(10_000), this.sessionManager.dispose()]);
+                const result = await Promise.race([sleep(10_000), this.sessionManager.dispose()]);
+                if (result === 10_000) {
+                    traceError(`Session shutdown timed out.`);
+                }
                 this.sessionManager = undefined;
             }
 
