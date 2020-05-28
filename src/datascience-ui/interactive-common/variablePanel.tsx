@@ -20,6 +20,7 @@ export interface IVariablePanelProps {
     offsetHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
+    setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -39,6 +40,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 skipDefault={this.props.skipDefault}
                 showDataExplorer={this.props.showDataExplorer}
                 closeVariableExplorer={this.props.closeVariableExplorer}
+                setVariableExplorerHeight={this.props.setVariableExplorerHeight}
                 pageIn={this.props.pageIn}
                 executionCount={this.props.executionCount}
                 supportsDebugging={this.props.supportsDebugging}

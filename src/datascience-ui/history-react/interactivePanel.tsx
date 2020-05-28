@@ -313,6 +313,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
+            setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,

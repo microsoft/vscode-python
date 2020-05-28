@@ -82,6 +82,7 @@ export enum CommonActionType {
     TOGGLE_LINE_NUMBERS = 'action.toggle_line_numbers',
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
+    SET_VARIABLE_EXPLORER_HEIGHT = 'action.set_variable_explorer_height',
     UNFOCUS_CELL = 'action.unfocus_cell',
     UNMOUNT = 'action.unmount'
 }
@@ -134,6 +135,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
+    [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
     [CommonActionType.PostOutgoingMessage]: never | undefined;
     [CommonActionType.REFRESH_VARIABLES]: never | undefined;
     [CommonActionType.OPEN_SETTINGS]: IOpenSettingsAction;
@@ -147,7 +149,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.RUN_BY_LINE]: ICellAction;
 };
 
-export interface IShowDataViewerAction extends IShowDataViewer {}
+export interface IShowDataViewerAction extends IShowDataViewer { }
 
 export interface ILinkClickAction {
     href: string;
@@ -206,7 +208,7 @@ export interface IRefreshVariablesAction {
     newExecutionCount?: number;
 }
 
-export interface IShowDataViewerAction extends IShowDataViewer {}
+export interface IShowDataViewerAction extends IShowDataViewer { }
 
 export interface ISendCommandAction {
     command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;
@@ -230,6 +232,12 @@ export interface ILoadIPyWidgetClassFailureAction {
     error: any;
     timedout: boolean;
 }
+
+export interface IVariableExplorerHeight {
+    containerHeight: number;
+    gridHeight: number;
+}
+
 export type LoadIPyWidgetClassDisabledAction = {
     className: string;
     moduleName: string;
