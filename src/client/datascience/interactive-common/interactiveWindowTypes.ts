@@ -182,7 +182,7 @@ export interface ICopyCode {
 }
 
 export enum VariableExplorerStateKeys {
-    height = 'variable_explorer_height'
+    height = 'NBVariableHeights'
 }
 
 export enum SysInfoReason {

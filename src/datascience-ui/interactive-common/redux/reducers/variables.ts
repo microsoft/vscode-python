@@ -58,22 +58,11 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
 }
 
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
-    let newState: IVariableState = {
+    const newState: IVariableState = {
         ...arg.prevState,
         visible: !arg.prevState.visible
     };
 
-    const vscode = (window as any).acquireVSCodeApi;
-    if (vscode) {
-        const resizeState = vscode.getState();
-        if (resizeState && 'containerHeight' in resizeState && 'gridHeight' in resizeState) {
-            newState = {
-                ...newState,
-                containerHeight: resizeState.containerHeight,
-                gridHeight: resizeState.gridHeight
-            };
-        }
-    }
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerHeightRequest);
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
 
@@ -101,6 +90,8 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
     const containerHeight = arg.payload.data.containerHeight;
     const gridHeight = arg.payload.data.gridHeight;
+    const vscode = (window as any).acquireVSCodeApi;
+    vscode.setState({ containerHeight: containerHeight, gridHeight: gridHeight });
 
     postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, { containerHeight, gridHeight });
 
