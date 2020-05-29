@@ -20,21 +20,28 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 // Any build on the CI is considered production mode.
 const isProdBuild = constants.isCI || process.argv.includes('--mode');
 
-function getEntry(isNotebook) {
-    if (isNotebook) {
-        return {
-            nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
-        };
+function getEntry(bundle) {
+    switch (bundle) {
+        case 'notebook':
+            return {
+                nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
+                interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+            };
+        case 'renderers':
+            return {
+                renderers: ['babel-polyfill', `./src/datascience-ui/renderers/index.tsx`]
+            };
+        case 'viewers':
+            return {
+                plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
+                dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+            };
+        default:
+            throw new Error(`Bundle not supported ${bundle}`);
     }
-
-    return {
-        plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
-    };
 }
 
-function getPlugins(isNotebook) {
+function getPlugins(bundle) {
     const plugins = [
         new ForkTsCheckerWebpackPlugin({
             checkSyntacticErrors: true,
@@ -44,64 +51,79 @@ function getPlugins(isNotebook) {
         })
     ];
     if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+        plugins.push(...common.getDefaultPlugins(bundle));
     }
-
-    if (isNotebook) {
-        plugins.push(
-            new MonacoWebpackPlugin({
-                languages: [] // force to empty so onigasm will be used
-            }),
-            new HtmlWebpackPlugin({
-                template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
-                chunks: [],
-                filename: 'index.html'
-            }),
-            new HtmlWebpackPlugin({
-                template: 'src/datascience-ui/native-editor/index.html',
-                chunks: ['monaco', 'commons', 'nativeEditor'],
-                filename: 'index.nativeEditor.html'
-            }),
-            new HtmlWebpackPlugin({
-                template: 'src/datascience-ui/history-react/index.html',
-                chunks: ['monaco', 'commons', 'interactiveWindow'],
-                filename: 'index.interactiveWindow.html'
-            })
-        );
-    } else {
-        const definePlugin = new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        });
-
-        plugins.push(
-            ...(isProdBuild ? [definePlugin] : []),
-            ...[
-                new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/plot/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'plotViewer'],
-                    filename: 'index.plotViewer.html'
+    switch (bundle) {
+        case 'notebook':
+            plugins.push(
+                new MonacoWebpackPlugin({
+                    languages: [] // force to empty so onigasm will be used
                 }),
                 new HtmlWebpackPlugin({
-                    template: 'src/datascience-ui/data-explorer/index.html',
-                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                    chunks: ['commons', 'dataExplorer'],
-                    filename: 'index.dataExplorer.html'
+                    template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
+                    chunks: [],
+                    filename: 'index.html'
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/native-editor/index.html',
+                    chunks: ['monaco', 'commons', 'nativeEditor'],
+                    filename: 'index.nativeEditor.html'
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/history-react/index.html',
+                    chunks: ['monaco', 'commons', 'interactiveWindow'],
+                    filename: 'index.interactiveWindow.html'
                 })
-            ]
-        );
+            );
+            break;
+        case 'renderers': {
+            const definePlugin = new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            });
+
+            plugins.push(...(isProdBuild ? [definePlugin] : []));
+            break;
+        }
+        case 'viewers': {
+            const definePlugin = new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            });
+
+            plugins.push(
+                ...(isProdBuild ? [definePlugin] : []),
+                ...[
+                    new HtmlWebpackPlugin({
+                        template: 'src/datascience-ui/plot/index.html',
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        chunks: ['commons', 'plotViewer'],
+                        filename: 'index.plotViewer.html'
+                    }),
+                    new HtmlWebpackPlugin({
+                        template: 'src/datascience-ui/data-explorer/index.html',
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        chunks: ['commons', 'dataExplorer'],
+                        filename: 'index.dataExplorer.html'
+                    })
+                ]
+            );
+            break;
+        }
+        default:
+            throw new Error(`Bundle not supported ${bundle}`);
     }
 
     return plugins;
 }
 
-function buildConfiguration(isNotebook) {
+function buildConfiguration(bundle) {
     // Folder inside `datascience-ui` that will be created and where the files will be dumped.
-    const bundleFolder = isNotebook ? 'notebook' : 'viewers';
+    const bundleFolder = bundle;
     const filesToCopy = [];
-    if (isNotebook) {
+    if (bundle === 'notebook') {
         // Include files only for notebooks.
         filesToCopy.push(
             ...[
@@ -116,9 +138,9 @@ function buildConfiguration(isNotebook) {
             ]
         );
     }
-    return {
+    const config = {
         context: constants.ExtensionRootDir,
-        entry: getEntry(isNotebook),
+        entry: getEntry(bundle),
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
@@ -140,7 +162,7 @@ function buildConfiguration(isNotebook) {
                     commons: {
                         name: 'commons',
                         chunks: 'initial',
-                        minChunks: isNotebook ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
+                        minChunks: bundle === 'notebook' ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
                         filename: '[name].initial.bundle.js'
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
@@ -218,7 +240,7 @@ function buildConfiguration(isNotebook) {
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
-            ...getPlugins(isNotebook)
+            ...getPlugins(bundle)
         ],
         externals: ['log4js'],
         resolve: {
@@ -298,7 +320,13 @@ function buildConfiguration(isNotebook) {
             ]
         }
     };
+
+    if (bundle === 'renderers') {
+        delete config.optimization;
+    }
+    return config;
 }
 
-exports.notebooks = buildConfiguration(true);
-exports.viewers = buildConfiguration(false);
+exports.notebooks = buildConfiguration('notebook');
+exports.viewers = buildConfiguration('viewers');
+exports.renderers = buildConfiguration('renderers');

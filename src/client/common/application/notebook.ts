@@ -2,21 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import {
-    Disposable,
-    Event,
-    EventEmitter,
-    GlobPattern,
+import { Disposable, Event, EventEmitter, GlobPattern, TextDocument, window } from 'vscode';
+import type {
     notebook,
     NotebookContentProvider,
     NotebookDocument,
     NotebookEditor,
     NotebookKernel,
     NotebookOutputRenderer,
-    NotebookOutputSelector,
-    TextDocument,
-    window
-} from 'vscode';
+    NotebookOutputSelector
+} from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
 import { IDisposableRegistry } from '../types';
 import {
@@ -36,13 +31,13 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         | NotebookCellLanguageChangeEvent
     >();
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
-        return notebook.onDidOpenNotebookDocument;
+        return this.notebook.onDidOpenNotebookDocument;
     }
     public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
-        return notebook.onDidCloseNotebookDocument;
+        return this.notebook.onDidCloseNotebookDocument;
     }
     public get notebookEditors() {
-        return notebook.visibleNotebookEditors;
+        return this.notebook.visibleNotebookEditors;
     }
     public get onDidChangeNotebookDocument(): Event<
         | NotebookCellsChangeEvent
@@ -64,7 +59,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         // Temporary, currently VSC API doesn't work well.
         // `notebook.activeNotebookEditor`  is not reset when opening another file.
-        if (!notebook.activeNotebookEditor) {
+        if (!this.notebook.activeNotebookEditor) {
             return;
         }
         // If we have a text editor opened and it is not a cell, then we know for certain a notebook is not open.
@@ -72,28 +67,36 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             return;
         }
         // Temporary until VSC API stabilizes.
-        if (Array.isArray(notebook.visibleNotebookEditors)) {
-            return notebook.visibleNotebookEditors.find((item) => item.active && item.visible);
+        if (Array.isArray(this.notebook.visibleNotebookEditors)) {
+            return this.notebook.visibleNotebookEditors.find((item) => item.active && item.visible);
         }
-        return notebook.activeNotebookEditor;
+        return this.notebook.activeNotebookEditor;
     }
     private addedEventHandlers?: boolean;
+    private _notebook?: typeof notebook;
+    private get notebook() {
+        if (!this._notebook) {
+            // tslint:disable-next-line: no-require-imports
+            this._notebook = require('vscode').notebook;
+        }
+        return this._notebook!;
+    }
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {
-        return notebook.registerNotebookContentProvider(notebookType, provider);
+        return this.notebook.registerNotebookContentProvider(notebookType, provider);
     }
     public registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable {
-        return notebook.registerNotebookKernel(id, selectors, kernel);
+        return this.notebook.registerNotebookKernel(id, selectors, kernel);
     }
     public registerNotebookOutputRenderer(
         id: string,
         outputSelector: NotebookOutputSelector,
         renderer: NotebookOutputRenderer
     ): Disposable {
-        return notebook.registerNotebookOutputRenderer(id, outputSelector, renderer);
+        return this.notebook.registerNotebookOutputRenderer(id, outputSelector, renderer);
     }
     public isCell(textDocument: TextDocument) {
         return (
@@ -109,16 +112,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
         this.disposables.push(
             ...[
-                notebook.onDidChangeCellLanguage((e) =>
+                this.notebook.onDidChangeCellLanguage((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellLanguage' })
                 ),
-                notebook.onDidChangeCellOutputs((e) =>
+                this.notebook.onDidChangeCellOutputs((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCellOutputs' })
                 ),
-                notebook.onDidChangeNotebookCells((e) =>
+                this.notebook.onDidChangeNotebookCells((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'changeCells' })
                 ),
-                notebook.onDidMoveNotebookCell((e) =>
+                this.notebook.onDidMoveNotebookCell((e) =>
                     this._onDidChangeNotebookDocument.fire({ ...e, type: 'moveCell' })
                 )
             ]

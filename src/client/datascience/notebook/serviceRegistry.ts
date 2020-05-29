@@ -10,6 +10,7 @@ import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
 import { NotebookEditorProviderActivation } from './notebookEditorProvider';
 import { NotebookKernel } from './notebookKernel';
+import { NotebookOutputRenderer } from './renderer';
 import { INotebookExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -20,6 +21,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookIntegration
     );
     serviceManager.addSingleton<NotebookKernel>(NotebookKernel, NotebookKernel);
+    serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookEditorProviderActivation

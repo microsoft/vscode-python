@@ -24,16 +24,6 @@ import {
     InputBoxOptions,
     MessageItem,
     MessageOptions,
-    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
-    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
-    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
-    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
-    NotebookContentProvider,
-    NotebookDocument,
-    NotebookEditor,
-    NotebookKernel,
-    NotebookOutputRenderer,
-    NotebookOutputSelector,
     OpenDialogOptions,
     OutputChannel,
     Progress,
@@ -68,6 +58,18 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
+import type {
+    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
+    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
+    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
+    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
+    NotebookContentProvider,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookKernel,
+    NotebookOutputRenderer,
+    NotebookOutputSelector
+} from 'vscode-proposed';
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
