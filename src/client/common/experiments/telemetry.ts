@@ -4,13 +4,12 @@
 'use strict';
 
 import { IExperimentationTelemetry } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 
 export class ExperimentationTelemetry implements IExperimentationTelemetry {
-    private readonly sharedProperties: Record<string, string> = {};
-
     public setSharedProperty(name: string, value: string): void {
-        this.sharedProperties[name] = value;
+        // Add the shared property to all telemetry being sent, not just events being sent by the experimentation package.
+        setSharedProperty(name, value);
     }
 
     public postEvent(eventName: string, properties: Map<string, string>): void {
@@ -18,9 +17,6 @@ export class ExperimentationTelemetry implements IExperimentationTelemetry {
         properties.forEach((value, key) => {
             formattedProperties[key] = value;
         });
-
-        // Add shared properties to telemetry props (we may overwrite existing ones).
-        Object.assign(formattedProperties, this.sharedProperties);
 
         // tslint:disable-next-line: no-any
         sendTelemetryEvent(eventName as any, undefined, formattedProperties);

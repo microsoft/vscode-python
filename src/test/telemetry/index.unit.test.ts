@@ -12,7 +12,12 @@ import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { clearTelemetryReporter, isTelemetryDisabled, sendTelemetryEvent } from '../../client/telemetry';
+import {
+    clearTelemetryReporter,
+    isTelemetryDisabled,
+    sendTelemetryEvent,
+    setSharedProperty
+} from '../../client/telemetry';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
@@ -100,7 +105,7 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([properties]);
     });
-    test('Send Telemetry with properties', () => {
+    test('Send Telemetry with no properties', () => {
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -111,6 +116,24 @@ suite('Telemetry', () => {
         expect(Reporter.eventName).to.deep.equal([eventName]);
         expect(Reporter.measures).to.deep.equal([undefined], 'Measures should be empty');
         expect(Reporter.properties).to.deep.equal([{}], 'Properties should be empty');
+    });
+    test('Send Telemetry with shared properties', () => {
+        rewiremock.enable();
+        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+
+        const eventName = 'Testing';
+        const properties = { hello: 'world', foo: 'bar' };
+        const measures = { start: 123, end: 987 };
+        const expectedProperties = { ...properties, one: 'two' };
+
+        setSharedProperty('one', 'two');
+
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent(eventName as any, measures, properties as any);
+
+        expect(Reporter.eventName).to.deep.equal([eventName]);
+        expect(Reporter.measures).to.deep.equal([measures]);
+        expect(Reporter.properties).to.deep.equal([expectedProperties]);
     });
     test('Send Error Telemetry', () => {
         rewiremock.enable();

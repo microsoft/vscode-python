@@ -13,6 +13,7 @@ suite('Experimentation telemetry', () => {
 
     let telemetryEvents: { eventName: string; properties: object }[] = [];
     let sendTelemetryEventStub: sinon.SinonStub;
+    let setSharedPropertyStub: sinon.SinonStub;
     let experimentTelemetry: ExperimentationTelemetry;
     let eventProperties: Map<string, string>;
 
@@ -23,6 +24,7 @@ suite('Experimentation telemetry', () => {
                 const telemetry = { eventName, properties };
                 telemetryEvents.push(telemetry);
             });
+        setSharedPropertyStub = sinon.stub(Telemetry, 'setSharedProperty');
 
         eventProperties = new Map<string, string>();
         eventProperties.set('foo', 'one');
@@ -50,19 +52,11 @@ suite('Experimentation telemetry', () => {
         });
     });
 
-    test('Shared properties should be sent in the telemetry event', () => {
+    test('Shared properties should be set for all telemetry events', () => {
         const shared = { key: 'shared', value: 'three' };
 
         experimentTelemetry.setSharedProperty(shared.key, shared.value);
-        experimentTelemetry.postEvent(event, eventProperties);
 
-        assert.deepEqual(telemetryEvents[0], {
-            eventName: event,
-            properties: {
-                foo: 'one',
-                bar: 'two',
-                shared: 'three'
-            }
-        });
+        sinon.assert.calledOnce(setSharedPropertyStub);
     });
 });

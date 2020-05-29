@@ -58,6 +58,15 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
+// Shared properties set by the IExperimentationTelemetry implementation.
+const sharedProperties: Record<string, string> = {};
+/**
+ * Set shared properties for all telemetry events.
+ */
+export function setSharedProperty(name: string, value: string): void {
+    sharedProperties[name] = value;
+}
+
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
@@ -122,6 +131,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 }
             });
         }
+
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(customProperties, sharedProperties);
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
