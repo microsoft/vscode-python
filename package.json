@@ -2959,6 +2959,7 @@
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
+        "compile": "tsc -watch -p ./",
         "compiled": "tsc -watch -p ./",
         "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "compile-webviews-watchd": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
