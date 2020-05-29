@@ -228,7 +228,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // Send the loc strings (skip during testing as it takes up a lot of memory)
                 const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors(); //TODO: reference
+                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -1094,10 +1094,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             try {
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({
-                        identity: identity.resource,
-                        resource,
-                        metadata
-                    })
+                          identity: identity.resource,
+                          resource,
+                          metadata
+                      })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };
@@ -1375,11 +1375,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                totalCount: 0,
-                pageResponse: [],
-                pageStartIndex: args?.startIndex,
-                executionCount: args?.executionCount
-            };
+                  totalCount: 0,
+                  pageResponse: [],
+                  pageStartIndex: args?.startIndex,
+                  executionCount: args?.executionCount
+              };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
