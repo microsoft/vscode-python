@@ -4,7 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
+import type { NotebookDocument } from 'vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';

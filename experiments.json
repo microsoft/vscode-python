@@ -21,13 +21,13 @@
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
-        "min": 60
+        "min": 80
     },
     {
         "name": "ShowExtensionSurveyPrompt - control",
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
-        "max": 40
+        "max": 20
     },
     {
         "name": "DebugAdapterFactory - control",
@@ -177,12 +177,12 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 0
+        "max": 4
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 100,
+        "min": 96,
         "max": 100
     },
     {

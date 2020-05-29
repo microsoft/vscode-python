@@ -34,6 +34,13 @@ steps:
       compile: 'false'
       sqlite: $(NeedsIPythonReqs)
 
+  # When running unit tests, we need to just compile extension code (not webviews & the like).
+  - task: Gulp@0
+    displayName: 'gulp compile'
+    inputs:
+      targets: 'compile'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
+
   # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
   # This produces the .js files required into the out/ folder.
   # Example command line (windows pwsh):
@@ -42,7 +49,7 @@ steps:
     displayName: 'gulp prePublishNonBundle'
     inputs:
       targets: 'prePublishNonBundle'
-    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')), not(contains(variables['TestsToRun'], 'testUnitTests')))
 
   # Run the typescript unit tests.
   #
