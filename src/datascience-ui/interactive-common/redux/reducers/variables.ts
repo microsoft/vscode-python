@@ -74,7 +74,7 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
             };
         }
     }
-
+    postActionToExtension(arg, InteractiveWindowMessages.GetVariableExplorerHeight);
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
 
     // If going visible for the first time, refresh our variables
@@ -102,7 +102,9 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
     const containerHeight = arg.payload.data.containerHeight;
     const gridHeight = arg.payload.data.gridHeight;
     const vscode = (window as any).acquireVSCodeApi;
-    vscode.setState({ containerHeight, gridHeight });
+    vscode.setState({ containerHeight: containerHeight, gridHeight: gridHeight });
+
+    postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, { containerHeight, gridHeight });
 
     return {
         ...arg.prevState,
