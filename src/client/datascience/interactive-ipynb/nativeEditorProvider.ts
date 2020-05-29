@@ -189,7 +189,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = await this.getNextNewNotebookUri();
+        const uri = this.getNextNewNotebookUri();
 
         // Update number of notebooks in the workspace
         this.notebookCount += 1;
@@ -271,11 +271,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         }
     }
 
-    private async getNextNewNotebookUri(): Promise<Uri> {
+    private getNextNewNotebookUri(): Uri {
         // Just use the current counter. Counter will be incremented after actually opening a file.
         const fileName = `${DataScience.untitledNotebookFileName()}-${this.untitledCounter}.ipynb`;
-        const fileUri = Uri.file(fileName);
-        // Turn this back into an untitled
-        return fileUri.with({ scheme: 'untitled', path: fileName });
+        return Uri.parse(`untitled:///${fileName}`);
     }
 }
