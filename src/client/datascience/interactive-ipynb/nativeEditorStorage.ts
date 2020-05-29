@@ -474,6 +474,12 @@ export class NativeEditorStorage implements INotebookStorage {
         return this.savedAs.event;
     }
     private readonly savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
+
+    // Keep track of if we are backing up our file already
+    private backingUp = false;
+    // If backup requests come in while we are already backing up save the most recent one here
+    private backupRequested: { model: INotebookModel; cancellation: CancellationToken } | undefined;
+
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -516,8 +522,25 @@ export class NativeEditorStorage implements INotebookStorage {
         this.clearHotExit(old).ignoreErrors();
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
+        // If we are already backing up, save this request replacing any other previous requests
+        if (this.backingUp) {
+            this.backupRequested = { model, cancellation };
+            return;
+        }
+        this.backingUp = true;
         // Should send to extension context storage path
-        return this.storeContentsInHotExitFile(model, cancellation);
+        return this.storeContentsInHotExitFile(model, cancellation).finally(() => {
+            this.backingUp = false;
+
+            // If there is a backup request waiting, then clear and start it
+            if (this.backupRequested) {
+                const requested = this.backupRequested;
+                this.backupRequested = undefined;
+                this.backup(requested.model, requested.cancellation).catch((error) => {
+                    traceError(`Error in backing up NativeEditor Storage: ${error}`);
+                });
+            }
+        });
     }
     /**
      * Stores the uncommitted notebook changes into a temporary location.
