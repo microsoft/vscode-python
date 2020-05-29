@@ -82,9 +82,11 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     public async open(): Promise<void> {
         sendTelemetryEvent(Telemetry.StartPageViewed);
-        await this.loadWebPanel(process.cwd());
-        // open webview
-        await super.show(true);
+        setTimeout(async () => {
+            await this.loadWebPanel(process.cwd());
+            // open webview
+            await super.show(true);
+        }, 0);
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -272,8 +274,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         }
 
         const content = await this.file.readFile(sampleNotebookPath);
-        const sampleNotebook = await this.documentManager.openTextDocument({ language: 'python', content: content });
-        await this.documentManager.showTextDocument(sampleNotebook, 1, true);
+        await this.notebookEditorProvider.createNew(content);
     }
 
     private setTelemetryFlags() {
