@@ -69,6 +69,9 @@ export enum InteractiveWindowMessages {
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
+    SetVariableExplorerHeight = 'set_variable_explorer_height',
+    VariableExplorerHeight = 'VariableExplorerHeight',
+    GetVariableExplorerHeight = 'GetVariableExplorerHeight',
     ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
@@ -133,8 +136,7 @@ export enum InteractiveWindowMessages {
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
-    KernelIdle = 'kernel_idle',
-    VariableExplorerHeight = 'VariableExplorerHeight'
+    KernelIdle = 'kernel_idle'
 }
 
 export enum IPyWidgetMessages {
@@ -177,6 +179,10 @@ export interface IGotoCode {
 
 export interface ICopyCode {
     source: string;
+}
+
+export enum VariableExplorerStateKeys {
+    height = 'variable_explorer_height'
 }
 
 export enum SysInfoReason {
@@ -554,6 +560,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
+    public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.GetVariableExplorerHeight]: IVariableExplorerHeight;
     public [InteractiveWindowMessages.VariableExplorerHeight]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;

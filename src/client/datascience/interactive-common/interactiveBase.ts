@@ -62,7 +62,8 @@ import {
     IRemoteReexecuteCode,
     IShowDataViewer,
     ISubmitNewCell,
-    SysInfoReason
+    SysInfoReason,
+    VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -276,6 +277,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.VariableExplorerToggle:
                 this.variableExplorerToggle(payload);
+                break;
+
+            case InteractiveWindowMessages.SetVariableExplorerHeight:
+                this.setVariableExplorerHeight(payload);
+                break;
+
+            case InteractiveWindowMessages.GetVariableExplorerHeight:
+                this.getVariableExplorerHeight();
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
@@ -1084,10 +1093,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             try {
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({
-                          identity: identity.resource,
-                          resource,
-                          metadata
-                      })
+                        identity: identity.resource,
+                        resource,
+                        metadata
+                    })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };
@@ -1365,11 +1374,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                  totalCount: 0,
-                  pageResponse: [],
-                  pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount
-              };
+                totalCount: 0,
+                pageResponse: [],
+                pageStartIndex: args?.startIndex,
+                executionCount: args?.executionCount
+            };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
@@ -1385,6 +1394,20 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
     };
+
+    private setVariableExplorerHeight(payload?: any) {
+        if (payload !== undefined) {
+            const openValue = payload as object;
+            this.globalStorage.update(VariableExplorerStateKeys.height, openValue);
+        }
+        this.getVariableExplorerHeight();
+    }
+
+    private getVariableExplorerHeight() {
+        const x = this.globalStorage.get(VariableExplorerStateKeys.height);
+        console.log(x);
+        //TODO: send message back
+    }
 
     private requestTmLanguage() {
         // Get the contents of the appropriate tmLanguage file.
