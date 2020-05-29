@@ -84,7 +84,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             await super.dispose();
             const api = await this.api;
             await this.onDetach(api);
-            traceInfo(`Finished diposing HostJupyterServer`);
+            traceInfo(`Finished disposing HostJupyterServer`);
         }
     }
 

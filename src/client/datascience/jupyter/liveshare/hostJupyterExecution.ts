@@ -35,6 +35,7 @@ export class HostJupyterExecution
     extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
     implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
+    private _disposed = false;
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
@@ -67,13 +68,16 @@ export class HostJupyterExecution
 
     public async dispose(): Promise<void> {
         traceInfo(`Disposing HostJupyterExecution`);
-        await super.dispose();
-        const api = await this.api;
-        await this.onDetach(api);
+        if (!this._disposed) {
+            this._disposed = true;
+            await super.dispose();
+            const api = await this.api;
+            await this.onDetach(api);
 
-        // Cleanup on dispose. We are going away permanently
-        if (this.serverCache) {
-            await this.serverCache.dispose();
+            // Cleanup on dispose. We are going away permanently
+            if (this.serverCache) {
+                await this.serverCache.dispose();
+            }
         }
         traceInfo(`Finished disposing HostJupyterExecution`);
     }
