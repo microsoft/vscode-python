@@ -74,6 +74,7 @@ export enum CommonActionType {
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
     SELECT_SERVER = 'action.select_server',
+    SET_VARIABLE_EXPLORER_HEIGHT = 'action.set_variable_explorer_height',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     STEP = 'action.step',
@@ -82,7 +83,6 @@ export enum CommonActionType {
     TOGGLE_LINE_NUMBERS = 'action.toggle_line_numbers',
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
-    SET_VARIABLE_EXPLORER_HEIGHT = 'action.set_variable_explorer_height',
     UNFOCUS_CELL = 'action.unfocus_cell',
     UNMOUNT = 'action.unmount'
 }

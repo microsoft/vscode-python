@@ -306,6 +306,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
         }
         return {
+            gridHeight: this.props.variableState.gridHeight,
+            containerHeight: this.props.variableState.containerHeight,
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,
