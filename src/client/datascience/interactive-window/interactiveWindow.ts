@@ -25,7 +25,8 @@ import {
     IExperimentsManager,
     IMemento,
     IPersistentStateFactory,
-    Resource
+    Resource,
+    WORKSPACE_MEMENTO
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -110,6 +111,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
@@ -137,6 +139,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             errorHandler,
             commandManager,
             globalStorage,
+            workspaceStorage,
             historyReactDir,
             [
                 path.join(historyReactDir, 'require.js'),

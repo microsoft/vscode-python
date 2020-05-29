@@ -145,6 +145,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         @unmanaged() protected readonly commandManager: ICommandManager,
         @unmanaged() protected globalStorage: Memento,
+        @unmanaged() protected workspaceStorage: Memento,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
@@ -280,7 +281,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.SetVariableExplorerHeight:
-                this.setVariableExplorerHeight(payload);
+                this.setVariableExplorerHeight(payload).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.VariableExplorerHeightRequest:
@@ -1396,10 +1397,23 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     };
 
-    private setVariableExplorerHeight(payload?: any) {
+    private async setVariableExplorerHeight(payload?: any) {
+        // Store variable explorer height based on file name in workspace storage
         if (payload !== undefined) {
-            const openValue = payload as object;
-            this.globalStorage.update(VariableExplorerStateKeys.height, openValue);
+            const updatedHeights = payload as { containerHeight: number; gridHeight: number };
+            const uri = await this.getOwningResource(); // Get file name
+
+            if (!uri) {
+                return;
+            }
+
+            // Storing an object that looks like
+            //  { "fully qualified Path to 1.ipynb": 1234,
+            //    "fully qualifieid path to 2.ipynb": 1234 }
+
+            const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
+            value[uri.toString()] = updatedHeights;
+            this.globalStorage.update(VariableExplorerStateKeys.height, value);
         }
     }
 
