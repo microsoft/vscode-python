@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { JSONObject } from '@phosphor/coreutils';
+import { IDisposable } from '../../common/types';
 import { SharedMessages } from '../messages';
 
 export const CellFetchAllLimit = 100000;
@@ -33,7 +33,7 @@ export interface IGetRowsRequest {
 }
 
 export interface IGetRowsResponse {
-    rows: JSONObject;
+    rows: IRowsResponse;
     start: number;
     end: number;
 }
@@ -44,7 +44,7 @@ export type IDataViewerMapping = {
     [DataViewerMessages.UpdateSettings]: string;
     [DataViewerMessages.InitializeData]: IDataFrameInfo;
     [DataViewerMessages.GetAllRowsRequest]: never | undefined;
-    [DataViewerMessages.GetAllRowsResponse]: JSONObject;
+    [DataViewerMessages.GetAllRowsResponse]: IRowsResponse;
     [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     [DataViewerMessages.CompletedData]: never | undefined;
@@ -53,18 +53,33 @@ export type IDataViewerMapping = {
 export interface IDataFrameInfo {
     columns?: { key: string; type: ColumnType }[];
     indexColumn?: string;
-    rowCount: number;
+    rowCount?: number;
 }
 
 export interface IDataViewerDataProvider {
     dispose(): void;
     getDataFrameInfo(): Promise<IDataFrameInfo>;
-    getAllRows(): Promise<JSONObject>;
-    getRows(start: number, end: number): Promise<JSONObject>;
+    getAllRows(): Promise<IRowsResponse>;
+    getRows(start: number, end: number): Promise<IRowsResponse>;
 }
 
 export enum ColumnType {
     String = 'string',
     Number = 'number',
     Bool = 'bool'
+}
+
+export interface IRowsResponse {
+    // tslint:disable-next-line: no-any
+    data?: any[];
+}
+
+export const IDataViewerFactory = Symbol('IDataViewerFactory');
+export interface IDataViewerFactory {
+    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+}
+
+export const IDataViewer = Symbol('IDataViewer');
+export interface IDataViewer extends IDisposable {
+    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
 }

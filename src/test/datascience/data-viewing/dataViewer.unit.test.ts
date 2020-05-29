@@ -16,9 +16,9 @@ import { IConfigurationService, IExperimentsManager } from '../../../client/comm
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
-import { IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
+import { IDataViewer, IDataViewerDataProvider } from '../../../client/datascience/data-viewing/types';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
-import { ICodeCssGenerator, IDataViewer, IThemeFinder } from '../../../client/datascience/types';
+import { ICodeCssGenerator, IThemeFinder } from '../../../client/datascience/types';
 
 suite('Data Science - DataViewer', () => {
     let dataViewer: IDataViewer;

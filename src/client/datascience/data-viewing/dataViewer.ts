@@ -18,12 +18,13 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { HelpLinks, Telemetry } from '../constants';
 import { JupyterDataRateLimitError } from '../jupyter/jupyterDataRateLimitError';
-import { ICodeCssGenerator, IDataViewer, IThemeFinder } from '../types';
+import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
     DataViewerMessages,
     IDataFrameInfo,
+    IDataViewer,
     IDataViewerDataProvider,
     IDataViewerMapping,
     IGetRowsRequest
@@ -35,6 +36,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private dataProvider: IDataViewerDataProvider | undefined;
     private rowsTimer: StopWatch | undefined;
     private pendingRowsCount: number = 0;
+    private dataFrameInfoPromise: Promise<IDataFrameInfo> | undefined;
 
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
@@ -63,14 +65,6 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         );
     }
 
-    private static trimTitle(title: string): string {
-        const TRIM_LENGTH = 40;
-        if (title && title.length > TRIM_LENGTH) {
-            title = `${title.substr(0, TRIM_LENGTH)}...`;
-        }
-        return title;
-    }
-
     public async showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
         if (!this.isDisposed) {
             // Save the data provider
@@ -79,12 +73,12 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             // Load the web panel using our current directory as we don't expect to load any other files
             await super.loadWebPanel(process.cwd()).catch(traceError);
 
-            super.setTitle(DataViewer.trimTitle(title));
+            super.setTitle(title);
 
             // Then show our web panel. Eventually we need to consume the data
             await super.show(true);
 
-            const dataFrameInfo = await this.prepDataFrameInfo(dataProvider);
+            const dataFrameInfo = await this.prepDataFrameInfo();
 
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
@@ -123,9 +117,16 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         super.onMessage(message, payload);
     }
 
-    private async prepDataFrameInfo(dataProvider: IDataViewerDataProvider): Promise<IDataFrameInfo> {
+    private getDataFrameInfo(): Promise<IDataFrameInfo> {
+        if (!this.dataFrameInfoPromise) {
+            this.dataFrameInfoPromise = this.dataProvider ? this.dataProvider.getDataFrameInfo() : Promise.resolve({});
+        }
+        return this.dataFrameInfoPromise;
+    }
+
+    private async prepDataFrameInfo(): Promise<IDataFrameInfo> {
         this.rowsTimer = new StopWatch();
-        const output = await dataProvider.getDataFrameInfo();
+        const output = await this.getDataFrameInfo();
 
         // Log telemetry about number of rows
         try {
@@ -156,9 +157,10 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private getRowChunk(request: IGetRowsRequest) {
         return this.wrapRequest(async () => {
             if (this.dataProvider) {
+                const dataFrameInfo = await this.getDataFrameInfo();
                 const rows = await this.dataProvider.getRows(
                     request.start,
-                    Math.min(request.end, (await this.dataProvider.getDataFrameInfo()).rowCount)
+                    Math.min(request.end, dataFrameInfo.rowCount ? dataFrameInfo.rowCount : 0)
                 );
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,

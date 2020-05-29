@@ -61,7 +61,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerFactory,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
@@ -87,6 +86,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 

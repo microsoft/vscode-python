@@ -30,12 +30,12 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerFactory,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,

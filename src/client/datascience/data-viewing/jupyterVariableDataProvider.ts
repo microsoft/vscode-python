@@ -5,22 +5,20 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { JSONObject } from '@phosphor/coreutils';
-
 import { Identifiers } from '../constants';
-import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
+import { IJupyterVariable, IJupyterVariables, INotebook, IJupyterVariableDataProvider } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
-import { ColumnType, IDataFrameInfo } from './types';
+import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
     private initialized: boolean = false;
+    private notebook: INotebook | undefined;
+    private variable: IJupyterVariable | undefined;
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
-        @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService,
-        private variable: IJupyterVariable,
-        private notebook: INotebook
+        @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
     ) {}
 
     /**
@@ -59,21 +57,30 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return;
     }
 
+    public setDependencies(variable: IJupyterVariable, notebook: INotebook): void {
+        this.notebook = notebook;
+        this.variable = variable;
+    }
+
     public async getDataFrameInfo(): Promise<IDataFrameInfo> {
+        let dataFrameInfo: IDataFrameInfo = {};
         await this.ensureInitialized();
-        return {
-            columns: this.variable.columns
-                ? JupyterVariableDataProvider.getNormalizedColumns(this.variable.columns)
-                : this.variable.columns,
-            indexColumn: this.variable.indexColumn,
-            rowCount: this.variable.rowCount || 0
-        };
+        if (this.variable && this.notebook) {
+            dataFrameInfo = {
+                columns: this.variable.columns
+                    ? JupyterVariableDataProvider.getNormalizedColumns(this.variable.columns)
+                    : this.variable.columns,
+                indexColumn: this.variable.indexColumn,
+                rowCount: this.variable.rowCount
+            };
+        }
+        return dataFrameInfo;
     }
 
     public async getAllRows() {
-        let allRows: JSONObject = {};
+        let allRows: IRowsResponse = {};
         await this.ensureInitialized();
-        if (this.variable.rowCount) {
+        if (this.variable && this.variable.rowCount && this.notebook) {
             allRows = await this.variableManager.getDataFrameRows(
                 this.variable,
                 this.notebook,
@@ -85,9 +92,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     }
 
     public async getRows(start: number, end: number) {
-        let rows: JSONObject = {};
+        let rows: IRowsResponse = {};
         await this.ensureInitialized();
-        if (this.variable.rowCount) {
+        if (this.variable && this.variable.rowCount && this.notebook) {
             rows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, start, end);
         }
         return rows;
@@ -95,10 +102,10 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
 
     private async ensureInitialized(): Promise<void> {
         // Postpone pre-req and variable initialization until data is requested.
-        if (!this.initialized) {
+        if (!this.initialized && this.variable && this.notebook) {
+            this.initialized = true;
             await this.dependencyService.checkAndInstallMissingDependencies(this.notebook.getMatchingInterpreter());
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this.notebook);
-            this.initialized = true;
         }
     }
 }

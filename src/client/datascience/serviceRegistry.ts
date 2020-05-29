@@ -21,6 +21,8 @@ import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
 import { DataViewerFactory } from './data-viewing/dataViewerFactory';
 import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
+import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
@@ -115,8 +117,6 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IDataViewer,
-    IDataViewerFactory,
     IDebugLocationTracker,
     IGatherLogger,
     IGatherProvider,
@@ -133,12 +133,10 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
-    IJupyterVariable,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
-    INotebook,
     INotebookAndInteractiveWindowUsageTracker,
     INotebookEditor,
     INotebookEditorProvider,
@@ -261,13 +259,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
-    serviceManager.addFactory<IJupyterVariableDataProvider>(IJupyterVariableDataProviderFactory, (context) => {
-        return (variable: IJupyterVariable, notebook: INotebook) => {
-            const variableManager: IJupyterVariables = context.container.getNamed<IJupyterVariables>(IJupyterVariables, Identifiers.ALL_VARIABLES);
-            const dependencyService: DataViewerDependencyService = context.container.get(DataViewerDependencyService);
-            return new JupyterVariableDataProvider(variableManager, dependencyService, variable, notebook);
-        };
-    });
+    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
+    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

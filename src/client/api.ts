@@ -7,8 +7,7 @@ import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experiments/groups';
 import { traceError } from './common/logger';
 import { IConfigurationService, IExperimentsManager, Resource } from './common/types';
-import { IDataViewerDataProvider } from './datascience/data-viewing/types';
-import { IDataViewer, IDataViewerFactory } from './datascience/types';
+import { IDataViewerDataProvider, IDataViewerFactory } from './datascience/data-viewing/types';
 import {
     getDebugpyLauncherArgs,
     getDebugpyPackagePath,
@@ -71,9 +70,8 @@ export interface IExtensionApi {
          * Launches Data Viewer component.
          * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
          * @param {string} title Data Viewer title
-         * @returns {Promise<IDataViewer>}
          */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
+        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
     };
 }
 
@@ -131,9 +129,9 @@ export function buildApi(
             }
         },
         datascience: {
-            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string) {
+            async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
                 const dataViewerProviderService = serviceContainer.get<IDataViewerFactory>(IDataViewerFactory);
-                return dataViewerProviderService.create(dataProvider, title);
+                await dataViewerProviderService.create(dataProvider, title);
             }
         }
     };

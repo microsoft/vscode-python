@@ -49,7 +49,7 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { addToUriList } from '../common';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { ColumnWarningSize } from '../data-viewing/types';
+import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -74,7 +74,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerFactory,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -904,7 +903,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkColumnSize(request.columnSize)) {
-                const jupyterVariableDataProvider = this.jupyterVariableDataProviderFactory(
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     request.variable,
                     this._notebook!
                 );

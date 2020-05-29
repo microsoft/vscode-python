@@ -19,9 +19,6 @@ const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
 
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // tslint:disable-next-line: ordered-imports
-// Adding comments to ensure order of imports does not change due to auto formatters.
-// tslint:disable-next-line: ordered-imports
-import 'slickgrid/plugins/slick.autotooltips';
 import 'slickgrid/slick.core';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // tslint:disable-next-line: ordered-imports
@@ -29,6 +26,9 @@ import 'slickgrid/slick.dataview';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.grid';
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
+import 'slickgrid/plugins/slick.autotooltips';
 // Adding comments to ensure order of imports does not change due to auto formatters.
 // tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.grid.css';

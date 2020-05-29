@@ -3,7 +3,7 @@
 'use strict';
 import './mainPanel.css';
 
-import { JSONArray, JSONObject } from '@phosphor/coreutils';
+import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 
@@ -15,7 +15,8 @@ import {
     DataViewerMessages,
     IDataFrameInfo,
     IDataViewerMapping,
-    IGetRowsResponse
+    IGetRowsResponse,
+    IRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
@@ -140,7 +141,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 break;
 
             case DataViewerMessages.GetAllRowsResponse:
-                this.handleGetAllRowsResponse(payload as JSONObject);
+                this.handleGetAllRowsResponse(payload as IRowsResponse);
                 break;
 
             case DataViewerMessages.GetRowsResponse:
@@ -245,7 +246,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
     }
 
-    private handleGetAllRowsResponse(response: JSONObject) {
+    private handleGetAllRowsResponse(response: IRowsResponse) {
         const rows = response.data ? (response.data as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
 

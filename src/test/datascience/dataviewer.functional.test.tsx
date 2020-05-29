@@ -13,12 +13,14 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
-import { DataViewerMessages, IDataViewerDataProvider } from '../../client/datascience/data-viewing/types';
 import {
+    DataViewerMessages,
     IDataViewer,
-    IDataViewerFactory,
+    IDataViewerDataProvider,
+    IDataViewerFactory
+} from '../../client/datascience/data-viewing/types';
+import {
     IJupyterVariable,
-    IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     INotebook,
     INotebookProvider
@@ -108,8 +110,8 @@ suite('DataScience DataViewer tests', () => {
 
     async function createJupyterVariableDataProvider(
         jupyterVariable: IJupyterVariable
-    ): Promise<IJupyterVariableDataProvider> {
-        return jupyterVariableDataProviderFactory(jupyterVariable, notebook!);
+    ): Promise<IDataViewerDataProvider> {
+        return jupyterVariableDataProviderFactory.create(jupyterVariable, notebook!);
     }
 
     async function createDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer> {
@@ -118,7 +120,7 @@ suite('DataScience DataViewer tests', () => {
 
     async function createJupyterVariableDataViewer(variable: string, type: string): Promise<IDataViewer> {
         const jupyterVariable: IJupyterVariable = createJupyterVariable(variable, type);
-        const jupyterVariableDataProvider: IJupyterVariableDataProvider = await createJupyterVariableDataProvider(
+        const jupyterVariableDataProvider: IDataViewerDataProvider = await createJupyterVariableDataProvider(
             jupyterVariable
         );
         return createDataViewer(jupyterVariableDataProvider, jupyterVariable.name);

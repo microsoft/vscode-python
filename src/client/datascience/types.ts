@@ -782,12 +782,13 @@ export interface IJupyterVariable {
 }
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
-export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {}
+export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    setDependencies(variable: IJupyterVariable, notebook: INotebook): void;
+}
 
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
-export interface IJupyterVariableDataProviderFactory extends Function {
-    // tslint:disable-next-line: callable-types
-    (variable: IJupyterVariable, notebook: INotebook): IJupyterVariableDataProvider;
+export interface IJupyterVariableDataProviderFactory {
+    create(variable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariableDataProvider>;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
@@ -827,16 +828,6 @@ export interface IJupyterVariablesResponse {
     totalCount: number;
     pageStartIndex: number;
     pageResponse: IJupyterVariable[];
-}
-
-export const IDataViewerFactory = Symbol('IDataViewerFactory');
-export interface IDataViewerFactory {
-    create(dataProvider: IDataViewerDataProvider, title: string): Promise<IDataViewer>;
-}
-
-export const IDataViewer = Symbol('IDataViewer');
-export interface IDataViewer extends IDisposable {
-    showData(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');

@@ -7,8 +7,7 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IDataViewer, IDataViewerFactory } from '../types';
-import { IDataViewerDataProvider } from './types';
+import { IDataViewer, IDataViewerFactory, IDataViewerDataProvider } from './types';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
