@@ -25,6 +25,17 @@ import { CursorPos, IMainState } from '../../mainState';
  * 6) Add the handler to the main reducer map in reducers\index.ts
  */
 
+/**
+ * How to add a new state change:
+ * 1) Add a new <name> to CommonActionType (preferably `InteractiveWindowMessages` - to keep messages in the same place).
+ * 2) Add a new interface (or reuse 1 below) if the action takes any parameters (ex: ICellAction)
+ * 3) Add a new actionCreator function (this is how you use it from a react control) to the
+ *    appropriate actionCreator list (one for native and one for interactive).
+ *    The creator should 'create' an instance of the action.
+ * 4) Add an entry into the appropriate mapping.ts. This is how the type of the list of reducers is enforced.
+ * 5) Add a new handler for the action under the 'reducer's folder. Handle the expected state change
+ * 6) Add the handler to the main reducer map in reducers\index.ts
+ */
 export enum CommonActionType {
     ADD_AND_FOCUS_NEW_CELL = 'action.add_new_cell_and_focus_cell',
     INSERT_ABOVE_AND_FOCUS_NEW_CELL = 'action.insert_above_and_focus_cell',
@@ -84,7 +95,8 @@ export enum CommonActionType {
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
     UNFOCUS_CELL = 'action.unfocus_cell',
-    UNMOUNT = 'action.unmount'
+    UNMOUNT = 'action.unmount',
+    VARIABLE_EXPLORER_HEIGHT_REQUEST = 'action.variable_explorer_height_request'
 }
 
 export type CommonActionTypeMapping = {
@@ -134,6 +146,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.SELECT_SERVER]: never | undefined;
     [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
+    [CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST]: never | undefined;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
     [CommonActionType.PostOutgoingMessage]: never | undefined;

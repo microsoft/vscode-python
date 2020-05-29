@@ -39,6 +39,8 @@ interface IVariableExplorerProps {
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
+    sendVariableExplorerHeightRequest(): void;
+    sendVariableExplorerHeightRequest(): void;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -99,7 +101,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         super(prop);
 
         this.state = {
-            containerHeight: 0,
+            containerHeight: this.props.containerHeight,
             gridHeight: this.props.gridHeight,
             resized: false
         };
@@ -167,6 +169,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.setInitialHeight();
             this.update();
         }
+    }
+
+    public componentWillMount() {
+        this.props.sendVariableExplorerHeightRequest();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
