@@ -79,7 +79,8 @@ export function vscNotebookCellToCellModel(cell: NotebookCellData, model: INoteb
     }
     assert.equal(cell.language, PYTHON_LANGUAGE, 'Cannot create a non Python cell');
     return {
-        // TODO: Translate output into nbformat.IOutput.
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: #12068 Translate output into nbformat.IOutput.
         data: createCodeCell([cell.source], []),
         file: model.file.toString(),
         id: uuid(),

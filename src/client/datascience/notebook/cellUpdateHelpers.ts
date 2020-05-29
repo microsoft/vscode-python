@@ -120,10 +120,6 @@ export function updateCellModelWithChangesToVSCCell(
 }
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
-    if (change.language !== PYTHON_LANGUAGE && change.language !== MARKDOWN_LANGUAGE) {
-        throw new Error(`Unsupported cell language ${change.language}`);
-    }
-
     const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
 
     // VSC fires event if changing cell language from markdown to markdown.
@@ -153,8 +149,8 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
     // tslint:disable-next-line: no-any
     change.cell.outputs = cellOutputsToVSCCellOutputs(newCellData.outputs as any);
     change.cell.metadata.executionOrder = undefined;
-    change.cell.metadata.hasExecutionOrder = change.language === PYTHON_LANGUAGE;
-    change.cell.metadata.runnable = change.language === PYTHON_LANGUAGE;
+    change.cell.metadata.hasExecutionOrder = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
+    change.cell.metadata.runnable = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
