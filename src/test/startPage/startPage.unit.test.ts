@@ -14,12 +14,12 @@ import {
     IWorkspaceService
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
+import { StartPage } from '../../client/common/startPage/startPage';
+import { IStartPage } from '../../client/common/startPage/types';
 import { IConfigurationService, IExtensionContext } from '../../client/common/types';
-import { StartPage } from '../../client/datascience/startPage/startPage';
-import { IStartPage } from '../../client/datascience/startPage/types';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../client/datascience/types';
+import { MockPythonSettings } from '../datascience/mockPythonSettings';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-import { MockPythonSettings } from './mockPythonSettings';
 
 suite('StartPage tests', () => {
     let startPage: IStartPage;

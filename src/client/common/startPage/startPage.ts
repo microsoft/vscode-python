@@ -6,6 +6,11 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, TextDocument, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { EXTENSION_ROOT_DIR } from '../../constants';
+import { Commands, Telemetry } from '../../datascience/constants';
+import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
+import { WebViewHost } from '../../datascience/webViewHost';
+import { sendTelemetryEvent } from '../../telemetry';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -13,16 +18,11 @@ import {
     IDocumentManager,
     IWebPanelProvider,
     IWorkspaceService
-} from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IExtensionContext, Resource } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
-import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../types';
-import { WebViewHost } from '../webViewHost';
+} from '../application/types';
+import { IFileSystem } from '../platform/types';
+import { IConfigurationService, IExtensionContext, Resource } from '../types';
+import * as localize from '../utils/localize';
+import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
 import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
@@ -60,7 +60,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             (c, v, d) => new StartPageMessageListener(c, v, d),
             startPageDir,
             [path.join(startPageDir, 'commons.initial.bundle.js'), path.join(startPageDir, 'startPage.js')],
-            localize.DataScience.startPage(),
+            localize.StartPage.getStarted(),
             ViewColumn.One,
             false,
             false,
@@ -139,7 +139,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
                 const doc2 = await this.documentManager.openTextDocument({
                     language: 'python',
-                    content: `#%%\nprint("${localize.DataScience.helloWorld()}")`
+                    content: `#%%\nprint("${localize.StartPage.helloWorld()}")`
                 });
                 await this.documentManager.showTextDocument(doc2, 1, true);
                 await this.commandManager.executeCommand(Commands.RunAllCells, '');
@@ -262,7 +262,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async openSampleNotebook(): Promise<void> {
-        const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.DataScience.sampleNotebook());
+        const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.StartPage.sampleNotebook());
         let sampleNotebook: TextDocument;
 
         if (await this.file.fileExists(localizedFilePath)) {

@@ -66,6 +66,7 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
     export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
+    export const OpenStartPage = 'python.startPage.open';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

@@ -130,6 +130,8 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory
 } from '../../client/common/process/types';
+import { StartPage } from '../../client/common/startPage/startPage';
+import { IStartPage } from '../../client/common/startPage/types';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { CondaActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
@@ -251,8 +253,6 @@ import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewer
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
 import { RawNotebookProviderWrapper } from '../../client/datascience/raw-kernel/rawNotebookProviderWrapper';
 import { RawNotebookSupportedService } from '../../client/datascience/raw-kernel/rawNotebookSupportedService';
-import { StartPage } from '../../client/datascience/startPage/startPage';
-import { IStartPage } from '../../client/datascience/startPage/types';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {

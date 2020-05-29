@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import '../../client/common/extensions';
-import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/datascience/startPage/types';
+import { IReleaseNotesPackage, IStartPageMapping, StartPageMessages } from '../../client/common/startPage/types';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -62,9 +62,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                             image={ImageName.PythonColor}
                         />
                     </div>
-                    <div className="title">
-                        {getLocString('DataScience.startPage.pythonExtensionTitle', 'Python Extension')}
-                    </div>
+                    <div className="title">{getLocString('StartPage.pythonExtensionTitle', 'Python Extension')}</div>
                 </div>
                 <div className="row">
                     <div className={this.iconClass} onClick={this.openBlankNotebook} role="button">
@@ -76,7 +74,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text">
-                            {getLocString('DataScience.startPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
+                            {getLocString('StartPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
                         {this.renderNotebookDescription()}
                     </div>
@@ -91,7 +89,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text">
-                            {getLocString('DataScience.startPage.createAPythonFile', 'Create a Python File')}
+                            {getLocString('StartPage.createAPythonFile', 'Create a Python File')}
                         </div>
                         {this.renderPythonFileDescription()}
                     </div>
@@ -106,7 +104,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                     <div className="block">
                         <div className="text">
-                            {getLocString('DataScience.startPage.openInteractiveWindow', 'Open the Interactive Window')}
+                            {getLocString('StartPage.openInteractiveWindow', 'Open the Interactive Window')}
                         </div>
                         {this.renderInteractiveWindowDescription()}
                     </div>
@@ -125,7 +123,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     ></input>
                 </div>
                 <div className="block">
-                    <p>{getLocString('DataScience.startPage.dontShowAgain', "Don't show this page again")}</p>
+                    <p>{getLocString('StartPage.dontShowAgain', "Don't show this page again")}</p>
                 </div>
             </div>
         );
@@ -174,7 +172,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
-                        'DataScience.startPage.notebookDescription',
+                        'StartPage.notebookDescription',
                         '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
                     ).format('openCommandPalette()', 'openCommandPaletteWithSelection()', 'openSampleNotebook()')
                 }}
@@ -189,7 +187,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
-                        'DataScience.startPage.pythonFileDescription',
+                        'StartPage.pythonFileDescription',
                         '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
                     ).format('openFileBrowser()')
                 }}
@@ -203,7 +201,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
             <p
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
-                        'DataScience.startPage.interactiveWindowDesc',
+                        'StartPage.interactiveWindowDesc',
                         '- You can create cells on a Python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
                     )
                 }}
@@ -218,7 +216,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
-                        'DataScience.startPage.releaseNotes',
+                        'StartPage.releaseNotes',
                         'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
                     ).format('https://aka.ms/AA8dxtb')
                 }}
@@ -241,7 +239,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 className="paragraph"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
-                        'DataScience.startPage.tutorialAndDoc',
+                        'StartPage.tutorialAndDoc',
                         'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
                     ).format('https://aka.ms/AA8dqti', 'https://aka.ms/AA8dxwy')
                 }}

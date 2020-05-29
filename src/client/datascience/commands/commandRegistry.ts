@@ -7,12 +7,13 @@ import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
+import { Commands as coreCommands } from '../../common/constants';
+import { IStartPage } from '../../common/startPage/types';
 import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { IStartPage } from '../startPage/types';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -78,7 +79,7 @@ export class CommandRegistry implements IDisposable {
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
-        this.registerCommand(Commands.OpenStartPage, this.openStartPage);
+        this.registerCommand(coreCommands.OpenStartPage, this.openStartPage);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);

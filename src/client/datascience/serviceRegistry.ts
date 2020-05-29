@@ -5,6 +5,8 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
 import { NativeNotebook } from '../common/experiments/groups';
+import { StartPage } from '../common/startPage/startPage';
+import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';
@@ -102,8 +104,6 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables'
 import { ProgressReporter } from './progress/progressReporter';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
 import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
-import { StartPage } from './startPage/startPage';
-import { IStartPage } from './startPage/types';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {

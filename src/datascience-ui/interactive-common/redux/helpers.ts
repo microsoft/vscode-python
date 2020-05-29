@@ -4,6 +4,7 @@
 'use strict';
 
 import * as Redux from 'redux';
+import { StartPageMessages } from '../../../client/common/startPage/types';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
@@ -15,7 +16,6 @@ import {
 } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload, SyncPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
-import { StartPageMessages } from '../../../client/datascience/startPage/types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 

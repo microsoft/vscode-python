@@ -7,6 +7,7 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
@@ -14,7 +15,6 @@ import { JupyterServerSelectorCommand } from '../../../client/datascience/comman
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { StartPage } from '../../../client/datascience/startPage/startPage';
 import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length

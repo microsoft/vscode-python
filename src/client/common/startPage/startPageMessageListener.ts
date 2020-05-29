@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
-import '../../common/extensions';
+import { IWebPanel, IWebPanelMessageListener } from '../application/types';
+import '../extensions';
 
 // tslint:disable:no-any
 // This class listens to messages that come from the local Python Interactive window

@@ -1,4 +1,4 @@
-import { SharedMessages } from '../messages';
+import { SharedMessages } from '../../datascience/messages';
 
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
