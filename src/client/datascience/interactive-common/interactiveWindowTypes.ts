@@ -363,6 +363,11 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     newCells: ICell[];
     oldCells: ICell[];
 }
+export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
+    kind: 'updateCellExecutionCount';
+    cellId: string;
+    executionCount?: number;
+}
 
 export interface INotebookModelClearChange extends INotebookModelChange {
     kind: 'clear';
@@ -478,7 +483,8 @@ export type NotebookModelChange =
     | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
-    | INotebookModelChangeTypeChange;
+    | INotebookModelChangeTypeChange
+    | INotebookModelCellExecutionCountChange;
 
 export interface IRunByLine {
     cell: ICell;

@@ -18,33 +18,19 @@ import { ICell, INotebookModel } from '../types';
 import { cellOutputsToVSCCellOutputs, vscNotebookCellToCellModel } from './helpers';
 
 export function findMappedNotebookCellData(source: ICell, cells: NotebookCell[]): NotebookCell {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
     // If so, then we have a problem.
     const found = cells.filter((cell) => source.id === cell.metadata.custom?.cellId);
 
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Once VSC provides API, throw error here.
-    if (!found || !found.length) {
-        traceError(`Unable to find matching cell for ${source}`);
-        return cells[0];
-    }
+    assert.ok(found.length, `NotebookCell not found, for CellId = ${source.id} in ${source}`);
 
     return found[0];
 }
 
 export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Will metadata get copied across when copying/pasting cells (cloning a cell)?
     // If so, then we have a problem.
     const found = cells.filter((cell) => cell.id === source.metadata.custom?.cellId);
 
-    // tslint:disable-next-line: no-suspicious-comment
-    // TODO: Once VSC provides API, throw error here.
-    if (!found || !found.length) {
-        traceError(`Unable to find matching cell for ${source}`);
-        return cells[0];
-    }
+    assert.ok(found.length, `ICell not found, for CellId = ${source.metadata.custom?.cellId} in ${source}`);
 
     return found[0];
 }
@@ -128,7 +114,8 @@ export function updateCellModelWithChangesToVSCCell(
         case 'changeCells':
             return handleChangesToCells(change, model);
         default:
-            throw new Error(`Unsupported cell change`);
+            // tslint:disable-next-line: no-string-literal
+            assert.fail(`Unsupported cell change ${change['type']}`);
     }
 }
 
@@ -136,7 +123,18 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
     if (change.language !== PYTHON_LANGUAGE && change.language !== MARKDOWN_LANGUAGE) {
         throw new Error(`Unsupported cell language ${change.language}`);
     }
+
     const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
+
+    // VSC fires event if changing cell language from markdown to markdown.
+    // https://github.com/microsoft/vscode/issues/98836
+    if (
+        (change.language === PYTHON_LANGUAGE && cellModel.data.cell_type === 'code') ||
+        (change.language === MARKDOWN_LANGUAGE && cellModel.data.cell_type === 'markdown')
+    ) {
+        return;
+    }
+
     const newCellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
     const newCell: ICell = {
         ...cellModel,
@@ -161,8 +159,7 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
     // For some reason VSC fires a change even when opening a document.
-    // Ignore this
-    // TODO: File an issue.
+    // Ignore this https://github.com/microsoft/vscode/issues/98841
     if (
         change.changes.length === 1 &&
         change.changes[0].deletedCount === 0 &&
@@ -221,7 +218,7 @@ function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel)
         oldDirty: model.isDirty,
         newDirty: true,
         firstCellId: cellToSwap.id,
-        secondCellId: cellToSwap.id
+        secondCellId: cellToSwapWith.id
     });
 }
 function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookModel) {
@@ -229,13 +226,17 @@ function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookM
     assert.equal(change.changes[0].items.length, 1, 'Insertion of more than 1 cell is not supported');
     const insertChange = change.changes[0];
     const cell = change.changes[0].items[0];
+    const newCell = vscNotebookCellToCellModel(cell, model);
+    // Ensure we add the cell id to the VSC cell to map itto ours.
+    cell.metadata.custom = cell.metadata.custom || {};
+    cell.metadata.custom.cellId = newCell.id;
     model.update({
         source: 'user',
         kind: 'insert',
         newDirty: true,
         oldDirty: model.isDirty,
         index: insertChange.start,
-        cell: vscNotebookCellToCellModel(cell, model)
+        cell: newCell
     });
 }
 function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookModel) {

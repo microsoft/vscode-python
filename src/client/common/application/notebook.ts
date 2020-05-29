@@ -39,7 +39,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public get onDidChangeNotebookDocument(): Event<
         NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     > {
-        this.addEventHandlers();
         return this._onDidChangeNotebookDocument.event;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
@@ -77,7 +76,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) {
+        if (this.useProposedApi) {
+            this.addEventHandlers();
+        }
+    }
     public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {
         return this.notebook.registerNotebookContentProvider(notebookType, provider);
     }
@@ -103,6 +106,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         if (this.addedEventHandlers) {
             return;
         }
+        this.addedEventHandlers = true;
         this.disposables.push(
             ...[
                 this.notebook.onDidChangeCellLanguage((e) =>

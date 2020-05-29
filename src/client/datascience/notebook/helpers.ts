@@ -16,7 +16,11 @@ import type {
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import * as uuid from 'uuid/v4';
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../../../datascience-ui/common';
+import {
+    concatMultilineStringInput,
+    concatMultilineStringOutput,
+    splitMultilineString
+} from '../../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceWarning } from '../../logging';
@@ -66,7 +70,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
 export function vscNotebookCellToCellModel(cell: NotebookCellData, model: INotebookModel): ICell {
     if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
         return {
-            data: createMarkdownCell(cell.source),
+            data: createMarkdownCell(splitMultilineString(cell.source), true),
             file: model.file.toString(),
             id: uuid(),
             line: 0,

@@ -22,6 +22,7 @@ import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
+    updateCellExecutionCount,
     updateCellOutput,
     updateCellWithErrorStatus
 } from './executionHelpers';
@@ -174,6 +175,17 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
                     const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
+
+                    // Set execution count, all messages should have it
+                    if (
+                        cells.length &&
+                        'execution_count' in cells[0].data &&
+                        typeof cells[0].data.execution_count === 'number'
+                    ) {
+                        const executionCount = cells[0].data.execution_count as number;
+                        updateCellExecutionCount(notebookCellModel, model, executionCount);
+                    }
+
                     updateCellOutput(notebookCellModel, rawCellOutput, model);
                 },
                 (error: Partial<Error>) => {
