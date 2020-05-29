@@ -78,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             };
 
             // Fire off a timer to mimic dynamic loading
-            setTimeout(() => this.handleGetAllRowsResponse({ data: data.rows }), 1000);
+            setTimeout(() => this.handleGetAllRowsResponse(data.rows), 1000);
         } else {
             this.state = {
                 gridColumns: [],
@@ -247,7 +247,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private handleGetAllRowsResponse(response: IRowsResponse) {
-        const rows = response.data ? (response.data as JSONArray) : [];
+        const rows = response ? (response as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
 
         // Update our fetched count and actual rows
@@ -262,7 +262,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
-        const rows = response.rows.data ? (response.rows.data as JSONArray) : [];
+        const rows = response.rows ? (response.rows as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 

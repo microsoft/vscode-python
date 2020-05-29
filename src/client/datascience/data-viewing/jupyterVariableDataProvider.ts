@@ -78,24 +78,26 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
     }
 
     public async getAllRows() {
-        let allRows: IRowsResponse = {};
+        let allRows: IRowsResponse = [];
         await this.ensureInitialized();
         if (this.variable && this.variable.rowCount && this.notebook) {
-            allRows = await this.variableManager.getDataFrameRows(
+            const dataFrameRows = await this.variableManager.getDataFrameRows(
                 this.variable,
                 this.notebook,
                 0,
                 this.variable.rowCount
             );
+            allRows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return allRows;
     }
 
     public async getRows(start: number, end: number) {
-        let rows: IRowsResponse = {};
+        let rows: IRowsResponse = [];
         await this.ensureInitialized();
         if (this.variable && this.variable.rowCount && this.notebook) {
-            rows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, start, end);
+            const dataFrameRows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, start, end);
+            rows = dataFrameRows && dataFrameRows.data ? (dataFrameRows.data as IRowsResponse) : [];
         }
         return rows;
     }

@@ -69,10 +69,8 @@ export enum ColumnType {
     Bool = 'bool'
 }
 
-export interface IRowsResponse {
-    // tslint:disable-next-line: no-any
-    data?: any[];
-}
+// tslint:disable-next-line: no-any
+export type IRowsResponse = any[];
 
 export const IDataViewerFactory = Symbol('IDataViewerFactory');
 export interface IDataViewerFactory {
