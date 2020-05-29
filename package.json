@@ -80,7 +80,7 @@
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
-        "onCommand:python.datascience.startPage.open",
+        "onCommand:python.startPage.open",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
@@ -656,8 +656,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.startPage.open",
-                "title": "%python.command.python.datascience.startPage.open.title%",
+                "command": "python.startPage.open",
+                "title": "%python.command.python.startPage.open.title%",
                 "category": "Python"
             },
             {
@@ -1113,8 +1113,8 @@
                     "category": "Python"
                 },
                 {
-                    "command": "python.datascience.startPage.open",
-                    "title": "%python.command.python.datascience.startPage.open.title%",
+                    "command": "python.startPage.open",
+                    "title": "%python.command.python.startPage.open.title%",
                     "category": "Python"
                 },
                 {
