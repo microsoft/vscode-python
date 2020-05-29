@@ -123,7 +123,6 @@ suite('Experimentation service', () => {
     suite('In-experiment check', () => {
         const experiment = 'Test Experiment - experiment';
         let telemetryEvents: { eventName: string; properties: object }[] = [];
-        let getExperimentationServiceStub: sinon.SinonStub;
         let isCachedFlightEnabledStub: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
@@ -136,7 +135,7 @@ suite('Experimentation service', () => {
                 });
 
             isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
-            getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService').returns({
+            sinon.stub(tasClient, 'getExperimentationService').returns({
                 isCachedFlightEnabled: isCachedFlightEnabledStub
                 // tslint:disable-next-line: no-any
             } as any);
@@ -175,7 +174,7 @@ suite('Experimentation service', () => {
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(getExperimentationServiceStub);
+            sinon.assert.notCalled(isCachedFlightEnabledStub);
         });
 
         test('If the opt-in setting contains "All", inExperiment should return true', async () => {
