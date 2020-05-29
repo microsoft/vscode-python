@@ -63,7 +63,6 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
         visible: !arg.prevState.visible
     };
 
-    postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerHeightRequest);
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
 
     // If going visible for the first time, refresh our variables
@@ -87,11 +86,14 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     }
 }
 
+function handleVariableExplorerHeightRequest(arg: VariableReducerArg): IVariableState {
+    postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerHeightRequest);
+    return arg.prevState;
+}
+
 function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
     const containerHeight = arg.payload.data.containerHeight;
     const gridHeight = arg.payload.data.gridHeight;
-    const vscode = (window as any).acquireVSCodeApi;
-    vscode.setState({ containerHeight: containerHeight, gridHeight: gridHeight });
 
     postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, { containerHeight, gridHeight });
 
@@ -250,6 +252,7 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
+    [CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST]: handleVariableExplorerHeightRequest,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
 };

@@ -104,6 +104,7 @@ suite('DataScience Interactive Panel', () => {
                 gridHeight: 200
             },
             setVariableExplorerHeight: noopAny,
+            sendVariableExplorerHeightRequest: noopAny,
             editorOptions: {},
             settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any
         };

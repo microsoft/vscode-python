@@ -85,6 +85,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncWithLiveShare,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncWithLiveShare,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: MessageType.other,
+    [CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST]: MessageType.other,
     [CommonActionType.UNFOCUS_CELL]: MessageType.syncWithLiveShare,
     [CommonActionType.UNMOUNT]: MessageType.other,
     [CommonActionType.PostOutgoingMessage]: MessageType.other,

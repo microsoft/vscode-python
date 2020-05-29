@@ -285,8 +285,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.VariableExplorerHeightRequest:
-                const data = this.globalStorage.get(VariableExplorerStateKeys.height);
-                this.postMessageInternal(InteractiveWindowMessages.VariableExplorerHeightResponse, data).ignoreErrors();
+                const data = this.variableExplorerHeightRequest();
+                if (data) {
+                    this.postMessageInternal(
+                        InteractiveWindowMessages.VariableExplorerHeightResponse,
+                        data
+                    ).ignoreErrors();
+                }
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
@@ -1414,6 +1419,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
             value[uri.toString()] = updatedHeights;
             this.globalStorage.update(VariableExplorerStateKeys.height, value);
+        }
+    }
+
+    private async variableExplorerHeightRequest(): Promise<
+        { containerHeight: number; gridHeight: number } | undefined
+    > {
+        const uri = await this.getOwningResource(); // Get file name
+
+        if (!uri) {
+            return;
+        }
+
+        const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
+        const uriString = uri.toString();
+        if (uriString in value) {
+            return value[uriString];
         }
     }
 
