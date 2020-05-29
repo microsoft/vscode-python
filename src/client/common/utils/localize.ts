@@ -961,7 +961,7 @@ export namespace StartPage {
     export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
-        '- You can create cells on a Python file by typing "#%%" <br /> - Use "Shift + Enter" to run a cell, the output will be shown in the interactive window'
+        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
     );
 
     export const releaseNotes = localize(

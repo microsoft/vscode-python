@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationTarget, EventEmitter, TextDocument, ViewColumn } from 'vscode';
+import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Commands, Telemetry } from '../../datascience/constants';
@@ -263,16 +263,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     private async openSampleNotebook(): Promise<void> {
         const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.StartPage.sampleNotebook());
-        let sampleNotebook: TextDocument;
+        let sampleNotebookPath: string;
 
         if (await this.file.fileExists(localizedFilePath)) {
-            sampleNotebook = await this.documentManager.openTextDocument(localizedFilePath);
+            sampleNotebookPath = localizedFilePath;
         } else {
-            sampleNotebook = await this.documentManager.openTextDocument(
-                path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Welcome_To_VSCode_Notebooks.ipynb')
-            );
+            sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Welcome_To_VSCode_Notebooks.ipynb');
         }
 
+        const content = await this.file.readFile(sampleNotebookPath);
+        const sampleNotebook = await this.documentManager.openTextDocument({ language: 'python', content: content });
         await this.documentManager.showTextDocument(sampleNotebook, 1, true);
     }
 
