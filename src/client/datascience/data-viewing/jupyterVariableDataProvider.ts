@@ -6,7 +6,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { Identifiers } from '../constants';
-import { IJupyterVariable, IJupyterVariables, INotebook, IJupyterVariableDataProvider } from '../types';
+import { IJupyterVariable, IJupyterVariableDataProvider, IJupyterVariables, INotebook } from '../types';
 import { DataViewerDependencyService } from './dataViewerDependencyService';
 import { ColumnType, IDataFrameInfo, IRowsResponse } from './types';
 
