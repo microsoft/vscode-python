@@ -2959,8 +2959,9 @@
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
-        "compile": "tsc -watch -p ./",
+        "compiled": "tsc -watch -p ./",
         "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watchd": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
         "build-ipywidgets-clean": "node ./src/ipywidgets/scripts/clean.js",
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
@@ -3166,6 +3167,7 @@
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
         "dedent": "^0.7.0",
+        "deemon": "^1.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
         "enzyme": "^3.7.0",
