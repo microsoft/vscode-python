@@ -195,9 +195,9 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
     [InteractiveWindowMessages.SetVariableExplorerHeight]: MessageType.other,
-    [InteractiveWindowMessages.GetVariableExplorerHeight]: MessageType.other,
+    [InteractiveWindowMessages.VariableExplorerHeightResponse]: MessageType.other,
+    [InteractiveWindowMessages.VariableExplorerHeightRequest]: MessageType.other,
     [InteractiveWindowMessages.VariablesComplete]: MessageType.other,
-    [InteractiveWindowMessages.VariableExplorerHeight]: MessageType.other,
     [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: MessageType.other,
     [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: MessageType.other,
     // Types from CssMessages

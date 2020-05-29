@@ -70,8 +70,8 @@ export enum InteractiveWindowMessages {
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
     SetVariableExplorerHeight = 'set_variable_explorer_height',
-    VariableExplorerHeight = 'VariableExplorerHeight',
-    GetVariableExplorerHeight = 'GetVariableExplorerHeight',
+    VariableExplorerHeightResponse = 'variable_explorer_height_response',
+    VariableExplorerHeightRequest = 'variable_explorer_height_request',
     ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
@@ -561,8 +561,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
-    public [InteractiveWindowMessages.GetVariableExplorerHeight]: IVariableExplorerHeight;
-    public [InteractiveWindowMessages.VariableExplorerHeight]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.VariableExplorerHeightRequest]: never | undefined;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;

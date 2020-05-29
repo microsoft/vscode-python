@@ -228,7 +228,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // Send the loc strings (skip during testing as it takes up a lot of memory)
                 const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors(); //TODO: reference
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -283,8 +283,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.setVariableExplorerHeight(payload);
                 break;
 
-            case InteractiveWindowMessages.GetVariableExplorerHeight:
-                this.getVariableExplorerHeight();
+            case InteractiveWindowMessages.VariableExplorerHeightRequest:
+                const data = this.globalStorage.get(VariableExplorerStateKeys.height);
+                this.postMessageInternal(InteractiveWindowMessages.VariableExplorerHeightResponse, data).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
@@ -1400,13 +1401,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const openValue = payload as object;
             this.globalStorage.update(VariableExplorerStateKeys.height, openValue);
         }
-        this.getVariableExplorerHeight();
-    }
-
-    private getVariableExplorerHeight() {
-        const x = this.globalStorage.get(VariableExplorerStateKeys.height);
-        console.log(x);
-        //TODO: send message back
     }
 
     private requestTmLanguage() {

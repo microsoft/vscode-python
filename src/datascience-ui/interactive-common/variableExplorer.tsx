@@ -34,6 +34,8 @@ interface IVariableExplorerProps {
     fontSize: number;
     executionCount: number;
     offsetHeight: number;
+    gridHeight: number;
+    containerHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
@@ -76,9 +78,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     private pageSize: number = -1;
 
-    // Used for handling resizing
-    private defaultGridHeight: number = 200;
-
     // These values keep track of variable requests so we don't make the same ones over and over again
     // Note: This isn't in the redux state because the requests will come before the state
     // has been updated. We don't want to force a wait for redraw to determine if a request
@@ -101,14 +100,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: 0,
-            gridHeight: this.defaultGridHeight,
+            gridHeight: this.props.gridHeight,
             resized: false
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
-        this.restorePreviousSize = this.restorePreviousSize.bind(this);
 
         this.gridColumns = [
             {
@@ -169,10 +167,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.setInitialHeight();
             this.update();
         }
-    }
-
-    public componentWillMount() {
-        this.restorePreviousSize();
     }
 
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
@@ -282,25 +276,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private saveCurrentSize() {
         // uses redux
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
-    }
-
-    private restorePreviousSize() {
-        const vscode = (window as any).acquireVSCodeApi;
-
-        if (!vscode) {
-            // acquireVSCodeApi may not have been called yet
-            return;
-        }
-
-        const prevState = vscode.getState();
-        if (
-            prevState &&
-            Object.keys(prevState).length === 2 &&
-            'containerHeight' in prevState &&
-            'gridHeight' in prevState
-        ) {
-            this.setState(prevState);
-        }
     }
 
     private getRowHeight() {

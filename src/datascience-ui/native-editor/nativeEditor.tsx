@@ -166,6 +166,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         }
         return {
             variables: this.props.variableState.variables,
+            containerHeight: this.props.variableState.containerHeight,
+            gridHeight: this.props.variableState.gridHeight,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,

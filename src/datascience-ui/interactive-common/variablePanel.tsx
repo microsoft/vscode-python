@@ -18,6 +18,8 @@ export interface IVariablePanelProps {
     supportsDebugging: boolean;
     fontSize: number;
     offsetHeight: number;
+    gridHeight: number;
+    containerHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
@@ -32,6 +34,8 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
     public render() {
         return (
             <VariableExplorer
+                gridHeight={this.props.gridHeight}
+                containerHeight={this.props.containerHeight}
                 offsetHeight={this.props.offsetHeight}
                 fontSize={this.props.fontSize}
                 variables={this.props.variables}
