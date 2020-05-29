@@ -47,6 +47,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     ) {}
 
     public async dispose() {
+        traceInfo(`Disposing session manager`);
         try {
             if (this.contentsManager) {
                 traceInfo('SessionManager - dispose contents manager');
@@ -80,6 +81,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
+        } finally {
+            traceInfo('Finished disposing jupyter session manager');
         }
     }
 

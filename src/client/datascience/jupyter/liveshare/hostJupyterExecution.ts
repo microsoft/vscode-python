@@ -17,6 +17,7 @@ import {
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { traceInfo } from '../../../logging';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
@@ -65,6 +66,7 @@ export class HostJupyterExecution
     }
 
     public async dispose(): Promise<void> {
+        traceInfo(`Disposing HostJupyterExecution`);
         await super.dispose();
         const api = await this.api;
         await this.onDetach(api);
@@ -73,6 +75,7 @@ export class HostJupyterExecution
         if (this.serverCache) {
             await this.serverCache.dispose();
         }
+        traceInfo(`Finished disposing HostJupyterExecution`);
     }
 
     public async hostConnectToNotebookServer(

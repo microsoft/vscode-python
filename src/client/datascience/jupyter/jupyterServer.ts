@@ -153,7 +153,7 @@ export class JupyterServerBase implements INotebookServer {
             traceInfo(`Shutting down notebooks for ${this.id}`);
             const notebooks = await Promise.all([...this.notebooks.values()]);
             await Promise.all(notebooks.map((n) => n?.dispose()));
-            traceInfo(`Shut down session manager`);
+            traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
                 // long.
