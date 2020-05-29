@@ -54,6 +54,7 @@ export class JupyterServerBase implements INotebookServer {
         private jupyterOutputChannel: IOutputChannel
     ) {
         this.asyncRegistry.push(this);
+        traceInfo(`Creating jupyter server: ${this._id}`);
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
