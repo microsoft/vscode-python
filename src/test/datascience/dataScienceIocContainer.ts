@@ -67,10 +67,12 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
+import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { VSCodeNotebook } from '../../client/common/application/notebook';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
+    IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
     ICommandManager,
@@ -616,6 +618,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
+        this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);

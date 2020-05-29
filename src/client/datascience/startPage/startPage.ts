@@ -107,7 +107,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     public async onMessage(message: string, payload: any) {
         switch (message) {
             case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
-                await this.handleReleaseNotesRequest();
+                const settings = this.configuration.getSettings();
+                const filteredNotes = await this.handleReleaseNotesRequest();
+                await this.postMessage(StartPageMessages.SendReleaseNotes, {
+                    notes: filteredNotes,
+                    showAgainSetting: settings.showStartPage
+                });
                 break;
             case StartPageMessages.OpenBlankNotebook:
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankNotebook);
@@ -153,7 +158,6 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     'workbench.action.quickOpen',
                     '>Create New Blank Jupyter Notebook'
                 );
-                // await commands.executeCommand('workbench.action.quickOpen', '>Create New Blank Jupyter Notebook');
                 break;
             case StartPageMessages.OpenSampleNotebook:
                 sendTelemetryEvent(Telemetry.StartPageOpenSampleNotebook);
@@ -189,6 +193,37 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         super.onMessage(message, payload);
     }
 
+    // This gets the most recent Enhancements and date from CHANGELOG.md
+    // This is public for testing
+    public async handleReleaseNotesRequest(): Promise<string[]> {
+        const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
+        const changelogBeginning = changelog.indexOf('### Enhancements');
+        const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
+        const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
+
+        const scrappedNotes = startOfLog.splitLines();
+        return scrappedNotes
+            .filter((line) => line.startsWith('1.'))
+            .slice(0, 5)
+            .map((line) => line.substr(3));
+    }
+
+    // Public for testing
+    public async extensionVersionChanged(): Promise<boolean> {
+        const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
+        const version: string = this.appEnvironment.packageJson.version;
+
+        if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
+            // There has not been an update
+            return false;
+        }
+
+        // savedVersion being undefined means this is the first time the user activates the extension.
+        // if savedVersion != version, there was an update
+        await this.context.globalState.update('extensionVersion', version);
+        return true;
+    }
+
     private async activateBackground(): Promise<void> {
         const settings = this.configuration.getSettings();
 
@@ -204,57 +239,25 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         }
     }
 
-    // This gets the most recent Enhancements and date from CHANGELOG.md
-    private async handleReleaseNotesRequest() {
-        const settings = this.configuration.getSettings();
-        const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
-        const changelogBeginning = changelog.indexOf('### Enhancements');
-        const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
-        const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
-
-        const scrappedNotes = startOfLog.splitLines();
-        const filteredNotes = scrappedNotes.filter((line) => line.startsWith('1.')).slice(0, 5);
-
-        await this.postMessage(StartPageMessages.SendReleaseNotes, {
-            notes: filteredNotes.map((line) => line.substr(3)),
-            showAgainSetting: settings.showStartPage
-        });
-    }
-
-    private async extensionVersionChanged(): Promise<boolean> {
-        const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
-        const version: string = this.appEnvironment.packageJson.version;
-
-        if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
-            // There has not been an update
-            return false;
-        }
-
-        // savedVersion being undefined means this is the first time the user activates the extension.
-        // if savedVersion != version, there was an update
-        await this.context.globalState.update('extensionVersion', version);
-        return true;
-    }
-
     private savedVersionisOlder(savedVersion: string, actualVersion: string): boolean {
         const saved = savedVersion.split('.');
         const actual = actualVersion.split('.');
 
         switch (true) {
             case Number(actual[0]) > Number(saved[0]):
-                return true;
+                return false;
             case Number(actual[0]) < Number(saved[0]):
-                return false;
+                return true;
             case Number(actual[1]) > Number(saved[1]):
-                return true;
+                return false;
             case Number(actual[1]) < Number(saved[1]):
-                return false;
+                return true;
             case Number(actual[2][0]) > Number(saved[2][0]):
-                return true;
-            case Number(actual[2][0]) < Number(saved[2][0]):
                 return false;
-            default:
+            case Number(actual[2][0]) < Number(saved[2][0]):
                 return true;
+            default:
+                return false;
         }
     }
 

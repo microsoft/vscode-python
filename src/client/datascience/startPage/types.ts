@@ -3,6 +3,8 @@ import { SharedMessages } from '../messages';
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;
+    handleReleaseNotesRequest(): Promise<string[]>;
+    extensionVersionChanged(): Promise<boolean>;
 }
 
 export interface IReleaseNotesPackage {

@@ -80,56 +80,11 @@ suite('StartPage tests', () => {
         });
     }
 
-    function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1): Promise<void> {
-        // tslint:disable-next-line:promise-must-complete
-        return new Promise((resolve, reject) => {
-            if (component) {
-                let originalRenderFunc = component.render;
-                if (originalRenderFunc) {
-                    originalRenderFunc = originalRenderFunc.bind(component);
-                }
-                let renderCount = 0;
-                component.render = () => {
-                    let result: React.ReactNode = null;
-
-                    // When the render occurs, call the original function and resolve our promise
-                    if (originalRenderFunc) {
-                        result = originalRenderFunc();
-                    }
-                    renderCount += 1;
-
-                    if (renderCount === numberOfRenders) {
-                        // Reset our render function
-                        component.render = originalRenderFunc;
-                        resolve();
-                    }
-
-                    return result;
-                };
-            } else {
-                reject('Cannot find the component for waitForRender');
-            }
-        });
-    }
-
-    async function waitForUpdate<P, S, C>(
-        wrapper: ReactWrapper<P, S, C>,
-        mainClass: ComponentClass<P>,
-        numberOfRenders: number = 1
-    ): Promise<void> {
+    async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>): Promise<void> {
         const mainObj = wrapper.find(mainClass).instance();
         if (mainObj) {
-            // Hook the render first.
-            const renderPromise = waitForRender(mainObj, numberOfRenders);
-
             // First wait for the update
             await waitForComponentDidUpdate(mainObj);
-
-            // Force a render
-            wrapper.update();
-
-            // Wait for the render
-            await renderPromise;
 
             // Force a render
             wrapper.update();
@@ -138,7 +93,7 @@ suite('StartPage tests', () => {
 
     async function waitForStartPage(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
         // Get a render promise with the expected number of renders
-        const renderPromise = waitForUpdate(wrapper, StartPage, 1);
+        const renderPromise = waitForUpdate(wrapper, StartPage);
 
         // Call our function to add a plot
         await start.open();
