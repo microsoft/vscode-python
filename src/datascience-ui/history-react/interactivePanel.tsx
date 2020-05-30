@@ -40,11 +40,15 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
 
     public componentDidMount() {
         document.addEventListener('click', this.linkClick, true);
+        document.addEventListener('focus', this.focusPanel, true);
+        document.addEventListener('blur', this.unfocusPanel, true);
         this.props.editorLoaded();
     }
 
     public componentWillUnmount() {
         document.removeEventListener('click', this.linkClick);
+        document.removeEventListener('focus', this.focusPanel, true);
+        document.removeEventListener('blur', this.unfocusPanel, true);
         this.props.editorUnmounted();
     }
 
@@ -253,7 +257,9 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
         const executionCount = this.getInputExecutionCount();
         const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
-
+        // tslint:disable-next-line: no-console
+        console.log(`Document has focus: ${document.hasFocus().toString()}`);
+        // tslint:disable-next-line: no-console
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
@@ -392,6 +398,16 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
     private linkClick = (ev: MouseEvent) => {
         handleLinkClick(ev, this.props.linkClick);
+    };
+
+    private focusPanel = (ev: FocusEvent) => {
+        // tslint:disable-next-line: no-console
+        console.log(`Panel was focused with event ${JSON.stringify(ev)}\n`);
+    };
+
+    private unfocusPanel = (ev: FocusEvent) => {
+        // tslint:disable-next-line: no-console
+        console.log(`Panel was unfocused with event ${JSON.stringify(ev)}\n`);
     };
 }
 
