@@ -36,7 +36,7 @@
             "problemMatcher": [
                 "$tsc-watch",
                 "$ts-checker-webpack-watch"
-            ],
+            ]
         },
         {
             "label": "Run Unit Tests",

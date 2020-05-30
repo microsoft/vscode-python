@@ -20,6 +20,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                     data: {
                         cell_type: 'code',
                         execution_count: 10,
+                        hasExecutionOrder: true,
                         outputs: [],
                         source: 'print(1)',
                         metadata: {}
@@ -32,6 +33,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                 {
                     data: {
                         cell_type: 'markdown',
+                        hasExecutionOrder: false,
                         source: '# HEAD',
                         metadata: {}
                     },
