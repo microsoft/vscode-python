@@ -490,9 +490,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // allowed to have it.
         if (this.viewState.active) {
             // Force the webpanel to reveal and take focus.
-            await super.show(false);
-
-            // Send this to the react control
+            if (!this.documentManager.activeTextEditor) {
+                await super.show(false);
+            }
+            // Send this to the react control. Resolve input box gaining focus on the UI side
             await this.postMessage(InteractiveWindowMessages.Activate);
         }
     }
