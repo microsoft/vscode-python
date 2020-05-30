@@ -91,7 +91,6 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
         return items
             .filter((item) => item.display_name || item.name)
             .filter((item) => 'lastActivityTime' in item && 'numberOfConnections' in item)
-            .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map((item) => getQuickPickItemForActiveKernel(item, this.pathUtils));
     }
 }
@@ -114,9 +113,7 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
         cancelToken?: CancellationToken | undefined
     ): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        return items
-            .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
-            .map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        return items.map((item) => getQuickPickItemForKernelSpec(item, this.pathUtils));
     }
 }
 
@@ -129,7 +126,6 @@ export class InstalledRawKernelSelectionListProvider implements IKernelSelection
     ): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelFinder.listKernelSpecs(resource);
         return items
-            .filter((item) => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .filter((item) => {
                 // If we have a default kernel name and a non-absolute path just hide the item
                 // Otherwise we end up showing a bunch of "Python 3 - python" default items for
