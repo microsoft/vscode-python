@@ -160,7 +160,8 @@ function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebook
         change.changes.length === 1 &&
         change.changes[0].deletedCount === 0 &&
         change.changes[0].start === 0 &&
-        change.changes[0].items.length === model.cells.length
+        change.changes[0].items.length === model.cells.length &&
+        change.document.cells.length === model.cells.length
     ) {
         // This is an event fired when a document is opened, we can safely ignore this.
         return;
