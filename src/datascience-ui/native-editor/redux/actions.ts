@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
-import { Common } from '../../../client/common/utils/localize';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
