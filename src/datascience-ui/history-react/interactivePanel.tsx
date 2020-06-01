@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import * as React from 'react';
 import { connect } from 'react-redux';
+// import * as StackTrace from 'stacktrace-js';
 import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
@@ -258,8 +259,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         const executionCount = this.getInputExecutionCount();
         const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
         // tslint:disable-next-line: no-console
-        console.log(`Document has focus: ${document.hasFocus().toString()}`);
-        // tslint:disable-next-line: no-console
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
@@ -400,14 +399,23 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         handleLinkClick(ev, this.props.linkClick);
     };
 
-    private focusPanel = (ev: FocusEvent) => {
+    private focusPanel = (_ev: FocusEvent) => {
         // tslint:disable-next-line: no-console
-        console.log(`Panel was focused with event ${JSON.stringify(ev)}\n`);
+        console.log('Focusing element ', document.activeElement);
     };
 
-    private unfocusPanel = (ev: FocusEvent) => {
-        // tslint:disable-next-line: no-console
-        console.log(`Panel was unfocused with event ${JSON.stringify(ev)}\n`);
+    private unfocusPanel = (_ev: FocusEvent) => {
+        // Attempt to force blur of the active element
+        try {
+            // tslint:disable-next-line: no-console
+            console.log('Attempting to force blur on element ', document.activeElement);
+            (document.activeElement as HTMLElement).blur();
+        } catch (e) {
+            // tslint:disable-next-line: no-console
+            console.log('Failed to force blur on element ', document.activeElement);
+            // tslint:disable-next-line: no-console
+            console.log(e.message);
+        }
     };
 }
 
