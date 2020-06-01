@@ -562,7 +562,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
-    public [InteractiveWindowMessages.VariableExplorerHeightRequest]: never | undefined;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;

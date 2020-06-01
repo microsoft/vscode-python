@@ -76,7 +76,6 @@ export const actionCreators = {
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
     setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
         createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
-    sendVariableExplorerHeightRequest: () => createIncomingAction(CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST),
     expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),
     collapseAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.CollapseAll),
     export: (): CommonAction => createIncomingAction(CommonActionType.EXPORT),

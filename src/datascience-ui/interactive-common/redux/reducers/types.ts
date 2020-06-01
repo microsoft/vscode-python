@@ -95,8 +95,7 @@ export enum CommonActionType {
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
     UNFOCUS_CELL = 'action.unfocus_cell',
-    UNMOUNT = 'action.unmount',
-    VARIABLE_EXPLORER_HEIGHT_REQUEST = 'action.variable_explorer_height_request'
+    UNMOUNT = 'action.unmount'
 }
 
 export type CommonActionTypeMapping = {
@@ -146,7 +145,6 @@ export type CommonActionTypeMapping = {
     [CommonActionType.SELECT_SERVER]: never | undefined;
     [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
-    [CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST]: never | undefined;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
     [CommonActionType.PostOutgoingMessage]: never | undefined;
