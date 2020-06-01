@@ -14,10 +14,6 @@ import { getRandomBetween } from '../common/utils/random';
 // Persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
     ShowBanner = 'ProposeLSBanner',
-    // With MPLSv1 preview user could get the offer to use LS and either
-    // accept or reject it. The state was then saved. With MPLSv2 we need
-    // to clear the state once in order to allow banner to appear again
-    // for both Jedi and MPLSv1 users.
     ReactivatedBannerForV2 = 'ReactivatedBannerForV2'
 }
 
@@ -36,7 +32,6 @@ function enables the popup for this user.
 */
 @injectable()
 export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
-    private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private sampleSizePerHundred: number;
     private bannerMessage: string =
@@ -53,32 +48,8 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         this.initialize();
     }
 
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        // With MPLSv1 preview user could get the offer to use LS and either
-        // accept or reject it. The state was then saved. With MPLSv2 we need
-        // to clear the state once in order to allow banner to appear again
-        // for both Jedi and MPLSv1 users.
-        this.reactivateBannerForLSv2();
-
-        // Don't even bother adding handlers if banner has been turned off.
-        if (!this.enabled) {
-            return;
-        }
-
-        // we only want 10% of folks that use Jedi to see this survey.
-        const randomSample: number = getRandomBetween(0, 100);
-        if (randomSample >= this.sampleSizePerHundred) {
-            this.disable().ignoreErrors();
-            return;
-        }
-    }
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        return this.getStateValue(ProposeLSStateKeys.ShowBanner, true);
     }
 
     public async showBanner(): Promise<void> {
@@ -118,9 +89,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState
-            .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
-            .updateValue(false);
+        this.setStateValue(ProposeLSStateKeys.ShowBanner, false);
     }
 
     public async enableLanguageServer(): Promise<void> {
@@ -132,10 +101,42 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         );
     }
 
-    private reactivateBannerForLSv2(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(
-            ProposeLSStateKeys.ReactivatedBannerForV2,
-            false
-        ).value;
+    private initialize() {
+        this.reactivateBannerForLSv2()
+            .then(() => {
+                // Don't even bother adding handlers if banner has been turned off.
+                if (!this.enabled) {
+                    return;
+                }
+
+                // we only want 10% of folks that use Jedi to see this survey.
+                const randomSample: number = getRandomBetween(0, 100);
+                if (randomSample >= this.sampleSizePerHundred) {
+                    this.disable().ignoreErrors();
+                    return;
+                }
+            })
+            .ignoreErrors();
+    }
+
+    private async reactivateBannerForLSv2(): Promise<void> {
+        // With MPLSv1 preview user could get the offer to use LS and either
+        // accept or reject it. The state was then saved. With MPLSv2 we need
+        // to clear the state once in order to allow banner to appear again
+        // for both Jedi and MPLSv1 users.
+        const reactivatedPopupOnce = this.getStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, false);
+        if (!reactivatedPopupOnce) {
+            // Enable popup once.
+            await this.setStateValue(ProposeLSStateKeys.ShowBanner, true);
+            // Remember we've done it.
+            await this.setStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, true);
+        }
+    }
+
+    private getStateValue(name: string, defaultValue: boolean): boolean {
+        return this.persistentState.createGlobalPersistentState<boolean>(name, defaultValue).value;
+    }
+    private async setStateValue(name: string, value: boolean): Promise<void> {
+        return this.persistentState.createGlobalPersistentState<boolean>(name, value).updateValue(value);
     }
 }
