@@ -20,7 +20,6 @@ suite('Data Science - NativeNotebook helpers', () => {
                     data: {
                         cell_type: 'code',
                         execution_count: 10,
-                        hasExecutionOrder: true,
                         outputs: [],
                         source: 'print(1)',
                         metadata: {}
@@ -33,7 +32,6 @@ suite('Data Science - NativeNotebook helpers', () => {
                 {
                     data: {
                         cell_type: 'markdown',
-                        hasExecutionOrder: false,
                         source: '# HEAD',
                         metadata: {}
                     },
@@ -58,6 +56,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                 metadata: {
                     editable: true,
                     executionOrder: 10,
+                    hasExecutionOrder: true,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: true,
                     custom: {
@@ -73,6 +72,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
+                    hasExecutionOrder: false,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: false,
                     custom: {
