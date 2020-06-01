@@ -52,6 +52,9 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
         ) {
             const ver = appEnv.packageJson[NodeLanguageServerVersionKey] as string;
             this._bundledVersion = semver.parse(ver) || undefined;
+            if (this._bundledVersion === undefined) {
+                traceWarning(`invalid language server version ${ver} in package.json (${NodeLanguageServerVersionKey})`)
+            }
         }
     }
 
@@ -60,7 +63,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
     }
 
     public isBundled(): boolean {
-        return !!this._bundledVersion;
+        return this._bundledVersion !== undefined;
     }
 
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
