@@ -39,8 +39,6 @@ interface IVariableExplorerProps {
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
-    sendVariableExplorerHeightRequest(): void;
-    sendVariableExplorerHeightRequest(): void;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -171,10 +169,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    public componentWillMount() {
-        this.props.sendVariableExplorerHeightRequest();
-    }
-
     public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
@@ -185,6 +179,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return true;
         }
         if (this.state.resized) {
+            // if we have resized the window
             this.setState({ resized: false });
             return true;
         }
@@ -276,7 +271,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private update() {
-        this.setState({ resized: true });
+        this.setState({
+            resized: true
+        });
     }
 
     private saveCurrentSize() {

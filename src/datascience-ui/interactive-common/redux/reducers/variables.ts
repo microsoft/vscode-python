@@ -86,32 +86,38 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     }
 }
 
-function handleVariableExplorerHeightRequest(arg: VariableReducerArg): IVariableState {
-    postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerHeightRequest);
-    return arg.prevState;
+function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
+    const containerHeight = arg.payload.data.containerHeight;
+    const gridHeight = arg.payload.data.gridHeight;
+    if (containerHeight && gridHeight) {
+        return {
+            ...arg.prevState,
+            containerHeight: containerHeight,
+            gridHeight: gridHeight
+        };
+    }
+    return {
+        ...arg.prevState
+    };
 }
 
 function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
     const containerHeight = arg.payload.data.containerHeight;
     const gridHeight = arg.payload.data.gridHeight;
 
-    postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, { containerHeight, gridHeight });
-
+    if (containerHeight && gridHeight) {
+        postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, {
+            containerHeight,
+            gridHeight
+        });
+        return {
+            ...arg.prevState,
+            containerHeight: containerHeight,
+            gridHeight: gridHeight
+        };
+    }
     return {
-        ...arg.prevState,
-        containerHeight: containerHeight,
-        gridHeight: gridHeight
-    };
-}
-
-function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
-    const containerHeight = arg.payload.data.containerHeight;
-    const gridHeight = arg.payload.data.gridHeight;
-
-    return {
-        ...arg.prevState,
-        containerHeight: containerHeight,
-        gridHeight: gridHeight
+        ...arg.prevState
     };
 }
 
@@ -252,7 +258,6 @@ const reducerMap: Partial<VariableActionMapping> = {
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
     [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
-    [CommonActionType.VARIABLE_EXPLORER_HEIGHT_REQUEST]: handleVariableExplorerHeightRequest,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
 };

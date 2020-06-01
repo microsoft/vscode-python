@@ -175,7 +175,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
             setVariableExplorerHeight: this.props.setVariableExplorerHeight,
-            sendVariableExplorerHeightRequest: this.props.sendVariableExplorerHeightRequest,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
