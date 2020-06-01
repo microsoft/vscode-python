@@ -2,6 +2,7 @@ import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { InterpreterInformation } from '../common/process/types';
 import { Resource } from '../common/types';
+import { InterpreterType } from '../pythonEnvironments/discovery/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -71,15 +72,6 @@ export interface ICondaService {
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 
-export enum InterpreterType {
-    Unknown = 'Unknown',
-    Conda = 'Conda',
-    VirtualEnv = 'VirtualEnv',
-    Pipenv = 'PipEnv',
-    Pyenv = 'Pyenv',
-    Venv = 'Venv',
-    WindowsStore = 'WindowsStore'
-}
 export type PythonInterpreter = InterpreterInformation & {
     companyDisplayName?: string;
     displayName?: string;

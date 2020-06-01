@@ -48,9 +48,9 @@ import {
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';

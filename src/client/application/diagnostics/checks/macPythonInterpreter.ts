@@ -17,8 +17,9 @@ import {
     InterpreterConfigurationScope,
     Resource
 } from '../../../common/types';
-import { IInterpreterHelper, IInterpreterService, InterpreterType } from '../../../interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';

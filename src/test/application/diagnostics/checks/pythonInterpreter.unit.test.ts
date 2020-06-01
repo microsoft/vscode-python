@@ -29,8 +29,9 @@ import { CommandsWithoutArgs } from '../../../../client/common/application/comma
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
 import { noop } from '../../../../client/common/utils/misc';
-import { IInterpreterHelper, IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;

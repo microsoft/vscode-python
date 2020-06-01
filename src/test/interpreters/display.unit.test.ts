@@ -22,12 +22,12 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterService,
-    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any max-func-body-length
 

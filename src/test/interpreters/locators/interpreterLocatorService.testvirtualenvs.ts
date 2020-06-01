@@ -10,9 +10,9 @@ import { IRegistry } from '../../../client/common/platform/types';
 import {
     IInterpreterLocatorService,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
     PythonInterpreter
 } from '../../../client/interpreter/contracts';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 import { getOSType, OSType } from '../../common';
 import { TEST_TIMEOUT } from '../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';

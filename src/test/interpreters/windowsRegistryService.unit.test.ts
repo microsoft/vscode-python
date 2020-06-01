@@ -5,10 +5,11 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService, RegistryHive } from '../../client/common/platform/types';
 import { IPathUtils, IPersistentStateFactory } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterHelper, InterpreterType } from '../../client/interpreter/contracts';
+import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { MockRegistry, MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');

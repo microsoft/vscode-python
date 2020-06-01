@@ -16,13 +16,13 @@ import { Architecture } from '../../../client/common/utils/platform';
 import {
     IInterpreterHelper,
     IInterpreterLocatorHelper,
-    InterpreterType,
     PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { PipEnvServiceHelper } from '../../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { IPipEnvServiceHelper } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 
 enum OS {
     Windows = 'Windows',

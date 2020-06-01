@@ -4,15 +4,11 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPersistentStateFactory } from '../../client/common/types';
-import {
-    ICondaService,
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-    InterpreterType
-} from '../../client/interpreter/contracts';
+import { ICondaService, IInterpreterHelper, IInterpreterLocatorService } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { MockState } from './mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');

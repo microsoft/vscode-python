@@ -28,7 +28,8 @@ import {
     IJupyterSessionManagerFactory,
     INotebook
 } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any

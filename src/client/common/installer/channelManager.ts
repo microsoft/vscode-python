@@ -3,8 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { InterpreterType } from '../../pythonEnvironments/discovery/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { Product } from '../types';

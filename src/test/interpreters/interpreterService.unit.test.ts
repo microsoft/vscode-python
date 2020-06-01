@@ -41,7 +41,6 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -49,6 +48,7 @@ import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../..
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 

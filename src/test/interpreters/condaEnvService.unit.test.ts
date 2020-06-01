@@ -3,11 +3,12 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPersistentStateFactory } from '../../client/common/types';
-import { ICondaService, InterpreterType } from '../../client/interpreter/contracts';
+import { ICondaService } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvService, parseCondaInfo } from '../../client/interpreter/locators/services/condaEnvService';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockState } from './mocks';
 

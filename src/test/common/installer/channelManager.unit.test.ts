@@ -11,8 +11,9 @@ import { IModuleInstaller } from '../../../client/common/installer/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Product } from '../../../client/common/types';
 import { Installer } from '../../../client/common/utils/localize';
-import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('InstallationChannelManager - getInstallationChannel()', () => {

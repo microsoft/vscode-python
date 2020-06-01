@@ -125,7 +125,6 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
     PIPENV_SERVICE,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
@@ -134,6 +133,7 @@ import { InterpeterHashProviderFactory } from '../../client/interpreter/locators
 import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';

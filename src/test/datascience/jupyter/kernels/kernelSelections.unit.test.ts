@@ -20,7 +20,7 @@ import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/ty
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { InterpreterSelector } from '../../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
-import { InterpreterType } from '../../../../client/interpreter/contracts';
+import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelSelections', () => {

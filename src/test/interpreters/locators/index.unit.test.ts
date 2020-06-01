@@ -20,7 +20,6 @@ import {
     GLOBAL_VIRTUAL_ENV_SERVICE,
     IInterpreterLocatorHelper,
     IInterpreterLocatorService,
-    InterpreterType,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     PythonInterpreter,
@@ -30,6 +29,7 @@ import {
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IInterpreterFilter } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
