@@ -591,6 +591,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private renameVariableExplorerHeights(name: string, updatedName: string) {
         // Updates the workspace storage to reflect the updated name of the notebook
         // should be called if the name of the notebook changes
+        // tslint:disable-next-line: no-any
         const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
         if (!(name in value)) {
             return; // Nothing to update
