@@ -86,7 +86,7 @@ suite('DataScience - VSCode Notebook - (Execution)', function () {
         assert.ok(execCount, 'Execution count should be > 0');
         assert.equal(execCount, vscCell[0].metadata.executionOrder, 'Execution count should be the same');
     });
-    test('Verify multiple cells get executed', async function () {
+    test('Verify multiple cells get executed', async () => {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
         await insertPythonCellAndWait('print("Hello World")', 1);
         const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
