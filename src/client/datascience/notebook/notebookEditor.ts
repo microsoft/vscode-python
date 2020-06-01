@@ -206,7 +206,7 @@ export class NotebookEditor implements INotebookEditor {
         }
     }
     public dispose() {
-        // Not required.
+        this._closed.fire(this);
     }
     private async restartKernelInternal(notebook: INotebook): Promise<void> {
         this.restartingKernel = true;
