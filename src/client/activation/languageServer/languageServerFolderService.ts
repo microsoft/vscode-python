@@ -10,7 +10,7 @@ import { LanguageServerFolderService } from '../common/languageServerFolderServi
 import { DotNetLanguageServerFolder } from '../types';
 
 // Must match languageServerVersion* keys in package.json
-export const DotNetLanguageServerMinVersionKey = 'languageServerVersionV1';
+export const DotNetLanguageServerMinVersionKey = 'languageServerVersion';
 
 @injectable()
 export class DotNetLanguageServerFolderService extends LanguageServerFolderService {
