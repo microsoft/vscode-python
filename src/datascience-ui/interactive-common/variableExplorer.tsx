@@ -22,7 +22,7 @@ import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 // tslint:disable-next-line: import-name
 import Draggable from 'react-draggable';
 
-import { CommonAction, IVariableExplorerHeight } from './redux/reducers/types';
+import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
@@ -38,7 +38,7 @@ interface IVariableExplorerProps {
     containerHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
-    setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
+    setVariableExplorerHeight(containerHeight: number, gridHeight: number): void;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
@@ -67,7 +67,6 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
-    resized: boolean;
 }
 
 // tslint:disable:no-any
@@ -100,8 +99,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight,
-            resized: false
+            gridHeight: this.props.gridHeight
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
@@ -165,11 +163,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     public componentDidMount() {
         if (this.state.containerHeight === 0) {
             this.setInitialHeight();
-            this.update();
         }
     }
 
-    public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
+    public shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
             this.pageSize = -1;
@@ -178,9 +175,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
             return true;
         }
-        if (this.state.resized) {
-            // if we have resized the window
-            this.setState({ resized: false });
+        if (
+            prevState.containerHeight !== this.state.containerHeight ||
+            prevState.gridHeight !== this.state.gridHeight
+        ) {
             return true;
         }
 
@@ -270,12 +268,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private update() {
-        this.setState({
-            resized: true
-        });
-    }
-
     private saveCurrentSize() {
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
     }
@@ -297,7 +289,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private handleResizeMouseMove(e: any) {
         this.setVariableExplorerHeight(e);
         this.setVariableGridHeight();
-        this.update();
     }
 
     private setVariableExplorerHeight(e: MouseEvent) {

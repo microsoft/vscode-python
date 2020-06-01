@@ -147,7 +147,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
-    private fileName: string = '';
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -231,9 +230,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
         // Save the model we're using
         this.model = model;
-
-        // Save current name of model
-        this.fileName = model.file.toString();
 
         // Indicate we have our identity
         this.loadedPromise.resolve();
@@ -563,12 +559,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
             await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
         }
-        if (change.kind === 'saveAs' && change.model) {
+        if (change.kind === 'saveAs' && change.model && this.model) {
             const newFileName: string = change.model.file.toString();
-            if (newFileName !== this.fileName) {
+            const oldFileName = this.model.file.toString();
+
+            if (newFileName !== oldFileName) {
                 // If the filename has changed
-                this.renameVariableExplorerHeights(this.fileName, newFileName);
-                this.fileName = newFileName;
+                this.renameVariableExplorerHeights(oldFileName, newFileName);
             }
         }
 
