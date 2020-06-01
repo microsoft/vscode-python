@@ -4,10 +4,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
+import { LanguageConfiguration } from 'vscode';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { ICurrentProcess, IExtensions } from '../common/types';
+import { getLanguageConfiguration } from '../language/languageConfiguration';
 import { IThemeFinder } from './types';
 
 // tslint:disable:no-any
@@ -48,6 +50,15 @@ export class ThemeFinder implements IThemeFinder {
             }
         }
         return this.languageCache[language];
+    }
+
+    public async findLanguageConfiguration(language: string): Promise<LanguageConfiguration> {
+        if (language === PYTHON_LANGUAGE) {
+            return getLanguageConfiguration();
+        }
+        return {
+            // Unknown? Can't get this from disk. Comes from the other extensions.
+        };
     }
 
     public async isThemeDark(themeName: string): Promise<boolean | undefined> {

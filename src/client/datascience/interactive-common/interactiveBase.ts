@@ -1137,7 +1137,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: status,
                 localizedUri: this.getServerUri(notebook.connection),
-                displayName: name
+                displayName: name,
+                language: kernelSpec?.language ?? PYTHON_LANGUAGE
             });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);
@@ -1157,7 +1158,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
                 localizedUri: this.getServerUri(serverConnection),
-                displayName: ''
+                displayName: '',
+                language: PYTHON_LANGUAGE
             }).ignoreErrors();
 
             this._notebook = await this.createNotebook(serverConnection);
@@ -1380,17 +1382,20 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     };
 
-    private requestTmLanguage() {
+    private async requestTmLanguage(languageId: string) {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
-        this.themeFinder
-            .findTmLanguage(PYTHON_LANGUAGE)
-            .then((s) => {
-                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
-            })
-            .catch((_e) => {
-                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse).ignoreErrors();
-            });
+        const languageJson = await this.themeFinder.findTmLanguage(languageId);
+        const languageConfiguration = await this.themeFinder.findLanguageConfiguration(languageId);
+        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
+        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
+        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
+            languageJSON: languageJson ?? '',
+            languageConfiguration,
+            extensions,
+            scopeName,
+            languageId
+        }).ignoreErrors();
     }
 
     private async requestOnigasm(): Promise<void> {

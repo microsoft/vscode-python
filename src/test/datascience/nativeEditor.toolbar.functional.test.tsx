@@ -5,6 +5,7 @@ import { assert } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import * as sinon from 'sinon';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { INativeEditorToolbarProps, Toolbar } from '../../datascience-ui/native-editor/toolbar';
@@ -39,7 +40,12 @@ suite('DataScience Native Toolbar', () => {
             export: sinon.stub(),
             font: { family: '', size: 1 },
             interruptKernel: sinon.stub(),
-            kernel: { displayName: '', jupyterServerStatus: ServerStatus.Busy, localizedUri: '' },
+            kernel: {
+                displayName: '',
+                jupyterServerStatus: ServerStatus.Busy,
+                localizedUri: '',
+                language: PYTHON_LANGUAGE
+            },
             restartKernel: sinon.stub(),
             selectKernel: noopAny,
             selectServer: noopAny,

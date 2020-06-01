@@ -14,6 +14,7 @@ import {
     DebugSession,
     Disposable,
     Event,
+    LanguageConfiguration,
     Range,
     TextDocument,
     TextEditor,
@@ -673,6 +674,7 @@ export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string): Promise<string | undefined>;
     findTmLanguage(language: string): Promise<string | undefined>;
+    findLanguageConfiguration(language: string): Promise<LanguageConfiguration | undefined>;
     isThemeDark(themeName: string): Promise<boolean | undefined>;
 }
 

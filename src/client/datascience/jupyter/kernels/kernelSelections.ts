@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';

@@ -85,7 +85,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
@@ -695,7 +695,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
                     localizedUri: '',
-                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name
+                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
+                    language: (metadata.kernelspec.language as string) ?? PYTHON_LANGUAGE
                 }).ignoreErrors();
             }
         }
