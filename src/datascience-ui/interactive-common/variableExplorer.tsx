@@ -277,7 +277,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     private saveCurrentSize() {
-        // uses redux
         this.props.setVariableExplorerHeight(this.state.containerHeight, this.state.gridHeight);
     }
 
