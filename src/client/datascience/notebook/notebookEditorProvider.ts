@@ -217,13 +217,14 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
         }
         this.notebookEditorsByUri.set(uri.toString(), editor);
+        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
-        if (!editor || !this.trackedVSCodeNotebookEditors.has(editor)) {
+        if (!editor || this.trackedVSCodeNotebookEditors.has(editor)) {
             return;
         }
         this.trackedVSCodeNotebookEditors.add(editor);
-        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor.document.uri)));
+        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
     }
     /**
      * We know a notebook editor has been closed.
@@ -231,8 +232,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
      * However we also need to check if there are other notebooks opened, that are associated with this same notebook.
      * I.e. we may have closed a duplicate editor.
      */
-    private async onDidDisposeVSCodeNotebookEditor(uri: Uri) {
-        if (this.vscodeNotebook.notebookEditors.some((item) => item.document.uri.toString() === uri.toString())) {
+    private async onDidDisposeVSCodeNotebookEditor(closedEditor: VSCodeNotebookEditor) {
+        const uri = closedEditor.document.uri;
+        if (
+            this.vscodeNotebook.notebookEditors.some(
+                (item) => item !== closedEditor && item.document.uri.toString() === uri.toString()
+            )
+        ) {
             return;
         }
 

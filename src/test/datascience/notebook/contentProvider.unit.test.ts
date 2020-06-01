@@ -9,6 +9,7 @@ import { Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
+import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
@@ -20,7 +21,8 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
     const fileUri = Uri.file('a.ipynb');
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
-        contentProvider = new NotebookContentProvider(instance(storageProvider));
+        const commandManager = mock<ICommandManager>();
+        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(commandManager));
     });
 
     test('Return notebook with 2 cells', async () => {

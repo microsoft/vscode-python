@@ -5,61 +5,64 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { Uri } from 'vscode';
-import { IApplicationEnvironment, ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IConfigurationService, IDisposable } from '../../../client/common/types';
+import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
+import { IDisposable } from '../../../client/common/types';
+import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi } from '../../common';
+import { createEventHandler, IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
+import { closeActiveWindows, initialize } from '../../initialize';
+import {
+    canRunTests,
+    closeNotebooksAndCleanUpAfterTests,
+    createTemporaryNotebook,
+    swallowSavingOfNotebooks
+} from './helper';
 
 suite('DataScience - VSCode Notebook', function () {
-    // tslint:disable-next-line: no-invalid-this
+    // tslint:disable: no-invalid-this no-any
     this.timeout(5_000);
 
     let api: IExtensionTestApi;
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
-    const testIPynb = Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb'));
+    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
+    let testIPynb: Uri;
     const disposables: IDisposable[] = [];
-    let oldValueFor_disableJupyterAutoStart: undefined | boolean = false;
     suiteSetup(async function () {
         api = await initialize();
-        const appEnv = api.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-        if (appEnv.extensionChannel === 'stable') {
-            // tslint:disable-next-line: no-invalid-this
+        if (!(await canRunTests())) {
             return this.skip();
         }
-        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        oldValueFor_disableJupyterAutoStart = configSettings.getSettings(undefined).datascience.disableJupyterAutoStart;
-    });
-    setup(async () => {
-        await initializeTest();
-        // Reset for tests, do this everytime, as things can change due to config changes etc.
-        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = true;
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
     });
-    teardown(async () => {
-        while (disposables.length) {
-            disposables.pop()?.dispose(); // NOSONAR;
-        }
-        await closeActiveWindows();
+    setup(async () => {
+        sinon.restore();
+        await swallowSavingOfNotebooks();
+
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
     });
-    suiteTeardown(async () => {
-        // Restore.
-        const configSettings = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        configSettings.getSettings(undefined).datascience.disableJupyterAutoStart = oldValueFor_disableJupyterAutoStart;
-        await closeActiveWindows();
-    });
+    teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(closeActiveWindows);
 
     test('Create empty notebook', async () => {
         const editor = await editorProvider.createNew();
 
         assert.isOk(editor);
+        assert.instanceOf(editor, NotebookEditor);
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
+    });
+    test('Create empty notebook using command', async () => {
+        await commandManager.executeCommand('python.datascience.createnewnotebook');
+
+        assert.isOk(vscodeNotebook.activeNotebookEditor);
     });
     test('Create empty notebook and we have active editor', async () => {
         assert.isUndefined(editorProvider.activeEditor);
@@ -79,26 +82,23 @@ suite('DataScience - VSCode Notebook', function () {
     });
 
     test('Create empty notebook will fire necessary events', async () => {
-        let notebookOpened = false;
-        let activeNotebookChanged = false;
-        editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
-        editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
+        const notebookOpened = createEventHandler(editorProvider, 'onDidChangeActiveNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
 
         await editorProvider.createNew();
 
-        assert.isTrue(notebookOpened);
-        assert.isTrue(activeNotebookChanged);
+        await notebookOpened.assertFired();
+        await activeNotebookChanged.assertFired();
     });
     test('Closing a notebook will fire necessary events and clear state', async () => {
-        let notebookClosed = false;
-        editorProvider.onDidCloseNotebookEditor(() => (notebookClosed = true), undefined, disposables);
+        const notebookClosed = createEventHandler(editorProvider, 'onDidCloseNotebookEditor', disposables);
 
         await editorProvider.createNew();
         await closeActiveWindows();
 
         assert.isUndefined(editorProvider.activeEditor);
         assert.equal(editorProvider.editors.length, 0);
-        assert.isTrue(notebookClosed);
+        await notebookClosed.assertFired();
     });
     test('Open a notebook using our API', async () => {
         const editor = await editorProvider.open(testIPynb);
@@ -122,15 +122,13 @@ suite('DataScience - VSCode Notebook', function () {
         assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), editor.file.fsPath.toLowerCase());
     });
     test('Open a notebook using our API will fire necessary events', async () => {
-        let notebookOpened = false;
-        let activeNotebookChanged = false;
-        editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
-        editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
+        const notebookOpened = createEventHandler(editorProvider, 'onDidChangeActiveNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
 
         await editorProvider.open(testIPynb);
 
-        assert.isTrue(notebookOpened);
-        assert.isTrue(activeNotebookChanged);
+        await notebookOpened.assertFired();
+        await activeNotebookChanged.assertFired();
     });
     test('Open a notebook using VS Code API', async () => {
         assert.isUndefined(editorProvider.activeEditor);
@@ -201,22 +199,18 @@ suite('DataScience - VSCode Notebook', function () {
         );
     });
     test('Active Notebook Editor event gets fired when opening multiple notebooks', async () => {
-        let notebookOpened = false;
-        let activeNotebookChanged = false;
-        editorProvider.onDidChangeActiveNotebookEditor(() => (activeNotebookChanged = true), undefined, disposables);
-        editorProvider.onDidOpenNotebookEditor(() => (notebookOpened = true), undefined, disposables);
+        const notebookOpened = createEventHandler(editorProvider, 'onDidChangeActiveNotebookEditor', disposables);
+        const activeNotebookChanged = createEventHandler(editorProvider, 'onDidOpenNotebookEditor', disposables);
 
         await editorProvider.createNew();
 
-        assert.isTrue(notebookOpened);
-        assert.isTrue(activeNotebookChanged);
+        await notebookOpened.assertFiredExactly(1);
+        await activeNotebookChanged.assertFiredExactly(1);
 
-        // Clear and open another notebook.
-        notebookOpened = false;
-        activeNotebookChanged = false;
+        // Open another notebook.
         await commandManager.executeCommand('vscode.open', testIPynb);
 
-        assert.isTrue(notebookOpened);
-        assert.isTrue(activeNotebookChanged);
+        await notebookOpened.assertFiredExactly(2);
+        await activeNotebookChanged.assertFiredExactly(2);
     });
 });

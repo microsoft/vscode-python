@@ -29,7 +29,6 @@ export function findMappedNotebookCellData(source: ICell, cells: NotebookCell[])
 export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
     // If so, then we have a problem.
     const found = cells.filter((cell) => cell.id === source.metadata.custom?.cellId);
-
     assert.ok(found.length, `ICell not found, for CellId = ${source.metadata.custom?.cellId} in ${source}`);
 
     return found[0];
@@ -64,6 +63,18 @@ export function monitorModelCellOutputChangesAndUpdateNotebookDocument(
                 disposable.dispose();
                 return;
             }
+        }
+        // We're only interested in updates to cells (output or execution count).
+        if (change.kind === 'updateCellExecutionCount') {
+            const cell = model.cells.find((item) => item.id === change.cellId);
+            if (!cell) {
+                return;
+            }
+            const uiCellToUpdate = findMappedNotebookCellData(cell, document.cells);
+            if (uiCellToUpdate) {
+                uiCellToUpdate.metadata.executionOrder = change.executionCount;
+            }
+            return;
         }
         // We're only interested in updates to cells.
         if (change.kind !== 'modify') {
