@@ -4,6 +4,8 @@ import { inject, injectable } from 'inversify';
 
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
+import protocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
+import ProtocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -48,11 +50,12 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
         const languageClient = this.getLanguageClient();
 
         if (languageClient) {
-            // tslint:disable-next-line: no-any
-            const data = (item as any).data;
-            const args = languageClient.code2ProtocolConverter.asCompletionItem(item);
-            // tslint:disable-next-line: no-any
-            (args as any).data = data;
+            // Turn our item into a ProtocolCompletionItem before we convert it. This preserves the .data
+            // attribute that it has and is needed to match on the language server side.
+            const protoItem: ProtocolCompletionItem = new ProtocolCompletionItem(item.label);
+            Object.assign(protoItem, item);
+
+            const args = languageClient.code2ProtocolConverter.asCompletionItem(protoItem);
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.CompletionResolveRequest.type,
                 args,
@@ -60,25 +63,8 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             );
 
             if (result) {
-                //return languageClient.protocol2CodeConverter.asCompletionResult(result);
                 return languageClient.protocol2CodeConverter.asCompletionItem(result);
             }
         }
     }
-
-    //private async handleProvideCompletionItems(
-    //document: TextDocument,
-    //position: Position,
-    //token: CancellationToken,
-    //context: CompletionContext
-    //): Promise<CompletionItem[] | CompletionList | undefined> {
-    //const languageClient = this.getLanguageClient();
-    //if (languageClient) {
-    //const args = languageClient.code2ProtocolConverter.asCompletionParams(document, position, context);
-    //const result = await languageClient.sendRequest(vscodeLanguageClient.CompletionRequest.type, args, token);
-    //if (result) {
-    //return languageClient.protocol2CodeConverter.asCompletionResult(result);
-    //}
-    //}
-    //}
 }
