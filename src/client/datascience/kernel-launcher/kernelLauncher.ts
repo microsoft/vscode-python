@@ -6,7 +6,6 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
@@ -27,7 +26,6 @@ export class KernelLauncher implements IKernelLauncher {
     private static nextFreePortToTryAndUse = PortToStartFrom;
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
-        @inject(IFileSystem) private file: IFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool
     ) {}
 
@@ -40,7 +38,6 @@ export class KernelLauncher implements IKernelLauncher {
         const connection = await this.getKernelConnection();
         const kernelProcess = new KernelProcess(
             this.processExecutionFactory,
-            this.file,
             this.daemonPool,
             connection,
             kernelSpec,

@@ -147,7 +147,7 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
     });
     return {
         ...result,
-        currentExecutionCount: 0,
+        currentExecutionCount: -1,
         variables: []
     };
 }

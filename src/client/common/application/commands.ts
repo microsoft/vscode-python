@@ -29,6 +29,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
+    ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
@@ -72,6 +73,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
+    [Commands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
 }
 
@@ -83,6 +85,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['setContext']: [string, boolean];
     ['python.reloadVSCode']: [string];
@@ -90,10 +93,16 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
+    ['notebook.execute']: [];
+    ['notebook.cell.execute']: [];
+    ['notebook.cell.insertCodeCellBelow']: [];
+    ['notebook.undo']: [];
+    ['notebook.redo']: [];
     ['python.viewLanguageServerOutput']: [];
     ['vscode.open']: [Uri];
     ['workbench.action.files.saveAs']: [Uri];
     ['workbench.action.files.save']: [Uri];
+    [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];

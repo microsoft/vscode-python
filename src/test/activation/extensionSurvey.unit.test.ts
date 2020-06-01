@@ -9,7 +9,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
 import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
-import { ShowExtensionSurveyPrompt } from '../../client/common/experimentGroups';
+import { ShowExtensionSurveyPrompt } from '../../client/common/experiments/groups';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
 import {
@@ -227,7 +227,7 @@ suite('Extension survey prompt - showSurvey()', () => {
             version: 'extensionVersion'
         };
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=machineId`;
+        const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=sessionId`;
         appEnvironment
             .setup((a) => a.packageJson)
             .returns(() => packageJson)
@@ -237,8 +237,8 @@ suite('Extension survey prompt - showSurvey()', () => {
             .returns(() => 'vscodeVersion')
             .verifiable(TypeMoq.Times.once());
         appEnvironment
-            .setup((a) => a.machineId)
-            .returns(() => 'machineId')
+            .setup((a) => a.sessionId)
+            .returns(() => 'sessionId')
             .verifiable(TypeMoq.Times.once());
         platformService
             .setup((a) => a.osType)

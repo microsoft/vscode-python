@@ -22,7 +22,6 @@ import {
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import '../../../client/common/extensions';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -52,9 +51,7 @@ import {
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
-const isolated = path
-    .join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py')
-    .fileToCommandArgument();
+const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.

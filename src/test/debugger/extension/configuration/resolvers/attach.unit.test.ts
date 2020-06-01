@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { DebugAdapterNewPtvsd } from '../../../../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../../../client/common/experiments/groups';
 import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../../../../client/common/types';
 import { Diagnostics } from '../../../../../client/common/utils/localize';

@@ -142,10 +142,12 @@ export async function run(): Promise<void> {
         reactHelpers.setUpDomEnvironment();
     }
 
+    // Ignore `ds.test.js` test files when running other tests.
+    const ignoreGlob = options.testFilesSuffix.toLowerCase() === 'ds.test' ? [] : ['**/**.ds.test.js'];
     const testFiles = await new Promise<string[]>((resolve, reject) => {
         glob(
             `**/**.${options.testFilesSuffix}.js`,
-            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot },
+            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {
                     return reject(error);

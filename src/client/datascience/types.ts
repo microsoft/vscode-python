@@ -133,18 +133,24 @@ export interface INotebookServer extends IAsyncDisposable {
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri, cancelToken?: CancellationToken): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     shutdown(): Promise<void>;
 }
 
+// Provides a service to determine if raw notebook is supported or not
+export const IRawNotebookSupportedService = Symbol('IRawNotebookSupportedService');
+export interface IRawNotebookSupportedService {
+    supported(): Promise<boolean>;
+}
+
 // Provides notebooks that talk directly to kernels as opposed to a jupyter server
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
-    connect(): Promise<IRawConnection>;
+    connect(token?: CancellationToken): Promise<IRawConnection>;
     createNotebook(
         identity: Uri,
         resource: Resource,
@@ -152,7 +158,7 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(identity: Uri): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri, token?: CancellationToken): Promise<INotebook | undefined>;
 }
 
 // Provides notebooks that talk to jupyter servers
@@ -233,6 +239,7 @@ export type ConnectNotebookProviderOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
+    token?: CancellationToken;
 };
 
 export interface INotebookServerOptions {
@@ -248,7 +255,7 @@ export interface INotebookServerOptions {
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
-export interface INotebookExecutionLogger {
+export interface INotebookExecutionLogger extends IDisposable {
     preExecute(cell: ICell, silent: boolean): Promise<void>;
     postExecute(cell: ICell, silent: boolean): Promise<void>;
     onKernelRestarted(): void;
@@ -784,7 +791,11 @@ export interface IJupyterVariables {
         start: number,
         end: number
     ): Promise<JSONObject>;
-    getMatchingVariableValue(notebook: INotebook, name: string): Promise<string | undefined>;
+    getMatchingVariable(
+        notebook: INotebook,
+        name: string,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterVariable | undefined>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -988,26 +999,38 @@ export interface IJupyterInterpreterDependencyManager {
 }
 
 export interface INotebookModel {
+    readonly indentAmount: string;
+    readonly onDidDispose: Event<void>;
     readonly file: Uri;
     readonly isDirty: boolean;
     readonly isUntitled: boolean;
     readonly changed: Event<NotebookModelChange>;
-    readonly cells: ICell[];
-    getJson(): Promise<Partial<nbformat.INotebookContent>>;
-    getContent(cells?: ICell[]): Promise<string>;
+    readonly cells: Readonly<ICell>[];
+    readonly onDidEdit: Event<NotebookModelChange>;
+    readonly isDisposed: boolean;
+    readonly metadata: nbformat.INotebookMetadata | undefined;
+    getContent(): string;
+    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
+    clone(file: Uri): INotebookModel;
+    /**
+     * Dispose of the Notebook model.
+     *
+     * This is invoked when there are no more references to a given `NotebookModel` (for example when
+     * all editors associated with the document have been closed.)
+     */
+    dispose(): void;
 }
 
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
-    readonly onDidEdit: Event<NotebookModelChange>;
-    save(cancellation: CancellationToken): Thenable<void>;
-    saveAs(targetResource: Uri): Thenable<void>;
-    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    backup(cancellation: CancellationToken): Thenable<void>;
-    load(file: Uri, contents?: string): Promise<INotebookModel>;
+    readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
+    save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
+    backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
@@ -1021,16 +1044,19 @@ export type GetServerOptions = {
     getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
+    token?: CancellationToken;
 };
 
 /**
  * Options for getting a notebook
  */
 export type GetNotebookOptions = {
+    resource?: Uri;
     identity: Uri;
     getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
+    token?: CancellationToken;
 };
 
 export interface INotebookProvider {
@@ -1055,7 +1081,7 @@ export interface INotebookProvider {
     /**
      * Disconnect from a notebook provider connection
      */
-    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
+    disconnect(options: ConnectNotebookProviderOptions, cancelToken?: CancellationToken): Promise<void>;
 }
 
 export const IJupyterServerProvider = Symbol('IJupyterServerProvider');

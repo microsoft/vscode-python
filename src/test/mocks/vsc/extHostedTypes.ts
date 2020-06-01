@@ -16,6 +16,23 @@ import { vscUri } from './uri';
 import { generateUuid } from './uuid';
 
 export namespace vscMockExtHostedTypes {
+    export enum CellKind {
+        Markdown = 1,
+        Code = 2
+    }
+
+    export enum CellOutputKind {
+        Text = 1,
+        Error = 2,
+        Rich = 3
+    }
+    export enum NotebookCellRunState {
+        Running = 1,
+        Idle = 2,
+        Success = 3,
+        Error = 4
+    }
+
     export interface IRelativePattern {
         base: string;
         pattern: string;

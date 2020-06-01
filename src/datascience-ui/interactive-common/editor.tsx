@@ -57,6 +57,7 @@ export class Editor extends React.Component<IEditorProps> {
     private lastCleanVersionId: number = 0;
     private monacoRef: React.RefObject<MonacoEditor> = React.createRef<MonacoEditor>();
     private modelRef: monacoEditor.editor.ITextModel | null = null;
+    private editorRef: monacoEditor.editor.IStandaloneCodeEditor | null = null;
     private decorationIds: string[] = [];
 
     constructor(prop: IEditorProps) {
@@ -75,6 +76,9 @@ export class Editor extends React.Component<IEditorProps> {
                     this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, newDecorations);
                 } else if (this.decorationIds.length) {
                     this.decorationIds = this.modelRef.deltaDecorations(this.decorationIds, []);
+                }
+                if (this.editorRef && this.props.ipLocation) {
+                    this.editorRef.setPosition({ lineNumber: this.props.ipLocation, column: 1 });
                 }
             }
         }
@@ -176,6 +180,7 @@ export class Editor extends React.Component<IEditorProps> {
     };
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+        this.editorRef = editor;
         const model = editor.getModel();
         this.modelRef = model;
 

@@ -20,10 +20,10 @@ export async function updateSetting(setting: string, value: any) {
         .update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 export async function removeLanguageServerFiles() {
-    const folders = await getLanaguageServerFolders();
+    const folders = await getLanguageServerFolders();
     await Promise.all(folders.map((item) => fs.remove(item).catch(noop)));
 }
-async function getLanaguageServerFolders(): Promise<string[]> {
+async function getLanguageServerFolders(): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
         glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
             ex ? reject(ex) : resolve(matches.map((item) => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
@@ -33,13 +33,13 @@ async function getLanaguageServerFolders(): Promise<string[]> {
 export function isJediEnabled() {
     const resource = vscode.workspace.workspaceFolders![0].uri;
     const settings = vscode.workspace.getConfiguration('python', resource);
-    return settings.get<boolean>('jediEnabled') === true;
+    return settings.get<string>('languageServer') === 'Jedi';
 }
 export async function enableJedi(enable: boolean | undefined) {
     if (isJediEnabled() === enable) {
         return;
     }
-    await updateSetting('jediEnabled', enable);
+    await updateSetting('languageServer', 'Jedi');
 }
 export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDocument> {
     const textDocument = await vscode.workspace.openTextDocument(file);

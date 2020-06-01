@@ -14,7 +14,8 @@
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*"
+                "${workspaceFolder}/out/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -24,7 +25,7 @@
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
-                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE" : "1",
+                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_PYTHON_LOG_TELEMETRY": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
@@ -43,7 +44,8 @@
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*"
+                "${workspaceFolder}/out/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Inject DS WebBrowser UI",
             "env": {
@@ -66,7 +68,8 @@
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*"
+                "${workspaceFolder}/out/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile"
         },
@@ -99,7 +102,8 @@
             ],
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/client/**/*.js"
+                "${workspaceFolder}/out/client/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Compile",
@@ -122,7 +126,8 @@
             "sourceMaps": true,
             "smartStep": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*"
+                "${workspaceFolder}/out/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "env": {
@@ -151,7 +156,8 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -175,7 +181,36 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Tests (DataScience, *.ds.test.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/test",
+                "--disable-extensions",
+                "--enable-proposed-api",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
+                "TEST_FILES_SUFFIX": "ds.test"
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -197,7 +232,8 @@
             "sourceMaps": true,
             "smartStep": true,
             "outFiles": [
-                "${workspaceFolder}/out/**/*"
+                "${workspaceFolder}/out/**/*",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -221,7 +257,8 @@
                 "--timeout=300000"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -246,7 +283,8 @@
                 "--fast"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -271,7 +309,7 @@
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
-                "xVSC_PYTHON_DS_UI_BROWSER": "1",
+                "XVSC_PYTHON_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
                 "XVSCODE_PYTHON_ROLLING": "1",
                 // Remove 'X' to turn on all logging in the debug output
@@ -282,7 +320,8 @@
                 "XDEBUGPY_LOG_DIR": "${workspaceRoot}/tmp/Debug_Output"
             },
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [
@@ -317,7 +356,8 @@
                 "XCI_PYTHON_PATH": "<Python Path>"
             },
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js",
+                "!${workspaceFolder}/**/node_modules**/*"
             ],
             "preLaunchTask": "Compile",
             "skipFiles": [

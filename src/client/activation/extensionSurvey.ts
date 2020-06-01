@@ -6,7 +6,7 @@
 import { inject, injectable, optional } from 'inversify';
 import * as querystring from 'querystring';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
-import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
+import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
@@ -114,7 +114,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
             o: encodeURIComponent(this.platformService.osType), // platform
             v: encodeURIComponent(this.appEnvironment.vscodeVersion),
             e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
-            m: encodeURIComponent(this.appEnvironment.machineId)
+            m: encodeURIComponent(this.appEnvironment.sessionId)
         });
         const url = `https://aka.ms/AA5rjx5?${query}`;
         this.browserService.launch(url);

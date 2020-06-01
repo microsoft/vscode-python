@@ -91,7 +91,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         if (!debugConfiguration) {
             return;
         }
-        if (debugConfiguration.pythonPath === '${config:python.interpreterPath}' || !debugConfiguration.pythonPath) {
+        if (debugConfiguration.pythonPath === '${command:python.interpreterPath}' || !debugConfiguration.pythonPath) {
             const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = pythonPath;
             this.pythonPathSource = PythonPathSource.settingsJson;

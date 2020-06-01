@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="32" height="32">
+  <path style="fill: #C5C5C5 !important; fill-rule: evenodd !important; clip-rule: evenodd !important" d="M1408 384v384H640V384h768zm-128 256V512H768v128h512zM128 0h1664v2048H128v-384H0v-128h128v-256H0v-128h128V896H0V768h128V512H0V384h128V0zm1536 1920V128H256v256h128v128H256v256h128v128H256v256h128v128H256v256h128v128H256v256h1408z" />
+</svg>

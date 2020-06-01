@@ -218,6 +218,31 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         fs.verifyAll();
     });
 
+    test('Should return ConfigPythonPathDiagnostic if file launch.json contains string "{config:python.interpreterPath}"', async () => {
+        const fileContents = 'Hello I am launch.json, I contain string {config:python.interpreterPath}';
+        workspaceService
+            .setup((w) => w.hasWorkspaceFolders)
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        workspaceService
+            .setup((w) => w.workspaceFolders)
+            .returns(() => [workspaceFolder])
+            .verifiable(TypeMoq.Times.once());
+        fs.setup((w) => w.fileExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+        fs.setup((w) => w.readFile(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(fileContents))
+            .verifiable(TypeMoq.Times.once());
+        const diagnostics = await diagnosticService.diagnose(undefined);
+        expect(diagnostics).to.be.deep.equal(
+            [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.ConfigPythonPathDiagnostic, undefined, false)],
+            'Diagnostics returned are not as expected'
+        );
+        workspaceService.verifyAll();
+        fs.verifyAll();
+    });
+
     test('Should return both diagnostics if file launch.json contains string "debugStdLib" and  "pythonExperimental"', async () => {
         const fileContents = 'Hello I am launch.json, I contain both "debugStdLib" and "pythonExperimental"';
         workspaceService
@@ -471,8 +496,9 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('File launch.json is fixed correctly when code equals ConfigPythonPathDiagnostic ', async () => {
-        const launchJson = 'This string contains {config:python.pythonPath}';
-        const correctedlaunchJson = 'This string contains {config:python.interpreterPath}';
+        const launchJson = 'This string contains {config:python.pythonPath} & {config:python.interpreterPath}';
+        const correctedlaunchJson =
+            'This string contains {command:python.interpreterPath} & {command:python.interpreterPath}';
         workspaceService
             .setup((w) => w.hasWorkspaceFolders)
             .returns(() => true)

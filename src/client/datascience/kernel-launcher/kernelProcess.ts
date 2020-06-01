@@ -4,10 +4,10 @@
 
 import { ChildProcess } from 'child_process';
 import * as tcpPortUsed from 'tcp-port-used';
+import * as tmp from 'tmp';
 import { Event, EventEmitter } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IProcessServiceFactory, ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop, swallowExceptions } from '../../common/utils/misc';
@@ -39,7 +39,6 @@ export class KernelProcess implements IKernelProcess {
         return this.kernelSpec.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase();
     }
     private _process?: ChildProcess;
-    private connectionFile?: TemporaryFile;
     private exitEvent = new EventEmitter<{ exitCode?: number; reason?: string }>();
     private pythonKernelLauncher?: PythonKernelLauncherDaemon;
     private launchedOnce?: boolean;
@@ -49,7 +48,6 @@ export class KernelProcess implements IKernelProcess {
     private readonly originalKernelSpec: IJupyterKernelSpec;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
-        private readonly file: IFileSystem,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec,
@@ -72,7 +70,8 @@ export class KernelProcess implements IKernelProcess {
         }
         this.launchedOnce = true;
 
-        await this.createAndUpdateConnectionFile();
+        // Update our connection arguments in the kernel spec
+        this.updateConnectionArgs();
 
         const exeObs = await this.launchAsObservable();
 
@@ -127,7 +126,6 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire();
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
-        swallowExceptions(() => this.connectionFile?.dispose());
     }
 
     // Make sure that the heartbeat channel is open for connections
@@ -144,19 +142,53 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
-    private async createAndUpdateConnectionFile() {
-        this.connectionFile = await this.file.createTemporaryFile('.json');
-        await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
-            encoding: 'utf-8',
-            flag: 'w'
-        });
-
-        // Update the args in the kernelspec to include the conenction file.
+    // Instead of having to use a connection file update our local copy of the kernelspec to launch
+    // directly with command line arguments
+    private updateConnectionArgs() {
+        // First check to see if we have a kernelspec that expects a connection file,
+        // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
         const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
-        if (indexOfConnectionFile === -1) {
+        if (
+            indexOfConnectionFile === -1 ||
+            indexOfConnectionFile === 0 ||
+            this._kernelSpec.argv[indexOfConnectionFile - 1] !== '-f'
+        ) {
             throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
         }
-        this._kernelSpec.argv[indexOfConnectionFile] = this.connectionFile.filePath;
+
+        // Slice out -f and the connection file from the args
+        this._kernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
+
+        // Add in our connection command line args
+        this._kernelSpec.argv.push(...this.addConnectionArgs());
+    }
+
+    // Add the command line arguments
+    private addConnectionArgs(): string[] {
+        const newConnectionArgs: string[] = [];
+
+        newConnectionArgs.push(`--ip=${this._connection.ip}`);
+        newConnectionArgs.push(`--stdin=${this._connection.stdin_port}`);
+        newConnectionArgs.push(`--control=${this._connection.control_port}`);
+        newConnectionArgs.push(`--hb=${this._connection.hb_port}`);
+        newConnectionArgs.push(`--Session.signature_scheme="${this._connection.signature_scheme}"`);
+        newConnectionArgs.push(`--Session.key=b"${this._connection.key}"`); // Note we need the 'b here at the start for a byte string
+        newConnectionArgs.push(`--shell=${this._connection.shell_port}`);
+        newConnectionArgs.push(`--transport="${this._connection.transport}"`);
+        newConnectionArgs.push(`--iopub=${this._connection.iopub_port}`);
+
+        // Turn this on if you get desparate. It can cause crashes though as the
+        // logging code isn't that robust.
+        // if (isTestExecution()) {
+        //     // Extra logging for tests
+        //     newConnectionArgs.push(`--log-level=10`);
+        // }
+
+        // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
+        // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
+        newConnectionArgs.push(`--f=${tmp.tmpNameSync({ postfix: '.json' })}`);
+
+        return newConnectionArgs;
     }
 
     private async launchAsObservable() {

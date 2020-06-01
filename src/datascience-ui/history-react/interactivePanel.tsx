@@ -19,6 +19,8 @@ import { InteractiveCellComponent } from './interactiveCell';
 import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
+// tslint:disable: no-suspicious-comment
+
 export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
@@ -27,6 +29,7 @@ function mapStateToProps(state: IStore): IMainWithVariables {
 
 export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private mainPanelToolbarRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
@@ -64,7 +67,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                     <style>{`${this.props.rootCss ? this.props.rootCss : ''}
 ${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
-                <header id="main-panel-toolbar">
+                <header id="main-panel-toolbar" ref={this.mainPanelToolbarRef}>
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
@@ -257,8 +260,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     <InteractiveCellComponent
                         role="form"
                         editorOptions={this.props.editorOptions}
-                        maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
-                        enableScroll={this.props.settings.enableScrollingForCellOutputs}
+                        maxTextSize={undefined}
+                        enableScroll={false}
                         autoFocus={document.hasFocus()}
                         testMode={this.props.testMode}
                         cellVM={this.props.editCellVM}
@@ -298,6 +301,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+        let toolbarHeight = 0;
+        if (this.mainPanelToolbarRef.current) {
+            toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
+        }
         return {
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
@@ -310,6 +317,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
                     ? this.props.settings.variableOptions.enableDuringDebugger
@@ -326,6 +334,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         _index: number,
         containerRef?: React.RefObject<HTMLDivElement>
     ): JSX.Element | null => {
+        // Note: MaxOutputSize and enableScrollingForCellOutputs is being ignored on purpose for
+        // the interactive window. See bug: https://github.com/microsoft/vscode-python/issues/11421
         if (this.props.settings && this.props.editorOptions) {
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
@@ -333,8 +343,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
-                            maxTextSize={this.getMaxTextSize(this.props.settings.maxOutputSize)}
-                            enableScroll={this.props.settings.enableScrollingForCellOutputs}
+                            maxTextSize={undefined}
+                            enableScroll={false}
                             autoFocus={false}
                             testMode={this.props.testMode}
                             cellVM={cellVM}
@@ -383,11 +393,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private linkClick = (ev: MouseEvent) => {
         handleLinkClick(ev, this.props.linkClick);
     };
-
-    private getMaxTextSize(maxOutputSize: number): number | undefined {
-        const outputSizeLimit = 10000;
-        return maxOutputSize && maxOutputSize < outputSizeLimit && maxOutputSize > 0 ? maxOutputSize : undefined;
-    }
 }
 
 // Main export, return a redux connected editor

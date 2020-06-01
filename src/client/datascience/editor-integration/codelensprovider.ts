@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
@@ -28,7 +28,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IVSCodeNotebook) private readonly vsCodeNotebook: IVSCodeNotebook
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
@@ -53,6 +54,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
+        if (this.vsCodeNotebook.activeNotebookEditor) {
+            return [];
+        }
         // Get the list of code lens for this document.
         return this.getCodeLensTimed(document);
     }

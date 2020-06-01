@@ -18,6 +18,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { IDataScienceErrorHandler, INotebookEditor } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
+import { INotebookStorageProvider } from './notebookStorageProvider';
 
 @injectable()
 export class NativeEditorProviderOld extends NativeEditorProvider {
@@ -42,9 +43,10 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookStorageProvider) storage: INotebookStorageProvider
     ) {
-        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService);
+        super(serviceContainer, asyncRegistry, disposables, workspace, configuration, customEditorService, storage);
 
         // No live share sync required as open document from vscode will give us our contents.
 
@@ -235,7 +237,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // Look for other editors with the same file name that have a scheme of file/git and same viewcolumn.
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             (editorUri) =>
-                (editorUri.document.uri.scheme === 'file' || editorUri.document.uri.scheme === 'git') &&
                 editorUri !== gitSchemeEditor &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
@@ -249,9 +250,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         return gitSchemeEditor === editor || fileSchemeEditor === editor;
     }
     private isNotebook(document: TextDocument) {
-        // Only support file uris (we don't want to automatically open any other ipynb file from another resource as a notebook).
-        // E.g. when opening a document for comparison, the scheme is `git`, in live share the scheme is `vsls`.
-        const validUriScheme = document.uri.scheme === 'file' || document.uri.scheme === 'vsls';
+        // Skip opening anything from git as we should use the git viewer.
+        const validUriScheme = document.uri.scheme !== 'git';
         return (
             validUriScheme &&
             (document.languageId === JUPYTER_LANGUAGE ||

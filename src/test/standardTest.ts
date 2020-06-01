@@ -13,14 +13,18 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
+const channel = (process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')
+    ? 'insiders'
+    : 'stable';
+
 function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
     runTests({
         extensionDevelopmentPath: extensionDevelopmentPath,
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
-        launchArgs: [workspacePath],
-        version: 'stable',
+        launchArgs: [workspacePath].concat(channel === 'insiders' ? ['--enable-proposed-api'] : []),
+        version: channel,
         extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' }
     }).catch((ex) => {
         console.error('End Standard tests (with errors)', ex);

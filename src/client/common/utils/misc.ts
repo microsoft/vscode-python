@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Uri } from 'vscode';
+import type { Uri } from 'vscode';
 import { InterpreterUri } from '../installer/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../types';
 

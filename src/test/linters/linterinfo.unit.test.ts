@@ -7,55 +7,58 @@
 
 import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
+import { LanguageServerType } from '../../client/activation/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PylintLinterInfo } from '../../client/linters/linterInfo';
 
 suite('Linter Info - Pylint', () => {
-    test('Test disabled when Pylint is explicitly disabled', async () => {
-        const config = mock(ConfigurationService);
-        const workspaceService = mock(WorkspaceService);
-        const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
+    const workspace = mock(WorkspaceService);
+    const config = mock(ConfigurationService);
 
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: false } } as any);
+    test('Test disabled when Pylint is explicitly disabled', async () => {
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
+
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: false },
+            languageServer: LanguageServerType.Jedi
+        } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
     test('Test disabled when Jedi is enabled and Pylint is explicitly disabled', async () => {
-        const config = mock(ConfigurationService);
-        const workspaceService = mock(WorkspaceService);
-        const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
-            jediEnabled: true
+            languageServer: LanguageServerType.Jedi
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
     test('Test enabled when Jedi is enabled and Pylint is explicitly enabled', async () => {
-        const config = mock(ConfigurationService);
-        const workspaceService = mock(WorkspaceService);
-        const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: true } as any);
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: true },
+            languageServer: LanguageServerType.Jedi
+        } as any);
 
         expect(linterInfo.isEnabled()).to.be.true;
     });
     test('Test disabled when using Language Server and Pylint is not configured', async () => {
-        const config = mock(ConfigurationService);
-        const workspaceService = mock(WorkspaceService);
-        const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
 
-        const inspection = {};
-        const pythonConfig = {
-            inspect: () => inspection
-        };
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            jediEnabled: false
+            languageServer: LanguageServerType.Microsoft
         } as any);
-        when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+
+        const pythonConfig = {
+            // tslint:disable-next-line:no-empty
+            inspect: () => {}
+        };
+        when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
@@ -77,6 +80,7 @@ suite('Linter Info - Pylint', () => {
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
         testsForisEnabled.forEach((testParams) => {
             test(testParams.testName, async () => {
+                // tslint:disable-next-line:no-shadowed-variable
                 const config = mock(ConfigurationService);
                 const workspaceService = mock(WorkspaceService);
                 const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
@@ -86,7 +90,7 @@ suite('Linter Info - Pylint', () => {
                 };
                 when(config.getSettings(anything())).thenReturn({
                     linting: { pylintEnabled: true },
-                    jediEnabled: false
+                    languageServer: LanguageServerType.Microsoft
                 } as any);
                 when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 

@@ -10,7 +10,7 @@ import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
 import { BasePythonDaemon } from './baseDaemon';
 import {
-    InterpreterInfomation,
+    InterpreterInformation,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
@@ -41,7 +41,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     ) {
         super(pythonExecutionService, pythonPath, proc, connection);
     }
-    public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
+    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
             type InterpreterInfoResponse = ErrorResponse & {

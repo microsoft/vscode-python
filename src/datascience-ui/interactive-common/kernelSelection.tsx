@@ -96,9 +96,9 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             : ImageName.JupyterServerConnected;
     }
 
-    private getMaxWidth(charLenght: number): string {
+    private getMaxWidth(charLength: number): string {
         // This comes from a linear regression
-        const width = 0.57674 * charLenght + 1.70473;
+        const width = 0.57674 * charLength + 1.70473;
         const unit = 'em';
         return Math.round(width).toString() + unit;
     }

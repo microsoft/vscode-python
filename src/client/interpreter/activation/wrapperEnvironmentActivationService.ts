@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { UseTerminalToGetActivatedEnvVars } from '../../common/experimentGroups';
+import { UseTerminalToGetActivatedEnvVars } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';

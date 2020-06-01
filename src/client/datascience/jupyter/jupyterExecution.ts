@@ -157,7 +157,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let tryCount = 0;
             const maxTries = this.configuration.getSettings(undefined).datascience.jupyterLaunchRetries;
             const stopWatch = new StopWatch();
-            while (tryCount < maxTries) {
+            while (tryCount < maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([
@@ -271,6 +271,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         tryCount += 1;
                     } else if (connection) {
                         kernelSpecCancelSource.cancel();
+
+                        // If this is occurring during shutdown, don't worry about it.
+                        if (this.disposed) {
+                            return undefined;
+                        }
 
                         // Something else went wrong
                         if (!isLocalConnection) {

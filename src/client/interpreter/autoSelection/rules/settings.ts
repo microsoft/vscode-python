@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IFileSystem } from '../../../common/platform/types';
 import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';

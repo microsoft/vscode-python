@@ -29,7 +29,7 @@ import {
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IWorkspaceService } from '../../../../client/common/application/types';
-import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import {
     IConfigurationService,

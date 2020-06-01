@@ -4,12 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, Uri } from 'vscode';
+import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { Identifiers } from '../constants';
+import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import {
     ConnectNotebookProviderOptions,
     GetNotebookOptions,
@@ -37,9 +38,11 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
         @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(INotebookStorageProvider) storageProvider: INotebookStorageProvider
     ) {
         disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
+        disposables.push(storageProvider.onSavedAs(this.onSavedAs, this));
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
@@ -57,10 +60,13 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
-    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
+    public async connect(
+        options: ConnectNotebookProviderOptions,
+        token?: CancellationToken
+    ): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            return this.rawNotebookProvider.connect();
+            return this.rawNotebookProvider.connect(token);
         } else {
             return this.jupyterNotebookProvider.connect(options);
         }
@@ -71,7 +77,7 @@ export class NotebookProvider implements INotebookProvider {
 
         // Check to see if our provider already has this notebook
         const notebook = rawKernel
-            ? await this.rawNotebookProvider.getNotebook(options.identity)
+            ? await this.rawNotebookProvider.getNotebook(options.identity, options.token)
             : await this.jupyterNotebookProvider.getNotebook(options);
         if (notebook) {
             return notebook;
@@ -80,6 +86,11 @@ export class NotebookProvider implements INotebookProvider {
         // Next check our own promise cache
         if (this.notebooks.get(options.identity.fsPath)) {
             return this.notebooks.get(options.identity.fsPath)!!;
+        }
+
+        // If get only, don't create a notebook
+        if (options.getOnly) {
+            return undefined;
         }
 
         // We want to cache a Promise<INotebook> from the create functions
@@ -92,8 +103,8 @@ export class NotebookProvider implements INotebookProvider {
         }
 
         // Finally create if needed
-        let resource: Resource = options.identity;
-        if (options.identity.scheme === Identifiers.HistoryPurpose) {
+        let resource: Resource = options.resource;
+        if (options.identity.scheme === Identifiers.HistoryPurpose && !resource) {
             // If we have any workspaces, then use the first available workspace.
             // This is required, else using `undefined` as a resource when we have worksapce folders is a different meaning.
             // This means interactive window doesn't properly support mult-root workspaces as we pick first workspace.
@@ -103,7 +114,13 @@ export class NotebookProvider implements INotebookProvider {
                 : undefined;
         }
         const promise = rawKernel
-            ? this.rawNotebookProvider.createNotebook(options.identity, resource, options.disableUI, options.metadata)
+            ? this.rawNotebookProvider.createNotebook(
+                  options.identity,
+                  resource,
+                  options.disableUI,
+                  options.metadata,
+                  options.token
+              )
             : this.jupyterNotebookProvider.createNotebook(options);
 
         this.cacheNotebookPromise(options.identity, promise);
@@ -144,6 +161,15 @@ export class NotebookProvider implements INotebookProvider {
         // If we have no editors for this file, then dispose the notebook.
         if (editors.length === 0) {
             await this.disposeNotebook(editor.file);
+        }
+    }
+
+    private async onSavedAs(e: { new: Uri; old: Uri }) {
+        // Swap the Uris when a notebook is saved as a different file.
+        const notebookPromise = this.notebooks.get(e.old.toString());
+        if (notebookPromise) {
+            this.notebooks.set(e.new.toString(), notebookPromise);
+            this.notebooks.delete(e.old.toString());
         }
     }
 

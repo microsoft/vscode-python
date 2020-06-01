@@ -21,6 +21,10 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         this.notebookEditorProvider.onDidOpenNotebookEditor((t) => this.onOpenedOrClosedNotebook(t));
     }
 
+    public dispose() {
+        this.pendingChecks.clear();
+    }
+
     public onKernelRestarted() {
         // Do nothing on restarted
     }

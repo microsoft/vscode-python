@@ -57,40 +57,49 @@ export function registerMonacoLanguage() {
     });
 }
 
+// Loading the tokenizer is process wide, so don't bother doing it more than once. Creates memory leaks
+// when running tests.
+let loaded: boolean = false;
+
 // tslint:disable: no-any
 export async function initializeTokenizer(
     onigasm: ArrayBuffer,
     tmlanguageJSON: string,
     loadingFinished: (e?: any) => void
 ): Promise<void> {
-    try {
-        // Register the language first
-        registerMonacoLanguage();
+    if (!loaded) {
+        loaded = true;
+        try {
+            // Register the language first
+            registerMonacoLanguage();
 
-        // Load the web assembly if necessary
-        if (onigasm && onigasm.byteLength > 0) {
-            await loadWASM(onigasm);
+            // Load the web assembly if necessary
+            if (onigasm && onigasm.byteLength > 0) {
+                await loadWASM(onigasm);
 
-            // Setup our registry of different
-            const registry = new Registry({
-                getGrammarDefinition: async (_scopeName) => {
-                    return {
-                        format: 'json',
-                        content: tmlanguageJSON
-                    };
-                }
-            });
+                // Setup our registry of different
+                const registry = new Registry({
+                    getGrammarDefinition: async (_scopeName) => {
+                        return {
+                            format: 'json',
+                            content: tmlanguageJSON
+                        };
+                    }
+                });
 
-            // map of monaco "language id's" to TextMate scopeNames
-            const grammars = new Map();
-            grammars.set('python', 'source.python');
+                // map of monaco "language id's" to TextMate scopeNames
+                const grammars = new Map();
+                grammars.set('python', 'source.python');
 
-            // Wire everything together.
-            await wireTmGrammars(monacoEditor, registry, grammars);
+                // Wire everything together.
+                await wireTmGrammars(monacoEditor, registry, grammars);
+            }
+            // Indicate to the callback that we're done.
+            loadingFinished();
+        } catch (e) {
+            loadingFinished(e);
         }
-        // Indicate to the callback that we're done.
+    } else {
         loadingFinished();
-    } catch (e) {
-        loadingFinished(e);
     }
 }

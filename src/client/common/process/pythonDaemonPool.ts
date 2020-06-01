@@ -10,7 +10,7 @@ import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import {
     ExecutionResult,
-    InterpreterInfomation,
+    InterpreterInformation,
     IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
@@ -60,7 +60,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
     public dispose() {
         this._disposed = true;
     }
-    public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
+    public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
         return this.wrapCall((daemon) => daemon.getInterpreterInformation(), msg);
     }

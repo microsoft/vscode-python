@@ -58,6 +58,18 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
+import type {
+    NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
+    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
+    NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
+    NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
+    NotebookContentProvider,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookKernel,
+    NotebookOutputRenderer,
+    NotebookOutputSelector
+} from 'vscode-proposed';
 import * as vsls from 'vsls/vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
@@ -1441,4 +1453,37 @@ export interface IClipboard {
      * Writes text into the clipboard.
      */
     writeText(value: string): Promise<void>;
+}
+
+export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
+export type NotebookCellMoveEvent = { type: 'moveCell' } & VSCNotebookCellMoveEvent;
+export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
+export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
+
+export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
+export interface IVSCodeNotebook {
+    readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
+    readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+
+    readonly onDidChangeNotebookDocument: Event<
+        | NotebookCellsChangeEvent
+        | NotebookCellMoveEvent
+        | NotebookCellOutputsChangeEvent
+        | NotebookCellLanguageChangeEvent
+    >;
+    readonly notebookEditors: Readonly<NotebookEditor[]>;
+    readonly activeNotebookEditor: NotebookEditor | undefined;
+    /**
+     * Whether the current document is aCell.
+     */
+    isCell(textDocument: TextDocument): boolean;
+    registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
+
+    registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;
+
+    registerNotebookOutputRenderer(
+        id: string,
+        outputSelector: NotebookOutputSelector,
+        renderer: NotebookOutputRenderer
+    ): Disposable;
 }

@@ -102,6 +102,7 @@ gulp.task('output:clean', () => del(['coverage']));
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
+gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -112,91 +113,93 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 
-gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
+gulp.task('validate-packagejson', () => validatePackageJson());
+gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
+async function validatePackageJson() {
+    const json = require('./package.json');
+    if (json.enableProposedApi) {
+        throw new Error('package.json has enableProposedApi setting enabled');
+    }
+    if (json.contributes.notebookOutputRenderer) {
+        throw new Error('Package.json contains entry for contributes.notebookOutputRenderer');
+    }
+    if (json.contributes.notebookProvider) {
+        throw new Error('Package.json contains entry for contributes.notebookProvider');
+    }
+}
+
 async function buildIPyWidgets() {
+    // if the output ipywidgest file exists, then no need to re-build.
+    // Barely changes. If making changes, then re-build manually.
+    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
+        return;
+    }
     await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
 }
-async function buildDataScienceUI(forceBundleAnalyzer = false) {
-    if (forceBundleAnalyzer) {
-        process.env.VSC_PYTHON_FORCE_ANALYZER = 1;
-    }
-    await buildIPyWidgets();
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-notebooks.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
-    await spawnAsync(
-        'npm',
-        [
-            'run',
-            'webpack',
-            '--',
-            '--config',
-            './build/webpack/webpack.datascience-ui-viewers.config.js',
-            '--mode',
-            'production'
-        ],
-        webpackEnv
-    );
-    if (forceBundleAnalyzer) {
-        delete process.env.VSC_PYTHON_FORCE_ANALYZER;
-    }
-}
-
-gulp.task('compile-webviews', async () => {
-    buildDataScienceUI(false);
+gulp.task('compile-notebooks', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js');
 });
 
+gulp.task('compile-renderers', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
+});
+
+gulp.task('compile-viewers', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
+});
+
+gulp.task('compile-webviews', gulp.series('compile-ipywidgets', 'compile-notebooks', 'compile-viewers'));
+
+gulp.task(
+    'check-datascience-dependencies',
+    gulp.series(
+        (done) => {
+            if (process.env.VSC_PYTHON_FORCE_ANALYZER) {
+                process.env.XVSC_PYTHON_FORCE_ANALYZER = '1';
+            }
+            process.env.VSC_PYTHON_FORCE_ANALYZER = '1';
+            done();
+        },
+        'compile-webviews',
+        () => checkDatascienceDependencies(),
+        (done) => {
+            if (!process.env.XVSC_PYTHON_FORCE_ANALYZER) {
+                delete process.env.VSC_PYTHON_FORCE_ANALYZER;
+            }
+            done();
+        }
+    )
+);
+
+async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
+    if (configNameForProductionBuilds) {
+        await buildWebPack(configNameForProductionBuilds, ['--config', configFile], webpackEnv);
+    } else {
+        await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'production'], webpackEnv);
+    }
+}
 gulp.task('webpack', async () => {
     // Build node_modules.
-    await buildWebPack(
-        'production',
-        ['--config', './build/webpack/webpack.extension.dependencies.config.js'],
-        webpackEnv
-    );
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
     await buildIPyWidgets();
-    await buildWebPack(
-        'production',
-        ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'],
-        webpackEnv
-    );
-    await buildWebPack(
-        'production',
-        ['--config', './build/webpack/webpack.datascience-ui-viewers.config.js'],
-        webpackEnv
-    );
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-notebooks.config.js', 'production');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack(
-            'extension',
-            ['--config', './build/webpack/webpack.extension.config.js'],
-            webpackEnv
-        );
-        const buildDebugAdapter = buildWebPack(
-            'debugAdapter',
-            ['--config', './build/webpack/webpack.debugadapter.config.js'],
-            webpackEnv
-        );
-        await Promise.all([buildExtension, buildDebugAdapter]);
+        await Promise.all([
+            buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension'),
+            buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter')
+        ]);
     } else {
-        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+        await buildWebPackForDevOrProduction('./build/webpack/webpack.debugadapter.config.js', 'debugAdapter');
     }
 });
 
@@ -287,7 +290,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/any-promise/register.js',
                 'WARNING in ./node_modules/log4js/lib/appenders/index.js',
-                'WARNING in ./node_modules/log4js/lib/clustering.js'
+                'WARNING in ./node_modules/log4js/lib/clustering.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
             ];
         case 'extension':
             return [
@@ -300,10 +305,16 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'remove-files-plugin@1.4.0:',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js'
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/Validation.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
             ];
         case 'debugAdapter':
-            return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
+            return [
+                'WARNING in ./node_modules/vscode-uri/lib/index.js',
+                'WARNING in ./node_modules/diagnostic-channel-publishers/dist/src/azure-coretracing.pub.js',
+                'WARNING in ./node_modules/applicationinsights/out/AutoCollection/NativePerformance.js'
+            ];
         default:
             throw new Error('Unknown WebPack Configuration');
     }
@@ -495,8 +506,6 @@ function spawnAsync(command, args, env, rejectOnStdErr = false) {
  *
  */
 async function checkDatascienceDependencies() {
-    await buildDataScienceUI(true);
-
     const existingModulesFileName = 'package.datascience-ui.dependencies.json';
     const existingModulesFile = path.join(__dirname, existingModulesFileName);
     const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then((data) => data.toString()));

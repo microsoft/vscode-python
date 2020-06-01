@@ -7,6 +7,7 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
@@ -35,6 +36,7 @@ suite('Data Science - Commands', () => {
         commandManager = mock(CommandManager);
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
+        const startPage = mock(StartPage);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -48,7 +50,8 @@ suite('Data Science - Commands', () => {
             instance(debugService),
             instance(configService),
             instance(appShell),
-            new MockOutputChannel('Jupyter')
+            new MockOutputChannel('Jupyter'),
+            instance(startPage)
         );
     });
 

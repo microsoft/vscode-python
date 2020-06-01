@@ -10,3 +10,4 @@ variables:
   CI_BRANCH_NAME: ${Build.SourceBranchName}
   npm_config_cache: $(Pipeline.Workspace)/.npm
   vmImageMacOS: 'macOS-10.15'
+  TS_NODE_FILES: true # Temporarily enabled to allow using types from vscode.proposed.d.ts from ts-node (for tests).

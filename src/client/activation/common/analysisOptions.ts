@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
 
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
@@ -62,10 +62,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        return [
-            { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
-        ];
+        return PYTHON;
     }
 
     // tslint:disable-next-line: no-any

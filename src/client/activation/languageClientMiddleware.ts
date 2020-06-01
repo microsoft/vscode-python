@@ -60,7 +60,7 @@ import {
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
 import { HiddenFilePrefix } from '../common/constants';
-import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experimentGroups';
+import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experiments/groups';
 import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
@@ -444,9 +444,12 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
             this.lastCaptured.set(method, now);
             this.eventCount += 1;
 
+            // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+            const formattedMethod = method.replace(/\//g, '.');
+
             const properties = {
                 lsVersion: this.serverVersion || 'unknown',
-                method: method
+                method: formattedMethod
             };
 
             const stopWatch = new StopWatch();

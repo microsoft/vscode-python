@@ -1,10 +1,10 @@
---- /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/formatting/yapfFileToFormat.py	(original)
-+++ /Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/formatting/yapfFileToFormat.py	(reformatted)
-@@ -1,21 +1,42 @@
--import math, sys;
+--- C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py	(original)
++++ C:\GIT\issues\s p\vscode-python\src\test\pythonFiles\formatting\fileToformat.py	(reformatted)
+@@ -1,22 +1,40 @@
 +import math, sys
-+
-
+ 
+-import math, sys;
+ 
  def example1():
      ####This is a long comment. This should be wrapped to fit within 72 characters.
 -    some_tuple=(   1,2, 3,'a'  );
@@ -38,9 +38,7 @@
 +def example2():
 +    return {
 +        'has_key() is deprecated': True
-+    }.has_key({
-+        'f': 2
-+    }.has_key(''))
++    }.has_key({'f': 2}.has_key(''))
 +
 +
 +class Example3(object):

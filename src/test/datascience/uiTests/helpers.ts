@@ -73,6 +73,10 @@ export class BaseWebUI implements IAsyncDisposable {
             ])
         );
     }
+
+    public waitForMessageAfterServer(message: string, options?: WaitForMessageOptions): Promise<void> {
+        return this.webServerPromise.promise.then(() => this.waitForMessage(message, options));
+    }
     public async waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void> {
         if (!this.webServer) {
             throw new Error('WebServer not yet started');

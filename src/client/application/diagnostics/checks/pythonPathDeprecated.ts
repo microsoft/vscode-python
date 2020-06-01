@@ -6,7 +6,7 @@
 import { inject, named } from 'inversify';
 import { ConfigurationTarget, DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
-import { DeprecatePythonPath } from '../../../common/experimentGroups';
+import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';

@@ -297,6 +297,42 @@ suite('Module Installer only', () => {
                         });
                         break;
                     }
+                    case Product.jupyter:
+                    case Product.pandas:
+                    case Product.nbconvert:
+                    case Product.ipykernel:
+                    case Product.kernelspec:
+                    case Product.notebook:
+                        {
+                            test(`Ensure resource info is passed into the module installer ${product.name} (${
+                                resource ? 'With a resource' : 'without a resource'
+                            })`, async () => {
+                                const moduleName = installer.translateProductToModuleName(
+                                    product.value,
+                                    ModuleNamePurpose.install
+                                );
+
+                                moduleInstaller
+                                    .setup((m) =>
+                                        m.installModule(
+                                            TypeMoq.It.isValue(moduleName),
+                                            TypeMoq.It.isValue(resource),
+                                            TypeMoq.It.isValue(undefined)
+                                        )
+                                    )
+                                    .returns(() => Promise.reject(new Error('UnitTesting')));
+
+                                try {
+                                    await installer.install(product.value, resource);
+                                } catch (ex) {
+                                    expect(ex.message).to.be.equal(
+                                        'All data science packages require an interpreter be passed in'
+                                    );
+                                }
+                            });
+                        }
+                        break;
+
                     default:
                         {
                             test(`Ensure the prompt is displayed only once, until the prompt is closed, ${
@@ -547,6 +583,7 @@ suite('Module Installer only', () => {
                                 );
                             }
                         });
+
                         test(`Return InstallerResponse.Ignore for the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         }) if installation channel is not defined`, async () => {

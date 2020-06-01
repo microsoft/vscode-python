@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../../common/experiments/groups';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../../../common/types';
 import { Diagnostics } from '../../../../common/utils/localize';

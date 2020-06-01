@@ -44,17 +44,17 @@ suite('Data Science - Kernel Dependency Service', () => {
     });
     test('Prompt if if ipykernel is not installed', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+        when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
         const response = await dependencyService.installMissingDependencies(interpreter);
 
         assert.equal(response, KernelInterpreterDependencyResponse.cancel);
-        verify(appShell.showErrorMessage(anything(), anything(), anything())).once();
+        verify(appShell.showErrorMessage(anything(), anything(), anything())).never();
     });
     test('Install ipykernel', async () => {
         when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
         when(installer.install(Product.ipykernel, interpreter, anything())).thenResolve(InstallerResponse.Installed);
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.ok() as any);
+        when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
         const response = await dependencyService.installMissingDependencies(interpreter);
 
@@ -65,7 +65,7 @@ suite('Data Science - Kernel Dependency Service', () => {
         when(installer.install(Product.ipykernel, interpreter, anything())).thenReject(
             new Error('Install failed - kaboom')
         );
-        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.ok() as any);
+        when(appShell.showErrorMessage(anything(), anything())).thenResolve(Common.install() as any);
 
         const promise = dependencyService.installMissingDependencies(interpreter);
 

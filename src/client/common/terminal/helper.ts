@@ -61,7 +61,9 @@ export class TerminalHelper implements ITerminalHelper {
             terminalShellType === TerminalShellType.powershell ||
             terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
-        return `${commandPrefix}${command.fileToCommandArgument()} ${args.join(' ')}`.trim();
+        const formattedArgs = args.map((a) => a.toCommandArgument());
+
+        return `${commandPrefix}${command.fileToCommandArgument()} ${formattedArgs.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,

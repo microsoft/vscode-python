@@ -5,6 +5,7 @@
 import * as os from 'os';
 import * as TypeMoq from 'typemoq';
 import { DiagnosticSeverity, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
@@ -318,7 +319,7 @@ export class BaseTestFixture {
             })
             .returns(() => Promise.resolve(undefined));
 
-        this.pythonSettings.setup((s) => s.jediEnabled).returns(() => true);
+        this.pythonSettings.setup((s) => s.languageServer).returns(() => LanguageServerType.Jedi);
     }
 
     private initData(): void {

@@ -28,6 +28,7 @@ import {
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
+    INotebookModel,
     KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
@@ -108,6 +109,8 @@ export enum InteractiveWindowMessages {
     NotebookAddCellBelow = 'notebook_add_cell_below',
     ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
+    SelectedCell = 'selected_cell',
+    OutputToggled = 'output_toggled',
     UnfocusedCellEditor = 'unfocused_cell_editor',
     MonacoReady = 'monaco_ready',
     ClearAllOutputs = 'clear_all_outputs',
@@ -127,7 +130,9 @@ export enum InteractiveWindowMessages {
     Step = 'step',
     Continue = 'continue',
     ShowContinue = 'show_continue',
-    ShowBreak = 'show_break'
+    ShowBreak = 'show_break',
+    ShowingIp = 'showing_ip',
+    KernelIdle = 'kernel_idle'
 }
 
 export enum IPyWidgetMessages {
@@ -337,6 +342,15 @@ export interface INotebookModelChange {
     oldDirty: boolean;
     newDirty: boolean;
     source: 'undo' | 'user' | 'redo';
+    model?: INotebookModel;
+}
+
+export interface INotebookModelSaved extends INotebookModelChange {
+    kind: 'save';
+}
+export interface INotebookModelSavedAs extends INotebookModelChange {
+    kind: 'saveAs';
+    target: Uri;
 }
 
 export interface INotebookModelRemoveAllChange extends INotebookModelChange {
@@ -452,13 +466,9 @@ export interface INotebookModelVersionChange extends INotebookModelChange {
     kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined;
 }
 
-export interface INotebookModelFileChange extends INotebookModelChange {
-    kind: 'file';
-    newFile: Uri;
-    oldFile: Uri;
-}
-
 export type NotebookModelChange =
+    | INotebookModelSaved
+    | INotebookModelSavedAs
     | INotebookModelModifyChange
     | INotebookModelRemoveAllChange
     | INotebookModelClearChange
@@ -468,7 +478,6 @@ export type NotebookModelChange =
     | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
-    | INotebookModelFileChange
     | INotebookModelChangeTypeChange;
 
 export interface IRunByLine {
@@ -586,6 +595,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.DoSave]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.OutputToggled]: never | undefined;
     public [InteractiveWindowMessages.UnfocusedCellEditor]: never | undefined;
     public [InteractiveWindowMessages.MonacoReady]: never | undefined;
     public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
@@ -607,4 +618,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowBreak]: { frames: DebugProtocol.StackFrame[]; cell: ICell };
     public [InteractiveWindowMessages.ShowContinue]: ICell;
     public [InteractiveWindowMessages.Step]: never | undefined;
+    public [InteractiveWindowMessages.ShowingIp]: never | undefined;
+    public [InteractiveWindowMessages.KernelIdle]: never | undefined;
 }

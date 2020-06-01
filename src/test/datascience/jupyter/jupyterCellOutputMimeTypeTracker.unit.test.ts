@@ -12,9 +12,8 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Telemetry } from '../../../client/datascience/constants';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
-import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
+import { CellState, ICell, INotebookEditor, INotebookModel } from '../../../client/datascience/types';
 import { FakeClock } from '../../common';
 
 suite('Data Science - Cell Output Mimetype Tracker', () => {
@@ -70,7 +69,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
     function emitNotebookEvent(cells: ICell[]) {
         const notebook = mock(NativeEditor);
-        const model = mock(NativeEditorStorage);
+        const model = mock<INotebookModel>();
 
         when(notebook.file).thenReturn(Uri.file('wow'));
         when(notebook.model).thenReturn(instance(model));

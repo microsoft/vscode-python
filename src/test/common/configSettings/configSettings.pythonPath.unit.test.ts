@@ -13,7 +13,7 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
-import { DeprecatePythonPath } from '../../../client/common/experimentGroups';
+import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
