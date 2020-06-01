@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, GlobPattern, TextDocument, window } from 'vscode';
+import { Disposable, Event, EventEmitter, GlobPattern } from 'vscode';
 import type {
     notebook,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
@@ -45,19 +45,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         if (!this.useProposedApi) {
             return;
         }
-        // Temporary, currently VSC API doesn't work well.
-        // `notebook.activeNotebookEditor`  is not reset when opening another file.
-        if (!this.notebook.activeNotebookEditor) {
-            return;
-        }
-        // If we have a text editor opened and it is not a cell, then we know for certain a notebook is not open.
-        if (window.activeTextEditor && !this.isCell(window.activeTextEditor.document)) {
-            return;
-        }
-        // Temporary until VSC API stabilizes.
-        if (Array.isArray(this.notebook.visibleNotebookEditors)) {
-            return this.notebook.visibleNotebookEditors.find((item) => item.active && item.visible);
-        }
         return this.notebook.activeNotebookEditor;
     }
     private get notebook() {
@@ -93,14 +80,6 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         renderer: NotebookOutputRenderer
     ): Disposable {
         return this.notebook.registerNotebookOutputRenderer(id, outputSelector, renderer);
-    }
-    public isCell(textDocument: TextDocument) {
-        return (
-            (textDocument.uri.fsPath.toLowerCase().includes('.ipynb') &&
-                textDocument.uri.query.includes('notebook') &&
-                textDocument.uri.query.includes('cell')) ||
-            textDocument.uri.scheme.includes('vscode-notebook-cell')
-        );
     }
     private addEventHandlers() {
         if (this.addedEventHandlers) {
