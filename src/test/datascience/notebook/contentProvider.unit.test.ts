@@ -9,6 +9,7 @@ import { Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
+import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
@@ -20,7 +21,8 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
     const fileUri = Uri.file('a.ipynb');
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
-        contentProvider = new NotebookContentProvider(instance(storageProvider));
+        const commandManager = mock<ICommandManager>();
+        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(commandManager));
     });
 
     test('Return notebook with 2 cells', async () => {
@@ -30,6 +32,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     data: {
                         cell_type: 'code',
                         execution_count: 10,
+                        hasExecutionOrder: true,
                         outputs: [],
                         source: 'print(1)',
                         metadata: {}
@@ -42,6 +45,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 {
                     data: {
                         cell_type: 'markdown',
+                        hasExecutionOrder: false,
                         source: '# HEAD',
                         metadata: {}
                     },
@@ -67,6 +71,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 metadata: {
                     editable: true,
                     executionOrder: 10,
+                    hasExecutionOrder: true,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: true,
                     custom: {
@@ -82,6 +87,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
+                    hasExecutionOrder: false,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: false,
                     custom: {

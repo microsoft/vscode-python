@@ -5,9 +5,17 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import type { NotebookDocument } from 'vscode-proposed';
+import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IVSCodeNotebook,
+    IWorkspaceService,
+    NotebookCellLanguageChangeEvent,
+    NotebookCellOutputsChangeEvent,
+    NotebookCellsChangeEvent
+} from '../../common/application/types';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -17,7 +25,10 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
-import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './cellUpdateHelpers';
+import {
+    monitorModelCellOutputChangesAndUpdateNotebookDocument,
+    updateCellModelWithChangesToVSCCell
+} from './cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
@@ -65,11 +76,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
-    private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private executedEditors: Set<string> = new Set<string>();
+    private readonly openedEditors = new Set<INotebookEditor>();
+    private readonly trackedVSCodeNotebookEditors = new Set<VSCodeNotebookEditor>();
+    private readonly executedEditors = new Set<string>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
-    private readonly notebookEditors = new Map<NotebookDocument, INotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
@@ -88,7 +99,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     public activate() {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
-        this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
+        this.disposables.push(
+            this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
+        );
         this.disposables.push(this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this));
 
         // Swap the uris.
@@ -202,12 +215,36 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!isUri(doc)) {
             // This is where we ensure changes to our models are propagated back to the VSCode model.
             this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
-            this.notebookEditors.set(doc, editor);
         }
         this.notebookEditorsByUri.set(uri.toString(), editor);
+        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
-    private async onDidCloseNotebookDocument(doc: NotebookDocument | Uri): Promise<void> {
-        const editor = isUri(doc) ? this.notebookEditorsByUri.get(doc.toString()) : this.notebookEditors.get(doc);
+    private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
+        if (!editor || this.trackedVSCodeNotebookEditors.has(editor)) {
+            return;
+        }
+        this.trackedVSCodeNotebookEditors.add(editor);
+        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
+    }
+    /**
+     * We know a notebook editor has been closed.
+     * We need to close/dispose all of our resources related to this notebook document.
+     * However we also need to check if there are other notebooks opened, that are associated with this same notebook.
+     * I.e. we may have closed a duplicate editor.
+     */
+    private async onDidDisposeVSCodeNotebookEditor(closedEditor: VSCodeNotebookEditor) {
+        const uri = closedEditor.document.uri;
+        if (
+            this.vscodeNotebook.notebookEditors.some(
+                (item) => item !== closedEditor && item.document.uri.toString() === uri.toString()
+            )
+        ) {
+            return;
+        }
+
+        // Ok, dispose all of the resources associated with this document.
+        // In our case, we only have one editor.
+        const editor = this.notebookEditorsByUri.get(uri.toString());
         if (editor) {
             this.closedEditor(editor);
             editor.dispose();
@@ -215,16 +252,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 editor.model.dispose();
             }
         }
-        if (isUri(doc)) {
-            this.notebookEditorsByUri.delete(doc.toString());
-            this.notebooksWaitingToBeOpenedByUri.delete(doc.toString());
-        } else {
-            this.notebookEditors.delete(doc);
-            this.notebookEditorsByUri.delete(doc.uri.toString());
-            this.notebooksWaitingToBeOpenedByUri.delete(doc.uri.toString());
-        }
+        this.notebookEditorsByUri.delete(uri.toString());
+        this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
     }
-    private async onDidChangeNotebookDocument(): Promise<void> {
-        // Noop.
+    private async onDidChangeNotebookDocument(
+        e: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
+    ): Promise<void> {
+        const model = await this.storage.load(e.document.uri);
+        updateCellModelWithChangesToVSCCell(e, model);
     }
 }

@@ -14,7 +14,7 @@ import { NotebookOutputRenderer } from './renderer';
 import { INotebookExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.add<NotebookContentProvider>(NotebookContentProvider, NotebookContentProvider);
+    serviceManager.addSingleton<NotebookContentProvider>(NotebookContentProvider, NotebookContentProvider);
     serviceManager.addSingleton<INotebookExecutionService>(INotebookExecutionService, NotebookExecutionService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,

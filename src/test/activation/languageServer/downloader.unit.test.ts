@@ -260,12 +260,29 @@ suite('Language Server Activation - Downloader', () => {
                 throw failure;
             }
         }
+        class LanguageServeBundledTest extends LanguageServerDownloader {
+            // tslint:disable-next-line:no-unnecessary-override
+            public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
+                return super.downloadLanguageServer(destinationFolder, res);
+            }
+            // tslint:disable-next-line:no-unnecessary-override
+            public async getDownloadInfo(_res?: Resource): Promise<string[]> {
+                throw failure;
+            }
+            public async downloadFile(): Promise<string> {
+                throw failure;
+            }
+            protected async unpackArchive(_extensionPath: string, _tempFilePath: string): Promise<void> {
+                throw failure;
+            }
+        }
         let output: TypeMoq.IMock<IOutputChannel>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
         let fs: TypeMoq.IMock<IFileSystem>;
         let platformData: TypeMoq.IMock<IPlatformData>;
         let languageServerDownloaderTest: LanguageServerDownloaderTest;
         let languageServerExtractorTest: LanguageServerExtractorTest;
+        let languageServerBundledTest: LanguageServeBundledTest;
         setup(() => {
             appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -293,8 +310,18 @@ suite('Language Server Activation - Downloader', () => {
                 workspaceService.object,
                 undefined as any
             );
+            languageServerBundledTest = new LanguageServeBundledTest(
+                lsOutputChannel.object,
+                undefined as any,
+                folderService.object,
+                appShell.object,
+                fs.object,
+                workspaceService.object,
+                undefined as any
+            );
         });
         test('Display error message if LS downloading fails', async () => {
+            folderService.setup((f) => f.isBundled()).returns(() => false);
             const pkg = makePkgInfo('ls', 'xyz');
             folderService.setup((f) => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup((o) => o.appendLine(LanguageService.downloadFailedOutputMessage()));
@@ -318,6 +345,7 @@ suite('Language Server Activation - Downloader', () => {
             platformData.verifyAll();
         });
         test('Display error message if LS extraction fails', async () => {
+            folderService.setup((f) => f.isBundled()).returns(() => false);
             const pkg = makePkgInfo('ls', 'xyz');
             folderService.setup((f) => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup((o) => o.appendLine(LanguageService.extractionFailedOutputMessage()));
@@ -334,6 +362,17 @@ suite('Language Server Activation - Downloader', () => {
             }
 
             expect(actualFailure).to.not.equal(undefined, 'error not thrown');
+            folderService.verifyAll();
+            output.verifyAll();
+            appShell.verifyAll();
+            fs.verifyAll();
+            platformData.verifyAll();
+        });
+        test('No download if bundled', async () => {
+            folderService.setup((f) => f.isBundled()).returns(() => true);
+
+            await languageServerBundledTest.downloadLanguageServer('', resource);
+
             folderService.verifyAll();
             output.verifyAll();
             appShell.verifyAll();

@@ -4,6 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import * as assert from 'assert';
 import type {
     CellDisplayOutput,
     CellErrorOutput,
@@ -14,10 +15,16 @@ import type {
 } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../../../datascience-ui/common';
+import * as uuid from 'uuid/v4';
+import {
+    concatMultilineStringInput,
+    concatMultilineStringOutput,
+    splitMultilineString
+} from '../../../datascience-ui/common';
+import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceWarning } from '../../logging';
-import { ICell, INotebookModel } from '../types';
+import { CellState, ICell, INotebookModel } from '../types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -39,7 +46,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
             cellEditable: true,
             cellRunnable: true,
             editable: true,
-            hasExecutionOrder: true,
+            cellHasExecutionOrder: true,
             runnable: true,
             displayOrder: [
                 'application/vnd.*',
@@ -60,6 +67,27 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         }
     };
 }
+export function vscNotebookCellToCellModel(cell: NotebookCellData, model: INotebookModel): ICell {
+    if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+        return {
+            data: createMarkdownCell(splitMultilineString(cell.source), true),
+            file: model.file.toString(),
+            id: uuid(),
+            line: 0,
+            state: CellState.init
+        };
+    }
+    assert.equal(cell.language, PYTHON_LANGUAGE, 'Cannot create a non Python cell');
+    return {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: #12068 Translate output into nbformat.IOutput.
+        data: createCodeCell([cell.source], []),
+        file: model.file.toString(),
+        id: uuid(),
+        line: 0,
+        state: CellState.init
+    };
+}
 export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undefined {
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
@@ -73,6 +101,7 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
         metadata: {
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
+            hasExecutionOrder: cell.data.cell_type === 'code',
             runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
             runnable: cell.data.cell_type === 'code',
             custom: {
