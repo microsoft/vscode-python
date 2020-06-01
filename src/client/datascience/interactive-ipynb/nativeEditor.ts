@@ -232,7 +232,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Save the model we're using
         this.model = model;
 
-        // save current name of model
+        // Save current name of model
         this.fileName = model.file.toString();
 
         // Indicate we have our identity

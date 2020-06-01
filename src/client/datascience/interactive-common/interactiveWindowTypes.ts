@@ -71,7 +71,6 @@ export enum InteractiveWindowMessages {
     VariableExplorerToggle = 'variable_explorer_toggle',
     SetVariableExplorerHeight = 'set_variable_explorer_height',
     VariableExplorerHeightResponse = 'variable_explorer_height_response',
-    VariableExplorerHeightRequest = 'variable_explorer_height_request',
     ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',

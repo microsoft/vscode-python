@@ -1092,10 +1092,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             try {
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({
-                          identity: identity.resource,
-                          resource,
-                          metadata
-                      })
+                        identity: identity.resource,
+                        resource,
+                        metadata
+                    })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };
@@ -1373,17 +1373,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                  totalCount: 0,
-                  pageResponse: [],
-                  pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount
-              };
+                totalCount: 0,
+                pageResponse: [],
+                pageStartIndex: args?.startIndex,
+                executionCount: args?.executionCount
+            };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
     }
 
-    // tslint:disable-next-line: no-anyp
+    // tslint:disable-next-line: no-any
     private variableExplorerToggle = (payload?: any) => {
         // Direct undefined check as false boolean will skip code
         if (payload !== undefined) {
