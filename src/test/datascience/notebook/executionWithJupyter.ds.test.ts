@@ -86,9 +86,7 @@ suite('DataScience - VSCode Notebook - (Execution)', function () {
         assert.ok(execCount, 'Execution count should be > 0');
         assert.equal(execCount, vscCell[0].metadata.executionOrder, 'Execution count should be the same');
     });
-    test('Verify multiple cells get executed', async () => {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: Known bug in VSC, cells do not get added in order.
+    test('Verify multiple cells get executed', async function () {
         await insertPythonCellAndWait('print("Foo Bar")', 0);
         await insertPythonCellAndWait('print("Hello World")', 1);
         const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
@@ -106,10 +104,10 @@ suite('DataScience - VSCode Notebook - (Execution)', function () {
         );
 
         // Verify output.
-        assertHasTextOutputInVSCode(vscCell[1], 'Hello World', 0);
-        assertHasTextOutputInICell(cellModels[1], 'Hello World', 0);
         assertHasTextOutputInVSCode(vscCell[0], 'Foo Bar', 0);
         assertHasTextOutputInICell(cellModels[0], 'Foo Bar', 0);
+        assertHasTextOutputInVSCode(vscCell[1], 'Hello World', 0);
+        assertHasTextOutputInICell(cellModels[1], 'Hello World', 0);
 
         // Verify execution count.
         assert.ok(vscCell[0].metadata.executionOrder, 'Execution count should be > 0');
