@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
+import { isTestExecution } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IConfigurationService, Resource } from '../../common/types';
+import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -29,7 +30,10 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     constructor(
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_PROPOSE_LS)
+        private readonly proposeNewLanguageServerPopup: IPythonExtensionBanner
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -58,33 +62,39 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonInterpreter | undefined,
         options: LanguageClientOptions
     ): Promise<void> {
-        if (!this.languageClient) {
-            this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
-            this.disposables.push(this.languageClient!.start());
-            await this.serverReady();
-            if (this.disposed) {
-                // Check if it got disposed in the interim.
-                return;
-            }
-            const progressReporting = new ProgressReporting(this.languageClient!);
-            this.disposables.push(progressReporting);
-
-            const settings = this.configurationService.getSettings(resource);
-            if (settings.downloadLanguageServer) {
-                this.languageClient.onTelemetry((telemetryEvent) => {
-                    const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
-                    const formattedProperties = {
-                        ...telemetryEvent.Properties,
-                        // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
-                        method: telemetryEvent.Properties.method?.replace(/\//g, '.')
-                    };
-                    sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
-                });
-            }
-            await this.registerTestServices();
-        } else {
-            await this.startupCompleted.promise;
+        // Offer MPLSv2
+        if (!isTestExecution()) {
+            await this.proposeNewLanguageServerPopup.showBanner();
         }
+
+        if (this.languageClient) {
+            await this.startupCompleted.promise;
+            return;
+        }
+
+        this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
+        this.disposables.push(this.languageClient!.start());
+        await this.serverReady();
+        if (this.disposed) {
+            // Check if it got disposed in the interim.
+            return;
+        }
+        const progressReporting = new ProgressReporting(this.languageClient!);
+        this.disposables.push(progressReporting);
+
+        const settings = this.configurationService.getSettings(resource);
+        if (settings.downloadLanguageServer) {
+            this.languageClient.onTelemetry((telemetryEvent) => {
+                const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
+                const formattedProperties = {
+                    ...telemetryEvent.Properties,
+                    // Replace all slashes in the method name so it doesn't get scrubbed by vscode-extension-telemetry.
+                    method: telemetryEvent.Properties.method?.replace(/\//g, '.')
+                };
+                sendTelemetryEvent(eventName, telemetryEvent.Measurements, formattedProperties);
+            });
+        }
+        await this.registerTestServices();
     }
     @traceDecorators.error('Failed to load Language Server extension')
     public loadExtension(args?: {}) {
