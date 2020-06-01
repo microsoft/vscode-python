@@ -71,6 +71,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 metadata: {
                     editable: true,
                     executionOrder: 10,
+                    hasExecutionOrder: true,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: true,
                     custom: {
@@ -86,6 +87,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
+                    hasExecutionOrder: false,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
                     runnable: false,
                     custom: {
