@@ -77,7 +77,8 @@ function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
         return {
             ...arg.prevState,
             intellisenseProvider: new IntellisenseProvider(
-                arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice)
+                arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice),
+                arg.prevState.language ?? PYTHON_LANGUAGE
             )
         };
     }
@@ -127,12 +128,20 @@ function handleKernelUpdate(arg: MonacoReducerArg<IServerState | undefined>): IM
         if (!Tokenizer.hasLanguage(newLanguage)) {
             postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest, newLanguage);
         }
+
+        // Recreate the intellisense provider
+        arg.prevState.intellisenseProvider?.dispose();
+        return {
+            ...arg.prevState,
+            language: newLanguage,
+            intellisenseProvider: new IntellisenseProvider(
+                arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice),
+                newLanguage
+            )
+        };
     }
 
-    return {
-        ...arg.prevState,
-        language: arg.payload.data?.language ?? PYTHON_LANGUAGE
-    };
+    return arg.prevState;
 }
 
 function handleThemeResponse(arg: MonacoReducerArg<IGetMonacoThemeResponse>): IMonacoState {
