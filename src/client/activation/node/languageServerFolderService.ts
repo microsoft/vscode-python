@@ -9,6 +9,7 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../common/applica
 import { NugetPackage } from '../../common/nuget/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceWarning } from '../../logging';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
 import {
     BundledLanguageServerFolder,
@@ -53,7 +54,9 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
             const ver = appEnv.packageJson[NodeLanguageServerVersionKey] as string;
             this._bundledVersion = semver.parse(ver) || undefined;
             if (this._bundledVersion === undefined) {
-                traceWarning(`invalid language server version ${ver} in package.json (${NodeLanguageServerVersionKey})`)
+                traceWarning(
+                    `invalid language server version ${ver} in package.json (${NodeLanguageServerVersionKey})`
+                );
             }
         }
     }
