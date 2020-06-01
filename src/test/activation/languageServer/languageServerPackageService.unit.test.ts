@@ -12,6 +12,7 @@ import {
     azureCDNBlobStorageAccount,
     LanguageServerDownloadChannel
 } from '../../../client/activation/common/packageRepository';
+import { DotNetLanguageServerMinVersionKey } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
@@ -41,7 +42,7 @@ suite('Language Server - Package Service', () => {
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     function setMinVersionOfLs(version: string) {
-        const packageJson = { languageServerVersion: version };
+        const packageJson = { [DotNetLanguageServerMinVersionKey]: version };
         appVersion.setup((e) => e.packageJson).returns(() => packageJson);
     }
     [true, false].forEach((is64Bit) => {

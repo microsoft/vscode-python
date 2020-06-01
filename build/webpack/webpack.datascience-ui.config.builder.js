@@ -34,7 +34,8 @@ function getEntry(bundle) {
         case 'viewers':
             return {
                 plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-                dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+                dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
+                startPage: ['babel-polyfill', `./src/datascience-ui/startPage/index.tsx`]
             };
         default:
             throw new Error(`Bundle not supported ${bundle}`);
@@ -107,6 +108,12 @@ function getPlugins(bundle) {
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
+                    }),
+                    new HtmlWebpackPlugin({
+                        template: 'src/datascience-ui/startPage/index.html',
+                        indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                        chunks: ['commons', 'startPage'],
+                        filename: 'index.startPage.html'
                     })
                 ]
             );

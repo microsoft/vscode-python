@@ -58,6 +58,8 @@ webpack.datascience-*.config.js
 .vscode test/**
 languageServer/**
 languageServer.*/**
+nodeLanguageServer/**
+nodeLanguageServer.*/**
 bin/**
 build/**
 BuildOutput/**

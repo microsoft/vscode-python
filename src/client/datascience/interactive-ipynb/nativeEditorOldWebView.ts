@@ -30,15 +30,16 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditorProvider,
     INotebookExporter,
@@ -87,7 +88,9 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(NativeEditorSynchronizer) synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
-        @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
+        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) importer: INotebookImporter,
@@ -118,7 +121,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             workspaceService,
             synchronizer,
             editorProvider,
-            dataExplorerProvider,
+            dataExplorerFactory,
+            jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             importer,

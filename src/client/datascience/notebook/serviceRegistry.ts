@@ -5,6 +5,7 @@
 
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
+import { CellEditSyncService } from './cellEditSyncService';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
@@ -14,7 +15,7 @@ import { NotebookOutputRenderer } from './renderer';
 import { INotebookExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.add<NotebookContentProvider>(NotebookContentProvider, NotebookContentProvider);
+    serviceManager.addSingleton<NotebookContentProvider>(NotebookContentProvider, NotebookContentProvider);
     serviceManager.addSingleton<INotebookExecutionService>(INotebookExecutionService, NotebookExecutionService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -25,5 +26,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookEditorProviderActivation
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CellEditSyncService
     );
 }
