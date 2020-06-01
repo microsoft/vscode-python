@@ -3,6 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -36,6 +37,7 @@ export class HostJupyterExecution
     implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
     private _disposed = false;
+    private _id = uuid();
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
@@ -67,19 +69,23 @@ export class HostJupyterExecution
     }
 
     public async dispose(): Promise<void> {
-        traceInfo(`Disposing HostJupyterExecution`);
+        traceInfo(`Disposing HostJupyterExecution ${this._id}`);
         if (!this._disposed) {
             this._disposed = true;
+            traceInfo(`Disposing super HostJupyterExecution ${this._id}`);
             await super.dispose();
+            traceInfo(`Getting live share API during dispose HostJupyterExecution ${this._id}`);
             const api = await this.api;
+            traceInfo(`Detaching HostJupyterExecution ${this._id}`);
             await this.onDetach(api);
 
             // Cleanup on dispose. We are going away permanently
             if (this.serverCache) {
+                traceInfo(`Cleaning up server cache ${this._id}`);
                 await this.serverCache.dispose();
             }
         }
-        traceInfo(`Finished disposing HostJupyterExecution`);
+        traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
     public async hostConnectToNotebookServer(
