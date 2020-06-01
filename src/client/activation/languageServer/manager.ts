@@ -5,14 +5,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IDisposable,
-    IExperimentsManager,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -44,9 +37,6 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         @named(LanguageServerType.Microsoft)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
-        @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
@@ -125,7 +115,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.surveyBanner,
+            undefined, // Survey is not active with MPLSv1.
             this.experimentsManager,
             this.configService,
             LanguageServerType.Microsoft,

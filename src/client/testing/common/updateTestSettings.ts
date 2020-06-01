@@ -56,7 +56,8 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     // deal with potential whitespace changes.
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string, fixLanguageServerSetting = true): Promise<string> {
-        let fileContents = await this.fs.readFile(filePath);
+        const originalFileContents = await this.fs.readFile(filePath);
+        let fileContents = originalFileContents;
 
         const setting = new RegExp('"python\\.unitTest', 'g');
         fileContents = fileContents.replace(setting, '"python.testing');
@@ -83,7 +84,9 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             fileContents = this.fixLanguageServerSettings(fileContents);
         }
 
-        await this.fs.writeFile(filePath, fileContents);
+        if (fileContents !== originalFileContents) {
+            await this.fs.writeFile(filePath, fileContents);
+        }
         return fileContents;
     }
 
@@ -121,8 +124,15 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             };
             let edits: Edit[] = [];
 
-            if (!jediEnabledNode || jediEnabled) {
-                // `jediEnabled` is missing or is true. Default is true, so assume Jedi.
+            // If `jediEnabled` is missing, the configuration is default.
+            // This mode is treated as a basis for experimentation so we
+            // should not be setting `languageServer` to `Jedi` if it is missing.
+            if (!jediEnabledNode) {
+                return fileContent;
+            }
+
+            if (jediEnabled) {
+                // `jediEnabled` is is true. Default is true, so assume Jedi.
                 edits = modify(fileContent, languageServerPath, LanguageServerType.Jedi, { formattingOptions });
             } else {
                 // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.

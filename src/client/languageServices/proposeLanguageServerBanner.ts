@@ -11,9 +11,14 @@ import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import { getRandomBetween } from '../common/utils/random';
 
-// persistent state names, exported to make use of in testing
+// Persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner'
+    ShowBanner = 'ProposeLSBanner',
+    // With MPLSv1 preview user could get the offer to use LS and either
+    // accept or reject it. The state was then saved. With MPLSv2 we need
+    // to clear the state once in order to allow banner to appear again
+    // for both Jedi and MPLSv1 users.
+    ReactivatedBannerForV2 = 'ReactivatedBannerForV2'
 }
 
 enum ProposeLSLabelIndex {
@@ -53,6 +58,12 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
         this.initialized = true;
+
+        // With MPLSv1 preview user could get the offer to use LS and either
+        // accept or reject it. The state was then saved. With MPLSv2 we need
+        // to clear the state once in order to allow banner to appear again
+        // for both Jedi and MPLSv1 users.
+        this.reactivateBannerForLSv2();
 
         // Don't even bother adding handlers if banner has been turned off.
         if (!this.enabled) {
@@ -115,9 +126,16 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     public async enableLanguageServer(): Promise<void> {
         await this.configuration.updateSetting(
             'languageServer',
-            LanguageServerType.Microsoft,
+            LanguageServerType.Node,
             undefined,
             ConfigurationTarget.Global
         );
+    }
+
+    private reactivateBannerForLSv2(): boolean {
+        return this.persistentState.createGlobalPersistentState<boolean>(
+            ProposeLSStateKeys.ReactivatedBannerForV2,
+            false
+        ).value;
     }
 }

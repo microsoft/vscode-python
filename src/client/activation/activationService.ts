@@ -41,7 +41,7 @@ const workspacePathNameForGlobalWorkspaces = '';
 interface IActivatedServer {
     key: string;
     server: ILanguageServerActivator;
-    jedi: boolean;
+    type: LanguageServerType;
 }
 
 @injectable()
@@ -97,7 +97,7 @@ export class LanguageServerExtensionActivationService
         }
 
         // Save our active server.
-        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerType.Jedi };
+        this.activatedServer = { key, server: result, type: result.type };
 
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
@@ -170,25 +170,23 @@ export class LanguageServerExtensionActivationService
     }
 
     /**
-     * Checks if user is using Jedi as intellisense
-     * @returns `true` if user is using jedi, `false` if user is using language server
+     * Determines what language server to use depending on settings and experiments.
+     * @returns `LanguageServerType`
      */
-    public useJedi(): boolean {
-        // Check if `languageServer` setting is missing (default configuration).
+    public getLanguageServerType(): LanguageServerType {
+        // Check if `languageServer` setting is missing (default configuration means Jedi).
         if (this.isJediUsingDefaultConfiguration(this.resource)) {
             // If user is assigned to an experiment (i.e. use LS), return false.
             if (this.abExperiments.inExperiment(LSEnabled)) {
-                return false;
+                return LanguageServerType.Node;
             }
             // Send telemetry if user is in control group
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-            return true; // Do use Jedi as it is default.
+            return LanguageServerType.Jedi; // Do use Jedi as it is default.
         }
         // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const lstType = configurationService.getSettings(this.resource).languageServer;
-        this.sendTelemetryForChosenLanguageServer(lstType).ignoreErrors();
-        return lstType === LanguageServerType.Jedi;
+        return configurationService.getSettings(this.resource).languageServer;
     }
 
     protected async onWorkspaceFoldersChanged() {
@@ -216,24 +214,14 @@ export class LanguageServerExtensionActivationService
         interpreter: PythonInterpreter | undefined,
         key: string
     ): Promise<RefCountedLanguageServer> {
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let serverType = configurationService.getSettings(this.resource).languageServer;
-        if (!serverType) {
-            serverType = LanguageServerType.Jedi;
-        }
+        // Default (missing settings) case is controlled by experimentation
+        let serverType = this.getLanguageServerType();
 
         switch (serverType) {
             case LanguageServerType.None:
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
                 break;
-            case LanguageServerType.Node:
-                // No telemetry in development phase.
-                break;
             case LanguageServerType.Microsoft:
-                if (this.useJedi()) {
-                    serverType = LanguageServerType.Jedi;
-                    break;
-                }
                 const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
                     IDiagnosticsService,
                     LSNotSupportedDiagnosticServiceId
@@ -252,6 +240,7 @@ export class LanguageServerExtensionActivationService
                 break;
         }
 
+        this.sendTelemetryForChosenLanguageServer(serverType).ignoreErrors();
         await this.logStartup(serverType);
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
@@ -306,16 +295,9 @@ export class LanguageServerExtensionActivationService
         ) {
             return;
         }
-        const jedi = this.useJedi();
-        if (this.activatedServer) {
-            if (this.activatedServer.jedi === jedi) {
-                return;
-            }
-            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const lsType = configurationService.getSettings(this.resource).languageServer;
-            if (this.activatedServer.key === lsType) {
-                return;
-            }
+        const lsType = this.getLanguageServerType();
+        if (this.activatedServer?.type === lsType) {
+            return;
         }
 
         const item = await this.appShell.showInformationMessage(
