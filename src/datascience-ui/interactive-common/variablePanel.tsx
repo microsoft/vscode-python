@@ -5,7 +5,6 @@
 import * as React from 'react';
 
 import { IJupyterVariable } from '../../client/datascience/types';
-import { CommonAction } from './redux/reducers/types';
 import { VariableExplorer } from './variableExplorer';
 
 export interface IVariablePanelProps {
@@ -23,7 +22,8 @@ export interface IVariablePanelProps {
     containerHeight: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
-    setVariableExplorerHeight(containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight>;
+    // tslint:disable-next-line: no-any
+    setVariableExplorerHeight(containerHeight: number, gridHeight: number): any;
     pageIn(startIndex: number, pageSize: number): void;
 }
 
