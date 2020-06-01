@@ -22,6 +22,7 @@ interface IServerData {
 export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private emptyKey = uuid();
+    private disposed = false;
 
     constructor(
         private configService: IConfigurationService,
@@ -96,13 +97,19 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async dispose(): Promise<void> {
-        await Promise.all(
-            [...this.cache.values()].map(async (d) => {
-                const server = await d.promise;
-                await server?.dispose();
-            })
-        );
-        this.cache.clear();
+        if (!this.disposed) {
+            this.disposed = true;
+            const entries = [...this.cache.values()];
+            this.cache.clear();
+            await Promise.all(
+                entries.map(async (d) => {
+                    const server = await d.promise;
+                    if (server) {
+                        await server.dispose();
+                    }
+                })
+            );
+        }
     }
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
