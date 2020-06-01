@@ -47,7 +47,7 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { addToUriList } from '../common';
+import { addToUriList, translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import {
@@ -1138,7 +1138,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 jupyterServerStatus: status,
                 localizedUri: this.getServerUri(notebook.connection),
                 displayName: name,
-                language: kernelSpec?.language ?? PYTHON_LANGUAGE
+                language: translateKernelLanguageToMonaco(kernelSpec?.language ?? PYTHON_LANGUAGE)
             });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);

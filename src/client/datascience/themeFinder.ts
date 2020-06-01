@@ -54,11 +54,42 @@ export class ThemeFinder implements IThemeFinder {
 
     public async findLanguageConfiguration(language: string): Promise<LanguageConfiguration> {
         if (language === PYTHON_LANGUAGE) {
-            return getLanguageConfiguration();
+            // Custom for python. Some of these are required by monaco.
+            return {
+                comments: {
+                    lineComment: '#',
+                    blockComment: ['"""', '"""']
+                },
+                brackets: [
+                    ['{', '}'],
+                    ['[', ']'],
+                    ['(', ')']
+                ],
+                autoClosingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"', notIn: ['string'] },
+                    { open: "'", close: "'", notIn: ['string', 'comment'] }
+                ],
+                surroundingPairs: [
+                    { open: '{', close: '}' },
+                    { open: '[', close: ']' },
+                    { open: '(', close: ')' },
+                    { open: '"', close: '"' },
+                    { open: "'", close: "'" }
+                ],
+                folding: {
+                    offSide: true,
+                    markers: {
+                        start: new RegExp('^\\s*#region\\b'),
+                        end: new RegExp('^\\s*#endregion\\b')
+                    }
+                },
+                ...getLanguageConfiguration()
+            } as any;
         }
-        return {
-            // Unknown? Can't get this from disk. Comes from the other extensions.
-        };
+        return this.findMatchingLanguageConfiguration(language);
     }
 
     public async isThemeDark(themeName: string): Promise<boolean | undefined> {
@@ -104,6 +135,32 @@ export class ThemeFinder implements IThemeFinder {
         }
 
         return results;
+    }
+
+    private async findMatchingLanguageConfiguration(language: string): Promise<LanguageConfiguration> {
+        try {
+            const currentExe = this.currentProcess.execPath;
+            let currentPath = path.dirname(currentExe);
+
+            // Should be somewhere under currentPath/resources/app/extensions inside of a json file
+            let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions', language);
+            if (!(await this.fs.directoryExists(extensionsPath))) {
+                // Might be on mac or linux. try a different path
+                currentPath = path.resolve(currentPath, '../../../..');
+                extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions', language);
+            }
+
+            // See if the 'language-configuration.json' file exists
+            const filePath = path.join(extensionsPath, 'language-configuration.json');
+            if (await this.fs.fileExists(filePath)) {
+                const contents = await this.fs.readFile(filePath);
+                return JSON.parse(contents) as LanguageConfiguration;
+            }
+        } catch {
+            // Do nothing if an error
+        }
+
+        return {};
     }
 
     private async findMatchingLanguages(language: string, rootPath: string): Promise<string | undefined> {
