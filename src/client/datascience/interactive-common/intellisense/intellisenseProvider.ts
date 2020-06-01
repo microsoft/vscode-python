@@ -314,8 +314,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
 
             // Needed by Jedi in completionSource.ts to resolve the item
-            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-            (vscodeCompItem as any)._documentPosition = { document, position: docPos };
+            //const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            //(vscodeCompItem as any)._documentPosition = { document, position: docPos };
 
             const result = await languageServer.resolveCompletionItem(vscodeCompItem, token);
             if (result) {
