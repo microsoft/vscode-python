@@ -160,7 +160,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.RUN_BY_LINE]: ICellAction;
 };
 
-export interface IShowDataViewerAction extends IShowDataViewer { }
+export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ILinkClickAction {
     href: string;
@@ -219,7 +219,7 @@ export interface IRefreshVariablesAction {
     newExecutionCount?: number;
 }
 
-export interface IShowDataViewerAction extends IShowDataViewer { }
+export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ISendCommandAction {
     command: NativeKeyboardCommandTelemetry | NativeMouseCommandTelemetry;

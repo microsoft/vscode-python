@@ -1092,10 +1092,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             try {
                 notebook = identity
                     ? await this.notebookProvider.getOrCreateNotebook({
-                        identity: identity.resource,
-                        resource,
-                        metadata
-                    })
+                          identity: identity.resource,
+                          resource,
+                          metadata
+                      })
                     : undefined;
                 if (notebook) {
                     const executionActivation = { ...identity, owningResource: resource };
@@ -1373,11 +1373,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
             : {
-                totalCount: 0,
-                pageResponse: [],
-                pageStartIndex: args?.startIndex,
-                executionCount: args?.executionCount
-            };
+                  totalCount: 0,
+                  pageResponse: [],
+                  pageStartIndex: args?.startIndex,
+                  executionCount: args?.executionCount
+              };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
@@ -1394,6 +1394,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     };
 
+    // tslint:disable-next-line: no-any
     private async setVariableExplorerHeight(payload?: any) {
         // Store variable explorer height based on file name in workspace storage
         if (payload !== undefined) {
@@ -1408,6 +1409,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             //  { "fully qualified Path to 1.ipynb": 1234,
             //    "fully qualifieid path to 2.ipynb": 1234 }
 
+            // tslint:disable-next-line: no-any
             const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
             value[uri.toString()] = updatedHeights;
             this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
@@ -1423,6 +1425,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             return;
         }
 
+        // tslint:disable-next-line: no-any
         const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
         const uriString = uri.toString();
         if (uriString in value) {
