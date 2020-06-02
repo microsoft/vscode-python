@@ -524,12 +524,16 @@ steps:
       npm install -g vsce
       npm run clean
       npx tsc -p ./
+      ls ./out
       npx gulp clean:cleanExceptTests
+      ls ./out
       mkdir -p ./tmp
       cp -r ./out/test ./tmp/test
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
+      ls ./out
       npx gulp clean:cleanExceptTests
+      ls ./out
       cp -r ./tmp/test ./out/test
       node ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'

@@ -101,10 +101,29 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', async () => {
     // Monkeypatching on CI requires 'out/client/logging' directory to exist, so delete everything in 'out/client' except that.
-    await fsExtra.move('out/client/logging', 'out/tmp');
+    try {
+        await fsExtra.copy('out/client/logging', 'out/temp');
+    } catch (ex) {
+        console.error('Error is', ex);
+    }
     await del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']);
-    await fsExtra.mkdir('out/client').then(() => fsExtra.mkdir('out/client/logging'));
-    await fsExtra.move('out/tmp', 'out/client/logging');
+    try {
+        await fsExtra.mkdir('out/client');
+    } catch (ex) {
+        console.error('Error is', ex);
+    }
+    try {
+        await fsExtra.mkdir('out/client/logging');
+    } catch (ex) {
+        console.error('Error is', ex);
+    }
+    try {
+        await fsExtra.copy('out/temp', 'out/client/logging');
+    } catch (ex) {
+        console.error('Error is', ex);
+    }
+    await del(['out/temp']);
+    // await fsExtra.copy('out/client/logging', 'out/tmp');
 });
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
