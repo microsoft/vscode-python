@@ -559,7 +559,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
             await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
         }
-        if (change.kind === 'saveAs' && change.model && this.model) {
+        if (change.kind === 'saveAs' && change.model) {
             const newFileName = change.model.file.toString();
             const oldFileName = change.sourceUri.toString();
 
@@ -673,7 +673,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
-    // TODO: reference
     @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
     private async export(): Promise<void> {
         const status = this.setStatus(localize.DataScience.convertingToPythonFile(), false);
