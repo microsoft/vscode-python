@@ -28,9 +28,9 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    public async openEditor(file: vscode.Uri): Promise<void> {
+    public async openEditor(file: vscode.Uri, viewType: string): Promise<void> {
         if (this.useCustomEditorApi) {
-            await this.commandManager.executeCommand('vscode.open', file);
+            await this.commandManager.executeCommand('vscode.openWith', file, viewType);
         }
     }
 }

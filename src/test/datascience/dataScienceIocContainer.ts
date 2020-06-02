@@ -1423,7 +1423,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
         } else {
-            this.missedMessages.push(msg);
+            this.missedMessages.push({ type: msg.type, payload: msg.payload });
         }
 
         if (this.extraListeners.length) {

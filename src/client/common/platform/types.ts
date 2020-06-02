@@ -223,7 +223,7 @@ export interface IFileSystem {
     getSubDirectories(rootDir: string): Promise<string[]>;
     getFiles(rootDir: string): Promise<string[]>;
     getFileHash(filePath: string): Promise<string>;
-    search(globPattern: string, cwd?: string): Promise<string[]>;
+    search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
     createTemporaryFile(extension: string, mode?: number): Promise<TemporaryFile>;
     isDirReadonly(dirname: string): Promise<boolean>;
 }

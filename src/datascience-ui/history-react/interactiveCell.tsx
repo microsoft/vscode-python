@@ -28,6 +28,7 @@ import { actionCreators } from './redux/actions';
 interface IInteractiveCellBaseProps {
     role?: string;
     cellVM: ICellViewModel;
+    language: string;
     baseTheme: string;
     codeTheme: string;
     testMode?: boolean;
@@ -294,6 +295,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     disableUndoStack={this.props.cellVM.cell.id !== Identifiers.EditCellId}
                     codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 0}
                     focusPending={this.props.focusPending}
+                    language={this.props.language}
                 />
             );
         }

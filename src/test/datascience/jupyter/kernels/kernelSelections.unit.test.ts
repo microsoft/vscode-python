@@ -160,14 +160,14 @@ suite('Data Science - KernelSelections', () => {
 
         assert.equal(items.length, 0);
     });
-    test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
+    test('Should return a list with the proper details in the quick pick for remote connections', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-        const sessions = activeKernels.map((item) => {
+        const sessions = activeKernels.map((item, index) => {
             return {
-                id: 'sessionId',
+                id: `sessionId${index}`,
                 name: 'someSession',
                 // tslint:disable-next-line: no-any
-                kernel: item as any,
+                kernel: { id: `sessionId${index}`, ...(item as any) },
                 type: '',
                 path: ''
             };
@@ -190,11 +190,12 @@ suite('Data Science - KernelSelections', () => {
                     kernelModel: {
                         ...activePython1KernelModel,
                         ...python1KernelSpecModel,
+                        id: 'sessionId0',
                         session: {
-                            id: 'sessionId',
+                            id: 'sessionId0',
                             name: 'someSession',
                             // tslint:disable-next-line: no-any
-                            kernel: activeKernels[0] as any,
+                            kernel: { id: 'sessionId0', ...(activeKernels[0] as any) },
                             type: '',
                             path: ''
                             // tslint:disable-next-line: no-any
@@ -206,6 +207,33 @@ suite('Data Science - KernelSelections', () => {
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
                     activePython1KernelModel.numberOfConnections.toString()
+                )
+            },
+            {
+                label: juliaKernelSpecModel.display_name,
+                // tslint:disable-next-line: no-any
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: {
+                        ...activeJuliaKernelModel,
+                        ...juliaKernelSpecModel,
+                        id: 'sessionId1',
+                        session: {
+                            id: 'sessionId1',
+                            name: 'someSession',
+                            // tslint:disable-next-line: no-any
+                            kernel: { id: 'sessionId1', ...(activeKernels[1] as any) },
+                            type: '',
+                            path: ''
+                            // tslint:disable-next-line: no-any
+                        } as any
+                    },
+                    kernelSpec: undefined
+                },
+                detail: '<user friendly path>',
+                description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
+                    activeJuliaKernelModel.lastActivityTime.toLocaleString(),
+                    activeJuliaKernelModel.numberOfConnections.toString()
                 )
             }
         ];
@@ -220,7 +248,7 @@ suite('Data Science - KernelSelections', () => {
         verify(sessionManager.getKernelSpecs()).once();
         assert.deepEqual(items, expectedItems);
     });
-    test('Should return a list of Local Kernels + Interpreters for local raw connection (excluding non-python kernels)', async () => {
+    test('Should return a list of Local Kernels + Interpreters for local raw connection', async () => {
         when(kernelFinder.listKernelSpecs(anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
 
@@ -228,15 +256,13 @@ suite('Data Science - KernelSelections', () => {
         // - kernel spec display name
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
-        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
-            (item) => {
-                return {
-                    label: item.display_name,
-                    detail: '<user friendly path>',
-                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
-                };
-            }
-        );
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = allSpecs.map((item) => {
+            return {
+                label: item.display_name,
+                detail: '<user friendly path>',
+                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+            };
+        });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
             return {
                 ...item,
@@ -257,7 +283,7 @@ suite('Data Science - KernelSelections', () => {
 
         assert.deepEqual(items, expectedList);
     });
-    test('Should return a list of Local Kernels + Interpreters for local jupyter connection (excluding non-python kernels)', async () => {
+    test('Should return a list of Local Kernels + Interpreters for local jupyter connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
@@ -266,15 +292,13 @@ suite('Data Science - KernelSelections', () => {
         // - kernel spec display name
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
-        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
-            (item) => {
-                return {
-                    label: item.display_name,
-                    detail: '<user friendly path>',
-                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
-                };
-            }
-        );
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = allSpecs.map((item) => {
+            return {
+                label: item.display_name,
+                detail: '<user friendly path>',
+                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+            };
+        });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
             return {
                 ...item,

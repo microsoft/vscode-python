@@ -174,7 +174,7 @@ export class NativeEditorProvider
         disposable = this._onDidOpenNotebookEditor.event(handler);
 
         // Send an open command.
-        this.customEditorService.openEditor(file).ignoreErrors();
+        this.customEditorService.openEditor(file, NativeEditorProvider.customEditorViewType).ignoreErrors();
 
         // Promise should resolve when the file opens.
         return deferred.promise;

@@ -43,6 +43,8 @@ namespace CssConstants {
 interface INativeCellBaseProps {
     role?: string;
     cellVM: ICellViewModel;
+    language: string;
+
     baseTheme: string;
     codeTheme: string;
     testMode?: boolean;
@@ -747,6 +749,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         disableUndoStack={this.props.useCustomEditorApi}
                         codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 1}
                         focusPending={this.props.focusPending}
+                        language={this.props.language}
                     />
                 </div>
             );

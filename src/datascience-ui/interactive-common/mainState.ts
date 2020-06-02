@@ -8,6 +8,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
@@ -122,6 +123,7 @@ export interface IServerState {
     jupyterServerStatus: ServerStatus;
     localizedUri: string;
     displayName: string;
+    language: string;
 }
 
 export enum ServerStatus {
@@ -179,7 +181,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         kernel: {
             localizedUri: 'No Kernel',
             displayName: 'Python',
-            jupyterServerStatus: ServerStatus.NotStarted
+            jupyterServerStatus: ServerStatus.NotStarted,
+            language: PYTHON_LANGUAGE
         }
     };
 }

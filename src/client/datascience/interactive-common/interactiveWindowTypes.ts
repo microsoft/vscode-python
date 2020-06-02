@@ -499,6 +499,15 @@ export interface IRunByLine {
     expectedExecutionCount: number;
 }
 
+export interface ILoadTmLanguageResponse {
+    languageId: string;
+    scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
+    // tslint:disable-next-line: no-any
+    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageJSON: string; // Contents of the tmLanguage.json file
+    extensions: string[]; // Array of file extensions that map to this language
+}
+
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
@@ -580,8 +589,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
+    public [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;

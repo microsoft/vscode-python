@@ -329,7 +329,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         public readonly paths: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
         private readonly getHash: (data: string) => string,
-        private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>
+        private readonly globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>
     ) {}
     // Create a new object using common-case default values.
     public static withDefaults(
@@ -452,16 +452,17 @@ export class FileSystemUtils implements IFileSystemUtils {
         return this.getHash(data);
     }
 
-    public async search(globPattern: string, cwd?: string): Promise<string[]> {
-        let found: string[];
+    public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
+        // tslint:disable-next-line: no-any
+        let options: any;
         if (cwd) {
-            const options = {
-                cwd: cwd
-            };
-            found = await this.globFiles(globPattern, options);
-        } else {
-            found = await this.globFiles(globPattern);
+            options = { ...options, cwd };
         }
+        if (dot) {
+            options = { ...options, dot };
+        }
+
+        const found = await this.globFiles(globPattern, options);
         return Array.isArray(found) ? found : [];
     }
 
@@ -574,8 +575,8 @@ export class FileSystem implements IFileSystem {
     public async getFileHash(filename: string): Promise<string> {
         return this.utils.getFileHash(filename);
     }
-    public async search(globPattern: string, cwd?: string): Promise<string[]> {
-        return this.utils.search(globPattern, cwd);
+    public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
+        return this.utils.search(globPattern, cwd, dot);
     }
     public async createTemporaryFile(suffix: string, mode?: number): Promise<TemporaryFile> {
         return this.utils.tmp.createFile(suffix, mode);
