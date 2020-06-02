@@ -47,10 +47,10 @@ export class NotebookProvider implements INotebookProvider {
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
-        // this.rawNotebookProvider
-        //     .supported()
-        //     .then((b) => (this._type = b ? 'raw' : 'jupyter'))
-        //     .ignoreErrors();
+        this.rawNotebookProvider
+            .supported()
+            .then((b) => (this._type = b ? 'raw' : 'jupyter'))
+            .ignoreErrors();
     }
     public get onNotebookCreated() {
         return this._notebookCreated.event;
