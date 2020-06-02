@@ -358,6 +358,7 @@ export interface INotebookModelSaved extends INotebookModelChange {
 export interface INotebookModelSavedAs extends INotebookModelChange {
     kind: 'saveAs';
     target: Uri;
+    sourceUri: Uri;
 }
 
 export interface INotebookModelRemoveAllChange extends INotebookModelChange {
