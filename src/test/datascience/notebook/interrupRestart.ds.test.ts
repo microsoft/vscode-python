@@ -10,7 +10,7 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { INotebookExecutionService } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
+import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
