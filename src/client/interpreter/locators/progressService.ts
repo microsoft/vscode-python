@@ -10,7 +10,8 @@ import { IDisposableRegistry } from '../../common/types';
 import { createDeferredFrom, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterLocatorProgressService, IInterpreterLocatorService, PythonInterpreter } from '../contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { IInterpreterLocatorProgressService, IInterpreterLocatorService } from '../contracts';
 
 @injectable()
 export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {

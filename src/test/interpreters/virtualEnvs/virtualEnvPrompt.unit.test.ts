@@ -16,13 +16,13 @@ import { IPythonPathUpdaterServiceManager } from '../../../client/interpreter/co
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
-    IInterpreterWatcherBuilder,
-    PythonInterpreter
+    IInterpreterWatcherBuilder
 } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { CacheableLocatorService } from '../../../client/interpreter/locators/services/cacheableLocatorService';
 import { InterpreterWatcherBuilder } from '../../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import { VirtualEnvironmentPrompt } from '../../../client/interpreter/virtualEnvs/virtualEnvPrompt';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Prompt', () => {

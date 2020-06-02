@@ -20,7 +20,7 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
-import { InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -29,8 +29,7 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterService,
-    INTERPRETER_LOCATOR_SERVICE,
-    PythonInterpreter
+    INTERPRETER_LOCATOR_SERVICE
 } from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';

@@ -22,14 +22,13 @@ import {
     IInterpreterLocatorService,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
-    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IInterpreterFilter } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

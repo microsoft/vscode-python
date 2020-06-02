@@ -15,8 +15,9 @@ import { ProductService } from '../../../client/common/installer/productService'
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IPersistentState, IPersistentStateFactory, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 use(chaiAsPromised);
 

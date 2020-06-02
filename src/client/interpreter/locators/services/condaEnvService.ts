@@ -6,8 +6,8 @@ import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
-import { CondaInfo, ICondaService, IInterpreterHelper, PythonInterpreter } from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { CondaInfo, ICondaService, IInterpreterHelper } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName } from './conda';
 

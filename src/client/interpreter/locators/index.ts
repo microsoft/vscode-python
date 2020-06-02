@@ -6,6 +6,7 @@ import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -16,7 +17,6 @@ import {
     IInterpreterLocatorService,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
-    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';

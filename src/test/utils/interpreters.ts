@@ -4,8 +4,7 @@
 'use strict';
 
 import { Architecture } from '../../client/common/utils/platform';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 
 /**
  * Creates a PythonInterpreter object for testing purposes, with unique name, version and path.

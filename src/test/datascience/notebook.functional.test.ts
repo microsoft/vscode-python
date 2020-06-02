@@ -45,12 +45,8 @@ import {
     INotebookProvider,
     InterruptResult
 } from '../../client/datascience/types';
-import {
-    IInterpreterService,
-    IKnownSearchPathsForInterpreters,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
-import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
+import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';

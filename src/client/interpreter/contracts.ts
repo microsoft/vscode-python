@@ -1,7 +1,7 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
-import { InterpreterInformation, InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -70,15 +70,6 @@ export interface ICondaService {
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
-
-export type PythonInterpreter = InterpreterInformation & {
-    companyDisplayName?: string;
-    displayName?: string;
-    type: InterpreterType;
-    envName?: string;
-    envPath?: string;
-    cachedEntry?: boolean;
-};
 
 export type WorkspacePythonPath = {
     folderUri: Uri;

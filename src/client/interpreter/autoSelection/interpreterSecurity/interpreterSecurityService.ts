@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { Resource } from '../../../common/types';
-import { PythonInterpreter } from '../../contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { IInterpreterEvaluation, IInterpreterSecurityService, IInterpreterSecurityStorage } from '../types';
 
 @injectable()

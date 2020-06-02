@@ -29,7 +29,8 @@ import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../../constants';
 import {

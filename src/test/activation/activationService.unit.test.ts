@@ -31,9 +31,9 @@ import {
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
-import { InterpreterType } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:max-func-body-length no-any
 

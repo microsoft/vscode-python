@@ -10,8 +10,8 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
-import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
-import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {

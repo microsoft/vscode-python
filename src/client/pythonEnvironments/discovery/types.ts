@@ -27,3 +27,12 @@ export type InterpreterInformation = {
     sysPrefix: string;
     pipEnvWorkspaceFolder?: string;
 };
+
+export type PythonInterpreter = InterpreterInformation & {
+    companyDisplayName?: string;
+    displayName?: string;
+    type: InterpreterType;
+    envName?: string;
+    envPath?: string;
+    cachedEntry?: boolean;
+};

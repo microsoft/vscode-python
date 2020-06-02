@@ -7,8 +7,8 @@ import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { InterpreterInformation, InterpreterType } from '../pythonEnvironments/discovery/types';
-import { IInterpreterHelper, PythonInterpreter, WorkspacePythonPath } from './contracts';
+import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { IInterpreterHelper, WorkspacePythonPath } from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 

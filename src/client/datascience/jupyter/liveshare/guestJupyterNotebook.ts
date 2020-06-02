@@ -15,7 +15,7 @@ import { IConfigurationService, IDisposableRegistry, Resource } from '../../../c
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,

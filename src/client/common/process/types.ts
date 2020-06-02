@@ -5,9 +5,8 @@ import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } f
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
-import { PythonInterpreter } from '../../interpreter/contracts';
 import { Newable } from '../../ioc/types';
-import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { InterpreterInformation, PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { ExecutionInfo, IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 

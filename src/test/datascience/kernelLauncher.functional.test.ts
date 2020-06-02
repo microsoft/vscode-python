@@ -15,7 +15,7 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelConnection, IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { sleep, waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';

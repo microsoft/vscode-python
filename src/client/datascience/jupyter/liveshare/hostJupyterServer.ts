@@ -24,8 +24,9 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScience,
