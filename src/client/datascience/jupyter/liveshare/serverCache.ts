@@ -9,7 +9,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
-import { traceInfo } from '../../../logging';
+import { traceError, traceInfo } from '../../../logging';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 
@@ -104,17 +104,24 @@ export class ServerCache implements IAsyncDisposable {
             this.cache.clear();
             await Promise.all(
                 entries.map(async (d) => {
-                    traceInfo(`ServerCache Dispose, waiting for ${JSON.stringify(d.options)} : ${d.resolved}`);
-                    const server = await d.promise;
-                    if (server) {
-                        traceInfo(`ServerCache Dispose, disposing ${JSON.stringify(d.options)} : ${d.resolved}`);
-                        await server.dispose();
-                        traceInfo(
-                            `ServerCache Dispose, finished disposing ${JSON.stringify(d.options)} : ${d.resolved}`
-                        );
+                    try {
+                        traceInfo(`ServerCache Dispose, waiting for ${JSON.stringify(d.options)} : ${d.resolved}`);
+                        const server = await d.promise;
+                        if (server) {
+                            traceInfo(`ServerCache Dispose, disposing ${JSON.stringify(d.options)} : ${d.resolved}`);
+                            await server.dispose();
+                            traceInfo(
+                                `ServerCache Dispose, finished disposing ${JSON.stringify(d.options)} : ${d.resolved}`
+                            );
+                        } else {
+                            traceInfo('ServerCache Dispose, no server');
+                        }
+                    } catch (e) {
+                        traceError(`Dispose error in ServerCache: `, e);
                     }
                 })
             );
+            traceInfo(`ServerCache dispose complete.`);
         }
     }
 
