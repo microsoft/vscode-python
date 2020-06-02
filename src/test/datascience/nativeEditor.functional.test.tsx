@@ -289,6 +289,12 @@ suite('DataScience Native Editor', () => {
                     'Invalid kernel can be switched',
                     async (wrapper, context) => {
                         if (ioc.mockJupyter) {
+                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                                ...ioc.getSettings().datascience,
+                                jupyterLaunchRetries: 1,
+                                disableJupyterAutoStart: true
+                            });
+
                             // Can only do this with the mock. Have to force the first call to idle on the
                             // the jupyter session to fail
                             ioc.mockJupyter.forcePendingIdleFailure();
@@ -298,6 +304,7 @@ suite('DataScience Native Editor', () => {
 
                             // Run a cell. It should fail.
                             await addCell(wrapper, ioc, 'a=1\na');
+                            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 1);
 
                             // Now switch to another kernel
                             editor.onMessage(InteractiveWindowMessages.SelectKernel, undefined);
@@ -305,7 +312,7 @@ suite('DataScience Native Editor', () => {
                             // Verify we picked the valid kernel.
                             await addCell(wrapper, ioc, 'a=1\na');
 
-                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 2);
                         } else {
                             context.skip();
                         }

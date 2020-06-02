@@ -94,7 +94,6 @@ suite('Data Science - Kernel Switcher', () => {
             instance(kernelSelector),
             instance(appShell),
             instance(mock(KernelDependencyService))
-            //instance(notebookProvider)
         );
         when(appShell.withProgress(anything(), anything())).thenCall(async (_, cb: () => Promise<void>) => {
             await cb();
