@@ -403,7 +403,6 @@
     "src/test/configuration/interpreterSelector.unit.test.ts",
     "src/test/constants.ts",
     "src/test/core.ts",
-    "src/test/debugger/attach.ptvsd.test.ts",
     "src/test/debugger/capabilities.test.ts",
     "src/test/debugger/common/constants.ts",
     "src/test/debugger/common/debugStreamProvider.test.ts",

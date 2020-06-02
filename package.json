@@ -1921,10 +1921,10 @@
                     "description": "Set of debug commands to put as code lens above a cell while debugging.",
                     "scope": "resource"
                 },
-                "python.dataScience.ptvsdDistPath": {
+                "python.dataScience.debugpyDistPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to ptvsd experimental bits for debugging cells.",
+                    "description": "Path to debugpy bits for debugging cells.",
                     "scope": "resource"
                 },
                 "python.dataScience.stopOnFirstLineWhileDebugging": {
