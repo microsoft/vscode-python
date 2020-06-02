@@ -130,7 +130,7 @@ function handleKernelUpdate(arg: MonacoReducerArg<IServerState | undefined>): IM
         }
 
         // Recreate the intellisense provider
-        arg.prevState.intellisenseProvider?.dispose();
+        arg.prevState.intellisenseProvider?.dispose(); // NOSONAR
         return {
             ...arg.prevState,
             language: newLanguage,

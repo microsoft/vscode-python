@@ -87,7 +87,7 @@ export class ThemeFinder implements IThemeFinder {
                     }
                 },
                 ...getLanguageConfiguration()
-            } as any;
+            } as any; // NOSONAR
         }
         return this.findMatchingLanguageConfiguration(language);
     }
