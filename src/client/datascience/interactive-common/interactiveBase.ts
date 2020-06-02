@@ -1407,10 +1407,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const updatedHeights = payload as { containerHeight: number; gridHeight: number };
             const uri = await this.getOwningResource(); // Get file name
 
-            if (!uri || uri.scheme === 'untitled') {
+            if (!uri) {
                 return;
             }
-
             // Storing an object that looks like
             //  { "fully qualified Path to 1.ipynb": 1234,
             //    "fully qualifieid path to 2.ipynb": 1234 }
@@ -1427,8 +1426,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     > {
         const uri = await this.getOwningResource(); // Get file name
 
-        if (!uri) {
-            return;
+        if (!uri || uri.scheme === 'untitled') {
+            return; // don't resotre height of untitled notebooks
         }
 
         // tslint:disable-next-line: no-any
