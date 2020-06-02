@@ -9,6 +9,7 @@ import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
 import { NotebookEditor } from '../../../client/datascience/notebook/notebookEditor';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
@@ -125,7 +126,7 @@ suite('DataScience - VSCode Notebook', function () {
         await modelDisposed.assertFired();
     });
     test('Opening an nb multiple times will result in a single (our) INotebookEditor being created', async () => {
-        await commandManager.executeCommand('vscode.open', Uri.file(templateIPynb));
+        await commandManager.executeCommand('vscode.openWith', Uri.file(templateIPynb), JupyterNotebookView);
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
         // Open a duplicate editor.
@@ -137,7 +138,7 @@ suite('DataScience - VSCode Notebook', function () {
         assert.lengthOf(editorProvider.editors, 1);
     });
     test('Closing one of the duplicate notebooks will not dispose (our) INotebookEditor until all VSC Editors are closed', async () => {
-        await commandManager.executeCommand('vscode.open', Uri.file(templateIPynb));
+        await commandManager.executeCommand('vscode.openWith', Uri.file(templateIPynb), JupyterNotebookView);
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
         const editorDisposed = createEventHandler(editorProvider.activeEditor!, 'closed', disposables);
@@ -221,7 +222,7 @@ suite('DataScience - VSCode Notebook', function () {
         assert.isUndefined(editorProvider.activeEditor);
         assert.equal(editorProvider.editors.length, 0);
 
-        await commandManager.executeCommand('vscode.open', testIPynb);
+        await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
 
         assert.equal(editorProvider.editors.length, 1);
         assert.isOk(vscodeNotebook.activeNotebookEditor);
@@ -232,7 +233,7 @@ suite('DataScience - VSCode Notebook', function () {
         assert.isUndefined(editorProvider.activeEditor);
         assert.equal(editorProvider.editors.length, 0);
 
-        await commandManager.executeCommand('vscode.open', testIPynb);
+        await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
 
         assert.equal(editorProvider.editors.length, 1);
         assert.isOk(vscodeNotebook.activeNotebookEditor);
@@ -295,7 +296,7 @@ suite('DataScience - VSCode Notebook', function () {
         await activeNotebookChanged.assertFiredExactly(1);
 
         // Open another notebook.
-        await commandManager.executeCommand('vscode.open', testIPynb);
+        await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
 
         await notebookOpened.assertFiredExactly(2);
         await activeNotebookChanged.assertFiredExactly(2);
