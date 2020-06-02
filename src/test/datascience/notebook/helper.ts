@@ -16,7 +16,7 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
-import { ICell, INotebookEditorProvider } from '../../../client/datascience/types';
+import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
@@ -162,11 +162,17 @@ export async function swallowSavingOfNotebooks() {
     sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
 }
 
+export async function shutdownAllNotebooks() {
+    const api = await initialize();
+    const notebookProvider = api.serviceContainer.get<INotebookProvider>(INotebookProvider);
+    await Promise.all(notebookProvider.activeNotebooks.map(async (item) => (await item).dispose()));
+}
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
     await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
     disposeAllDisposables(disposables);
+    await shutdownAllNotebooks();
     sinon.restore();
 }
 

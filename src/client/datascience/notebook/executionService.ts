@@ -36,9 +36,10 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 @injectable()
 export class NotebookExecutionService implements INotebookExecutionService {
-    private registeredIOPubListeners = new WeakSet<INotebook>();
+    private readonly registeredIOPubListeners = new WeakSet<INotebook>();
     private _notebookProvider?: INotebookProvider;
-    private pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
+    private readonly pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
+    private readonly tokensInterrupted = new WeakSet<CancellationToken>();
     private get notebookProvider(): INotebookProvider {
         this._notebookProvider =
             this._notebookProvider || this.serviceContainer.get<INotebookProvider>(INotebookProvider);
@@ -133,18 +134,14 @@ export class NotebookExecutionService implements INotebookExecutionService {
         const stopWatch = new StopWatch();
 
         wrappedToken.onCancellationRequested(() => {
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: Is this the right thing to do?
-            // I think it is, as we have a stop button.
-            // If we're busy executing, then interrupt the execution.
             if (deferred.completed) {
                 return;
             }
-            deferred.resolve();
-            cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
 
             // Interrupt kernel only if original cancellation was cancelled.
-            if (token.isCancellationRequested) {
+            // I.e. interrupt kernel only if user attempts to stop the execution by clicking stop button.
+            if (token.isCancellationRequested && !this.tokensInterrupted.has(token)) {
+                this.tokensInterrupted.add(token);
                 this.commandManager.executeCommand(Commands.NotebookEditorInterruptKernel).then(noop, noop);
             }
         });
@@ -152,14 +149,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
         cell.metadata.runStartTime = new Date().getTime();
         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
 
-        if (!findMappedNotebookCellModel(cell, model.cells)) {
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: Possible it was added as we didn't get to know about it.
-            // We need to handle these.
-            // Basically if there's a new cell, we need to first add it into our model,
-            // Similarly we might want to handle deletions.
-            throw new Error('Unable to find corresonding Cell in Model');
-        }
         let subscription: Subscription | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
