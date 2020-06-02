@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { Uri } from 'vscode';
+import type { TextDocument, Uri } from 'vscode';
+import { NotebookCellScheme } from '../constants';
 import { InterpreterUri } from '../installer/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../types';
 
@@ -71,4 +72,9 @@ export function isUri(resource?: Uri | any): resource is Uri {
     }
     const uri = resource as Uri;
     return typeof uri.path === 'string' && typeof uri.scheme === 'string';
+}
+
+export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
+    const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
+    return uri.scheme.includes(NotebookCellScheme);
 }

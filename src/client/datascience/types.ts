@@ -29,6 +29,7 @@ import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '.
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
+import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
 import { JupyterInstallError } from './jupyter/jupyterInstallError';
@@ -780,6 +781,16 @@ export interface IJupyterVariable {
     indexColumn?: string;
 }
 
+export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
+export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
+    setDependencies(variable: IJupyterVariable, notebook: INotebook): void;
+}
+
+export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
+export interface IJupyterVariableDataProviderFactory {
+    create(variable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariableDataProvider>;
+}
+
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
@@ -817,16 +828,6 @@ export interface IJupyterVariablesResponse {
     totalCount: number;
     pageStartIndex: number;
     pageResponse: IJupyterVariable[];
-}
-
-export const IDataViewerProvider = Symbol('IDataViewerProvider');
-export interface IDataViewerProvider {
-    create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer>;
-}
-export const IDataViewer = Symbol('IDataViewer');
-
-export interface IDataViewer extends IDisposable {
-    showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void>;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');

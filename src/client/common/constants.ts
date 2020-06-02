@@ -4,11 +4,12 @@ export const JUPYTER_LANGUAGE = 'jupyter';
 
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
+export const NotebookCellScheme = 'vscode-notebook-cell';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE },
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-    { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }
 ];
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 

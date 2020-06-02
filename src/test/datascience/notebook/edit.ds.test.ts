@@ -14,7 +14,7 @@ import { splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { createEventHandler, IExtensionTestApi, TestEventHandler } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { initialize } from '../../initialize';
 import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
@@ -42,7 +42,7 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
         }
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     });
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     [true, false].forEach((isUntitled) => {
         suite(isUntitled ? 'Untitled Notebook' : 'Existing Notebook', () => {
             let model: INotebookModel;

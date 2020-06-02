@@ -1468,10 +1468,6 @@ export interface IVSCodeNotebook {
     >;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    /**
-     * Whether the current document is aCell.
-     */
-    isCell(textDocument: TextDocument): boolean;
     registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
 
     registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;

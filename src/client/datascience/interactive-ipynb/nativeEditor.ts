@@ -61,12 +61,12 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
@@ -86,6 +86,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
@@ -164,7 +165,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
-        @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
+        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
@@ -191,7 +194,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             configuration,
             jupyterExporter,
             workspaceService,
-            dataExplorerProvider,
+            dataExplorerFactory,
+            jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             errorHandler,

@@ -49,7 +49,7 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { addToUriList } from '../common';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { ColumnWarningSize } from '../data-viewing/types';
+import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -74,13 +74,13 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
@@ -137,7 +137,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() protected configuration: IConfigurationService,
         @unmanaged() protected jupyterExporter: INotebookExporter,
         @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() private dataExplorerProvider: IDataViewerProvider,
+        @unmanaged() private dataExplorerFactory: IDataViewerFactory,
+        @unmanaged() private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private jupyterVariables: IJupyterVariables,
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
@@ -902,7 +903,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkColumnSize(request.columnSize)) {
-                await this.dataExplorerProvider.create(request.variable, this._notebook!);
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    request.variable,
+                    this._notebook!
+                );
+                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
+                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());

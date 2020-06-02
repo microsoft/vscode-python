@@ -32,6 +32,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -45,7 +46,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -53,6 +53,7 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
     INotebookProvider,
@@ -101,7 +102,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
+        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
@@ -127,7 +130,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             configuration,
             jupyterExporter,
             workspaceService,
-            dataExplorerProvider,
+            dataExplorerFactory,
+            jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             errorHandler,
