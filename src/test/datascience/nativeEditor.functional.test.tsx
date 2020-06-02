@@ -286,6 +286,36 @@ suite('DataScience Native Editor', () => {
                 );
 
                 runMountedTest(
+                    'Invalid kernel can be switched',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            // Can only do this with the mock. Have to force the first call to idle on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingIdleFailure();
+
+                            // Create an editor so something is listening to messages
+                            const editor = (await createNewEditor(ioc)) as NativeEditorWebView;
+
+                            // Run a cell. It should fail.
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            // Now switch to another kernel
+                            editor.onMessage(InteractiveWindowMessages.SelectKernel, undefined);
+
+                            // Verify we picked the valid kernel.
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                        } else {
+                            context.skip();
+                        }
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
                     'Mime Types',
                     async (wrapper) => {
                         // Create an editor so something is listening to messages
