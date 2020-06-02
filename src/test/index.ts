@@ -23,11 +23,9 @@ import {
     TEST_TIMEOUT
 } from './constants';
 import { initialize } from './initialize';
+import { initializeLogger } from './testLogger';
 
-if (!process.env.VSC_PYTHON_SMOKE_TEST) {
-    const initializeLogger = require('./testLogger');
-    initializeLogger();
-}
+initializeLogger();
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
