@@ -245,15 +245,17 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 }
 
 export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
-    const ext = path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
     // This means temp file has to be created in the same folder
     // as the original one and then removed.
+    // Use a .tmp file extension (instead of the original extension)
+    // because the language server is watching the file system for Python
+    // file add/delete/change and we don't want this temp file to trigger it.
 
     // tslint:disable-next-line:no-require-imports
-    const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+    const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}.tmp`;
     try {
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {
