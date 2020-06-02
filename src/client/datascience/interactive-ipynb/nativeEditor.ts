@@ -560,8 +560,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
         }
         if (change.kind === 'saveAs' && change.model && this.model) {
-            const newFileName: string = change.model.file.toString();
-            const oldFileName = this.model.file.toString();
+            const newFileName = change.model.file.toString();
+            const oldFileName = change.sourceUri.toString();
 
             if (newFileName !== oldFileName) {
                 // If the filename has changed
@@ -673,6 +673,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
+    // TODO: reference
     @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
     private async export(): Promise<void> {
         const status = this.setStatus(localize.DataScience.convertingToPythonFile(), false);
