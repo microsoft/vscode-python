@@ -7,7 +7,12 @@ import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-langua
 
 import { isTestExecution } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, Resource } from '../../common/types';
+import {
+    BANNER_NAME_PROPOSE_LS_OVER_LSV1,
+    IConfigurationService,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
@@ -32,7 +37,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_PROPOSE_LS)
+        @named(BANNER_NAME_PROPOSE_LS_OVER_LSV1)
         private readonly proposeNewLanguageServerPopup: IPythonExtensionBanner
     ) {
         this.startupCompleted = createDeferred<void>();

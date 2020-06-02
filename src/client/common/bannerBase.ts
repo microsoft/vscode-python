@@ -3,6 +3,8 @@
 
 import { IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 
+// Base class for a popup (banner) that proposes user to try out a new feature of
+// the extension, and optionally enable that new feature if they choose to do so.
 export abstract class BannerBase implements IPythonExtensionBanner {
     protected initialization = Promise.resolve();
     protected disabledInCurrentSession = false;

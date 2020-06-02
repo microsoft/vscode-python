@@ -25,15 +25,7 @@ enum ProposeLSLabelIndex {
     Later
 }
 
-/*
-This class represents a popup that propose that the user try out a new
-feature of the extension, and optionally enable that new feature if they
-choose to do so. It is meant to be shown only to a subset of our users,
-and will show as soon as it is instructed to do so, if a random sample
-function enables the popup for this user.
-*/
-@injectable()
-export class ProposeLanguageServerBanner extends BannerBase {
+abstract class ProposeLanguageServerBanner extends BannerBase {
     private sampleSizePerHundred: number;
     private bannerMessage: string = localize.LanguageService.proposeLanguageServerMessage();
     private bannerLabels: string[] = [
@@ -43,9 +35,9 @@ export class ProposeLanguageServerBanner extends BannerBase {
     ];
 
     constructor(
-        @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) private configuration: IConfigurationService,
+        private appShell: IApplicationShell,
+        persistentState: IPersistentStateFactory,
+        private configuration: IConfigurationService,
         sampleSizePerOneHundredUsers: number = 10
     ) {
         super(ProposeLSStateKeys.ShowBanner, persistentState);
@@ -97,7 +89,7 @@ export class ProposeLanguageServerBanner extends BannerBase {
         // for both Jedi and MPLSv1 users.
         await this.reactivateBannerForLSv2();
 
-        // we only want 10% of folks that use Jedi or MPLSv1 to see the prompt for MPLS v2.
+        // we only want 10% of folks that use MPLSv1 to see the prompt for MPLS v2.
         const randomSample: number = getRandomBetween(0, 100);
         if (randomSample >= this.sampleSizePerHundred) {
             await this.disable();
@@ -113,5 +105,39 @@ export class ProposeLanguageServerBanner extends BannerBase {
             // Remember we've done it.
             await this.setStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, true);
         }
+    }
+}
+
+@injectable()
+export class ProposeLanguageServerBannerOverJedi extends ProposeLanguageServerBanner {
+    constructor(
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService) configuration: IConfigurationService
+    ) {
+        super(appShell, persistentState, configuration, 10);
+    }
+}
+
+@injectable()
+export class ProposeLanguageServerBannerOverLSv1 extends ProposeLanguageServerBanner {
+    constructor(
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService) configuration: IConfigurationService
+    ) {
+        super(appShell, persistentState, configuration, 50);
+    }
+}
+
+// tslint:disable-next-line:max-classes-per-file
+@injectable()
+export class ProposeLanguageServerBannerOverNone extends ProposeLanguageServerBanner {
+    constructor(
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService) configuration: IConfigurationService
+    ) {
+        super(appShell, persistentState, configuration, 50);
     }
 }

@@ -15,7 +15,7 @@ import * as internalPython from '../common/process/internal/python';
 import * as internalScripts from '../common/process/internal/scripts';
 import { IPythonExecutionFactory } from '../common/process/types';
 import {
-    BANNER_NAME_PROPOSE_LS,
+    BANNER_NAME_PROPOSE_LS_OVER_JEDI,
     IConfigurationService,
     IPythonExtensionBanner,
     IPythonSettings
@@ -177,7 +177,7 @@ export class JediProxy implements Disposable {
 
         this.proposeNewLanguageServerPopup = serviceContainer.get<IPythonExtensionBanner>(
             IPythonExtensionBanner,
-            BANNER_NAME_PROPOSE_LS
+            BANNER_NAME_PROPOSE_LS_OVER_JEDI
         );
 
         this.checkJediMemoryFootprint().ignoreErrors();

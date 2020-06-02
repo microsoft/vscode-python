@@ -280,7 +280,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Propose New Language Server Banner",
+                // "--grep", "<suite name>",
                 "--timeout=300000",
                 "--fast"
             ],

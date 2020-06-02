@@ -7,14 +7,20 @@ import {
     BANNER_NAME_DS_SURVEY,
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     BANNER_NAME_LS_SURVEY,
-    BANNER_NAME_PROPOSE_LS,
+    BANNER_NAME_PROPOSE_LS_OVER_JEDI,
+    BANNER_NAME_PROPOSE_LS_OVER_LSV1,
+    BANNER_NAME_PROPOSE_LS_OVER_NONE,
     IPythonExtensionBanner
 } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
-import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
+import {
+    ProposeLanguageServerBannerOverJedi,
+    ProposeLanguageServerBannerOverLSv1,
+    ProposeLanguageServerBannerOverNone
+} from '../languageServices/proposeLanguageServerBanner';
 import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
@@ -126,8 +132,18 @@ function addBanners(serviceManager: IServiceManager): void {
     );
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,
-        ProposeLanguageServerBanner,
-        BANNER_NAME_PROPOSE_LS
+        ProposeLanguageServerBannerOverJedi,
+        BANNER_NAME_PROPOSE_LS_OVER_JEDI
+    );
+    serviceManager.addSingleton<IPythonExtensionBanner>(
+        IPythonExtensionBanner,
+        ProposeLanguageServerBannerOverLSv1,
+        BANNER_NAME_PROPOSE_LS_OVER_LSV1
+    );
+    serviceManager.addSingleton<IPythonExtensionBanner>(
+        IPythonExtensionBanner,
+        ProposeLanguageServerBannerOverNone,
+        BANNER_NAME_PROPOSE_LS_OVER_NONE
     );
     serviceManager.addSingleton<IPythonExtensionBanner>(
         IPythonExtensionBanner,

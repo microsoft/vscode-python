@@ -171,22 +171,19 @@ export class LanguageServerExtensionActivationService
 
     /**
      * Determines what language server to use depending on settings and experiments.
+     * Experiment is for LSv1 => LSv2. No experimentation with Jedi users.
      * @returns `LanguageServerType`
      */
     public getLanguageServerType(): LanguageServerType {
-        // Check if `languageServer` setting is missing (default configuration means Jedi).
-        if (this.isJediUsingDefaultConfiguration(this.resource)) {
-            // If user is assigned to an experiment (i.e. use LS), return false.
-            if (this.abExperiments.inExperiment(LSEnabled)) {
-                return LanguageServerType.Node;
-            }
-            // Send telemetry if user is in control group
-            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-            return LanguageServerType.Jedi; // Do use Jedi as it is default.
-        }
-        // Configuration is non-default, so `languageServer` should be present.
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        return configurationService.getSettings(this.resource).languageServer;
+        const lsType = configurationService.getSettings(this.resource).languageServer;
+        // If user is using LSv1 and is assigned to an experiment (i.e. use LSv2), return false.
+        if (lsType === LanguageServerType.Microsoft && this.abExperiments.inExperiment(LSEnabled)) {
+            return LanguageServerType.Node;
+        }
+        // Send telemetry if user is in control group
+        this.abExperiments.sendTelemetryIfInExperiment(LSControl);
+        return lsType ?? LanguageServerType.Jedi; // Jedi is default.
     }
 
     protected async onWorkspaceFoldersChanged() {
