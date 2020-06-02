@@ -99,7 +99,13 @@ gulp.task('hygiene-branch', (done) => run({ mode: 'diffMaster' }, done));
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:cleanExceptTests', async () => {
+    // Monkeypatching on CI requires 'out/client/logging' directory to exist, so delete everything in 'out/client' except that.
+    await fsExtra.move('out/client/logging', 'out/tmp');
+    await del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']);
+    await fsExtra.mkdir('out/client').then(() => fsExtra.mkdir('out/client/logging'));
+    await fsExtra.move('out/tmp', 'out/client/logging');
+});
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out']));
 
