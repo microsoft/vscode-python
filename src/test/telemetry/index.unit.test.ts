@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
+    _resetSharedProperties,
     clearTelemetryReporter,
     isTelemetryDisabled,
     sendTelemetryEvent,
@@ -57,6 +58,7 @@ suite('Telemetry', () => {
         process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
         process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
         rewiremock.disable();
+        _resetSharedProperties();
     });
 
     const testsForisTelemetryDisabled = [
@@ -127,6 +129,24 @@ suite('Telemetry', () => {
         const expectedProperties = { ...properties, one: 'two' };
 
         setSharedProperty('one', 'two');
+
+        // tslint:disable-next-line:no-any
+        sendTelemetryEvent(eventName as any, measures, properties as any);
+
+        expect(Reporter.eventName).to.deep.equal([eventName]);
+        expect(Reporter.measures).to.deep.equal([measures]);
+        expect(Reporter.properties).to.deep.equal([expectedProperties]);
+    });
+    test('Shared properties will replace existing ones', () => {
+        rewiremock.enable();
+        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+
+        const eventName = 'Testing';
+        const properties = { hello: 'world', foo: 'bar' };
+        const measures = { start: 123, end: 987 };
+        const expectedProperties = { ...properties, foo: 'baz' };
+
+        setSharedProperty('foo', 'baz');
 
         // tslint:disable-next-line:no-any
         sendTelemetryEvent(eventName as any, measures, properties as any);

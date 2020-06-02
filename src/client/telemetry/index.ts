@@ -67,6 +67,15 @@ export function setSharedProperty(name: string, value: string): void {
     sharedProperties[name] = value;
 }
 
+/**
+ * Reset shared properties for testing purposes.
+ */
+export function _resetSharedProperties(): void {
+    for (const key of Object.keys(sharedProperties)) {
+        delete sharedProperties[key];
+    }
+}
+
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
