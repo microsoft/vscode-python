@@ -9,6 +9,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
+import { sleep } from '../../../common/utils/async';
 import { traceError, traceInfo } from '../../../logging';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
@@ -105,14 +106,10 @@ export class ServerCache implements IAsyncDisposable {
             await Promise.all(
                 entries.map(async (d) => {
                     try {
-                        traceInfo(`ServerCache Dispose, waiting for ${JSON.stringify(d.options)} : ${d.resolved}`);
-                        const server = await d.promise;
-                        if (server) {
-                            traceInfo(`ServerCache Dispose, disposing ${JSON.stringify(d.options)} : ${d.resolved}`);
-                            await server.dispose();
-                            traceInfo(
-                                `ServerCache Dispose, finished disposing ${JSON.stringify(d.options)} : ${d.resolved}`
-                            );
+                        // This should be quick. The server is either already up or will never come back.
+                        const server = await Promise.race([d.promise, sleep(1000)]);
+                        if (typeof server !== 'number') {
+                            await (server as any).dispose();
                         } else {
                             traceInfo('ServerCache Dispose, no server');
                         }
@@ -121,7 +118,6 @@ export class ServerCache implements IAsyncDisposable {
                     }
                 })
             );
-            traceInfo(`ServerCache dispose complete.`);
         }
     }
 
