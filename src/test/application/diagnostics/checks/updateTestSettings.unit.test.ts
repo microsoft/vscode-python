@@ -211,9 +211,9 @@ suite('Application Diagnostics - Check Test Settings', () => {
 
     [
         {
-            testTitle: 'No jediEnabled setting.',
+            testTitle: 'No jediEnabled setting',
             contents: '{}',
-            expectedContent: '{ "python.languageServer": "Jedi" }'
+            expectedContent: '{}'
         },
         {
             testTitle: 'jediEnabled: true, no languageServer setting',

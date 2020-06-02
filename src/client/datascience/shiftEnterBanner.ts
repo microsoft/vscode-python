@@ -6,8 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
+import { BannerBase } from '../common/bannerBase';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
@@ -24,45 +25,21 @@ enum InteractiveShiftEnterLabelIndex {
 
 // Create a banner to ask users if they want to send shift-enter to the interactive window or not
 @injectable()
-export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
-    private initialized?: boolean;
-    private disabledInCurrentSession: boolean = false;
+export class InteractiveShiftEnterBanner extends BannerBase {
     private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage();
     private bannerLabels: string[] = [localize.Common.bannerLabelYes(), localize.Common.bannerLabelNo()];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IConfigurationService) private configuration: IConfigurationService
     ) {
-        this.initialize();
-    }
-
-    public initialize() {
-        if (this.initialized) {
-            return;
-        }
-        this.initialized = true;
-
-        if (!this.enabled) {
-            return;
-        }
-    }
-
-    public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(
-            InteractiveShiftEnterStateKeys.ShowBanner,
-            true
-        ).value;
+        super(InteractiveShiftEnterStateKeys.ShowBanner, persistentState);
     }
 
     public async showBanner(): Promise<void> {
-        if (!this.enabled) {
-            return;
-        }
-
-        const show = await this.shouldShowBanner();
+        const show = await this.shouldShowBannerEx();
         if (!show) {
             return;
         }
@@ -93,14 +70,12 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         }
     }
 
-    public async shouldShowBanner(): Promise<boolean> {
+    public async shouldShowBannerEx(): Promise<boolean> {
+        if (!(await this.shouldShowBanner())) {
+            return false;
+        }
         const settings = this.configuration.getSettings();
-        return Promise.resolve(
-            this.enabled &&
-                !this.disabledInCurrentSession &&
-                !settings.datascience.sendSelectionToInteractiveWindow &&
-                settings.datascience.enabled
-        );
+        return !settings.datascience.sendSelectionToInteractiveWindow && settings.datascience.enabled;
     }
 
     @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)

@@ -142,6 +142,13 @@ export namespace LanguageService {
         'LanguageService.reloadVSCodeIfSeachPathHasChanged',
         'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.'
     );
+    export const proposeLanguageServerMessage = localize(
+        'LanguageService.proposeLanguageServerMessage',
+        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.'
+    );
+    export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
+    export const noThanks = localize('LanguageService.noThanks', 'No thanks');
+    export const remindMeLater = localize('LanguageService.remindMeLater', 'Remind me later');
 }
 
 export namespace Http {

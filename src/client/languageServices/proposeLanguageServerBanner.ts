@@ -7,8 +7,10 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
+import { BannerBase } from '../common/bannerBase';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory } from '../common/types';
+import * as localize from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
 
 // Persistent state names, exported to make use of in testing
@@ -31,32 +33,26 @@ and will show as soon as it is instructed to do so, if a random sample
 function enables the popup for this user.
 */
 @injectable()
-export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
-    private disabledInCurrentSession: boolean = false;
+export class ProposeLanguageServerBanner extends BannerBase {
     private sampleSizePerHundred: number;
-    private bannerMessage: string =
-        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-    private bannerLabels: string[] = ['Try it now', 'No thanks', 'Remind me Later'];
+    private bannerMessage: string = localize.LanguageService.proposeLanguageServerMessage();
+    private bannerLabels: string[] = [
+        localize.LanguageService.tryItNow(),
+        localize.LanguageService.noThanks(),
+        localize.LanguageService.remindMeLater()
+    ];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         sampleSizePerOneHundredUsers: number = 10
     ) {
+        super(ProposeLSStateKeys.ShowBanner, persistentState);
         this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
-        this.initialize();
-    }
-
-    public get enabled(): boolean {
-        return this.getStateValue(ProposeLSStateKeys.ShowBanner, true);
     }
 
     public async showBanner(): Promise<void> {
-        if (!this.enabled) {
-            return;
-        }
-
         const show = await this.shouldShowBanner();
         if (!show) {
             return;
@@ -84,15 +80,8 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         }
     }
 
-    public async shouldShowBanner(): Promise<boolean> {
-        return Promise.resolve(this.enabled && !this.disabledInCurrentSession);
-    }
-
-    public async disable(): Promise<void> {
-        this.setStateValue(ProposeLSStateKeys.ShowBanner, false);
-    }
-
     public async enableLanguageServer(): Promise<void> {
+        await this.initialization;
         await this.configuration.updateSetting(
             'languageServer',
             LanguageServerType.Node,
@@ -101,29 +90,22 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         );
     }
 
-    private initialize() {
-        this.reactivateBannerForLSv2()
-            .then(() => {
-                // Don't even bother adding handlers if banner has been turned off.
-                if (!this.enabled) {
-                    return;
-                }
-
-                // we only want 10% of folks that use Jedi to see this survey.
-                const randomSample: number = getRandomBetween(0, 100);
-                if (randomSample >= this.sampleSizePerHundred) {
-                    this.disable().ignoreErrors();
-                    return;
-                }
-            })
-            .ignoreErrors();
-    }
-
-    private async reactivateBannerForLSv2(): Promise<void> {
+    protected async initialize(): Promise<void> {
         // With MPLSv1 preview user could get the offer to use LS and either
         // accept or reject it. The state was then saved. With MPLSv2 we need
         // to clear the state once in order to allow banner to appear again
         // for both Jedi and MPLSv1 users.
+        await this.reactivateBannerForLSv2();
+
+        // we only want 10% of folks that use Jedi or MPLSv1 to see the prompt for MPLS v2.
+        const randomSample: number = getRandomBetween(0, 100);
+        if (randomSample >= this.sampleSizePerHundred) {
+            await this.disable();
+            return;
+        }
+    }
+
+    private async reactivateBannerForLSv2(): Promise<void> {
         const reactivatedPopupOnce = this.getStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, false);
         if (!reactivatedPopupOnce) {
             // Enable popup once.
@@ -131,12 +113,5 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             // Remember we've done it.
             await this.setStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, true);
         }
-    }
-
-    private getStateValue(name: string, defaultValue: boolean): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(name, defaultValue).value;
-    }
-    private async setStateValue(name: string, value: boolean): Promise<void> {
-        return this.persistentState.createGlobalPersistentState<boolean>(name, value).updateValue(value);
     }
 }

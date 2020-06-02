@@ -27,10 +27,11 @@ suite('Propose New Language Server Banner', () => {
         config = typemoq.Mock.ofType<IConfigurationService>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
     });
-    test('Is debugger enabled upon creation?', () => {
-        const enabledValue: boolean = true;
-        const testBanner: ProposeLanguageServerBanner = preparePopup(enabledValue, 100, appShell.object, config.object);
-        expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
+    test('Is debugger enabled upon creation?', async () => {
+        const enabledValue = true;
+        const testBanner = preparePopup(enabledValue, true, 100, appShell.object, config.object);
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
         appShell
@@ -43,18 +44,28 @@ suite('Propose New Language Server Banner', () => {
                 )
             )
             .verifiable(typemoq.Times.never());
-        const enabled: boolean = true;
-        const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 0, appShell.object, config.object);
+        const enabled = true;
+        const testBanner = preparePopup(enabled, false, 0, appShell.object, config.object);
         testBanner.showBanner().ignoreErrors();
     });
-    test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
-        const enabled: boolean = true;
-        const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 0, appShell.object, config.object);
-        expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
+    test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', async () => {
+        const testBanner = preparePopup(true, false, 0, appShell.object, config.object);
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
+    });
+    test('shouldShowBanner must return true when Banner was deactivated but being reactivated now', async () => {
+        const testBanner = preparePopup(false, false, 100, appShell.object, config.object);
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(true, 'We reactivated disabled banner but it did not show.');
+    });
+    test('shouldShowBanner must return false when Banner is was already reactivated and then used', async () => {
+        const testBanner = preparePopup(false, true, 100, appShell.object, config.object);
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(false, 'We disabled banner after reactivation, it should never show.');
     });
     test('shouldShowBanner must return false when Banner is explicitly disabled', async () => {
-        const enabled: boolean = true;
-        const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 100, appShell.object, config.object);
+        const enabled = true;
+        const testBanner = preparePopup(enabled, false, 100, appShell.object, config.object);
 
         expect(await testBanner.shouldShowBanner()).to.be.equal(
             true,
@@ -70,36 +81,39 @@ suite('Propose New Language Server Banner', () => {
 
 function preparePopup(
     enabledValue: boolean,
+    reactivatedValue: boolean,
     sampleValue: number,
     appShell: IApplicationShell,
     config: IConfigurationService
 ): ProposeLanguageServerBanner {
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
+
+    setupPersistentState(myfactory, ProposeLSStateKeys.ShowBanner, enabledValue);
+    setupPersistentState(myfactory, ProposeLSStateKeys.ReactivatedBannerForV2, reactivatedValue);
+    return new ProposeLanguageServerBanner(appShell, myfactory.object, config, sampleValue);
+}
+
+function setupPersistentState(myfactory: typemoq.IMock<IPersistentStateFactory>, name: string, value: boolean): void {
     const val: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
     val.setup((a) => a.updateValue(typemoq.It.isValue(true))).returns(() => {
-        enabledValue = true;
+        value = true;
         return Promise.resolve();
     });
     val.setup((a) => a.updateValue(typemoq.It.isValue(false))).returns(() => {
-        enabledValue = false;
+        value = false;
         return Promise.resolve();
     });
     val.setup((a) => a.value).returns(() => {
-        return enabledValue;
+        return value;
     });
     myfactory
-        .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true))
-        )
+        .setup((a) => a.createGlobalPersistentState(typemoq.It.isValue(name), typemoq.It.isValue(true)))
         .returns(() => {
             return val.object;
         });
     myfactory
-        .setup((a) =>
-            a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false))
-        )
+        .setup((a) => a.createGlobalPersistentState(typemoq.It.isValue(name), typemoq.It.isValue(false)))
         .returns(() => {
             return val.object;
         });
-    return new ProposeLanguageServerBanner(appShell, myfactory.object, config, sampleValue);
 }

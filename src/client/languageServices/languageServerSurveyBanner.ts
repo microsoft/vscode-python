@@ -6,8 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { FolderVersionPair, ILanguageServerFolderService } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
+import { BannerBase } from '../common/bannerBase';
 import '../common/extensions';
-import { IBrowserService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
+import { IBrowserService, IPersistentStateFactory } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
 
@@ -28,11 +29,9 @@ This class represents a popup that will ask our users for some feedback after
 a specific event occurs N times.
 */
 @injectable()
-export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
-    private disabledInCurrentSession: boolean = false;
+export class LanguageServerSurveyBanner extends BannerBase {
     private minCompletionsBeforeShow: number;
     private maxCompletionsBeforeShow: number;
-    private isInitialized: boolean = false;
     private bannerMessage: string = localize.LanguageService.bannerMessage();
     private bannerLabels: string[] = [
         localize.LanguageService.bannerLabelYes(),
@@ -41,39 +40,23 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
         showAfterMinimumEventsCount: number = 100,
         showBeforeMaximumEventsCount: number = 500
     ) {
+        super(LSSurveyStateKeys.ShowBanner, persistentState);
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
-        this.initialize();
-    }
-
-    public initialize(): void {
-        if (this.isInitialized) {
-            return;
-        }
-        this.isInitialized = true;
-
         if (this.minCompletionsBeforeShow >= this.maxCompletionsBeforeShow) {
             this.disable().ignoreErrors();
         }
     }
 
-    public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
-    }
-
     public async showBanner(): Promise<void> {
-        if (!this.enabled || this.disabledInCurrentSession) {
-            return;
-        }
-
         const launchCounter: number = await this.incrementPythonLanguageServiceLaunchCounter();
-        const show = await this.shouldShowBanner(launchCounter);
+        const show = await this.shouldShowBannerEx(launchCounter);
         if (!show) {
             return;
         }
@@ -96,16 +79,16 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         }
     }
 
-    public async shouldShowBanner(launchCounter?: number): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
+    public async shouldShowBannerEx(launchCounter?: number): Promise<boolean> {
+        if (!(await super.shouldShowBanner())) {
             return false;
         }
 
         if (!launchCounter) {
             launchCounter = await this.getPythonLSLaunchCounter();
         }
-        const threshold: number = await this.getPythonLSLaunchThresholdCounter();
 
+        const threshold: number = await this.getPythonLSLaunchThresholdCounter();
         return launchCounter >= threshold;
     }
 
@@ -119,7 +102,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         const launchCounter = await this.getPythonLSLaunchCounter();
         let lsVersion: string = await this.getPythonLSVersion();
         lsVersion = encodeURIComponent(lsVersion);
-        this.browserService.launch(`www.surveymonkey.com/r/ZK7YYVF?n=${launchCounter}&v=${lsVersion}`);
+        this.browserService.launch(`https://www.surveymonkey.com/r/ZK7YYVF?n=${launchCounter}&v=${lsVersion}`);
     }
 
     private async incrementPythonLanguageServiceLaunchCounter(): Promise<number> {

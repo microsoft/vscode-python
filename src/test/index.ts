@@ -63,7 +63,7 @@ function configure(): SetupOptions {
     // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
     // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
     // So the solution is to run them separately and first on CI.
-    const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
+    const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Propose New Language' : defaultGrep;
     const testFilesSuffix = process.env.TEST_FILES_SUFFIX || 'test';
 
     const options: SetupOptions & { retries: number; invert: boolean } = {

@@ -6,6 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
+import { BannerBase } from '../common/bannerBase';
 import '../common/extensions';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -71,9 +72,7 @@ export class DataScienceSurveyBannerLogger implements IInteractiveWindowListener
 }
 
 @injectable()
-export class DataScienceSurveyBanner implements IPythonExtensionBanner {
-    private disabledInCurrentSession: boolean = false;
-    private isInitialized: boolean = false;
+export class DataScienceSurveyBanner extends BannerBase {
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
@@ -83,34 +82,20 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         surveyLink: string = 'https://aka.ms/pyaisurvey'
     ) {
+        super(DSSurveyStateKeys.ShowBanner, persistentState);
         this.surveyLink = surveyLink;
-        this.initialize();
         editorProvider.onDidOpenNotebookEditor(this.openedNotebook.bind(this));
     }
 
-    public initialize(): void {
-        if (this.isInitialized) {
-            return;
-        }
-        this.isInitialized = true;
-    }
-    public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, true).value;
-    }
-
     public async showBanner(): Promise<void> {
-        if (!this.enabled || this.disabledInCurrentSession) {
-            return;
-        }
-
         const executionCount: number = this.getExecutionCount();
         const notebookCount: number = this.getOpenNotebookCount();
-        const show = await this.shouldShowBanner(executionCount, notebookCount);
+        const show = await this.shouldShowBannerEx(executionCount, notebookCount);
         if (!show) {
             return;
         }
@@ -133,18 +118,11 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         }
     }
 
-    public async shouldShowBanner(executionCount: number, notebookOpenCount: number): Promise<boolean> {
-        if (!this.enabled || this.disabledInCurrentSession) {
+    public async shouldShowBannerEx(executionCount: number, notebookOpenCount: number): Promise<boolean> {
+        if (!(await super.shouldShowBanner())) {
             return false;
         }
-
         return executionCount >= NotebookExecutionThreshold || notebookOpenCount > NotebookOpenThreshold;
-    }
-
-    public async disable(): Promise<void> {
-        await this.persistentState
-            .createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false)
-            .updateValue(false);
     }
 
     public async launchSurvey(): Promise<void> {

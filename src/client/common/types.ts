@@ -512,7 +512,7 @@ export interface IBrowserService {
 
 export const IPythonExtensionBanner = Symbol('IPythonExtensionBanner');
 export interface IPythonExtensionBanner {
-    readonly enabled: boolean;
+    isEnabled(): Promise<boolean>;
     showBanner(): Promise<void>;
 }
 export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';

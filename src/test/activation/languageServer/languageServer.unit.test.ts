@@ -13,7 +13,12 @@ import { DotNetLanguageServerProxy } from '../../../client/activation/languageSe
 import { ILanguageClientFactory } from '../../../client/activation/types';
 import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
-import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IPythonExtensionBanner,
+    IPythonSettings
+} from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { UnitTestManagementService } from '../../../client/testing/main';
 import { ITestManagementService } from '../../../client/testing/types';
@@ -33,11 +38,13 @@ suite('Language Server - LanguageServer', () => {
     let testManager: ITestManagementService;
     let configService: typemoq.IMock<IConfigurationService>;
     let commandManager: typemoq.IMock<ICommandManager>;
+    let offerLSBanner: typemoq.IMock<IPythonExtensionBanner>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(DotNetLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
+        offerLSBanner = typemoq.Mock.ofType<IPythonExtensionBanner>();
 
         commandManager = typemoq.Mock.ofType<ICommandManager>();
         commandManager
@@ -45,7 +52,12 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => {
                 return typemoq.Mock.ofType<Disposable>().object;
             });
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
+        server = new LanguageServerTest(
+            instance(clientFactory),
+            instance(testManager),
+            configService.object,
+            offerLSBanner.object
+        );
     });
     teardown(() => {
         client.setup((c) => c.stop()).returns(() => Promise.resolve());

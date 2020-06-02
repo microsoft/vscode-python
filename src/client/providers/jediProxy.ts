@@ -634,23 +634,16 @@ export class JediProxy implements Disposable {
 
     // tslint:disable-next-line:no-any
     private createPayload<T extends ICommandResult>(cmd: IExecutionCommand<T>): any {
-        const payload = {
+        return {
             id: cmd.id,
             prefix: '',
             lookup: commandNames.get(cmd.command),
             path: cmd.fileName,
             source: cmd.source,
-            line: cmd.lineIndex,
-            column: cmd.columnIndex,
+            line: cmd.command === CommandType.Symbols ? undefined : cmd.lineIndex,
+            column: cmd.command === CommandType.Symbols ? undefined : cmd.columnIndex,
             config: this.getConfig()
         };
-
-        if (cmd.command === CommandType.Symbols) {
-            delete payload.column;
-            delete payload.line;
-        }
-
-        return payload;
     }
 
     private async getPathFromPython(getArgs = internalPython.getExecutable): Promise<string> {

@@ -853,7 +853,7 @@ suite('Language Server Activation - ActivationService', () => {
         });
     });
 
-    suite('Test useJedi()', () => {
+    suite('Test getLanguageServerType()', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -939,7 +939,7 @@ suite('Language Server Activation - ActivationService', () => {
                 .returns(() => lsNotSupportedDiagnosticService.object);
         });
 
-        test('If default value (Jedi) of language server is being used, and LSEnabled experiment is enabled, then return false', async () => {
+        test('If default value (Jedi) of language server is being used, and LSEnabled experiment is enabled, then return LanguageServerType.Node', async () => {
             const settings = {};
             experiments
                 .setup((ex) => ex.inExperiment(LSEnabled))
@@ -959,15 +959,15 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            const result = activationService.useJedi();
-            expect(result).to.equal(false, 'LS should be enabled');
+            const lsType = activationService.getLanguageServerType();
+            expect(lsType).to.equal(LanguageServerType.Node, 'LS should be enabled');
 
             workspaceService.verifyAll();
             workspaceConfig.verifyAll();
             experiments.verifyAll();
         });
 
-        test('If default value of languageServer (Jedi) is being used, and LSEnabled experiment is disabled, then send telemetry if user is in Experiment LSControl and useJedi() should be true)', async () => {
+        test('If default value of languageServer (Jedi) is being used, and LSEnabled experiment is disabled, then send telemetry if user is in Experiment LSControl and getLanguageServerType() should be true)', async () => {
             const settings = {};
             experiments
                 .setup((ex) => ex.inExperiment(LSEnabled))
@@ -987,8 +987,8 @@ suite('Language Server Activation - ActivationService', () => {
                 stateFactory.object,
                 experiments.object
             );
-            const result = activationService.useJedi();
-            expect(result).to.equal(true, 'Return value should be true');
+            const lsType = activationService.getLanguageServerType();
+            expect(lsType).to.equal(LanguageServerType.Jedi, 'LS type should be Jedi');
 
             pythonSettings.verifyAll();
             experiments.verifyAll();
@@ -1001,14 +1001,14 @@ suite('Language Server Activation - ActivationService', () => {
             async () => {
                 [
                     {
-                        testName: 'Returns false when python settings value is Microsoft',
+                        testName: 'Returns `Microsoft` when python settings value is Microsoft',
                         pythonSettingsValue: LanguageServerType.Microsoft,
-                        expectedResult: false
+                        expectedResult: LanguageServerType.Microsoft
                     },
                     {
-                        testName: 'Returns true when python settings value is Jedi',
+                        testName: 'Returns `Jedi` when python settings value is Jedi',
                         pythonSettingsValue: LanguageServerType.Jedi,
-                        expectedResult: true
+                        expectedResult: LanguageServerType.Jedi
                     }
                 ].forEach((testParams) => {
                     test(testParams.testName, async () => {
@@ -1035,10 +1035,10 @@ suite('Language Server Activation - ActivationService', () => {
                             stateFactory.object,
                             experiments.object
                         );
-                        const result = activationService.useJedi();
-                        expect(result).to.equal(
+                        const lsType = activationService.getLanguageServerType();
+                        expect(lsType).to.equal(
                             testParams.expectedResult,
-                            `Return value should be ${testParams.expectedResult}`
+                            `Return value of getLanguageServerType() should be ${testParams.expectedResult}`
                         );
 
                         pythonSettings.verifyAll();

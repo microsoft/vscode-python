@@ -30,7 +30,7 @@ suite('Language Server Survey Banner', () => {
         browser = typemoq.Mock.ofType<IBrowserService>();
         lsService = typemoq.Mock.ofType<ILanguageServerFolderService>();
     });
-    test('Is debugger enabled upon creation?', () => {
+    test('Is debugger enabled upon creation?', async () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
@@ -44,7 +44,8 @@ suite('Language Server Survey Banner', () => {
             browser.object,
             lsService.object
         );
-        expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
         appShell
@@ -67,7 +68,7 @@ suite('Language Server Survey Banner', () => {
         );
         testBanner.showBanner().ignoreErrors();
     });
-    test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
+    test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', async () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
@@ -81,7 +82,8 @@ suite('Language Server Survey Banner', () => {
             browser.object,
             lsService.object
         );
-        expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
+        const enabled = await testBanner.isEnabled();
+        expect(enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
     });
 
     const languageServerVersions: string[] = [
@@ -101,7 +103,7 @@ suite('Language Server Survey Banner', () => {
             // the expected URI as provided in issue #2630
             // with mocked-up test replacement values
 
-            const expectedUri: string = `https://www.research.net/r/LJZV9BZ?n=${attemptCounter}&v=${encodeURIComponent(
+            const expectedUri: string = `https://www.surveymonkey.com/r/ZK7YYVF?n=${attemptCounter}&v=${encodeURIComponent(
                 languageServerVersion
             )}`;
 
