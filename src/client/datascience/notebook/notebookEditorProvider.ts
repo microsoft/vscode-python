@@ -29,6 +29,7 @@ import {
     monitorModelCellOutputChangesAndUpdateNotebookDocument,
     updateCellModelWithChangesToVSCCell
 } from './cellUpdateHelpers';
+import { JupyterNotebookView } from './constants';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
@@ -147,7 +148,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
         // Tell VSC to open the notebook, at which point it will fire a callback when a notebook document has been opened.
         // Then our promise will get resolved.
-        await this.commandManager.executeCommand('vscode.open', file);
+        await this.commandManager.executeCommand('vscode.openWith', file, JupyterNotebookView);
 
         // This gets resolved when we have handled the opening of the notebook.
         return deferred.promise;

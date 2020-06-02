@@ -1438,7 +1438,7 @@ export interface ICustomEditorService {
     /**
      * Opens a file with a custom editor
      */
-    openEditor(file: Uri): Promise<void>;
+    openEditor(file: Uri, viewType: string): Promise<void>;
 }
 
 export const IClipboard = Symbol('IClipboard');

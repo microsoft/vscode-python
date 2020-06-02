@@ -52,7 +52,7 @@ export class MockCustomEditorService implements ICustomEditorService {
 
         return { dispose: noop };
     }
-    public async openEditor(file: Uri): Promise<void> {
+    public async openEditor(file: Uri, _viewType: string): Promise<void> {
         if (!this.provider) {
             throw new Error('Opening before registering');
         }
