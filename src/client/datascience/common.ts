@@ -126,5 +126,5 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
     if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
         return 'csharp';
     }
-    return kernelLanguage.toLocaleLowerCase();
+    return kernelLanguage.toLowerCase();
 }

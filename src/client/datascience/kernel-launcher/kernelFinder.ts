@@ -258,11 +258,13 @@ export class KernelFinder implements IKernelFinder {
         const searchResults = await Promise.all(promises);
 
         // Append back on the start of each path so we have the full path in the results
-        const fullPathResults = searchResults.map((result, index) => {
-            return result.map((partialSpecPath) => {
-                return path.join(paths[index], partialSpecPath);
+        const fullPathResults = searchResults
+            .filter((f) => f)
+            .map((result, index) => {
+                return result.map((partialSpecPath) => {
+                    return path.join(paths[index], partialSpecPath);
+                });
             });
-        });
 
         return flatten(fullPathResults);
     }

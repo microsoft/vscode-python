@@ -53,7 +53,7 @@ function handleLoaded<T>(arg: MonacoReducerArg<T>): IMonacoState {
     if (!Tokenizer.hasOnigasm()) {
         postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
     }
-    if (!Tokenizer.hasLanguage(arg.prevState.language)) {
+    if (arg.prevState.language && !Tokenizer.hasLanguage(arg.prevState.language)) {
         postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest, arg.prevState.language);
     }
     // If have both, tell other side monaco is ready

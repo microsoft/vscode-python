@@ -231,7 +231,7 @@ export class KernelSelector {
             this.kernelService.getKernelSpecs(sessionManager, cancelToken)
         ]);
         let bestMatch: IJupyterKernelSpec | undefined;
-        let bestScore = 0;
+        let bestScore = -1;
         for (let i = 0; specs && i < specs?.length; i = i + 1) {
             const spec = specs[i];
             let score = 0;
