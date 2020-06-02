@@ -1441,11 +1441,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-<<<<<<< HEAD
-    private requestTmLanguage() {
-=======
     private async requestTmLanguage(languageId: string) {
->>>>>>> 95434079908b586bfb019d131447911f9c67b304
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
