@@ -113,9 +113,10 @@ export class ProposeLanguageServerBannerOverJedi extends ProposeLanguageServerBa
     constructor(
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) configuration: IConfigurationService
+        @inject(IConfigurationService) configuration: IConfigurationService,
+        sampleValue = 10
     ) {
-        super(appShell, persistentState, configuration, 10);
+        super(appShell, persistentState, configuration, sampleValue);
     }
 }
 
@@ -124,9 +125,10 @@ export class ProposeLanguageServerBannerOverLSv1 extends ProposeLanguageServerBa
     constructor(
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) configuration: IConfigurationService
+        @inject(IConfigurationService) configuration: IConfigurationService,
+        sampleValue = 50
     ) {
-        super(appShell, persistentState, configuration, 50);
+        super(appShell, persistentState, configuration, sampleValue);
     }
 }
 

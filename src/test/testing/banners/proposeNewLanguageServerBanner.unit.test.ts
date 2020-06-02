@@ -10,7 +10,7 @@ import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import {
-    ProposeLanguageServerBanner,
+    ProposeLanguageServerBannerOverJedi,
     ProposeLSStateKeys
 } from '../../../client/languageServices/proposeLanguageServerBanner';
 
@@ -85,12 +85,12 @@ function preparePopup(
     sampleValue: number,
     appShell: IApplicationShell,
     config: IConfigurationService
-): ProposeLanguageServerBanner {
+): ProposeLanguageServerBannerOverJedi {
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
 
     setupPersistentState(myfactory, ProposeLSStateKeys.ShowBanner, enabledValue);
     setupPersistentState(myfactory, ProposeLSStateKeys.ReactivatedBannerForV2, reactivatedValue);
-    return new ProposeLanguageServerBanner(appShell, myfactory.object, config, sampleValue);
+    return new ProposeLanguageServerBannerOverJedi(appShell, myfactory.object, config, sampleValue);
 }
 
 function setupPersistentState(myfactory: typemoq.IMock<IPersistentStateFactory>, name: string, value: boolean): void {
