@@ -28,7 +28,7 @@ import '../client/logging/transports';
  * What we're doing here is monkey patching the console.log so we can
  * send everything sent to console window into our logs.  This is only
  * required when we're directly writing to `console.log` or not using
- * our `winston logger`.  This is something we'd generally turn on, only
+ * our `winston logger`.  This is something we'd generally turn on only
  * on CI so we can see everything logged to the console window
  * (via the logs).
  */
