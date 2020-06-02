@@ -695,8 +695,25 @@ suite('FileSystem', () => {
                 await fix.createFile('x/y/z/spam-all.py');
                 await fix.createFile('x/y/z/spam');
                 await fix.createFile('x/spam.py');
-
+                await fix.createFile('x/y/z/.net.py');
                 let files = await fileSystem.search(pattern);
+
+                // For whatever reason, on Windows "search()" is
+                // returning filenames with forward slasshes...
+                files = files.map(fixPath);
+                expect(files.sort()).to.deep.equal(expected.sort());
+            });
+            test('found dot matches', async () => {
+                const dir = await fix.resolve(`x/y/z`);
+                const expected: string[] = [
+                    await fix.createFile('x/y/z/spam.py'),
+                    await fix.createFile('x/y/z/.net.py')
+                ];
+                // non-matches
+                await fix.createFile('x/spam.py');
+                await fix.createFile('x/y/z/spam');
+                await fix.createFile('x/spam.py');
+                let files = await fileSystem.search(`${dir}/**/*.py`, undefined, true);
 
                 // For whatever reason, on Windows "search()" is
                 // returning filenames with forward slasshes...

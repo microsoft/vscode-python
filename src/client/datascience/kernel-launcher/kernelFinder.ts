@@ -254,7 +254,7 @@ export class KernelFinder implements IKernelFinder {
 
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     private async kernelGlobSearch(paths: string[]): Promise<string[]> {
-        const promises = paths.map((kernelPath) => this.file.search(`**/kernel.json`, kernelPath));
+        const promises = paths.map((kernelPath) => this.file.search(`**/kernel.json`, kernelPath, true));
         const searchResults = await Promise.all(promises);
 
         // Append back on the start of each path so we have the full path in the results
