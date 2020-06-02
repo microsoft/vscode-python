@@ -94,7 +94,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * If a cached entry already exists, then ignore the implementation.
      *
      * @private
-     * @param {string} key
+     * @param {string} cacheKey
      * @param {(() => Promise<NodeJS.ProcessEnv | undefined>)} implementation
      * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
      * @memberof WrapperEnvironmentActivationService

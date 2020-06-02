@@ -68,9 +68,9 @@ export class LaunchJsonUpdaterServiceHelper {
     /**
      * Gets the string representation of the debug config for insertion in the document.
      * Adds necessary leading or trailing commas (remember the text is added into an array).
-     * @param {TextDocument} document
-     * @param {Position} position
      * @param {DebugConfiguration} config
+     * @param {PositionOfCursor} cursorPosition
+     * @param {PositionOfComma} [commaPosition]
      * @returns
      * @memberof LaunchJsonCompletionItemProvider
      */

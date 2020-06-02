@@ -220,10 +220,11 @@ export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
  * Create a testable mocked up version of the TestExplorerViewProvider. Creates any
  * mocked dependencies not provided in the parameters.
  *
- * @param testStore Test storage service, provides access to the Tests structure that the view is built from.
- * @param unitTestMgmtService Unit test management service that provides the 'onTestStatusUpdated' event.
- * @param workspaceService Workspace service used to determine the current workspace that the test view is showing.
- * @param disposableReg Disposable registry used to dispose of items in the view.
+ * @param {ITestCollectionStorageService} [testStore] Test storage service, provides access to the Tests structure that the view is built from.
+ * @param {Tests} [testsData]
+ * @param {ITestManagementService} [unitTestMgmtService] Unit test management service that provides the 'onTestStatusUpdated' event.
+ * @param {IWorkspaceService} [workspaceService] Workspace service used to determine the current workspace that the test view is showing.
+ * @param {ICommandManager} [commandManager]
  */
 export function createMockTestExplorer(
     testStore?: ITestCollectionStorageService,

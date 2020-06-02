@@ -106,6 +106,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
      * @private
      * @template T
      * @param {(daemon: IPythonExecutionService) => Promise<T>} cb
+     * @param daemonLogMessage
      * @returns {Promise<T>}
      * @memberof PythonDaemonExecutionServicePool
      */
@@ -130,6 +131,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
      *
      * @private
      * @param {(daemon: IPythonExecutionService) => ObservableExecutionResult<string>} cb
+     * @param daemonLogMessage
      * @returns {ObservableExecutionResult<string>}
      * @memberof PythonDaemonExecutionServicePool
      */

@@ -243,7 +243,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      * (temporary to hard-code and use these in here).
      * The old debugger will soon go away into oblivion...
      * @private
-     * @param {INotebook} notebook
+     * @param {INotebook} _notebook
      * @returns {Promise<string>}
      * @memberof JupyterDebugger
      */

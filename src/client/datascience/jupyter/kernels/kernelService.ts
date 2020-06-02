@@ -283,6 +283,7 @@ export class KernelService {
      * - env = Will have environment variables of the activated environment.
      *
      * @param {PythonInterpreter} interpreter
+     * @param {boolean} [disableUI]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IJupyterKernelSpec>}
      * @memberof KernelService

@@ -207,6 +207,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * The format is `Python <Version> <bitness> (<env name>: <env type>)`
      * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
      * @param {Partial<PythonInterpreter>} info
+     * @param {Uri} [resource]
      * @returns {string}
      * @memberof InterpreterService
      */

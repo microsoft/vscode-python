@@ -55,6 +55,7 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  *
  * @export
  * @param {Product[]} products
+ * @param {string} [interpreterName]
  * @returns {string}
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
@@ -288,7 +289,7 @@ export class JupyterInterpreterDependencyService {
      *
      * @private
      * @param {PythonInterpreter} interpreter
-     * @param {CancellationToken} [token]
+     * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */

@@ -570,6 +570,7 @@ export interface ICryptoUtils {
      * @returns hash as number, or string
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
+     * @param [algorithm]
      */
     createHash<E extends keyof IHashFormat>(
         data: string,

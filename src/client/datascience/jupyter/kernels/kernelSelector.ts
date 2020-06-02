@@ -87,8 +87,11 @@ export class KernelSelector {
     /**
      * Selects a kernel from a remote session.
      *
+     * @param {Resource} resource
+     * @param {StopWatch} stopWatch
      * @param {IJupyterSessionManager} session
      * @param {CancellationToken} [cancelToken]
+     * @param {IJupyterKernelSpec | LiveKernelModel} [currentKernel]
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
@@ -119,8 +122,12 @@ export class KernelSelector {
     /**
      * Select a kernel from a local session.
      *
+     * @param {Resource} resource
+     * @param type
+     * @param {StopWatch} stopWatch
      * @param {IJupyterSessionManager} [session]
      * @param {CancellationToken} [cancelToken]
+     * @param {IJupyterKernelSpec | LiveKernelModel} [currentKernel]
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
@@ -154,8 +161,11 @@ export class KernelSelector {
      * Gets a kernel that needs to be used with a local session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      *
+     * @param {Resource} resource
+     * @param type
      * @param {IJupyterSessionManager} [sessionManager]
      * @param {nbformat.INotebookMetadata} [notebookMetadata]
+     * @param {boolean} [disableUI]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
@@ -212,6 +222,7 @@ export class KernelSelector {
      * Gets a kernel that needs to be used with a remote session.
      * (will attempt to find the best matching kernel, or prompt user to use current interpreter or select one).
      *
+     * @param {Resource} resource
      * @param {IJupyterSessionManager} [sessionManager]
      * @param {nbformat.INotebookMetadata} [notebookMetadata]
      * @param {CancellationToken} [cancelToken]
@@ -442,9 +453,12 @@ export class KernelSelector {
      * Otherwise, if not provided user is changing the kernel after starting a notebook.
      *
      * @private
+     * @param {Resource} resource
      * @param {PythonInterpreter} interpreter
+     * @param type
      * @param {string} [displayNameOfKernelNotFound]
      * @param {IJupyterSessionManager} [session]
+     * @param [disableUI]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector

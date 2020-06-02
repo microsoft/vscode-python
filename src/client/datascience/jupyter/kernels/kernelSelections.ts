@@ -24,6 +24,7 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel
  * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
  *
  * @param {IJupyterKernelSpec} kernelSpec
+ * @param pathUtils
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForKernelSpec(
@@ -42,6 +43,7 @@ function getQuickPickItemForKernelSpec(
  * Given an active kernel, this will return a quick pick item with appropriate display names and the like.
  *
  * @param {(LiveKernelModel)} kernel
+ * @param {IPathUtils} pathUtils
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
@@ -190,6 +192,7 @@ export class KernelSelectionProvider {
     /**
      * Gets a selection of kernel specs from a remote session.
      *
+     * @param {Resource} resource
      * @param {IJupyterSessionManager} sessionManager
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IKernelSpecQuickPickItem[]>}
@@ -227,6 +230,8 @@ export class KernelSelectionProvider {
     /**
      * Gets a selection of kernel specs for a local session.
      *
+     * @param {Resource} resource
+     * @param type
      * @param {IJupyterSessionManager} [sessionManager]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IKernelSelectionListProvider>}
