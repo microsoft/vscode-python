@@ -35,7 +35,7 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
-function isUntitledFile(file?: Uri) {
+export function isUntitledFile(file?: Uri) {
     return file?.scheme === 'untitled';
 }
 export function isUntitled(model?: INotebookModel): boolean {
