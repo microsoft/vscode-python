@@ -618,6 +618,14 @@ export interface IExperimentsManager {
     sendTelemetryIfInExperiment(experimentName: string): void;
 }
 
+/**
+ * Experiment service leveraging VS Code's experiment framework.
+ */
+export const IExperimentService = Symbol('IExperimentService');
+export interface IExperimentService {
+    inExperiment(experimentName: string): Promise<boolean>;
+}
+
 export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };
 export type InspectInterpreterSettingType = {
     globalValue?: string;

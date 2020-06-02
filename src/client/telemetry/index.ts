@@ -55,6 +55,24 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
+// Shared properties set by the IExperimentationTelemetry implementation.
+const sharedProperties: Record<string, string> = {};
+/**
+ * Set shared properties for all telemetry events.
+ */
+export function setSharedProperty(name: string, value: string): void {
+    sharedProperties[name] = value;
+}
+
+/**
+ * Reset shared properties for testing purposes.
+ */
+export function _resetSharedProperties(): void {
+    for (const key of Object.keys(sharedProperties)) {
+        delete sharedProperties[key];
+    }
+}
+
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
@@ -95,35 +113,37 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
-        const props: Record<string, string> = {};
-        props.stackTrace = getStackTrace(ex);
-        props.originalEventName = (eventName as any) as string;
-        reporter.sendTelemetryEvent('ERROR', props, measures);
+        eventNameSent = 'ERROR';
+        customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+    } else {
+        if (properties) {
+            const data = properties as any;
+            Object.getOwnPropertyNames(data).forEach((prop) => {
+                if (data[prop] === undefined || data[prop] === null) {
+                    return;
+                }
+                try {
+                    // If there are any errors in serializing one property, ignore that and move on.
+                    // Else nothing will be sent.
+                    customProperties[prop] =
+                        typeof data[prop] === 'string'
+                            ? data[prop]
+                            : typeof data[prop] === 'object'
+                            ? 'object'
+                            : data[prop].toString();
+                } catch (ex) {
+                    traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+                }
+            });
+        }
+
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(customProperties, sharedProperties);
+
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
-    const customProperties: Record<string, string> = {};
-    if (properties) {
-        // tslint:disable-next-line:prefer-type-cast no-any
-        const data = properties as any;
-        Object.getOwnPropertyNames(data).forEach((prop) => {
-            if (data[prop] === undefined || data[prop] === null) {
-                return;
-            }
-            try {
-                // If there are any errors in serializing one property, ignore that and move on.
-                // Else nothign will be sent.
-                // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
-                (customProperties as any)[prop] =
-                    typeof data[prop] === 'string'
-                        ? data[prop]
-                        : typeof data[prop] === 'object'
-                        ? 'object'
-                        : data[prop].toString();
-            } catch (ex) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
-            }
-        });
-    }
-    reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
         traceInfo(
             `Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
