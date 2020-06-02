@@ -1,8 +1,7 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
-import { InterpreterInformation } from '../common/process/types';
 import { Resource } from '../common/types';
-import { InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterInformation, InterpreterType } from '../pythonEnvironments/discovery/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';

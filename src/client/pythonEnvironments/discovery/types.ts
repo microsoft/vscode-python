@@ -3,6 +3,9 @@
 
 'use strict';
 
+import { Version } from '../../common/types';
+import { Architecture } from '../../common/utils/platform';
+
 export enum InterpreterType {
     Unknown = 'Unknown',
     Conda = 'Conda',
@@ -12,3 +15,15 @@ export enum InterpreterType {
     Venv = 'Venv',
     WindowsStore = 'WindowsStore'
 }
+
+type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
+export type PythonVersionInfo = [number, number, number, ReleaseLevel];
+
+export type InterpreterInformation = {
+    path: string;
+    version?: Version;
+    sysVersion: string;
+    architecture: Architecture;
+    sysPrefix: string;
+    pipEnvWorkspaceFolder?: string;
+};
