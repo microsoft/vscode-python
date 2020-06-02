@@ -410,6 +410,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             // tslint:disable-next-line: no-console
             console.log('Attempting to force blur on element ', document.activeElement);
             (document.activeElement as HTMLElement).blur();
+             // tslint:disable-next-line: no-console
+            console.log('After blur, active element is now element ', document.activeElement);
         } catch (e) {
             // tslint:disable-next-line: no-console
             console.log('Failed to force blur on element ', document.activeElement);
