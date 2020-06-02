@@ -1063,6 +1063,7 @@ export type GetNotebookOptions = {
 };
 
 export interface INotebookProvider {
+    readonly type: 'raw' | 'jupyter';
     /**
      * Fired when a notebook has been created for a given Uri/Identity
      */

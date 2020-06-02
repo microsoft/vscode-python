@@ -66,6 +66,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
@@ -1436,12 +1437,28 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async selectKernel() {
-        if (!this._notebook) {
-            return;
-        }
         try {
             this.startProgress();
-            await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
+            const kernel = (await this.commandManager.executeCommand(
+                Commands.SwitchJupyterKernel,
+                this._notebook,
+                this._notebook?.connection?.type || this.notebookProvider.type
+            )) as KernelSpecInterpreter;
+            if (!this._notebook && kernel?.kernelSpec) {
+                // No notebook, send update to UI anyway
+                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: ServerStatus.NotStarted,
+                    localizedUri: '',
+                    displayName: kernel.kernelSpec.display_name || kernel.kernelSpec.name || '',
+                    language: translateKernelLanguageToMonaco(kernel.kernelSpec.language ?? PYTHON_LANGUAGE)
+                }).ignoreErrors();
+
+                // Update our model
+                this.updateNotebookOptions(kernel.kernelSpec, kernel.interpreter).ignoreErrors();
+
+                // Try creating a notebook again with this new kernel.
+                this.ensureConnectionAndNotebook().ignoreErrors();
+            }
         } finally {
             this.stopProgress();
         }

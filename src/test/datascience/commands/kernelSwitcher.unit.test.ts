@@ -50,14 +50,14 @@ suite('Data Science - KernelSwitcher Command', () => {
         test('Should do nothing if there is no active notebook and no interactive window', async () => {
             await commandHandler.bind(kernelSwitcherCommand)();
 
-            verify(kernelSwitcher.switchKernel(anything())).never();
+            verify(kernelSwitcher.switchKernel(anything(), anything())).never();
         });
         test('Should switch kernel using the provided notebook', async () => {
             const notebook = mock(JupyterNotebookBase);
 
             await commandHandler.bind(kernelSwitcherCommand)(instance(notebook));
 
-            verify(kernelSwitcher.switchKernel(instance(notebook))).once();
+            verify(kernelSwitcher.switchKernel(instance(notebook), anything())).once();
         });
         test('Should switch kernel using the active Native Editor', async () => {
             const nativeEditor = mock(JupyterNotebookBase);
@@ -66,7 +66,7 @@ suite('Data Science - KernelSwitcher Command', () => {
 
             await commandHandler.bind(kernelSwitcherCommand)();
 
-            verify(kernelSwitcher.switchKernel(instance(nativeEditor))).once();
+            verify(kernelSwitcher.switchKernel(instance(nativeEditor), anything())).once();
         });
         test('Should switch kernel using the active Interactive Window', async () => {
             const interactiveWindow = mock(JupyterNotebookBase);
@@ -75,7 +75,7 @@ suite('Data Science - KernelSwitcher Command', () => {
 
             await commandHandler.bind(kernelSwitcherCommand)();
 
-            verify(kernelSwitcher.switchKernel(instance(interactiveWindow))).once();
+            verify(kernelSwitcher.switchKernel(instance(interactiveWindow), anything())).once();
         });
         test('Should switch kernel using the active Native editor even if an Interactive Window is available', async () => {
             const interactiveWindow = mock(JupyterNotebookBase);
@@ -87,7 +87,7 @@ suite('Data Science - KernelSwitcher Command', () => {
 
             await commandHandler.bind(kernelSwitcherCommand)();
 
-            verify(kernelSwitcher.switchKernel(instance(nativeEditor))).once();
+            verify(kernelSwitcher.switchKernel(instance(nativeEditor), anything())).once();
         });
     });
 });
