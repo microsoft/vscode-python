@@ -1407,7 +1407,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const updatedHeights = payload as { containerHeight: number; gridHeight: number };
             const uri = await this.getOwningResource(); // Get file name
 
-            if (!uri) {
+            if (!uri || uri.scheme === 'untitled') {
                 return;
             }
 

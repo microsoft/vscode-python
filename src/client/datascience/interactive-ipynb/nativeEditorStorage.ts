@@ -499,7 +499,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
-    ) { }
+    ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
     }
