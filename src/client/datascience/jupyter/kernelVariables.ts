@@ -263,16 +263,18 @@ export class KernelVariables implements IJupyterVariables {
             let query = this.configService
                 .getSettings(notebook.resource)
                 .datascience.variableQueries.find((v) => v.language === language);
-            if (!query) {
+            if (!query && language === PYTHON_LANGUAGE) {
                 query = Settings.DefaultVariableQuery;
             }
 
             // Use the query to generate our regex
-            result = {
-                query: query.query,
-                parser: new RegExp(query.parseExpr, 'g')
-            };
-            this.languageToQueryMap.set(language, result);
+            if (query) {
+                result = {
+                    query: query.query,
+                    parser: new RegExp(query.parseExpr, 'g')
+                };
+                this.languageToQueryMap.set(language, result);
+            }
         }
 
         return result;
@@ -369,7 +371,7 @@ export class KernelVariables implements IJupyterVariables {
         const query = this.getParser(notebook);
 
         // Now execute the query
-        if (notebook) {
+        if (notebook && query) {
             const cells = await notebook.execute(query.query, Identifiers.EmptyFileName, 0, uuid(), token, true);
             const text = this.extractJupyterResultText(cells);
 

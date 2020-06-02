@@ -7,7 +7,10 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
-import { INotebookModelModifyChange } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookModelCellExecutionCountChange,
+    INotebookModelModifyChange
+} from '../interactive-common/interactiveWindowTypes';
 import { ICell, INotebookModel } from '../types';
 import { cellOutputsToVSCCellOutputs, translateErrorOutput } from './helpers';
 
@@ -77,6 +80,21 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
     cell.metadata.runState = NotebookCellRunState.Error;
 }
 
+export function updateCellExecutionCount(notebookCellModel: ICell, model: INotebookModel, executionCount: number) {
+    if (notebookCellModel.data.execution_count === executionCount) {
+        return;
+    }
+    // Update our model.
+    const updateCell: INotebookModelCellExecutionCountChange = {
+        kind: 'updateCellExecutionCount',
+        cellId: notebookCellModel.id,
+        executionCount: executionCount,
+        newDirty: true,
+        oldDirty: model.isDirty === true,
+        source: 'user'
+    };
+    model.update(updateCell);
+}
 /**
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.

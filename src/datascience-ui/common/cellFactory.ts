@@ -27,12 +27,12 @@ function uncommentMagicCommands(line: string): string {
     }
 }
 
-export function createMarkdownCell(code: string | string[]): nbformat.IMarkdownCell {
+export function createMarkdownCell(code: string | string[], useSourceAsIs: boolean = false): nbformat.IMarkdownCell {
     code = Array.isArray(code) ? code : [code];
     return {
         cell_type: 'markdown',
         metadata: {},
-        source: generateMarkdownFromCodeLines(code)
+        source: useSourceAsIs ? code : generateMarkdownFromCodeLines(code)
     };
 }
 

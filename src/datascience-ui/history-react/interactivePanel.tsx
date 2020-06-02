@@ -273,6 +273,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         font={this.props.font}
                         settings={this.props.settings}
                         focusPending={this.props.focusPending}
+                        language={this.props.kernel.language}
                     />
                 </ErrorBoundary>
             </div>
@@ -359,6 +360,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             font={this.props.font}
                             settings={this.props.settings}
                             focusPending={this.props.focusPending}
+                            language={this.props.kernel.language}
                         />
                     </ErrorBoundary>
                 </div>

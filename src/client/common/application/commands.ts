@@ -85,6 +85,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['setContext']: [string, boolean];

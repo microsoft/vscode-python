@@ -3,7 +3,7 @@
 'use strict';
 import './mainPanel.css';
 
-import { JSONArray, JSONObject } from '@phosphor/coreutils';
+import { JSONArray } from '@phosphor/coreutils';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 
@@ -11,12 +11,15 @@ import {
     CellFetchAllLimit,
     CellFetchSizeFirst,
     CellFetchSizeSubsequent,
+    ColumnType,
     DataViewerMessages,
+    IDataFrameInfo,
     IDataViewerMapping,
-    IGetRowsResponse
+    IGetRowsResponse,
+    IRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
-import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
@@ -75,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             };
 
             // Fire off a timer to mimic dynamic loading
-            setTimeout(() => this.handleGetAllRowsResponse({ data: data.rows }), 1000);
+            setTimeout(() => this.handleGetAllRowsResponse(data.rows), 1000);
         } else {
             this.state = {
                 gridColumns: [],
@@ -138,7 +141,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 break;
 
             case DataViewerMessages.GetAllRowsResponse:
-                this.handleGetAllRowsResponse(payload as JSONObject);
+                this.handleGetAllRowsResponse(payload as IRowsResponse);
                 break;
 
             case DataViewerMessages.GetRowsResponse:
@@ -198,7 +201,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private initializeData(payload: any) {
         // Payload should be an IJupyterVariable with the first 100 rows filled out
         if (payload) {
-            const variable = payload as IJupyterVariable;
+            const variable = payload as IDataFrameInfo;
             if (variable) {
                 const columns = this.generateColumns(variable);
                 const totalRowCount = variable.rowCount ? variable.rowCount : 0;
@@ -243,8 +246,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
     }
 
-    private handleGetAllRowsResponse(response: JSONObject) {
-        const rows = response.data ? (response.data as JSONArray) : [];
+    private handleGetAllRowsResponse(response: IRowsResponse) {
+        const rows = response ? (response as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
 
         // Update our fetched count and actual rows
@@ -259,7 +262,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
-        const rows = response.rows.data ? (response.rows.data as JSONArray) : [];
+        const rows = response.rows ? (response.rows as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
@@ -285,9 +288,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[] {
+    private generateColumns(variable: IDataFrameInfo): Slick.Column<Slick.SlickData>[] {
         if (variable.columns) {
-            return variable.columns.map((c: { key: string; type: string }, i: number) => {
+            return variable.columns.map((c: { key: string; type: ColumnType }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),

@@ -120,3 +120,11 @@ export function traceCellResults(prefix: string, results: ICell[]) {
         traceInfo(`${prefix} no output.`);
     }
 }
+
+export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
+    // The only known translation is C# to csharp at the moment
+    if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
+        return 'csharp';
+    }
+    return kernelLanguage.toLowerCase();
+}

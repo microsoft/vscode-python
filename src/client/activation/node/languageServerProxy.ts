@@ -79,8 +79,8 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         options: LanguageClientOptions
     ): Promise<void> {
         if (!this.languageClient) {
-            const lsVersion = await this.folderService.getLatestLanguageServerVersion(resource);
-            this.lsVersion = lsVersion?.version.format();
+            const directory = await this.folderService.getCurrentLanguageServerDirectory();
+            this.lsVersion = directory?.version.format();
 
             this.cancellationStrategy = new FileBasedCancellationStrategy();
             options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };

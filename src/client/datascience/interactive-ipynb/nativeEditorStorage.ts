@@ -208,6 +208,9 @@ export class NativeEditorNotebookModel implements INotebookModel {
             case 'swap':
                 changed = this.swapCells(change.firstCellId, change.secondCellId);
                 break;
+            case 'updateCellExecutionCount':
+                changed = this.updateCellExecutionCount(change.cellId, change.executionCount);
+                break;
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
@@ -320,6 +323,15 @@ export class NativeEditorNotebookModel implements INotebookModel {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
             this._state.cells[second] = this.asCell(temp);
+            return true;
+        }
+        return false;
+    }
+
+    private updateCellExecutionCount(cellId: string, executionCount?: number) {
+        const index = this.cells.findIndex((v) => v.id === cellId);
+        if (index >= 0) {
+            this._state.cells[index].data.execution_count = (executionCount || 0) > 0 ? executionCount : null;
             return true;
         }
         return false;

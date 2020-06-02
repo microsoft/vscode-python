@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -61,7 +62,8 @@ function generateDefaultState(
             kernel: {
                 displayName: getLocString('DataScience.noKernel', 'No Kernel'),
                 localizedUri: getLocString('DataScience.serverNotStarted', 'Not Started'),
-                jupyterServerStatus: ServerStatus.NotStarted
+                jupyterServerStatus: ServerStatus.NotStarted,
+                language: PYTHON_LANGUAGE
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
             editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined

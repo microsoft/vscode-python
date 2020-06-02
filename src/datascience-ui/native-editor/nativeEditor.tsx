@@ -339,6 +339,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 ? otherCellRunningByLine === undefined
                                 : false
                         }
+                        language={this.props.kernel.language}
                     />
                 </ErrorBoundary>
                 {lastLine}

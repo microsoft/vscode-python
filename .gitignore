@@ -42,4 +42,4 @@ ptvsd*.log
 pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
-
+bundledLanguageServer/**

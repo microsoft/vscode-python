@@ -267,4 +267,15 @@ suite('Language Server Folder Service', () => {
             assert.deepEqual(result, expectedLSDirectory);
         });
     });
+
+    suite('Method isBundled()', () => {
+        setup(() => {
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
+        });
+
+        test('isBundled is false', () => {
+            expect(languageServerFolderService.isBundled()).to.be.equal(false, 'isBundled should be false');
+        });
+    });
 });

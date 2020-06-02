@@ -26,6 +26,10 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         @unmanaged() protected readonly languageServerFolder: string
     ) {}
 
+    public isBundled(): boolean {
+        return false;
+    }
+
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         const currentFolder = await this.getCurrentLanguageServerDirectory();

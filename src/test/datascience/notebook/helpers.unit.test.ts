@@ -56,6 +56,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                 metadata: {
                     editable: true,
                     executionOrder: 10,
+                    hasExecutionOrder: true,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: true,
                     custom: {
@@ -71,6 +72,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
+                    hasExecutionOrder: false,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
                     runnable: false,
                     custom: {
@@ -122,12 +124,12 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Text,
-                        text: 'Error'
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
+                        data: { 'text/plain': 'Error' }
                     },
                     {
-                        outputKind: vscodeNotebookEnums.CellOutputKind.Text,
-                        text: 'NoError'
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
+                        data: { 'text/plain': 'NoError' }
                     }
                 ]
             );
@@ -145,7 +147,6 @@ suite('Data Science - NativeNotebook helpers', () => {
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html': '<span style="color:var(--vscode-terminal-ansiYellow)">✅ </span> Loading\n',
                             'text/plain': '\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
                         }
                     }
@@ -165,7 +166,6 @@ suite('Data Science - NativeNotebook helpers', () => {
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html': '<xmp>1 is < 2</xmp>',
                             'text/plain': '1 is < 2'
                         }
                     }
@@ -185,8 +185,6 @@ suite('Data Science - NativeNotebook helpers', () => {
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html':
-                                '1 is < 2<span style="color:var(--vscode-terminal-ansiYellow)">✅ </span> Loading\n',
                             'text/plain': '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
                         }
                     }

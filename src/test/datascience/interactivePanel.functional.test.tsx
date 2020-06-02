@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import * as React from 'react';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { CellState } from '../../client/datascience/types';
 import { InteractiveCellComponent } from '../../datascience-ui/history-react/interactiveCell';
 import { IInteractivePanelProps, InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -71,7 +72,12 @@ suite('DataScience Interactive Panel', () => {
             gotoCell: noopAny,
             interruptKernel: noopAny,
             isAtBottom: false,
-            kernel: { displayName: '', jupyterServerStatus: ServerStatus.Busy, localizedUri: '' },
+            kernel: {
+                displayName: '',
+                jupyterServerStatus: ServerStatus.Busy,
+                localizedUri: '',
+                language: PYTHON_LANGUAGE
+            },
             knownDark: false,
             linkClick: noopAny,
             loaded: true,

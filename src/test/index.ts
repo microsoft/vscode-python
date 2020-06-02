@@ -57,6 +57,8 @@ function configure(): SetupOptions {
 
     // Check for a grep setting. Might be running a subset of the tests
     const defaultGrep = process.env.VSC_PYTHON_CI_TEST_GREP;
+    // Check whether to invert the grep (i.e. test everything that doesn't include the grep).
+    const invert = (process.env.VSC_PYTHON_CI_TEST_INVERT_GREP || '').length > 0;
 
     // If running on CI server and we're running the debugger tests, then ensure we only run debug tests.
     // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
@@ -64,9 +66,10 @@ function configure(): SetupOptions {
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
     const testFilesSuffix = process.env.TEST_FILES_SUFFIX || 'test';
 
-    const options: SetupOptions & { retries: number } = {
+    const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
         useColors: true,
+        invert,
         timeout: TEST_TIMEOUT,
         retries: TEST_RETRYCOUNT,
         grep,

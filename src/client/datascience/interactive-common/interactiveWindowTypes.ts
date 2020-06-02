@@ -371,6 +371,11 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     newCells: ICell[];
     oldCells: ICell[];
 }
+export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
+    kind: 'updateCellExecutionCount';
+    cellId: string;
+    executionCount?: number;
+}
 
 export interface INotebookModelClearChange extends INotebookModelChange {
     kind: 'clear';
@@ -486,11 +491,21 @@ export type NotebookModelChange =
     | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
-    | INotebookModelChangeTypeChange;
+    | INotebookModelChangeTypeChange
+    | INotebookModelCellExecutionCountChange;
 
 export interface IRunByLine {
     cell: ICell;
     expectedExecutionCount: number;
+}
+
+export interface ILoadTmLanguageResponse {
+    languageId: string;
+    scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
+    // tslint:disable-next-line: no-any
+    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageJSON: string; // Contents of the tmLanguage.json file
+    extensions: string[]; // Array of file extensions that map to this language
 }
 
 // Map all messages to specific payloads
@@ -574,8 +589,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
+    public [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;
