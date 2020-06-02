@@ -104,23 +104,23 @@ gulp.task('clean:cleanExceptTests', async () => {
     try {
         await fsExtra.copy('out/client/logging', 'out/temp');
     } catch (ex) {
-        console.error('Error is', ex);
+        console.error('Error1 is', ex);
     }
     await del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']);
     try {
         await fsExtra.mkdir('out/client');
     } catch (ex) {
-        console.error('Error is', ex);
+        console.error('Error2 is', ex);
     }
     try {
         await fsExtra.mkdir('out/client/logging');
     } catch (ex) {
-        console.error('Error is', ex);
+        console.error('Error3 is', ex);
     }
     try {
         await fsExtra.copy('out/temp', 'out/client/logging');
     } catch (ex) {
-        console.error('Error is', ex);
+        console.error('Error4 is', ex);
     }
     await del(['out/temp']);
     // await fsExtra.copy('out/client/logging', 'out/tmp');
