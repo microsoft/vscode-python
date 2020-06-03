@@ -430,9 +430,11 @@ suite('DataScience notebook tests', () => {
                         }
                     );
 
+                    traceInfo('Connecting to remote server');
                     const connString = await connectionFound.promise;
                     const uri = connString as string;
 
+                    traceInfo('Waiting for notebook');
                     // We have a connection string here, so try to connect jupyterExecution to the notebook server
                     const notebook = await createNotebook(uri);
                     if (!notebook) {
@@ -554,8 +556,10 @@ suite('DataScience notebook tests', () => {
                         }
                     });
 
+                    traceInfo('Connecting to remote server');
                     const connString = await connectionFound.promise;
                     const uri = connString as string;
+                    traceInfo('Waiting for notebook');
 
                     // We have a connection string here, so try to connect jupyterExecution to the notebook server
                     const notebook = await createNotebook(uri);

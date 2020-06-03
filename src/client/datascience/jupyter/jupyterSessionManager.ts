@@ -21,6 +21,7 @@ import {
 } from '../types';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { createDefaultKernelSpec } from './kernels/helpers';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
@@ -170,6 +171,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         try {
+            // Fetch the list the session manager already knows about. Refreshing may not work.
+            const oldKernelSpecs =
+                this.sessionManager.specs && this.sessionManager.specs.kernelspecs
+                    ? this.sessionManager.specs.kernelspecs
+                    : {};
+
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
             await Promise.race([sleep(10_000), this.sessionManager.refreshSpecs()]);
@@ -178,12 +185,18 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             const kernelspecs =
                 this.sessionManager.specs && this.sessionManager.specs.kernelspecs
                     ? this.sessionManager.specs.kernelspecs
-                    : {};
+                    : oldKernelSpecs;
             const keys = Object.keys(kernelspecs);
-            return keys.map((k) => {
-                const spec = kernelspecs[k];
-                return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
-            });
+            if (keys && keys.length) {
+                return keys.map((k) => {
+                    const spec = kernelspecs[k];
+                    return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
+                });
+            } else {
+                // If for some reason the session manager refuses to communicate, fall
+                // back to a default. This may not exist, but it's likely.
+                return [createDefaultKernelSpec()];
+            }
         } catch (e) {
             traceError(`SessionManager:getKernelSpecs failure: `, e);
             // For some reason this is failing. Just return nothing
