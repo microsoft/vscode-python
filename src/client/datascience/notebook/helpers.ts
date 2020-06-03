@@ -206,11 +206,9 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
     };
 }
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
-    // Do not include ename & evalue, else VSC will display that again.
-    // Currently the ename & value are already part of the stack trace.
     return {
-        ename: '',
-        evalue: '',
+        ename: output.ename,
+        evalue: output.evalue,
         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
         traceback: output.traceback
     };

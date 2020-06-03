@@ -152,8 +152,8 @@ suite('DataScience - VSCode Notebook - (Execution)', function () {
         assert.lengthOf(cell.outputs, 1, 'Incorrect output');
         const errorOutput = cell.outputs[0] as CellErrorOutput;
         assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
-        assert.isEmpty(errorOutput.ename, 'Incorrect ename');
-        assert.isEmpty(errorOutput.evalue, 'Incorrect evalue');
+        assert.isNotEmpty(errorOutput.ename, 'Incorrect ename');
+        assert.isNotEmpty(errorOutput.evalue, 'Incorrect evalue');
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
