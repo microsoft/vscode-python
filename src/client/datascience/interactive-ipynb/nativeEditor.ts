@@ -715,7 +715,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
-        console.log('worked!');
+        const options = ['Export as Python Script', 'Export to HTML', 'Export to PDF'];
+        this.applicationShell.showQuickPick(options);
     }
 
     private async viewDocument(contents: string): Promise<void> {
