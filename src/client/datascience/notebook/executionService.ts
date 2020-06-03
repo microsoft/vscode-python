@@ -22,8 +22,8 @@ import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
-    updateCellExecutionTimes,
     updateCellExecutionCount,
+    updateCellExecutionTimes,
     updateCellOutput,
     updateCellWithErrorStatus
 } from './executionHelpers';
