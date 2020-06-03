@@ -46,7 +46,7 @@ suite('Data Science - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
+        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
