@@ -100,7 +100,7 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
     const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
     const hasExecutionCount = typeof cell.data.execution_count === 'number' && cell.data.execution_count > 0;
     let runState: NotebookCellRunState;
-    let statusMessage = '';
+    let statusMessage: string | undefined;
     if (!hasExecutionCount) {
         runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
     } else if (hasErrors) {
@@ -112,13 +112,7 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
         runState = vscodeNotebookEnums.NotebookCellRunState.Success;
     }
 
-    const startExecutionTime = cell.data.metadata.vscode?.start_execution_time
-        ? new Date(Date.parse(cell.data.metadata.vscode.start_execution_time)).getTime()
-        : undefined;
-    const endExecutionTime = cell.data.metadata.vscode?.end_execution_time
-        ? new Date(Date.parse(cell.data.metadata.vscode.end_execution_time)).getTime()
-        : undefined;
-    return {
+    const notebookCellData: NotebookCellData = {
         cellKind:
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
         language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
@@ -130,17 +124,29 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
             runnable: cell.data.cell_type === 'code',
             custom: {
                 cellId: cell.id
-            },
-            runStartTime: startExecutionTime,
-            lastRunDuration:
-                startExecutionTime && typeof endExecutionTime === 'number'
-                    ? endExecutionTime - startExecutionTime
-                    : undefined,
-            statusMessage
+            }
         },
         source: concatMultilineStringInput(cell.data.source),
         outputs
     };
+
+    if (statusMessage) {
+        notebookCellData.metadata.statusMessage = statusMessage;
+    }
+
+    const startExecutionTime = cell.data.metadata.vscode?.start_execution_time
+        ? new Date(Date.parse(cell.data.metadata.vscode.start_execution_time)).getTime()
+        : undefined;
+    const endExecutionTime = cell.data.metadata.vscode?.end_execution_time
+        ? new Date(Date.parse(cell.data.metadata.vscode.end_execution_time)).getTime()
+        : undefined;
+
+    if (startExecutionTime && typeof endExecutionTime === 'number') {
+        notebookCellData.metadata.runStartTime = startExecutionTime;
+        notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
+    }
+
+    return notebookCellData;
 }
 
 export function cellOutputsToVSCCellOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {

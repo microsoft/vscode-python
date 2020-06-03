@@ -204,8 +204,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 [
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-                        ename: 'Error Name',
-                        evalue: 'Error Value',
+                        ename: '',
+                        evalue: '',
                         traceback: ['stack1', 'stack2', 'stack3']
                     }
                 ]
