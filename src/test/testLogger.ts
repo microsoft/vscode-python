@@ -24,9 +24,6 @@ export function initializeLogger() {
     }
 }
 
-// Ensure that the console functions are bound before monkeypatching.
-import '../client/logging/transports';
-
 /**
  * What we're doing here is monkey patching the console.log so we can
  * send everything sent to console window into our logs.  This is only

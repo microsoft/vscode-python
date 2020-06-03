@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
+// delete everything in '../client' except for '../client/logging' before running smoke tests.
 import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
-import { isCI } from '../common/constants';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
 import { getConsoleTransport, getFileTransport, isConsoleTransport } from './transports';
@@ -45,6 +46,7 @@ export function getPreDefinedConfiguration(): LoggerConfig {
     if (process.env.VSC_PYTHON_FORCE_LOGGING) {
         config.console = {};
         // In CI there's no need for the label.
+        const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
         if (!isCI) {
             config.console.label = 'Python Extension:';
         }
