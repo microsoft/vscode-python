@@ -2,8 +2,8 @@ import { JSONObject } from '@phosphor/coreutils';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
-    lastExecutionTime?: number;
-    startExecutionTime?: number;
+    end_execution_time?: string;
+    start_execution_time?: string;
 }
 
 declare module '@jupyterlab/coreutils' {

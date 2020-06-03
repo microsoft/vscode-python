@@ -18,7 +18,7 @@ import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { waitForCondition } from '../../common';
+import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -251,4 +251,20 @@ export function assertVSCCellIsIdle(cell: NotebookCell) {
 export function assertVSCCellHasErrors(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error);
     return true;
+}
+export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
+    assert.ok(
+        cell.outputs.filter((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error).length,
+        'No error output in cell'
+    );
+    return true;
+}
+
+export async function saveActiveNotebook(disposables: IDisposable[]) {
+    const api = await initialize();
+    const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
+    await commands.executeCommand('workbench.action.files.saveAll');
+
+    await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
 }

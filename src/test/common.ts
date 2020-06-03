@@ -652,6 +652,9 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     public get count(): number {
         return this.handledEvents.length;
     }
+    public get all(): T[] {
+        return this.handledEvents;
+    }
     private readonly handler: IDisposable;
     // tslint:disable-next-line: no-any
     private readonly handledEvents: any[] = [];

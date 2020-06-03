@@ -22,10 +22,12 @@ import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
+    updateCelExecutionTimes,
     updateCellExecutionCount,
     updateCellOutput,
     updateCellWithErrorStatus
 } from './executionHelpers';
+import { getCellStatusMessageBasedOnFirstErrorOutput } from './helpers';
 import { INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -185,9 +187,23 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         ? vscodeNotebookEnums.NotebookCellRunState.Idle
                         : vscodeNotebookEnums.NotebookCellRunState.Success;
                     cell.metadata.statusMessage = '';
+
+                    // Update metadata in our model.
+                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
+                    updateCelExecutionTimes(
+                        notebookCellModel,
+                        model,
+                        cell.metadata.runStartTime,
+                        cell.metadata.lastRunDuration
+                    );
+
                     // If there are any errors in the cell, then change status to error.
                     if (cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {
                         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+                        cell.metadata.statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(
+                            // tslint:disable-next-line: no-any
+                            notebookCellModel.data.outputs as any
+                        );
                     }
                     deferred.resolve();
                 }

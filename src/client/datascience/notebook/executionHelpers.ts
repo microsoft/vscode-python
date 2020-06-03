@@ -140,6 +140,27 @@ export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOu
     model.update(updateCell);
 }
 
+/**
+ * Store execution start and end times in ISO format for portability.
+ */
+export function updateCelExecutionTimes(
+    notebookCellModel: ICell,
+    model: INotebookModel,
+    startTime?: number,
+    duration?: number
+) {
+    const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
+    const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
+    updateCellMetadata(
+        notebookCellModel,
+        {
+            end_execution_time: endTimeISO,
+            start_execution_time: startTimeISO
+        },
+        model
+    );
+}
+
 export function updateCellMetadata(
     notebookCellModel: ICell,
     metadata: Partial<IBaseCellVSCodeMetadata>,
