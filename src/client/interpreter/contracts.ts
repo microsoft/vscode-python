@@ -1,9 +1,10 @@
 import { SemVer } from 'semver';
-import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
+import { CodeLensProvider, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
 import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
 import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
 import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { WorkspacePythonPath } from './helpers';
 import { GetInterpreterOptions } from './interpreterService';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
@@ -53,11 +54,6 @@ export interface ICondaService {
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
     getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
-
-export type WorkspacePythonPath = {
-    folderUri: Uri;
-    configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder;
-};
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
