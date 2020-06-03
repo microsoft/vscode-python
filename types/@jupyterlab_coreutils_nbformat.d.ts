@@ -2,7 +2,6 @@ import { JSONObject } from '@phosphor/coreutils';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 export interface IBaseCellVSCodeMetadata {
-    state?: 'success' | 'idle' | 'error';
     lastExecutionTime?: number;
     startExecutionTime?: number;
 }
