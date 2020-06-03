@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { isCI } from '../client/common/constants';
 import { LogLevel } from '../client/logging/levels';
 import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../client/logging/logger';
 
+const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 const monkeyPatchLogger = createLogger();
 
 export function initializeLogger() {
@@ -28,7 +28,7 @@ import '../client/logging/transports';
  * What we're doing here is monkey patching the console.log so we can
  * send everything sent to console window into our logs.  This is only
  * required when we're directly writing to `console.log` or not using
- * our `winston logger`.  This is something we'd generally turn on, only
+ * our `winston logger`.  This is something we'd generally turn on only
  * on CI so we can see everything logged to the console window
  * (via the logs).
  */
@@ -57,5 +57,3 @@ function monkeypatchConsole() {
         };
     }
 }
-
-module.exports = initializeLogger;
