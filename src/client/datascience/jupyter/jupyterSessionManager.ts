@@ -58,7 +58,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             if (this.sessionManager && !this.sessionManager.isDisposed) {
                 traceInfo('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
-                await this.sessionManager.ready;
+                await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
                 // tslint:disable-next-line: no-any
                 const sessionManager = this.sessionManager as any;
@@ -176,6 +176,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 this.sessionManager.specs && Object.keys(this.sessionManager.specs.kernelspecs).length
                     ? this.sessionManager.specs.kernelspecs
                     : {};
+
+            // Wait for the session to be ready
+            await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
             // Ask the session manager to refresh its list of kernel specs. This might never
             // come back so only wait for ten seconds.
