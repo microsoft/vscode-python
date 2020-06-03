@@ -40,14 +40,14 @@ const pythonFilesDir = path.join(workspaceDir, 'pythonFiles', 'linting');
 const fileToLint = path.join(pythonFilesDir, 'file.py');
 
 const linterConfigDirs = new Map<LinterId, string>([
-    ['flake8', path.join(pythonFilesDir, 'flake8config')],
-    ['pycodestyle', path.join(pythonFilesDir, 'pycodestyleconfig')],
-    ['pydocstyle', path.join(pythonFilesDir, 'pydocstyleconfig27')],
-    ['pylint', path.join(pythonFilesDir, 'pylintconfig')]
+    [LinterId.Flake8, path.join(pythonFilesDir, 'flake8config')],
+    [LinterId.PyCodeStyle, path.join(pythonFilesDir, 'pycodestyleconfig')],
+    [LinterId.PyDocStyle, path.join(pythonFilesDir, 'pydocstyleconfig27')],
+    [LinterId.PyLint, path.join(pythonFilesDir, 'pylintconfig')]
 ]);
 const linterConfigRCFiles = new Map<LinterId, string>([
-    ['pylint', '.pylintrc'],
-    ['pydocstyle', '.pydocstyle']
+    [LinterId.PyLint, '.pylintrc'],
+    [LinterId.PyDocStyle, '.pydocstyle']
 ]);
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
