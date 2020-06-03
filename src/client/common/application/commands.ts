@@ -171,7 +171,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ExportAsPythonScript]: [];
     [DSCommands.ExportToHTML]: [];
     [DSCommands.ExportToPDF]: [];
+<<<<<<< HEAD
     [DSCommands.Export]: [];
+=======
+>>>>>>> added command pallete commands
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];

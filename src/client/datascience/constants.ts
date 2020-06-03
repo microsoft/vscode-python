@@ -82,7 +82,10 @@ export namespace Commands {
     export const ExportAsPythonScript = 'python.datascience.exportAsPythonScript';
     export const ExportToHTML = 'python.datascience.exportToHTML';
     export const ExportToPDF = 'python.datascience.exportToPDF';
+<<<<<<< HEAD
     export const Export = 'python.datascience.export';
+=======
+>>>>>>> added command pallete commands
     export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';

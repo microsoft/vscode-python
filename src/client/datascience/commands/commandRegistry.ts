@@ -48,11 +48,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
-<<<<<<< HEAD
-        @inject(IExperimentService) private readonly expService: IExperimentService
-=======
+        @inject(IExperimentService) private readonly expService: IExperimentService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell
->>>>>>> moved to commandRegister
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -86,7 +83,6 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ExportAsPythonScript, this.exportAsPythonScript);
         this.registerCommand(Commands.ExportToHTML, this.exportToHTML);
         this.registerCommand(Commands.ExportToPDF, this.exportToPDF);
-        this.registerCommand(Commands.Export, this.export);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
@@ -371,82 +367,11 @@ export class CommandRegistry implements IDisposable {
         this.jupyterOutput.show(true);
     }
 
-    private getExportQuickPickItems(): IExportQuickPickItem[] {
-        return [
-            { label: 'Python Script', picked: true, handler: this.exportAsPythonScript },
-            { label: 'HTML', picked: false, handler: this.exportToHTML },
-            { label: 'PDF', picked: false, handler: this.exportToPDF }
-        ];
-    }
-
     private exportAsPythonScript() {}
 
     private exportToHTML() {}
 
     private exportToPDF() {}
-
-    private async showExportQuickPick(): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems();
-
-        const options = {
-            ignoreFocusOut: true,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeHolder: 'Export As...'
-        };
-
-        const pickedItem = await this.applicationShell.showQuickPick(items, options);
-        if (!pickedItem) {
-            return;
-        }
-        for (const item of items) {
-            if (item.label === pickedItem.label) {
-                return item;
-            }
-        }
-    }
-
-    private getFileSaveLocation(): Uri | undefined {
-        const file = this.notebookEditorProvider.activeEditor?.file;
-        const options: SaveDialogOptions = {
-            defaultUri: file,
-            saveLabel: '',
-            filters: {
-                'Juypter Notebooks': ['ipynb']
-            }
-        };
-
-        this.applicationShell.showSaveDialog(options).then((uri) => {
-            return uri;
-        });
-        return undefined;
-    }
-
-    private verifySaved() {
-        if (this.notebookEditorProvider.activeEditor?.isUntitled) {
-            // save to temporary file, don't need to ask
-        }
-
-        // Ask user if they'd like to save
-        const yes = DataScience.exportSaveFileYes();
-        const no = DataScience.exportSaveFileNo();
-        const options = [yes, no];
-
-        this.applicationShell.showInformationMessage(DataScience.exportSaveFilePrompt(), ...options).then((choice) => {
-            if (choice === yes) {
-                this.getFileSaveLocation();
-            }
-        });
-    }
-
-    private export() {
-        this.showExportQuickPick()
-            .then((item) => {
-                this.verifySaved(); // make sure notebook file is saved
-                item?.handler();
-            })
-            .catch();
-    }
 
     private getCurrentCodeLens(): CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
