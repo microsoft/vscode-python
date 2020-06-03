@@ -715,7 +715,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
+<<<<<<< HEAD
         this.commandManager.executeCommand(Commands.Export);
+=======
+        console.log('worked!');
+>>>>>>> some work done
     }
 
     private async viewDocument(contents: string): Promise<void> {
