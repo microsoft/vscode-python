@@ -212,8 +212,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Verify a server that matches us hasn't started already
         this.checkForNotebookProviderConnection().ignoreErrors();
 
-        // Show our web panel.
-        return super.show(true);
+        setTimeout(async () => {
+            // Show our web panel.
+            return super.show(true);
+        }, 0);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
