@@ -12,7 +12,7 @@ export const LINTERID_BY_PRODUCT = new Map<Product, LinterId>([
     [Product.flake8, LinterId.Flake8],
     [Product.pylint, LinterId.PyLint],
     [Product.mypy, LinterId.MyPy],
-    [Product.pycodestyle, LinterId.PyDocStyle],
+    [Product.pycodestyle, LinterId.PyCodeStyle],
     [Product.prospector, LinterId.Prospector],
     [Product.pydocstyle, LinterId.PyDocStyle],
     [Product.pylama, LinterId.PyLama]
