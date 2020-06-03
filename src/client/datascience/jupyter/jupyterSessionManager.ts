@@ -173,7 +173,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         try {
             // Fetch the list the session manager already knows about. Refreshing may not work.
             const oldKernelSpecs =
-                this.sessionManager.specs && this.sessionManager.specs.kernelspecs
+                this.sessionManager.specs && Object.keys(this.sessionManager.specs.kernelspecs).length
                     ? this.sessionManager.specs.kernelspecs
                     : {};
 
@@ -183,7 +183,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
             // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
             const kernelspecs =
-                this.sessionManager.specs && this.sessionManager.specs.kernelspecs
+                this.sessionManager.specs && Object.keys(this.sessionManager.specs.kernelspecs).length
                     ? this.sessionManager.specs.kernelspecs
                     : oldKernelSpecs;
             const keys = Object.keys(kernelspecs);
