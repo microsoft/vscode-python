@@ -331,7 +331,8 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private updateCellExecutionCount(cellId: string, executionCount?: number) {
         const index = this.cells.findIndex((v) => v.id === cellId);
         if (index >= 0) {
-            this._state.cells[index].data.execution_count = (executionCount || 0) > 0 ? executionCount : null;
+            this._state.cells[index].data.execution_count =
+                typeof executionCount === 'number' && executionCount > 0 ? executionCount : null;
             return true;
         }
         return false;

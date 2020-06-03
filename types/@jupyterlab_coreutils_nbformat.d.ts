@@ -126,7 +126,7 @@ declare module '@jupyterlab/coreutils' {
             /**
              * VS Code cell metadata.
              */
-            vscode: Partial<IBaseCellVSCodeMetadata>;
+            vscode?: Partial<IBaseCellVSCodeMetadata>;
             /**
              * The cell's tags. Tags must be unique, and must not contain commas.
              */
