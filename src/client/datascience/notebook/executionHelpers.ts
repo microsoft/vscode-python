@@ -143,7 +143,7 @@ export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOu
 /**
  * Store execution start and end times in ISO format for portability.
  */
-export function updateCelExecutionTimes(
+export function updateCellExecutionTimes(
     notebookCellModel: ICell,
     model: INotebookModel,
     startTime?: number,

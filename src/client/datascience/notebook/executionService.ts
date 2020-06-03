@@ -22,7 +22,7 @@ import { findMappedNotebookCellModel } from './cellUpdateHelpers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
-    updateCelExecutionTimes,
+    updateCellExecutionTimes,
     updateCellExecutionCount,
     updateCellOutput,
     updateCellWithErrorStatus
@@ -190,7 +190,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
                     // Update metadata in our model.
                     const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
-                    updateCelExecutionTimes(
+                    updateCellExecutionTimes(
                         notebookCellModel,
                         model,
                         cell.metadata.runStartTime,
