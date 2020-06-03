@@ -135,18 +135,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.interruptKernel}
-                            disabled={this.props.busy}
-                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
-                        >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Interrupt}
-                            />
-                        </ImageButton>
-                        <ImageButton
-                            baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
                             disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
@@ -155,6 +143,18 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
                                 image={ImageName.Restart}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.interruptKernel}
+                            disabled={this.props.busy}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Interrupt}
                             />
                         </ImageButton>
                         <ImageButton
