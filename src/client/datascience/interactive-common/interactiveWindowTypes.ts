@@ -43,6 +43,7 @@ export enum InteractiveWindowMessages {
     NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
     Export = 'export_to_ipynb',
+    ExportAs = 'export_as_menu',
     GetAllCells = 'get_all_cells',
     ReturnAllCells = 'return_all_cells',
     DeleteAllCells = 'delete_all_cells',
@@ -553,6 +554,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
+    public [InteractiveWindowMessages.ExportAs]: never | undefined;
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;

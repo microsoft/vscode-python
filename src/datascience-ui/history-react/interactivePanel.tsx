@@ -168,7 +168,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.export}
+                            onClick={this.props.exportAs}
                             disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
