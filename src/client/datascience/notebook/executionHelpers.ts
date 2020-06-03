@@ -6,6 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
+import { IBaseCellVSCodeMetadata } from '../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
 import {
     INotebookModelCellExecutionCountChange,
@@ -126,6 +127,37 @@ export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOu
         data: {
             ...notebookCellModel.data,
             outputs
+        }
+    };
+    const updateCell: INotebookModelModifyChange = {
+        kind: 'modify',
+        newCells: [newCell],
+        oldCells: [notebookCellModel],
+        newDirty: true,
+        oldDirty: model.isDirty === true,
+        source: 'user'
+    };
+    model.update(updateCell);
+}
+
+export function updateCellMetadata(
+    notebookCellModel: ICell,
+    metadata: Partial<IBaseCellVSCodeMetadata>,
+    model: INotebookModel
+) {
+    const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
+    // Update our model with the new metadata stored in jupyter.
+    const newCell: ICell = {
+        ...notebookCellModel,
+        data: {
+            ...notebookCellModel.data,
+            metadata: {
+                ...notebookCellModel.data.metadata,
+                vscode: {
+                    ...originalVscodeMetadata,
+                    ...metadata
+                }
+            }
         }
     };
     const updateCell: INotebookModelModifyChange = {

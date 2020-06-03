@@ -11,7 +11,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { commands } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
-import { CellDisplayOutput, CellStreamOutput } from '../../../../typings/vscode-proposed';
+import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
