@@ -61,7 +61,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
         const notebook = await contentProvider.openNotebook(fileUri);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
+        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: (vscodeNotebookEnums as any).CellKind.Code,
