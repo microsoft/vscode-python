@@ -244,9 +244,11 @@ export class KernelProcess implements IKernelProcess {
                 }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
             });
+            // tslint:disable-next-line: no-any
             exeObs.proc.stdout.on('data', (data: any) => {
                 traceInfo(`KernelProcess output: ${data}`);
             });
+            // tslint:disable-next-line: no-any
             exeObs.proc.stderr.on('data', (data: any) => {
                 traceInfo(`KernelProcess error: ${data}`);
             });
