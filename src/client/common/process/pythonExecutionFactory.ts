@@ -5,10 +5,11 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { CondaEnvironmentInfo, ICondaService, IInterpreterService } from '../../interpreter/contracts';
-import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
+import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
+import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
+import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';

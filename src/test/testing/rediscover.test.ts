@@ -5,7 +5,7 @@ import { instance, mock } from 'ts-mockito';
 import { ConfigurationTarget } from 'vscode';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { CommandSource } from '../../client/testing/common/constants';
 import { ITestManagerFactory, TestProvider } from '../../client/testing/common/types';
 import { deleteDirectory, deleteFile, rootWorkspaceUri, updateSetting } from '../common';

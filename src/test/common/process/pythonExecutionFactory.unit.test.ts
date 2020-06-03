@@ -30,10 +30,10 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
-import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any max-func-body-length chai-vague-errors

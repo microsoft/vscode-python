@@ -20,13 +20,13 @@ import {
 import { OSType } from '../../client/common/utils/platform';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/interpreter/locators/services/currentPathService';
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 

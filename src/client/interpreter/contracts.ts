@@ -1,7 +1,10 @@
 import { SemVer } from 'semver';
 import { CodeLensProvider, ConfigurationTarget, Disposable, Event, TextDocument, Uri } from 'vscode';
 import { Resource } from '../common/types';
+import { CondaEnvironmentInfo, CondaInfo } from '../pythonEnvironments/discovery/locators/services/conda';
+import { GetInterpreterLocatorOptions } from '../pythonEnvironments/discovery/locators/types';
 import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { GetInterpreterOptions } from './interpreterService';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
@@ -27,12 +30,6 @@ export interface IVirtualEnvironmentsSearchPathProvider {
     getSearchPaths(resource?: Uri): Promise<string[]>;
 }
 
-export type GetInterpreterOptions = {
-    onSuggestion?: boolean;
-};
-
-export type GetInterpreterLocatorOptions = GetInterpreterOptions & { ignoreCache?: boolean };
-
 export const IInterpreterLocatorService = Symbol('IInterpreterLocatorService');
 
 export interface IInterpreterLocatorService extends Disposable {
@@ -41,20 +38,6 @@ export interface IInterpreterLocatorService extends Disposable {
     didTriggerInterpreterSuggestions?: boolean;
     getInterpreters(resource?: Uri, options?: GetInterpreterLocatorOptions): Promise<PythonInterpreter[]>;
 }
-
-export type CondaInfo = {
-    envs?: string[];
-    'sys.version'?: string;
-    'sys.prefix'?: string;
-    python_version?: string;
-    default_prefix?: string;
-    conda_version?: string;
-};
-
-export type CondaEnvironmentInfo = {
-    name: string;
-    path: string;
-};
 
 export const ICondaService = Symbol('ICondaService');
 

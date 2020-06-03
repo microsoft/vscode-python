@@ -355,42 +355,42 @@ import {
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
-import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
-import { CacheableLocatorPromiseCache } from '../../client/interpreter/locators/services/cacheableLocatorService';
-import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
-import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/interpreter/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
-} from '../../client/interpreter/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
-import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
-import {
-    KnownPathsService,
-    KnownSearchPathsForInterpreters
-} from '../../client/interpreter/locators/services/KnownPathsService';
-import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
-} from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
-import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { traceInfo } from '../../client/logging';
+import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
+import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
+import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
+import { CondaEnvFileService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
+import { CondaEnvService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
+import {
+    GlobalVirtualEnvironmentsSearchPathProvider,
+    GlobalVirtualEnvService
+} from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
+import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
+import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
+import {
+    KnownPathsService,
+    KnownSearchPathsForInterpreters
+} from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
+import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
+import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
+import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
+import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import {
+    WorkspaceVirtualEnvironmentsSearchPathProvider,
+    WorkspaceVirtualEnvService
+} from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
+import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';

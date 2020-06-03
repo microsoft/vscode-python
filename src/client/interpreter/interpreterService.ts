@@ -20,22 +20,25 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
-    GetInterpreterOptions,
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE
 } from './contracts';
-import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+
+export type GetInterpreterOptions = {
+    onSuggestion?: boolean;
+};
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {

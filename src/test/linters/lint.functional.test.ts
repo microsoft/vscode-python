@@ -27,10 +27,10 @@ import { IConfigurationService, IDisposableRegistry } from '../../client/common/
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
+import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 

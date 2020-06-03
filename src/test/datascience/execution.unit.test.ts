@@ -60,8 +60,8 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';

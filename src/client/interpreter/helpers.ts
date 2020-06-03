@@ -7,9 +7,9 @@ import { FileSystemPaths } from '../common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
 import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { IInterpreterHelper, WorkspacePythonPath } from './contracts';
-import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
