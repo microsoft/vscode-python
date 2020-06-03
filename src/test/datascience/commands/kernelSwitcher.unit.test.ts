@@ -47,10 +47,10 @@ suite('Data Science - KernelSwitcher Command', () => {
             commandHandler = capture(commandManager.registerCommand as any).first()[1] as Function;
             commandHandler = commandHandler.bind(kernelSwitcherCommand);
         });
-        test('Should do nothing if there is no active notebook and no interactive window', async () => {
+        test('Should switch even if no active notebook', async () => {
             await commandHandler.bind(kernelSwitcherCommand)();
 
-            verify(kernelSwitcher.switchKernel(anything(), anything())).never();
+            verify(kernelSwitcher.switchKernel(anything(), anything())).once();
         });
         test('Should switch kernel using the provided notebook', async () => {
             const notebook = mock(JupyterNotebookBase);
