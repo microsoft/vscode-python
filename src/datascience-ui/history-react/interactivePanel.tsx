@@ -43,6 +43,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         document.addEventListener('click', this.linkClick, true);
         document.addEventListener('focus', this.focusPanel, true);
         document.addEventListener('blur', this.unfocusPanel, true);
+        window.addEventListener('focus', this.onWebviewTabFocused, true);
+        window.addEventListener('blur', this.onWebviewTabBlurred, true);
         this.props.editorLoaded();
     }
 
@@ -50,6 +52,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         document.removeEventListener('click', this.linkClick);
         document.removeEventListener('focus', this.focusPanel, true);
         document.removeEventListener('blur', this.unfocusPanel, true);
+        window.removeEventListener('focus', this.onWebviewTabFocused, true);
+        window.removeEventListener('blur', this.onWebviewTabBlurred, true);
         this.props.editorUnmounted();
     }
 
@@ -258,7 +262,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
         const executionCount = this.getInputExecutionCount();
         const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
-        // tslint:disable-next-line: no-console
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
@@ -401,23 +404,32 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
     private focusPanel = (_ev: FocusEvent) => {
         // tslint:disable-next-line: no-console
-        console.log('Focusing element ', document.activeElement);
+        console.log('Focusing document', document.activeElement);
+        // tslint:disable-next-line: no-console
+        console.trace();
+        this.props.focusInput();
     };
 
     private unfocusPanel = (_ev: FocusEvent) => {
-        // Attempt to force blur of the active element
-        try {
-            // tslint:disable-next-line: no-console
-            console.log('Attempting to force blur on element ', document.activeElement);
-            (document.activeElement as HTMLElement).blur();
-             // tslint:disable-next-line: no-console
-            console.log('After blur, active element is now element ', document.activeElement);
-        } catch (e) {
-            // tslint:disable-next-line: no-console
-            console.log('Failed to force blur on element ', document.activeElement);
-            // tslint:disable-next-line: no-console
-            console.log(e.message);
-        }
+        // tslint:disable-next-line: no-console
+        console.log('Unfocusing document', document.activeElement);
+        // tslint:disable-next-line: no-console
+        console.trace();
+    };
+
+    private onWebviewTabFocused = (_ev: FocusEvent) => {
+        // tslint:disable-next-line: no-console
+        console.log('Webview window focused', document.activeElement);
+        // tslint:disable-next-line: no-console
+        console.trace();
+        this.props.focusInput();
+    };
+
+    private onWebviewTabBlurred = (_ev: FocusEvent) => {
+        // tslint:disable-next-line: no-console
+        console.log('Webview window unfocused', document.activeElement);
+        // tslint:disable-next-line: no-console
+        console.trace();
     };
 }
 
