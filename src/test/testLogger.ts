@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { isCI } from '../client/common/constants';
 import { LogLevel } from '../client/logging/levels';
 import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../client/logging/logger';
 
+const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 const monkeyPatchLogger = createLogger();
 
 export function initializeLogger() {
