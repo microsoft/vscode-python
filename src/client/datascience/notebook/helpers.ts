@@ -247,7 +247,6 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
 
 /**
  * We will display the error message in the status of the cell.
- * We will display the error message in the status of the cell.
  * The `ename` & `evalue` is displayed at the top of the output by VS Code.
  * As we're displaying the error in the statusbar, we don't want this dup error in output.
  * Hence remove this.
