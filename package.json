@@ -80,6 +80,7 @@
         "onCommand:python.clearWorkspaceInterpreter",
         "onCommand:python.resetInterpreterSecurityStorage",
         "onCommand:python.datascience.createnewnotebook",
+        "onCommand:python.startPage.open",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
@@ -667,6 +668,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.startPage.open",
+                "title": "%python.command.python.startPage.open.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.scrolltocell",
                 "title": "%python.command.python.datascience.scrolltocell.title%",
                 "category": "Python"
@@ -1116,6 +1122,11 @@
                 {
                     "command": "python.datascience.createnewnotebook",
                     "title": "%python.command.python.datascience.createnewnotebook.title%",
+                    "category": "Python"
+                },
+                {
+                    "command": "python.startPage.open",
+                    "title": "%python.command.python.startPage.open.title%",
                     "category": "Python"
                 },
                 {
@@ -2853,6 +2864,12 @@
                         "daily"
                     ],
                     "scope": "application"
+                },
+                "python.showStartPage": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show the Python Start Page when a new update is released.",
+                    "scope": "application"
                 }
             }
         },
@@ -2972,7 +2989,11 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
+        "compiled": "deemon npm run compile",
+        "kill-compiled": "deemon --kill npm run compile",
         "compile-webviews-watch": "gulp compile-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
+        "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
         "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack",
         "build-ipywidgets-clean": "node ./src/ipywidgets/scripts/clean.js",
         "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
@@ -2989,7 +3010,7 @@
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
-        "testDataScience": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test node ./out/test/testBootstrap.js ./out/test/standardTest.js",
+        "testDataScience": "cross-env CODE_TESTS_WORKSPACE=src/test/datascience VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders TEST_FILES_SUFFIX=ds.test node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/smokeTest.js",
@@ -3067,6 +3088,7 @@
         "vscode-languageclient": "^6.2.0-next.2",
         "vscode-languageserver": "^6.2.0-next.2",
         "vscode-languageserver-protocol": "^3.16.0-next.2",
+        "vscode-tas-client": "^0.0.757",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
@@ -3178,6 +3200,7 @@
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
         "dedent": "^0.7.0",
+        "deemon": "^1.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
         "enzyme": "^3.7.0",

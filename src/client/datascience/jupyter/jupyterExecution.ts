@@ -154,10 +154,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
-            let tryCount = 0;
+            let tryCount = 1;
             const maxTries = this.configuration.getSettings(undefined).datascience.jupyterLaunchRetries;
             const stopWatch = new StopWatch();
-            while (tryCount < maxTries && !this.disposed) {
+            while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([

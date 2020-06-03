@@ -15,7 +15,7 @@ import {
 } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonActionTypeMapping } from './types';
+import { CommonActionType, CommonActionTypeMapping, IVariableExplorerHeight } from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -24,6 +24,8 @@ export type IVariableState = {
     sortAscending: boolean;
     variables: IJupyterVariable[];
     pageSize: number;
+    containerHeight: number;
+    gridHeight: number;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -82,6 +84,41 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     } else {
         return newState;
     }
+}
+
+function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
+    const containerHeight = arg.payload.data.containerHeight;
+    const gridHeight = arg.payload.data.gridHeight;
+    if (containerHeight && gridHeight) {
+        return {
+            ...arg.prevState,
+            containerHeight: containerHeight,
+            gridHeight: gridHeight
+        };
+    }
+    return {
+        ...arg.prevState
+    };
+}
+
+function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
+    const containerHeight = arg.payload.data.containerHeight;
+    const gridHeight = arg.payload.data.gridHeight;
+
+    if (containerHeight && gridHeight) {
+        postActionToExtension(arg, InteractiveWindowMessages.SetVariableExplorerHeight, {
+            containerHeight,
+            gridHeight
+        });
+        return {
+            ...arg.prevState,
+            containerHeight: containerHeight,
+            gridHeight: gridHeight
+        };
+    }
+    return {
+        ...arg.prevState
+    };
 }
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
@@ -219,6 +256,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.FinishCell]: handleFinishCell,
     [InteractiveWindowMessages.ForceVariableRefresh]: handleRefresh,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
+    [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: setVariableExplorerHeight,
+    [InteractiveWindowMessages.VariableExplorerHeightResponse]: handleVariableExplorerHeightResponse,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
 };
@@ -231,7 +270,9 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         visible: false,
         sortAscending: true,
         sortColumn: 'name',
-        pageSize: 5
+        pageSize: 5,
+        containerHeight: 0,
+        gridHeight: 200
     };
 
     // Then combine that with our map of state change message to reducer

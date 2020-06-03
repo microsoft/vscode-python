@@ -35,7 +35,7 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
-function isUntitledFile(file?: Uri) {
+export function isUntitledFile(file?: Uri) {
     return file?.scheme === 'untitled';
 }
 export function isUntitled(model?: INotebookModel): boolean {
@@ -208,6 +208,9 @@ export class NativeEditorNotebookModel implements INotebookModel {
             case 'swap':
                 changed = this.swapCells(change.firstCellId, change.secondCellId);
                 break;
+            case 'updateCellExecutionCount':
+                changed = this.updateCellExecutionCount(change.cellId, change.executionCount);
+                break;
             case 'version':
                 changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
@@ -320,6 +323,15 @@ export class NativeEditorNotebookModel implements INotebookModel {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
             this._state.cells[second] = this.asCell(temp);
+            return true;
+        }
+        return false;
+    }
+
+    private updateCellExecutionCount(cellId: string, executionCount?: number) {
+        const index = this.cells.findIndex((v) => v.id === cellId);
+        if (index >= 0) {
+            this._state.cells[index].data.execution_count = (executionCount || 0) > 0 ? executionCount : null;
             return true;
         }
         return false;
@@ -474,6 +486,12 @@ export class NativeEditorStorage implements INotebookStorage {
         return this.savedAs.event;
     }
     private readonly savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
+
+    // Keep track of if we are backing up our file already
+    private backingUp = false;
+    // If backup requests come in while we are already backing up save the most recent one here
+    private backupRequested: { model: INotebookModel; cancellation: CancellationToken } | undefined;
+
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -510,14 +528,32 @@ export class NativeEditorStorage implements INotebookStorage {
             kind: 'saveAs',
             oldDirty: model.isDirty,
             newDirty: false,
-            target: file
+            target: file,
+            sourceUri: model.file
         });
         this.savedAs.fire({ new: file, old });
         this.clearHotExit(old).ignoreErrors();
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
+        // If we are already backing up, save this request replacing any other previous requests
+        if (this.backingUp) {
+            this.backupRequested = { model, cancellation };
+            return;
+        }
+        this.backingUp = true;
         // Should send to extension context storage path
-        return this.storeContentsInHotExitFile(model, cancellation);
+        return this.storeContentsInHotExitFile(model, cancellation).finally(() => {
+            this.backingUp = false;
+
+            // If there is a backup request waiting, then clear and start it
+            if (this.backupRequested) {
+                const requested = this.backupRequested;
+                this.backupRequested = undefined;
+                this.backup(requested.model, requested.cancellation).catch((error) => {
+                    traceError(`Error in backing up NativeEditor Storage: ${error}`);
+                });
+            }
+        });
     }
 
     public async revert(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {

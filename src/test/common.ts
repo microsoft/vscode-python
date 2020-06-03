@@ -12,7 +12,7 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings, Resource } from '../client/common/types';
+import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
@@ -627,4 +627,71 @@ export class FakeClock {
             await this.clock.runAllAsync();
         }
     }
+}
+
+/**
+ * Helper class to test events.
+ *
+ * Usage: Assume xyz.onDidSave is the event we want to test.
+ * const handler = new TestEventHandler(xyz.onDidSave);
+ * // Do something that would trigger the event.
+ * assert.ok(handler.fired)
+ * assert.equal(handler.first, 'Args Passed to first onDidSave')
+ * assert.equal(handler.count, 1)// Only one should have been fired.
+ */
+export class TestEventHandler<T extends void | any = any> implements IDisposable {
+    public get fired() {
+        return this.handledEvents.length > 0;
+    }
+    public get first(): T {
+        return this.handledEvents[0];
+    }
+    public get second(): T {
+        return this.handledEvents[1];
+    }
+    public get count(): number {
+        return this.handledEvents.length;
+    }
+    private readonly handler: IDisposable;
+    // tslint:disable-next-line: no-any
+    private readonly handledEvents: any[] = [];
+    constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
+        disposables.push(this);
+        this.handler = event(this.listener, this);
+    }
+    public reset() {
+        while (this.handledEvents.length) {
+            this.handledEvents.pop();
+        }
+    }
+    public async assertFired(waitPeriod: number = 100): Promise<void> {
+        await waitForCondition(async () => this.fired, waitPeriod, `${this.eventNameForErrorMessages} event not fired`);
+    }
+    public async assertFiredExactly(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
+        await waitForCondition(
+            async () => this.count === numberOfTimesFired,
+            waitPeriod,
+            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
+        );
+    }
+    public atIndex(index: number): T {
+        return this.handledEvents[index];
+    }
+
+    public dispose() {
+        this.handler.dispose();
+    }
+
+    private listener(e: T) {
+        this.handledEvents.push(e);
+    }
+}
+
+export function createEventHandler<T, K extends keyof T>(
+    obj: T,
+    eventName: K,
+    dispoables: IDisposable[] = []
+): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
+    // tslint:disable-next-line: no-any
+    return new TestEventHandler(obj[eventName] as any, eventName as string, dispoables) as any;
 }

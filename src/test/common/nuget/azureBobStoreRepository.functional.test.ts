@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
+import { DotNetLanguageServerMinVersionKey } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
@@ -53,7 +54,7 @@ suite('Nuget Azure Storage Repository', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
-        const packageJson = { languageServerVersion: '0.0.1' };
+        const packageJson = { [DotNetLanguageServerMinVersionKey]: '0.0.1' };
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup((e) => e.packageJson).returns(() => packageJson);
         const lsPackageService = new DotNetLanguageServerPackageService(

@@ -37,6 +37,7 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     save: typeof actionCreators.save;
     executeAllCells: typeof actionCreators.executeAllCells;
     toggleVariableExplorer: typeof actionCreators.toggleVariableExplorer;
+    setVariableExplorerHeight: typeof actionCreators.setVariableExplorerHeight;
     executeAbove: typeof actionCreators.executeAbove;
     executeCellAndBelow: typeof actionCreators.executeCellAndBelow;
     restartKernel: typeof actionCreators.restartKernel;

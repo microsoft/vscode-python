@@ -11,6 +11,7 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
+    IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
@@ -68,6 +69,8 @@ export enum InteractiveWindowMessages {
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
+    SetVariableExplorerHeight = 'set_variable_explorer_height',
+    VariableExplorerHeightResponse = 'variable_explorer_height_response',
     ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
@@ -175,6 +178,10 @@ export interface IGotoCode {
 
 export interface ICopyCode {
     source: string;
+}
+
+export enum VariableExplorerStateKeys {
+    height = 'NBVariableHeights'
 }
 
 export enum SysInfoReason {
@@ -351,6 +358,7 @@ export interface INotebookModelSaved extends INotebookModelChange {
 export interface INotebookModelSavedAs extends INotebookModelChange {
     kind: 'saveAs';
     target: Uri;
+    sourceUri: Uri;
 }
 
 export interface INotebookModelRemoveAllChange extends INotebookModelChange {
@@ -362,6 +370,11 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     kind: 'modify';
     newCells: ICell[];
     oldCells: ICell[];
+}
+export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
+    kind: 'updateCellExecutionCount';
+    cellId: string;
+    executionCount?: number;
 }
 
 export interface INotebookModelClearChange extends INotebookModelChange {
@@ -478,11 +491,21 @@ export type NotebookModelChange =
     | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
-    | INotebookModelChangeTypeChange;
+    | INotebookModelChangeTypeChange
+    | INotebookModelCellExecutionCountChange;
 
 export interface IRunByLine {
     cell: ICell;
     expectedExecutionCount: number;
+}
+
+export interface ILoadTmLanguageResponse {
+    languageId: string;
+    scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
+    // tslint:disable-next-line: no-any
+    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageJSON: string; // Contents of the tmLanguage.json file
+    extensions: string[]; // Array of file extensions that map to this language
 }
 
 // Map all messages to specific payloads
@@ -546,6 +569,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
+    public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
@@ -564,8 +589,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
+    public [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;

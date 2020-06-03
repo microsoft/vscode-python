@@ -28,6 +28,7 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -46,9 +47,17 @@ export class NotebookProvider implements INotebookProvider {
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
+        this.rawNotebookProvider
+            .supported()
+            .then((b) => (this._type = b ? 'raw' : 'jupyter'))
+            .ignoreErrors();
     }
     public get onNotebookCreated() {
         return this._notebookCreated.event;
+    }
+
+    public get type(): 'jupyter' | 'raw' {
+        return this._type;
     }
 
     // Disconnect from the specified provider

@@ -55,5 +55,6 @@
         // Match what black does.
         "--max-line-length=88"
     ],
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "debug.javascript.usePreview": false
 }

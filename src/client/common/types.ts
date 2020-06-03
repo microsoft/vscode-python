@@ -165,6 +165,7 @@ export interface IPythonSettings {
     readonly poetryPath: string;
     readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
+    readonly showStartPage: boolean;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
@@ -615,6 +616,14 @@ export interface IExperimentsManager {
      * @param experimentName Name of the experiment
      */
     sendTelemetryIfInExperiment(experimentName: string): void;
+}
+
+/**
+ * Experiment service leveraging VS Code's experiment framework.
+ */
+export const IExperimentService = Symbol('IExperimentService');
+export interface IExperimentService {
+    inExperiment(experimentName: string): Promise<boolean>;
 }
 
 export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };

@@ -117,12 +117,7 @@ export class KernelService {
                 );
             });
         } else {
-            return specs.find(
-                (item) =>
-                    item.language === PYTHON_LANGUAGE &&
-                    item.display_name === option.display_name &&
-                    item.name === option.name
-            );
+            return specs.find((item) => item.display_name === option.display_name && item.name === option.name);
         }
     }
 
@@ -140,9 +135,6 @@ export class KernelService {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
     ): Promise<PythonInterpreter | undefined> {
-        if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
-            return;
-        }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).

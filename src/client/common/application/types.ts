@@ -60,7 +60,6 @@ import {
 } from 'vscode';
 import type {
     NotebookCellLanguageChangeEvent as VSCNotebookCellLanguageChangeEvent,
-    NotebookCellMoveEvent as VSCNotebookCellMoveEvent,
     NotebookCellOutputsChangeEvent as VSCNotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent as VSCNotebookCellsChangeEvent,
     NotebookContentProvider,
@@ -1500,7 +1499,7 @@ export interface ICustomEditorService {
     /**
      * Opens a file with a custom editor
      */
-    openEditor(file: Uri): Promise<void>;
+    openEditor(file: Uri, viewType: string): Promise<void>;
 }
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
@@ -1516,7 +1515,6 @@ export interface IClipboard {
 }
 
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
-export type NotebookCellMoveEvent = { type: 'moveCell' } & VSCNotebookCellMoveEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
 export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
 
@@ -1524,19 +1522,12 @@ export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-
+    readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     readonly onDidChangeNotebookDocument: Event<
-        | NotebookCellsChangeEvent
-        | NotebookCellMoveEvent
-        | NotebookCellOutputsChangeEvent
-        | NotebookCellLanguageChangeEvent
+        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     >;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
-    /**
-     * Whether the current document is aCell.
-     */
-    isCell(textDocument: TextDocument): boolean;
     registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;
 
     registerNotebookKernel(id: string, selectors: GlobPattern[], kernel: NotebookKernel): Disposable;

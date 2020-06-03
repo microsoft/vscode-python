@@ -46,6 +46,10 @@ export enum ImageName {
     ClearAllOutput,
     JupyterServerConnected,
     JupyterServerDisconnected,
+    Notebook,
+    Interactive,
+    Python,
+    PythonColor,
     RunByLine
 }
 
@@ -197,6 +201,22 @@ const images: { [key: string]: { light: string; dark: string } } = {
     JupyterServerDisconnected: {
         light: require('./images/JupyterServerDisconnected/disconnected-light.svg'),
         dark: require('./images/JupyterServerDisconnected/disconnected-dark.svg')
+    },
+    Notebook: {
+        light: require('./images/StartPage/Notebook.svg'),
+        dark: require('./images/StartPage/Notebook-inverse.svg')
+    },
+    Interactive: {
+        light: require('./images/StartPage/Interactive.svg'),
+        dark: require('./images/StartPage/Interactive-inverse.svg')
+    },
+    Python: {
+        light: require('./images/StartPage/Python.svg'),
+        dark: require('./images/StartPage/Python-inverse.svg')
+    },
+    PythonColor: {
+        light: require('./images/StartPage/Python-color.svg'),
+        dark: require('./images/StartPage/Python-color.svg')
     },
     RunByLine: {
         light: require('./images/RunByLine/runbyline_light.svg'),

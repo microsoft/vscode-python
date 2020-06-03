@@ -46,6 +46,7 @@ import {
     concatMultilineStringOutput,
     formatStreamText
 } from '../../../datascience-ui/common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
 
 class CellSubscriber {
@@ -927,6 +928,7 @@ export class JupyterNotebookBase implements INotebook {
         if (
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
+            this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
             (await this.fs.directoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));

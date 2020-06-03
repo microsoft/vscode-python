@@ -21,6 +21,7 @@ import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDie
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { IFileSystem } from '../../common/platform/types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
@@ -46,11 +47,13 @@ export class KernelProcess implements IKernelProcess {
     private kernelDaemon?: IPythonKernelDaemon;
     private readonly _kernelSpec: IJupyterKernelSpec;
     private readonly originalKernelSpec: IJupyterKernelSpec;
+    private connectionFile?: string;
     constructor(
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly daemonPool: KernelDaemonPool,
         private readonly _connection: IKernelConnection,
         kernelSpec: IJupyterKernelSpec,
+        private readonly file: IFileSystem,
         private readonly resource: Resource,
         private readonly interpreter?: PythonInterpreter
     ) {
@@ -71,7 +74,7 @@ export class KernelProcess implements IKernelProcess {
         this.launchedOnce = true;
 
         // Update our connection arguments in the kernel spec
-        this.updateConnectionArgs();
+        await this.updateConnectionArgs();
 
         const exeObs = await this.launchAsObservable();
 
@@ -126,6 +129,7 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire();
         });
         swallowExceptions(() => this.pythonKernelLauncher?.dispose());
+        swallowExceptions(async () => (this.connectionFile ? this.file.deleteFile(this.connectionFile) : noop()));
     }
 
     // Make sure that the heartbeat channel is open for connections
@@ -144,27 +148,48 @@ export class KernelProcess implements IKernelProcess {
 
     // Instead of having to use a connection file update our local copy of the kernelspec to launch
     // directly with command line arguments
-    private updateConnectionArgs() {
+    private async updateConnectionArgs() {
         // First check to see if we have a kernelspec that expects a connection file,
         // Error if we don't have one. We expect '-f', '{connectionfile}' in our launch args
         const indexOfConnectionFile = findIndexOfConnectionFile(this._kernelSpec);
+        if (indexOfConnectionFile === -1) {
+            throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
+        }
         if (
-            indexOfConnectionFile === -1 ||
-            indexOfConnectionFile === 0 ||
+            this.isPythonKernel &&
+            indexOfConnectionFile === 0 &&
             this._kernelSpec.argv[indexOfConnectionFile - 1] !== '-f'
         ) {
             throw new Error(`Connection file not found in kernelspec json args, ${this._kernelSpec.argv.join(' ')}`);
         }
 
-        // Slice out -f and the connection file from the args
-        this._kernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
+        // Python kernels are special. Handle the extra arguments.
+        if (this.isPythonKernel) {
+            // Slice out -f and the connection file from the args
+            this._kernelSpec.argv.splice(indexOfConnectionFile - 1, 2);
 
-        // Add in our connection command line args
-        this._kernelSpec.argv.push(...this.addConnectionArgs());
+            // Add in our connection command line args
+            this._kernelSpec.argv.push(...this.addPythonConnectionArgs());
+        } else {
+            // For other kernels, just write to the connection file.
+            // Note: We have to dispose the temp file and recreate it because otherwise the file
+            // system will hold onto the file with an open handle. THis doesn't work so well when
+            // a different process tries to open it.
+            const tempFile = await this.file.createTemporaryFile('.json');
+            this.connectionFile = tempFile.filePath;
+            await tempFile.dispose();
+            await this.file.writeFile(this.connectionFile, JSON.stringify(this._connection), {
+                encoding: 'utf-8',
+                flag: 'w'
+            });
+
+            // Then replace the connection file argument with this file
+            this._kernelSpec.argv[indexOfConnectionFile] = this.connectionFile;
+        }
     }
 
     // Add the command line arguments
-    private addConnectionArgs(): string[] {
+    private addPythonConnectionArgs(): string[] {
         const newConnectionArgs: string[] = [];
 
         newConnectionArgs.push(`--ip=${this._connection.ip}`);
@@ -218,6 +243,14 @@ export class KernelProcess implements IKernelProcess {
                     return;
                 }
                 this.exitEvent.fire({ exitCode: exitCode || undefined });
+            });
+            // tslint:disable-next-line: no-any
+            exeObs.proc.stdout.on('data', (data: any) => {
+                traceInfo(`KernelProcess output: ${data}`);
+            });
+            // tslint:disable-next-line: no-any
+            exeObs.proc.stderr.on('data', (data: any) => {
+                traceInfo(`KernelProcess error: ${data}`);
             });
         } else {
             throw new Error('KernelProcess failed to launch');

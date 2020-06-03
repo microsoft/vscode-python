@@ -4,6 +4,7 @@
 import { assert } from 'chai';
 import { noop } from 'jquery';
 import * as uuid from 'uuid/v4';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
@@ -79,6 +80,7 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
             kernelSpec,
+            ioc.get<IFileSystem>(IFileSystem),
             undefined,
             interpreter
         );

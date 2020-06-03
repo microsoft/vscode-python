@@ -14,6 +14,7 @@ import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import {
@@ -58,6 +59,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
+        if (this.lsFolderService.isBundled()) {
+            // Sanity check; a bundled LS should never be downloaded.
+            traceError('Attempted to download bundled language server');
+            return;
+        }
+
         const [downloadUri, lsVersion, lsName] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;

@@ -174,7 +174,7 @@ suite('DataScience - Native Editor Provider', () => {
             });
 
         customEditorService
-            .setup((c) => c.openEditor(typemoq.It.isAny()))
+            .setup((c) => c.openEditor(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(async (f) => {
                 const doc = typemoq.Mock.ofType<CustomDocument>();
                 doc.setup((d) => d.uri).returns(() => f);

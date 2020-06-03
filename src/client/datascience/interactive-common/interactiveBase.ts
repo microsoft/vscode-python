@@ -47,9 +47,9 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { addToUriList } from '../common';
+import { addToUriList, translateKernelLanguageToMonaco } from '../common';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { ColumnWarningSize } from '../data-viewing/types';
+import { ColumnWarningSize, IDataViewerFactory } from '../data-viewing/types';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -62,10 +62,13 @@ import {
     IRemoteReexecuteCode,
     IShowDataViewer,
     ISubmitNewCell,
-    SysInfoReason
+    SysInfoReason,
+    VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
+import { isUntitledFile } from '../interactive-ipynb/nativeEditorStorage';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages, SharedMessages } from '../messages';
@@ -74,13 +77,13 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveBase,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
@@ -137,12 +140,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() protected configuration: IConfigurationService,
         @unmanaged() protected jupyterExporter: INotebookExporter,
         @unmanaged() workspaceService: IWorkspaceService,
-        @unmanaged() private dataExplorerProvider: IDataViewerProvider,
+        @unmanaged() private dataExplorerFactory: IDataViewerFactory,
+        @unmanaged() private jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @unmanaged() private jupyterVariables: IJupyterVariables,
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         @unmanaged() protected readonly commandManager: ICommandManager,
         @unmanaged() protected globalStorage: Memento,
+        @unmanaged() protected workspaceStorage: Memento,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
@@ -227,6 +232,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Send the loc strings (skip during testing as it takes up a lot of memory)
                 const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
                 this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                this.variableExplorerHeightRequest()
+                    .then((data) =>
+                        this.postMessageInternal(
+                            InteractiveWindowMessages.VariableExplorerHeightResponse,
+                            data
+                        ).ignoreErrors()
+                    )
+                    .catch(); // do nothing
                 break;
 
             case InteractiveWindowMessages.GotoCodeCell:
@@ -275,6 +288,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.VariableExplorerToggle:
                 this.variableExplorerToggle(payload);
+                break;
+
+            case InteractiveWindowMessages.SetVariableExplorerHeight:
+                this.setVariableExplorerHeight(payload).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
@@ -902,7 +919,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkColumnSize(request.columnSize)) {
-                await this.dataExplorerProvider.create(request.variable, this._notebook!);
+                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
+                    request.variable,
+                    this._notebook!
+                );
+                const title: string = `${localize.DataScience.dataExplorerTitle()} - ${request.variable.name}`;
+                await this.dataExplorerFactory.create(jupyterVariableDataProvider, title);
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
@@ -1137,7 +1159,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: status,
                 localizedUri: this.getServerUri(notebook.connection),
-                displayName: name
+                displayName: name,
+                language: translateKernelLanguageToMonaco(kernelSpec?.language ?? PYTHON_LANGUAGE)
             });
         };
         notebook.onSessionStatusChanged(statusChangeHandler);
@@ -1157,7 +1180,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
                 localizedUri: this.getServerUri(serverConnection),
-                displayName: ''
+                displayName: '',
+                language: PYTHON_LANGUAGE
             }).ignoreErrors();
 
             this._notebook = await this.createNotebook(serverConnection);
@@ -1380,17 +1404,58 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     };
 
-    private requestTmLanguage() {
+    // tslint:disable-next-line: no-any
+    private async setVariableExplorerHeight(payload?: any) {
+        // Store variable explorer height based on file name in workspace storage
+        if (payload !== undefined) {
+            const updatedHeights = payload as { containerHeight: number; gridHeight: number };
+            const uri = await this.getOwningResource(); // Get file name
+
+            if (!uri) {
+                return;
+            }
+            // Storing an object that looks like
+            //  { "fully qualified Path to 1.ipynb": 1234,
+            //    "fully qualifieid path to 2.ipynb": 1234 }
+
+            // tslint:disable-next-line: no-any
+            const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
+            value[uri.toString()] = updatedHeights;
+            this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+        }
+    }
+
+    private async variableExplorerHeightRequest(): Promise<
+        { containerHeight: number; gridHeight: number } | undefined
+    > {
+        const uri = await this.getOwningResource(); // Get file name
+
+        if (!uri || isUntitledFile(uri)) {
+            return; // don't resotre height of untitled notebooks
+        }
+
+        // tslint:disable-next-line: no-any
+        const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
+        const uriString = uri.toString();
+        if (uriString in value) {
+            return value[uriString];
+        }
+    }
+
+    private async requestTmLanguage(languageId: string) {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
-        this.themeFinder
-            .findTmLanguage(PYTHON_LANGUAGE)
-            .then((s) => {
-                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
-            })
-            .catch((_e) => {
-                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse).ignoreErrors();
-            });
+        const languageJson = await this.themeFinder.findTmLanguage(languageId);
+        const languageConfiguration = await this.themeFinder.findLanguageConfiguration(languageId);
+        const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
+        const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
+        this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {
+            languageJSON: languageJson ?? '',
+            languageConfiguration,
+            extensions,
+            scopeName,
+            languageId
+        }).ignoreErrors();
     }
 
     private async requestOnigasm(): Promise<void> {
@@ -1425,12 +1490,28 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async selectKernel() {
-        if (!this._notebook) {
-            return;
-        }
         try {
             this.startProgress();
-            await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
+            const kernel = (await this.commandManager.executeCommand(
+                Commands.SwitchJupyterKernel,
+                this._notebook,
+                this._notebook?.connection?.type || this.notebookProvider.type
+            )) as KernelSpecInterpreter;
+            if (!this._notebook && kernel?.kernelSpec) {
+                // No notebook, send update to UI anyway
+                this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: ServerStatus.NotStarted,
+                    localizedUri: '',
+                    displayName: kernel.kernelSpec.display_name || kernel.kernelSpec.name || '',
+                    language: translateKernelLanguageToMonaco(kernel.kernelSpec.language ?? PYTHON_LANGUAGE)
+                }).ignoreErrors();
+
+                // Update our model
+                this.updateNotebookOptions(kernel.kernelSpec, kernel.interpreter).ignoreErrors();
+
+                // Try creating a notebook again with this new kernel.
+                this.ensureConnectionAndNotebook().ignoreErrors();
+            }
         } finally {
             this.stopProgress();
         }

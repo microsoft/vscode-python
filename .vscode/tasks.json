@@ -33,7 +33,10 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "problemMatcher": [
+                "$tsc-watch",
+                "$ts-checker-webpack-watch"
+            ]
         },
         {
             "label": "Run Unit Tests",
@@ -48,7 +51,9 @@
             "label": "Inject DS WebBrowser UI",
             "type": "shell",
             "command": "node",
-            "args": ["build/debug/replaceWithWebBrowserPanel.js"],
+            "args": [
+                "build/debug/replaceWithWebBrowserPanel.js"
+            ],
             "problemMatcher": []
         }
     ]

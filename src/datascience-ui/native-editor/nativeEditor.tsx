@@ -166,12 +166,15 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         }
         return {
             variables: this.props.variableState.variables,
+            containerHeight: this.props.variableState.containerHeight,
+            gridHeight: this.props.variableState.gridHeight,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
+            setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
@@ -336,6 +339,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 ? otherCellRunningByLine === undefined
                                 : false
                         }
+                        language={this.props.kernel.language}
                     />
                 </ErrorBoundary>
                 {lastLine}
