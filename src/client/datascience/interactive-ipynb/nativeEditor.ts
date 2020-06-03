@@ -85,6 +85,7 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { QuickPickItem } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
@@ -715,8 +716,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
-        const options = ['Export as Python Script', 'Export to HTML', 'Export to PDF'];
-        this.applicationShell.showQuickPick(options);
+        const items: QuickPickItem[] = [{ label: 'Python Script', picked: true }, { label: 'HTML' }, { label: 'PDF' }];
+        const options = {
+            ignoreFocusOut: true,
+            matchOnDescription: true,
+            matchOnDetail: true,
+            placeHolder: 'Export As...'
+        };
+
+        this.applicationShell.showQuickPick(items, options).then((item) => {
+            console.log(item); // send to something that can handle this
+        });
     }
 
     private async viewDocument(contents: string): Promise<void> {
