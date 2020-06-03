@@ -37,7 +37,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
 
     return {
         cells,
-        languages: [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE],
+        languages: [PYTHON_LANGUAGE],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
@@ -206,9 +206,11 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
     };
 }
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
+    // Do not include ename & evalue, else VSC will display that again.
+    // Currently the ename & value are already part of the stack trace.
     return {
-        ename: output.ename,
-        evalue: output.evalue,
+        ename: '',
+        evalue: '',
         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
         traceback: output.traceback
     };

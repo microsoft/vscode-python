@@ -11,6 +11,7 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { commands } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
+import { CellDisplayOutput, CellStreamOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
@@ -211,6 +212,12 @@ export function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
+    return (
+        (cell.metadata.executionOrder ?? 0) > 0 &&
+        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
+    );
+}
 export function hasOutputInVSCode(cell: NotebookCell) {
     assert.ok(cell.outputs.length, 'No output');
 }
@@ -220,8 +227,8 @@ export function hasOutputInICell(cell: ICell) {
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
-    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Text, 'Incorrect output kind');
-    const outputText = (cellOutputs[index] as any).text.trim();
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
     } else {
@@ -239,5 +246,9 @@ export function assertVSCCellIsRunning(cell: NotebookCell) {
 }
 export function assertVSCCellIsIdle(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+    return true;
+}
+export function assertVSCCellHasErrors(cell: NotebookCell) {
+    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error);
     return true;
 }

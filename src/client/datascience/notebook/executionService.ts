@@ -155,9 +155,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
             const observable = nb.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
             subscription = observable?.subscribe(
                 (cells) => {
-                    if (wrappedToken.isCancellationRequested) {
-                        return;
-                    }
                     const rawCellOutput = cells
                         .filter((item) => item.id === cell.uri.fsPath)
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
@@ -183,11 +180,15 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
                 () => {
+                    cell.metadata.lastRunDuration = stopWatch.elapsedTime;
                     cell.metadata.runState = wrappedToken.isCancellationRequested
                         ? vscodeNotebookEnums.NotebookCellRunState.Idle
                         : vscodeNotebookEnums.NotebookCellRunState.Success;
-                    cell.metadata.lastRunDuration = stopWatch.elapsedTime;
                     cell.metadata.statusMessage = '';
+                    // If there are any errors in the cell, then change status to error.
+                    if (cell.outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error)) {
+                        cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+                    }
                     deferred.resolve();
                 }
             );
