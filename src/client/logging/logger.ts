@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: Smoke tests assume this file only have imports from within 'out/client/logging' directory.
 import * as util from 'util';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
