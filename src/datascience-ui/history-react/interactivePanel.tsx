@@ -270,7 +270,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         editorOptions={this.props.editorOptions}
                         maxTextSize={undefined}
                         enableScroll={false}
-                        autoFocus={document.hasFocus()}
+                        autoFocus={false}
                         testMode={this.props.testMode}
                         cellVM={this.props.editCellVM}
                         baseTheme={baseTheme}
@@ -402,34 +402,34 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         handleLinkClick(ev, this.props.linkClick);
     };
 
-    private focusPanel = (_ev: FocusEvent) => {
+    private focusPanel = (event: FocusEvent) => {
         // tslint:disable-next-line: no-console
         console.log('Focusing document', document.activeElement);
         // tslint:disable-next-line: no-console
-        console.trace();
+        console.log('Origin: ', event.composedPath()[0]);
         this.props.focusInput();
     };
 
-    private unfocusPanel = (_ev: FocusEvent) => {
+    private unfocusPanel = (event: FocusEvent) => {
         // tslint:disable-next-line: no-console
         console.log('Unfocusing document', document.activeElement);
         // tslint:disable-next-line: no-console
-        console.trace();
+        console.log('Origin: ', event.composedPath()[0]);
     };
 
-    private onWebviewTabFocused = (_ev: FocusEvent) => {
+    private onWebviewTabFocused = (event: FocusEvent) => {
         // tslint:disable-next-line: no-console
         console.log('Webview window focused', document.activeElement);
         // tslint:disable-next-line: no-console
-        console.trace();
+        console.log('Origin: ', event.composedPath()[0]);
         this.props.focusInput();
     };
 
-    private onWebviewTabBlurred = (_ev: FocusEvent) => {
+    private onWebviewTabBlurred = (event: FocusEvent) => {
         // tslint:disable-next-line: no-console
         console.log('Webview window unfocused', document.activeElement);
         // tslint:disable-next-line: no-console
-        console.trace();
+        console.log('Origin: ', event.composedPath()[0]);
     };
 }
 
