@@ -525,7 +525,7 @@ steps:
       npm run clean
       npx tsc -p ./
       mkdir -p ./tmp/client/logging
-      cp -r ./out/client/logging ./tmp/client/logging
+      cp -r ./out/client/logging ./tmp/client
       ls ./out
       npx gulp clean:cleanExceptTests
       ls ./out
@@ -536,7 +536,7 @@ steps:
       npx gulp clean:cleanExceptTests
       ls ./out
       mkdir -p ./out/client/logging
-      cp -r ./tmp/client/logging ./out/client/logging
+      cp -r ./tmp/client/logging ./out/client
       cp -r ./tmp/test ./out/test
       node ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
