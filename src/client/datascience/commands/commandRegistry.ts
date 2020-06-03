@@ -75,6 +75,9 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
+        this.registerCommand(Commands.ExportAsPythonScript, this.exportAsPythonScript);
+        this.registerCommand(Commands.ExportToHTML, this.exportToHTML);
+        this.registerCommand(Commands.ExportToPDF, this.exportToPDF);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
@@ -358,6 +361,12 @@ export class CommandRegistry implements IDisposable {
     private viewJupyterOutput() {
         this.jupyterOutput.show(true);
     }
+
+    private exportAsPythonScript() {}
+
+    private exportToHTML() {}
+
+    private exportToPDF() {}
 
     private getCurrentCodeLens(): CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
