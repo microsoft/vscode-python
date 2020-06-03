@@ -38,6 +38,13 @@ interface IConfigurableLogger {
     add(transport: Transport): void;
 }
 
+// tslint:disable-next-line: no-suspicious-comment
+/**
+ * TODO: We should actually have this method in `./_global.ts` as this is exported globally.
+ * But for some reason, importing '../client/logging/_global' fails when launching the tests.
+ * More details in the comment https://github.com/microsoft/vscode-python/pull/11897#discussion_r433954993
+ * https://github.com/microsoft/vscode-python/issues/12137
+ */
 export function getPreDefinedConfiguration(): LoggerConfig {
     const config: LoggerConfig = {};
 
