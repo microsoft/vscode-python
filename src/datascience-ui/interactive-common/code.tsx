@@ -107,14 +107,14 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     private giveFocus(cursorPos: CursorPos) {
         if (this.editorRef && this.editorRef.current) {
-            this.editorRef.current.giveFocus(cursorPos);
+            // this.editorRef.current.giveFocus(cursorPos);
         }
     }
 
     private clickWatermark = (ev: React.MouseEvent<HTMLDivElement>) => {
         ev.stopPropagation();
         // Give focus to the editor
-        this.giveFocus(CursorPos.Current);
+        // this.giveFocus(CursorPos.Current);
     };
 
     private getWatermarkString = (): string => {

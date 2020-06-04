@@ -102,7 +102,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
     // Make the entire footer focus our input, instead of having to click directly on the monaco editor
     private footerPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        this.props.focusInput();
+        // this.props.focusInput();
     };
 
     // tslint:disable-next-line: max-func-body-length

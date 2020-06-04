@@ -412,7 +412,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     public giveFocus(cursorPos: CursorPos | monacoEditor.IPosition) {
         if (this.state.editor) {
-            this.giveFocusToEditor(this.state.editor, cursorPos, this.props.options.readOnly);
+            // this.giveFocusToEditor(this.state.editor, cursorPos, this.props.options.readOnly);
         }
     }
 
@@ -448,7 +448,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         readonly?: boolean
     ) {
         if (!readonly) {
-            editor.focus();
+            // editor.focus();
         }
         if (cursorPos !== CursorPos.Current) {
             const current = editor.getPosition();

@@ -70,7 +70,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     public componentDidUpdate(prevProps: IInteractiveCellProps) {
         if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
-            this.giveFocus();
+            // this.giveFocus();
         }
         if (this.props.cellVM.scrollCount !== prevProps.cellVM.scrollCount) {
             this.scrollAndFlash();
@@ -101,15 +101,15 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         if (this.wrapperRef && this.wrapperRef.current) {
             // Give focus to the cell if not already owning focus
             if (!this.wrapperRef.current.contains(document.activeElement)) {
-                this.wrapperRef.current.focus();
+                // this.wrapperRef.current.focus();
             }
 
             // Scroll into view (since we have focus). However this function
             // is not supported on enzyme
             // tslint:disable-next-line: no-any
-            if ((this.wrapperRef.current as any).scrollIntoView) {
-                this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-            }
+            // if ((this.wrapperRef.current as any).scrollIntoView) {
+            //     this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            // }
         }
     }
 
@@ -305,7 +305,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private onUnfocused = () => {
-        this.props.unfocus(this.getCell().id);
+        // this.props.unfocus(this.getCell().id);
     };
 
     private onCodeChange = (e: IMonacoModelContentChangeEvent) => {
