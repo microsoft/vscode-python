@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, SaveDialogOptions, Uri } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -83,6 +83,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.ExportAsPythonScript, this.exportAsPythonScript);
         this.registerCommand(Commands.ExportToHTML, this.exportToHTML);
         this.registerCommand(Commands.ExportToPDF, this.exportToPDF);
+        this.registerCommand(Commands.Export, this.export);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
@@ -367,11 +368,48 @@ export class CommandRegistry implements IDisposable {
         this.jupyterOutput.show(true);
     }
 
+    private getExportQuickPickItems(): IExportQuickPickItem[] {
+        return [
+            { label: 'Python Script', picked: true, handler: this.exportAsPythonScript },
+            { label: 'HTML', picked: false, handler: this.exportToHTML },
+            { label: 'PDF', picked: false, handler: this.exportToPDF }
+        ];
+    }
+
     private exportAsPythonScript() {}
 
     private exportToHTML() {}
 
     private exportToPDF() {}
+
+    private async showExportQuickPick(): Promise<void> {
+        const items = this.getExportQuickPickItems();
+
+        const options = {
+            ignoreFocusOut: true,
+            matchOnDescription: true,
+            matchOnDetail: true,
+            placeHolder: 'Export As...'
+        };
+
+        this.applicationShell.showQuickPick(items, options).then((pickedItem) => {
+            if (!pickedItem) {
+                return;
+            }
+            for (const item of items) {
+                if (item.label === pickedItem.label) {
+                    item.handler();
+                }
+            }
+        });
+    }
+
+    private verifySaved() {}
+
+    private export() {
+        this.verifySaved();
+        this.showExportQuickPick().ignoreErrors();
+    }
 
     private getCurrentCodeLens(): CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
