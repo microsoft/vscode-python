@@ -40,7 +40,6 @@ export const CONDA_RUN_VERSION = '4.6.0';
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     private readonly disposables: IDisposableRegistry;
-    private readonly interpreterService: IInterpreterService;
     private readonly logger: IProcessLogger;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -53,7 +52,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
     }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
@@ -80,16 +78,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-
-        const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath, options.resource);
+        const interpreterService = this.serviceContainer.tryGet<IInterpreterService>(IInterpreterService);
+        const interpreter = interpreterService
+            ? await interpreterService.getInterpreterDetails(pythonPath, options.resource)
+            : undefined;
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: interpreter,
             resource: options.resource,
             bypassCondaExecution: true
         });
-        // No daemon support in Python 2.7.
-        if (interpreter?.version && interpreter.version.major < 3) {
+        // No daemon support in Python 2.7 or during shutdown
+        if (!interpreterService || (interpreter?.version && interpreter.version.major < 3)) {
             return (activatedProcPromise! as unknown) as T;
         }
 

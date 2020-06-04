@@ -61,7 +61,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
     private readonly updatedInterpreters = new Set<string>();
-    private readonly pythonExecutionFactory: IPythonExecutionFactory;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -75,7 +74,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        this.pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
 
     public async refresh(resource?: Uri) {
@@ -138,8 +136,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
-        const pythonExecutionService = await this.pythonExecutionFactory.create({ resource });
-        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
+        // During shutdown we might not be able to get items out of the service container.
+        const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecutionService = pythonExecutionFactory
+            ? await pythonExecutionFactory.create({ resource })
+            : undefined;
+        const fullyQualifiedPath = pythonExecutionService
+            ? await pythonExecutionService.getExecutablePath().catch(() => undefined)
+            : undefined;
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
             return;
