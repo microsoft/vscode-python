@@ -102,3 +102,9 @@ export enum DeprecatePythonPath {
     control = 'DeprecatePythonPath - control',
     experiment = 'DeprecatePythonPath - experiment'
 }
+
+// Experiment for showing the start page
+export enum EnableStartPage {
+    control = 'EnableStartPage - control',
+    experiment = 'EnableStartPage - experiment'
+}
