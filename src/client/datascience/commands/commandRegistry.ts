@@ -5,6 +5,7 @@
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, Uri } from 'vscode';
+import { SaveDialogOptions } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -18,7 +19,8 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    INotebookEditorProvider
+    INotebookEditorProvider,
+    INotebookModel
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';
@@ -385,7 +387,7 @@ export class CommandRegistry implements IDisposable {
 
     private exportToPDF() {}
 
-    private async showExportQuickPick(): Promise<void> {
+    private async showExportQuickPick(): Promise<IExportQuickPickItem | undefined> {
         const items = this.getExportQuickPickItems();
 
         const options = {
@@ -395,23 +397,36 @@ export class CommandRegistry implements IDisposable {
             placeHolder: 'Export As...'
         };
 
-        this.applicationShell.showQuickPick(items, options).then((pickedItem) => {
-            if (!pickedItem) {
-                return;
+        const pickedItem = await this.applicationShell.showQuickPick(items, options);
+        if (!pickedItem) {
+            return;
+        }
+        for (const item of items) {
+            if (item.label === pickedItem.label) {
+                return item;
             }
-            for (const item of items) {
-                if (item.label === pickedItem.label) {
-                    item.handler();
-                }
-            }
-        });
+        }
     }
 
-    private verifySaved() {}
+    private verifySaved(model: INotebookModel) {
+        const options: SaveDialogOptions = {
+            defaultUri: model.file,
+            saveLabel: '',
+            filters: {
+                'Juypter Notebooks': ['ipynb']
+            }
+        };
 
-    private export() {
-        this.verifySaved();
-        this.showExportQuickPick().ignoreErrors();
+        this.applicationShell.showSaveDialog(options);
+    }
+
+    private export(model: INotebookModel) {
+        this.showExportQuickPick()
+            .then((item) => {
+                this.verifySaved(model);
+                item?.handler();
+            })
+            .catch();
     }
 
     private getCurrentCodeLens(): CodeLens | undefined {
