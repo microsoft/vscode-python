@@ -17,6 +17,7 @@ const folderPath = path.dirname(__dirname);
 const folderName = path.basename(folderPath);
 const EXTENSION_ROOT_DIR =
     folderName === 'client' ? path.join(folderPath, '..', '..') : path.join(folderPath, '..', '..', '..', '..');
+const formattedMessage = Symbol.for('message');
 
 export function isConsoleTransport(transport: unknown): boolean {
     // tslint:disable-next-line:no-any
