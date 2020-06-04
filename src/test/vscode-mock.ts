@@ -45,6 +45,7 @@ export function initialize() {
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
     mockedVSCodeNamespaces.env?.setup((e) => e.clipboard).returns(() => clipboard);
+    mockedVSCodeNamespaces.env?.setup((e) => e.appName).returns(() => 'Insider');
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function (request: any, _parent: any) {

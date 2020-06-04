@@ -100,6 +100,7 @@ import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibi
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
+import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
@@ -154,6 +155,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IExperimentService,
     IExperimentsManager,
     IExtensionContext,
     IExtensions,
@@ -628,6 +630,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
+        this.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
