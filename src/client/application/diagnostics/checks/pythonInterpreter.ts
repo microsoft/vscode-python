@@ -67,9 +67,17 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         }
 
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const hasInterpreters = await interpreterService.hasInterpreters;
+        let hasInterpreters = await interpreterService.hasInterpreters;
 
         if (!hasInterpreters) {
+            // hasInterpreters being false can mean one of 2 things:
+            // 1. getInterpreters hasn't returned any interpreters;
+            // 2. getInterpreters hasn't run yet.
+            // We want to make sure that false comes from 1, so we're adding this fix until we refactor interpreter discovery.
+            // Also see https://github.com/microsoft/vscode-python/issues/3023.
+            interpreterService.getInterpreters(resource).ignoreErrors();
+            hasInterpreters = await interpreterService.hasInterpreters;
+
             return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, resource)];
         }
 
