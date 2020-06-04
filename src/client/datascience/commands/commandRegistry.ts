@@ -4,8 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, Uri } from 'vscode';
-import { SaveDialogOptions } from 'vscode';
+import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, SaveDialogOptions, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -19,8 +18,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    INotebookEditorProvider,
-    INotebookModel
+    INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';
@@ -408,22 +406,43 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private verifySaved(model: INotebookModel) {
+    private getFileSaveLocation(): Uri | undefined {
+        const file = this.notebookEditorProvider.activeEditor?.file;
         const options: SaveDialogOptions = {
-            defaultUri: model.file,
+            defaultUri: file,
             saveLabel: '',
             filters: {
                 'Juypter Notebooks': ['ipynb']
             }
         };
 
-        this.applicationShell.showSaveDialog(options);
+        this.applicationShell.showSaveDialog(options).then((uri) => {
+            return uri;
+        });
+        return undefined;
     }
 
-    private export(model: INotebookModel) {
+    private verifySaved() {
+        if (this.notebookEditorProvider.activeEditor?.isUntitled) {
+            // save to temporary file, don't need to ask
+        }
+
+        // Ask user if they'd like to save
+        const yes = DataScience.exportSaveFileYes();
+        const no = DataScience.exportSaveFileNo();
+        const options = [yes, no];
+
+        this.applicationShell.showInformationMessage(DataScience.exportSaveFilePrompt(), ...options).then((choice) => {
+            if (choice === yes) {
+                this.getFileSaveLocation();
+            }
+        });
+    }
+
+    private export() {
         this.showExportQuickPick()
             .then((item) => {
-                this.verifySaved(model);
+                this.verifySaved(); // make sure notebook file is saved
                 item?.handler();
             })
             .catch();
