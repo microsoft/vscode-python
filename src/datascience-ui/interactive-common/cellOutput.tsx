@@ -5,6 +5,10 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as fastDeepEqual from 'fast-deep-equal';
+// import * as kt from 'katex';
+// const kt = require('katex');
+import * as MarkdownIt from 'markdown-it';
+// import * as tm from 'markdown-it-texmath';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
@@ -287,6 +291,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return [];
     };
 
+    // tslint:disable: no-require-imports
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
@@ -294,10 +299,21 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const Transform = getTransform('text/markdown');
         const MarkdownClassName = 'markdown-cell-output';
 
+        const kt = require('katex');
+        const tm = require('markdown-it-texmath').use(kt);
+
+        const mdit = new MarkdownIt();
+        mdit.use(tm);
+
+        const delimiters = 'dollars'; // wondering why this ...
+        const options = { delimiters };
+        mdit.render(source, options);
+
         return [
             <div key={0} className={MarkdownClassName}>
                 <Transform key={0} data={source} />
             </div>
+            // <div dangerouslySetInnerHTML={{ __html: asd }} />
         ];
     };
 
