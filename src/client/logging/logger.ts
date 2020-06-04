@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-// tslint:disable:no-any
+// IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
+// delete everything in '../client' except for '../client/logging' before running smoke tests.
 
 import * as util from 'util';
 import { createLogger } from 'winston';
@@ -34,14 +35,47 @@ export function _log(logLevel: LogLevel, ...args: any[]) {
     logToFile(logLevel, ...args);
 }
 
-// Emit a log message derived from the args to a file, if enabled.
-function logToFile(logLevel: LogLevel, ...args: any[]) {
-    if (fileLogger.transports.length === 0) {
-        return;
-    }
-    const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
-    fileLogger.log(logLevelMap[logLevel], message);
+interface IConfigurableLogger {
+    level: string;
+    add(transport: Transport): void;
 }
+
+// tslint:disable-next-line: no-suspicious-comment
+/**
+ * TODO: We should actually have this method in `./_global.ts` as this is exported globally.
+ * But for some reason, importing '../client/logging/_global' fails when launching the tests.
+ * More details in the comment https://github.com/microsoft/vscode-python/pull/11897#discussion_r433954993
+ * https://github.com/microsoft/vscode-python/issues/12137
+ */
+export function getPreDefinedConfiguration(): LoggerConfig {
+    const config: LoggerConfig = {};
+
+    // Do not log to console if running tests and we're not
+    // asked to do so.
+    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
+        config.console = {};
+        // In CI there's no need for the label.
+        const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+        if (!isCI) {
+            config.console.label = 'Python Extension:';
+        }
+    }
+    if (process.env.VSC_PYTHON_LOG_FILE) {
+        config.file = {
+            logfile: process.env.VSC_PYTHON_LOG_FILE
+        };
+    }
+    return config;
+}
+
+// Set up a logger just the way we like it.
+export function configureLogger(logger: IConfigurableLogger, config: LoggerConfig) {
+    if (config.level) {
+        const levelName = resolveLevelName(config.level);
+        if (levelName) {
+            logger.level = levelName;
+        }
+    }
 
 /**
  * Initialize the logger for console.

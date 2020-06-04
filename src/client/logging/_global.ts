@@ -3,12 +3,11 @@
 'use strict';
 
 import * as winston from 'winston';
-import { isCI } from '../common/constants';
 import { IOutputChannel } from '../common/types';
 import { CallInfo } from '../common/utils/decorators';
 import { getFormatter } from './formatters';
 import { LogLevel, resolveLevelName } from './levels';
-import { configureLogger, createLogger, ILogger, LoggerConfig, logToAll } from './logger';
+import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from './logger';
 import { createTracingDecorator, LogInfo, TraceOptions, tracing as _tracing } from './trace';
 import { getPythonOutputChannelTransport } from './transports';
 import { Arguments } from './util';
@@ -40,35 +39,7 @@ initialize();
  *   this is setup on CI servers.
  */
 function initialize() {
-    const config: LoggerConfig = {};
-    let nonConsole = false;
-
-    // Do not log to console if running tests and we're not
-    // asked to do so.
-    if (process.env.VSC_PYTHON_FORCE_LOGGING) {
-        config.console = {};
-        // In CI there's no need for the label.
-        if (!isCI) {
-            config.console.label = 'Python Extension:';
-        }
-    }
-    if (process.env.VSC_PYTHON_LOG_FILE) {
-        config.file = {
-            logfile: process.env.VSC_PYTHON_LOG_FILE
-        };
-        nonConsole = true;
-    }
-    configureLogger(globalLogger, config);
-
-    if (isCI && nonConsole) {
-        delete config.console;
-        // Send console.*() to the non-console loggers.
-        monkeypatchConsole(
-            // This is a separate logger that matches our config but
-            // does not do any console logging.
-            createLogger(config)
-        );
-    }
+    configureLogger(globalLogger, getPreDefinedConfiguration());
 }
 
 // Set the logging level the extension logs at.
@@ -142,39 +113,5 @@ export namespace traceDecorators {
         const opts = DEFAULT_OPTS;
         const level = LogLevel.Warn;
         return createTracingDecorator([globalLogger], { message, opts, level });
-    }
-}
-
-/**
- * What we're doing here is monkey patching the console.log so we can
- * send everything sent to console window into our logs.  This is only
- * required when we're directly writing to `console.log` or not using
- * our `winston logger`.  This is something we'd generally turn on, only
- * on CI so we can see everything logged to the console window
- * (via the logs).
- */
-function monkeypatchConsole(logger: ILogger) {
-    // The logging "streams" (methods) of the node console.
-    const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
-    const levels: { [key: string]: LogLevel } = {
-        error: LogLevel.Error,
-        warn: LogLevel.Warn
-    };
-    // tslint:disable-next-line:no-any
-    const consoleAny: any = console;
-    for (const stream of streams) {
-        // Using symbols guarantee the properties will be unique & prevents
-        // clashing with names other code/library may create or have created.
-        // We could use a closure but it's a bit trickier.
-        const sym = Symbol.for(stream);
-        consoleAny[sym] = consoleAny[stream];
-        // tslint:disable-next-line: no-function-expression
-        consoleAny[stream] = function () {
-            const args = Array.prototype.slice.call(arguments);
-            const fn = consoleAny[sym];
-            fn(...args);
-            const level = levels[stream] || LogLevel.Info;
-            logToAll([logger], level, args);
-        };
     }
 }
