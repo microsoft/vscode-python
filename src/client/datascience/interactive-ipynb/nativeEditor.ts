@@ -45,7 +45,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
@@ -85,7 +85,6 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 import type { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import { QuickPickItem } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
@@ -716,17 +715,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
-        const items: QuickPickItem[] = [{ label: 'Python Script', picked: true }, { label: 'HTML' }, { label: 'PDF' }];
-        const options = {
-            ignoreFocusOut: true,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeHolder: 'Export As...'
-        };
-
-        this.applicationShell.showQuickPick(items, options).then((item) => {
-            console.log(item); // send to something that can handle this
-        });
+        this.commandManager.executeCommand(Commands.Export);
     }
 
     private async viewDocument(contents: string): Promise<void> {
