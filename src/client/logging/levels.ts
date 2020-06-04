@@ -4,6 +4,7 @@
 
 // IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
 // delete everything in '../client' except for '../client/logging' before running smoke tests.
+
 import * as winston from 'winston';
 
 //======================

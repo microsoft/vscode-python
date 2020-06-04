@@ -2,16 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
+// delete everything in '../client' except for '../client/logging' before running smoke tests.
+
 import * as logform from 'logform';
 import * as path from 'path';
+import { OutputChannel } from 'vscode';
 import * as winston from 'winston';
 import * as Transport from 'winston-transport';
-import { IOutputChannel } from '../common/types';
-import { EXTENSION_ROOT_DIR } from '../constants';
 import { LogLevel, resolveLevel } from './levels';
 import { Arguments } from './util';
 
-const formattedMessage = Symbol.for('message');
+const folderPath = path.dirname(__dirname);
+const folderName = path.basename(folderPath);
+const EXTENSION_ROOT_DIR =
+    folderName === 'client' ? path.join(folderPath, '..', '..') : path.join(folderPath, '..', '..', '..', '..');
 
 export function isConsoleTransport(transport: unknown): boolean {
     // tslint:disable-next-line:no-any
@@ -74,7 +79,7 @@ export function getConsoleTransport(formatter: logform.Format): Transport {
 
 class PythonOutputChannelTransport extends Transport {
     // tslint:disable-next-line: no-any
-    constructor(private readonly channel: IOutputChannel, options?: any) {
+    constructor(private readonly channel: OutputChannel, options?: any) {
         super(options);
     }
     // tslint:disable-next-line: no-any
@@ -88,7 +93,7 @@ class PythonOutputChannelTransport extends Transport {
 }
 
 // Create a Python output channel targeting transport that can be added to a winston logger.
-export function getPythonOutputChannelTransport(channel: IOutputChannel, formatter: logform.Format) {
+export function getPythonOutputChannelTransport(channel: OutputChannel, formatter: logform.Format) {
     return new PythonOutputChannelTransport(channel, {
         // We minimize customization.
         format: formatter
