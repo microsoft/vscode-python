@@ -9,6 +9,7 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri } from 'vscode';
 
+import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
@@ -329,7 +330,9 @@ suite('DataScience - Native Editor Storage', () => {
             localMemento
         );
 
-        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
+        const commandManager = mock(CommandManager);
+
+        return new NotebookStorageProvider(notebookStorage, [], instance(commandManager));
     }
 
     teardown(() => {

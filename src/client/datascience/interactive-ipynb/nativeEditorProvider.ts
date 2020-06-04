@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import * as os from 'os';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { CancellationToken } from 'vscode-languageclient';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
     CustomDocument,
@@ -77,7 +79,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
         @inject(ICustomEditorService) private customEditorService: ICustomEditorService,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider
     ) {
         traceInfo(`id is ${this._id}`);
         asyncRegistry.push(this);
@@ -90,7 +92,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         }
 
         // Register for the custom editor service.
-        customEditorService.registerCustomEditorProvider2(NativeEditorProvider.customEditorViewType, this, {
+        customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
             webviewOptions: {
                 enableFindWidget: true,
                 retainContextWhenHidden: true
@@ -101,10 +103,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
 
     public async openCustomDocument(
         uri: Uri,
-        _context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
+        context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
         _cancellation: CancellationToken
     ): Promise<CustomDocument> {
-        const model = await this.loadModel(uri);
+        const model = await this.loadModel(uri, undefined, context.backupId ? false : true);
         return {
             uri,
             dispose: () => model.dispose()
@@ -112,15 +114,18 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
     public async saveCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        await this.storage.save(model, cancellation);
+        // 1 second timeout on save so don't wait. Just write and forget
+        this.storage.save(model, cancellation).ignoreErrors();
     }
     public async saveCustomDocumentAs(document: CustomDocument, targetResource: Uri): Promise<void> {
         const model = await this.loadModel(document.uri);
-        await this.storage.saveAs(model, targetResource);
+        // 1 second timeout on save so don't wait. Just write and forget
+        this.storage.saveAs(model, targetResource).ignoreErrors();
     }
     public async revertCustomDocument(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
         const model = await this.loadModel(document.uri);
-        await this.storage.revert(model, cancellation);
+        // 1 second time limit on this so don't wait.
+        this.storage.revert(model, cancellation).ignoreErrors();
     }
     public async backupCustomDocument(
         document: CustomDocument,
@@ -128,10 +133,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         cancellation: CancellationToken
     ): Promise<CustomDocumentBackup> {
         const model = await this.loadModel(document.uri);
-        await this.storage.backup(model, cancellation);
+        const id = this.storage.getBackupId(model);
+        this.storage.backup(model, cancellation).ignoreErrors();
         return {
-            id: document.uri.toString(), // This is used to restore on an open
-            delete: () => this.storage.deleteBackup(model) // This cleans up after save has happened.
+            id,
+            delete: () => this.storage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
         };
     }
 
@@ -201,13 +207,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
         // Every time we load a new untitled file, up the counter past the max value for this counter
         this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
-        return this.storage.load(file, contents, skipDirtyContents).then((m) => {
-            this.trackModel(m);
-            return m;
-        });
+
+        // Load our model from our storage object.
+        const model = await this.storage.load(file, contents, skipDirtyContents);
+
+        // Make sure to listen to events on the model
+        this.trackModel(model);
+        return model;
     }
 
     protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
@@ -241,6 +250,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this._onDidOpenNotebookEditor.fire(editor);
     }
 
+    protected async modelEdited(model: INotebookModel, change: NotebookModelChange) {
+        // Find the document associated with this edit.
+        const document = this.customDocuments.get(model.file.fsPath);
+
+        // Tell VS code about model changes if not caused by vs code itself
+        if (document && change.kind !== 'save' && change.kind !== 'saveAs' && change.source === 'user') {
+            this._onDidEdit.fire(new NotebookModelEditEvent(document, model, change));
+        }
+    }
+
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
@@ -263,17 +282,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         }
     }
 
-    private async modelEdited(model: INotebookModel, change: NotebookModelChange) {
-        // Find the document associated with this edit.
-        const document = this.customDocuments.get(model.file.fsPath);
-        if (document) {
-            this._onDidEdit.fire(new NotebookModelEditEvent(document, model, change));
-        }
-    }
-
     private getNextNewNotebookUri(): Uri {
-        // Just use the current counter. Counter will be incremented after actually opening a file.
+        // Because of this bug here:
+        // https://github.com/microsoft/vscode/issues/93441
+        // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
+        // Instead we need to create untitled files in the temp folder and force a saveas whenever they're
+        // saved.
+
+        // However if there are files already on disk, we should be able to overwrite them because
+        // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
         const fileName = `${DataScience.untitledNotebookFileName()}-${this.untitledCounter}.ipynb`;
-        return Uri.parse(`untitled:///${fileName}`);
+        return Uri.parse(`untitled:///${os.tmpdir}/${fileName}`);
     }
 }

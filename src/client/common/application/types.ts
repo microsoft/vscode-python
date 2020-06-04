@@ -1474,7 +1474,7 @@ export interface ICustomEditorService {
      *
      * @return Disposable that unregisters the `WebviewCustomEditorProvider`.
      */
-    registerCustomEditorProvider2(
+    registerCustomEditorProvider(
         viewType: string,
         provider: CustomReadonlyEditorProvider | CustomEditorProvider,
         options?: {

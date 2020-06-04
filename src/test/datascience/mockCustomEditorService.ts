@@ -37,7 +37,7 @@ export class MockCustomEditorService implements ICustomEditorService {
         );
     }
 
-    public registerCustomEditorProvider2(
+    public registerCustomEditorProvider(
         _viewType: string,
         provider: CustomEditorProvider,
         _options?: {

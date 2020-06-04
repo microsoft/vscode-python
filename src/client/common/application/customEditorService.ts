@@ -15,8 +15,7 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean
     ) {}
 
-    // 2 should be temporary
-    public registerCustomEditorProvider2(
+    public registerCustomEditorProvider(
         viewType: string,
         provider: CustomEditorProvider,
         options?: {
@@ -26,7 +25,7 @@ export class CustomEditorService implements ICustomEditorService {
     ): vscode.Disposable {
         if (this.useCustomEditorApi) {
             // tslint:disable-next-line: no-any
-            return (vscode.window as any).registerCustomEditorProvider2(viewType, provider, options);
+            return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
             return { dispose: noop };
         }
