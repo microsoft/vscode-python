@@ -308,7 +308,7 @@ export class KernelSelector {
                     selection.kernelSpec,
                     cancelToken
                 );
-            } else {
+            } else if (!cancelToken?.isCancellationRequested) {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
                 if (activeInterpreter) {
@@ -332,7 +332,7 @@ export class KernelSelector {
                     );
                 }
             }
-        } else {
+        } else if (!cancelToken?.isCancellationRequested) {
             // No kernel info, hence use current interpreter as a kernel.
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (activeInterpreter) {

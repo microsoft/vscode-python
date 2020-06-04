@@ -61,6 +61,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
     private readonly updatedInterpreters = new Set<string>();
+    private readonly pythonExecutionFactory: IPythonExecutionFactory;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -74,6 +75,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
 
     public async refresh(resource?: Uri) {
@@ -136,8 +138,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
-        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecutionService = await pythonExecutionFactory.create({ resource });
+        const pythonExecutionService = await this.pythonExecutionFactory.create({ resource });
         const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {

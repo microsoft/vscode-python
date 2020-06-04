@@ -39,6 +39,9 @@ export const CONDA_RUN_VERSION = '4.6.0';
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
+    private readonly disposables: IDisposableRegistry;
+    private readonly interpreterService: IInterpreterService;
+    private readonly logger: IProcessLogger;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -47,7 +50,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
-    ) {}
+    ) {
+        // Acquire other objects here so that if we are called during dispose they are available.
+        this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+    }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
@@ -72,11 +80,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
 
-        const interpreter = await interpreterService.getInterpreterDetails(pythonPath, options.resource);
+        const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath, options.resource);
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: interpreter,
@@ -98,18 +103,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 const daemon = new PythonDaemonExecutionServicePool(
-                    logger,
-                    disposables,
+                    this.logger,
+                    this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
                     activatedEnvVars
                 );
                 await daemon.initialize();
-                disposables.push(daemon);
+                this.disposables.push(daemon);
                 return (daemon as unknown) as T;
             } else {
                 const factory = new PythonDaemonFactory(
-                    disposables,
+                    this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
                     activatedEnvVars

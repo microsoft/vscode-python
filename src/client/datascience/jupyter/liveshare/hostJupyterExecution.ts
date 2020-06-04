@@ -92,28 +92,34 @@ export class HostJupyterExecution
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+        if (!this._disposed) {
+            return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+        }
     }
 
     public async connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+        if (!this._disposed) {
+            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+        }
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onAttach(api);
+        if (!this._disposed) {
+            await super.onAttach(api);
 
-        if (api) {
-            const service = await this.waitForService();
+            if (api) {
+                const service = await this.waitForService();
 
-            // Register handlers for all of the supported remote calls
-            if (service) {
-                service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-                service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-                service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
-                service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+                // Register handlers for all of the supported remote calls
+                if (service) {
+                    service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
+                    service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
+                    service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
+                    service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+                }
             }
         }
     }
