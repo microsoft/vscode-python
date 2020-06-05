@@ -24,6 +24,7 @@ export enum CursorPos {
     Current
 }
 
+// The state we are in for run by line debugging
 export enum DebugState {
     Break,
     Design,

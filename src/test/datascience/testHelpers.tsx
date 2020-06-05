@@ -93,11 +93,11 @@ export function waitForMessage(
         : undefined;
     let timesMessageReceived = 0;
     const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-    handler = (m: string, p: any) => {
+    handler = (m: string, payload: any) => {
         if (m === message || m === dispatchedAction) {
             // First verify the payload matches
             if (options?.withPayload) {
-                if (!options.withPayload(p)) {
+                if (!options.withPayload(payload)) {
                     return;
                 }
             }
