@@ -175,6 +175,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
+
             expect(diagnostics).to.be.deep.equal([], 'not the same');
             settings.verifyAll();
             interpreterService.verifyAll();
