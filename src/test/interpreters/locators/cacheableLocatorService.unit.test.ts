@@ -13,10 +13,11 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Resource } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { IInterpreterWatcher, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterWatcher } from '../../../client/interpreter/contracts';
 import { CacheableLocatorService } from '../../../client/interpreter/locators/services/cacheableLocatorService';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Cacheable Locator Service', () => {
     suite('Caching', () => {

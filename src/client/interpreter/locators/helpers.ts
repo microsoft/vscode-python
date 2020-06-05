@@ -4,7 +4,8 @@ import * as path from 'path';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
+import { InterpreterType, PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { IInterpreterLocatorHelper } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;

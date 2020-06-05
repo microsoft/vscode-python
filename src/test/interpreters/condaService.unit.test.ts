@@ -14,14 +14,10 @@ import { IProcessService, IProcessServiceFactory } from '../../client/common/pro
 import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
 import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
-import {
-    IInterpreterLocatorService,
-    IInterpreterService,
-    InterpreterType,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { MockState } from './mocks';
 
 const untildify: (value: string) => string = require('untildify');

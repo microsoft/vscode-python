@@ -10,9 +10,10 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Disposable, Uri } from 'vscode';
 import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
-import { IInterpreterLocatorService, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterLocatorService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressService } from '../../../client/interpreter/locators/progressService';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 import { sleep } from '../../core';
 
 suite('Interpreters - Locator Progress', () => {

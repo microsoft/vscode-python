@@ -4,10 +4,11 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { FileSystemPaths } from '../common/platform/fs-paths';
-import { InterpreterInformation, IPythonExecutionFactory } from '../common/process/types';
+import { IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
-import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
+import { InterpreterInformation, InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { IInterpreterHelper, WorkspacePythonPath } from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 

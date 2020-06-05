@@ -21,7 +21,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionService
 } from '../../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Auto Selection - Base Rule', () => {
     let rule: BaseRuleServiceTest;

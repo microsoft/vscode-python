@@ -46,7 +46,7 @@ suite('Data Science - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
+        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
@@ -57,7 +57,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Success,
                     runnable: true,
                     custom: {
                         cellId: 'MyCellId1'
@@ -204,8 +204,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 [
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-                        ename: 'Error Name',
-                        evalue: 'Error Value',
+                        ename: '',
+                        evalue: '',
                         traceback: ['stack1', 'stack2', 'stack3']
                     }
                 ]

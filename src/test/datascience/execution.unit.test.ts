@@ -58,10 +58,11 @@ import {
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';

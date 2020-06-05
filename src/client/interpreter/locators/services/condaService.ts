@@ -9,13 +9,12 @@ import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import {
     CondaEnvironmentInfo,
     CondaInfo,
     ICondaService,
     IInterpreterLocatorService,
-    InterpreterType,
-    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE
 } from '../../contracts';
 import { parseCondaEnvFileContents } from './condaHelper';

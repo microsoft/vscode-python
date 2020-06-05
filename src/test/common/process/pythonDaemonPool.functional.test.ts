@@ -22,8 +22,7 @@ import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
-    Output,
-    PythonVersionInfo
+    Output
 } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -32,6 +31,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { JupyterDaemonModule } from '../../../client/datascience/constants';
+import { PythonVersionInfo } from '../../../client/pythonEnvironments/discovery/types';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);

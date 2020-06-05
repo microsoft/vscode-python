@@ -943,6 +943,10 @@ export namespace DataScience {
         'DataScience.rawKernelSessionFailed',
         'Unable to start session for kernel {0}. Select another kernel to launch with.'
     );
+    export const rawKernelConnectingSession = localize(
+        'DataScience.rawKernelConnectingSession',
+        'Connecting to kernel.'
+    );
 }
 
 export namespace StartPage {

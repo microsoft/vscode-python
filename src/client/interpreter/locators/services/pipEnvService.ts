@@ -11,15 +11,10 @@ import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, ICurrentProcess } from '../../../common/types';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IServiceContainer } from '../../../ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import {
-    GetInterpreterLocatorOptions,
-    IInterpreterHelper,
-    InterpreterType,
-    IPipEnvService,
-    PythonInterpreter
-} from '../../contracts';
+import { GetInterpreterLocatorOptions, IInterpreterHelper, IPipEnvService } from '../../contracts';
 import { IPipEnvServiceHelper } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 

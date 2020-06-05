@@ -29,8 +29,9 @@ import {
 } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length

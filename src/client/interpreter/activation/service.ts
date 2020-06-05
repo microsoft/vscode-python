@@ -17,9 +17,10 @@ import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IInterpreterService, PythonInterpreter } from '../contracts';
+import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';

@@ -2,20 +2,14 @@
 // Licensed under the MIT License.
 
 import { CondaEnvironmentInfo } from '../../interpreter/contracts';
+import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
 import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
-import {
-    ExecutionResult,
-    InterpreterInformation,
-    IProcessService,
-    PythonExecutionInfo,
-    ShellOptions,
-    SpawnOptions
-} from './types';
+import { ExecutionResult, IProcessService, PythonExecutionInfo, ShellOptions, SpawnOptions } from './types';
 
 function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecutionInfo {
     const args = python.slice(1);

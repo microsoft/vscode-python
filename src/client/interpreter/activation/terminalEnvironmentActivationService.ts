@@ -11,9 +11,9 @@ import * as internalScripts from '../../common/process/internal/scripts';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 /**

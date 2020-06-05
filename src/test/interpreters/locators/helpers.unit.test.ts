@@ -13,16 +13,12 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture } from '../../../client/common/utils/platform';
-import {
-    IInterpreterHelper,
-    IInterpreterLocatorHelper,
-    InterpreterType,
-    PythonInterpreter
-} from '../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterLocatorHelper } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { PipEnvServiceHelper } from '../../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { IPipEnvServiceHelper } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 enum OS {
     Windows = 'Windows',

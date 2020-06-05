@@ -12,7 +12,8 @@ import { IEnvironmentVariablesProvider } from '../../../client/common/variables/
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../../../client/datascience/types';
-import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 

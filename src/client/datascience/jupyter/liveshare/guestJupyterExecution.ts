@@ -14,8 +14,9 @@ import {
     IOutputChannel
 } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IJupyterConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';

@@ -18,12 +18,8 @@ import { JupyterKernelSpec } from '../../client/datascience/jupyter/kernels/jupy
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
-import {
-    IInterpreterLocatorService,
-    IInterpreterService,
-    InterpreterType,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;

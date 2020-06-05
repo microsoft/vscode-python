@@ -14,7 +14,8 @@ import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { ICondaService, IInterpreterHelper } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName } from './conda';
 

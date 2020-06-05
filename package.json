@@ -2006,6 +2006,7 @@
                     "type": "string",
                     "default": "",
                     "description": "Path to ptvsd experimental bits for debugging cells.",
+                    "deprecationMessage": "This setting has been deprecated in favor of 'debugpyDistPath'.",
                     "scope": "resource"
                 },
                 "python.dataScience.stopOnFirstLineWhileDebugging": {

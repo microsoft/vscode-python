@@ -16,6 +16,7 @@ import type {
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import * as uuid from 'uuid/v4';
+import { NotebookCellRunState } from '../../../../typings/vscode-proposed';
 import {
     concatMultilineStringInput,
     concatMultilineStringOutput,
@@ -37,7 +38,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
 
     return {
         cells,
-        languages: [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE],
+        languages: [PYTHON_LANGUAGE],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
@@ -90,7 +91,28 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
         return;
     }
 
-    return {
+    // tslint:disable-next-line: no-any
+    const outputs = cellOutputsToVSCCellOutputs(cell.data.outputs as any);
+
+    // If we have an execution count & no errors, then success state.
+    // If we have an execution count &  errors, then error state.
+    // Else idle state.
+    const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
+    const hasExecutionCount = typeof cell.data.execution_count === 'number' && cell.data.execution_count > 0;
+    let runState: NotebookCellRunState;
+    let statusMessage: string | undefined;
+    if (!hasExecutionCount) {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
+    } else if (hasErrors) {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+        // Error details are stripped from the output, get raw output.
+        // tslint:disable-next-line: no-any
+        statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cell.data.outputs as any);
+    } else {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Success;
+    }
+
+    const notebookCellData: NotebookCellData = {
         cellKind:
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
         language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
@@ -98,16 +120,33 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
             hasExecutionOrder: cell.data.cell_type === 'code',
-            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+            runState,
             runnable: cell.data.cell_type === 'code',
             custom: {
                 cellId: cell.id
             }
         },
         source: concatMultilineStringInput(cell.data.source),
-        // tslint:disable-next-line: no-any
-        outputs: cellOutputsToVSCCellOutputs(cell.data.outputs as any)
+        outputs
     };
+
+    if (statusMessage) {
+        notebookCellData.metadata.statusMessage = statusMessage;
+    }
+
+    const startExecutionTime = cell.data.metadata.vscode?.start_execution_time
+        ? new Date(Date.parse(cell.data.metadata.vscode.start_execution_time)).getTime()
+        : undefined;
+    const endExecutionTime = cell.data.metadata.vscode?.end_execution_time
+        ? new Date(Date.parse(cell.data.metadata.vscode.end_execution_time)).getTime()
+        : undefined;
+
+    if (startExecutionTime && typeof endExecutionTime === 'number') {
+        notebookCellData.metadata.runStartTime = startExecutionTime;
+        notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
+    }
+
+    return notebookCellData;
 }
 
 export function cellOutputsToVSCCellOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
@@ -205,11 +244,31 @@ function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | Cel
         }
     };
 }
+
+/**
+ * We will display the error message in the status of the cell.
+ * The `ename` & `evalue` is displayed at the top of the output by VS Code.
+ * As we're displaying the error in the statusbar, we don't want this dup error in output.
+ * Hence remove this.
+ */
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
     return {
-        ename: output.ename,
-        evalue: output.evalue,
+        ename: '',
+        evalue: '',
         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
         traceback: output.traceback
     };
+}
+
+export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
+    if (!Array.isArray(outputs)) {
+        return '';
+    }
+    const errorOutput = (outputs.find((output) => output.output_type === 'error') as unknown) as
+        | nbformat.IError
+        | undefined;
+    if (!errorOutput) {
+        return '';
+    }
+    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
 }

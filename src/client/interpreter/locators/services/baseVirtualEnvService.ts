@@ -6,12 +6,8 @@ import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
-import {
-    IInterpreterHelper,
-    InterpreterType,
-    IVirtualEnvironmentsSearchPathProvider,
-    PythonInterpreter
-} from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';

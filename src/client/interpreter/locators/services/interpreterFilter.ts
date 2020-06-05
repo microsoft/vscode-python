@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { PythonInterpreter } from '../../contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { IInterpreterFilter, IWindowsStoreInterpreter } from '../types';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 

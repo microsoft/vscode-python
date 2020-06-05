@@ -21,13 +21,10 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/winRegistry';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import {
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-    PythonInterpreter
-} from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { WindowsRegistryService } from '../../../../client/interpreter/locators/services/windowsRegistryService';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
     let rule: WindowsRegistryInterpretersAutoSelectionRuleTest;

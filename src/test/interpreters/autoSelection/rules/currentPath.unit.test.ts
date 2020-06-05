@@ -18,13 +18,10 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/currentPath';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import {
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-    PythonInterpreter
-} from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Auto Selection - Current Path Rule', () => {
     let rule: CurrentPathInterpretersAutoSelectionRuleTest;

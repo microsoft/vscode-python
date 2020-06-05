@@ -50,7 +50,7 @@ const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(
     'test',
     'pythonFiles',
     'testFiles',
-    'unitestsWithConfigs'
+    'unittestsWithConfigs'
 );
 const unitTestTestFilesCwdPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'cwd', 'src');
 
@@ -781,7 +781,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 {
                     rootid: '.',
                     root:
-                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unittestsWithConfigs',
                     parents: [
                         {
                             id: './other',

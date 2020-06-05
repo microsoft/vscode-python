@@ -345,12 +345,10 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
-    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
@@ -393,6 +391,7 @@ import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs'
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { traceInfo } from '../../client/logging';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';

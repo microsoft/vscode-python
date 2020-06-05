@@ -21,7 +21,7 @@ import {
     INotebookEditor,
     INotebookEditorProvider
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { FakeClock } from '../common';
 import { createPythonInterpreter } from '../utils/interpreters';
 

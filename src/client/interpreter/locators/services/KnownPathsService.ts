@@ -5,12 +5,8 @@ import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
-import {
-    IInterpreterHelper,
-    IKnownSearchPathsForInterpreters,
-    InterpreterType,
-    PythonInterpreter
-} from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { IInterpreterHelper, IKnownSearchPathsForInterpreters } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');

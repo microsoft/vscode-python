@@ -11,13 +11,14 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { commands } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
+import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { waitForCondition } from '../../common';
+import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -211,6 +212,12 @@ export function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
+    return (
+        (cell.metadata.executionOrder ?? 0) > 0 &&
+        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
+    );
+}
 export function hasOutputInVSCode(cell: NotebookCell) {
     assert.ok(cell.outputs.length, 'No output');
 }
@@ -220,8 +227,8 @@ export function hasOutputInICell(cell: ICell) {
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
-    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Text, 'Incorrect output kind');
-    const outputText = (cellOutputs[index] as any).text.trim();
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
     } else {
@@ -240,4 +247,24 @@ export function assertVSCCellIsRunning(cell: NotebookCell) {
 export function assertVSCCellIsIdle(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     return true;
+}
+export function assertVSCCellHasErrors(cell: NotebookCell) {
+    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error);
+    return true;
+}
+export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
+    assert.ok(
+        cell.outputs.filter((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error).length,
+        'No error output in cell'
+    );
+    return true;
+}
+
+export async function saveActiveNotebook(disposables: IDisposable[]) {
+    const api = await initialize();
+    const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
+    await commands.executeCommand('workbench.action.files.saveAll');
+
+    await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
 }

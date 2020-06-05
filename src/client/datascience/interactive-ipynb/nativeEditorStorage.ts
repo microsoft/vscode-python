@@ -10,7 +10,7 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
@@ -331,7 +331,8 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private updateCellExecutionCount(cellId: string, executionCount?: number) {
         const index = this.cells.findIndex((v) => v.id === cellId);
         if (index >= 0) {
-            this._state.cells[index].data.execution_count = (executionCount || 0) > 0 ? executionCount : null;
+            this._state.cells[index].data.execution_count =
+                typeof executionCount === 'number' && executionCount > 0 ? executionCount : null;
             return true;
         }
         return false;

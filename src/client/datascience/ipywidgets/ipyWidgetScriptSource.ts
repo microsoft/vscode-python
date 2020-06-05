@@ -20,7 +20,8 @@ import {
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import {

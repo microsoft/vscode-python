@@ -8,7 +8,8 @@ import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
+import { InterpreterType, PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { IInterpreterHelper } from '../../contracts';
 import { IPythonInPathCommandProvider } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 

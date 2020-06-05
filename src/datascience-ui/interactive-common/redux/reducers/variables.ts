@@ -87,14 +87,16 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 }
 
 function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
-    const containerHeight = arg.payload.data.containerHeight;
-    const gridHeight = arg.payload.data.gridHeight;
-    if (containerHeight && gridHeight) {
-        return {
-            ...arg.prevState,
-            containerHeight: containerHeight,
-            gridHeight: gridHeight
-        };
+    if (arg.payload.data) {
+        const containerHeight = arg.payload.data.containerHeight;
+        const gridHeight = arg.payload.data.gridHeight;
+        if (containerHeight && gridHeight) {
+            return {
+                ...arg.prevState,
+                containerHeight: containerHeight,
+                gridHeight: gridHeight
+            };
+        }
     }
     return {
         ...arg.prevState

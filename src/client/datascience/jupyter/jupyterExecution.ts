@@ -12,8 +12,9 @@ import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../.
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';

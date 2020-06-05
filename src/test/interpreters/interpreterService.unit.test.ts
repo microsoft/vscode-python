@@ -40,15 +40,14 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
-    INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
-    PythonInterpreter
+    INTERPRETER_LOCATOR_SERVICE
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 

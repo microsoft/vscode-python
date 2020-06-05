@@ -23,8 +23,9 @@ import { KernelService } from '../../../../client/datascience/jupyter/kernels/ke
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable: max-func-body-length no-unused-expression
 
