@@ -105,11 +105,13 @@ export class NativeEditorRunByLineListener
 
     private async handleStep() {
         // User issued a step command.
+        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
         return this.debugService.step();
     }
 
     private async handleContinue() {
         // User issued a continue command
+        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
         return this.debugService.continue();
     }
 

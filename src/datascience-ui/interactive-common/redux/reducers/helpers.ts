@@ -96,7 +96,6 @@ export namespace Helpers {
                         source: newVMs[index].cell.data.source
                     }
                 },
-                //runningByLine: finished ? false : newVMs[index].runningByLine
                 runningByLine: finished ? DebugState.Design : newVMs[index].runningByLine
             };
             newVMs[index] = newVM;

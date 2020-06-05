@@ -192,7 +192,6 @@ export namespace Creation {
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
             scrollCount: 0,
-            //runningByLine: false
             runningByLine: DebugState.Design
         };
 
@@ -249,7 +248,6 @@ export namespace Creation {
                 cursorPos: CursorPos.Current,
                 hasBeenRun: false,
                 scrollCount: 0,
-                //runningByLine: false
                 runningByLine: DebugState.Design
             };
 

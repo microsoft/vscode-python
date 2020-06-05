@@ -230,7 +230,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
             case 'F10':
                 if (this.props.debugging) {
-                    //const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
                     const debuggingCell = this.props.cellVMs.find((cvm) => activeDebugState(cvm.runningByLine));
                     if (debuggingCell) {
                         this.props.step(debuggingCell.cell.id);
@@ -240,7 +239,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 break;
             case 'F5':
                 if (this.props.debugging) {
-                    //const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
                     const debuggingCell = this.props.cellVMs.find((cvm) => activeDebugState(cvm.runningByLine));
                     if (debuggingCell) {
                         this.props.continue(debuggingCell.cell.id);
@@ -306,7 +304,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             ) : null;
 
         const otherCellRunningByLine = this.props.cellVMs.find(
-            //(cvm) => cvm.runningByLine && cvm.cell.id !== cellVM.cell.id
             (cvm) => activeDebugState(cvm.runningByLine) && cvm.cell.id !== cellVM.cell.id
         );
         const maxOutputSize = this.props.settings.maxOutputSize;

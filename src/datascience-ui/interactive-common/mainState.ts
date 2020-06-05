@@ -53,7 +53,6 @@ export interface ICellViewModel {
     runDuringDebug?: boolean;
     codeVersion?: number;
     uiSideError?: string;
-    //runningByLine: boolean;
     runningByLine: DebugState;
     currentStack?: DebugProtocol.StackFrame[];
 }
@@ -223,7 +222,6 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        //runningByLine: false
         runningByLine: DebugState.Design
     };
 }
@@ -278,7 +276,6 @@ export function createCellVM(
         hasBeenRun: false,
         scrollCount: 0,
         runDuringDebug,
-        //runningByLine: false
         runningByLine: DebugState.Design
     };
 

@@ -61,7 +61,6 @@ interface INativeCellBaseProps {
     focusPending: number;
     busy: boolean;
     useCustomEditorApi: boolean;
-    //runningByLine: boolean;
     runningByLine: DebugState;
     supportsRunByLine: boolean;
 }
@@ -561,6 +560,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
     }
 
+    // IANHU: Too big? Break this funtion up?
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
@@ -612,7 +612,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
-        //if (this.props.runningByLine && !this.isMarkdownCell()) {
         if (this.props.runningByLine !== DebugState.Design && !this.isMarkdownCell()) {
             return (
                 <div className={toolbarClassName}>
