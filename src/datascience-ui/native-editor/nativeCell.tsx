@@ -612,7 +612,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
-        if (this.props.runningByLine !== DebugState.Design && !this.isMarkdownCell()) {
+        if (activeDebugState(this.props.runningByLine) && !this.isMarkdownCell()) {
             return (
                 <div className={toolbarClassName}>
                     <div className="native-editor-celltoolbar-middle">

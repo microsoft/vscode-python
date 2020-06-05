@@ -10,6 +10,7 @@ import { ContentPanel, IContentPanelProps } from '../interactive-common/contentP
 import { handleLinkClick } from '../interactive-common/handlers';
 import {
     activeDebugState,
+    DebugState,
     getSelectedAndFocusedInfo,
     ICellViewModel,
     IMainState
@@ -230,7 +231,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
             case 'F10':
                 if (this.props.debugging) {
-                    const debuggingCell = this.props.cellVMs.find((cvm) => activeDebugState(cvm.runningByLine));
+                    // Only allow step if debugging in break mode
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine === DebugState.Break);
                     if (debuggingCell) {
                         this.props.step(debuggingCell.cell.id);
                     }
@@ -239,7 +241,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                 break;
             case 'F5':
                 if (this.props.debugging) {
-                    const debuggingCell = this.props.cellVMs.find((cvm) => activeDebugState(cvm.runningByLine));
+                    // Only allow continue if debugging in break mode
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine === DebugState.Break);
                     if (debuggingCell) {
                         this.props.continue(debuggingCell.cell.id);
                     }
