@@ -560,7 +560,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
     }
 
-    // IANHU: Too big? Break this funtion up?
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
