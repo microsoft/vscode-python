@@ -565,6 +565,7 @@ export namespace DataScience {
         'Please save this file before exporting.'
     );
     export const exportSaveFileYes = localize('DataScience.exportSaveFileYes', 'Save');
+    export const exportSaveFileDontShow = localize('DataScience.exportSaveFileDontShow', "Save & Don't Show Again");
     export const exportSaveFileCancel = localize('DataScience.exportSaveFileNo', 'Cancel');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
