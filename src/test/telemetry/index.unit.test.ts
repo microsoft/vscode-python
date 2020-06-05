@@ -154,7 +154,7 @@ suite('Telemetry', () => {
         const error = new Error('Boo');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const eventName = 'ERROR';
+        const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
@@ -196,7 +196,7 @@ suite('Telemetry', () => {
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const eventName = 'ERROR';
+        const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
@@ -249,7 +249,7 @@ suite('Telemetry', () => {
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const eventName = 'ERROR';
+        const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
@@ -291,7 +291,7 @@ suite('Telemetry', () => {
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
-        const eventName = 'ERROR';
+        const eventName = 'Testing';
         const properties = { hello: 'world', foo: 'bar' };
         const measures = { start: 123, end: 987 };
 
