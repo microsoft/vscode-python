@@ -116,7 +116,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
         eventNameSent = 'ERROR';
         customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
     } else {
         if (properties) {
             const data = properties as any;
