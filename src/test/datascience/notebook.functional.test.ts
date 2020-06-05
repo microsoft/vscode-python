@@ -407,7 +407,8 @@ suite('DataScience notebook tests', () => {
                             'jupyter',
                             'notebook',
                             '--NotebookApp.open_browser=False',
-                            '--NotebookApp.ip=0.0.0.0',
+                            '--NotebookApp.ip=*',
+                            '--NotebookApp.port=9999',
                             `--certfile=${pemFile}`,
                             `--keyfile=${keyFile}`
                         ],
