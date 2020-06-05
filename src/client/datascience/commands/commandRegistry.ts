@@ -4,16 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import {
-    CodeLens,
-    ConfigurationTarget,
-    env,
-    QuickPickItem,
-    QuickPickOptions,
-    Range,
-    SaveDialogOptions,
-    Uri
-} from 'vscode';
+import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -23,6 +14,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { ExportFormat, IExportManager } from '../export/exportManager';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -32,10 +24,6 @@ import {
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';
 import { JupyterServerSelectorCommand } from './serverSelector';
-
-interface IExportQuickPickItem extends QuickPickItem {
-    handler(): void;
-}
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -57,8 +45,12 @@ export class CommandRegistry implements IDisposable {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
+<<<<<<< HEAD
         @inject(IExperimentService) private readonly expService: IExperimentService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell
+=======
+        @inject(IExportManager) private exportManager: IExportManager
+>>>>>>> moved to new file
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -89,9 +81,9 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
-        this.registerCommand(Commands.ExportAsPythonScript, this.exportAsPythonScript);
-        this.registerCommand(Commands.ExportToHTML, this.exportToHTML);
-        this.registerCommand(Commands.ExportToPDF, this.exportToPDF);
+        this.registerCommand(Commands.ExportAsPythonScript, () => this.export(ExportFormat.python));
+        this.registerCommand(Commands.ExportToHTML, () => this.export(ExportFormat.html));
+        this.registerCommand(Commands.ExportToPDF, () => this.export(ExportFormat.pdf));
         this.registerCommand(Commands.Export, this.export);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(
@@ -377,90 +369,12 @@ export class CommandRegistry implements IDisposable {
         this.jupyterOutput.show(true);
     }
 
-    private getExportQuickPickItems(): IExportQuickPickItem[] {
-        // To add a new quick pick item simply enter the label,
-        // if it picked by default and add a handler for when it is selected
-        return [
-            { label: 'Python Script', picked: true, handler: this.exportAsPythonScript },
-            { label: 'HTML', picked: false, handler: this.exportToHTML },
-            { label: 'PDF', picked: false, handler: this.exportToPDF }
-        ];
-    }
-
-    private exportAsPythonScript() {}
-
-    private exportToHTML() {}
-
-    private exportToPDF() {}
-
-    private async showExportQuickPick(): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems();
-
-        const options: QuickPickOptions = {
-            ignoreFocusOut: true,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeHolder: 'Export As...'
-        };
-
-        const pickedItem = await this.applicationShell.showQuickPick(items, options);
-        if (!pickedItem) {
-            return;
+    private async export(exportMethod?: ExportFormat) {
+        if (exportMethod) {
+            await this.exportManager.export(exportMethod);
+        } else {
+            await this.exportManager.export();
         }
-        for (const item of items) {
-            if (item.label === pickedItem.label) {
-                return item;
-            }
-        }
-    }
-
-    private getFileSaveLocation(): Uri | undefined {
-        const file = this.notebookEditorProvider.activeEditor?.file;
-        const options: SaveDialogOptions = {
-            defaultUri: file,
-            saveLabel: '',
-            filters: {
-                'Juypter Notebooks': ['ipynb']
-            }
-        };
-
-        this.applicationShell.showSaveDialog(options).then((uri) => {
-            return uri;
-        });
-        return undefined;
-    }
-
-    private verifySaved() {
-        if (this.notebookEditorProvider.activeEditor?.isUntitled) {
-            // save to temporary file, don't need to ask
-            return;
-        }
-
-        if (!this.notebookEditorProvider.activeEditor?.isDirty) {
-            // if notebook does not have unsaved changed
-            return;
-        }
-
-        // Ask user if they'd like to save
-        const yes = DataScience.exportSaveFileYes();
-        const cancel = DataScience.exportSaveFileCancel();
-        const options = [yes, cancel];
-
-        this.applicationShell.showInformationMessage(DataScience.exportSaveFilePrompt(), ...options).then((choice) => {
-            if (choice === yes) {
-                const file = this.getFileSaveLocation();
-            }
-        });
-    }
-
-    private export() {
-        // shows the export quick pick menu
-        this.showExportQuickPick()
-            .then((item) => {
-                this.verifySaved(); // make sure notebook file is saved
-                item?.handler();
-            })
-            .catch();
     }
 
     private getCurrentCodeLens(): CodeLens | undefined {

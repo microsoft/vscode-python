@@ -34,6 +34,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
+import { ExportFormat, ExportManager, ExportToHTML, ExportToPDF, ExportToPython, IExport, IExportManager } from './export/exportManager';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
@@ -265,6 +266,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
+    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
+    serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);
