@@ -37,6 +37,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     private actionTaken = false;
     private actionTakenOnFirstTime = false;
     private firstTime = false;
+    private reloadFlag = true;
+    private reloadTime = 5000;
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -82,11 +84,19 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
 
     public async open(): Promise<void> {
         sendTelemetryEvent(Telemetry.StartPageViewed);
+
+        await this.loadWebPanel(process.cwd());
+        // open webview
+        await super.show(true);
+
         setTimeout(async () => {
-            await this.loadWebPanel(process.cwd());
-            // open webview
-            await super.show(true);
-        }, 0);
+            if (this.reloadFlag) {
+                await this.dispose();
+                this.open().ignoreErrors();
+            } else {
+                this.reloadTime *= 2;
+            }
+        }, this.reloadTime);
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -108,6 +118,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     // tslint:disable-next-line: no-any
     public async onMessage(message: string, payload: any) {
         switch (message) {
+            case StartPageMessages.Started:
+                this.reloadFlag = false;
+                break;
             case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
                 const settings = this.configuration.getSettings();
                 const filteredNotes = await this.handleReleaseNotesRequest();

@@ -40,7 +40,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
-        // Tell the plot viewer code we have started.
+        // Tell the start page code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
 
         // Bind some functions to the window, as we need them to be accessible with clean HTML to use translations
