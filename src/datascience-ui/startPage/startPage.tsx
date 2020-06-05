@@ -135,17 +135,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
             this.setState({});
         }
 
-        if (msg === StartPageMessages.UpdateSettings) {
-            let settings;
-            try {
-                settings = JSON.parse(payload);
-            } catch {
-                settings = undefined;
-            }
-
-            this.setState({});
-        }
-
         return false;
     };
 
