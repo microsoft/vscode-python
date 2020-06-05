@@ -7,7 +7,7 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands, Telemetry } from '../../datascience/constants';
+import { Commands, EditorContexts, Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
 import { WebViewHost } from '../../datascience/webViewHost';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -19,12 +19,13 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../application/types';
+import { ContextKey } from '../contextKey';
 import { IFileSystem } from '../platform/types';
-import { IConfigurationService, IExtensionContext, Resource } from '../types';
+import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
-import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
+import { EnableStartPage, IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -49,7 +50,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
+        @inject(IExperimentService) private readonly expService: IExperimentService
     ) {
         super(
             configuration,
@@ -227,9 +229,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async activateBackground(): Promise<void> {
+        const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
+        const editorContext = new ContextKey(EditorContexts.StartPageEnabled, this.commandManager);
+        editorContext.set(enabled).ignoreErrors();
         const settings = this.configuration.getSettings();
 
-        if (settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
+        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
             // extesionVersionChanged() reads CHANGELOG.md
             // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();

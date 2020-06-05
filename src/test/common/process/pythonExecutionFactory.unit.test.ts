@@ -117,6 +117,9 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService)
                 );
+                when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
+                    instance(interpreterService)
+                );
                 factory = new PythonExecutionFactory(
                     instance(serviceContainer),
                     instance(activationHelper),

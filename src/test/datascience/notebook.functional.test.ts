@@ -52,7 +52,7 @@ import { generateTestState, ICellViewModel } from '../../datascience-ui/interact
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
-import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
+import { getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 
@@ -368,15 +368,49 @@ suite('DataScience notebook tests', () => {
                 }
             }
 
+            async function startRemoteServer(pythonService: IPythonExecutionService, args: string[]): Promise<string> {
+                const connectionFound = createDeferred();
+                const exeResult = pythonService.execObservable(args, {
+                    throwOnStdErr: false
+                });
+                disposables.push(exeResult);
+                exeResult.out.subscribe(
+                    (output: Output<string>) => {
+                        traceInfo(`Remote server output: ${output.out}`);
+                        const connectionURL = getIPConnectionInfo(output.out);
+                        if (connectionURL) {
+                            connectionFound.resolve(connectionURL);
+                        }
+                    },
+                    (e) => {
+                        traceInfo(`Remote server error: ${e}`);
+                        connectionFound.reject(e);
+                    }
+                );
+
+                traceInfo('Connecting to remote server');
+                const connString = await connectionFound.promise;
+                const uri = connString as string;
+
+                // Wait another 3 seconds to give notebook time to be ready. Not sure
+                // how else to know when it's okay to connect to. Mac on azure seems
+                // to connect too fast and then is unable to actually communicate.
+                await sleep(3000);
+
+                return uri;
+            }
+
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
                 const pythonService = await createPythonService(2);
 
-                // Skip test for older python and on windows. Getting E_PROTO on windows.
-                if (pythonService) {
+                // Skip test for older python and raw kernel
+                if (pythonService && !useRawKernel) {
                     // We will only connect if we allow for self signed cert connections
-                    ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+                    ioc.forceDataScienceSettingsChanged({
+                        allowUnauthorizedRemoteConnection: true,
+                        jupyterLaunchTimeout: 60000
+                    });
 
-                    const connectionFound = createDeferred();
                     const pemFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -394,31 +428,18 @@ suite('DataScience notebook tests', () => {
                         'jkey.key'
                     );
 
-                    const exeResult = pythonService.execObservable(
-                        [
-                            '-m',
-                            'jupyter',
-                            'notebook',
-                            '--NotebookApp.open_browser=False',
-                            '--NotebookApp.ip=0.0.0.0',
-                            `--certfile=${pemFile}`,
-                            `--keyfile=${keyFile}`
-                        ],
-                        {
-                            throwOnStdErr: false
-                        }
-                    );
-                    disposables.push(exeResult);
-                    exeResult.out.subscribe((output: Output<string>) => {
-                        const connectionURL = getIPConnectionInfo(output.out);
-                        if (connectionURL) {
-                            connectionFound.resolve(connectionURL);
-                        }
-                    });
+                    const uri = await startRemoteServer(pythonService, [
+                        '-m',
+                        'jupyter',
+                        'notebook',
+                        '--NotebookApp.open_browser=False',
+                        '--NotebookApp.ip=*',
+                        '--NotebookApp.port=9999',
+                        `--certfile=${pemFile}`,
+                        `--keyfile=${keyFile}`
+                    ]);
 
-                    const connString = await connectionFound.promise;
-                    const uri = connString as string;
-
+                    traceInfo('Waiting for notebook');
                     // We have a connection string here, so try to connect jupyterExecution to the notebook server
                     const notebook = await createNotebook(uri);
                     if (!notebook) {
@@ -439,7 +460,6 @@ suite('DataScience notebook tests', () => {
                     const pythonService = await createPythonService();
 
                     if (pythonService) {
-                        const connectionFound = createDeferred();
                         const configFile = path.join(
                             EXTENSION_ROOT_DIR,
                             'src',
@@ -448,22 +468,12 @@ suite('DataScience notebook tests', () => {
                             'serverConfigFiles',
                             'remoteNoAuth.py'
                         );
-                        const exeResult = pythonService.execObservable(
-                            ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                            { throwOnStdErr: false }
-                        );
-                        disposables.push(exeResult);
-
-                        exeResult.out.subscribe((output: Output<string>) => {
-                            traceInfo(`remote jupyter output: ${output.out}`);
-                            const connectionURL = getIPConnectionInfo(output.out);
-                            if (connectionURL) {
-                                connectionFound.resolve(connectionURL);
-                            }
-                        });
-
-                        const connString = await connectionFound.promise;
-                        const uri = connString as string;
+                        const uri = await startRemoteServer(pythonService, [
+                            '-m',
+                            'jupyter',
+                            'notebook',
+                            `--config=${configFile}`
+                        ]);
 
                         // We have a connection string here, so try to connect jupyterExecution to the notebook server
                         const notebook = await createNotebook(uri);
@@ -514,8 +524,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();
 
-                if (pythonService) {
-                    const connectionFound = createDeferred();
+                if (pythonService && !useRawKernel) {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -524,24 +533,14 @@ suite('DataScience notebook tests', () => {
                         'serverConfigFiles',
                         'remotePassword.py'
                     );
-                    const exeResult = pythonService.execObservable(
-                        ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                        {
-                            throwOnStdErr: false
-                        }
-                    );
-                    disposables.push(exeResult);
+                    const uri = await startRemoteServer(pythonService, [
+                        '-m',
+                        'jupyter',
+                        'notebook',
+                        `--config=${configFile}`
+                    ]);
 
-                    exeResult.out.subscribe((output: Output<string>) => {
-                        traceInfo(`remote jupyter output: ${output.out}`);
-                        const connectionURL = getIPConnectionInfo(output.out);
-                        if (connectionURL) {
-                            connectionFound.resolve(connectionURL);
-                        }
-                    });
-
-                    const connString = await connectionFound.promise;
-                    const uri = connString as string;
+                    traceInfo('Waiting for notebook');
 
                     // We have a connection string here, so try to connect jupyterExecution to the notebook server
                     const notebook = await createNotebook(uri);
@@ -557,7 +556,6 @@ suite('DataScience notebook tests', () => {
                 const pythonService = await createPythonService();
 
                 if (pythonService) {
-                    const connectionFound = createDeferred();
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
@@ -566,24 +564,13 @@ suite('DataScience notebook tests', () => {
                         'serverConfigFiles',
                         'remoteToken.py'
                     );
-                    const exeResult = pythonService.execObservable(
-                        ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                        {
-                            throwOnStdErr: false
-                        }
-                    );
-                    disposables.push(exeResult);
 
-                    exeResult.out.subscribe((output: Output<string>) => {
-                        traceInfo(`remote jupyter output: ${output.out}`);
-                        const connectionURL = getConnectionInfo(output.out);
-                        if (connectionURL) {
-                            connectionFound.resolve(connectionURL);
-                        }
-                    });
-
-                    const connString = await connectionFound.promise;
-                    const uri = connString as string;
+                    const uri = await startRemoteServer(pythonService, [
+                        '-m',
+                        'jupyter',
+                        'notebook',
+                        `--config=${configFile}`
+                    ]);
 
                     // We have a connection string here, so try to connect jupyterExecution to the notebook server
                     const notebook = await createNotebook(uri);

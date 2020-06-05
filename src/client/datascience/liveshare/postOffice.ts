@@ -8,6 +8,7 @@ import * as vsls from 'vsls/vscode';
 import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
+import { traceInfo } from '../../logging';
 import { LiveShare } from '../constants';
 
 // tslint:disable:no-any
@@ -53,6 +54,7 @@ export class PostOffice implements IAsyncDisposable {
         this.peerCountChangedEmitter.fire();
         this.peerCountChangedEmitter.dispose();
         if (this.hostServer) {
+            traceInfo(`Shutting down live share api`);
             const s = await this.getApi();
             if (s !== null) {
                 await s.unshareService(this.name);

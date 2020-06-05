@@ -468,8 +468,10 @@ export class KernelService {
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }
+        traceInfo('Enumerating kernel specs...');
         const specs: IJupyterKernelSpec[] = await enumerator;
         const result = specs.filter((item) => !!item);
+        traceInfo(`Found ${result.length} kernelspecs`);
 
         // Send telemetry on this enumeration.
         const anyPython = result.find((k) => k.language === 'python') !== undefined;

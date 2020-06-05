@@ -16,18 +16,11 @@
     width: 45px;
     padding: 20px 25px 20px 25px;
     margin-right: 30px;
-}
-
-.icon-dark {
-    background-color: #1a1a1a;
-}
-
-.icon-light {
-    background-color: #efefef;
+    background-color: var(--vscode-titleBar-activeBackground);
 }
 
 .icon:hover {
-    background-color: var(--vscode-editorGroup-dropBackground);
+    background-color: var(--vscode-editorIndentGuide-activeBackground);
     cursor: pointer;
 }
 

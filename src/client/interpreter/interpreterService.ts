@@ -135,9 +135,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
-        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecutionService = await pythonExecutionFactory.create({ resource });
-        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
+        // During shutdown we might not be able to get items out of the service container.
+        const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecutionService = pythonExecutionFactory
+            ? await pythonExecutionFactory.create({ resource })
+            : undefined;
+        const fullyQualifiedPath = pythonExecutionService
+            ? await pythonExecutionService.getExecutablePath().catch(() => undefined)
+            : undefined;
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
             return;

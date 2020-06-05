@@ -210,22 +210,24 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async dispose(): Promise<void> {
-        if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.dispose();
-        }
-        if (this.sessionStatusChanged) {
-            this.sessionStatusChanged.dispose();
-        }
-
-        traceInfo(`Shutting down session ${this.identity.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
+            if (this.onStatusChangedEvent) {
+                this.onStatusChangedEvent.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+            if (this.sessionStatusChanged) {
+                this.sessionStatusChanged.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+
+            traceInfo(`Shutting down session ${this.identity.toString()}`);
             if (this.session) {
                 await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
+            this.loggers.forEach((d) => d.dispose());
+            this.disposed.fire();
         }
-        this.loggers.forEach((d) => d.dispose());
-        this.disposed.fire();
     }
 
     public get onSessionStatusChanged(): Event<ServerStatus> {

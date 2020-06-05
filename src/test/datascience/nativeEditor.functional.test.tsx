@@ -44,7 +44,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import {
@@ -526,8 +526,7 @@ df.head()`;
                     async (_wrapper, context) => {
                         if (ioc.mockJupyter) {
                             await ioc.activate();
-                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                                ...ioc.getSettings().datascience,
+                            ioc.forceDataScienceSettingsChanged({
                                 disableJupyterAutoStart: false
                             });
 
@@ -2233,8 +2232,7 @@ df.head()`;
 
                         // Update the settings and wait for the component to receive it and process it.
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...defaultDataScienceSettings(),
+                        ioc.forceDataScienceSettingsChanged({
                             showCellInputCode: false
                         });
                         await promise;

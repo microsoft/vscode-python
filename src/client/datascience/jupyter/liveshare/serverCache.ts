@@ -9,6 +9,8 @@ import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
+import { sleep } from '../../../common/utils/async';
+import { traceError, traceInfo } from '../../../logging';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 
@@ -22,6 +24,7 @@ interface IServerData {
 export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private emptyKey = uuid();
+    private disposed = false;
 
     constructor(
         private configService: IConfigurationService,
@@ -96,13 +99,27 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async dispose(): Promise<void> {
-        await Promise.all(
-            [...this.cache.values()].map(async (d) => {
-                const server = await d.promise;
-                await server?.dispose();
-            })
-        );
-        this.cache.clear();
+        if (!this.disposed) {
+            this.disposed = true;
+            const entries = [...this.cache.values()];
+            this.cache.clear();
+            await Promise.all(
+                entries.map(async (d) => {
+                    try {
+                        // This should be quick. The server is either already up or will never come back.
+                        const server = await Promise.race([d.promise, sleep(1000)]);
+                        if (typeof server !== 'number') {
+                            // tslint:disable-next-line: no-any
+                            await (server as any).dispose();
+                        } else {
+                            traceInfo('ServerCache Dispose, no server');
+                        }
+                    } catch (e) {
+                        traceError(`Dispose error in ServerCache: `, e);
+                    }
+                })
+            );
+        }
     }
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
