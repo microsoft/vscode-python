@@ -56,7 +56,7 @@ import { generateTestState, ICellViewModel } from '../../datascience-ui/interact
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
-import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
+import { getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 
