@@ -11,6 +11,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri, WebviewPanel } from 'vscode';
+import { CancellationToken } from 'vscode-languageclient';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     CustomDocument,
@@ -35,13 +36,17 @@ import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
-import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import {
+    INotebookStorageProvider,
+    NotebookStorageProvider
+} from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     IJupyterExecution,
     INotebookEditor,
     INotebookModel,
-    INotebookServerOptions
+    INotebookServerOptions,
+    INotebookStorage
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -75,6 +80,7 @@ suite('DataScience - Native Editor Provider', () => {
     let panel: typemoq.IMock<WebviewPanel>;
     let file: Uri;
     let model: INotebookModel;
+    let storageProvider: INotebookStorageProvider;
 
     setup(() => {
         svcContainer = mock(ServiceContainer);
@@ -210,7 +216,7 @@ suite('DataScience - Native Editor Provider', () => {
             localMemento
         );
 
-        const storage = new NotebookStorageProvider(notebookStorage, []);
+        storageProvider = new NotebookStorageProvider(notebookStorage, []);
 
         registeredProvider = new NativeEditorProvider(
             instance(svcContainer),
@@ -219,7 +225,7 @@ suite('DataScience - Native Editor Provider', () => {
             instance(workspace),
             instance(configService),
             customEditorService.object,
-            storage
+            storageProvider
         );
 
         return registeredProvider;
@@ -270,7 +276,7 @@ suite('DataScience - Native Editor Provider', () => {
         let cells = model!.cells;
         expect(cells).to.be.lengthOf(1);
         insertCell(model!, 0, 'a=1');
-        await sleep(500); // Wait long enough for the storage write.
+        await storageProvider.backup(model, CancellationToken.None);
         const uri = n1.file;
 
         // Act like a reboot
