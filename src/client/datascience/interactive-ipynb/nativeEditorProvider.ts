@@ -144,7 +144,6 @@ export class NativeEditorProvider
     }
 
     public async dispose(): Promise<void> {
-        traceInfo(`Disposing nativeEditorProvider...`);
         // Send a bunch of telemetry
         if (this.openedNotebookCount) {
             sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
@@ -155,7 +154,6 @@ export class NativeEditorProvider
         if (this.notebookCount) {
             sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
         }
-        traceInfo(`Finished disposing nativeEditorProvider...`);
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
