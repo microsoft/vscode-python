@@ -14,6 +14,7 @@ import {
     createCellVM,
     createEmptyCell,
     CursorPos,
+    DebugState,
     extractInputText,
     getSelectedAndFocusedInfo,
     ICellViewModel,
@@ -191,7 +192,8 @@ export namespace Creation {
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
             scrollCount: 0,
-            runningByLine: false
+            //runningByLine: false
+            runningByLine: DebugState.Design
         };
 
         Transfer.postModelRemoveAll(arg, newVM.cell.id);
@@ -247,7 +249,8 @@ export namespace Creation {
                 cursorPos: CursorPos.Current,
                 hasBeenRun: false,
                 scrollCount: 0,
-                runningByLine: false
+                //runningByLine: false
+                runningByLine: DebugState.Design
             };
 
             // Send messages to other side to indicate the new add

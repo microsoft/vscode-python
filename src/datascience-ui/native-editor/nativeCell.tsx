@@ -21,7 +21,7 @@ import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
-import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
+import { activeDebugState, CursorPos, DebugState, ICellViewModel, IFont } from '../interactive-common/mainState';
 import { getOSType } from '../react-common/constants';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
@@ -61,7 +61,8 @@ interface INativeCellBaseProps {
     focusPending: number;
     busy: boolean;
     useCustomEditorApi: boolean;
-    runningByLine: boolean;
+    //runningByLine: boolean;
+    runningByLine: DebugState;
     supportsRunByLine: boolean;
 }
 
@@ -611,7 +612,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
-        if (this.props.runningByLine && !this.isMarkdownCell()) {
+        //if (this.props.runningByLine && !this.isMarkdownCell()) {
+        if (this.props.runningByLine !== DebugState.Design && !this.isMarkdownCell()) {
             return (
                 <div className={toolbarClassName}>
                     <div className="native-editor-celltoolbar-middle">
@@ -620,7 +622,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             onClick={cont}
                             tooltip={getLocString('DataScience.continueRunByLine', 'Stop')}
                             hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy}
+                            disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
                         >
                             <div className="codicon codicon-button">{CodIcon.Stop}</div>
                         </ImageButton>
@@ -629,7 +631,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             onClick={step}
                             tooltip={getLocString('DataScience.step', 'Run next line')}
                             hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy}
+                            disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
