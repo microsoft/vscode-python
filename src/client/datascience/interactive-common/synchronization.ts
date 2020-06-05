@@ -106,6 +106,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.CollapseAll]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Continue]: MessageType.other,
     [InteractiveWindowMessages.CopyCodeCell]: MessageType.other,
+    [InteractiveWindowMessages.DebugStateChange]: MessageType.other,
     [InteractiveWindowMessages.DeleteAllCells]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.DoSave]: MessageType.other,
     [InteractiveWindowMessages.ExecutionRendered]: MessageType.other,

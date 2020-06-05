@@ -3,7 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
-import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
+import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -135,6 +135,7 @@ export enum InteractiveWindowMessages {
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
+    DebugStateChange = 'debug_state_change',
     KernelIdle = 'kernel_idle'
 }
 
@@ -339,6 +340,11 @@ export interface INativeCommand {
 
 export interface IRenderComplete {
     ids: string[];
+}
+
+export interface IDebugStateChange {
+    oldState: DebugState;
+    newState: DebugState;
 }
 
 export interface IFocusedCellEditor {
@@ -645,4 +651,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Step]: never | undefined;
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
+    public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
 }

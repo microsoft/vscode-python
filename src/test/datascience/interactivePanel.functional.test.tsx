@@ -7,7 +7,7 @@ import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { CellState } from '../../client/datascience/types';
 import { InteractiveCellComponent } from '../../datascience-ui/history-react/interactiveCell';
 import { IInteractivePanelProps, InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-import { CursorPos, ServerStatus } from '../../datascience-ui/interactive-common/mainState';
+import { CursorPos, DebugState, ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 import { mountComponent } from './testHelpers';
 
@@ -57,7 +57,7 @@ suite('DataScience Interactive Panel', () => {
                 inputBlockText: '',
                 scrollCount: 0,
                 selected: false,
-                runningByLine: false
+                runningByLine: DebugState.Design
             },
             editorLoaded: noopAny,
             editorUnmounted: noopAny,
