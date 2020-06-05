@@ -31,7 +31,7 @@ import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;
@@ -153,6 +153,8 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             interpreterService.verifyAll();
         });
         test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
+            const interpreter: PythonInterpreter = { type: InterpreterType.Unknown } as any;
+
             settings
                 .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
@@ -163,7 +165,13 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .verifiable(typemoq.Times.once());
             interpreterService
                 .setup((i) => i.getInterpreters(undefined))
-                .returns(() => Promise.resolve([{ type: InterpreterType.Unknown } as any]))
+                .returns(() => Promise.resolve([interpreter]))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+                .returns(() => {
+                    return Promise.resolve(interpreter);
+                })
                 .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
