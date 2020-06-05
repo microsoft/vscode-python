@@ -28,7 +28,6 @@ import {
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
 import { Experiments } from '../utils/localize';
-import { NativeNotebook } from './groups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';

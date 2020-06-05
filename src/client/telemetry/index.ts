@@ -3,13 +3,12 @@
 // tslint:disable:no-reference no-any import-name no-any function-name
 /// <reference path="./vscode-extension-telemetry.d.ts" />
 import type { JSONObject } from '@phosphor/coreutils';
-import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -106,6 +105,8 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
+    let customProperties: Record<string, string> = {};
+    let eventNameSent = eventName as string;
 
     if (ex && (eventName as any) !== 'ERROR') {
         // When sending `ERROR` telemetry event no need to send custom properties.
@@ -115,7 +116,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
         eventNameSent = 'ERROR';
         customProperties = { originalEventName: eventName as string, stackTrace: serializeStackTrace(ex) };
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     } else {
         if (properties) {
             const data = properties as any;
@@ -266,32 +267,12 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     }
 }
 
-function sanitizeFilename(filename: string): string {
-    if (filename.startsWith(EXTENSION_ROOT_DIR)) {
-        filename = `<pvsc>${filename.substring(EXTENSION_ROOT_DIR.length)}`;
-    } else {
-        // We don't really care about files outside our extension.
-        filename = `<hidden>${pathSep}${pathBasename(filename)}`;
-    }
-    return filename;
-}
-
-function sanitizeName(name: string): string {
-    if (name.indexOf('/') === -1 && name.indexOf('\\') === -1) {
-        return name;
-    } else {
-        return '<hidden>';
-    }
-}
-
-function getStackTrace(ex: Error): string {
-    // We aren't showing the error message (ex.message) since it might
-    // contain PII.
+function serializeStackTrace(ex: Error): string {
+    // We aren't showing the error message (ex.message) since it might contain PII.
     let trace = '';
     for (const frame of stackTrace.parse(ex)) {
-        let filename = frame.getFileName();
+        const filename = frame.getFileName();
         if (filename) {
-            filename = sanitizeFilename(filename);
             const lineno = frame.getLineNumber();
             const colno = frame.getColumnNumber();
             trace += `\n\tat ${getCallsite(frame)} ${filename}:${lineno}:${colno}`;
@@ -299,8 +280,8 @@ function getStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    // Ensure we always use `/` as path seperators.
-    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    // Ensure we always use `/` as path separators.
+    // This way stack traces (with relative paths) coming from different OS will always look the same.
     return trace.trim().replace(/\\/g, '/');
 }
 
@@ -317,7 +298,7 @@ function getCallsite(frame: stackTrace.StackFrame) {
             parts.push(frame.getFunctionName());
         }
     }
-    return parts.map(sanitizeName).join('.');
+    return parts.join('.');
 }
 
 // Map all events to their properties
