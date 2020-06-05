@@ -11,7 +11,6 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri, WebviewPanel } from 'vscode';
-import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     CustomDocument,
@@ -211,8 +210,7 @@ suite('DataScience - Native Editor Provider', () => {
             localMemento
         );
 
-        const commandManager = mock(CommandManager);
-        const storage = new NotebookStorageProvider(notebookStorage, [], instance(commandManager));
+        const storage = new NotebookStorageProvider(notebookStorage, []);
 
         registeredProvider = new NativeEditorProvider(
             instance(svcContainer),

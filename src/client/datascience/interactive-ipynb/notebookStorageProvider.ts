@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { ICommandManager } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { INotebookModel, INotebookStorage } from '../types';
@@ -30,8 +29,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(ICommandManager) private commandManager: ICommandManager
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
         disposables.push(storage.onSavedAs((e) => this._savedAs.fire(e)));
