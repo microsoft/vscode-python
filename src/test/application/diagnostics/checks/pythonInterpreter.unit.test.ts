@@ -130,7 +130,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(diagnostics).to.be.deep.equal([]);
             settings.verifyAll();
         });
-        test('Should return diagnostics if there are no interpreters', async () => {
+        test('Should return diagnostics if there are no interpreters after double-checking', async () => {
             settings
                 .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
@@ -139,12 +139,35 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 .setup((i) => i.hasInterpreters)
                 .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.getInterpreters(undefined))
+                .returns(() => Promise.resolve([]))
+                .verifiable(typemoq.Times.once());
 
             const diagnostics = await diagnosticService.diagnose(undefined);
             expect(diagnostics).to.be.deep.equal(
                 [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoPythonInterpretersDiagnostic, undefined)],
                 'not the same'
             );
+            settings.verifyAll();
+            interpreterService.verifyAll();
+        });
+        test('Should return empty diagnostics if there are interpreters after double-checking', async () => {
+            settings
+                .setup((s) => s.disableInstallationChecks)
+                .returns(() => false)
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.hasInterpreters)
+                .returns(() => Promise.resolve(false))
+                .verifiable(typemoq.Times.once());
+            interpreterService
+                .setup((i) => i.getInterpreters(undefined))
+                .returns(() => Promise.resolve([{ type: InterpreterType.Unknown } as any]))
+                .verifiable(typemoq.Times.once());
+
+            const diagnostics = await diagnosticService.diagnose(undefined);
+            expect(diagnostics).to.be.deep.equal([], 'not the same');
             settings.verifyAll();
             interpreterService.verifyAll();
         });
