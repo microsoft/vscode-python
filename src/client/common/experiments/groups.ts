@@ -103,9 +103,9 @@ export enum DeprecatePythonPath {
     experiment = 'DeprecatePythonPath - experiment'
 }
 
+// Uncomment when the VS Code webview bug is fixed
 // Experiment for showing the start page
-export enum EnableStartPage {
-    // Uncomment when the VS Code webview bug is fixed
-    // control = 'EnableStartPage - control',
-    experiment = 'EnableStartPage - experiment'
-}
+// export enum EnableStartPage {
+//     control = 'EnableStartPage - control',
+//     experiment = 'EnableStartPage - experiment'
+// }

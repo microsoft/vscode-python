@@ -2,6 +2,11 @@
 // Licensed under the MIT License.
 import { SharedMessages } from '../../datascience/messages';
 
+export enum EnableStartPage {
+    control = 'EnableStartPage - control',
+    experiment = 'EnableStartPage - experiment'
+}
+
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;

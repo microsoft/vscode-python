@@ -20,13 +20,12 @@ import {
     IWorkspaceService
 } from '../application/types';
 import { ContextKey } from '../contextKey';
-import { EnableStartPage } from '../experiments/groups';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
-import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
+import { EnableStartPage, IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
