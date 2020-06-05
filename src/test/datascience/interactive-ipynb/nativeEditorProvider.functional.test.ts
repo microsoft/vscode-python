@@ -30,7 +30,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IExtensionContext } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -45,8 +44,7 @@ import {
     IJupyterExecution,
     INotebookEditor,
     INotebookModel,
-    INotebookServerOptions,
-    INotebookStorage
+    INotebookServerOptions
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';

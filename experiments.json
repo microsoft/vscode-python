@@ -196,6 +196,18 @@
         "salt": "RunByLine",
         "max": 0,
         "min": 0
+    },
+    {
+        "name": "CustomEditorSupport - control",
+        "salt": "CustomEditorSupport",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CustomEditorSupport - experiment",
+        "salt": "CustomEditorSupport",
+        "max": 0,
+        "min": 0
     }
 
 ]

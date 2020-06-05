@@ -4,7 +4,7 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
-import { NativeNotebook } from '../common/experiments/groups';
+import { CustomEditorSupport, NativeNotebook } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager, IExtensionContext } from '../common/types';
@@ -163,15 +163,17 @@ export function registerTypes(serviceManager: IServiceManager) {
     const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
     const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
+    const inCustomEditorApiExperiment = experiments.inExperiment(CustomEditorSupport.experiment);
     const context = serviceManager.get<IExtensionContext>(IExtensionContext);
-    const insidersBuild = context.globalStoragePath.toLocaleLowerCase().includes('insiders');
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi && insidersBuild);
+    const insidersVsCodeBuild = context.globalStoragePath.toLocaleLowerCase().includes('insiders');
+    const usingCustomEditor = enableProposedApi && insidersVsCodeBuild && inCustomEditorApiExperiment;
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
 
     // This condition is temporary.
-    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : enableProposedApi ? NativeEditorProvider : NativeEditorProviderOld;
+    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, notebookEditorProvider);
     if (!useVSCodeNotebookAPI) {
-        serviceManager.add<INotebookEditor>(INotebookEditor, enableProposedApi ? NativeEditor : NativeEditorOldWebView);
+        serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
         // These are never going to be required for new VSC NB.
         serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
