@@ -564,8 +564,8 @@ export namespace DataScience {
         'DataScience.exportSaveFilePrompt',
         'Please save this file before exporting.'
     );
-    export const exportSaveFileYes = localize('DataScience.exportSaveFileYes', 'Yes');
-    export const exportSaveFileNo = localize('DataScience.exportSaveFileNo', 'No');
+    export const exportSaveFileYes = localize('DataScience.exportSaveFileYes', 'Save');
+    export const exportSaveFileCancel = localize('DataScience.exportSaveFileNo', 'Cancel');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'

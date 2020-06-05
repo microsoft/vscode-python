@@ -4,7 +4,16 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, ConfigurationTarget, env, QuickPickItem, Range, SaveDialogOptions, Uri } from 'vscode';
+import {
+    CodeLens,
+    ConfigurationTarget,
+    env,
+    QuickPickItem,
+    QuickPickOptions,
+    Range,
+    SaveDialogOptions,
+    Uri
+} from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
@@ -369,6 +378,8 @@ export class CommandRegistry implements IDisposable {
     }
 
     private getExportQuickPickItems(): IExportQuickPickItem[] {
+        // To add a new quick pick item simply enter the label,
+        // if it picked by default and add a handler for when it is selected
         return [
             { label: 'Python Script', picked: true, handler: this.exportAsPythonScript },
             { label: 'HTML', picked: false, handler: this.exportToHTML },
@@ -385,7 +396,7 @@ export class CommandRegistry implements IDisposable {
     private async showExportQuickPick(): Promise<IExportQuickPickItem | undefined> {
         const items = this.getExportQuickPickItems();
 
-        const options = {
+        const options: QuickPickOptions = {
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
@@ -422,21 +433,28 @@ export class CommandRegistry implements IDisposable {
     private verifySaved() {
         if (this.notebookEditorProvider.activeEditor?.isUntitled) {
             // save to temporary file, don't need to ask
+            return;
+        }
+
+        if (!this.notebookEditorProvider.activeEditor?.isDirty) {
+            // if notebook does not have unsaved changed
+            return;
         }
 
         // Ask user if they'd like to save
         const yes = DataScience.exportSaveFileYes();
-        const no = DataScience.exportSaveFileNo();
-        const options = [yes, no];
+        const cancel = DataScience.exportSaveFileCancel();
+        const options = [yes, cancel];
 
         this.applicationShell.showInformationMessage(DataScience.exportSaveFilePrompt(), ...options).then((choice) => {
             if (choice === yes) {
-                this.getFileSaveLocation();
+                const file = this.getFileSaveLocation();
             }
         });
     }
 
     private export() {
+        // shows the export quick pick menu
         this.showExportQuickPick()
             .then((item) => {
                 this.verifySaved(); // make sure notebook file is saved
