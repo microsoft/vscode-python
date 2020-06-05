@@ -352,7 +352,7 @@ export class CommandRegistry implements IDisposable {
 
     private async openStartPage(): Promise<void> {
         if (await this.expService.inExperiment(EnableStartPage.experiment)) {
-            this.startPage.open().ignoreErrors();
+            return this.startPage.open();
         }
     }
 
