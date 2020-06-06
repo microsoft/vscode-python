@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
 import { CustomEditorSupport, NativeNotebook } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
-import { IExperimentsManager, IExtensionContext } from '../common/types';
+import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { IServiceManager } from '../ioc/types';
@@ -160,13 +159,10 @@ import {
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
-    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
     const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
     const inCustomEditorApiExperiment = experiments.inExperiment(CustomEditorSupport.experiment);
-    const context = serviceManager.get<IExtensionContext>(IExtensionContext);
-    const insidersVsCodeBuild = context.globalStoragePath.toLocaleLowerCase().includes('insiders');
-    const usingCustomEditor = enableProposedApi && insidersVsCodeBuild && inCustomEditorApiExperiment;
+    const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
 
     // This condition is temporary.
