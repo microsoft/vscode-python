@@ -153,6 +153,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         // Copy workspace folder setting into the new storage if it hasn't been copied already
         const workspaceFolderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
         if (workspaceFolderKey === '') {
+            // No workspace folder is opened, simply return.
             return;
         }
         const flaggedWorkspaceFolderKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
