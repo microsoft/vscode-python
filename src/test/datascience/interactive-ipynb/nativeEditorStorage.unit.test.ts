@@ -23,7 +23,13 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    ICryptoUtils,
+    IDisposable,
+    IExperimentsManager,
+    IExtensionContext
+} from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
@@ -328,8 +334,8 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento
         );
-
-        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
+        const experiment = mock<IExperimentsManager>();
+        return new NotebookStorageProvider(notebookStorage, [], instance(workspace), instance(experiment));
     }
 
     teardown(() => {

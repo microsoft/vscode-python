@@ -7,7 +7,8 @@ import { inject, injectable } from 'inversify';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IWorkspaceService } from '../../common/application/types';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
+import { NativeNotebook } from '../../common/experiments/groups';
+import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookModel, INotebookStorage } from '../types';
@@ -34,7 +35,8 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     constructor(
         @inject(INotebookStorage) private readonly storage: INotebookStorage,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager
     ) {
         disposables.push(this);
         disposables.push(storage.onSavedAs((e) => this._savedAs.fire(e)));
@@ -107,6 +109,10 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     }
 
     private modelChanged(model: INotebookModel, e: NotebookModelChange) {
+        // VSC Notebooks will have their own hotexit.
+        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+            return;
+        }
         const actualModel = e.model || model; // Test mocks can screw up bound values.
         if (actualModel) {
             let debounceFunc = this._autoSaveNotebookInHotExitFile.get(actualModel);
