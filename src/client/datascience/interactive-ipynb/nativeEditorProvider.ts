@@ -135,7 +135,8 @@ export class NativeEditorProvider
 
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
         this.customDocuments.set(document.uri.fsPath, document);
-        await this.createNotebookEditor(document.uri, panel);
+        const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
+        await this.loadNotebookEditor(editor, document.uri, panel);
     }
 
     public async resolveCustomDocument(document: CustomDocument): Promise<void> {
@@ -208,13 +209,10 @@ export class NativeEditorProvider
         });
     }
 
-    protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
+    protected async loadNotebookEditor(editor: INotebookEditor, resource: Uri, panel?: WebviewPanel) {
         try {
             // Get the model
             const model = await this.loadModel(resource);
-
-            // Create a new editor
-            const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
 
             // Load it (should already be visible)
             return editor
