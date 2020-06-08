@@ -40,8 +40,8 @@ export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 //============================
 // interpreterInfo.py
 
-type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-type PythonVersionInfo = [number, number, number, ReleaseLevel];
+type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
 export type PythonEnvInfo = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;

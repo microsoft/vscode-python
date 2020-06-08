@@ -6,9 +6,9 @@
 // tslint:disable: no-any
 
 import * as assert from 'assert';
-import { parsePythonVersion } from '../../../client/common/utils/version';
+import { parsePythonVersion } from '../../client/pythonEnvironments/pythonVersion';
 
-suite('Version Utils', () => {
+suite('parsePythonVersion', () => {
     test('Must convert undefined if empty strinfg', async () => {
         assert.equal(parsePythonVersion(undefined as any), undefined);
         assert.equal(parsePythonVersion(''), undefined);
