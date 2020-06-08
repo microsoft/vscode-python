@@ -25,7 +25,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     IEditorContentChange,
