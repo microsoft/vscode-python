@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import { CancellationToken } from 'vscode-languageclient';
@@ -25,9 +24,9 @@ import {
     IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
-import { DataScience } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { generateNewNotebookUri } from '../common';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
@@ -283,15 +282,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     private getNextNewNotebookUri(): Uri {
-        // Because of this bug here:
-        // https://github.com/microsoft/vscode/issues/93441
-        // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
-        // Instead we need to create untitled files in the temp folder and force a saveas whenever they're
-        // saved.
-
-        // However if there are files already on disk, we should be able to overwrite them because
-        // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-        const fileName = `${DataScience.untitledNotebookFileName()}-${this.untitledCounter}.ipynb`;
-        return Uri.parse(`untitled:///${os.tmpdir}/${fileName}`);
+        return generateNewNotebookUri(this.untitledCounter);
     }
 }

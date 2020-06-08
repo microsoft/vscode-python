@@ -4,11 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
+import { generateNewNotebookUri } from '../common';
 import { INotebookModel, INotebookStorage } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
 
@@ -78,23 +77,14 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
 
     public async createNew(contents?: string): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = await this.getNextNewNotebookUri();
+        const uri = this.getNextNewNotebookUri();
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
         return this.load(uri, contents, true);
     }
 
-    private async getNextNewNotebookUri(): Promise<Uri> {
-        // Because of this bug here:
-        // https://github.com/microsoft/vscode/issues/93441
-        // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
-        // Instead we need to create untitled files in the temp folder and force a saveas whenever they're
-        // saved.
-
-        // However if there are files already on disk, we should be able to overwrite them because
-        // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-        const fileName = `${DataScience.untitledNotebookFileName()}-${NotebookStorageProvider.untitledCounter}.ipynb`;
-        return Uri.parse(`untitled:///${os.tmpdir}/${fileName}`);
+    private getNextNewNotebookUri(): Uri {
+        return generateNewNotebookUri(NotebookStorageProvider.untitledCounter);
     }
 
     private trackModel(model: INotebookModel): INotebookModel {
