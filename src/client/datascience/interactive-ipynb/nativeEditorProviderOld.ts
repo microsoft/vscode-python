@@ -149,11 +149,14 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     }
 
     private async create(file: Uri): Promise<INotebookEditor> {
-        const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-        this.activeEditors.set(file.fsPath, editor);
-        this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
-        await this.loadNotebookEditor(editor, file);
-        await this.showEditor(editor);
+        let editor = this.activeEditors.get(file.fsPath);
+        if (!editor) {
+            editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
+            this.activeEditors.set(file.fsPath, editor);
+            this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
+            await this.loadNotebookEditor(editor, file);
+            await this.showEditor(editor);
+        }
         return editor;
     }
 

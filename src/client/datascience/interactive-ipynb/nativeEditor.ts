@@ -239,6 +239,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Indicate we have our identity
         this.loadedPromise.resolve();
 
+        traceInfo(`Loading web panel for ${model.file}`);
+
         // Load the web panel using our file path so it can find
         // relative files next to the notebook.
         await super.loadWebPanel(path.dirname(this.file.fsPath), webViewPanel);
