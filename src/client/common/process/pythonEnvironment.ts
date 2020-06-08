@@ -3,19 +3,13 @@
 
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { getPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
-
-function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecInfo {
-    const args = python.slice(1);
-    args.push(...pythonArgs);
-    return { command: python[0], args, python };
-}
 
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
@@ -35,11 +29,11 @@ class PythonEnvironment {
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return getPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return getPythonExecInfo(python, pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
