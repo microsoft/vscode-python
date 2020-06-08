@@ -18,6 +18,20 @@ function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecInf
     return { command: python[0], args, python };
 }
 
+export function extractInterpreterInfo(python: string, raw: internalScripts.PythonEnvInfo): InterpreterInformation {
+    const versionValue =
+        raw.versionInfo.length === 4
+            ? `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`
+            : raw.versionInfo.join('.');
+    return {
+        architecture: raw.is64Bit ? Architecture.x64 : Architecture.x86,
+        path: python,
+        version: parsePythonVersion(versionValue),
+        sysVersion: raw.sysVersion,
+        sysPrefix: raw.sysPrefix
+    };
+}
+
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -97,17 +111,7 @@ class PythonEnvironment {
             }
             const json = parse(result.stdout);
             traceInfo(`Found interpreter for ${argv}`);
-            const versionValue =
-                json.versionInfo.length === 4
-                    ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
-                    : json.versionInfo.join('.');
-            return {
-                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                path: this.pythonPath,
-                version: parsePythonVersion(versionValue),
-                sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix
-            };
+            return extractInterpreterInfo(this.pythonPath, json);
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
