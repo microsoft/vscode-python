@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import '../common/extensions';
 import * as internalPython from '../common/process/internal/python';
 import { IProcessServiceFactory } from '../common/process/types';
-import { getPythonVersion } from '../pythonEnvironments/discovery/info';
+import { getPythonVersion } from '../pythonEnvironments/pythonVersion';
 import { IInterpreterVersionService } from './contracts';
 
 export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)?';
