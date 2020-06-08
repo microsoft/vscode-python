@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { getPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
+import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { getExecutablePath } from '../../pythonEnvironments/info/executable';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
@@ -29,11 +30,11 @@ class PythonEnvironment {
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return getPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return getPythonExecInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
@@ -49,11 +50,8 @@ class PythonEnvironment {
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
-
-        const [args, parse] = internalPython.getExecutable();
-        const info = this.getExecutionInfo(args);
-        const proc = await this.deps.exec(info.command, info.args);
-        return parse(proc.stdout);
+        const python = this.getExecutionInfo();
+        return getExecutablePath(python, this.deps.exec);
     }
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {

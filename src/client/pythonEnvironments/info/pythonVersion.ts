@@ -55,6 +55,7 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonVersionCommand();
+    // Use buildPythonExecInfo()...
     return exec(pythonPath, args)
         .then((result) => parse(result.stdout).splitLines()[0])
         .then((version) => (version.length === 0 ? defaultValue : version))
