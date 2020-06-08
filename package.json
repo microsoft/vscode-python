@@ -700,7 +700,7 @@
                     "command": "python.sortImports",
                     "title": "Refactor: Sort Imports",
                     "group": "Refactor",
-                    "when": "editorLangId == python"
+                    "when": "editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "python.execSelectionInTerminal",
