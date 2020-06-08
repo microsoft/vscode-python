@@ -4,6 +4,8 @@
 
 ### Fixes
 
+1. Double-check for interpreters when running diagnostics before displaying the "Python is not installed" message.
+   ([#11870](https://github.com/Microsoft/vscode-python/issues/11870))
 1. Ensure user cannot belong to all experiments in an experiment group.
    ([#11943](https://github.com/Microsoft/vscode-python/issues/11943))
 1. Ensure extension features are started when in `Deprecate PythonPath` experiment and opening a file without any folder opened.
