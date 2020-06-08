@@ -1,10 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { ViewColumn } from 'vscode';
+import { Uri, ViewColumn } from 'vscode';
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { INotebookEditorProvider, INotebookImporter } from '../types';
-//import { INotebookImporter } from '../types';
 
 export const IExport = Symbol('IExport');
 export interface IExport {

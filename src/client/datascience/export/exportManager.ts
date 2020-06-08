@@ -33,7 +33,7 @@ interface IExportQuickPickItem extends QuickPickItem {
 
 @injectable()
 export class ExportManager implements IExportManager {
-    private readonly defaultExportSaveLocation = 'Downloads';
+    private readonly defaultExportSaveLocation = '';
 
     constructor(
         @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
@@ -65,7 +65,7 @@ export class ExportManager implements IExportManager {
             return; // user didn't select path
         }
 
-        const tempFile = await this.makeTemporaryFileUri();
+        const tempFile = await this.makeTemporaryFile();
         if (!tempFile) {
             return; // error making temp file
         }
@@ -93,7 +93,7 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async makeTemporaryFileUri(): Promise<TemporaryFile | undefined> {
+    private async makeTemporaryFile(): Promise<TemporaryFile | undefined> {
         let tempFile: TemporaryFile | undefined;
         const activeEditor = this.notebookEditorProvider.activeEditor;
         try {
