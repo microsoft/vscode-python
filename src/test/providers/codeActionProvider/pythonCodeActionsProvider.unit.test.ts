@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, CodeActionContext, CodeActionKind, Range, TextDocument, Uri } from 'vscode';
 import { PythonCodeActionProvider } from '../../../client/providers/codeActionProvider/pythonCodeActionProvider';
@@ -32,11 +32,9 @@ suite('Python CodeAction Provider', () => {
             token.object
         );
 
-        if (!codeActions) {
-            throw Error(`codeActionsProvider.provideCodeActions did not return an array (it returned ${codeActions})`);
-        }
+        assert.isArray(codeActions, 'codeActionsProvider.provideCodeActions did not return an array');
 
-        const organizeImportsCodeAction = codeActions.filter(
+        const organizeImportsCodeAction = (codeActions || []).filter(
             (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports
         );
         expect(organizeImportsCodeAction).to.have.length(1);
@@ -51,11 +49,9 @@ suite('Python CodeAction Provider', () => {
             token.object
         );
 
-        if (!codeActions) {
-            throw Error(`codeActionsProvider.provideCodeActions did not return an array (it returned ${codeActions})`);
-        }
+        assert.isArray(codeActions, 'codeActionsProvider.provideCodeActions did not return an array');
 
-        const organizeImportsCodeAction = codeActions.filter(
+        const organizeImportsCodeAction = (codeActions || []).filter(
             (codeAction) => codeAction.kind === CodeActionKind.SourceOrganizeImports
         );
         expect(organizeImportsCodeAction).to.have.length(0);
