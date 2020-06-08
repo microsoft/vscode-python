@@ -41,7 +41,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { noop, isUntitledFile } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -65,7 +65,6 @@ import {
     SysInfoReason,
     VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
-import { isUntitledFile } from '../interactive-ipynb/nativeEditorStorage';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';

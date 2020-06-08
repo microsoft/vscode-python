@@ -9,7 +9,7 @@ import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { noop } from '../../common/utils/misc';
+import { noop, isUntitledFile } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
@@ -35,9 +35,6 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
-export function isUntitledFile(file?: Uri) {
-    return file?.scheme === 'untitled';
-}
 export function isUntitled(model?: INotebookModel): boolean {
     return isUntitledFile(model?.file);
 }
