@@ -5,11 +5,10 @@ import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locator
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable';
-import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
+import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
-import * as internalScripts from './internal/scripts';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
 class PythonEnvironment {
@@ -68,27 +67,8 @@ class PythonEnvironment {
 
     private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
         try {
-            const execInfo = this.getExecutionInfo();
-            const [args, parse] = internalScripts.interpreterInfo();
-            const argv = [...execInfo.python, ...args];
-
-            // Concat these together to make a set of quoted strings
-            const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
-
-            // Try shell execing the command, followed by the arguments. This will make node kill the process if it
-            // takes too long.
-            // Sometimes the python path isn't valid, timeout if that's the case.
-            // See these two bugs:
-            // https://github.com/microsoft/vscode-python/issues/7569
-            // https://github.com/microsoft/vscode-python/issues/7760
-            const result = await this.deps.shellExec(quoted, 15000);
-            if (result.stderr) {
-                traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
-                return;
-            }
-            const json = parse(result.stdout);
-            traceInfo(`Found interpreter for ${argv}`);
-            return extractInterpreterInfo(this.pythonPath, json);
+            const python = this.getExecutionInfo();
+            return getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }

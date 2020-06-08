@@ -15,6 +15,7 @@ import {
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterInformation } from '../../client/pythonEnvironments/info';
+import { buildPythonExecInfo } from '../../client/pythonEnvironments/exec';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;
@@ -78,6 +79,6 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         return result;
     }
     public getExecutionInfo(args: string[]) {
-        return { command: this.pythonPath, args, python: [this.pythonPath] };
+        return buildPythonExecInfo(this.pythonPath, args);
     }
 }

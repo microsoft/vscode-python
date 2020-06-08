@@ -6,6 +6,7 @@ export type PythonExecInfo = {
     args: string[];
 
     python: string[];
+    pythonExecutable: string;
 };
 
 export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, pythonArgs?: string[]): PythonExecInfo {
@@ -14,14 +15,33 @@ export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, 
         if (pythonArgs) {
             args.push(...pythonArgs);
         }
-        return { command: python[0], args, python };
+        return {
+            command: python[0],
+            args,
+            python,
+            pythonExecutable: python[python.length - 1]
+        };
     } else if (python instanceof Object) {
-        const info = { command: python.command, args: [...python.args], python: [...python.python] };
+        const info = {
+            command: python.command,
+            args: [...python.args],
+            python: [...python.python],
+            pythonExecutable: python.pythonExecutable
+        };
         if (pythonArgs) {
             info.args.push(...pythonArgs);
         }
+        if (info.pythonExecutable === undefined) {
+            // This isn't necessarily true...
+            info.pythonExecutable = info.python[info.python.length - 1];
+        }
         return info;
     } else {
-        return { command: python, args: pythonArgs || [], python: [python] };
+        return {
+            command: python,
+            args: pythonArgs || [],
+            python: [python],
+            pythonExecutable: python
+        };
     }
 }

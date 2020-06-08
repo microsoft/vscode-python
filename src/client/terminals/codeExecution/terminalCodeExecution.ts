@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -64,7 +64,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             ? pythonSettings.pythonPath.replace(/\\/g, '/')
             : pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
-        return { command, args: [...launchArgs, ...args], python: [command] };
+        return buildPythonExecInfo(command, [...launchArgs, ...args]);
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts

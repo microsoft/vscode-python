@@ -42,7 +42,7 @@ suite('getExecutablePath()', () => {
         verifyAll();
     });
 
-    test('should throw if the result of exec() writes to stderr', async () => {
+    test('should throw if exec() fails', async () => {
         const stderr = 'oops';
         const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
         deps.setup((d) => d.exec(python.command, argv))

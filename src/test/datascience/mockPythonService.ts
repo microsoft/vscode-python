@@ -8,6 +8,7 @@ import {
     SpawnOptions
 } from '../../client/common/process/types';
 import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/info';
+import { buildPythonExecInfo } from '../../client/pythonEnvironments/exec';
 import { MockProcessService } from './mockProcessService';
 
 export class MockPythonService implements IPythonExecutionService {
@@ -77,6 +78,6 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public getExecutionInfo(args: string[]) {
-        return { command: this.interpreter.path, args, python: [this.interpreter.path] };
+        return buildPythonExecInfo(this.interpreter.path, args);
     }
 }
