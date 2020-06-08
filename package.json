@@ -688,13 +688,13 @@
                     "command": "python.refactorExtractVariable",
                     "title": "Refactor: Extract Variable",
                     "group": "Refactor",
-                    "when": "editorHasSelection && editorLangId == python"
+                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "python.refactorExtractMethod",
                     "title": "Refactor: Extract Method",
                     "group": "Refactor",
-                    "when": "editorHasSelection && editorLangId == python"
+                    "when": "editorHasSelection && editorLangId == python && !notebookEditorFocused"
                 },
                 {
                     "command": "python.sortImports",
