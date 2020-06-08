@@ -6,6 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { InterpreterInformation, PythonVersionInfo } from '../../pythonEnvironments/discovery/types';
+import { PythonExecInfo } from '../../pythonEnvironments/types';
 import { traceWarning } from '../logger';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
@@ -14,7 +15,6 @@ import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
-    PythonExecutionInfo,
     SpawnOptions
 } from './types';
 
@@ -82,7 +82,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.getExecutablePath();
         }
     }
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
