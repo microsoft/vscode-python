@@ -187,7 +187,7 @@ export enum VariableExplorerStateKeys {
 }
 
 export enum ExportNotebookSettings {
-    showSaveDialog = 'NBExportShowSaveDialog'
+    lastSaveLocation = 'NBExportSaveLocation'
 }
 
 export enum SysInfoReason {

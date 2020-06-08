@@ -697,6 +697,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Translate the cells into a notebook
             const content = this.model ? this.model.getContent() : '';
+
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
 
             // Import this file and show it
