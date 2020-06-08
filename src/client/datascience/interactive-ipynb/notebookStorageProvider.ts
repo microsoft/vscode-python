@@ -110,7 +110,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
 
     private modelChanged(model: INotebookModel, e: NotebookModelChange) {
         // VSC Notebooks will have their own hotexit.
-        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+        if (this.experiment.inExperiment(NativeNotebook.experiment)) {
             return;
         }
         const actualModel = e.model || model; // Test mocks can screw up bound values.
