@@ -16,7 +16,6 @@
 ### Fixes
 
 1. Ensure sorting imports in a modified file picks up the proper configuration.
-   ([#4891](https://github.com/Microsoft/vscode-python/issues/4891);
    thanks [Peter Law](https://github.com/PeterJCLaw))
    ([#4891](https://github.com/Microsoft/vscode-python/issues/4891))
 1. Made variable explorer (from IPython Notebook interface) resizable.
