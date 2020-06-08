@@ -44684,16 +44684,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 -------------------------------------------------------------------
 
-font-awesome 4.7.0 - OFL-1.1 AND MIT
-http://fontawesome.io/
-Copyright Dave Gandy 2016.
-
-OFL-1.1 AND MIT
-
--------------------------------------------------------------------
-
--------------------------------------------------------------------
-
 vsls 0.3.1291 - OTHER
 https://aka.ms/vsls
 Copyright (c) Microsoft Corporation.

@@ -3,7 +3,6 @@
 'use strict';
 import '../../extensions';
 
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { Identifiers } from '../../../datascience/constants';
@@ -157,21 +156,6 @@ export class WebPanel implements IWebPanel {
             .forEach((f) => webView.asWebviewUri(Uri.file(f)));
 
         const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
-        const fontAwesomePath = webView
-            .asWebviewUri(
-                Uri.file(
-                    path.join(
-                        this.options.rootPath,
-                        '..',
-                        'common',
-                        'node_modules',
-                        'font-awesome',
-                        'css',
-                        'font-awesome.min.css'
-                    )
-                )
-            )
-            .toString();
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -184,7 +168,6 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
-                <link rel="stylesheet" href="${fontAwesomePath}">
                 </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
