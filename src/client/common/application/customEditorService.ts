@@ -2,18 +2,28 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import * as vscode from 'vscode';
+import { DataScience } from '../../common/utils/localize';
 
-import { UseCustomEditorApi } from '../constants';
+import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../constants';
+import { IFileSystem } from '../platform/types';
 import { noop } from '../utils/misc';
-import { CustomEditorProvider, ICommandManager, ICustomEditorService } from './types';
+import { CustomEditorProvider, IApplicationEnvironment, ICommandManager, ICustomEditorService } from './types';
 
 @injectable()
 export class CustomEditorService implements ICustomEditorService {
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean
-    ) {}
+        @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+    ) {
+        // Double check the package json has the necessary entries for contributing a custom editor
+        if (this.useCustomEditorApi && !appEnvironment.packageJson.contributes?.customEditors) {
+            this.rewritePackageJson().ignoreErrors();
+        }
+    }
 
     public registerCustomEditorProvider(
         viewType: string,
@@ -35,5 +45,19 @@ export class CustomEditorService implements ICustomEditorService {
         if (this.useCustomEditorApi) {
             await this.commandManager.executeCommand('vscode.openWith', file, viewType);
         }
+    }
+
+    private async rewritePackageJson() {
+        const current = this.appEnvironment.packageJson;
+        const improvedContents = await this.fileSystem.readFile(path.join(EXTENSION_ROOT_DIR, 'package_proposed.json'));
+        const improved = {
+            ...current,
+            ...JSON.parse(improvedContents)
+        };
+        await this.fileSystem.writeFile(
+            path.join(EXTENSION_ROOT_DIR, 'package.json'),
+            JSON.stringify(improved, null, 4)
+        );
+        this.commandManager.executeCommand('python.reloadVSCode', DataScience.reloadCustomEditor());
     }
 }

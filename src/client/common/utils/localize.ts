@@ -947,6 +947,11 @@ export namespace DataScience {
         'DataScience.rawKernelConnectingSession',
         'Connecting to kernel.'
     );
+
+    export const reloadCustomEditor = localize(
+        'DataScience.reloadCustomEditor',
+        'Please reload VS Code to use the custom editor API'
+    );
 }
 
 export namespace StartPage {

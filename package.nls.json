@@ -510,5 +510,6 @@
     "DataScience.continueRunByLine": "Stop",
     "DataScience.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
     "DataScience.rawKernelSessionFailed": "Unable to start session for kernel {0}. Select another kernel to launch with.",
-    "DataScience.rawKernelConnectingSession": "Connecting to kernel."
+    "DataScience.rawKernelConnectingSession": "Connecting to kernel.",
+    "DataScience.reloadCustomEditor": "Please reload VS Code to use the custom editor API"
 }
