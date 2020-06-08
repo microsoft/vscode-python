@@ -67,11 +67,11 @@ export function verifyVariables(
     });
 }
 
-const Name_Column = 1;
+const Button_Column = 0;
+const Name_Column = Button_Column + 1;
 const Type_Column = Name_Column + 1;
 const Shape_Column = Type_Column + 1;
 const Value_Column = Shape_Column + 1;
-const Button_Column = 0;
 
 // Verify a single row versus a single expected variable
 function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariable: IJupyterVariable) {
