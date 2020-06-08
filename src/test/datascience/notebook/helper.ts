@@ -86,6 +86,9 @@ export async function insertPythonCell(source: string, index: number = 0) {
 export async function insertPythonCellAndWait(source: string, index: number = 0) {
     await (await insertPythonCell(source, index)).waitForCellToGetAdded();
 }
+export async function insertMarkdownCellAndWait(source: string, index: number = 0) {
+    await (await insertMarkdownCell(source, index)).waitForCellToGetAdded();
+}
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
