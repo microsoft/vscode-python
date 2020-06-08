@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DataScience } from '../../common/utils/localize';
 
+import { traceError } from '../../logging';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { noop } from '../utils/misc';
@@ -21,7 +22,7 @@ export class CustomEditorService implements ICustomEditorService {
     ) {
         // Double check the package json has the necessary entries for contributing a custom editor
         if (this.useCustomEditorApi && !appEnvironment.packageJson.contributes?.customEditors) {
-            this.rewritePackageJson().ignoreErrors();
+            this.rewritePackageJson().catch((e) => traceError(`Error rewriting package json: `, e));
         }
     }
 

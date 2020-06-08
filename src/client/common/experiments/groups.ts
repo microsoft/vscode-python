@@ -104,7 +104,7 @@ export enum DeprecatePythonPath {
 }
 
 /*
- * Experiment to check whether the extension should deprecate `python.pythonPath` setting
+ * Experiment to turn on custom editor API support.
  */
 export enum CustomEditorSupport {
     control = 'CustomEditorSupport - control',
