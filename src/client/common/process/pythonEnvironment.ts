@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { extractInterpreterInfo } from '../../pythonEnvironments/discovery/info';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
-import { parsePythonVersion } from '../../pythonEnvironments/pythonVersion';
 import { PythonExecInfo } from '../../pythonEnvironments/types';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { Architecture } from '../utils/platform';
 import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
@@ -16,17 +15,6 @@ function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecInf
     const args = python.slice(1);
     args.push(...pythonArgs);
     return { command: python[0], args, python };
-}
-
-export function extractInterpreterInfo(python: string, raw: internalScripts.PythonEnvInfo): InterpreterInformation {
-    const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
-    return {
-        architecture: raw.is64Bit ? Architecture.x64 : Architecture.x86,
-        path: python,
-        version: parsePythonVersion(rawVersion),
-        sysVersion: raw.sysVersion,
-        sysPrefix: raw.sysPrefix
-    };
 }
 
 class PythonEnvironment {
