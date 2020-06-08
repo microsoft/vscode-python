@@ -6,6 +6,8 @@
 
 1. Ensure user cannot belong to all experiments in an experiment group.
    ([#11943](https://github.com/Microsoft/vscode-python/issues/11943))
+1. Ensure extension features are started when in `Deprecate PythonPath` experiment and opening a file without any folder opened.
+   ([#12177](https://github.com/Microsoft/vscode-python/issues/12177))
 
 ### Code Health
 
