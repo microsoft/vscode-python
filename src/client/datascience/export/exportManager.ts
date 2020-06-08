@@ -6,7 +6,7 @@ import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { Commands } from '../constants';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookImporter } from '../types';
+import { IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
 
 export enum ExportFormat {
     pdf = 'pdf',
@@ -110,22 +110,6 @@ export class ExportManager implements IExportManager {
         return tempFile;
     }
 
-    /*private getAutoSaveSettings(): FileSettings {
-        const filesConfig = this.workspace.getConfiguration('files', this.notebookEditorProvider.activeEditor?.file);
-        return {
-            autoSave: filesConfig.get('autoSave', 'off'),
-            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
-        };
-    }*/
-
-    /*private shouldShowSaveDialog(): boolean {
-        return this.workspaceStorage.get(ExportNotebookSettings.showSaveDialog, true);
-    }*/
-
-    /*private updateShouldShowSaveDialog(value: boolean) {
-        this.workspaceStorage.update(ExportNotebookSettings.showSaveDialog, value);
-    }*/
-
     private getExportQuickPickItems(): IExportQuickPickItem[] {
         return [
             {
@@ -151,7 +135,7 @@ export class ExportManager implements IExportManager {
         return this.applicationShell.showQuickPick(items, options);
     }
 
-    private getLastFileSaveLocation(): Uri {
+    private getFileSaveLocation(): Uri {
         const filePath = this.workspaceStorage.get(
             ExportNotebookSettings.lastSaveLocation,
             this.defaultExportSaveLocation
@@ -182,18 +166,36 @@ export class ExportManager implements IExportManager {
             default:
                 return;
         }
-        const file = this.notebookEditorProvider.activeEditor?.file;
+
         const options: SaveDialogOptions = {
-            defaultUri: file,
+            defaultUri: this.getFileSaveLocation(),
             saveLabel: '',
             filters: fileExtensions
         };
 
         this.applicationShell.showSaveDialog(options).then((uri) => {
+            if (uri) {
+                this.updateFileSaveLocation(uri);
+            }
             return uri;
         });
-        return undefined;
     }
+
+    /*private getAutoSaveSettings(): FileSettings {
+        const filesConfig = this.workspace.getConfiguration('files', this.notebookEditorProvider.activeEditor?.file);
+        return {
+            autoSave: filesConfig.get('autoSave', 'off'),
+            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
+        };
+    }*/
+
+    /*private shouldShowSaveDialog(): boolean {
+        return this.workspaceStorage.get(ExportNotebookSettings.showSaveDialog, true);
+    }*/
+
+    /*private updateShouldShowSaveDialog(value: boolean) {
+        this.workspaceStorage.update(ExportNotebookSettings.showSaveDialog, value);
+    }*/
 
     /*private async save() {
         const activeEditor = this.notebookEditorProvider.activeEditor;
@@ -231,26 +233,4 @@ export class ExportManager implements IExportManager {
             this.updateShouldShowSaveDialog(false);
         }
     }*/
-}
-
-@injectable()
-export abstract class ExportBase implements IExport {
-    constructor(@inject(INotebookImporter) private readonly importer: INotebookImporter) {}
-
-    public async export(source: Uri, target: Uri): Promise<void> {}
-}
-
-@injectable()
-export class ExportToHTML extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {}
-}
-
-@injectable()
-export class ExportToPDF extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {}
-}
-
-@injectable()
-export class ExportToPython extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {}
 }
