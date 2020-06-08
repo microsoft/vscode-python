@@ -1,5 +1,190 @@
 # Changelog
 
+## 2020.6.0-rc (8 June 2020)
+
+### Enhancements
+
+1. Removed `python.jediEnabled` setting in favor of `python.languageServer`. Instead of `"python.jediEnabled": true` please use `"python.languageServer": "Jedi"`.
+   ([#7010](https://github.com/Microsoft/vscode-python/issues/7010))
+1. Integrate VS Code experiment framework in the extension.
+   ([#10790](https://github.com/Microsoft/vscode-python/issues/10790))
+1. Added a start page for the extension. It opens to new users or when there is a new release. It can be disabled with the setting 'Python: Show Start Page'.
+   ([#11057](https://github.com/Microsoft/vscode-python/issues/11057))
+1. Preliminary support using other languages for the kernel.
+   ([#11919](https://github.com/Microsoft/vscode-python/issues/11919))
+
+### Fixes
+
+1. Ensure sorting imports in a modified file picks up the proper configuration.
+   ([#4891](https://github.com/Microsoft/vscode-python/issues/4891);
+   thanks [Peter Law](https://github.com/PeterJCLaw))
+   ([#4891](https://github.com/Microsoft/vscode-python/issues/4891))
+1. Made variable explorer (from IPython Notebook interface) resizable.
+   ([#5382](https://github.com/Microsoft/vscode-python/issues/5382))
+1. Add junit family to pytest runner args to remove pytest warning.
+   ([#10673](https://github.com/Microsoft/vscode-python/issues/10673))
+1. Switch order of restart and cancel buttons in interactive window to be consistent with ordering in notebook toolbar.
+   ([#11091](https://github.com/Microsoft/vscode-python/issues/11091))
+1. Support opening other URI schemes besides 'file' and 'vsls'.
+   ([#11393](https://github.com/Microsoft/vscode-python/issues/11393))
+1. Fix issue with formatting when the first line is blank.
+   ([#11416](https://github.com/Microsoft/vscode-python/issues/11416))
+1. Force interactive window to always scroll long output. Don't allow scrollbars within scrollbars.
+   ([#11421](https://github.com/Microsoft/vscode-python/issues/11421))
+1. Hover on notebooks or interactive window seems to stutter.
+   ([#11422](https://github.com/Microsoft/vscode-python/issues/11422))
+1. Make shift+tab work again in the interactive window. Escaping focus from the prompt is now relegated to 'Shift+Esc'.
+   ([#11495](https://github.com/Microsoft/vscode-python/issues/11495))
+1. Keep import and export working with raw kernel mode. Also allow for installing dependencies if running an import before jupyter was ever launched.
+   ([#11501](https://github.com/Microsoft/vscode-python/issues/11501))
+1. Extra kernels that just say "Python 3 - python" are showing up in the raw kernel kernel picker.
+   ([#11552](https://github.com/Microsoft/vscode-python/issues/11552))
+1. Fix intermittent launch failure with raw kernels on windows.
+   ([#11574](https://github.com/Microsoft/vscode-python/issues/11574))
+1. Don't register a kernelspec when switching to an interpreter in raw kernel mode.
+   ([#11575](https://github.com/Microsoft/vscode-python/issues/11575))
+1. Keep the notebook input prompt up if you focus out of vscode.
+   ([#11581](https://github.com/Microsoft/vscode-python/issues/11581))
+1. Fix install message to reference run by line instead of debugging.
+   ([#11661](https://github.com/Microsoft/vscode-python/issues/11661))
+1. Run by line does not scroll to the line that is being run.
+   ([#11662](https://github.com/Microsoft/vscode-python/issues/11662))
+1. For direct kernel connection, don't replace a notebook's metadata default kernelspec with a new kernelspec on startup.
+   ([#11672](https://github.com/Microsoft/vscode-python/issues/11672))
+1. Fixes issue with importing `debupy` in interactive window.
+   ([#11686](https://github.com/Microsoft/vscode-python/issues/11686))
+1. Reopen all notebooks when rerunning the extension (including untitled ones).
+   ([#11711](https://github.com/Microsoft/vscode-python/issues/11711))
+1. Make sure to clear 'outputPrepend' when rerunning cells and to also only ever add it once to a cell.
+   (thanks [Barry Nolte](https://github.com/BarryNolte))
+   ([#11726](https://github.com/Microsoft/vscode-python/issues/11726))
+1. Disable pre-warming of Kernel Daemons when user does not belong to the `LocalZMQKernel - experiment` experiment.
+   ([#11751](https://github.com/Microsoft/vscode-python/issues/11751))
+1. When switching to an invalid kernel (one that is registered but cannot start) in raw mode respect the launch timeout that is passed in.
+   ([#11752](https://github.com/Microsoft/vscode-python/issues/11752))
+1. Make ```python.dataScience.textOutputLimit``` apply on subsequent rerun. We were letting the 'outputPrepend' metadata persist from run to run.
+   (thanks [Barry Nolte](https://github.com/BarryNolte))
+   ([#11777](https://github.com/Microsoft/vscode-python/issues/11777))
+1. Use `${command:python.interpreterPath}` to get selected interpreter path in `launch.json` and `tasks.json`.
+   ([#11789](https://github.com/Microsoft/vscode-python/issues/11789))
+1. Restarting a kernel messes up run by line.
+   ([#11793](https://github.com/Microsoft/vscode-python/issues/11793))
+1. Correctly show kernel status in raw kernel mode.
+   ([#11797](https://github.com/Microsoft/vscode-python/issues/11797))
+1. Hovering over variables in a python file can show two hover values if the interactive window is closed and reopened.
+   ([#11800](https://github.com/Microsoft/vscode-python/issues/11800))
+1. Make sure to use webView.cspSource for all csp sources.
+   ([#11855](https://github.com/Microsoft/vscode-python/issues/11855))
+1. Double-check for interpreters when running diagnostics before displaying the "Python is not installed" message.
+   ([#11870](https://github.com/Microsoft/vscode-python/issues/11870))
+1. Use command line arguments to launch our raw kernels as opposed to a connection file. The connection file seems to be causing issues in particular on windows CI machines with permissions.
+   ([#11883](https://github.com/Microsoft/vscode-python/issues/11883))
+1. Ensure user cannot belong to all experiments in an experiment group.
+   ([#11943](https://github.com/Microsoft/vscode-python/issues/11943))
+1. Improve our status reporting when launching and connecting to a raw kernel.
+   ([#11951](https://github.com/Microsoft/vscode-python/issues/11951))
+1. Prewarm raw kernels based on raw kernel support and don't prewarm if jupyter autostart is disabled.
+   ([#11956](https://github.com/Microsoft/vscode-python/issues/11956))
+1. Don't flood the hard drive when typing in a large notebook file.
+   ([#12058](https://github.com/Microsoft/vscode-python/issues/12058))
+1. Disable run-by-line and continue buttons in run by line mode when running.
+   ([#12169](https://github.com/Microsoft/vscode-python/issues/12169))
+1. Disable `Sort Imports` command in `Notebook Cells`.
+   ([#12193](https://github.com/Microsoft/vscode-python/issues/12193))
+
+### Code Health
+
+1. Use ts-loader as a tyepscript loader in webpack.
+   ([#9061](https://github.com/Microsoft/vscode-python/issues/9061))
+1. Fixed typo from unitest -> unittest.
+   (thanks [Rameez Khan](https://github.com/Rxmeez)).
+   ([#10919](https://github.com/Microsoft/vscode-python/issues/10919))
+1. Make functional tests more deterministic.
+   ([#11058](https://github.com/Microsoft/vscode-python/issues/11058))
+1. Reenable CDN unit tests.
+   ([#11442](https://github.com/Microsoft/vscode-python/issues/11442))
+1. Update telemetry on errors and exceptions to use [vscode-extension-telemetry](https://www.npmjs.com/package/vscode-extension-telemetry).
+   ([#11597](https://github.com/Microsoft/vscode-python/issues/11597))
+1. Run by line for notebook cells minimal implementation.
+   ([#11607](https://github.com/Microsoft/vscode-python/issues/11607))
+1. Get shape and count when showing debugger variables.
+   ([#11657](https://github.com/Microsoft/vscode-python/issues/11657))
+1. Add more tests to verify data frames can be opened.
+   ([#11658](https://github.com/Microsoft/vscode-python/issues/11658))
+1. Support data tips overtop of python files that have had cells run.
+   ([#11659](https://github.com/Microsoft/vscode-python/issues/11659))
+1. Functional test for run by line functionality.
+   ([#11660](https://github.com/Microsoft/vscode-python/issues/11660))
+1. Fixed typo in a test from lanaguage -> language.
+   (thanks [Ashwin Ramaswami](https://github.com/epicfaace)).
+   ([#11775](https://github.com/Microsoft/vscode-python/issues/11775))
+1. Add bitness information to interpreter telemetry.
+   ([#11904](https://github.com/Microsoft/vscode-python/issues/11904))
+1. Fix failing linux debugger tests.
+   ([#11935](https://github.com/Microsoft/vscode-python/issues/11935))
+1. Faster unit tests on CI Pipeline.
+   ([#12017](https://github.com/Microsoft/vscode-python/issues/12017))
+1. Ensure we can use proposed VS Code API with `ts-node`.
+   ([#12025](https://github.com/Microsoft/vscode-python/issues/12025))
+1. Faster node unit tests on Azure pipeline.
+   ([#12027](https://github.com/Microsoft/vscode-python/issues/12027))
+1. Use [deemon](https://www.npmjs.com/package/deemon) package for background compilation with support for restarting VS Code during development.
+   ([#12059](https://github.com/Microsoft/vscode-python/issues/12059))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.5.1 (19 May 2020)
 
 ### Fixes
