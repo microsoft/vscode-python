@@ -48,12 +48,15 @@ export class CustomEditorService implements ICustomEditorService {
     }
 
     private async rewritePackageJson() {
+        // tslint:disable-next-line:no-require-imports no-var-requires
+        const _mergeWith = require('lodash/mergeWith') as typeof import('lodash/mergeWith');
         const current = this.appEnvironment.packageJson;
-        const improvedContents = await this.fileSystem.readFile(path.join(EXTENSION_ROOT_DIR, 'package_proposed.json'));
-        const improved = {
-            ...current,
-            ...JSON.parse(improvedContents)
-        };
+        const improvedContents = await this.fileSystem.readFile(path.join(EXTENSION_ROOT_DIR, 'customEditor.json'));
+        const improved = _mergeWith({ ...current }, JSON.parse(improvedContents), (l, r) => {
+            if (Array.isArray(l) && Array.isArray(r)) {
+                return [...l, ...r];
+            }
+        });
         await this.fileSystem.writeFile(
             path.join(EXTENSION_ROOT_DIR, 'package.json'),
             JSON.stringify(improved, null, 4)
