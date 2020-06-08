@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, Jupyter Notebooks, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2020.6.0-rc",
+    "version": "2020.7.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
