@@ -1,9 +1,16 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 import {
     CommonActionType,
     CommonActionTypeMapping
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
-import { IInteractiveWindowMapping, InteractiveWindowMessages, IPyWidgetMessages } from './interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IPyWidgetMessages,
+    NotebookModelChange
+} from './interactiveWindowTypes';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -24,8 +31,11 @@ export enum MessageType {
     noIdea = 1 << 2
 }
 
+// tslint:disable-next-line: no-any
+type MessageAction = (payload: any) => boolean;
+
 type MessageMapping<T> = {
-    [P in keyof T]: MessageType;
+    [P in keyof T]: MessageType | MessageAction;
 };
 
 export type IInteractiveActionMapping = MessageMapping<IInteractiveWindowMapping>;
@@ -191,7 +201,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UnfocusedCellEditor]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateCellWithExecutionResults]:
         MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
-    [InteractiveWindowMessages.UpdateModel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.UpdateModel]: checkSyncUpdateModel,
     [InteractiveWindowMessages.UpdateKernel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
@@ -228,6 +238,14 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
 };
 
 /**
+ * Function to check if a NotebookModelChange should be sync'd across editors or not
+ */
+function checkSyncUpdateModel(payload: NotebookModelChange): boolean {
+    // Only sync user changes
+    return payload.source === 'user';
+}
+
+/**
  * If the original message was a sync message, then do not send messages to extension.
  *  We allow messages to be sent to extension ONLY when the original message was triggered by the user.
  *
@@ -249,9 +267,12 @@ export function checkToPostBasedOnOriginalMessageType(messageType?: MessageType)
     return true;
 }
 
-export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [boolean, MessageType] {
+// tslint:disable-next-line: no-any
+export function shouldRebroadcast(message: keyof IInteractiveWindowMapping, payload: any): [boolean, MessageType] {
     // Get the configured type for this message (whether it should be re-broadcasted or not).
-    const messageType: MessageType | undefined = messageWithMessageTypes[message];
+    const messageTypeOrFunc: MessageType | undefined | MessageAction = messageWithMessageTypes[message];
+    const messageType =
+        typeof messageTypeOrFunc !== 'function' ? (messageTypeOrFunc as number) : MessageType.syncAcrossSameNotebooks;
     // Support for liveshare is turned off for now, we can enable that later.
     // I.e. we only support synchronizing across editors in the same session.
     if (
@@ -259,6 +280,10 @@ export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [bo
         (messageType & MessageType.syncAcrossSameNotebooks) !== MessageType.syncAcrossSameNotebooks
     ) {
         return [false, MessageType.other];
+    }
+
+    if (typeof messageTypeOrFunc === 'function') {
+        return [messageTypeOrFunc(payload), messageType];
     }
 
     return [

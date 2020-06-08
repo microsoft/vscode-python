@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { CancellationTokenSource, Disposable, EventEmitter, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
+import { CancellationTokenSource, Disposable, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
+import { CancellationToken } from 'vscode-languageclient';
 import {
     CustomDocument,
     CustomEditorProvider,
@@ -19,7 +20,7 @@ import { createTemporaryFile } from '../utils/fs';
 @injectable()
 export class MockCustomEditorService implements ICustomEditorService {
     private provider: CustomEditorProvider | undefined;
-    private resolvedList = new Map<string, Thenable<void>>();
+    private resolvedList = new Map<string, Thenable<void> | void>();
     private undoStack = new Map<string, unknown[]>();
     private redoStack = new Map<string, unknown[]>();
 
@@ -39,7 +40,24 @@ export class MockCustomEditorService implements ICustomEditorService {
     public registerCustomEditorProvider(
         _viewType: string,
         provider: CustomEditorProvider,
-        _options?: WebviewPanelOptions | undefined
+        _options?: {
+            readonly webviewOptions?: WebviewPanelOptions;
+
+            /**
+             * Only applies to `CustomReadonlyEditorProvider | CustomEditorProvider`.
+             *
+             * Indicates that the provider allows multiple editor instances to be open at the same time for
+             * the same resource.
+             *
+             * If not set, VS Code only allows one editor instance to be open at a time for each resource. If the
+             * user tries to open a second editor instance for the resource, the first one is instead moved to where
+             * the second one was to be opened.
+             *
+             * When set, users can split and create copies of the custom editor. The custom editor must make sure it
+             * can properly synchronize the states of all editor instances for a resource so that they are consistent.
+             */
+            readonly supportsMultipleEditorsPerDocument?: boolean;
+        }
     ): Disposable {
         // Only support one view type, so just save the provider
         this.provider = provider;
@@ -61,8 +79,12 @@ export class MockCustomEditorService implements ICustomEditorService {
         let resolved = this.resolvedList.get(file.toString());
         if (!resolved) {
             // Pass undefined as the webview panel. This will make the editor create a new one
-            // tslint:disable-next-line: no-any
-            resolved = this.provider.resolveCustomEditor(this.createDocument(file), (undefined as any) as WebviewPanel);
+            resolved = this.provider.resolveCustomEditor(
+                this.createDocument(file),
+                // tslint:disable-next-line: no-any
+                (undefined as any) as WebviewPanel,
+                CancellationToken.None
+            );
             this.resolvedList.set(file.toString(), resolved);
         }
 
@@ -106,11 +128,9 @@ export class MockCustomEditorService implements ICustomEditorService {
     }
 
     private createDocument(file: Uri): CustomDocument {
-        const eventEmitter = new EventEmitter<void>();
         return {
             uri: file,
-            viewType: NativeEditorProvider.customEditorViewType,
-            onDidDispose: eventEmitter.event
+            dispose: noop
         };
     }
 

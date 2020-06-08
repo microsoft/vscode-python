@@ -280,7 +280,7 @@ export interface IGatherLogger extends INotebookExecutionLogger {
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
-    serverStarted: Event<INotebookServerOptions>;
+    serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
@@ -1030,10 +1030,13 @@ export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
     readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
+    getBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    deleteBackup(model: INotebookModel): Promise<void>;
 }
 type WebViewViewState = {
     readonly visible: boolean;

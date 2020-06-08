@@ -51,7 +51,7 @@ export class PostOffice implements IAsyncDisposable {
     }
 
     public async dispose() {
-        this.peerCountChangedEmitter.fire();
+        this.peerCountChangedEmitter.fire(0);
         this.peerCountChangedEmitter.dispose();
         if (this.hostServer) {
             traceInfo(`Shutting down live share api`);

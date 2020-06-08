@@ -90,9 +90,9 @@ export namespace Creation {
         return arg.prevState;
     }
 
-    export function insertAbove(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(arg.payload.data.newCellId, null), false, arg.prevState.settings);
+    function insertAbove(arg: NativeEditorReducerArg<ICellAction & { vm: ICellViewModel }>): IMainState {
         const newList = [...arg.prevState.cellVMs];
+        const newVM = arg.payload.data.vm;
 
         // Find the position where we want to insert
         let position = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
@@ -113,6 +113,34 @@ export namespace Creation {
         Transfer.postModelInsert(arg, position, newVM.cell, arg.payload.data.cellId);
 
         return result;
+    }
+
+    export function insertExistingAbove(arg: NativeEditorReducerArg<ICellAction & { cell: ICell }>): IMainState {
+        const newVM = prepareCellVM(arg.payload.data.cell, false, arg.prevState.settings);
+        return insertAbove({
+            ...arg,
+            payload: {
+                ...arg.payload,
+                data: {
+                    cellId: arg.payload.data.cellId,
+                    vm: newVM
+                }
+            }
+        });
+    }
+
+    export function insertNewAbove(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
+        const newVM = prepareCellVM(createEmptyCell(arg.payload.data.newCellId, null), false, arg.prevState.settings);
+        return insertAbove({
+            ...arg,
+            payload: {
+                ...arg.payload,
+                data: {
+                    cellId: arg.payload.data.cellId,
+                    vm: newVM
+                }
+            }
+        });
     }
 
     export function insertBelow(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
@@ -146,7 +174,7 @@ export namespace Creation {
         const firstCellId = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
 
         // Do what an insertAbove does
-        return insertAbove({
+        return insertNewAbove({
             ...arg,
             payload: { ...arg.payload, data: { cellId: firstCellId, newCellId: arg.payload.data.newCellId } }
         });
@@ -341,11 +369,11 @@ export namespace Creation {
                     arg.prevState.cellVMs.length > arg.payload.data.index
                         ? arg.prevState.cellVMs[arg.payload.data.index].cell
                         : undefined;
-                return insertAbove({
+                return insertExistingAbove({
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { newCellId: arg.payload.data.cell.id, cellId: cellBelow ? cellBelow.id : undefined }
+                        data: { cell: arg.payload.data.cell, cellId: cellBelow ? cellBelow.id : undefined }
                     }
                 });
             case 'remove_all':
@@ -398,11 +426,11 @@ export namespace Creation {
                     payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.forward } }
                 });
             case 'insert':
-                return insertAbove({
+                return insertExistingAbove({
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { newCellId: arg.payload.data.cell.id, cellId: arg.payload.data.codeCellAboveId }
+                        data: { cell: arg.payload.data.cell, cellId: arg.payload.data.codeCellAboveId }
                     }
                 });
             case 'remove':

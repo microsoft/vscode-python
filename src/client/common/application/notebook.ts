@@ -14,7 +14,8 @@ import type {
     NotebookOutputSelector
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
-import { IDisposableRegistry } from '../types';
+import { NativeNotebook } from '../experiments/groups';
+import { IDisposableRegistry, IExperimentsManager } from '../types';
 import {
     IVSCodeNotebook,
     NotebookCellLanguageChangeEvent,
@@ -62,9 +63,10 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IExperimentsManager) readonly experimentManager: IExperimentsManager
     ) {
-        if (this.useProposedApi) {
+        if (this.useProposedApi && experimentManager.inExperiment(NativeNotebook.experiment)) {
             this.addEventHandlers();
         }
     }

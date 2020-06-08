@@ -102,3 +102,11 @@ export enum DeprecatePythonPath {
     control = 'DeprecatePythonPath - control',
     experiment = 'DeprecatePythonPath - experiment'
 }
+
+/*
+ * Experiment to turn on custom editor API support.
+ */
+export enum CustomEditorSupport {
+    control = 'CustomEditorSupport - control',
+    experiment = 'CustomEditorSupport - experiment'
+}

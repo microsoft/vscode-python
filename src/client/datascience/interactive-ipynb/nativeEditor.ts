@@ -561,8 +561,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async modelChanged(change: NotebookModelChange) {
         if (change.source !== 'user') {
-            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
-            await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
+            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change. Remove the
+            // the model so this doesn't have to be stringified
+            await this.postMessage(InteractiveWindowMessages.UpdateModel, { ...change, model: undefined });
         }
         if (change.kind === 'saveAs' && change.model) {
             const newFileName = change.model.file.toString();
@@ -576,7 +577,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Use the current state of the model to indicate dirty (not the message itself)
         if (this.model && change.newDirty !== change.oldDirty) {
-            this.modifiedEvent.fire();
+            this.modifiedEvent.fire(this);
             if (this.model.isDirty) {
                 await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             } else {

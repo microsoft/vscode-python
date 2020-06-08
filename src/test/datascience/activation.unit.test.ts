@@ -91,7 +91,7 @@ suite('Data Science - Activation', () => {
         await testCreatingDaemonWhenOpeningANotebook();
 
         // Trigger changes to interpreter.
-        interpreterEventEmitter.fire();
+        interpreterEventEmitter.fire(interpreter);
 
         // Wait for debounce to complete.
         await fakeTimer.wait();
@@ -104,7 +104,7 @@ suite('Data Science - Activation', () => {
     });
     test('Changing interpreter without opening a notebook does not result in a daemon being created', async () => {
         // Trigger changes to interpreter.
-        interpreterEventEmitter.fire();
+        interpreterEventEmitter.fire(interpreter);
 
         // Assume a debounce is required and wait.
         await sleep(10);

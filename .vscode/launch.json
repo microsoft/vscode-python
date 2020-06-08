@@ -25,7 +25,7 @@
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
-                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
+                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_PYTHON_LOG_TELEMETRY": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time

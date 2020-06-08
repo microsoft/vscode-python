@@ -2247,7 +2247,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
                         // Also, send notification about changes to window state.
                         windowStateChangeHandlers.forEach((item) => item({ focused: false }));
                         windowStateChangeHandlers.forEach((item) => item({ focused: true }));
@@ -2272,7 +2272,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor);
+                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor!);
 
                         // At this point a message should be sent to extension asking it to save.
                         // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -2305,7 +2305,7 @@ df.head()`;
                         // Now that the notebook is dirty, change the active editor.
                         // This should not trigger a save of notebook (as its configured to save only when window state changes).
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
 
                         // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                         await expect(cleanPromise).to.eventually.be.rejected;

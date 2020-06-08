@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment } from '../common/application/types';
 import { UseCustomEditorApi } from '../common/constants';
-import { NativeNotebook } from '../common/experiments/groups';
+import { CustomEditorSupport, NativeNotebook } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
@@ -160,16 +159,17 @@ import {
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
-    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
     const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi);
+    const inCustomEditorApiExperiment = experiments.inExperiment(CustomEditorSupport.experiment);
+    const usingCustomEditor = inCustomEditorApiExperiment;
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
 
     // This condition is temporary.
-    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : enableProposedApi ? NativeEditorProvider : NativeEditorProviderOld;
+    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, notebookEditorProvider);
     if (!useVSCodeNotebookAPI) {
-        serviceManager.add<INotebookEditor>(INotebookEditor, enableProposedApi ? NativeEditor : NativeEditorOldWebView);
+        serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
         // These are never going to be required for new VSC NB.
         serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
