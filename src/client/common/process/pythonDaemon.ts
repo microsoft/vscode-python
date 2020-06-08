@@ -5,8 +5,8 @@
 
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { extractInterpreterInfo } from '../../pythonEnvironments/discovery/info';
 import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info';
 import { PythonExecInfo } from '../../pythonEnvironments/types';
 import { traceWarning } from '../logger';
 import { BasePythonDaemon } from './baseDaemon';

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { extractInterpreterInfo } from '../../pythonEnvironments/discovery/info';
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info';
 import { PythonExecInfo } from '../../pythonEnvironments/types';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';

@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as internalScripts from '../../common/process/internal/scripts';
-import { Architecture } from '../../common/utils/platform';
-import { parsePythonVersion } from '../pythonVersion';
-import { InterpreterInformation } from './types';
+import * as internalScripts from '../common/process/internal/scripts';
+import { Architecture } from '../common/utils/platform';
+import { InterpreterInformation } from './discovery/types';
+import { parsePythonVersion } from './pythonVersion';
 
 export function extractInterpreterInfo(python: string, raw: internalScripts.PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
