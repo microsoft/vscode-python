@@ -1,6 +1,5 @@
 import { inject, injectable, named } from 'inversify';
-import { Uri } from 'monaco-editor';
-import { Memento, QuickPickItem, QuickPickOptions, SaveDialogOptions } from 'vscode';
+import { Memento, QuickPickItem, QuickPickOptions, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
@@ -14,11 +13,9 @@ export enum ExportFormat {
     python = 'python'
 }
 
-export namespace ExportExtensions {
-    export const PDFExtensions = { PDF: ['.pdf'] };
-    export const HTMLExtensions = { HTML: ['.html', 'htm'] };
-    export const PythonExtensions = { Python: ['.py'] };
-}
+export const PDFExtensions = { PDF: ['.pdf'] };
+export const HTMLExtensions = { HTML: ['.html', 'htm'] };
+export const PythonExtensions = { Python: ['.py'] };
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
@@ -36,7 +33,7 @@ interface IExportQuickPickItem extends QuickPickItem {
 
 @injectable()
 export class ExportManager implements IExportManager {
-    private readonly defaultExportSaveLocation = '/Downloads';
+    private readonly defaultExportSaveLocation = 'Downloads';
 
     constructor(
         @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
@@ -63,7 +60,7 @@ export class ExportManager implements IExportManager {
             return;
         }
 
-        const target = this.getExportFileLocation(format);
+        const target = await this.getExportFileLocation(format);
         if (!target) {
             return; // user didn't select path
         }
@@ -140,6 +137,7 @@ export class ExportManager implements IExportManager {
             ExportNotebookSettings.lastSaveLocation,
             this.defaultExportSaveLocation
         );
+
         return Uri.file(filePath);
     }
 
@@ -148,19 +146,19 @@ export class ExportManager implements IExportManager {
         this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, filePath);
     }
 
-    private getExportFileLocation(format: ExportFormat): Uri | undefined {
+    private async getExportFileLocation(format: ExportFormat): Promise<Uri | undefined> {
         let fileExtensions;
         switch (format) {
             case ExportFormat.python:
-                fileExtensions = ExportExtensions.PythonExtensions;
+                fileExtensions = PythonExtensions;
                 break;
 
             case ExportFormat.pdf:
-                fileExtensions = ExportExtensions.PDFExtensions;
+                fileExtensions = PDFExtensions;
                 break;
 
             case ExportFormat.html:
-                fileExtensions = ExportExtensions.HTMLExtensions;
+                fileExtensions = HTMLExtensions;
                 break;
 
             default:
@@ -173,12 +171,11 @@ export class ExportManager implements IExportManager {
             filters: fileExtensions
         };
 
-        this.applicationShell.showSaveDialog(options).then((uri) => {
-            if (uri) {
-                this.updateFileSaveLocation(uri);
-            }
-            return uri;
-        });
+        const uri = await this.applicationShell.showSaveDialog(options);
+        if (uri) {
+            this.updateFileSaveLocation(uri);
+        }
+        return uri;
     }
 
     /*private getAutoSaveSettings(): FileSettings {
