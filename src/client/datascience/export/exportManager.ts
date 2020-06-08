@@ -1,11 +1,14 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'monaco-editor';
 import { QuickPickItem, QuickPickOptions, SaveDialogOptions } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { Memento } from 'vscode';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { Commands } from '../constants';
-import { IDataScienceErrorHandler, INotebookEditorProvider, INotebookImporter } from '../types';
+import { ExportNotebookSettings, VariableExplorerStateKeys } from '../interactive-common/interactiveWindowTypes';
+import { FileSettings, IDataScienceErrorHandler, INotebookEditorProvider, INotebookImporter } from '../types';
 
 export enum ExportFormat {
     pdf = 'pdf',
@@ -42,9 +45,8 @@ export class ExportManager implements IExportManager {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(INotebookImporter) private readonly importer: INotebookImporter,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
     ) {}
 
     public async export(format?: ExportFormat) {
@@ -85,12 +87,26 @@ export class ExportManager implements IExportManager {
                 return;
         }
 
-        if (fileExtensions) {
-            const target = this.getExportFileLocation(fileExtensions);
-            if (target && exportCall) {
-                await exportCall(source, target);
-            }
+        const target = this.getExportFileLocation(fileExtensions);
+        if (target && exportCall) {
+            await exportCall(source, target);
         }
+    }
+
+    private getAutoSaveSettings(): FileSettings {
+        const filesConfig = this.workspace.getConfiguration('files', this.notebookEditorProvider.activeEditor?.file);
+        return {
+            autoSave: filesConfig.get('autoSave', 'off'),
+            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
+        };
+    }
+
+    private shouldShowSaveDialog(): boolean {
+        return this.workspaceStorage.get(ExportNotebookSettings.showSaveDialog, true);
+    }
+
+    private updateShouldShowSaveDialog(value: boolean) {
+        this.workspaceStorage.update(ExportNotebookSettings.showSaveDialog, value);
     }
 
     private getExportQuickPickItems(): IExportQuickPickItem[] {
@@ -147,9 +163,14 @@ export class ExportManager implements IExportManager {
 
     private async verifySaved() {
         const activeEditor = this.notebookEditorProvider.activeEditor;
-
         if (!activeEditor?.isDirty) {
-            // if notebook does not have unsaved changed
+            return;
+        }
+
+        const settings = this.getAutoSaveSettings();
+        const autoSaveOn = settings && settings.autoSave !== 'off';
+        if (autoSaveOn || !this.shouldShowSaveDialog()) {
+            await this.save();
             return;
         }
 
@@ -162,14 +183,23 @@ export class ExportManager implements IExportManager {
             .showInformationMessage(DataScience.exportSaveFilePrompt(), ...options)
             .then((selected) => selected);
 
-        if (choice === yes) {
+        if (choice !== cancel) {
             await this.save();
+        }
+        if (choice === yesDontShow) {
+            this.updateShouldShowSaveDialog(false);
         }
     }
 }
 
 @injectable()
 export abstract class ExportBase implements IExport {
+    constructor(
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(INotebookImporter) private readonly importer: INotebookImporter,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+    ) {}
+
     public async export(source: Uri, target: Uri): Promise<void> {}
 }
 

@@ -186,6 +186,10 @@ export enum VariableExplorerStateKeys {
     height = 'NBVariableHeights'
 }
 
+export enum ExportNotebookSettings {
+    showSaveDialog = 'NBExportShowSaveDialog'
+}
+
 export enum SysInfoReason {
     Start,
     Restart,
