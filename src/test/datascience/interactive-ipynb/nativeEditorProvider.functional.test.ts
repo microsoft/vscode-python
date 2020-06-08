@@ -28,7 +28,12 @@ import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, ICryptoUtils, IExtensionContext, IExperimentsManager } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    ICryptoUtils,
+    IExperimentsManager,
+    IExtensionContext
+} from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
