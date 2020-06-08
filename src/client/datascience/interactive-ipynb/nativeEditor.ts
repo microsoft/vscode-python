@@ -632,6 +632,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
+            traceInfo(`Exception executing cell ${cell.id}: `, exc);
+
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
