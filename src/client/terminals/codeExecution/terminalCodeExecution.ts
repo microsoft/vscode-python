@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { PythonExecInfo } from '../../pythonEnvironments/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()

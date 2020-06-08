@@ -7,7 +7,7 @@ import { CancellationToken, Uri } from 'vscode';
 
 import { Newable } from '../../ioc/types';
 import { InterpreterInformation, PythonInterpreter } from '../../pythonEnvironments/discovery/types';
-import { PythonExecInfo } from '../../pythonEnvironments/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ExecutionInfo, IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 

@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { PythonExecInfo } from '../../pythonEnvironments/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
