@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.6.0-rc (8 June 2020)
+## 2020.6.0-rc (15 June 2020)
 
 ### Enhancements
 
@@ -12,6 +12,8 @@
    ([#11057](https://github.com/Microsoft/vscode-python/issues/11057))
 1. Preliminary support using other languages for the kernel.
    ([#11919](https://github.com/Microsoft/vscode-python/issues/11919))
+1. Enable the use of the custom editor for native notebooks.
+   ([#10744](https://github.com/Microsoft/vscode-python/issues/10744))   
 
 ### Fixes
 
