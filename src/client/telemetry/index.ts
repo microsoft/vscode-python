@@ -282,8 +282,8 @@ function serializeStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    // Ensure we always use `/` as path seperators.
-    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    // Ensure we always use `/` as path separators.
+    // This way stack traces (with relative paths) coming from different OS will always look the same.
     return trace.trim().replace(/\\/g, '/');
 }
 

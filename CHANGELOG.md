@@ -6,8 +6,6 @@
 
 1. Removed `python.jediEnabled` setting in favor of `python.languageServer`. Instead of `"python.jediEnabled": true` please use `"python.languageServer": "Jedi"`.
    ([#7010](https://github.com/Microsoft/vscode-python/issues/7010))
-1. Integrate VS Code experiment framework in the extension.
-   ([#10790](https://github.com/Microsoft/vscode-python/issues/10790))
 1. Added a start page for the extension. It opens to new users or when there is a new release. It can be disabled with the setting 'Python: Show Start Page'.
    ([#11057](https://github.com/Microsoft/vscode-python/issues/11057))
 1. Preliminary support using other languages for the kernel.
@@ -61,7 +59,7 @@
    ([#11751](https://github.com/Microsoft/vscode-python/issues/11751))
 1. When switching to an invalid kernel (one that is registered but cannot start) in raw mode respect the launch timeout that is passed in.
    ([#11752](https://github.com/Microsoft/vscode-python/issues/11752))
-1. Make ```python.dataScience.textOutputLimit``` apply on subsequent rerun. We were letting the 'outputPrepend' metadata persist from run to run.
+1. Make `python.dataScience.textOutputLimit` apply on subsequent rerun. We were letting the 'outputPrepend' metadata persist from run to run.
    (thanks [Barry Nolte](https://github.com/BarryNolte))
    ([#11777](https://github.com/Microsoft/vscode-python/issues/11777))
 1. Use `${command:python.interpreterPath}` to get selected interpreter path in `launch.json` and `tasks.json`.
@@ -74,12 +72,8 @@
    ([#11800](https://github.com/Microsoft/vscode-python/issues/11800))
 1. Make sure to use webView.cspSource for all csp sources.
    ([#11855](https://github.com/Microsoft/vscode-python/issues/11855))
-1. Double-check for interpreters when running diagnostics before displaying the "Python is not installed" message.
-   ([#11870](https://github.com/Microsoft/vscode-python/issues/11870))
 1. Use command line arguments to launch our raw kernels as opposed to a connection file. The connection file seems to be causing issues in particular on windows CI machines with permissions.
    ([#11883](https://github.com/Microsoft/vscode-python/issues/11883))
-1. Ensure user cannot belong to all experiments in an experiment group.
-   ([#11943](https://github.com/Microsoft/vscode-python/issues/11943))
 1. Improve our status reporting when launching and connecting to a raw kernel.
    ([#11951](https://github.com/Microsoft/vscode-python/issues/11951))
 1. Prewarm raw kernels based on raw kernel support and don't prewarm if jupyter autostart is disabled.
@@ -102,8 +96,6 @@
    ([#11058](https://github.com/Microsoft/vscode-python/issues/11058))
 1. Reenable CDN unit tests.
    ([#11442](https://github.com/Microsoft/vscode-python/issues/11442))
-1. Update telemetry on errors and exceptions to use [vscode-extension-telemetry](https://www.npmjs.com/package/vscode-extension-telemetry).
-   ([#11597](https://github.com/Microsoft/vscode-python/issues/11597))
 1. Run by line for notebook cells minimal implementation.
    ([#11607](https://github.com/Microsoft/vscode-python/issues/11607))
 1. Get shape and count when showing debugger variables.
@@ -129,6 +121,78 @@
    ([#12027](https://github.com/Microsoft/vscode-python/issues/12027))
 1. Use [deemon](https://www.npmjs.com/package/deemon) package for background compilation with support for restarting VS Code during development.
    ([#12059](https://github.com/Microsoft/vscode-python/issues/12059))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2020.5.2 (8 June 2020)
+
+### Fixes
+
+1. Double-check for interpreters when running diagnostics before displaying the "Python is not installed" message.
+   ([#11870](https://github.com/Microsoft/vscode-python/issues/11870))
+1. Ensure user cannot belong to all experiments in an experiment group.
+   ([#11943](https://github.com/Microsoft/vscode-python/issues/11943))
+1. Ensure extension features are started when in `Deprecate PythonPath` experiment and opening a file without any folder opened.
+   ([#12177](https://github.com/Microsoft/vscode-python/issues/12177))
+
+### Code Health
+
+1. Integrate VS Code experiment framework in the extension.
+   ([#10790](https://github.com/Microsoft/vscode-python/issues/10790))
+1. Update telemetry on errors and exceptions to use [vscode-extension-telemetry](https://www.npmjs.com/package/vscode-extension-telemetry).
+   ([#11597](https://github.com/Microsoft/vscode-python/issues/11597))
 
 ### Thanks
 

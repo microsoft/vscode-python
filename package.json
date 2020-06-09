@@ -91,7 +91,6 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        
         "onNotebookEditor:jupyter-notebook",
         "workspaceContains:**/mspythonconfig.json"
     ],
