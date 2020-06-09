@@ -12,6 +12,7 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { getNamesAndValues } from '../../common/utils/enum';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
+import { getName as getEnvName } from '../../pythonEnvironments/discovery/subenv';
 import { InterpreterType } from '../../pythonEnvironments/info';
 import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
@@ -35,19 +36,13 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public async getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders![0].uri
-            : undefined;
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
-
-        if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath))) {
-            // In pipenv, return the folder name of the workspace.
-            return path.basename(workspaceUri.fsPath);
-        }
-
-        return grandParentDirName;
+        const workspaceRoot = this.getWorkspaceRoot(resource);
+        return getEnvName(
+            pythonPath,
+            workspaceRoot,
+            (d: string, p: string) => this.pipEnvService.isRelatedPipEnvironment(d, p),
+            path
+        );
     }
     public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
         if (await this.isVenvEnvironment(pythonPath)) {
@@ -132,6 +127,16 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
 
         return false;
     }
+
+    private getWorkspaceRoot(resource?: Uri): string | undefined {
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders![0].uri
+            : undefined;
+        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const uri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
+        return uri ? uri.fsPath : undefined;
+    }
+
     private getTerminalActivationProviderForVirtualEnvs(): ITerminalActivationCommandProvider {
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         const serviceName = isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish';
