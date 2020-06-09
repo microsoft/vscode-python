@@ -45,12 +45,8 @@ export class CommandRegistry implements IDisposable {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
-<<<<<<< HEAD
         @inject(IExperimentService) private readonly expService: IExperimentService,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell
-=======
         @inject(IExportManager) private exportManager: IExportManager
->>>>>>> moved to new file
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
