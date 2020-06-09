@@ -1242,7 +1242,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             .setup((a) =>
                 a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
             )
-            .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+            .returns((_a1: string, a2: any, _a3: string, a4: string) => {
+                if (typeof a2 === 'string') {
+                    return Promise.resolve(a2);
+                } else {
+                    return Promise.resolve(a4);
+                }
+            });
         appShell
             .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(Uri.file('test.ipynb')));
@@ -1526,7 +1532,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 20000,
+            jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',

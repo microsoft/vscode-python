@@ -2545,6 +2545,7 @@ df.head()`;
                         saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
                         await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
                         await saved;
+                        await sleep(1000); // Make sure file finishes writing.
 
                         const nb = JSON.parse(
                             await fs.readFile(notebookFile.filePath, 'utf8')
