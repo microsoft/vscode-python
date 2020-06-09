@@ -27,6 +27,12 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceWarning } from '../../logging';
 import { CellState, ICell, INotebookModel } from '../types';
 
+// This is the custom type we are adding into nbformat.IBaseCellMetadata
+interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
+
 /**
  * Converts a NotebookModel into VSCode friendly format.
  */
@@ -133,12 +139,12 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
     if (statusMessage) {
         notebookCellData.metadata.statusMessage = statusMessage;
     }
-
-    const startExecutionTime = cell.data.metadata.vscode?.start_execution_time
-        ? new Date(Date.parse(cell.data.metadata.vscode.start_execution_time)).getTime()
+    const vscodeMetadata = (cell.data.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
+    const startExecutionTime = vscodeMetadata?.start_execution_time
+        ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
         : undefined;
-    const endExecutionTime = cell.data.metadata.vscode?.end_execution_time
-        ? new Date(Date.parse(cell.data.metadata.vscode.end_execution_time)).getTime()
+    const endExecutionTime = vscodeMetadata?.end_execution_time
+        ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
         : undefined;
 
     if (startExecutionTime && typeof endExecutionTime === 'number') {
