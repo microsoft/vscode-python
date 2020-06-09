@@ -90,6 +90,8 @@
    ([#12169](https://github.com/Microsoft/vscode-python/issues/12169))
 1. Disable `Sort Imports` command in `Notebook Cells`.
    ([#12193](https://github.com/Microsoft/vscode-python/issues/12193))
+1. Fix debugger continue event to actually change a cell.
+   ([#12155](https://github.com/Microsoft/vscode-python/issues/12155))
 
 ### Code Health
 
