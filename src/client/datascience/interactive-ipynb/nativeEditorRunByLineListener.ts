@@ -105,18 +105,18 @@ export class NativeEditorRunByLineListener
 
     private async handleStep() {
         // User issued a step command.
-        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
+        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: this.currentCellBeingRun });
         return this.debugService.step();
     }
 
     private async handleContinue() {
         // User issued a continue command
-        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
+        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: this.currentCellBeingRun });
         return this.debugService.continue();
     }
 
     private async handleContinueEvent() {
         // Tell the ui to erase the current IP
-        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: undefined });
+        this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: this.currentCellBeingRun });
     }
 }
