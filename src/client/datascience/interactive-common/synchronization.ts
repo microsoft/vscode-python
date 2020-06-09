@@ -63,7 +63,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.EXECUTE_CELL]: MessageType.other,
     [CommonActionType.EXECUTE_CELL_AND_BELOW]: MessageType.other,
     [CommonActionType.EXPORT]: MessageType.other,
-    [CommonActionType.EXPORT_AS]: MessageType.other,
+    [CommonActionType.EXPORT_NOTEBOOK_AS]: MessageType.other,
     [CommonActionType.FOCUS_CELL]: MessageType.syncWithLiveShare,
     [CommonActionType.GATHER_CELL]: MessageType.other,
     [CommonActionType.GATHER_CELL_TO_SCRIPT]: MessageType.other,

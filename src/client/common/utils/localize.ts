@@ -560,13 +560,6 @@ export namespace DataScience {
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
-    export const exportSaveFilePrompt = localize(
-        'DataScience.exportSaveFilePrompt',
-        'Please save this file before exporting.'
-    );
-    export const exportSaveFileYes = localize('DataScience.exportSaveFileYes', 'Save');
-    export const exportSaveFileDontShow = localize('DataScience.exportSaveFileDontShow', "Save & Don't Show Again");
-    export const exportSaveFileCancel = localize('DataScience.exportSaveFileNo', 'Cancel');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
