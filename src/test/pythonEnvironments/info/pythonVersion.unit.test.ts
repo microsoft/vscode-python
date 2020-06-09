@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { join as pathJoin } from 'path';
 import { It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
-import { getPythonVersion, parsePythonVersion } from '../../client/pythonEnvironments/pythonVersion';
+import { getPythonVersion, parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
 
 interface IDeps {
     exec(cmd: string, args: string[]): Promise<{ stdout: string }>;

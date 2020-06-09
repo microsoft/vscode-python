@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { InterpreterInformation } from '../../pythonEnvironments/types';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';

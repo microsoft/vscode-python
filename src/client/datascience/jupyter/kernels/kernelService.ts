@@ -20,7 +20,7 @@ import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';

@@ -3,8 +3,8 @@
 
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { getPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
-import { extractInterpreterInfo } from '../../pythonEnvironments/info';
-import { InterpreterInformation } from '../../pythonEnvironments/types';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';

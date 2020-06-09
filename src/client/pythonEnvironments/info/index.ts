@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { Version } from '../common/types';
-import { Architecture } from '../common/utils/platform';
+import { Version } from '../../common/types';
+import { Architecture } from '../../common/utils/platform';
 
 export enum InterpreterType {
     Unknown = 'Unknown',
