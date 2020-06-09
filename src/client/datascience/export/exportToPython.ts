@@ -1,9 +1,21 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri, ViewColumn } from 'vscode';
+import { IDocumentManager } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
+import { INotebookEditorProvider, INotebookImporter } from '../types';
 import { ExportBase } from './exportBase';
 
 @injectable()
 export class ExportToPython extends ExportBase {
+    constructor(
+        @inject(INotebookEditorProvider) protected readonly notebookEditorProvider: INotebookEditorProvider,
+        @inject(IFileSystem) protected readonly fileSystem: IFileSystem,
+        @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
+        @inject(INotebookImporter) protected readonly importer: INotebookImporter
+    ) {
+        super();
+    }
+
     public async export(source: Uri): Promise<void> {
         const contents = await this.importer.importFromFile(
             source.fsPath,

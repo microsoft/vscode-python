@@ -4,8 +4,6 @@ import { ExportBase } from './exportBase';
 
 @injectable()
 export class ExportToPDF extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {
-        // tslint:disable-next-line: no-console
-        console.log(source, target);
-    }
+    // tslint:disable-next-line: no-empty
+    public async export(_source: Uri, _target: Uri): Promise<void> {}
 }
