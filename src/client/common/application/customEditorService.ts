@@ -20,10 +20,7 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {
-        // Double check the package json has the necessary entries for contributing a custom editor
-        if (this.useCustomEditorApi && !appEnvironment.packageJson.contributes?.customEditors) {
-            this.rewritePackageJson().catch((e) => traceError(`Error rewriting package json: `, e));
-        }
+        this.verifyPackageJson().catch((e) => traceError(`Error rewriting package json: `, e));
     }
 
     public registerCustomEditorProvider(
@@ -48,12 +45,23 @@ export class CustomEditorService implements ICustomEditorService {
         }
     }
 
-    private async rewritePackageJson() {
+    private async verifyPackageJson(): Promise<void> {
+        // Double check the package json has the necessary entries for contributing a custom editor. Note
+        // we have to actually read it because appEnvironment.packageJson is the webpacked version
+        const packageJson = JSON.parse(await this.fileSystem.readFile(path.join(EXTENSION_ROOT_DIR, 'package.json')));
+        if (this.useCustomEditorApi && !packageJson.contributes?.customEditors) {
+            return this.addCustomEditors(packageJson);
+        } else if (!this.useCustomEditorApi && packageJson.contributes.customEditors) {
+            return this.removeCustomEditors();
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private async addCustomEditors(currentPackageJson: any) {
         // tslint:disable-next-line:no-require-imports no-var-requires
         const _mergeWith = require('lodash/mergeWith') as typeof import('lodash/mergeWith');
-        const current = this.appEnvironment.packageJson;
         const improvedContents = await this.fileSystem.readFile(path.join(EXTENSION_ROOT_DIR, 'customEditor.json'));
-        const improved = _mergeWith({ ...current }, JSON.parse(improvedContents), (l, r) => {
+        const improved = _mergeWith({ ...currentPackageJson }, JSON.parse(improvedContents), (l, r) => {
             if (Array.isArray(l) && Array.isArray(r)) {
                 return [...l, ...r];
             }
@@ -61,6 +69,16 @@ export class CustomEditorService implements ICustomEditorService {
         await this.fileSystem.writeFile(
             path.join(EXTENSION_ROOT_DIR, 'package.json'),
             JSON.stringify(improved, null, 4)
+        );
+        this.commandManager.executeCommand('python.reloadVSCode', DataScience.reloadCustomEditor());
+    }
+    private async removeCustomEditors() {
+        // Note, to put it back, use the shipped version. This packageJson is required into the product
+        // so it's packed by webpack into the source.
+        const original = { ...this.appEnvironment.packageJson };
+        await this.fileSystem.writeFile(
+            path.join(EXTENSION_ROOT_DIR, 'package.json'),
+            JSON.stringify(original, null, 4)
         );
         this.commandManager.executeCommand('python.reloadVSCode', DataScience.reloadCustomEditor());
     }
