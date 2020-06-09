@@ -209,5 +209,5 @@ async function activateLegacy(
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    return activationPromise;
+    return { activationPromise };
 }
