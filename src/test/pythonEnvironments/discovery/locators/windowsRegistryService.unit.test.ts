@@ -14,7 +14,7 @@ import { MockRegistry, MockState } from '../../../interpreters/mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');
 
-// tslint:disable:max-func-body-length no-octal-literal
+// tslint:disable:max-func-body-length no-octal-literal no-invalid-this
 
 suite('Interpreters from Windows Registry (unit)', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
