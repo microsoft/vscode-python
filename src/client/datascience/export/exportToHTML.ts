@@ -4,8 +4,6 @@ import { ExportBase } from './exportBase';
 
 @injectable()
 export class ExportToHTML extends ExportBase {
-    public async export(source: Uri, target: Uri): Promise<void> {
-        source = target; // stop compilier from getting mad REMOVE
-        target = source;
-    }
+    // tslint:disable-next-line: no-empty
+    public async export(_source: Uri, _target: Uri): Promise<void> {}
 }
