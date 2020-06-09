@@ -29,11 +29,13 @@ export class ExportDependencies implements IExportDependencies {
         return false;
     }
 
+    // tslint:disable-next-line: no-empty
     private async installJuypterLab(): Promise<void> {}
 
     private async hasNBConvert(): Promise<boolean> {
         return false;
     }
 
+    // tslint:disable-next-line: no-empty
     private async installNBConvert(): Promise<void> {}
 }
