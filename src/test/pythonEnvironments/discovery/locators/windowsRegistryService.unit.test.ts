@@ -84,7 +84,9 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const interpreters = await winRegistry.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
-    test('Must return a single entry', async () => {
+    test('Must return a single entry', async function () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -161,6 +163,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].version!.raw, '9.9.9-final', 'Incorrect version');
     });
     test('Must default names for PythonCore and exe', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -240,6 +244,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
     test('Must return a single entry and when registry contains only the InstallPath', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -284,6 +290,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[0].type, InterpreterType.Unknown, 'Incorrect type');
     });
     test('Must return a single entry with a type of WindowsStore', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -381,6 +389,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         windowsStoreInterpreter.verifyAll();
     });
     test('Must return multiple entries', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -565,6 +575,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[3].version!.raw, '5.0.0', 'Incorrect version');
     });
     test('Must return multiple entries excluding the invalid registry items and duplicate paths', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
@@ -778,6 +790,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         assert.equal(interpreters[3].version!.raw, '4.0.0', 'Incorrect version');
     });
     test('Must return multiple entries excluding the invalid registry items and nonexistent paths', async () => {
+        // https://github.com/microsoft/vscode-python/issues/12241
+        return this.skip();
         const registryKeys = [
             {
                 key: '\\Software\\Python',
