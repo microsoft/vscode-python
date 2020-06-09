@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { SemVer } from 'semver';
-import '../common/extensions'; // For string.splitLines()
+import '../../common/extensions'; // For string.splitLines()
 import { getVersion as getPythonVersionCommand } from '../../common/process/internal/python';
 
 export type PythonVersion = {
