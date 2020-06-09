@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as semver from 'semver';
 import { Version } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
 
@@ -36,3 +37,38 @@ export type PythonInterpreter = InterpreterInformation & {
     envPath?: string;
     cachedEntry?: boolean;
 };
+
+export function getInterpreterTypeName(interpreterType: InterpreterType) {
+    switch (interpreterType) {
+        case InterpreterType.Conda: {
+            return 'conda';
+        }
+        case InterpreterType.Pipenv: {
+            return 'pipenv';
+        }
+        case InterpreterType.Pyenv: {
+            return 'pyenv';
+        }
+        case InterpreterType.Venv: {
+            return 'venv';
+        }
+        case InterpreterType.VirtualEnv: {
+            return 'virtualenv';
+        }
+        default: {
+            return '';
+        }
+    }
+}
+
+export function sortInterpreters(interpreters: PythonInterpreter[]): PythonInterpreter[] {
+    if (interpreters.length === 0) {
+        return [];
+    }
+    if (interpreters.length === 1) {
+        return [interpreters[0]];
+    }
+    const sorted = interpreters.slice();
+    sorted.sort((a, b) => (a.version && b.version ? semver.compare(a.version.raw, b.version.raw) : 0));
+    return sorted;
+}
