@@ -11,7 +11,7 @@ import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { parsePythonVersion } from '../../../pythonVersion';
-import { InterpreterType, PythonInterpreter } from '../../types';
+import { InterpreterType, PythonInterpreter } from '../../../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';

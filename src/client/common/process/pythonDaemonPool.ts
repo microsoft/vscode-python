@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { InterpreterInformation } from '../../pythonEnvironments/types';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';

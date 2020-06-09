@@ -3,8 +3,8 @@
 
 import { PythonEnvInfo } from '../common/process/internal/scripts';
 import { Architecture } from '../common/utils/platform';
-import { InterpreterInformation } from './discovery/types';
 import { parsePythonVersion } from './pythonVersion';
+import { InterpreterInformation } from './types';
 
 export function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;

@@ -14,7 +14,7 @@ import {
     SpawnOptions
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { InterpreterInformation } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterInformation } from '../../client/pythonEnvironments/types';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;

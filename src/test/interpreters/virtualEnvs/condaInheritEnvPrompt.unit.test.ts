@@ -19,7 +19,7 @@ import {
     CondaInheritEnvPrompt,
     condaInheritEnvPromptKey
 } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
-import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/types';
 
 // tslint:disable:no-any
 
