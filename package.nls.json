@@ -110,6 +110,7 @@
     "DataScience.exportDialogFailed": "Failed to export notebook. {0}",
     "DataScience.exportOpenQuestion": "Open in browser",
     "DataScience.exportOpenQuestion1": "Open in editor",
+    "DataScience.notebookExportAs" : "Convert and save to a python script",
     "DataScience.collapseInputTooltip": "Collapse input block",
     "DataScience.collapseVariableExplorerTooltip": "Hide variables active in jupyter kernel",
     "DataScience.collapseVariableExplorerLabel": "Variables",
