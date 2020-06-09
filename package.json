@@ -2153,7 +2153,7 @@
                         "Microsoft",
                         "None"
                     ],
-                    "default": "Microsoft",
+                    "default": "Jedi",
                     "description": "Defines type of the language server.",
                     "scope": "resource"
                 },
