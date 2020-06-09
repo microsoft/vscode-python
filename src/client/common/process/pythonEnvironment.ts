@@ -68,7 +68,7 @@ class PythonEnvironment {
     private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
         try {
             const python = this.getExecutionInfo();
-            return getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
+            return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }

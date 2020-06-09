@@ -44,9 +44,10 @@ suite('getInterpreterInfo()', () => {
             is64Bit: true
         };
         const script = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
-        const cmd = `"${python}" "${isolated}" "${script}"`;
-        //const cmd = `${python} ${isolated} ${script}`;
-        deps.setup((d) => d.shellExec(cmd, 15000))
+        const cmd = `"${python.command}" "${isolated}" "${script}"`;
+        deps
+            // Checking the args is the key point of this test.
+            .setup((d) => d.shellExec(cmd, 15000))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
@@ -55,17 +56,12 @@ suite('getInterpreterInfo()', () => {
         verifyAll();
     });
 
-    test('should quote spaces in the command', async () => {
-    });
-
-    test('should handle multi-command (e.g. conda)', async () => {
-    });
-
     test('should return an object if exec() is successful', async () => {
         const expected = {
             architecture: Architecture.x64,
             path: python.command,
-            version: new SemVer('3.7.5-candidate.1'),
+            version: new SemVer('3.7.5-candidate'),
+            //version: new SemVer('3.7.5-candidate.1'),
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             sysVersion: undefined
         };
@@ -75,7 +71,9 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true
         };
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
@@ -99,7 +97,9 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true
         };
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
@@ -123,7 +123,9 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: false
         };
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
@@ -134,38 +136,43 @@ suite('getInterpreterInfo()', () => {
     });
 
     test('should return undefined if the result of exec() writes to stderr', async () => {
-        const stderr = 'oops';
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.reject(new StdErrError(stderr)));
-        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
-
-        const result = await sut.getInterpreterInfo(python, shellExec);
-
-        expect(result).to.equal(undefined, 'broken');
-        verifyAll();
-    });
-
-    test('should fail if exec() fails (e.g. the script times out)', async () => {
-        const err = new Error('oops');
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            // tslint:disable-next-line: no-any
+        const err = new StdErrError('oops!');
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.reject(err));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         const result = sut.getInterpreterInfo(python, shellExec);
 
-        expect(result).to.eventually.be.rejectedWith(err);
+        await expect(result).to.eventually.be.rejectedWith(err);
+        verifyAll();
+    });
+
+    test('should fail if exec() fails (e.g. the script times out)', async () => {
+        const err = new Error('oops');
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.reject(err));
+        const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
+
+        const result = sut.getInterpreterInfo(python, shellExec);
+
+        await expect(result).to.eventually.be.rejectedWith(err);
         verifyAll();
     });
 
     test('should fail if the json value returned by interpreterInfo.py is not valid', async () => {
-        deps.setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        deps
+            // We check the args in other tests.
+            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'bad json' }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
         const result = sut.getInterpreterInfo(python, shellExec);
 
-        expect(result).to.eventually.be.rejectedWith('');
+        await expect(result).to.eventually.be.rejected;
         verifyAll();
     });
 });

@@ -117,7 +117,7 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             // tslint:disable-next-line: no-any
-            .returns(() => Promise.resolve(undefined as any));
+            .returns(() => Promise.reject(new Error('timed out')));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();
@@ -173,7 +173,7 @@ suite('PythonEnvironment', () => {
 
         const result = env.getExecutablePath();
 
-        expect(result).to.eventually.be.rejectedWith(stderr);
+        await expect(result).to.eventually.be.rejectedWith(stderr);
     });
 
     test('isModuleInstalled should call processService.exec()', async () => {
