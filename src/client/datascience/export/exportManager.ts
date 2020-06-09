@@ -24,7 +24,7 @@ export interface IExportManager {
 
 export const IExport = Symbol('IExport');
 export interface IExport {
-    export(source: Uri, target: Uri): Promise<void>;
+    export(source: Uri, target?: Uri): Promise<void>;
 }
 
 interface IExportQuickPickItem extends QuickPickItem {
@@ -33,7 +33,7 @@ interface IExportQuickPickItem extends QuickPickItem {
 
 @injectable()
 export class ExportManager implements IExportManager {
-    private readonly defaultExportSaveLocation = '';
+    private readonly defaultExportSaveLocation = ''; // set default save location
 
     constructor(
         @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
@@ -48,6 +48,7 @@ export class ExportManager implements IExportManager {
     ) {}
 
     public async export(format?: ExportFormat) {
+        // need to add telementry and status messages
         const activeEditor = this.notebookEditorProvider.activeEditor;
         if (!activeEditor) {
             return;
@@ -60,9 +61,12 @@ export class ExportManager implements IExportManager {
             return;
         }
 
-        const target = await this.getExportFileLocation(format);
-        if (!target) {
-            return; // user didn't select path
+        let target;
+        if (format !== ExportFormat.python) {
+            target = await this.getExportFileLocation(format);
+            if (!target) {
+                return; // user didn't select path
+            }
         }
 
         const tempFile = await this.makeTemporaryFile();
@@ -95,9 +99,9 @@ export class ExportManager implements IExportManager {
 
     private async makeTemporaryFile(): Promise<TemporaryFile | undefined> {
         let tempFile: TemporaryFile | undefined;
-        const activeEditor = this.notebookEditorProvider.activeEditor;
         try {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
+            const activeEditor = this.notebookEditorProvider.activeEditor;
             const content = activeEditor?.model ? activeEditor.model.getContent() : '';
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
         } catch (e) {
@@ -113,9 +117,9 @@ export class ExportManager implements IExportManager {
                 label: 'Python Script',
                 picked: true,
                 handler: () => this.commandManager.executeCommand(Commands.ExportAsPythonScript)
-            },
-            { label: 'HTML', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToHTML) },
-            { label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
+            }
+            //{ label: 'HTML', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToHTML) },
+            //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
         ];
     }
 
@@ -231,3 +235,17 @@ export class ExportManager implements IExportManager {
         }
     }*/
 }
+
+// ADD BACK TO PACKAGE JSON
+/*
+{
+    "command": "python.datascience.exportToHTML",
+    "title": "%python.command.python.datascience.exportToHTML.title%",
+    "category": "Python"
+},
+{
+    "command": "python.datascience.exportToPDF",
+    "title": "%python.command.python.datascience.exportToPDF.title%",
+    "category": "Python"
+},
+*/

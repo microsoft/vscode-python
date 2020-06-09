@@ -123,7 +123,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.ExecutionRendered]: MessageType.other,
     [InteractiveWindowMessages.ExpandAll]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.Export]: MessageType.other,
-    [InteractiveWindowMessages.ExportAs]: MessageType.other,
+    [InteractiveWindowMessages.ExportNotebookAs]: MessageType.other,
     [InteractiveWindowMessages.FinishCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.FocusedCellEditor]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.GatherCode]: MessageType.other,

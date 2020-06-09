@@ -37,7 +37,7 @@ export namespace Transfer {
 
     // Start of function to send message to extenstion to display export message
     export function showExportAsMenu(arg: CommonReducerArg): IMainState {
-        postActionToExtension(arg, InteractiveWindowMessages.ExportAs, arg.payload.data); // want to send filename
+        postActionToExtension(arg, InteractiveWindowMessages.ExportNotebookAs, arg.payload.data); // want to send filename
         return arg.prevState;
     }
 

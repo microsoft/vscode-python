@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Uri, ViewColumn } from 'vscode';
+import { Uri } from 'vscode';
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { INotebookEditorProvider, INotebookImporter } from '../types';
@@ -19,21 +19,7 @@ export abstract class ExportBase implements IExport {
     ) {}
 
     public async export(source: Uri, target: Uri): Promise<void> {
-        console.log(source, target);
-    }
-
-    private async showFile(source: Uri) {
-        const contents = await this.importer.importFromFile(
-            source.fsPath,
-            this.notebookEditorProvider.activeEditor?.file.fsPath
-        );
-        if (contents) {
-            await this.viewDocument(contents);
-        }
-    }
-
-    private async viewDocument(contents: string): Promise<void> {
-        const doc = await this.documentManager.openTextDocument({ language: 'python', content: contents });
-        await this.documentManager.showTextDocument(doc, ViewColumn.One);
+        source = target; // prevent compilier from getting mad REMOVE
+        target = source;
     }
 }

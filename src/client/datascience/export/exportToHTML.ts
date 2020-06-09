@@ -5,6 +5,7 @@ import { ExportBase } from './exportBase';
 @injectable()
 export class ExportToHTML extends ExportBase {
     public async export(source: Uri, target: Uri): Promise<void> {
-        console.log(source, target);
+        source = target; // stop compilier from getting mad REMOVE
+        target = source;
     }
 }
