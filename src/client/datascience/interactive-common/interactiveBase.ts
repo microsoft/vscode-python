@@ -430,8 +430,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
         if (this._notebook && !this.restartingKernel) {
-            this.restartingKernel = true;
-
             const status = this.statusProvider.set(
                 localize.DataScience.interruptKernelStatus(),
                 true,
@@ -448,7 +446,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.
-                if (result === InterruptResult.TimedOut) {
+                if (result === InterruptResult.TimedOut && !this.restartingKernel) {
                     const message = localize.DataScience.restartKernelAfterInterruptMessage();
                     const yes = localize.DataScience.restartKernelMessageYes();
                     const no = localize.DataScience.restartKernelMessageNo();
@@ -464,8 +462,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 status.dispose();
                 traceError(err);
                 this.applicationShell.showErrorMessage(err);
-            } finally {
-                this.restartingKernel = false;
             }
         }
     }

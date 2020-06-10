@@ -51,6 +51,10 @@ export class MockJupyterNotebook implements INotebook {
     >().event;
     public onDisposed = new EventEmitter<void>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
+    public get onKernelInterrupted(): Event<void> {
+        return this.kernelInterrupted.event;
+    }
+    private kernelInterrupted = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
     constructor(private providerConnection: INotebookProviderConnection | undefined) {

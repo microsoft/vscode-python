@@ -136,7 +136,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
-                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
                             <Image
@@ -148,7 +147,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
-                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
                             <Image
