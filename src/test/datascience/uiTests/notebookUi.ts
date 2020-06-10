@@ -24,13 +24,13 @@ export class NotebookEditorUI extends BaseWebUI {
 
     public async clearOutput(): Promise<void> {
         const runButton = await this.getMainToolbarButton(MainToolbarButton.clearOutput);
-        await runButton.click({ button: 'left', force: true });
+        await runButton.click({ button: 'left', force: true, timeout: 0 });
     }
 
     public async executeCell(cellIndex: number): Promise<void> {
         const renderedPromise = this.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
-        await Promise.all([runButton.click({ button: 'left', force: true }), renderedPromise]);
+        await Promise.all([runButton.click({ button: 'left', force: true, timeout: 0 }), renderedPromise]);
     }
 
     public async cellHasOutput(cellIndex: number): Promise<boolean> {

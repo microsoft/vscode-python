@@ -403,8 +403,8 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Self Certs', async (_this: Mocha.Context) => {
                 const pythonService = await createPythonService(2);
 
-                // Skip test for older python and raw kernel
-                if (pythonService && !useRawKernel) {
+                // Skip test for older python and raw kernel and mac
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
                     // We will only connect if we allow for self signed cert connections
                     ioc.forceDataScienceSettingsChanged({
                         allowUnauthorizedRemoteConnection: true,
@@ -524,7 +524,7 @@ suite('DataScience notebook tests', () => {
             runTest('Remote Password', async () => {
                 const pythonService = await createPythonService();
 
-                if (pythonService && !useRawKernel) {
+                if (pythonService && !useRawKernel && os.platform() !== 'darwin') {
                     const configFile = path.join(
                         EXTENSION_ROOT_DIR,
                         'src',
