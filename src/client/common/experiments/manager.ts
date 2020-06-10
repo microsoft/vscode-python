@@ -132,8 +132,6 @@ export class ExperimentsManager implements IExperimentsManager {
         for (const exp of this.userExperiments || []) {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             // tslint:disable-next-line: no-console
-            console.error(`${Experiments.inGroup().format(exp.name)}`);
-            traceError(`${Experiments.inGroup().format(exp.name)}`);
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
@@ -266,9 +264,7 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
-        traceError('Inside updateExperimentStorage');
         if (!process.env.VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE) {
-            traceError('Inside updateExperimentStorage - VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE');
             // Step 1. Update experiment storage using downloaded experiments in the last session if any
             if (Array.isArray(this.downloadedExperimentsStorage.value)) {
                 await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
