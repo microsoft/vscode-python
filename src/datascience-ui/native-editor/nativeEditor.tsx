@@ -237,6 +237,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         this.props.step(debuggingCell.cell.id);
                     }
                     event.stopPropagation();
+                } else {
+                    // Otherwise if not debugging, run by line the current focused cell
+                    const focusedCell = getSelectedAndFocusedInfo(this.props).focusedCellId;
+                    if (focusedCell) {
+                        this.props.runByLine(focusedCell);
+                    }
                 }
                 break;
             case 'F5':
