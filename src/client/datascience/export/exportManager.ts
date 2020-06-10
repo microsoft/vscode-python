@@ -92,7 +92,7 @@ export class ExportManager implements IExportManager {
         return tempFile;
     }
 
-    private getFileSaveLocation(): Uri {
+    private getLastFileSaveLocation(): Uri {
         const filePath = this.workspaceStorage.get(
             ExportNotebookSettings.lastSaveLocation,
             this.defaultExportSaveLocation
@@ -126,7 +126,7 @@ export class ExportManager implements IExportManager {
         }
 
         const options: SaveDialogOptions = {
-            defaultUri: this.getFileSaveLocation(),
+            defaultUri: this.getLastFileSaveLocation(),
             saveLabel: '',
             filters: fileExtensions
         };
@@ -139,31 +139,6 @@ export class ExportManager implements IExportManager {
     }
 }
 
-@injectable()
-export class ExportManagerDependencyChecker implements IExportManager {
-    constructor(@inject(ExportManager) private readonly manager: IExportManager) {}
-
-    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
-        // CHekc dependnecies.. etc.
-
-        // if not ok return.
-        // Else export.
-        return this.manager.export(format, activeEditor);
-    }
-}
-
-@injectable()
-export class ExportManagerFileOpener implements IExportManager {
-    constructor(@inject(ExportManagerDependencyChecker) private readonly manager: IExportManager) {}
-
-    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
-        const uri = await this.manager.export(format, activeEditor);
-
-        // open the file.
-        return uri;
-    }
-}
-// make new command registry, move stuff from old
 // continue with decorater pattern - READ
 // ts mockito - READ
 // do depenedncy checking using code seen before
