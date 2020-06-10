@@ -206,20 +206,33 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Special case for rendering complete
-        const prevFinished = prevState.main.cellVMs
-            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map((c) => c.cell.id);
-        const afterFinished = afterState.main.cellVMs
-            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map((c) => c.cell.id);
         if (
-            afterFinished.length > prevFinished.length ||
-            (afterFinished.length !== prevFinished.length &&
-                afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
+            action.type &&
+            action.type === InteractiveWindowMessages.FinishCell &&
+            action.payload.data &&
+            action.payload.data.data?.cell_type === 'code'
         ) {
-            const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
-            sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
+            sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: [] });
+        }
+
+        if (!action.type || action.type !== InteractiveWindowMessages.FinishCell) {
+            // Might be a non finish but still update cells (like an undo or a delete)
+            const prevFinished = prevState.main.cellVMs
+                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+                .map((c) => c.cell.id);
+            const afterFinished = afterState.main.cellVMs
+                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+                .map((c) => c.cell.id);
+            if (
+                afterFinished.length > prevFinished.length ||
+                (afterFinished.length !== prevFinished.length &&
+                    afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
+            ) {
+                const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
+                // Send async so happens after the render is actually finished.
+                sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
+            }
         }
 
         // Hiding/displaying output

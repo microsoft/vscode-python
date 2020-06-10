@@ -189,8 +189,8 @@ export class CellHashProvider implements ICellHashProvider, INotebookExecutionLo
 
             const hash: IRangedCellHash = {
                 hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
-                line: line.lineNumber + 1,
-                endLine: endLine.lineNumber + 1,
+                line: line ? line.lineNumber + 1 : 1,
+                endLine: endLine ? endLine.lineNumber + 1 : 1,
                 firstNonBlankLineIndex: firstNonBlankIndex + trueStartLine,
                 executionCount: expectedCount,
                 startOffset,

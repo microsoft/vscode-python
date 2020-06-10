@@ -624,7 +624,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
     public [InteractiveWindowMessages.DoSave]: never | undefined;
-    public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
+    public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
     public [InteractiveWindowMessages.OutputToggled]: never | undefined;
