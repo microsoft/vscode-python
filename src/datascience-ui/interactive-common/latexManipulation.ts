@@ -96,35 +96,36 @@ export function fixLatexEquations(input: string, wrapSingles: boolean = false): 
         }
     }
 
-    let latexFixed = output.join('');
+    return output.join('');
+    // let latexFixed = output.join('');
 
     // change links
-    let linkStartIndex = latexFixed.indexOf('<a');
-    while (linkStartIndex !== -1) {
-        const linkEnd = '</a>';
-        const linkEndIndex = latexFixed.indexOf(linkEnd, linkStartIndex);
+    // let linkStartIndex = latexFixed.indexOf('<a');
+    // while (linkStartIndex !== -1) {
+    //     const linkEnd = '</a>';
+    //     const linkEndIndex = latexFixed.indexOf(linkEnd, linkStartIndex);
 
-        if (linkEndIndex !== -1) {
-            const hferIndex = latexFixed.indexOf('href', linkStartIndex);
+    //     if (linkEndIndex !== -1) {
+    //         const hferIndex = latexFixed.indexOf('href', linkStartIndex);
 
-            const quoteSearch1 = latexFixed.indexOf("'", hferIndex);
-            const urlStartIndex = quoteSearch1 === -1 ? latexFixed.indexOf('"', hferIndex) : quoteSearch1;
+    //         const quoteSearch1 = latexFixed.indexOf("'", hferIndex);
+    //         const urlStartIndex = quoteSearch1 === -1 ? latexFixed.indexOf('"', hferIndex) : quoteSearch1;
 
-            const quoteSearch2 = latexFixed.indexOf("'", urlStartIndex + 1);
-            const urlEndIndex = quoteSearch2 === -1 ? latexFixed.indexOf('"', urlStartIndex + 1) : quoteSearch2;
+    //         const quoteSearch2 = latexFixed.indexOf("'", urlStartIndex + 1);
+    //         const urlEndIndex = quoteSearch2 === -1 ? latexFixed.indexOf('"', urlStartIndex + 1) : quoteSearch2;
 
-            const url = latexFixed.substring(urlStartIndex + 1, urlEndIndex);
+    //         const url = latexFixed.substring(urlStartIndex + 1, urlEndIndex);
 
-            const textStartIndex = latexFixed.indexOf('>', linkStartIndex);
-            const text = latexFixed.substring(textStartIndex + 1, linkEndIndex);
-            latexFixed = latexFixed.replace(
-                latexFixed.substring(linkStartIndex, linkEndIndex + linkEnd.length),
-                `[${text}](${url})`
-            );
-        }
+    //         const textStartIndex = latexFixed.indexOf('>', linkStartIndex);
+    //         const text = latexFixed.substring(textStartIndex + 1, linkEndIndex);
+    //         latexFixed = latexFixed.replace(
+    //             latexFixed.substring(linkStartIndex, linkEndIndex + linkEnd.length),
+    //             `[${text}](${url})`
+    //         );
+    //     }
 
-        linkStartIndex = latexFixed.indexOf('<a', linkStartIndex + 1);
-    }
+    //     linkStartIndex = latexFixed.indexOf('<a', linkStartIndex + 1);
+    // }
 
-    return latexFixed;
+    // return latexFixed;
 }

@@ -8,6 +8,8 @@ import * as fastDeepEqual from 'fast-deep-equal';
 // import * as kt from 'katex';
 // const kt = require('katex');
 import * as MarkdownIt from 'markdown-it';
+// import markdownItLatex from 'markdown-it-latex';
+// declare module 'markdown-it-latex';
 // import * as tm from 'markdown-it-texmath';
 import * as React from 'react';
 import '../../client/common/extensions';
@@ -295,25 +297,35 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
-        const Transform = getTransform('text/markdown');
-        const MarkdownClassName = 'markdown-cell-output';
+        // const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
+        // const Transform = getTransform('text/markdown');
+        // const MarkdownClassName = 'markdown-cell-output';
 
-        const kt = require('katex');
-        const tm = require('markdown-it-texmath').use(kt);
+        // const kt = require('katex');
+        // const tm = require('markdown-it-texmath').use(kt);
+        const latex = require('markdown-it-latex');
 
         const mdit = new MarkdownIt();
-        mdit.use(tm);
+        mdit.use(latex);
 
-        const delimiters = 'dollars'; // wondering why this ...
+        const delimiters = 'dollars';
         const options = { delimiters };
-        mdit.render(source, options);
+        const source2 = mdit
+            .render(concatMultilineStringInput(markdown.source), options)
+            .replace(/&gt;/g, '>')
+            .replace(/&lt;/g, '<');
+
+        const source3 = `<!doctype html><html><head><meta charset="utf-8">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css">
+        </head><body>
+        ${source2}
+        </body></html>`;
 
         return [
-            <div key={0} className={MarkdownClassName}>
-                <Transform key={0} data={source} />
-            </div>
-            // <div dangerouslySetInnerHTML={{ __html: asd }} />
+            // <div key={0} className={MarkdownClassName}>
+            //     <Transform key={0} data={source} />
+            // </div>
+            <div dangerouslySetInnerHTML={{ __html: source3 }} />
         ];
     };
 

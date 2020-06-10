@@ -3044,6 +3044,7 @@
         "lodash": "^4.17.15",
         "log4js": "^6.1.2",
         "markdown-it": "^11.0.0",
+        "markdown-it-latex": "^0.2.0",
         "markdown-it-texmath": "^0.6.7",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
