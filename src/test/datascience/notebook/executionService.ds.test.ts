@@ -30,14 +30,14 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Execution)', function () {
-    this.timeout(15_000);
+    this.timeout(60_000);
 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
-        this.timeout(15_000);
+        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();

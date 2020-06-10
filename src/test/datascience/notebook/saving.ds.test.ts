@@ -35,8 +35,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Saving)', function () {
-    this.timeout(15_000);
-    this.retries(0);
+    this.timeout(60_000);
     const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
     let api: IExtensionTestApi;
     let testIPynb: Uri;
@@ -44,8 +43,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
-        this.timeout(15_000);
-        this.retries(0);
+        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();
