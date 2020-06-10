@@ -131,7 +131,9 @@ export class ExperimentsManager implements IExperimentsManager {
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
+            // tslint:disable-next-line: no-console
             console.error(`${Experiments.inGroup().format(exp.name)}`);
+            traceError(`${Experiments.inGroup().format(exp.name)}`);
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
