@@ -76,7 +76,8 @@ suite('Hover Definition (Jedi)', () => {
 
     test('Across files', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -172,7 +173,8 @@ suite('Hover Definition (Jedi)', () => {
 
     test('Across files with Unicode Characters', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -272,7 +274,8 @@ suite('Hover Definition (Jedi)', () => {
 
     test('Highlighting Class', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -341,7 +344,8 @@ suite('Hover Definition (Jedi)', () => {
 
     test('Highlight Method', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -439,7 +443,8 @@ suite('Hover Definition (Jedi)', () => {
 
     test('Highlight Multiline Method Signature', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();

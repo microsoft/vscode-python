@@ -34,7 +34,8 @@ const INDENT_ON_ENTER = [
 ];
 const DEDENT_ON_ENTER = [
     // block-ending statements
-    // For now we are ignoring "return" completely.  See gh-6564.
+    // For now we are ignoring "return" completely.
+    // See https://github.com/microsoft/vscode-python/issues/6564.
     ///^return\b/,
     /^break$/,
     /^continue$/,

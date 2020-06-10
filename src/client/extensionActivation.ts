@@ -76,10 +76,11 @@ export async function activateComponents(
 // old activation code
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-10454): Gradually move simple initialization
+// TODO: Gradually move simple initialization
 // and DI registration currently in this function over
 // to initializeComponents().  Likewise with complex
 // init and activation: move them to activateComponents().
+// See https://github.com/microsoft/vscode-python/issues/10454.
 
 async function activateLegacy(
     context: IExtensionContext,

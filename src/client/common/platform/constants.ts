@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO (GH-8542): Drop all these in favor of IPlatformService
+// TODO : Drop all these in favor of IPlatformService.
+// See https://github.com/microsoft/vscode-python/issues/8542.
 
 export const WINDOWS_PATH_VARIABLE_NAME = 'Path';
 export const NON_WINDOWS_PATH_VARIABLE_NAME = 'PATH';

@@ -214,7 +214,8 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async appendText(filename: string, text: string): Promise<void> {
-        // TODO (GH-9900): We *could* use the new API for this.
+        // TODO: We *could* use the new API for this.
+        // See https://github.com/microsoft/vscode-python/issues/9900
         return this.fsExtra.appendFile(filename, text);
     }
 
