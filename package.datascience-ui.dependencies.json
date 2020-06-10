@@ -283,6 +283,7 @@
     "xtend",
     "yallist",
     "schedule",
+    "scheduler",
     "symbol-observable",
     "core-js",
     "vega-time",
