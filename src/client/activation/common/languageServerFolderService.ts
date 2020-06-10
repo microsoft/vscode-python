@@ -26,7 +26,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         @unmanaged() protected readonly languageServerFolder: string
     ) {}
 
-    public isBundled(): boolean {
+    public async skipDownload(): Promise<boolean> {
         return false;
     }
 
