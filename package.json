@@ -3480,7 +3480,7 @@
         "@enonic/fnv-plus": "^1.3.0",
         "@jupyter-widgets/base": "^2.0.1",
         "@jupyter-widgets/controls": "^1.5.2",
-        "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
+        "@jupyter-widgets/jupyterlab-manager": "^1.1.0",
         "@jupyter-widgets/output": "^2.0.1",
         "@jupyter-widgets/schema": "^0.4.0",
         "@jupyterlab/coreutils": "^3.1.0",

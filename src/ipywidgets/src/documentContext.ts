@@ -7,7 +7,7 @@ import { IClientSession } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { INotebookModel, NotebookModel } from '@jupyterlab/notebook/lib';
 import { IRenderMime } from '@jupyterlab/rendermime';
-import { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { Widget } from '@phosphor/widgets';
 import { Signal } from './signal';
 // tslint:disable: no-any
@@ -26,10 +26,10 @@ export class DocumentContext implements DocumentRegistry.IContext<INotebookModel
     public ready: Promise<void>;
     public isDisposed: boolean;
     public terminated = new Signal<this, void>();
-    public kernelChanged = new Signal<this, Session.IKernelChangedArgs>();
-    public statusChanged = new Signal<this, Kernel.Status>();
-    public iopubMessage = new Signal<this, KernelMessage.IMessage>();
-    public unhandledMessage = new Signal<this, KernelMessage.IMessage>();
+    public kernelChanged: Signal<this, Session.IKernelChangedArgs> = new Signal<this, Session.IKernelChangedArgs>();
+    public statusChanged: Signal<this, Kernel.Status> = new Signal<this, Kernel.Status>();
+    public iopubMessage: Signal<this, KernelMessage.IMessage> = new Signal<this, KernelMessage.IMessage>();
+    public unhandledMessage: Signal<this, KernelMessage.IMessage> = new Signal<this, KernelMessage.IMessage>();
     public propertyChanged = new Signal<this, 'path' | 'name' | 'type'>();
     public name: string;
     public type: string;
