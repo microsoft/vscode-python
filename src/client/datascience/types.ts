@@ -152,7 +152,7 @@ export interface IRawNotebookSupportedService {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
-    connect(token?: CancellationToken): Promise<IRawConnection>;
+    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         identity: Uri,
         resource: Resource,

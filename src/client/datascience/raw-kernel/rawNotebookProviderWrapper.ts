@@ -23,7 +23,14 @@ import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBas
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
+import {
+    ConnectNotebookProviderOptions,
+    IDataScience,
+    INotebook,
+    IRawConnection,
+    IRawNotebookProvider,
+    IRawNotebookSupportedService
+} from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -104,9 +111,9 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         return notebookProvider.supported();
     }
 
-    public async connect(): Promise<IRawConnection> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
         const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.connect();
+        return notebookProvider.connect(options);
     }
 
     public async createNotebook(
