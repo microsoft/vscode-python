@@ -176,13 +176,6 @@ suite('DataScience Native Toolbar', () => {
     suite('Restart & Interrupt Kernel', () => {
         getNamesAndValues<ServerStatus>(ServerStatus).forEach((status) => {
             // Should always be disabled if busy.
-            test(`If Kernel status is ${status.name} and busy, both are disabled`, () => {
-                props.kernel.jupyterServerStatus = status.name as any;
-                props.busy = true;
-                mountToolbar();
-                assertDisabled(Button.RestartKernel);
-                assertDisabled(Button.InterruptKernel);
-            });
             if (status.name === ServerStatus.NotStarted) {
                 // Should be disabled if not busy and status === 'Not Started'.
                 test(`If Kernel status is ${ServerStatus.NotStarted} and not busy, both are disabled`, () => {
@@ -193,10 +186,10 @@ suite('DataScience Native Toolbar', () => {
                     assertDisabled(Button.InterruptKernel);
                 });
             } else {
-                // Should be enabled if not busy and status != 'Not Started'.
-                test(`If Kernel status is ${status.name} and not busy, both are enabled`, () => {
+                // Should be enabled if busy and status != 'Not Started'.
+                test(`If Kernel status is ${status.name}, both are enabled`, () => {
                     props.kernel.jupyterServerStatus = status.name as any;
-                    props.busy = false;
+                    props.busy = true;
                     mountToolbar();
                     assertEnabled(Button.RestartKernel);
                     assertEnabled(Button.InterruptKernel);
