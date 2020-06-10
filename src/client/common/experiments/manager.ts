@@ -266,7 +266,9 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
+        traceError('Inside updateExperimentStorage');
         if (!process.env.VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE) {
+            traceError('Inside updateExperimentStorage - VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE');
             // Step 1. Update experiment storage using downloaded experiments in the last session if any
             if (Array.isArray(this.downloadedExperimentsStorage.value)) {
                 await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
