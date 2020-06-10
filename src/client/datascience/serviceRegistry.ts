@@ -37,6 +37,7 @@ import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportCommands } from './export/exportCommands';
 import { ExportFormat, ExportManager, IExport, IExportManager } from './export/exportManager';
 import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
+import { ExportManagerFilePicker, IExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
@@ -277,6 +278,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
+    serviceManager.addSingleton<IExportManagerFilePicker>(ExportManagerFilePicker, ExportManagerFilePicker);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

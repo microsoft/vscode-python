@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { ExportBase } from './exportBase';
+import { IExport } from './exportManager';
 
 @injectable()
-export class ExportToHTML extends ExportBase {
+export class ExportToHTML implements IExport {
     // tslint:disable-next-line: no-empty
     public async export(_source: Uri, _target: Uri): Promise<void> {}
 }

@@ -1,20 +1,14 @@
 import { inject, injectable, named } from 'inversify';
-import { Memento, SaveDialogOptions, Uri } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
 import { IDataScienceErrorHandler, INotebookEditor } from '../types';
+import { IExportManagerFilePicker } from './exportManagerFilePicker';
 
 export enum ExportFormat {
     pdf = 'pdf',
     html = 'html',
     python = 'python'
 }
-
-export const PDFExtensions = { PDF: ['.pdf'] };
-export const HTMLExtensions = { HTML: ['.html', 'htm'] };
-export const PythonExtensions = { Python: ['.py'] };
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
@@ -28,27 +22,21 @@ export interface IExport {
 
 @injectable()
 export class ExportManager implements IExportManager {
-    private readonly defaultExportSaveLocation = ''; // set default save location
-
     constructor(
         @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
         @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker
     ) {}
 
     public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
         // need to add telementry and status messages
 
-        let target;
-        if (format !== ExportFormat.python) {
-            target = await this.getExportFileLocation(format);
-            if (!target) {
-                return; // user didn't select path
-            }
+        const target = await this.filePicker.getExportFileLocation(format);
+        if (!target) {
+            return;
         }
 
         const tempFile = await this.makeTemporaryFile(activeEditor);
@@ -91,55 +79,8 @@ export class ExportManager implements IExportManager {
 
         return tempFile;
     }
-
-    private getLastFileSaveLocation(): Uri {
-        const filePath = this.workspaceStorage.get(
-            ExportNotebookSettings.lastSaveLocation,
-            this.defaultExportSaveLocation
-        );
-
-        return Uri.file(filePath);
-    }
-
-    private updateFileSaveLocation(value: Uri) {
-        const filePath = value.toString();
-        this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, filePath);
-    }
-
-    private async getExportFileLocation(format: ExportFormat): Promise<Uri | undefined> {
-        let fileExtensions;
-        switch (format) {
-            case ExportFormat.python:
-                fileExtensions = PythonExtensions;
-                break;
-
-            case ExportFormat.pdf:
-                fileExtensions = PDFExtensions;
-                break;
-
-            case ExportFormat.html:
-                fileExtensions = HTMLExtensions;
-                break;
-
-            default:
-                return;
-        }
-
-        const options: SaveDialogOptions = {
-            defaultUri: this.getLastFileSaveLocation(),
-            saveLabel: '',
-            filters: fileExtensions
-        };
-
-        const uri = await this.applicationShell.showSaveDialog(options);
-        if (uri) {
-            this.updateFileSaveLocation(uri);
-        }
-        return uri;
-    }
 }
 
 // continue with decorater pattern - READ
 // ts mockito - READ
-// do depenedncy checking using code seen before
 // test that stuff
