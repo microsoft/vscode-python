@@ -31,17 +31,6 @@ export enum WebAppReload {
     experiment = 'Reload - experiment'
 }
 
-/**
- * Slow roll out, to test use of local web server for serving content in the Native Notebook editor.
- *
- * @export
- * @enum {string}
- */
-export enum WebHostNotebook {
-    control = 'WebHostNotebook - control',
-    experiment = 'WebHostNotebook - experiment'
-}
-
 // Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
 export enum LocalZMQKernel {
     control = 'LocalZMQKernel - control',

@@ -1111,7 +1111,6 @@ export interface IWebPanelOptions {
      */
     additionalPaths?: string[];
     scripts: string[];
-    startHttpServer: boolean;
     cwd: string;
     // tslint:disable-next-line: no-any
     settings?: any;

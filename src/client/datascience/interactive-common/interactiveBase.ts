@@ -35,7 +35,7 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { RunByLine, WebHostNotebook } from '../../common/experiments/groups';
+import { RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
@@ -167,7 +167,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             scripts,
             title,
             viewColumn,
-            experimentsManager.inExperiment(WebHostNotebook.experiment),
             useCustomEditorApi,
             experimentsManager.inExperiment(RunByLine.experiment)
         );

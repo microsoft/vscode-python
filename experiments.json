@@ -102,18 +102,6 @@
         "max": 100
     },
     {
-        "name": "WebHostNotebook - experiment",
-        "salt": "WebHostNotebook",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "WebHostNotebook - control",
-        "salt": "WebHostNotebook",
-        "min": 0,
-        "max": 100
-    },
-    {
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
         "max": 0,
