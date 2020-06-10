@@ -15,7 +15,7 @@ import { KernelSwitcherCommand } from '../../../client/datascience/commands/kern
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { ExportManager } from '../../../client/datascience/export/exportManager';
+import { ExportCommands } from '../../../client/datascience/export/exportCommands';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 
@@ -40,7 +40,7 @@ suite('Data Science - Commands', () => {
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
         const experiment = mock(ExperimentService);
-        const exportManager = mock(ExportManager);
+        const exportCommand = mock(ExportCommands);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -57,7 +57,7 @@ suite('Data Science - Commands', () => {
             new MockOutputChannel('Jupyter'),
             instance(startPage),
             instance(experiment),
-            instance(exportManager)
+            instance(exportCommand)
         );
     });
 

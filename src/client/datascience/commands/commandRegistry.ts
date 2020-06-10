@@ -14,7 +14,7 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { ExportFormat, IExportManager } from '../export/exportManager';
+import { ExportCommands } from '../export/exportCommands';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -46,7 +46,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IStartPage) private startPage: IStartPage,
         @inject(IExperimentService) private readonly expService: IExperimentService,
-        @inject(IExportManager) private exportManager: IExportManager
+        @inject(ExportCommands) private readonly exportCommand: ExportCommands
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -55,6 +55,7 @@ export class CommandRegistry implements IDisposable {
         this.commandLineCommand.register();
         this.serverSelectedCommand.register();
         this.kernelSwitcherCommand.register();
+        this.exportCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
@@ -77,10 +78,6 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
-        this.registerCommand(Commands.ExportAsPythonScript, () => this.export(ExportFormat.python));
-        this.registerCommand(Commands.ExportToHTML, () => this.export(ExportFormat.html));
-        this.registerCommand(Commands.ExportToPDF, () => this.export(ExportFormat.pdf));
-        this.registerCommand(Commands.Export, this.export);
         this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         this.registerCommand(
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
@@ -363,14 +360,6 @@ export class CommandRegistry implements IDisposable {
 
     private viewJupyterOutput() {
         this.jupyterOutput.show(true);
-    }
-
-    private async export(exportMethod?: ExportFormat) {
-        if (exportMethod) {
-            await this.exportManager.export(exportMethod);
-        } else {
-            await this.exportManager.export();
-        }
     }
 
     private getCurrentCodeLens(): CodeLens | undefined {

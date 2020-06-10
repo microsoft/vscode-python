@@ -176,7 +176,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_GREP": "Export Python" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -306,7 +306,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                //"--grep", "<suite name>",
+                "--grep", "Convert to python",
                 "--timeout=300000"
             ],
             "env": {

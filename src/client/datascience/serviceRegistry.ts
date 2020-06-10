@@ -34,7 +34,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
-import { ExportFormat, ExportManager, IExport, IExportManager } from './export/exportManager';
+import { ExportFormat, ExportManager, ExportManagerDependencyChecker, IExport, IExportManager } from './export/exportManager';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
@@ -269,7 +269,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
-    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManager);
+    serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
+    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerDependencyChecker);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);

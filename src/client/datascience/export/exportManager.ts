@@ -1,11 +1,10 @@
 import { inject, injectable, named } from 'inversify';
-import { Memento, QuickPickItem, QuickPickOptions, SaveDialogOptions, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
+import { Memento, SaveDialogOptions, Uri } from 'vscode';
+import { IApplicationShell } from '../../common/application/types';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { Commands } from '../constants';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
-import { IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
+import { IDataScienceErrorHandler, INotebookEditor } from '../types';
 
 export enum ExportFormat {
     pdf = 'pdf',
@@ -19,16 +18,12 @@ export const PythonExtensions = { Python: ['.py'] };
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
-    export(format?: ExportFormat): Promise<void>;
+    export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined>;
 }
 
 export const IExport = Symbol('IExport');
 export interface IExport {
     export(source: Uri, target?: Uri): Promise<void>;
-}
-
-interface IExportQuickPickItem extends QuickPickItem {
-    handler(): void;
 }
 
 @injectable()
@@ -39,27 +34,14 @@ export class ExportManager implements IExportManager {
         @inject(IExport) @named(ExportFormat.pdf) private readonly exportToPDF: IExport,
         @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {}
 
-    public async export(format?: ExportFormat) {
+    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
         // need to add telementry and status messages
-        const activeEditor = this.notebookEditorProvider.activeEditor;
-        if (!activeEditor) {
-            return;
-        }
-        if (!format) {
-            const pickedItem = await this.showExportQuickPickMenu().then((item) => item);
-            if (pickedItem !== undefined) {
-                pickedItem.handler();
-            }
-            return;
-        }
 
         let target;
         if (format !== ExportFormat.python) {
@@ -69,7 +51,7 @@ export class ExportManager implements IExportManager {
             }
         }
 
-        const tempFile = await this.makeTemporaryFile();
+        const tempFile = await this.makeTemporaryFile(activeEditor);
         if (!tempFile) {
             return; // error making temp file
         }
@@ -97,11 +79,10 @@ export class ExportManager implements IExportManager {
         }
     }
 
-    private async makeTemporaryFile(): Promise<TemporaryFile | undefined> {
+    private async makeTemporaryFile(activeEditor: INotebookEditor): Promise<TemporaryFile | undefined> {
         let tempFile: TemporaryFile | undefined;
         try {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-            const activeEditor = this.notebookEditorProvider.activeEditor;
             const content = activeEditor?.model ? activeEditor.model.getContent() : '';
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
         } catch (e) {
@@ -109,31 +90,6 @@ export class ExportManager implements IExportManager {
         }
 
         return tempFile;
-    }
-
-    private getExportQuickPickItems(): IExportQuickPickItem[] {
-        return [
-            {
-                label: 'Python Script',
-                picked: true,
-                handler: () => this.commandManager.executeCommand(Commands.ExportAsPythonScript)
-            }
-            //{ label: 'HTML', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToHTML) },
-            //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
-        ];
-    }
-
-    private async showExportQuickPickMenu(): Promise<IExportQuickPickItem | undefined> {
-        const items = this.getExportQuickPickItems();
-
-        const options: QuickPickOptions = {
-            ignoreFocusOut: false,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            placeHolder: 'Export As...'
-        };
-
-        return this.applicationShell.showQuickPick(items, options);
     }
 
     private getFileSaveLocation(): Uri {
@@ -182,3 +138,33 @@ export class ExportManager implements IExportManager {
         return uri;
     }
 }
+
+@injectable()
+export class ExportManagerDependencyChecker implements IExportManager {
+    constructor(@inject(ExportManager) private readonly manager: IExportManager) {}
+
+    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
+        // CHekc dependnecies.. etc.
+
+        // if not ok return.
+        // Else export.
+        return this.manager.export(format, activeEditor);
+    }
+}
+
+@injectable()
+export class ExportManagerFileOpener implements IExportManager {
+    constructor(@inject(ExportManagerDependencyChecker) private readonly manager: IExportManager) {}
+
+    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
+        const uri = await this.manager.export(format, activeEditor);
+
+        // open the file.
+        return uri;
+    }
+}
+// make new command registry, move stuff from old
+// continue with decorater pattern - READ
+// ts mockito - READ
+// do depenedncy checking using code seen before
+// test that stuff
