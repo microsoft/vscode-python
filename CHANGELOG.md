@@ -94,6 +94,8 @@
    ([#12193](https://github.com/Microsoft/vscode-python/issues/12193))
 1. Fix debugger continue event to actually change a cell.
    ([#12155](https://github.com/Microsoft/vscode-python/issues/12155))
+1. Make stop during run by line interrupt the kernel.
+   ([#12249](https://github.com/Microsoft/vscode-python/issues/12249))
 
 ### Code Health
 
