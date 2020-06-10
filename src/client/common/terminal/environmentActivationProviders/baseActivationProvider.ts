@@ -5,6 +5,7 @@ import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
+import { resolveVenvExecutable } from '../../../pythonEnvironments/discovery/subenv';
 import { IFileSystem } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
@@ -30,8 +31,10 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
     protected async findScriptFile(pythonPath: string, scriptFileNames: string[]): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         for (const scriptFileName of scriptFileNames) {
-            // Generate scripts are found in the same directory as the interpreter.
-            const scriptFile = path.join(path.dirname(pythonPath), scriptFileName);
+            const scriptFile = resolveVenvExecutable(pythonPath, scriptFileName, path);
+            if (!scriptFile) {
+                return;
+            }
             const found = await fs.fileExists(scriptFile);
             if (found) {
                 return scriptFile;
