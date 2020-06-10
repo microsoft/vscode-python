@@ -31,9 +31,6 @@ import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
-import { CodIcon } from '../react-common/codicon/codicon';
-import '../react-common/codicon/codicon.css';
-
 namespace CssConstants {
     export const CellOutputWrapper = 'cell-output-wrapper';
     export const CellOutputWrapperClass = `.${CellOutputWrapper}`;
@@ -577,8 +574,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.focusCell(cellId);
             this.props.runByLine(cellId);
         };
-        const cont = () => {
-            this.props.continue(cellId);
+        const stop = () => {
+            this.props.interruptKernel();
         };
         const step = () => {
             this.props.focusCell(cellId);
@@ -616,18 +613,19 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 <div className={toolbarClassName}>
                     <div className="native-editor-celltoolbar-middle">
                         <ImageButton
+                            className={'image-button-empty'} // Just takes up space for now
                             baseTheme={this.props.baseTheme}
-                            onClick={cont}
-                            tooltip={getLocString('DataScience.continueRunByLine', 'Stop')}
+                            onClick={runCell}
+                            tooltip={getLocString('DataScience.runCell', 'Run cell')}
                             hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
+                            disabled={true}
                         >
-                            <div className="codicon codicon-button">{CodIcon.Stop}</div>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={step}
-                            tooltip={getLocString('DataScience.step', 'Run next line')}
+                            tooltip={getLocString('DataScience.step', 'Run next line (F10)')}
                             hidden={this.isMarkdownCell()}
                             disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
                         >
@@ -635,6 +633,19 @@ export class NativeCell extends React.Component<INativeCellProps> {
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
                                 image={ImageName.RunByLine}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={stop}
+                            tooltip={getLocString('DataScience.stopRunByLine', 'Stop')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={false}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Interrupt}
                             />
                         </ImageButton>
                     </div>
