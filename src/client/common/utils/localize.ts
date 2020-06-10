@@ -937,8 +937,9 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const runByLine = localize('DataScience.runByLine', 'Run by line');
-    export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
+    export const runByLine = localize('DataScience.runByLine', 'Run by line (F10)');
+    export const step = localize('DataScience.step', 'Run next line (F10)');
+    export const stopRunByLine = localize('DataScience.stopRunByLine', 'Stop');
     export const rawKernelSessionFailed = localize(
         'DataScience.rawKernelSessionFailed',
         'Unable to start session for kernel {0}. Select another kernel to launch with.'
