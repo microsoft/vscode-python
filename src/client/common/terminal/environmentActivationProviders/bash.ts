@@ -5,55 +5,36 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import '../../extensions';
 import { TerminalShellType } from '../types';
-import { BaseActivationCommandProvider } from './baseActivationProvider';
+import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
+
+// For a given shell the scripts are in order of precedence.
+export const SCRIPTS: ActivationScripts = ({
+    // Group 1
+    [TerminalShellType.wsl]: ['activate.sh', 'activate'],
+    [TerminalShellType.ksh]: ['activate.sh', 'activate'],
+    [TerminalShellType.zsh]: ['activate.sh', 'activate'],
+    [TerminalShellType.gitbash]: ['activate.sh', 'activate'],
+    [TerminalShellType.bash]: ['activate.sh', 'activate'],
+    // Group 2
+    [TerminalShellType.tcshell]: ['activate.csh'],
+    [TerminalShellType.cshell]: ['activate.csh'],
+    // Group 3
+    [TerminalShellType.fish]: ['activate.fish']
+} as unknown) as ActivationScripts;
 
 @injectable()
-export class Bash extends BaseActivationCommandProvider {
+export class Bash extends VenvBaseActivationCommandProvider {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public isShellSupported(targetShell: TerminalShellType): boolean {
-        return (
-            targetShell === TerminalShellType.bash ||
-            targetShell === TerminalShellType.gitbash ||
-            targetShell === TerminalShellType.wsl ||
-            targetShell === TerminalShellType.ksh ||
-            targetShell === TerminalShellType.zsh ||
-            targetShell === TerminalShellType.cshell ||
-            targetShell === TerminalShellType.tcshell ||
-            targetShell === TerminalShellType.fish
-        );
+        super(SCRIPTS, serviceContainer);
     }
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType
     ): Promise<string[] | undefined> {
-        const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
+        const scriptFile = await this.findScriptFile(pythonPath, targetShell);
         if (!scriptFile) {
             return;
         }
         return [`source ${scriptFile.fileToCommandArgument()}`];
-    }
-
-    private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
-        switch (targetShell) {
-            case TerminalShellType.wsl:
-            case TerminalShellType.ksh:
-            case TerminalShellType.zsh:
-            case TerminalShellType.gitbash:
-            case TerminalShellType.bash: {
-                return ['activate.sh', 'activate'];
-            }
-            case TerminalShellType.tcshell:
-            case TerminalShellType.cshell: {
-                return ['activate.csh'];
-            }
-            case TerminalShellType.fish: {
-                return ['activate.fish'];
-            }
-            default: {
-                return [];
-            }
-        }
     }
 }

@@ -25,8 +25,19 @@ interface IFSPathsForVenvExec {
     join(...parts: string[]): string;
 }
 
-export function resolveVenvExecutable(python: string, name: string, path: IFSPathsForVenvExec): string {
+export async function findVenvExecutable(
+    python: string,
+    basename: string | string[],
+    path: IFSPathsForVenvExec,
+    fileExists: (n: string) => Promise<boolean>
+): Promise<string | undefined> {
     // Generated scripts are found in the same directory as the interpreter.
     const binDir = path.dirname(python);
-    return path.join(binDir, name);
+    for (const name of typeof basename === 'string' ? [basename] : basename) {
+        const filename = path.join(binDir, name);
+        if (await fileExists(filename)) {
+            return filename;
+        }
+    }
+    // No matches so return undefined.
 }
