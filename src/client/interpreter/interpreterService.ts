@@ -87,7 +87,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         disposables.push(
-            documentManager.onDidChangeActiveTextEditor((e) => (e ? this.refresh(e.document.uri) : undefined))
+            documentManager.onDidChangeActiveTextEditor((e) =>
+                e && e.document ? this.refresh(e.document.uri) : undefined
+            )
         );
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
