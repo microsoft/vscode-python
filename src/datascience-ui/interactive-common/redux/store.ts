@@ -213,7 +213,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             action.payload.data.data?.cell_type === 'code'
         ) {
             // Send async so happens after the render is actually finished.
-            sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: [] });
+            sendMessage(InteractiveWindowMessages.ExecutionRendered);
         }
 
         if (!action.type || action.type !== InteractiveWindowMessages.FinishCell) {
@@ -229,9 +229,8 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
                 (afterFinished.length !== prevFinished.length &&
                     afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
             ) {
-                const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
                 // Send async so happens after the render is actually finished.
-                sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
+                sendMessage(InteractiveWindowMessages.ExecutionRendered);
             }
         }
 
