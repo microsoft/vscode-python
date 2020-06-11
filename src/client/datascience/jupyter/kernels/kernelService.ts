@@ -32,7 +32,7 @@ import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { detectDefaultKernelName } from './helpers';
+import { cleanEnvironment, detectDefaultKernelName } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
@@ -396,7 +396,7 @@ export class KernelService {
     ) {
         const specedKernel = kernel as JupyterKernelSpec;
         if (specedKernel.specFile) {
-            const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
+            let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
                 await this.fileSystem.readFile(specedKernel.specFile)
             );
             let shouldUpdate = false;
@@ -446,15 +446,7 @@ export class KernelService {
             // Scrub the environment of the specmodel to make sure it has allowed values (they all must be strings)
             // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
             if (specModel.env) {
-                const keys = Object.keys(specModel.env);
-                keys.forEach((k) => {
-                    if (specModel.env) {
-                        const value = specModel.env[k];
-                        if (value !== null && value !== undefined) {
-                            specModel.env[k] = value.toString();
-                        }
-                    }
-                });
+                specModel = cleanEnvironment(specModel);
                 shouldUpdate = true;
             }
 

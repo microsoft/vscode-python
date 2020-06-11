@@ -14,13 +14,11 @@ import { noop, swallowExceptions } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
+import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import { IFileSystem } from '../../common/platform/types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
@@ -58,7 +56,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly interpreter?: PythonInterpreter
     ) {
         this.originalKernelSpec = kernelSpec;
-        this._kernelSpec = this.clean(kernelSpec);
+        this._kernelSpec = cleanEnvironment(kernelSpec);
     }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
@@ -258,24 +256,5 @@ export class KernelProcess implements IKernelProcess {
 
         this._process = exeObs.proc;
         return exeObs;
-    }
-
-    private clean(kernelSpec: IJupyterKernelSpec): IJupyterKernelSpec {
-        const copy = cloneDeep(kernelSpec);
-        if (copy.env) {
-            // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
-            // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
-            const keys = Object.keys(copy.env);
-            keys.forEach((k) => {
-                if (copy.env) {
-                    const value = copy.env[k];
-                    if (value !== null && value !== undefined) {
-                        copy.env[k] = value.toString();
-                    }
-                }
-            });
-        }
-
-        return copy;
     }
 }
