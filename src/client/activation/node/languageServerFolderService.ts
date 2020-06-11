@@ -3,7 +3,9 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import { IWorkspaceService } from '../../common/application/types';
 import { NugetPackage } from '../../common/nuget/types';
@@ -53,6 +55,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         const lsf = await this.languageServerFolder();
         if (lsf) {
+            assert.ok(path.isAbsolute(lsf.path));
             return lsf.path;
         }
         return this.fallback.getLanguageServerFolderName(resource);
@@ -68,6 +71,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         const lsf = await this.languageServerFolder();
         if (lsf) {
+            assert.ok(path.isAbsolute(lsf.path));
             return {
                 path: lsf.path,
                 version: new SemVer(lsf.version)
