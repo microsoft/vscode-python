@@ -596,7 +596,6 @@ suite('Data Science - KernelService', () => {
 
             // tslint:disable-next-line: no-any
             assert.deepEqual(kernel, installedKernel as any);
-            verify(fs.writeFile(anything(), anything(), anything())).never();
         });
     });
 });
