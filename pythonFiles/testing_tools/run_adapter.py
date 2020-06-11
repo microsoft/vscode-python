@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 # Replace the "." entry.
-from testing_tools.adapter.__main__ import parse_args, main
+
 import os.path
 import sys
 
@@ -14,6 +14,7 @@ sys.path.insert(
         )
     ),
 )
+from testing_tools.adapter.__main__ import parse_args, main
 
 
 if __name__ == "__main__":

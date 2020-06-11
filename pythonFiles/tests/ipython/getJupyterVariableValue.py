@@ -1,4 +1,3 @@
-import json as _VSCODE_json
 import sys as VC_sys
 import locale as VC_locale
 
@@ -435,6 +434,7 @@ class VC_SafeRepr(object):
 
 
 # Query Jupyter server for the value of a variable
+import json as _VSCODE_json
 
 _VSCODE_max_len = 200
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
