@@ -336,7 +336,7 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
 
                 await handler.assertFiredExactly(1); // Delete last cell.
                 // Bug in VS Code.
-                assertCodeCell(0, 'PYTHON1PYTHON2');
+                assertCodeCell(0, 'PYTHON1\nPYTHON2');
             });
         });
     });
