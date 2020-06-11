@@ -16,6 +16,7 @@ import {
     SpawnOptions
 } from '../../../common/process/types';
 import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
+import { sleep } from '../../../common/utils/async';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -23,6 +24,8 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterDaemonModule, Telemetry } from '../../constants';
+import { reportAction } from '../../progress/decorator';
+import { ReportableAction } from '../../progress/types';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -145,8 +148,11 @@ export class JupyterInterpreterSubCommandExecutionService
         }
         return serverInfos;
     }
+
+    @reportAction(ReportableAction.ExportNotebookToPython)
     public async exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string> {
         // Before we export check if our selected interpreter is available and supports export
+        await sleep(5_000);
         let interpreter = await this.getSelectedInterpreter(token);
         if (!interpreter || !(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
             // If not available or not supported install missing dependecies

@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
-import { Uri, ViewColumn } from 'vscode';
+import { Uri } from 'vscode';
 import { IDocumentManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
 import { ExportFormat, IExportManager } from './exportManager';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
@@ -11,21 +11,30 @@ export class ExportManagerFileOpener implements IExportManager {
     constructor(
         @inject(ExportManagerDependencyChecker) private readonly manager: IExportManager,
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        const uri = await this.manager.export(format, model);
-        if (!uri) {
-            return;
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`); // TODO: need to localize
+        let uri: Uri | undefined;
+        try {
+            uri = await this.manager.export(format, model);
+            if (!uri) {
+                return;
+            }
+        } finally {
+            reporter.dispose();
         }
-        const contents = await this.fileSystem.readFile(uri.fsPath);
-        await this.viewDocument(contents);
-        return uri;
+        // maybe prompt
+        if (format === ExportFormat.python) {
+            await this.openPythonFile(uri);
+        } else {
+            throw new Error('Not supported');
+        }
     }
 
-    private async viewDocument(contents: string): Promise<void> {
-        const doc = await this.documentManager.openTextDocument({ content: contents });
-        await this.documentManager.showTextDocument(doc, ViewColumn.One);
+    private async openPythonFile(uri: Uri): Promise<void> {
+        const doc = await this.documentManager.openTextDocument(uri);
+        await this.documentManager.showTextDocument(doc);
     }
 }

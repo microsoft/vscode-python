@@ -44,7 +44,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
 
         const options: SaveDialogOptions = {
             defaultUri: this.getLastFileSaveLocation(),
-            saveLabel: '',
+            saveLabel: 'Export',
             filters: fileExtensions
         };
 
@@ -65,7 +65,8 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
     }
 
     private updateFileSaveLocation(value: Uri) {
-        const filePath = value.toString();
+        const filePath = value.fsPath;
+        // use path module
         this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, filePath);
     }
 }

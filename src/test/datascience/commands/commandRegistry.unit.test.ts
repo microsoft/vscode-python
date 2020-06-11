@@ -11,11 +11,11 @@ import { ExperimentService } from '../../../client/common/experiments/service';
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
+import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { ExportCommands } from '../../../client/datascience/export/exportCommands';
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { MockOutputChannel } from '../../mockClasses';
 

@@ -14,7 +14,6 @@ import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { ExportCommands } from '../export/exportCommands';
 import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
@@ -22,6 +21,7 @@ import {
     INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
+import { ExportCommands } from './exportCommands';
 import { KernelSwitcherCommand } from './kernelSwitcher';
 import { JupyterServerSelectorCommand } from './serverSelector';
 

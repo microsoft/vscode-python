@@ -33,7 +33,6 @@ export class ExportManager implements IExportManager {
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         // need to add telementry and status messages
-
         const target = await this.filePicker.getExportFileLocation(format);
         if (!target) {
             return;
@@ -46,7 +45,6 @@ export class ExportManager implements IExportManager {
 
         try {
             const source = Uri.file(tempFile.filePath);
-
             switch (format) {
                 case ExportFormat.python:
                     await this.exportToPython.export(source, target);
