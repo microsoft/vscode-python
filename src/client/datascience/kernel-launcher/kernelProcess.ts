@@ -58,7 +58,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly interpreter?: PythonInterpreter
     ) {
         this.originalKernelSpec = kernelSpec;
-        this._kernelSpec = cloneDeep(kernelSpec);
+        this._kernelSpec = this.clean(kernelSpec);
     }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {
@@ -258,5 +258,24 @@ export class KernelProcess implements IKernelProcess {
 
         this._process = exeObs.proc;
         return exeObs;
+    }
+
+    private clean(kernelSpec: IJupyterKernelSpec): IJupyterKernelSpec {
+        const copy = cloneDeep(kernelSpec);
+        if (copy.env) {
+            // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
+            // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
+            const keys = Object.keys(copy.env);
+            keys.forEach((k) => {
+                if (copy.env) {
+                    const value = copy.env[k];
+                    if (value !== null && value !== undefined) {
+                        copy.env[k] = value.toString();
+                    }
+                }
+            });
+        }
+
+        return copy;
     }
 }
