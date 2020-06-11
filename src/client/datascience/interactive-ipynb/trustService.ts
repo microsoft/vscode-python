@@ -71,8 +71,7 @@ export class TrustService {
         if (this.fs.fileExists(defaultDatabaseLocation)) {
             db = new Database(defaultDatabaseLocation, (_err) => {
                 // If database doesn't exist or reading from it fails, create our own
-                // TODO: replace this with real filepath in custom directory that AzNB will also read
-                const DB_PATH = ':memory:';
+                const DB_PATH = ':memory:'; // TODO: replace this with real filepath in custom directory that AzNB will also read
                 db = new Database(DB_PATH);
 
                 // Create database schema; for now this is identical to Jupyter's in case we want compatibility
@@ -84,6 +83,7 @@ export class TrustService {
                     last_seen timestamp
                 );`;
                 db.exec(dbSchema);
+                db.exec(`CREATE INDEX IF NOT EXISTS algosig ON nbsignatures(algorithm, signature)`);
             })
         }
         return db;
@@ -111,16 +111,6 @@ export class TrustService {
     private isNotebookTrusted(filePath: string): boolean {
         const digest = this.computeDigest(filePath);
         return this.dbContains(digest);
-    }
-
-    /**
-     * Given a notebook that we have decided is untrusted,
-     * determine if it can now be trusted. Note that we set a cell's
-     * trusted state to true when it is executed
-     */
-    private notebookCanBeTrusted(): boolean {
-        // Map over all cells and check that trusted flag is set to true for all
-        return false;
     }
 
     /**
@@ -155,14 +145,14 @@ export class TrustService {
     /**
      * Computes and inserts a new digest representing a trusted checkpoint into database
      */
-    private trustNotebook() {
-        const digest = this.computeDigest();
+    private trustNotebook(filePath: string) {
+        const digest = this.computeDigest(filePath);
         this.updateDb(digest);
     }
 
-    private onNotebookCreated() {
+    private onNotebookCreated(filePath: string) {
         // Compute a digest for it and add to database
-        this.trustNotebook();
+        this.trustNotebook(filePath);
     }
 
     /**
@@ -172,26 +162,26 @@ export class TrustService {
      * Once a notebook is loaded in an untrusted state, all cells must be executed
      * by the current user before the notebook as a whole can be marked trusted
      */
-    private onNotebookOpened() {
+    private onNotebookOpened(filePath: string) {
         // Compute digest and see if notebook is trusted
-        const cellInitialTrustState = this.isNotebookTrusted();
+        const cellInitialTrustState = this.isNotebookTrusted(filePath);
         // Set all cell metadata flags accordingly
 
     }
 
-    /**
-     * Marks notebook trusted if all the cells in the notebook have been executed
-     * in the current user's context
-     */
-    private onNotebookSaved() {
-        // If all cells in notebook are trusted, compute digest and add to database
-        if (this.notebookCanBeTrusted()) {
-            this.trustNotebook();
-        }
-        // Otherwise, do nothing
-    }
+    // /**
+    //  * Marks notebook trusted if all the cells in the notebook have been executed
+    //  * in the current user's context
+    //  */
+    // private onNotebookSaved() {
+    //     // If all cells in notebook are trusted, compute digest and add to database
+    //     if (this.notebookCanBeTrusted()) {
+    //         this.trustNotebook();
+    //     }
+    //     // Otherwise, do nothing
+    // }
 
-    private onCellExecuted() {
-        // Set cell's trust flag to true
-    }
+    // private onCellExecuted() {
+    //     // Set cell's trust flag to true
+    // }
 }
