@@ -59,8 +59,6 @@ export interface IMonacoEditorProps {
 export interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
-    visibleLineCount: number;
-    attached: boolean; // Keeps track of when we reparent the editor out of the dummy dom node.
     widgetsReparented: boolean; // Keeps track of when we reparent the hover widgets so they work inside something with overflow
 }
 
@@ -82,7 +80,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private styleObserver: MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
-    private throttledScrollCurrentPosition = throttle(this.scrollToCurrentPosition.bind(this), 100);
+    private throttledScrollCurrentPosition = throttle(this.tryToScrollToCurrentPosition.bind(this), 100);
     private monacoContainer: HTMLDivElement | undefined;
     private lineTops: { top: number; index: number }[] = [];
     private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
@@ -92,15 +90,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * Reference to parameter widget (used by monaco to display parameter docs).
      */
     private parameterWidget?: Element;
-    private insideLayout = false;
+    private keyHasBeenPressed = false;
+    private visibleLineCount: number = -1;
+    private attached: boolean = false; // Keeps track of when we reparent the editor out of the dummy dom node.
+    private pendingLayoutScroll = false;
 
     constructor(props: IMonacoEditorProps) {
         super(props);
         this.state = {
             editor: undefined,
             model: null,
-            visibleLineCount: -1,
-            attached: false,
             widgetsReparented: false
         };
         this.containerRef = React.createRef<HTMLDivElement>();
@@ -154,6 +153,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 (model as any)._assertNotDisposed = noop;
             }
 
+            // Listen for keydown events. We don't do auto scrolling until the user types something
+            this.subscriptions.push(editor.onKeyDown((_e) => (this.keyHasBeenPressed = true)));
+
             // Register a link opener so when a user clicks on a link we can navigate to it.
             // tslint:disable-next-line: no-any
             const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
@@ -193,7 +195,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.debouncedComputeLineTops();
 
                     // A layout change may be because of a new line
-                    this.throttledScrollCurrentPosition(editor);
+                    this.throttledScrollCurrentPosition();
                 })
             );
 
@@ -239,7 +241,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     // Also update our scroll position, but do that after focus is established.
                     // This is necessary so that markdown can switch to edit mode before we
                     // try to scroll to it.
-                    setTimeout(() => this.throttledScrollCurrentPosition(editor), 0);
+                    setTimeout(() => this.throttledScrollCurrentPosition(), 0);
                 })
             );
 
@@ -249,7 +251,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.throttledUpdateWidgetPosition();
 
                     // Do this after the cursor changes so the text has time to appear
-                    setTimeout(() => this.throttledScrollCurrentPosition(editor), 0);
+                    setTimeout(() => this.throttledScrollCurrentPosition(), 0);
                 })
             );
 
@@ -343,7 +345,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
         }
 
-        if (this.state.visibleLineCount === -1) {
+        if (this.visibleLineCount === -1) {
             this.updateEditorSize();
         } else {
             // Debounce the call. This can happen too fast
@@ -357,6 +359,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.state.editor && !prevProps.hasFocus && this.props.hasFocus) {
             this.giveFocusToEditor(this.state.editor, this.props.cursorPos, this.props.options.readOnly);
         }
+
+        // Reset key press tracking.
+        this.keyHasBeenPressed = false;
     }
     public shouldComponentUpdate(
         nextProps: Readonly<IMonacoEditorProps>,
@@ -369,9 +374,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
         if (nextState === this.state) {
             return false;
-        }
-        if (nextState.visibleLineCount !== this.state.visibleLineCount) {
-            return true;
         }
         if (nextState.model?.id !== this.state.model?.id) {
             return true;
@@ -455,6 +457,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const lineNumber = cursorPos === CursorPos.Top ? 1 : editor.getModel()!.getLineCount();
             const column = current && current.lineNumber === lineNumber ? current.column : 1;
             editor.setPosition({ lineNumber, column });
+            this.scrollToCurrentPosition();
         }
     }
 
@@ -550,7 +553,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return this.lineTops;
     }
 
-    private scrollToCurrentPosition(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
+    private tryToScrollToCurrentPosition() {
+        // Don't scroll if no key has been pressed
+        if (!this.keyHasBeenPressed) {
+            return;
+        }
+        this.scrollToCurrentPosition();
+    }
+
+    private scrollToCurrentPosition() {
         // Unfortunately during functional tests we hack the line count and the like.
         if (isTestExecution() || !this.props.hasFocus) {
             return;
@@ -590,10 +601,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
         }
-        // If this was caused by a layout, don't bother updating again
-        if (!this.insideLayout) {
-            this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
-        }
+        this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
     };
 
     private startUpdateWidgetPosition = () => {
@@ -681,22 +689,23 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
             const layoutInfo = this.state.editor.getLayoutInfo();
-            if (
-                layoutInfo.height !== height ||
-                layoutInfo.width !== width ||
-                currLineCount !== this.state.visibleLineCount
-            ) {
+            if (layoutInfo.height !== height || layoutInfo.width !== width || currLineCount !== this.visibleLineCount) {
                 // Make sure to attach to a real dom node.
-                if (!this.state.attached && this.state.editor && this.monacoContainer) {
+                if (!this.attached && this.state.editor && this.monacoContainer) {
                     this.containerRef.current.appendChild(this.monacoContainer);
                     this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
-                this.setState({ visibleLineCount: currLineCount, attached: true });
-                try {
-                    this.insideLayout = true;
-                    this.state.editor.layout({ width, height });
-                } finally {
-                    this.insideLayout = false;
+                this.visibleLineCount = currLineCount;
+                this.attached = true;
+                this.state.editor.layout({ width, height });
+
+                // Once layout completes, scroll to the current position again. It may have disappeared
+                if (!this.pendingLayoutScroll) {
+                    this.pendingLayoutScroll = true;
+                    setTimeout(() => {
+                        this.scrollToCurrentPosition();
+                        this.pendingLayoutScroll = false;
+                    }, 0);
                 }
             }
         }
