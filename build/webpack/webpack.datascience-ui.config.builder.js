@@ -316,7 +316,7 @@ function buildConfiguration(bundle) {
                     use: [
                         {
                             loader: 'url-loader?limit=100000',
-                            options: { esModule: false }
+                            options: { esModule: false, esModuleInterop: true }
                         }
                     ]
                 },

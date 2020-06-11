@@ -8,7 +8,8 @@ import * as fastDeepEqual from 'fast-deep-equal';
 // import * as kt from 'katex';
 // const kt = require('katex');
 import * as MarkdownIt from 'markdown-it';
-// import markdownItLatex from 'markdown-it-latex';
+import markdownItLatex from 'markdown-it-latex';
+import 'markdown-it-latex/dist/index.css';
 // declare module 'markdown-it-latex';
 // import * as tm from 'markdown-it-texmath';
 import * as React from 'react';
@@ -298,34 +299,34 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
         // const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
-        // const Transform = getTransform('text/markdown');
-        // const MarkdownClassName = 'markdown-cell-output';
+        const Transform = getTransform('text/latex');
+        const MarkdownClassName = 'markdown-cell-output';
 
         // const kt = require('katex');
         // const tm = require('markdown-it-texmath').use(kt);
-        const latex = require('markdown-it-latex');
 
         const mdit = new MarkdownIt();
-        mdit.use(latex);
+        // mdit.use(markdownItLatex);
 
-        const delimiters = 'dollars';
-        const options = { delimiters };
+        // const delimiters = 'dollars';
+        // const options = { delimiters };
         const source2 = mdit
-            .render(concatMultilineStringInput(markdown.source), options)
+            .render(fixLatexEquations(concatMultilineStringInput(markdown.source)))
             .replace(/&gt;/g, '>')
             .replace(/&lt;/g, '<');
+        console.log(source2);
 
-        const source3 = `<!doctype html><html><head><meta charset="utf-8">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/katex.min.css">
-        </head><body>
-        ${source2}
-        </body></html>`;
+        const bundlePath = './latex2html5.bundle.js';
+
+        const source3 = `<div><script src="${bundlePath}"></script><script type="text/latex">
+          ${source2}
+          </script><script>LaTeX2HTML5.init();</script></div>`;
 
         return [
-            // <div key={0} className={MarkdownClassName}>
-            //     <Transform key={0} data={source} />
-            // </div>
-            <div dangerouslySetInnerHTML={{ __html: source3 }} />
+            <div key={0} className={MarkdownClassName}>
+                <Transform key={0} data={source2} />
+            </div>
+            // <div dangerouslySetInnerHTML={{ __html: source3 }} />
         ];
     };
 
