@@ -45,6 +45,11 @@ export class ExportCommands implements IDisposable {
     }
 
     private async export(model: INotebookModel, exportMethod?: ExportFormat) {
+        if (!model) {
+            // possibly show promp that you can't export if no model?
+            return;
+        }
+
         if (exportMethod) {
             await this.exportManager.export(exportMethod, model);
         } else {
