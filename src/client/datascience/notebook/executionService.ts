@@ -154,7 +154,13 @@ export class NotebookExecutionService implements INotebookExecutionService {
         let subscription: Subscription | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
-            const observable = nb.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
+            const observable = nb.executeObservable(
+                cell.document.getText(),
+                document.fileName,
+                0,
+                cell.uri.fsPath,
+                false
+            );
             subscription = observable?.subscribe(
                 (cells) => {
                     const rawCellOutput = cells

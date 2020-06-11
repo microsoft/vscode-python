@@ -84,7 +84,7 @@ export function createCellFromVSCNotebookCell(
     const cell = (() => {
         if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return {
-                data: createMarkdownCell(splitMultilineString(vscCell.source), true),
+                data: createMarkdownCell(splitMultilineString(vscCell.document.getText()), true),
                 file: model.file.toString(),
                 id: uuid(),
                 line: 0,
@@ -95,7 +95,7 @@ export function createCellFromVSCNotebookCell(
         return {
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: #12068 Translate output into nbformat.IOutput.
-            data: createCodeCell([vscCell.source], []),
+            data: createCodeCell([vscCell.document.getText()], []),
             file: model.file.toString(),
             id: uuid(),
             line: 0,
