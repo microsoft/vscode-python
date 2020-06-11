@@ -8,8 +8,6 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
-import { JSONObject } from '@phosphor/coreutils';
-
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 
@@ -49,7 +47,8 @@ export function detectDefaultKernelName(name: string) {
 }
 
 export function cleanEnvironment<T>(spec: T): T {
-    const copy = cloneDeep(spec) as { env?: JSONObject };
+    // tslint:disable-next-line: no-any
+    const copy = cloneDeep(spec) as { env?: any };
 
     if (copy.env) {
         // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
