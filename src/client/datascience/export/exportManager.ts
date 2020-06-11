@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { IDataScienceErrorHandler, INotebookEditor } from '../types';
+import { IDataScienceErrorHandler, INotebookModel } from '../types';
 import { IExportManagerFilePicker } from './exportManagerFilePicker';
 
 export enum ExportFormat {
@@ -12,7 +12,7 @@ export enum ExportFormat {
 
 export const IExportManager = Symbol('IExportManager');
 export interface IExportManager {
-    export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined>;
+    export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined>;
 }
 
 export const IExport = Symbol('IExport');
@@ -31,7 +31,7 @@ export class ExportManager implements IExportManager {
         @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker
     ) {}
 
-    public async export(format: ExportFormat, activeEditor: INotebookEditor): Promise<Uri | undefined> {
+    public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         // need to add telementry and status messages
 
         const target = await this.filePicker.getExportFileLocation(format);
@@ -39,7 +39,7 @@ export class ExportManager implements IExportManager {
             return;
         }
 
-        const tempFile = await this.makeTemporaryFile(activeEditor);
+        const tempFile = await this.makeTemporaryFile(model);
         if (!tempFile) {
             return; // error making temp file
         }
@@ -65,13 +65,15 @@ export class ExportManager implements IExportManager {
         } finally {
             tempFile.dispose(); // need to dispose of temp file
         }
+
+        return target;
     }
 
-    private async makeTemporaryFile(activeEditor: INotebookEditor): Promise<TemporaryFile | undefined> {
+    private async makeTemporaryFile(model: INotebookModel): Promise<TemporaryFile | undefined> {
         let tempFile: TemporaryFile | undefined;
         try {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-            const content = activeEditor?.model ? activeEditor.model.getContent() : '';
+            const content = model ? model.getContent() : '';
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
         } catch (e) {
             await this.errorHandler.handleError(e);
@@ -80,7 +82,3 @@ export class ExportManager implements IExportManager {
         return tempFile;
     }
 }
-
-// continue with decorater pattern - READ
-// ts mockito - READ
-// test that stuff

@@ -37,6 +37,7 @@ import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { ExportCommands } from './export/exportCommands';
 import { ExportFormat, ExportManager, IExport, IExportManager } from './export/exportManager';
 import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
+import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
 import { ExportManagerFilePicker, IExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
@@ -273,7 +274,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
     serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
-    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerDependencyChecker);
+    serviceManager.addSingleton<IExportManager>(ExportManagerDependencyChecker, ExportManagerDependencyChecker);
+    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);

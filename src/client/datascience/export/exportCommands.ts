@@ -47,13 +47,13 @@ export class ExportCommands implements IDisposable {
 
     private async export(exportMethod?: ExportFormat) {
         // get notebook provider
-        const activeEditor = this.notebookEditorProvider.activeEditor;
-        if (!activeEditor) {
+        const model = this.notebookEditorProvider.activeEditor?.model;
+        if (!model) {
             throw Error('No active editor found.');
         }
 
         if (exportMethod) {
-            await this.exportManager.export(exportMethod, activeEditor);
+            await this.exportManager.export(exportMethod, model);
         } else {
             // if no method was provided display quick pick menu
             const pickedItem = await this.showExportQuickPickMenu().then((item) => item);
