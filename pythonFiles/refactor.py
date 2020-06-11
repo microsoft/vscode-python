@@ -148,7 +148,8 @@ class RenameRefactor(BaseRefactoring):
         startOffset=None,
         newName="new_Name",
     ):
-        BaseRefactoring.__init__(self, project, resource, name, progressCallback)
+        BaseRefactoring.__init__(
+            self, project, resource, name, progressCallback)
         self._newName = newName
         self.startOffset = startOffset
 
@@ -158,7 +159,8 @@ class RenameRefactor(BaseRefactoring):
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item))
+                    Change(item.resource.real_path,
+                           ChangeType.EDIT, get_diff(item))
                 )
             else:
                 raise Exception("Unknown Change")
@@ -177,7 +179,8 @@ class ExtractVariableRefactor(BaseRefactoring):
         similar=False,
         global_=False,
     ):
-        BaseRefactoring.__init__(self, project, resource, name, progressCallback)
+        BaseRefactoring.__init__(
+            self, project, resource, name, progressCallback)
         self._newName = newName
         self._startOffset = startOffset
         self._endOffset = endOffset
@@ -188,11 +191,13 @@ class ExtractVariableRefactor(BaseRefactoring):
         renamed = ExtractVariable(
             self.project, self.resource, self._startOffset, self._endOffset
         )
-        changes = renamed.get_changes(self._newName, self._similar, self._global)
+        changes = renamed.get_changes(
+            self._newName, self._similar, self._global)
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item))
+                    Change(item.resource.real_path,
+                           ChangeType.EDIT, get_diff(item))
                 )
             else:
                 raise Exception("Unknown Change")
@@ -228,11 +233,13 @@ class ExtractMethodRefactor(ExtractVariableRefactor):
         renamed = ExtractMethod(
             self.project, self.resource, self._startOffset, self._endOffset
         )
-        changes = renamed.get_changes(self._newName, self._similar, self._global)
+        changes = renamed.get_changes(
+            self._newName, self._similar, self._global)
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, get_diff(item))
+                    Change(item.resource.real_path,
+                           ChangeType.EDIT, get_diff(item))
                 )
             else:
                 raise Exception("Unknown Change")

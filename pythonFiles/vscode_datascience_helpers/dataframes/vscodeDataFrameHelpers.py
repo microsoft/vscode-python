@@ -2,6 +2,8 @@ import pandas as _VSCODE_pd
 import builtins as _VSCODE_builtins
 
 # Function that converts the var passed in into a pandas data frame if possible
+
+
 def _VSCODE_convertToDataFrame(df):
     if isinstance(df, list):
         df = _VSCODE_pd.DataFrame(df)

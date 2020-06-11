@@ -12,6 +12,8 @@ _VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame
 _VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
 # Function to compute row count for a value
+
+
 def _VSCODE_getRowCount(var):
     if hasattr(var, "shape"):
         try:
@@ -38,7 +40,8 @@ else:
     _VSCODE_evalResult = _VSCODE_builtins.eval(_VSCODE_targetVariable["name"])
 
     # Figure out shape if not already there. Use the shape to compute the row count
-    _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_evalResult)
+    _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(
+        _VSCODE_evalResult)
 
     # Turn the eval result into a df
     _VSCODE_df = _VSCODE_evalResult

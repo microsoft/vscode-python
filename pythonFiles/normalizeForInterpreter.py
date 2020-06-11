@@ -58,7 +58,7 @@ def _get_global_statement_blocks(source, lines):
 
     statement_ranges = []
     for index, line_number in enumerate(visitor.line_numbers_with_statements):
-        remaining_line_numbers = visitor.line_numbers_with_statements[index + 1 :]
+        remaining_line_numbers = visitor.line_numbers_with_statements[index + 1:]
         end_line_number = (
             len(lines)
             if len(remaining_line_numbers) == 0
@@ -133,7 +133,8 @@ def normalize_lines(source):
     )
 
     global_statement_ranges = _get_global_statement_blocks(source, lines)
-    start_positions = map(operator.itemgetter(0), reversed(global_statement_ranges))
+    start_positions = map(operator.itemgetter(
+        0), reversed(global_statement_ranges))
     for line_number in filter(lambda x: x > 1, start_positions):
         lines.insert(line_number - 1, "")
 

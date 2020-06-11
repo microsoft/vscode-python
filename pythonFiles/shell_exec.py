@@ -11,7 +11,8 @@ import subprocess
 # 3. In here create a file that'll log the progress.
 # 4. Calling code monitors the contents of the file to determine state of execution.
 
-# Last argument is a file that's used for synchronizing the actions in the terminal with the calling code in extension.
+# Last argument is a file that's used for,
+# synchronizing the actions in the terminal with the calling code in extension.
 lock_file = sys.argv[-1]
 shell_args = sys.argv[1:-1]
 

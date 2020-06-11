@@ -8,9 +8,12 @@ import time
 def main():
     print("hello from dummy jupyter")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--version", type=bool, default=False, const=True, nargs="?")
-    parser.add_argument("notebook", type=bool, default=False, const=True, nargs="?")
-    parser.add_argument("--no-browser", type=bool, default=False, const=True, nargs="?")
+    parser.add_argument("--version", type=bool,
+                        default=False, const=True, nargs="?")
+    parser.add_argument("notebook", type=bool,
+                        default=False, const=True, nargs="?")
+    parser.add_argument("--no-browser", type=bool,
+                        default=False, const=True, nargs="?")
     parser.add_argument("--notebook-dir", default="")
     parser.add_argument("--config", default="")
     results = parser.parse_args()

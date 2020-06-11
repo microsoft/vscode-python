@@ -3,6 +3,8 @@ import pandas.io.json as _VSCODE_pd_json
 import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
 # Function to retrieve a set of rows for a data frame
+
+
 def _VSCODE_getDataFrameRows(df, start, end):
     df = _VSCODE_dataFrameHelpers._VSCODE_convertToDataFrame(df)
 

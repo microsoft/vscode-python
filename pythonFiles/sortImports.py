@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import isort.main
 import io
 import os
 import os.path
@@ -22,6 +23,5 @@ except AttributeError:
 sys.stdin = io.BytesIO(stdin.read())
 # End workaround
 
-import isort.main
 
 isort.main.main()

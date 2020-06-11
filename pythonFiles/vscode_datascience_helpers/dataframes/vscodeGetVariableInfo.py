@@ -6,6 +6,8 @@ import builtins as _VSCODE_builtins
 import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
 # Function to do our work. It will return the object
+
+
 def _VSCODE_getVariableInfo(var):
     # Start out without the information
     result = {}

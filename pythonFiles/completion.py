@@ -64,7 +64,8 @@ class JediCompletion(object):
         if not hasattr(completion, "_definition") or completion._definition is None:
             return ""
         if completion.type == "statement":
-            nodes_to_display = ["InstanceElement", "String", "Node", "Lambda", "Number"]
+            nodes_to_display = ["InstanceElement",
+                                "String", "Node", "Lambda", "Number"]
             return "".join(
                 c.get_code()
                 for c in completion._definition.children
@@ -250,7 +251,8 @@ class JediCompletion(object):
                     c["raw_type"] = _completion["raw_type"]
 
             if any(
-                [c["text"].split("=")[0] == _completion["text"] for c in _completions]
+                [c["text"].split("=")[0] == _completion["text"]
+                 for c in _completions]
             ):
                 # ignore function arguments we already have
                 continue
@@ -301,7 +303,8 @@ class JediCompletion(object):
             Serialized string to send to VSCode.
         """
         return json.dumps(
-            {"id": identifier, "results": self._get_call_signatures_with_args(script)}
+            {"id": identifier,
+                "results": self._get_call_signatures_with_args(script)}
         )
 
     def _top_definition(self, definition):
@@ -563,7 +566,8 @@ class JediCompletion(object):
                 request["path"] = newPath
             elif newPath[1:2] == ":":
                 # is path with drive letter, only absolute can be mapped
-                request["path"] = self.drive_mount + newPath[0:1].lower() + newPath[2:]
+                request["path"] = self.drive_mount + \
+                    newPath[0:1].lower() + newPath[2:]
             else:
                 # is relative path
                 request["path"] = newPath

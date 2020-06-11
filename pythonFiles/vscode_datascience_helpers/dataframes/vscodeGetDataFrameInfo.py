@@ -6,6 +6,8 @@ import builtins as _VSCODE_builtins
 import vscodeDataFrameHelpers as _VSCODE_dataFrameHelpers
 
 # Function to do our work. It will return the object
+
+
 def _VSCODE_getDataFrameInfo(df):
     df = _VSCODE_dataFrameHelpers._VSCODE_convertToDataFrame(df)
     rowCount = _VSCODE_dataFrameHelpers._VSCODE_getRowCount(df)

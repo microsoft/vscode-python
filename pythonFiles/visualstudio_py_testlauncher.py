@@ -56,7 +56,8 @@ class _TestOutput(object):
         return "utf8"
 
     def write(self, value):
-        _channel.send_event("stdout" if self.is_stdout else "stderr", content=value)
+        _channel.send_event(
+            "stdout" if self.is_stdout else "stderr", content=value)
         if self.old_out:
             self.old_out.write(value)
             # flush immediately, else things go wonky and out of order
@@ -85,7 +86,8 @@ class _TestOutputBuffer(object):
         self.is_stdout = is_stdout
 
     def write(self, data):
-        _channel.send_event("stdout" if self.is_stdout else "stderr", content=data)
+        _channel.send_event(
+            "stdout" if self.is_stdout else "stderr", content=data)
         self.buffer.write(data)
 
     def flush(self):
@@ -127,10 +129,12 @@ class _IpcChannel(object):
 
     def send_event(self, name, **args):
         with self.lock:
-            body = {"type": "event", "seq": self.seq, "event": name, "body": args}
+            body = {"type": "event", "seq": self.seq,
+                    "event": name, "body": args}
             self.seq += 1
             content = json.dumps(body).encode("utf8")
-            headers = ("Content-Length: %d\n\n" % (len(content),)).encode("utf8")
+            headers = ("Content-Length: %d\n\n" %
+                       (len(content),)).encode("utf8")
             self.socket.send(headers)
             self.socket.send(content)
 
@@ -262,7 +266,8 @@ def main():
         type="int",
         help="Verbose output (0 none, 1 (no -v) simple, 2 (-v) full)",
     )
-    parser.add_option("--uf", "--failfast", type="str", help="Stop on first failure")
+    parser.add_option("--uf", "--failfast", type="str",
+                      help="Stop on first failure")
     parser.add_option(
         "--uc", "--catch", type="str", help="Catch control-C and display results"
     )
@@ -278,7 +283,8 @@ def main():
             except:
                 pass
         _channel = _IpcChannel(
-            socket.create_connection(("127.0.0.1", opts.result_port)), stopTests
+            socket.create_connection(
+                ("127.0.0.1", opts.result_port)), stopTests
         )
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
@@ -325,7 +331,8 @@ def main():
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
             # opts.us will be passed in
-            suites = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
+            suites = loader.discover(
+                opts.us, pattern=os.path.basename(opts.testFile))
             suite = None
             tests = None
             if opts.tests is None:

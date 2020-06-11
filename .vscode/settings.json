@@ -35,7 +35,7 @@
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "black",
+    "python.formatting.provider": "autopep8",
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",

@@ -79,7 +79,8 @@ def launch_kernel(
 
     encoding = getdefaultencoding(prefer_stream=False)
     kwargs = kw.copy()
-    main_args = dict(stdin=_stdin, stdout=_stdout, stderr=_stderr, cwd=cwd, env=env,)
+    main_args = dict(stdin=_stdin, stdout=_stdout,
+                     stderr=_stderr, cwd=cwd, env=env,)
     kwargs.update(main_args)
 
     # Spawn a kernel.
@@ -158,7 +159,8 @@ def launch_kernel(
         )
         # exclude environment variables,
         # which may contain access tokens and the like.
-        without_env = {key: value for key, value in kwargs.items() if key != "env"}
+        without_env = {key: value for key,
+                       value in kwargs.items() if key != "env"}
         msg = msg.format(cmd, env.get("PATH", os.defpath), without_env)
         raise
 

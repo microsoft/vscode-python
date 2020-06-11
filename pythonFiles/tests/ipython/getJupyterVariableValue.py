@@ -1,3 +1,4 @@
+import json as _VSCODE_json
 import sys as VC_sys
 import locale as VC_locale
 
@@ -5,6 +6,8 @@ VC_IS_PY2 = VC_sys.version_info < (3,)
 
 # SafeRepr based on the pydevd implementation
 # https://github.com/microsoft/ptvsd/blob/master/src/ptvsd/_vendored/pydevd/_pydevd_bundle/pydevd_safe_repr.py
+
+
 class VC_SafeRepr(object):
     # Py3 compat - alias unicode to str, and xrange to range
     try:
@@ -200,7 +203,8 @@ class VC_SafeRepr(object):
                     (self._is_long_iter(item, level + 1) for item in obj)
                 )  # noqa
             return any(
-                i > self.maxcollection[level] or self._is_long_iter(item, level + 1)
+                i > self.maxcollection[level] or self._is_long_iter(
+                    item, level + 1)
                 for i, item in enumerate(obj)
             )  # noqa
 
@@ -405,7 +409,8 @@ class VC_SafeRepr(object):
         # locale.getpreferredencoding() and 'utf-8). If no encoding can decode
         # the input, we return the original bytes.
         try_encodings = []
-        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, "encoding", "")
+        encoding = self.sys_stdout_encoding or getattr(
+            VC_sys.stdout, "encoding", "")
         if encoding:
             try_encodings.append(encoding.lower())
 
@@ -430,7 +435,6 @@ class VC_SafeRepr(object):
 
 
 # Query Jupyter server for the value of a variable
-import json as _VSCODE_json
 
 _VSCODE_max_len = 200
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable

@@ -122,7 +122,8 @@ class PythonDaemon(BasePythonDaemon):
 
         specs = jupyter_client.kernelspec.find_kernel_specs()
         sys.stdout.write(
-            os.linesep.join(list("{0} {1}".format(k, v) for k, v in specs.items()))
+            os.linesep.join(list("{0} {1}".format(k, v)
+                                 for k, v in specs.items()))
         )
         sys.stdout.flush()
 
@@ -146,7 +147,8 @@ class PythonDaemon(BasePythonDaemon):
     def _start_notebook(self, args, cwd, env):
         from notebook import notebookapp as app
 
-        # Args must not have ['notebook'] in the begining. Drop the `notebook` subcommand when using `jupyter`
+        # Args must not have ['notebook'] in the begining.
+        # Drop the `notebook` subcommand when using `jupyter`
         args = args[1:] if args[0] == "notebook" else args
         self.log.info("Starting notebook with args %s", args)
 

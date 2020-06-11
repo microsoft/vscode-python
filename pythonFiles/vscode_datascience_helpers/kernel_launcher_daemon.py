@@ -87,7 +87,8 @@ class PythonDaemon(JupyterDaemon):
         def prewarm_kernel():
             cmd = [sys.executable, isolated_runner, kernel_prewarm_starter]
             self._start_kernel_observable_in_background(cmd)
-            self.log.info("Kernel launched, with PID as a daemon %s", self.kernel.pid)
+            self.log.info(
+                "Kernel launched, with PID as a daemon %s", self.kernel.pid)
 
         return self._execute_and_capture_output(prewarm_kernel)
 
@@ -120,7 +121,8 @@ class PythonDaemon(JupyterDaemon):
         )
 
         def start_kernel():
-            self._exec_module_observable_in_background(module_name, args, cwd, env)
+            self._exec_module_observable_in_background(
+                module_name, args, cwd, env)
 
         return self._execute_and_capture_output(start_kernel)
 
@@ -146,7 +148,8 @@ class PythonDaemon(JupyterDaemon):
         std_err = self.kernel.stderr.read()
         if std_err is not None:
             std_err = std_err.decode("utf-8")
-        self.log.warn("Kernel has exited with exit code %s, %s", exit_code, std_err)
+        self.log.warn("Kernel has exited with exit code %s, %s",
+                      exit_code, std_err)
         sys.stdout.flush()
         sys.stderr.flush()
         self._endpoint.notify(
