@@ -25,7 +25,7 @@ import {
 } from './helper';
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Open)xxx', function () {
+suite('DataScience - VSCode Notebook - (Open)', function () {
     this.timeout(15_000);
     const templateIPynb = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
