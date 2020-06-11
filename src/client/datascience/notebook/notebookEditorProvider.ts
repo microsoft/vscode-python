@@ -188,6 +188,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
         const uri = doc.uri;
         const model = await this.storage.load(uri);
+        // tslint:disable-next-line: no-suspicious-comment
         // TODO: When VSC supports hot exit, they'll open a notebook without invoking our code to provide the contents.
         // We need to handle those situations (cuz at that point we should load the old model and update it with the new model in the notebook).
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
