@@ -136,10 +136,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
             );
             assert.isNotOk(cell4.metadata.executionOrder, 'Execution count should be 0|null');
 
-            assert.isEmpty(cell1.metadata.statusMessage, 'Cell 1 status should be empty'); // No errors.
+            assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
             assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
             assert.isNotEmpty(cell3.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors (interrupted).
-            assert.isEmpty(cell4.metadata.statusMessage, 'Cell 1 status should be empty'); // No errors (didn't run).
+            assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors (didn't run).
 
             assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
             assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');

@@ -17,6 +17,7 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/const
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -72,11 +73,12 @@ export async function insertPythonCell(source: string, index: number = 0) {
                 1_000,
                 'Cell not inserted'
             );
-            // All cells must have same cell id as in INotebookModel.
+            // All cells must have a corresponding cell in INotebookModel.
             await waitForCondition(
                 async () =>
-                    vscEditor?.document.cells.map((cell) => cell.metadata.custom?.cellId || '').join('') ===
-                    nbEditor?.model?.cells.map((cell) => cell.id).join(''),
+                    vscEditor!.document.cells.every((cell) =>
+                        findMappedNotebookCellModel(vscEditor!.document, cell, nbEditor!.model!.cells)
+                    ),
                 1_000,
                 'Cell not assigned a cell Id'
             );

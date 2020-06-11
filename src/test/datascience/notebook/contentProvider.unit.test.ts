@@ -73,10 +73,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     executionOrder: 10,
                     hasExecutionOrder: true,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                    runnable: true,
-                    custom: {
-                        cellId: 'MyCellId1'
-                    }
+                    runnable: true
                 }
             },
             {
@@ -89,10 +86,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     executionOrder: undefined,
                     hasExecutionOrder: false,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
-                    runnable: false,
-                    custom: {
-                        cellId: 'MyCellId2'
-                    }
+                    runnable: false
                 }
             }
         ]);

@@ -1516,15 +1516,16 @@ export interface IClipboard {
 export type NotebookCellsChangeEvent = { type: 'changeCells' } & VSCNotebookCellsChangeEvent;
 export type NotebookCellOutputsChangeEvent = { type: 'changeCellOutputs' } & VSCNotebookCellOutputsChangeEvent;
 export type NotebookCellLanguageChangeEvent = { type: 'changeCellLanguage' } & VSCNotebookCellLanguageChangeEvent;
-
+export type NotebookCellChangedEvent =
+    | NotebookCellsChangeEvent
+    | NotebookCellOutputsChangeEvent
+    | NotebookCellLanguageChangeEvent;
 export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
 export interface IVSCodeNotebook {
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
-    readonly onDidChangeNotebookDocument: Event<
-        NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
-    >;
+    readonly onDidChangeNotebookDocument: Event<NotebookCellChangedEvent>;
     readonly notebookEditors: Readonly<NotebookEditor[]>;
     readonly activeNotebookEditor: NotebookEditor | undefined;
     registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable;

@@ -40,7 +40,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
 
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
-        const content = JSON.parse(await this.fs.readFile(packageJsonFile));
+        const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
 
         // This code is temporary.
         if (

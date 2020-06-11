@@ -6,14 +6,12 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IBaseCellVSCodeMetadata } from '../../../../types/@jupyterlab_coreutils_nbformat';
-import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
-import {
-    INotebookModelCellExecutionCountChange,
-    INotebookModelModifyChange
-} from '../interactive-common/interactiveWindowTypes';
-import { ICell, INotebookModel } from '../types';
-import { cellOutputsToVSCCellOutputs, translateErrorOutput } from './helpers';
+import { IBaseCellVSCodeMetadata } from '../../../../../types/@jupyterlab_coreutils_nbformat';
+import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
+import { INotebookModelModifyChange } from '../../interactive-common/interactiveWindowTypes';
+import { ICell, INotebookModel } from '../../types';
+import { findMappedNotebookCell } from './cellMappers';
+import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
 
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
@@ -35,7 +33,7 @@ export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
 export function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
     model: INotebookModel,
-    _document: NotebookDocument
+    document: NotebookDocument
 ) {
     // Find any cells that have this same display_id
     model.cells.forEach((cellToCheck) => {
@@ -69,7 +67,8 @@ export function handleUpdateDisplayDataMessage(
             return;
         }
 
-        updateCellOutput(cellToCheck, changedOutputs, model);
+        const vscCell = findMappedNotebookCell(cellToCheck, document.cells);
+        updateCellOutput(vscCell, cellToCheck, changedOutputs);
     });
 }
 
@@ -81,63 +80,39 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
     cell.metadata.runState = NotebookCellRunState.Error;
 }
 
-export function updateCellExecutionCount(notebookCellModel: ICell, model: INotebookModel, executionCount: number) {
-    if (notebookCellModel.data.execution_count === executionCount) {
-        return;
-    }
-    // Update our model.
-    const updateCell: INotebookModelCellExecutionCountChange = {
-        kind: 'updateCellExecutionCount',
-        cellId: notebookCellModel.id,
-        executionCount: executionCount,
-        newDirty: true,
-        oldDirty: model.isDirty === true,
-        source: 'user'
-    };
-    model.update(updateCell);
+export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, executionCount: number) {
+    cell.data.execution_count = executionCount;
+    vscCell.metadata.executionOrder = executionCount;
 }
+
 /**
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
  * (this has nothing to do with VSCode cells), this is out ICell in INotebookModel.
  */
-export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOutput[], model: INotebookModel) {
-    const newOutput = cellOutputsToVSCCellOutputs(outputs);
+export function updateCellOutput(vscCell: NotebookCell, cell: ICell, outputs: nbformat.IOutput[]) {
+    cell.data.outputs = outputs;
+    const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
     if (
-        Array.isArray(notebookCellModel.data.outputs) &&
-        notebookCellModel.data.outputs.length === 0 &&
-        newOutput.length === 0
+        Array.isArray(cell.data.outputs) &&
+        cell.data.outputs.length === 0 &&
+        newOutput.length === 0 &&
+        vscCell.outputs.length === 0
     ) {
         return;
     }
     // Compare outputs (at the end of the day everything is serializable).
     // Hence this is a safe comparison.
     if (
-        Array.isArray(notebookCellModel.data.outputs) &&
-        notebookCellModel.data.outputs.length === newOutput.length &&
-        JSON.stringify(notebookCellModel.data.outputs) === JSON.stringify(newOutput)
+        Array.isArray(cell.data.outputs) &&
+        cell.data.outputs.length === newOutput.length &&
+        JSON.stringify(cell.data.outputs) === JSON.stringify(newOutput)
     ) {
         return;
     }
-
-    // Update our model.
-    const newCell: ICell = {
-        ...notebookCellModel,
-        data: {
-            ...notebookCellModel.data,
-            outputs
-        }
-    };
-    const updateCell: INotebookModelModifyChange = {
-        kind: 'modify',
-        newCells: [newCell],
-        oldCells: [notebookCellModel],
-        newDirty: true,
-        oldDirty: model.isDirty === true,
-        source: 'user'
-    };
-    model.update(updateCell);
+    updateVSCNotebookCellMetadata(vscCell.metadata, cell);
+    vscCell.outputs = newOutput;
 }
 
 /**

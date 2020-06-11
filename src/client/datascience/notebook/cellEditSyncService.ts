@@ -12,6 +12,7 @@ import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../com
 import { isNotebookCell } from '../../common/utils/misc';
 import { traceError } from '../../logging';
 import { INotebookEditorProvider, INotebookModel } from '../types';
+import { getOriginalCellId } from './helpers/cellMappers';
 
 @injectable()
 export class CellEditSyncService implements IExtensionSingleActivationService, IDisposable {
@@ -108,7 +109,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
             return;
         }
 
-        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: cell.metadata.custom!.cellId });
+        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(document, cell)! });
         return this.mappedDocuments.get(cellDocument);
     }
 }

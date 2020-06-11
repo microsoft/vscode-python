@@ -9,13 +9,10 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 
 @injectable()
 export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
-    get preloads(): Uri[] {
-        return this._preloads;
-    }
-    private _preloads: Uri[] = [];
+    public readonly preloads: Uri[] = [];
     constructor() {
         const renderersFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers');
-        this._preloads.push(Uri.file(path.join(renderersFolder, 'renderers.js')));
+        this.preloads = [Uri.file(path.join(renderersFolder, 'renderers.js'))];
     }
 
     // @ts-ignore

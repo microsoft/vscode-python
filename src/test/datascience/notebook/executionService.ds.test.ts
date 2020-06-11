@@ -29,7 +29,7 @@ import {
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
-suite('DataScience - VSCode Notebook - (Execution)', function () {
+suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     this.timeout(60_000);
 
     let api: IExtensionTestApi;
@@ -152,13 +152,14 @@ suite('DataScience - VSCode Notebook - (Execution)', function () {
         assert.lengthOf(cell.outputs, 1, 'Incorrect output');
         const errorOutput = cell.outputs[0] as CellErrorOutput;
         assert.equal(errorOutput.outputKind, vscodeNotebookEnums.CellOutputKind.Error, 'Incorrect output');
-        assert.isNotEmpty(errorOutput.ename, 'Incorrect ename');
-        assert.isNotEmpty(errorOutput.evalue, 'Incorrect evalue');
+        assert.isEmpty(errorOutput.ename, 'Incorrect ename'); // As status contains ename, we don't want this displayed again.
+        assert.isEmpty(errorOutput.evalue, 'Incorrect evalue'); // As status contains ename, we don't want this displayed again.
         assert.isNotEmpty(errorOutput.traceback, 'Incorrect traceback');
         expect(cell.metadata.executionOrder).to.be.greaterThan(0, 'Execution count should be > 0');
         expect(cell.metadata.runStartTime).to.be.greaterThan(0, 'Start time should be > 0');
         expect(cell.metadata.lastRunDuration).to.be.greaterThan(0, 'Duration should be > 0');
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');
-        assert.equal(cell.metadata.statusMessage, '', 'Incorrect Status message');
+        assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
+        assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
     });
 });

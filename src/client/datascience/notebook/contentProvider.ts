@@ -13,14 +13,14 @@ import type {
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { notebookModelToVSCNotebookData } from './helpers';
+import { notebookModelToVSCNotebookData } from './helpers/helpers';
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
- * Its upto extension authors to read the files and return it in a format that VSCode understands.
+ * Its up to extension authors to read the files and return it in a format that VSCode understands.
  * Same with the cells and cell output.
  *
- * Also responsbile for saving of notebooks.
+ * Also responsible for saving of notebooks.
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
@@ -46,7 +46,7 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
             await this.commandManager.executeCommand('workbench.action.files.saveAs', document.uri);
             // tslint:disable-next-line: no-suspicious-comment
             //TODO: VSC doesn't handle this well.
-            // What if user doessn't save it.
+            // What if user doesn't save it.
             if (model.isUntitled) {
                 throw new Error('Not saved');
             }

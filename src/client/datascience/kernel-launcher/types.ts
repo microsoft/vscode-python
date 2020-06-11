@@ -54,7 +54,7 @@ export interface IKernelFinder {
 }
 
 /**
- * The daemon responsbile for the Python Kernel.
+ * The daemon responsible for the Python Kernel.
  */
 export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;

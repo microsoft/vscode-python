@@ -18,7 +18,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
-import { findMappedNotebookCellModel } from './cellUpdateHelpers';
+import { findMappedNotebookCellModel } from './helpers/cellMappers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
@@ -26,8 +26,8 @@ import {
     updateCellExecutionTimes,
     updateCellOutput,
     updateCellWithErrorStatus
-} from './executionHelpers';
-import { getCellStatusMessageBasedOnFirstErrorOutput } from './helpers';
+} from './helpers/executionHelpers';
+import { getCellStatusMessageBasedOnFirstErrorOutput, updateVSCNotebookCellMetadata } from './helpers/helpers';
 import { INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -162,7 +162,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
-                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
 
                     // Set execution count, all messages should have it
                     if (
@@ -171,10 +171,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         typeof cells[0].data.execution_count === 'number'
                     ) {
                         const executionCount = cells[0].data.execution_count as number;
-                        updateCellExecutionCount(notebookCellModel, model, executionCount);
+                        updateCellExecutionCount(cell, notebookCellModel, executionCount);
                     }
 
-                    updateCellOutput(notebookCellModel, rawCellOutput, model);
+                    updateCellOutput(cell, notebookCellModel, rawCellOutput);
                 },
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
@@ -189,7 +189,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     cell.metadata.statusMessage = '';
 
                     // Update metadata in our model.
-                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
                     updateCellExecutionTimes(
                         notebookCellModel,
                         model,
@@ -205,6 +205,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
                             notebookCellModel.data.outputs as any
                         );
                     }
+
+                    updateVSCNotebookCellMetadata(cell.metadata, notebookCellModel);
                     deferred.resolve();
                 }
             );
