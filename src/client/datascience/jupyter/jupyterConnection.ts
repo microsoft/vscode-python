@@ -237,7 +237,7 @@ class JupyterConnection implements IJupyterConnection {
         if (childProc) {
             childProc.on('exit', (c) => {
                 // Our code expects the exit code to be of type `number` or `undefined`.
-                const code = typeof c === 'number' ? c : undefined;
+                const code = typeof c === 'number' ? c : 0;
                 this.valid = false;
                 this.localProcExitCode = code;
                 this.eventEmitter.fire(code);

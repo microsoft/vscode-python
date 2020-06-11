@@ -25,13 +25,15 @@ import {
     IExperimentsManager,
     IMemento,
     IPersistentStateFactory,
-    Resource
+    Resource,
+    WORKSPACE_MEMENTO
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INotebookIdentity,
@@ -45,7 +47,6 @@ import {
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -53,6 +54,7 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookExporter,
     INotebookProvider,
@@ -101,12 +103,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
+        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
@@ -127,12 +132,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             configuration,
             jupyterExporter,
             workspaceService,
-            dataExplorerProvider,
+            dataExplorerFactory,
+            jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             errorHandler,
             commandManager,
             globalStorage,
+            workspaceStorage,
             historyReactDir,
             [
                 path.join(historyReactDir, 'require.js'),

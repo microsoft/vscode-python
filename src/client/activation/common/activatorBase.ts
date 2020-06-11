@@ -30,7 +30,7 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import {
     ILanguageServerActivator,
     ILanguageServerDownloader,
@@ -188,6 +188,13 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         return languageServerFolderPath;
     }
 
+    protected getLanguageClient(): vscodeLanguageClient.LanguageClient | undefined {
+        const proxy = this.manager.languageProxy;
+        if (proxy) {
+            return proxy.languageClient;
+        }
+    }
+
     private get textDocumentSyncKind(): vscodeLanguageClient.TextDocumentSyncKind {
         const languageClient = this.getLanguageClient();
         if (languageClient?.initializeResult?.capabilities?.textDocumentSync) {
@@ -203,13 +210,6 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
 
         // Default is full if not provided
         return vscodeLanguageClient.TextDocumentSyncKind.Full;
-    }
-
-    private getLanguageClient(): vscodeLanguageClient.LanguageClient | undefined {
-        const proxy = this.manager.languageProxy;
-        if (proxy) {
-            return proxy.languageClient;
-        }
     }
 
     private async handleProvideRenameEdits(

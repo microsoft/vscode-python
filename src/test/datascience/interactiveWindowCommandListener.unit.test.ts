@@ -34,8 +34,8 @@ import {
     INotebookServer
 } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';

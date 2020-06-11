@@ -22,12 +22,12 @@ import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
-import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { InterpreterHashProvider } from '../../../client/pythonEnvironments/discovery/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -50,7 +50,7 @@ const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(
     'test',
     'pythonFiles',
     'testFiles',
-    'unitestsWithConfigs'
+    'unittestsWithConfigs'
 );
 const unitTestTestFilesCwdPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'cwd', 'src');
 
@@ -781,7 +781,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 {
                     rootid: '.',
                     root:
-                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unittestsWithConfigs',
                     parents: [
                         {
                             id: './other',

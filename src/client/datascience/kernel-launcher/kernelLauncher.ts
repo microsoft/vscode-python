@@ -6,9 +6,10 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
+import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IJupyterKernelSpec } from '../types';
@@ -26,6 +27,7 @@ export class KernelLauncher implements IKernelLauncher {
     private static nextFreePortToTryAndUse = PortToStartFrom;
     constructor(
         @inject(IProcessServiceFactory) private processExecutionFactory: IProcessServiceFactory,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(KernelDaemonPool) private readonly daemonPool: KernelDaemonPool
     ) {}
 
@@ -41,6 +43,7 @@ export class KernelLauncher implements IKernelLauncher {
             this.daemonPool,
             connection,
             kernelSpec,
+            this.fileSystem,
             resource,
             interpreter
         );

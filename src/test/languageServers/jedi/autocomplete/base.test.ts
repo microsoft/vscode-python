@@ -253,7 +253,8 @@ suite('Autocomplete Base Tests', function () {
 
     test('Across files With Unicode Characters', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-10399) Fix this test.
+        // TODO: Fix this test.
+        // See https://github.com/microsoft/vscode-python/issues/10399.
         if (isOs(OSType.Windows) && isPy38) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();

@@ -4,6 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { InputHistory } from '../interactive-common/inputHistory';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
@@ -13,6 +14,7 @@ import { CursorPos, IFont } from './mainState';
 
 export interface ICodeProps {
     code: string;
+    language: string | undefined;
     version: number;
     codeTheme: string;
     testMode: boolean;
@@ -75,7 +77,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     content={this.props.code}
                     outermostParentClass={this.props.outermostParentClass}
                     monacoTheme={this.props.monacoTheme}
-                    language="python"
+                    language={this.props.language ? this.props.language : PYTHON_LANGUAGE}
                     editorOptions={this.props.editorOptions}
                     openLink={this.props.openLink}
                     ref={this.editorRef}

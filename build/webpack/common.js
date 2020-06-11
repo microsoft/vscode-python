@@ -32,10 +32,6 @@ exports.nodeModulesToExternalize = [
     'fontkit',
     'linebreak',
     'png-js',
-    '@koa/cors',
-    'koa',
-    'koa-compress',
-    'koa-logger',
     'zeromq'
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];

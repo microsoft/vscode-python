@@ -12,8 +12,9 @@ import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../.
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
@@ -154,10 +155,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
-            let tryCount = 0;
+            let tryCount = 1;
             const maxTries = this.configuration.getSettings(undefined).datascience.jupyterLaunchRetries;
             const stopWatch = new StopWatch();
-            while (tryCount < maxTries && !this.disposed) {
+            while (tryCount <= maxTries && !this.disposed) {
                 try {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([

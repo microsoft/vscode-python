@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import type { nbformat } from '@jupyterlab/coreutils';
-import { Memento } from 'vscode';
+import * as os from 'os';
+import * as path from 'path';
+import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
+import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { traceError, traceInfo } from '../logging';
 import { Settings } from './constants';
@@ -119,4 +122,27 @@ export function traceCellResults(prefix: string, results: ICell[]) {
     } else {
         traceInfo(`${prefix} no output.`);
     }
+}
+
+export function translateKernelLanguageToMonaco(kernelLanguage: string): string {
+    // The only known translation is C# to csharp at the moment
+    if (kernelLanguage === 'C#' || kernelLanguage === 'c#') {
+        return 'csharp';
+    }
+    return kernelLanguage.toLowerCase();
+}
+
+export function generateNewNotebookUri(counter: number): Uri {
+    // Because of this bug here:
+    // https://github.com/microsoft/vscode/issues/93441
+    // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
+    // Instead we need to create untitled files in the temp folder and force a saveas whenever they're
+    // saved.
+
+    // However if there are files already on disk, we should be able to overwrite them because
+    // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
+    const fileName = `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
+    const filePath = Uri.file(path.join(os.tmpdir(), fileName));
+    // Turn this back into an untitled
+    return filePath.with({ scheme: 'untitled', path: filePath.fsPath });
 }

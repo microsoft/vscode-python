@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import { Uri } from 'vscode';
 
 import { ILanguageServer, ILanguageServerCache } from '../../client/activation/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { MockLanguageServer } from './mockLanguageServer';
 
 // tslint:disable:no-any unified-signatures

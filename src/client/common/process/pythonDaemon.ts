@@ -5,17 +5,16 @@
 
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
+import { InterpreterInformation, PythonVersionInfo } from '../../pythonEnvironments/discovery/types';
 import { traceWarning } from '../logger';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
 import { BasePythonDaemon } from './baseDaemon';
 import {
-    InterpreterInformation,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
     PythonExecutionInfo,
-    PythonVersionInfo,
     SpawnOptions
 } from './types';
 

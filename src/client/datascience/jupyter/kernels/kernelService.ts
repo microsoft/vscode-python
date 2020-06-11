@@ -19,7 +19,8 @@ import { ReadWrite } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
@@ -117,12 +118,7 @@ export class KernelService {
                 );
             });
         } else {
-            return specs.find(
-                (item) =>
-                    item.language === PYTHON_LANGUAGE &&
-                    item.display_name === option.display_name &&
-                    item.name === option.name
-            );
+            return specs.find((item) => item.display_name === option.display_name && item.name === option.name);
         }
     }
 
@@ -140,9 +136,6 @@ export class KernelService {
         kernelSpec: IJupyterKernelSpec | LiveKernelModel,
         cancelToken?: CancellationToken
     ): Promise<PythonInterpreter | undefined> {
-        if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
-            return;
-        }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
@@ -475,8 +468,10 @@ export class KernelService {
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }
+        traceInfo('Enumerating kernel specs...');
         const specs: IJupyterKernelSpec[] = await enumerator;
         const result = specs.filter((item) => !!item);
+        traceInfo(`Found ${result.length} kernelspecs`);
 
         // Send telemetry on this enumeration.
         const anyPython = result.find((k) => k.language === 'python') !== undefined;

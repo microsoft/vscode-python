@@ -30,8 +30,9 @@ import {
     IInterpreterAutoSeletionProxyService,
     IInterpreterSecurityService
 } from '../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 

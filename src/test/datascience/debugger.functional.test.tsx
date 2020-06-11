@@ -23,6 +23,7 @@ import {
     IJupyterDebugService,
     IJupyterExecution
 } from '../../client/datascience/types';
+import { DebugState } from '../../datascience-ui/interactive-common/mainState';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
@@ -383,6 +384,58 @@ suite('DataScience Debugger tests', () => {
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
             assert.equal(ImageButtons.length, 4, 'Cell buttons wrong number');
+        },
+        () => {
+            ioc.setExperimentState(RunByLine.experiment, true);
+            return createIOC();
+        }
+    );
+    runNativeTest(
+        'Run by line state check',
+        async () => {
+            // Create an editor so something is listening to messages
+            await createNewEditor(ioc);
+            const wrapper = ioc.wrapper!;
+
+            // Add a cell into the UI and wait for it to render and submit it.
+            await addCell(wrapper, ioc, 'a=1\na=2\na=3', true);
+
+            // Step into this cell using the button
+            let cell = getLastOutputCell(wrapper, 'NativeCell');
+            let ImageButtons = cell.find(ImageButton);
+            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            const runByLineButton = ImageButtons.at(3);
+            // tslint:disable-next-line: no-any
+            assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
+
+            const promise = waitForMessage(ioc, InteractiveWindowMessages.DebugStateChange, {
+                withPayload: (p) => {
+                    return p.oldState === DebugState.Design && p.newState === DebugState.Run;
+                }
+            });
+            runByLineButton.simulate('click');
+            await promise;
+
+            // We should be running, is the run by line button disabled?
+            cell = getLastOutputCell(wrapper, 'NativeCell');
+            ImageButtons = cell.find(ImageButton);
+            // tslint:disable-next-line: no-any
+            let runByLineButtonProps = ImageButtons.at(3).instance().props as any;
+            expect(runByLineButtonProps.disabled).to.equal(true, 'Run by line button not disabled when running');
+
+            // Now wait for break mode
+            const breakPromise = waitForMessage(ioc, InteractiveWindowMessages.DebugStateChange, {
+                withPayload: (p) => {
+                    return p.oldState === DebugState.Run && p.newState === DebugState.Break;
+                }
+            });
+            await breakPromise;
+
+            cell = getLastOutputCell(wrapper, 'NativeCell');
+            ImageButtons = cell.find(ImageButton);
+            // tslint:disable-next-line: no-any
+            runByLineButtonProps = ImageButtons.at(3).instance().props as any;
+            expect(runByLineButtonProps.disabled).to.equal(false, 'Run by line button not active in break mode');
         },
         () => {
             ioc.setExperimentState(RunByLine.experiment, true);

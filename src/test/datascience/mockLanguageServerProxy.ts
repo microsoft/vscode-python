@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
 import { ILanguageServerProxy } from '../../client/activation/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { MockLanguageClient } from './mockLanguageClient';
 
 // tslint:disable:no-any unified-signatures

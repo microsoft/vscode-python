@@ -189,7 +189,8 @@ export interface IFileSystemUtils {
 }
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8542): Later we will drop IFileSystem, switching usage to IFileSystemUtils.
+// TODO: Later we will drop IFileSystem, switching usage to IFileSystemUtils.
+// See https://github.com/microsoft/vscode-python/issues/8542.
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
@@ -223,7 +224,7 @@ export interface IFileSystem {
     getSubDirectories(rootDir: string): Promise<string[]>;
     getFiles(rootDir: string): Promise<string[]>;
     getFileHash(filePath: string): Promise<string>;
-    search(globPattern: string, cwd?: string): Promise<string[]>;
+    search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
     createTemporaryFile(extension: string, mode?: number): Promise<TemporaryFile>;
     isDirReadonly(dirname: string): Promise<boolean>;
 }

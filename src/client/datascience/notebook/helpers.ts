@@ -4,6 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import * as assert from 'assert';
 import type {
     CellDisplayOutput,
     CellErrorOutput,
@@ -14,14 +15,23 @@ import type {
 } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../../../datascience-ui/common';
+import * as uuid from 'uuid/v4';
+import { NotebookCellRunState } from '../../../../typings/vscode-proposed';
+import {
+    concatMultilineStringInput,
+    concatMultilineStringOutput,
+    splitMultilineString
+} from '../../../datascience-ui/common';
+import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceWarning } from '../../logging';
-import { ICell, INotebookModel } from '../types';
-// tslint:disable-next-line: no-var-requires no-require-imports
-const ansiToHtml = require('ansi-to-html');
-// tslint:disable-next-line: no-var-requires no-require-imports
-const ansiRegex = require('ansi-regex');
+import { CellState, ICell, INotebookModel } from '../types';
+
+// This is the custom type we are adding into nbformat.IBaseCellMetadata
+interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
 
 /**
  * Converts a NotebookModel into VSCode friendly format.
@@ -34,12 +44,12 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
 
     return {
         cells,
-        languages: [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE],
+        languages: [PYTHON_LANGUAGE],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
             editable: true,
-            hasExecutionOrder: true,
+            cellHasExecutionOrder: true,
             runnable: true,
             displayOrder: [
                 'application/vnd.*',
@@ -60,29 +70,89 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         }
     };
 }
+export function vscNotebookCellToCellModel(cell: NotebookCellData, model: INotebookModel): ICell {
+    if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+        return {
+            data: createMarkdownCell(splitMultilineString(cell.source), true),
+            file: model.file.toString(),
+            id: uuid(),
+            line: 0,
+            state: CellState.init
+        };
+    }
+    assert.equal(cell.language, PYTHON_LANGUAGE, 'Cannot create a non Python cell');
+    return {
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: #12068 Translate output into nbformat.IOutput.
+        data: createCodeCell([cell.source], []),
+        file: model.file.toString(),
+        id: uuid(),
+        line: 0,
+        state: CellState.init
+    };
+}
 export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undefined {
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
     }
 
-    return {
+    // tslint:disable-next-line: no-any
+    const outputs = cellOutputsToVSCCellOutputs(cell.data.outputs as any);
+
+    // If we have an execution count & no errors, then success state.
+    // If we have an execution count &  errors, then error state.
+    // Else idle state.
+    const hasErrors = outputs.some((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error);
+    const hasExecutionCount = typeof cell.data.execution_count === 'number' && cell.data.execution_count > 0;
+    let runState: NotebookCellRunState;
+    let statusMessage: string | undefined;
+    if (!hasExecutionCount) {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Idle;
+    } else if (hasErrors) {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Error;
+        // Error details are stripped from the output, get raw output.
+        // tslint:disable-next-line: no-any
+        statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(cell.data.outputs as any);
+    } else {
+        runState = vscodeNotebookEnums.NotebookCellRunState.Success;
+    }
+
+    const notebookCellData: NotebookCellData = {
         cellKind:
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
         language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
         metadata: {
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
-            runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+            hasExecutionOrder: cell.data.cell_type === 'code',
+            runState,
             runnable: cell.data.cell_type === 'code',
             custom: {
                 cellId: cell.id
             }
         },
         source: concatMultilineStringInput(cell.data.source),
-        // tslint:disable-next-line: no-any
-        outputs: cellOutputsToVSCCellOutputs(cell.data.outputs as any)
+        outputs
     };
+
+    if (statusMessage) {
+        notebookCellData.metadata.statusMessage = statusMessage;
+    }
+    const vscodeMetadata = (cell.data.metadata.vscode as unknown) as IBaseCellVSCodeMetadata | undefined;
+    const startExecutionTime = vscodeMetadata?.start_execution_time
+        ? new Date(Date.parse(vscodeMetadata.start_execution_time)).getTime()
+        : undefined;
+    const endExecutionTime = vscodeMetadata?.end_execution_time
+        ? new Date(Date.parse(vscodeMetadata.end_execution_time)).getTime()
+        : undefined;
+
+    if (startExecutionTime && typeof endExecutionTime === 'number') {
+        notebookCellData.metadata.runStartTime = startExecutionTime;
+        notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
+    }
+
+    return notebookCellData;
 }
 
 export function cellOutputsToVSCCellOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
@@ -171,94 +241,40 @@ function isImagePngOrJpegMimeType(mimeType: string) {
     return mimeType === 'image/png' || mimeType === 'image/jpeg';
 }
 function translateStreamOutput(output: nbformat.IStream): CellStreamOutput | CellDisplayOutput {
-    const text = concatMultilineStringOutput(output.text);
-    const hasAngleBrackets = text.includes('<');
-    const hasAnsiChars = ansiRegex().test(text);
-
-    if (!hasAngleBrackets && !hasAnsiChars) {
-        // Plain text output.
-        return {
-            outputKind: vscodeNotebookEnums.CellOutputKind.Text,
-            text
-        };
-    }
-
-    // Format the output, but ensure we have the plain text output as well.
-    const richOutput: CellDisplayOutput = {
+    // Do not return as `CellOutputKind.Text`. VSC will not translate ascii output correctly.
+    // Instead format the output as rich.
+    return {
         outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
         data: {
-            ['text/plain']: text
+            ['text/plain']: concatMultilineStringOutput(output.text)
         }
     };
-
-    if (hasAngleBrackets) {
-        // Stream output needs to be wrapped in xmp so it
-        // show literally. Otherwise < chars start a new html element.
-        richOutput.data['text/html'] = `<xmp>${text}</xmp>`;
-    }
-    if (hasAnsiChars) {
-        // ansiToHtml is different between the tests running and webpack. figure out which one
-        try {
-            const ctor = ansiToHtml instanceof Function ? ansiToHtml : ansiToHtml.default;
-            const converter = new ctor(getAnsiToHtmlOptions());
-            richOutput.data['text/html'] = converter.toHtml(text);
-        } catch (ex) {
-            traceError(`Failed to convert Ansi text to HTML, ${text}`, ex);
-        }
-    }
-
-    return richOutput;
 }
+
+/**
+ * We will display the error message in the status of the cell.
+ * The `ename` & `evalue` is displayed at the top of the output by VS Code.
+ * As we're displaying the error in the statusbar, we don't want this dup error in output.
+ * Hence remove this.
+ */
 export function translateErrorOutput(output: nbformat.IError): CellErrorOutput {
     return {
-        ename: output.ename,
-        evalue: output.evalue,
+        ename: '',
+        evalue: '',
         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
         traceback: output.traceback
     };
 }
 
-function getAnsiToHtmlOptions(): { fg: string; bg: string; colors: string[] } {
-    // Here's the default colors for ansiToHtml. We need to use the
-    // colors from our current theme.
-    // const colors = {
-    //     0: '#000',
-    //     1: '#A00',
-    //     2: '#0A0',
-    //     3: '#A50',
-    //     4: '#00A',
-    //     5: '#A0A',
-    //     6: '#0AA',
-    //     7: '#AAA',
-    //     8: '#555',
-    //     9: '#F55',
-    //     10: '#5F5',
-    //     11: '#FF5',
-    //     12: '#55F',
-    //     13: '#F5F',
-    //     14: '#5FF',
-    //     15: '#FFF'
-    // };
-    return {
-        fg: 'var(--vscode-terminal-foreground)',
-        bg: 'var(--vscode-terminal-background)',
-        colors: [
-            'var(--vscode-terminal-ansiBlack)', // 0
-            'var(--vscode-terminal-ansiBrightRed)', // 1
-            'var(--vscode-terminal-ansiGreen)', // 2
-            'var(--vscode-terminal-ansiYellow)', // 3
-            'var(--vscode-terminal-ansiBrightBlue)', // 4
-            'var(--vscode-terminal-ansiMagenta)', // 5
-            'var(--vscode-terminal-ansiCyan)', // 6
-            'var(--vscode-terminal-ansiBrightBlack)', // 7
-            'var(--vscode-terminal-ansiWhite)', // 8
-            'var(--vscode-terminal-ansiRed)', // 9
-            'var(--vscode-terminal-ansiBrightGreen)', // 10
-            'var(--vscode-terminal-ansiBrightYellow)', // 11
-            'var(--vscode-terminal-ansiBlue)', // 12
-            'var(--vscode-terminal-ansiBrightMagenta)', // 13
-            'var(--vscode-terminal-ansiBrightCyan)', // 14
-            'var(--vscode-terminal-ansiBrightWhite)' // 15
-        ]
-    };
+export function getCellStatusMessageBasedOnFirstErrorOutput(outputs?: nbformat.IOutput[]): string {
+    if (!Array.isArray(outputs)) {
+        return '';
+    }
+    const errorOutput = (outputs.find((output) => output.output_type === 'error') as unknown) as
+        | nbformat.IError
+        | undefined;
+    if (!errorOutput) {
+        return '';
+    }
+    return `${errorOutput.ename}${errorOutput.evalue ? ': ' : ''}${errorOutput.evalue}`;
 }

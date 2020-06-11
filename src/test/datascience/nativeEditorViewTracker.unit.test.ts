@@ -75,7 +75,7 @@ suite('DataScience - View tracker', () => {
 
     function activate(): Promise<void> {
         openedList = [];
-        const viewTracker = new NativeEditorViewTracker(instance(editorProvider), memento, []);
+        const viewTracker = new NativeEditorViewTracker(instance(editorProvider), memento, [], false);
         return viewTracker.activate();
     }
 

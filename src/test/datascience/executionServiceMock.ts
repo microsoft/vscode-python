@@ -9,12 +9,12 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import {
     ExecutionResult,
-    InterpreterInformation,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { InterpreterInformation } from '../../client/pythonEnvironments/discovery/types';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;

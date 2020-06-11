@@ -18,8 +18,8 @@ import {
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { ICondaService } from '../../client/interpreter/contracts';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
+import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { isPythonVersion } from '../common';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';

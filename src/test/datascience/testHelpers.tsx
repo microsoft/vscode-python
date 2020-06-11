@@ -57,6 +57,10 @@ type WaitForMessageOptions = {
      * @type {number}
      */
     numberOfTimes?: number;
+
+    // Optional check for the payload of the message
+    // will only return (or count) message if this returns true
+    withPayload?(payload: any): boolean;
 };
 
 /**
@@ -89,8 +93,15 @@ export function waitForMessage(
         : undefined;
     let timesMessageReceived = 0;
     const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-    handler = (m: string, _p: any) => {
+    handler = (m: string, payload: any) => {
         if (m === message || m === dispatchedAction) {
+            // First verify the payload matches
+            if (options?.withPayload) {
+                if (!options.withPayload(payload)) {
+                    return;
+                }
+            }
+
             timesMessageReceived += 1;
             if (timesMessageReceived < numberOfTimes) {
                 return;

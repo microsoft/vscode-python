@@ -135,26 +135,24 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.interruptKernel}
-                            disabled={this.props.busy}
-                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
-                        >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Interrupt}
-                            />
-                        </ImageButton>
-                        <ImageButton
-                            baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
-                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
                                 image={ImageName.Restart}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.interruptKernel}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Interrupt}
                             />
                         </ImageButton>
                         <ImageButton
@@ -273,6 +271,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         font={this.props.font}
                         settings={this.props.settings}
                         focusPending={this.props.focusPending}
+                        language={this.props.kernel.language}
                     />
                 </ErrorBoundary>
             </div>
@@ -306,6 +305,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             toolbarHeight = this.mainPanelToolbarRef.current.offsetHeight;
         }
         return {
+            gridHeight: this.props.variableState.gridHeight,
+            containerHeight: this.props.variableState.containerHeight,
             variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,
@@ -313,6 +314,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
+            setVariableExplorerHeight: this.props.setVariableExplorerHeight,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
@@ -337,12 +339,14 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         // Note: MaxOutputSize and enableScrollingForCellOutputs is being ignored on purpose for
         // the interactive window. See bug: https://github.com/microsoft/vscode-python/issues/11421
         if (this.props.settings && this.props.editorOptions) {
+            // Disable hover for collapsed code blocks
+            const options = { ...this.props.editorOptions, hover: { enabled: cellVM.inputBlockOpen } };
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
                         <InteractiveCellComponent
                             role="listitem"
-                            editorOptions={this.props.editorOptions}
+                            editorOptions={options}
                             maxTextSize={undefined}
                             enableScroll={false}
                             autoFocus={false}
@@ -356,6 +360,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             font={this.props.font}
                             settings={this.props.settings}
                             focusPending={this.props.focusPending}
+                            language={this.props.kernel.language}
                         />
                     </ErrorBoundary>
                 </div>

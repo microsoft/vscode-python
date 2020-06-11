@@ -3,7 +3,9 @@
 'use strict';
 import { assert } from 'chai';
 import { noop } from 'jquery';
+import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/kernelDaemonPool';
@@ -40,7 +42,8 @@ suite('DataScience raw kernel tests', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            rawKernel = await connectToKernel(57718);
+            const port = await portfinder.getPortPromise({ startPort: 57718 });
+            rawKernel = await connectToKernel(port);
         }
     });
 
@@ -79,6 +82,7 @@ suite('DataScience raw kernel tests', () => {
             ioc.get<KernelDaemonPool>(KernelDaemonPool),
             connectionInfo as any,
             kernelSpec,
+            ioc.get<IFileSystem>(IFileSystem),
             undefined,
             interpreter
         );
@@ -155,7 +159,8 @@ suite('DataScience raw kernel tests', () => {
         assert.ok(executeResult, 'Result not found');
         await shutdown();
         await sleep(2500); // Give time for the shutdown to go across
-        rawKernel = await connectToKernel(57418);
+        const port = await portfinder.getPortPromise({ startPort: 57418 });
+        rawKernel = await connectToKernel(port);
         replies = await requestExecute(rawKernel, 'a=1\na');
         executeResult = replies.find((r) => r.header.msg_type === 'execute_result');
         assert.ok(executeResult, 'Result not found');

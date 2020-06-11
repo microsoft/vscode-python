@@ -67,26 +67,32 @@ export function verifyVariables(
     });
 }
 
+const Button_Column = 0;
+const Name_Column = Button_Column + 1;
+const Type_Column = Name_Column + 1;
+const Shape_Column = Type_Column + 1;
+const Value_Column = Shape_Column + 1;
+
 // Verify a single row versus a single expected variable
 function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariable: IJupyterVariable) {
     const rowCells = rowWrapper.find('div.react-grid-Cell');
 
     expect(rowCells.length).to.be.equal(5, 'Unexpected number of cells in variable explorer row');
 
-    verifyCell(rowCells.at(0), targetVariable.name, targetVariable.name);
-    verifyCell(rowCells.at(1), targetVariable.type, targetVariable.name);
+    verifyCell(rowCells.at(Name_Column), targetVariable.name, targetVariable.name);
+    verifyCell(rowCells.at(Type_Column), targetVariable.type, targetVariable.name);
 
     if (targetVariable.shape && targetVariable.shape !== '') {
-        verifyCell(rowCells.at(2), targetVariable.shape, targetVariable.name);
+        verifyCell(rowCells.at(Shape_Column), targetVariable.shape, targetVariable.name);
     } else if (targetVariable.count) {
-        verifyCell(rowCells.at(2), targetVariable.count.toString(), targetVariable.name);
+        verifyCell(rowCells.at(Shape_Column), targetVariable.count.toString(), targetVariable.name);
     }
 
     if (targetVariable.value) {
-        verifyCell(rowCells.at(3), targetVariable.value, targetVariable.name);
+        verifyCell(rowCells.at(Value_Column), targetVariable.value, targetVariable.name);
     }
 
-    verifyCell(rowCells.at(4), targetVariable.supportsDataExplorer, targetVariable.name);
+    verifyCell(rowCells.at(Button_Column), targetVariable.supportsDataExplorer, targetVariable.name);
 }
 
 // Verify a single cell value against a specific target value

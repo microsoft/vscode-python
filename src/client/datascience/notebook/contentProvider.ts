@@ -11,6 +11,7 @@ import type {
     NotebookDocument,
     NotebookDocumentEditEvent
 } from 'vscode-proposed';
+import { ICommandManager } from '../../common/application/types';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers';
 
@@ -28,17 +29,30 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
-    constructor(@inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider) {}
+    constructor(
+        @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
+    ) {}
     public async openNotebook(uri: Uri): Promise<NotebookData> {
         const model = await this.notebookStorage.load(uri);
         return notebookModelToVSCNotebookData(model);
     }
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
         const model = await this.notebookStorage.load(document.uri);
-        if (model.isUntitled) {
+        if (cancellation.isCancellationRequested) {
             return;
         }
-        await this.notebookStorage.save(model, cancellation);
+        if (model.isUntitled) {
+            await this.commandManager.executeCommand('workbench.action.files.saveAs', document.uri);
+            // tslint:disable-next-line: no-suspicious-comment
+            //TODO: VSC doesn't handle this well.
+            // What if user doessn't save it.
+            if (model.isUntitled) {
+                throw new Error('Not saved');
+            }
+        } else {
+            await this.notebookStorage.save(model, cancellation);
+        }
     }
 
     public async saveNotebookAs(
