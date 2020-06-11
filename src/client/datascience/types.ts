@@ -649,6 +649,7 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
+    trusted: boolean;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
     extraLines?: number[];
 }

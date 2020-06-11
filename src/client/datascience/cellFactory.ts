@@ -27,7 +27,8 @@ function generateCodeCell(
         id: id,
         file: file,
         line: line,
-        state: CellState.init
+        state: CellState.init,
+        trusted: true // Any cell executed by the current user is trusted
     };
 }
 
@@ -37,7 +38,8 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         file: file,
         line: line,
         state: CellState.finished,
-        data: createMarkdownCell(code)
+        data: createMarkdownCell(code),
+        trusted: true // Any cell executed by the current user is trusted
     };
 }
 
