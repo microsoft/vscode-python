@@ -16,7 +16,6 @@ import {
     SpawnOptions
 } from '../../../common/process/types';
 import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
-import { sleep } from '../../../common/utils/async';
 import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -152,7 +151,6 @@ export class JupyterInterpreterSubCommandExecutionService
     @reportAction(ReportableAction.ExportNotebookToPython)
     public async exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string> {
         // Before we export check if our selected interpreter is available and supports export
-        await sleep(5_000);
         let interpreter = await this.getSelectedInterpreter(token);
         if (!interpreter || !(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
             // If not available or not supported install missing dependecies

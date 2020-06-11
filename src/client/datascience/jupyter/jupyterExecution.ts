@@ -9,7 +9,6 @@ import { Cancellation } from '../../common/cancellation';
 import { WrappedError } from '../../common/errors/errorUtils';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -113,7 +112,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     @reportAction(ReportableAction.CheckingIfImportIsSupported)
     public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        await sleep(5_000);
         // See if we can find the command nbconvert
         return this.jupyterInterpreterService.isExportSupported(cancelToken);
     }
