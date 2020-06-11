@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, named } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -12,6 +12,7 @@ import { IApplicationEnvironment } from '../application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IMemento, IPythonSettings } from '../types';
 import { ExperimentationTelemetry } from './telemetry';
 
+@injectable()
 export class ExperimentService implements IExperimentService {
     /**
      * Experiments the user requested to opt into manually.

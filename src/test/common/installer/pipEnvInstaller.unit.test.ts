@@ -7,13 +7,9 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
-import {
-    IInterpreterLocatorService,
-    InterpreterType,
-    PIPENV_SERVICE,
-    PythonInterpreter
-} from '../../../client/interpreter/contracts';
+import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('PipEnv installer', async () => {

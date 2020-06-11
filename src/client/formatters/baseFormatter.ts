@@ -8,6 +8,7 @@ import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
+import { isNotebookCell } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
@@ -61,6 +62,7 @@ export abstract class BaseFormatter {
         // However they don't support returning the diff of the formatted text when reading data from the input stream.
         // Yet getting text formatted that way avoids having to create a temporary file, however the diffing will have
         // to be done here in node (extension), i.e. extension CPU, i.e. less responsive solution.
+        // Also, always create temp files for Notebook cells.
         const tempFile = await this.createTempFile(document);
         if (this.checkCancellation(document.fileName, tempFile, token)) {
             return [];
@@ -117,9 +119,15 @@ export abstract class BaseFormatter {
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
     }
 
+    /**
+     * Always create a temporary file when formatting notebook cells.
+     * This is because there is no physical file associated with notebook cells (they are all virtual).
+     */
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        return document.isDirty ? getTempFileWithDocumentContents(document, fs) : document.fileName;
+        return document.isDirty || isNotebookCell(document)
+            ? getTempFileWithDocumentContents(document, fs)
+            : document.fileName;
     }
 
     private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {

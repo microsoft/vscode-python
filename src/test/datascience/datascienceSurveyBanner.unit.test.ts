@@ -219,7 +219,7 @@ function preparePopup(
 
     // Fire the number of opens specifed so that it behaves like the real editor
     for (let i = 0; i < initialOpenCount; i += 1) {
-        openedEventEmitter.fire();
+        openedEventEmitter.fire({} as any);
     }
 
     return result;

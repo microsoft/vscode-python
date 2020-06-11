@@ -24,7 +24,8 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentsManager,
-    IMemento
+    IMemento,
+    WORKSPACE_MEMENTO
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -96,6 +97,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(INotebookImporter) importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
@@ -128,6 +130,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             importer,
             errorHandler,
             globalStorage,
+            workspaceStorage,
             experimentsManager,
             asyncRegistry,
             switcher,

@@ -18,16 +18,11 @@ import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
-import {
-    IInterpreterDisplay,
-    IInterpreterHelper,
-    IInterpreterService,
-    InterpreterType,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
+import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any max-func-body-length
 

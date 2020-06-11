@@ -5,10 +5,11 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { CondaEnvironmentInfo, ICondaService, IInterpreterService } from '../../interpreter/contracts';
-import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
+import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
+import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
+import { WindowsStoreInterpreter } from '../../pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
@@ -39,6 +40,8 @@ export const CONDA_RUN_VERSION = '4.6.0';
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
+    private readonly disposables: IDisposableRegistry;
+    private readonly logger: IProcessLogger;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -47,7 +50,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
-    ) {}
+    ) {
+        // Acquire other objects here so that if we are called during dispose they are available.
+        this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+    }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath
             ? options.pythonPath
@@ -72,19 +79,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ? options.pythonPath
             : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-
-        const interpreter = await interpreterService.getInterpreterDetails(pythonPath, options.resource);
+        const interpreterService = this.serviceContainer.tryGet<IInterpreterService>(IInterpreterService);
+        const interpreter = interpreterService
+            ? await interpreterService.getInterpreterDetails(pythonPath, options.resource)
+            : undefined;
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: interpreter,
             resource: options.resource,
             bypassCondaExecution: true
         });
-        // No daemon support in Python 2.7.
-        if (interpreter?.version && interpreter.version.major < 3) {
+        // No daemon support in Python 2.7 or during shutdown
+        if (!interpreterService || (interpreter?.version && interpreter.version.major < 3)) {
             return (activatedProcPromise! as unknown) as T;
         }
 
@@ -98,18 +104,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 const daemon = new PythonDaemonExecutionServicePool(
-                    logger,
-                    disposables,
+                    this.logger,
+                    this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
                     activatedEnvVars
                 );
                 await daemon.initialize();
-                disposables.push(daemon);
+                this.disposables.push(daemon);
                 return (daemon as unknown) as T;
             } else {
                 const factory = new PythonDaemonFactory(
-                    disposables,
+                    this.disposables,
                     { ...options, pythonPath },
                     activatedProc!,
                     activatedEnvVars

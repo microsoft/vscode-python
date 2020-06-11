@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -10,7 +11,6 @@ import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import {
     ExecutionResult,
-    InterpreterInformation,
     IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,

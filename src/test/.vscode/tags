@@ -72,30 +72,30 @@ RopeRefactoring	..\\pythonFiles\\refactoring\\standAlone\\refactor.py	/^class Ro
 Semaphore	..\\pythonFiles\\autocomp\\misc.py	/^def Semaphore(*args, **kwargs):$/;"	kind:function	line:412
 TOOLS	..\\pythonFiles\\jupyter\\cells.py	/^TOOLS = "pan,wheel_zoom,box_zoom,reset,save,box_select"$/;"	kind:variable	line:68
 Test_CheckMyApp	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^class Test_CheckMyApp:$/;"	kind:class	line:6
-Test_CheckMyApp	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^class Test_CheckMyApp:$/;"	kind:class	line:6
-Test_CheckMyApp	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^class Test_CheckMyApp:$/;"	kind:class	line:6
+Test_CheckMyApp	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^class Test_CheckMyApp:$/;"	kind:class	line:6
+Test_CheckMyApp	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^class Test_CheckMyApp:$/;"	kind:class	line:6
 Test_Current_Working_Directory	..\\pythonFiles\\testFiles\\cwd\\src\\tests\\test_cwd.py	/^class Test_Current_Working_Directory(unittest.TestCase):$/;"	kind:class	line:6
 Test_NestedClassA	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^    class Test_NestedClassA:$/;"	kind:class	line:13
-Test_NestedClassA	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^    class Test_NestedClassA:$/;"	kind:class	line:13
-Test_NestedClassA	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^    class Test_NestedClassA:$/;"	kind:class	line:13
+Test_NestedClassA	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^    class Test_NestedClassA:$/;"	kind:class	line:13
+Test_NestedClassA	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^    class Test_NestedClassA:$/;"	kind:class	line:13
 Test_Root_test1	..\\pythonFiles\\testFiles\\single\\test_root.py	/^class Test_Root_test1(unittest.TestCase):$/;"	kind:class	line:6
 Test_Root_test1	..\\pythonFiles\\testFiles\\standard\\test_root.py	/^class Test_Root_test1(unittest.TestCase):$/;"	kind:class	line:6
-Test_Root_test1	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\test_root.py	/^class Test_Root_test1(unittest.TestCase):$/;"	kind:class	line:6
+Test_Root_test1	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\test_root.py	/^class Test_Root_test1(unittest.TestCase):$/;"	kind:class	line:6
 Test_nested_classB_Of_A	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^        class Test_nested_classB_Of_A:$/;"	kind:class	line:16
-Test_nested_classB_Of_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^        class Test_nested_classB_Of_A:$/;"	kind:class	line:16
-Test_nested_classB_Of_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^        class Test_nested_classB_Of_A:$/;"	kind:class	line:16
+Test_nested_classB_Of_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^        class Test_nested_classB_Of_A:$/;"	kind:class	line:16
+Test_nested_classB_Of_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^        class Test_nested_classB_Of_A:$/;"	kind:class	line:16
 Test_test1	..\\pythonFiles\\testFiles\\single\\tests\\test_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
 Test_test1	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
-Test_test1	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_unittest_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
-Test_test1	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
+Test_test1	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_unittest_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
+Test_test1	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_one.py	/^class Test_test1(unittest.TestCase):$/;"	kind:class	line:6
 Test_test2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^class Test_test2(unittest.TestCase):$/;"	kind:class	line:3
-Test_test2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^class Test_test2(unittest.TestCase):$/;"	kind:class	line:3
+Test_test2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^class Test_test2(unittest.TestCase):$/;"	kind:class	line:3
 Test_test2a	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^class Test_test2a(unittest.TestCase):$/;"	kind:class	line:17
-Test_test2a	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^class Test_test2a(unittest.TestCase):$/;"	kind:class	line:17
+Test_test2a	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^class Test_test2a(unittest.TestCase):$/;"	kind:class	line:17
 Test_test2a1	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    class Test_test2a1(unittest.TestCase):$/;"	kind:class	line:24
-Test_test2a1	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    class Test_test2a1(unittest.TestCase):$/;"	kind:class	line:24
+Test_test2a1	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    class Test_test2a1(unittest.TestCase):$/;"	kind:class	line:24
 Test_test3	..\\pythonFiles\\testFiles\\standard\\tests\\unittest_three_test.py	/^class Test_test3(unittest.TestCase):$/;"	kind:class	line:4
-Test_test3	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\unittest_three_test.py	/^class Test_test3(unittest.TestCase):$/;"	kind:class	line:4
+Test_test3	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\unittest_three_test.py	/^class Test_test3(unittest.TestCase):$/;"	kind:class	line:4
 Test_test_one_1	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_one.py	/^class Test_test_one_1(unittest.TestCase):$/;"	kind:class	line:3
 Test_test_one_2	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_one.py	/^class Test_test_one_2(unittest.TestCase):$/;"	kind:class	line:14
 Test_test_two_1	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_two.py	/^class Test_test_two_1(unittest.TestCase):$/;"	kind:class	line:3
@@ -472,9 +472,9 @@ name	..\\pythonFiles\\autocomp\\misc.py	/^    def name(self):$/;"	kind:member	li
 name	..\\pythonFiles\\autocomp\\misc.py	/^    def name(self, name):$/;"	kind:member	line:979
 non_parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_another_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:10
 non_parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:33
-non_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:33
-non_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_another_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:10
-non_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:33
+non_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:33
+non_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_another_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:10
+non_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^def non_parametrized_username(request):$/;"	kind:function	line:33
 normalvariate	..\\pythonFiles\\autocomp\\misc.py	/^    def normalvariate(self, mu, sigma):$/;"	kind:member	line:1633
 notify	..\\pythonFiles\\autocomp\\misc.py	/^    def notify(self, n=1):$/;"	kind:member	line:373
 notifyAll	..\\pythonFiles\\autocomp\\misc.py	/^    def notifyAll(self):$/;"	kind:member	line:400
@@ -506,9 +506,9 @@ original.py	..\\pythonFiles\\sorting\\withconfig\\original.py	1;"	kind:file	line
 p1	..\\pythonFiles\\jupyter\\cells.py	/^p1 = figure(title="Legend Example", tools=TOOLS)$/;"	kind:variable	line:70
 parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_another_pytest.py	/^def parametrized_username():$/;"	kind:function	line:6
 parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^def parametrized_username():$/;"	kind:function	line:29
-parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^def parametrized_username():$/;"	kind:function	line:29
-parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_another_pytest.py	/^def parametrized_username():$/;"	kind:function	line:6
-parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^def parametrized_username():$/;"	kind:function	line:29
+parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^def parametrized_username():$/;"	kind:function	line:29
+parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_another_pytest.py	/^def parametrized_username():$/;"	kind:function	line:6
+parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^def parametrized_username():$/;"	kind:function	line:29
 paretovariate	..\\pythonFiles\\autocomp\\misc.py	/^    def paretovariate(self, alpha):$/;"	kind:member	line:1880
 pd	..\\pythonFiles\\jupyter\\cells.py	/^import pandas as pd$/;"	kind:namespace	line:77
 pep484.py	..\\pythonFiles\\autocomp\\pep484.py	1;"	kind:file	line:1
@@ -571,96 +571,96 @@ test_1_1_3	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_one.py
 test_1_1_3	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_two.py	/^    def test_1_1_3(self):$/;"	kind:member	line:11
 test_1_2_1	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_one.py	/^    def test_1_2_1(self):$/;"	kind:member	line:15
 test_222A2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_222A2(self):$/;"	kind:member	line:18
-test_222A2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_222A2(self):$/;"	kind:member	line:18
+test_222A2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_222A2(self):$/;"	kind:member	line:18
 test_222A2wow	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^        def test_222A2wow(self):$/;"	kind:member	line:25
-test_222A2wow	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^        def test_222A2wow(self):$/;"	kind:member	line:25
+test_222A2wow	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^        def test_222A2wow(self):$/;"	kind:member	line:25
 test_222B2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_222B2(self):$/;"	kind:member	line:21
-test_222B2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_222B2(self):$/;"	kind:member	line:21
+test_222B2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_222B2(self):$/;"	kind:member	line:21
 test_222B2wow	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^        def test_222B2wow(self):$/;"	kind:member	line:28
-test_222B2wow	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^        def test_222B2wow(self):$/;"	kind:member	line:28
+test_222B2wow	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^        def test_222B2wow(self):$/;"	kind:member	line:28
 test_2_1_1	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_two.py	/^    def test_2_1_1(self):$/;"	kind:member	line:15
 test_A	..\\pythonFiles\\testFiles\\single\\tests\\test_one.py	/^    def test_A(self):$/;"	kind:member	line:7
 test_A	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_one.py	/^    def test_A(self):$/;"	kind:member	line:7
 test_A	..\\pythonFiles\\testFiles\\standard\\tests\\unittest_three_test.py	/^    def test_A(self):$/;"	kind:member	line:5
-test_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_unittest_one.py	/^    def test_A(self):$/;"	kind:member	line:7
-test_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_A(self):$/;"	kind:member	line:7
-test_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\unittest_three_test.py	/^    def test_A(self):$/;"	kind:member	line:5
+test_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_unittest_one.py	/^    def test_A(self):$/;"	kind:member	line:7
+test_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_A(self):$/;"	kind:member	line:7
+test_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\unittest_three_test.py	/^    def test_A(self):$/;"	kind:member	line:5
 test_A2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_A2(self):$/;"	kind:member	line:4
-test_A2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_A2(self):$/;"	kind:member	line:4
+test_A2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_A2(self):$/;"	kind:member	line:4
 test_B	..\\pythonFiles\\testFiles\\single\\tests\\test_one.py	/^    def test_B(self):$/;"	kind:member	line:10
 test_B	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_one.py	/^    def test_B(self):$/;"	kind:member	line:10
 test_B	..\\pythonFiles\\testFiles\\standard\\tests\\unittest_three_test.py	/^    def test_B(self):$/;"	kind:member	line:8
-test_B	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_unittest_one.py	/^    def test_B(self):$/;"	kind:member	line:10
-test_B	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_B(self):$/;"	kind:member	line:10
-test_B	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\unittest_three_test.py	/^    def test_B(self):$/;"	kind:member	line:8
+test_B	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_unittest_one.py	/^    def test_B(self):$/;"	kind:member	line:10
+test_B	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_B(self):$/;"	kind:member	line:10
+test_B	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\unittest_three_test.py	/^    def test_B(self):$/;"	kind:member	line:8
 test_B2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_B2(self):$/;"	kind:member	line:7
-test_B2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_B2(self):$/;"	kind:member	line:7
+test_B2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_B2(self):$/;"	kind:member	line:7
 test_C2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_C2(self):$/;"	kind:member	line:10
-test_C2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_C2(self):$/;"	kind:member	line:10
+test_C2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_C2(self):$/;"	kind:member	line:10
 test_D2	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	/^    def test_D2(self):$/;"	kind:member	line:13
-test_D2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_D2(self):$/;"	kind:member	line:13
+test_D2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	/^    def test_D2(self):$/;"	kind:member	line:13
 test_Root_A	..\\pythonFiles\\testFiles\\single\\test_root.py	/^    def test_Root_A(self):$/;"	kind:member	line:7
 test_Root_A	..\\pythonFiles\\testFiles\\standard\\test_root.py	/^    def test_Root_A(self):$/;"	kind:member	line:7
-test_Root_A	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\test_root.py	/^    def test_Root_A(self):$/;"	kind:member	line:7
+test_Root_A	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\test_root.py	/^    def test_Root_A(self):$/;"	kind:member	line:7
 test_Root_B	..\\pythonFiles\\testFiles\\single\\test_root.py	/^    def test_Root_B(self):$/;"	kind:member	line:10
 test_Root_B	..\\pythonFiles\\testFiles\\standard\\test_root.py	/^    def test_Root_B(self):$/;"	kind:member	line:10
-test_Root_B	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\test_root.py	/^    def test_Root_B(self):$/;"	kind:member	line:10
+test_Root_B	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\test_root.py	/^    def test_Root_B(self):$/;"	kind:member	line:10
 test_Root_c	..\\pythonFiles\\testFiles\\single\\test_root.py	/^    def test_Root_c(self):$/;"	kind:member	line:14
 test_Root_c	..\\pythonFiles\\testFiles\\standard\\test_root.py	/^    def test_Root_c(self):$/;"	kind:member	line:14
-test_Root_c	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\test_root.py	/^    def test_Root_c(self):$/;"	kind:member	line:14
+test_Root_c	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\test_root.py	/^    def test_Root_c(self):$/;"	kind:member	line:14
 test_another_pytest.py	..\\pythonFiles\\testFiles\\standard\\tests\\test_another_pytest.py	1;"	kind:file	line:1
-test_another_pytest.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_another_pytest.py	1;"	kind:file	line:1
+test_another_pytest.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_another_pytest.py	1;"	kind:file	line:1
 test_c	..\\pythonFiles\\testFiles\\single\\tests\\test_one.py	/^    def test_c(self):$/;"	kind:member	line:14
 test_c	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_one.py	/^    def test_c(self):$/;"	kind:member	line:14
-test_c	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_unittest_one.py	/^    def test_c(self):$/;"	kind:member	line:14
-test_c	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_c(self):$/;"	kind:member	line:14
+test_c	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_unittest_one.py	/^    def test_c(self):$/;"	kind:member	line:14
+test_c	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_one.py	/^    def test_c(self):$/;"	kind:member	line:14
 test_complex_check	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^    def test_complex_check(self):$/;"	kind:member	line:10
-test_complex_check	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^    def test_complex_check(self):$/;"	kind:member	line:10
-test_complex_check	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^    def test_complex_check(self):$/;"	kind:member	line:10
+test_complex_check	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^    def test_complex_check(self):$/;"	kind:member	line:10
+test_complex_check	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^    def test_complex_check(self):$/;"	kind:member	line:10
 test_complex_check2	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^    def test_complex_check2(self):$/;"	kind:member	line:24
-test_complex_check2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^    def test_complex_check2(self):$/;"	kind:member	line:24
-test_complex_check2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^    def test_complex_check2(self):$/;"	kind:member	line:24
+test_complex_check2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^    def test_complex_check2(self):$/;"	kind:member	line:24
+test_complex_check2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^    def test_complex_check2(self):$/;"	kind:member	line:24
 test_cwd	..\\pythonFiles\\testFiles\\cwd\\src\\tests\\test_cwd.py	/^    def test_cwd(self):$/;"	kind:member	line:7
 test_cwd.py	..\\pythonFiles\\testFiles\\cwd\\src\\tests\\test_cwd.py	1;"	kind:file	line:1
 test_d	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^            def test_d(self):$/;"	kind:member	line:17
-test_d	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^            def test_d(self):$/;"	kind:member	line:17
-test_d	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^            def test_d(self):$/;"	kind:member	line:17
+test_d	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^            def test_d(self):$/;"	kind:member	line:17
+test_d	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^            def test_d(self):$/;"	kind:member	line:17
 test_nested_class_methodB	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^        def test_nested_class_methodB(self):$/;"	kind:member	line:14
-test_nested_class_methodB	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^        def test_nested_class_methodB(self):$/;"	kind:member	line:14
-test_nested_class_methodB	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^        def test_nested_class_methodB(self):$/;"	kind:member	line:14
+test_nested_class_methodB	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^        def test_nested_class_methodB(self):$/;"	kind:member	line:14
+test_nested_class_methodB	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^        def test_nested_class_methodB(self):$/;"	kind:member	line:14
 test_nested_class_methodC	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^        def test_nested_class_methodC(self):$/;"	kind:member	line:19
-test_nested_class_methodC	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^        def test_nested_class_methodC(self):$/;"	kind:member	line:19
-test_nested_class_methodC	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^        def test_nested_class_methodC(self):$/;"	kind:member	line:19
+test_nested_class_methodC	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^        def test_nested_class_methodC(self):$/;"	kind:member	line:19
+test_nested_class_methodC	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^        def test_nested_class_methodC(self):$/;"	kind:member	line:19
 test_one.py	..\\pythonFiles\\testFiles\\single\\tests\\test_one.py	1;"	kind:file	line:1
 test_parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_another_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:16
 test_parametrized_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:39
-test_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:39
-test_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_another_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:16
-test_parametrized_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:39
+test_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:39
+test_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_another_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:16
+test_parametrized_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^def test_parametrized_username(non_parametrized_username):$/;"	kind:function	line:39
 test_pytest.py	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	1;"	kind:file	line:1
-test_pytest.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	1;"	kind:file	line:1
-test_pytest.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	1;"	kind:file	line:1
+test_pytest.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	1;"	kind:file	line:1
+test_pytest.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	1;"	kind:file	line:1
 test_root.py	..\\pythonFiles\\testFiles\\single\\test_root.py	1;"	kind:file	line:1
 test_root.py	..\\pythonFiles\\testFiles\\standard\\test_root.py	1;"	kind:file	line:1
-test_root.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\test_root.py	1;"	kind:file	line:1
+test_root.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\test_root.py	1;"	kind:file	line:1
 test_simple_check	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^    def test_simple_check(self):$/;"	kind:member	line:8
-test_simple_check	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^    def test_simple_check(self):$/;"	kind:member	line:8
-test_simple_check	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^    def test_simple_check(self):$/;"	kind:member	line:8
+test_simple_check	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^    def test_simple_check(self):$/;"	kind:member	line:8
+test_simple_check	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^    def test_simple_check(self):$/;"	kind:member	line:8
 test_simple_check2	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^    def test_simple_check2(self):$/;"	kind:member	line:22
-test_simple_check2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^    def test_simple_check2(self):$/;"	kind:member	line:22
-test_simple_check2	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^    def test_simple_check2(self):$/;"	kind:member	line:22
+test_simple_check2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^    def test_simple_check2(self):$/;"	kind:member	line:22
+test_simple_check2	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^    def test_simple_check2(self):$/;"	kind:member	line:22
 test_unittest_one.py	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_one.py	1;"	kind:file	line:1
 test_unittest_one.py	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_one.py	1;"	kind:file	line:1
-test_unittest_one.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_unittest_one.py	1;"	kind:file	line:1
-test_unittest_one.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_one.py	1;"	kind:file	line:1
+test_unittest_one.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_unittest_one.py	1;"	kind:file	line:1
+test_unittest_one.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_one.py	1;"	kind:file	line:1
 test_unittest_two.py	..\\pythonFiles\\testFiles\\specificTest\\tests\\test_unittest_two.py	1;"	kind:file	line:1
 test_unittest_two.py	..\\pythonFiles\\testFiles\\standard\\tests\\test_unittest_two.py	1;"	kind:file	line:1
-test_unittest_two.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_unittest_two.py	1;"	kind:file	line:1
+test_unittest_two.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_unittest_two.py	1;"	kind:file	line:1
 test_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_another_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:13
 test_username	..\\pythonFiles\\testFiles\\standard\\tests\\test_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:36
-test_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\other\\test_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:36
-test_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_another_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:13
-test_username	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\test_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:36
+test_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\other\\test_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:36
+test_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_another_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:13
+test_username	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\test_pytest.py	/^def test_username(parametrized_username):$/;"	kind:function	line:36
 testthis	..\\pythonFiles\\definition\\await.test.py	/^async def testthis():$/;"	kind:function	line:13
 three.py	..\\pythonFiles\\autocomp\\three.py	1;"	kind:file	line:1
 three.py	..\\pythonFiles\\autoimport\\two\\three.py	1;"	kind:file	line:1
@@ -687,7 +687,7 @@ two.py	..\\pythonFiles\\autocomp\\two.py	1;"	kind:file	line:1
 two.py	..\\pythonFiles\\definition\\two.py	1;"	kind:file	line:1
 uniform	..\\pythonFiles\\autocomp\\misc.py	/^    def uniform(self, a, b):$/;"	kind:member	line:1605
 unittest_three_test.py	..\\pythonFiles\\testFiles\\standard\\tests\\unittest_three_test.py	1;"	kind:file	line:1
-unittest_three_test.py	..\\pythonFiles\\testFiles\\unitestsWithConfigs\\tests\\unittest_three_test.py	1;"	kind:file	line:1
+unittest_three_test.py	..\\pythonFiles\\testFiles\\unittestsWithConfigs\\tests\\unittest_three_test.py	1;"	kind:file	line:1
 user_options	..\\pythonFiles\\autocomp\\one.py	/^    user_options = []$/;"	kind:variable	line:12
 user_options	..\\pythonFiles\\definition\\one.py	/^    user_options = []$/;"	kind:variable	line:12
 var	..\\pythonFiles\\typeFormatFiles\\elseBlocks2.py	/^var = 100$/;"	kind:variable	line:1

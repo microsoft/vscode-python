@@ -5,101 +5,77 @@ import { wireTmGrammars } from 'monaco-editor-textmate';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Registry } from 'monaco-textmate';
 import { loadWASM } from 'onigasm';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 
-export function registerMonacoLanguage() {
-    // Tell monaco about our language
-    monacoEditor.languages.register({
-        id: PYTHON_LANGUAGE,
-        extensions: ['.py']
-    });
+// Map of grammars to tmlanguage contents
+const grammarMap = new Map<string, string>();
 
-    // Setup the configuration so that auto indent and other things work. Onigasm is just going to setup the tokenizer
-    monacoEditor.languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
-        comments: {
-            lineComment: '#',
-            blockComment: ['"""', '"""']
-        },
-        brackets: [
-            ['{', '}'],
-            ['[', ']'],
-            ['(', ')']
-        ],
-        autoClosingPairs: [
-            { open: '{', close: '}' },
-            { open: '[', close: ']' },
-            { open: '(', close: ')' },
-            { open: '"', close: '"', notIn: ['string'] },
-            { open: "'", close: "'", notIn: ['string', 'comment'] }
-        ],
-        surroundingPairs: [
-            { open: '{', close: '}' },
-            { open: '[', close: ']' },
-            { open: '(', close: ')' },
-            { open: '"', close: '"' },
-            { open: "'", close: "'" }
-        ],
-        onEnterRules: [
-            {
-                beforeText: new RegExp(
-                    '^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'
-                ),
-                action: { indentAction: monacoEditor.languages.IndentAction.Indent }
-            }
-        ],
-        folding: {
-            offSide: true,
-            markers: {
-                start: new RegExp('^\\s*#region\\b'),
-                end: new RegExp('^\\s*#endregion\\b')
-            }
-        }
-    });
+// Map of language ids to scope names
+const languageMap = new Map<string, string>();
+
+async function getGrammarDefinition(scopeName: string) {
+    const mappedGrammar = grammarMap.get(scopeName);
+    if (mappedGrammar) {
+        return {
+            format: 'json',
+            content: mappedGrammar
+        };
+    }
+    return {
+        format: 'json',
+        content: '{}'
+        // tslint:disable-next-line: no-any
+    } as any;
 }
 
-// Loading the tokenizer is process wide, so don't bother doing it more than once. Creates memory leaks
+// Loading the onigasm bundles is process wide, so don't bother doing it more than once. Creates memory leaks
 // when running tests.
-let loaded: boolean = false;
+let onigasmData: ArrayBuffer | undefined;
+let loadedOnigasm = false;
 
-// tslint:disable: no-any
-export async function initializeTokenizer(
-    onigasm: ArrayBuffer,
-    tmlanguageJSON: string,
-    loadingFinished: (e?: any) => void
-): Promise<void> {
-    if (!loaded) {
-        loaded = true;
-        try {
-            // Register the language first
-            registerMonacoLanguage();
+// Global registry for grammars
+const registry = new Registry({ getGrammarDefinition: getGrammarDefinition });
+
+export namespace Tokenizer {
+    // Export for loading language data.
+    export async function loadLanguage(
+        languageId: string,
+        extensions: string[],
+        scopeName: string,
+        config: monacoEditor.languages.LanguageConfiguration,
+        languageJSON: string
+    ) {
+        // See if this language was already registered or not.
+        if (!grammarMap.has(scopeName)) {
+            grammarMap.set(scopeName, languageJSON);
+            monacoEditor.languages.register({ id: languageId, extensions });
+            monacoEditor.languages.setLanguageConfiguration(languageId, config);
 
             // Load the web assembly if necessary
-            if (onigasm && onigasm.byteLength > 0) {
-                await loadWASM(onigasm);
-
-                // Setup our registry of different
-                const registry = new Registry({
-                    getGrammarDefinition: async (_scopeName) => {
-                        return {
-                            format: 'json',
-                            content: tmlanguageJSON
-                        };
-                    }
-                });
-
-                // map of monaco "language id's" to TextMate scopeNames
-                const grammars = new Map();
-                grammars.set('python', 'source.python');
-
-                // Wire everything together.
-                await wireTmGrammars(monacoEditor, registry, grammars);
+            if (onigasmData && onigasmData.byteLength !== 0 && !loadedOnigasm) {
+                loadedOnigasm = true;
+                await loadWASM(onigasmData);
             }
-            // Indicate to the callback that we're done.
-            loadingFinished();
-        } catch (e) {
-            loadingFinished(e);
+
+            // add scope map
+            languageMap.set(languageId, scopeName);
+
+            // Wire everything together.
+            await wireTmGrammars(monacoEditor, registry, languageMap);
         }
-    } else {
-        loadingFinished();
+    }
+
+    // Export for saving onigasm data
+    export function loadOnigasm(onigasm: ArrayBuffer) {
+        if (!onigasmData) {
+            onigasmData = onigasm;
+        }
+    }
+
+    export function hasOnigasm(): boolean {
+        return loadedOnigasm;
+    }
+
+    export function hasLanguage(languageId: string): boolean {
+        return languageMap.has(languageId);
     }
 }

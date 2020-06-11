@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ICondaService } from '../../../client/interpreter/contracts';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';

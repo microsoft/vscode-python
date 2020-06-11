@@ -23,7 +23,7 @@ import {
 
 import { Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { PythonInterpreter } from '../interpreter/contracts';
+import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { ILanguageServerActivator, LanguageServerType } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServerActivator {

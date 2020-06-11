@@ -28,7 +28,7 @@ import {
 import { PYTHON } from '../common/constants';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposable, IExtensionContext, Resource } from '../common/types';
-import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
+import { IShebangCodeLensProvider } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
@@ -39,6 +39,7 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
+import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { ITestManagementService } from '../testing/types';
 import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';

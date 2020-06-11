@@ -24,7 +24,6 @@ import { CursorPos, IMainState } from '../../mainState';
  * 5) Add a new handler for the action under the 'reducer's folder. Handle the expected state change
  * 6) Add the handler to the main reducer map in reducers\index.ts
  */
-
 export enum CommonActionType {
     ADD_AND_FOCUS_NEW_CELL = 'action.add_new_cell_and_focus_cell',
     INSERT_ABOVE_AND_FOCUS_NEW_CELL = 'action.insert_above_and_focus_cell',
@@ -74,6 +73,7 @@ export enum CommonActionType {
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
     SELECT_SERVER = 'action.select_server',
+    SET_VARIABLE_EXPLORER_HEIGHT = 'action.set_variable_explorer_height',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     STEP = 'action.step',
@@ -134,6 +134,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
     [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
+    [CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT]: IVariableExplorerHeight;
     [CommonActionType.PostOutgoingMessage]: never | undefined;
     [CommonActionType.REFRESH_VARIABLES]: never | undefined;
     [CommonActionType.OPEN_SETTINGS]: IOpenSettingsAction;
@@ -230,6 +231,12 @@ export interface ILoadIPyWidgetClassFailureAction {
     error: any;
     timedout: boolean;
 }
+
+export interface IVariableExplorerHeight {
+    containerHeight: number;
+    gridHeight: number;
+}
+
 export type LoadIPyWidgetClassDisabledAction = {
     className: string;
     moduleName: string;

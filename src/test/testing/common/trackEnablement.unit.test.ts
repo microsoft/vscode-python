@@ -69,7 +69,7 @@ suite('Unit Tests - Track Enablement', () => {
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
     });
-    test('Check whether unitest, pytest and nose settings have been enabled', async () => {
+    test('Check whether unittest, pytest and nose settings have been enabled', async () => {
         const expectedSettingsChecked = [
             'python.testing.nosetestEnabled',
             'python.testing.unittestEnabled',
@@ -97,7 +97,7 @@ suite('Unit Tests - Track Enablement', () => {
         ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
     });
-    test('Check settings related to unitest, pytest and nose', async () => {
+    test('Check settings related to unittest, pytest and nose', async () => {
         const expectedSettingsChecked = [
             'python.testing.nosetestEnabled',
             'python.testing.unittestEnabled',
@@ -188,7 +188,7 @@ suite('Unit Tests - Track Enablement', () => {
         ];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     }
-    test('Send telemetry for unitest', () => testSendingTelemetry('unittest'));
+    test('Send telemetry for unittest', () => testSendingTelemetry('unittest'));
     test('Send telemetry for pytest', () => testSendingTelemetry('pytest'));
     test('Send telemetry for nosetest', () => testSendingTelemetry('nosetest'));
 });

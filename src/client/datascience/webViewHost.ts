@@ -8,7 +8,7 @@ import { ConfigurationChangeEvent, Uri, ViewColumn, WebviewPanel, WorkspaceConfi
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
-import { traceInfo, traceWarning } from '../common/logger';
+import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -50,7 +50,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() private readonly useWebViewServer: boolean,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
         @unmanaged() private readonly enableVariablesDuringDebugging: boolean
     ) {
@@ -241,26 +240,10 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
-            const resource = await this.getOwningResource();
-
             // Get our settings to pass along to the react control
             const settings = await this.generateDataScienceExtraSettings();
-            const insiders = this.configService.getSettings(resource).insidersChannel;
 
             traceInfo('Loading web view...');
-
-            let startHttpServer = false;
-
-            if (typeof settings.useWebViewServer === 'boolean') {
-                // Always allow user to turn this feature on/off via settings.
-                startHttpServer = settings.useWebViewServer === true;
-            } else {
-                // Determine if we should start an HTTP server or not based on if in the insider's channel or
-                // if it's forced on.
-                startHttpServer = this.useWebViewServer || insiders !== 'off';
-            }
-
-            traceWarning(`startHttpServer=${startHttpServer}, will not be used. Temporarily turned off`);
 
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
 
@@ -273,7 +256,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer: false,
                 cwd,
                 webViewPanel,
                 additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []

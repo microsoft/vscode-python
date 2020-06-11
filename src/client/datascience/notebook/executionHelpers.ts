@@ -6,6 +6,7 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
+import { IBaseCellVSCodeMetadata } from '../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../datascience-ui/common/cellFactory';
 import {
     INotebookModelCellExecutionCountChange,
@@ -126,6 +127,58 @@ export function updateCellOutput(notebookCellModel: ICell, outputs: nbformat.IOu
         data: {
             ...notebookCellModel.data,
             outputs
+        }
+    };
+    const updateCell: INotebookModelModifyChange = {
+        kind: 'modify',
+        newCells: [newCell],
+        oldCells: [notebookCellModel],
+        newDirty: true,
+        oldDirty: model.isDirty === true,
+        source: 'user'
+    };
+    model.update(updateCell);
+}
+
+/**
+ * Store execution start and end times in ISO format for portability.
+ */
+export function updateCellExecutionTimes(
+    notebookCellModel: ICell,
+    model: INotebookModel,
+    startTime?: number,
+    duration?: number
+) {
+    const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
+    const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
+    updateCellMetadata(
+        notebookCellModel,
+        {
+            end_execution_time: endTimeISO,
+            start_execution_time: startTimeISO
+        },
+        model
+    );
+}
+
+export function updateCellMetadata(
+    notebookCellModel: ICell,
+    metadata: Partial<IBaseCellVSCodeMetadata>,
+    model: INotebookModel
+) {
+    const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
+    // Update our model with the new metadata stored in jupyter.
+    const newCell: ICell = {
+        ...notebookCellModel,
+        data: {
+            ...notebookCellModel.data,
+            metadata: {
+                ...notebookCellModel.data.metadata,
+                vscode: {
+                    ...originalVscodeMetadata,
+                    ...metadata
+                }
+            }
         }
     };
     const updateCell: INotebookModelModifyChange = {

@@ -168,7 +168,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
-    [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
+    [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];

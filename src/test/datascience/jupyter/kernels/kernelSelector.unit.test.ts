@@ -23,8 +23,9 @@ import { KernelService } from '../../../../client/datascience/jupyter/kernels/ke
 import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable: max-func-body-length no-unused-expression
 
@@ -52,7 +53,8 @@ suite('Data Science - KernelSelector', () => {
         path: 'somePath',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        type: InterpreterType.Conda,
+        version: { raw: '3.7.1.1', major: 3, minor: 7, patch: 1, build: ['1'], prerelease: [] }
     };
 
     setup(() => {
@@ -748,15 +750,15 @@ suite('Data Science - KernelSelector', () => {
                 {
                     name: 'bar',
                     display_name: 'foo',
-                    language: 'CSharp',
+                    language: 'c#',
                     path: '/foo/dotnet',
                     argv: [],
                     env: {}
                 },
                 {
-                    name: 'foo',
+                    name: 'python3',
                     display_name: 'foo',
-                    language: 'Python',
+                    language: 'python',
                     path: '/foo/python',
                     argv: [],
                     env: {}

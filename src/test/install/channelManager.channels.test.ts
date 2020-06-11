@@ -15,15 +15,11 @@ import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
-import {
-    IInterpreterLocatorService,
-    InterpreterType,
-    PIPENV_SERVICE,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
+import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 const info: PythonInterpreter = {

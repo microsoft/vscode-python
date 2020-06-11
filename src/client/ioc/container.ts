@@ -30,4 +30,16 @@ export class ServiceContainer implements IServiceContainer {
             ? this.container.getAllNamed<T>(serviceIdentifier, name)
             : this.container.getAll<T>(serviceIdentifier);
     }
+    public tryGet<T>(
+        serviceIdentifier: interfaces.ServiceIdentifier<T>,
+        name?: string | number | symbol | undefined
+    ): T | undefined {
+        try {
+            return name
+                ? this.container.getNamed<T>(serviceIdentifier, name)
+                : this.container.get<T>(serviceIdentifier);
+        } catch {
+            // This might happen after the container has been destroyed
+        }
+    }
 }

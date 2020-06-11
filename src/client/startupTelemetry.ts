@@ -18,8 +18,9 @@ import {
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService
 } from './interpreter/autoSelection/types';
-import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
+import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
+import { PythonInterpreter } from './pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';

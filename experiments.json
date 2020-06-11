@@ -102,18 +102,6 @@
         "max": 100
     },
     {
-        "name": "WebHostNotebook - experiment",
-        "salt": "WebHostNotebook",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "WebHostNotebook - control",
-        "salt": "WebHostNotebook",
-        "min": 0,
-        "max": 100
-    },
-    {
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
         "max": 0,
@@ -177,12 +165,12 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 4
+        "max": 10
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 96,
+        "min": 90,
         "max": 100
     },
     {
@@ -194,6 +182,18 @@
     {
         "name": "RunByLine - experiment",
         "salt": "RunByLine",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "CustomEditorSupport - control",
+        "salt": "CustomEditorSupport",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CustomEditorSupport - experiment",
+        "salt": "CustomEditorSupport",
         "max": 0,
         "min": 0
     }

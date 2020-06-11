@@ -9,9 +9,8 @@ import { ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../../common/constants';
-import { WebHostNotebook } from '../../common/experiments/groups';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -45,7 +44,6 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean
     ) {
         super(
@@ -59,7 +57,6 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             [path.join(dataExplorereDir, 'commons.initial.bundle.js'), path.join(dataExplorereDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
-            experimentsManager.inExperiment(WebHostNotebook.experiment),
             useCustomEditorApi,
             false
         );

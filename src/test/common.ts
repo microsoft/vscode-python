@@ -13,8 +13,8 @@ import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
-import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
+import { PythonInterpreter } from '../client/pythonEnvironments/discovery/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -273,7 +273,8 @@ function getPythonPath(): string {
         return process.env.CI_PYTHON_PATH;
     }
     // tslint:disable-next-line:no-suspicious-comment
-    // TODO(gh-10910): Change this to python3.
+    // TODO: Change this to python3.
+    // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
 }
 
@@ -651,6 +652,9 @@ export class TestEventHandler<T extends void | any = any> implements IDisposable
     }
     public get count(): number {
         return this.handledEvents.length;
+    }
+    public get all(): T[] {
+        return this.handledEvents;
     }
     private readonly handler: IDisposable;
     // tslint:disable-next-line: no-any

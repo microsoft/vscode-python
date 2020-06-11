@@ -14,6 +14,7 @@ import {
     DebugSession,
     Disposable,
     Event,
+    LanguageConfiguration,
     Range,
     TextDocument,
     TextEditor,
@@ -27,7 +28,7 @@ import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { PythonInterpreter } from '../interpreter/contracts';
+import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { JupyterCommands } from './constants';
 import { IDataViewerDataProvider } from './data-viewing/types';
 import { NotebookModelChange } from './interactive-common/interactiveWindowTypes';
@@ -151,7 +152,7 @@ export interface IRawNotebookSupportedService {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
-    connect(token?: CancellationToken): Promise<IRawConnection>;
+    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         identity: Uri,
         resource: Resource,
@@ -181,6 +182,7 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     onKernelRestarted: Event<void>;
+    onKernelInterrupted: Event<void>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -279,7 +281,7 @@ export interface IGatherLogger extends INotebookExecutionLogger {
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
-    serverStarted: Event<INotebookServerOptions>;
+    serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
@@ -674,6 +676,7 @@ export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string): Promise<string | undefined>;
     findTmLanguage(language: string): Promise<string | undefined>;
+    findLanguageConfiguration(language: string): Promise<LanguageConfiguration | undefined>;
     isThemeDark(themeName: string): Promise<boolean | undefined>;
 }
 
@@ -1028,10 +1031,13 @@ export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
     readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
+    getBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    deleteBackup(model: INotebookModel): Promise<void>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
@@ -1061,6 +1067,7 @@ export type GetNotebookOptions = {
 };
 
 export interface INotebookProvider {
+    readonly type: 'raw' | 'jupyter';
     /**
      * Fired when a notebook has been created for a given Uri/Identity
      */

@@ -22,8 +22,9 @@ import {
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
-import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './languageServer/constants';

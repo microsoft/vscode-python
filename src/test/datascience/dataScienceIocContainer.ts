@@ -100,6 +100,7 @@ import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibi
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { LocalZMQKernel } from '../../client/common/experiments/groups';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
+import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import {
@@ -154,6 +155,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IExperimentService,
     IExperimentsManager,
     IExtensionContext,
     IExtensions,
@@ -345,54 +347,53 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
-    PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
-import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
-import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
-import { CacheableLocatorPromiseCache } from '../../client/interpreter/locators/services/cacheableLocatorService';
-import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
-import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/interpreter/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
-} from '../../client/interpreter/locators/services/globalVirtualEnvService';
-import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
-import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
-import {
-    KnownPathsService,
-    KnownSearchPathsForInterpreters
-} from '../../client/interpreter/locators/services/KnownPathsService';
-import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
-import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
-import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
-} from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
-import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { traceInfo } from '../../client/logging';
+import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
+import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
+import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
+import { CondaEnvFileService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
+import { CondaEnvService } from '../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
+import {
+    GlobalVirtualEnvironmentsSearchPathProvider,
+    GlobalVirtualEnvService
+} from '../../client/pythonEnvironments/discovery/locators/services/globalVirtualEnvService';
+import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
+import { InterpreterWatcherBuilder } from '../../client/pythonEnvironments/discovery/locators/services/interpreterWatcherBuilder';
+import {
+    KnownPathsService,
+    KnownSearchPathsForInterpreters
+} from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
+import { PipEnvService } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvService';
+import { PipEnvServiceHelper } from '../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
+import { WindowsRegistryService } from '../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
+import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
+import {
+    WorkspaceVirtualEnvironmentsSearchPathProvider,
+    WorkspaceVirtualEnvService
+} from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
+import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -629,6 +630,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<IStartPage>(IStartPage, StartPage);
+        this.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
         this.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
@@ -1240,7 +1242,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             .setup((a) =>
                 a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
             )
-            .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+            .returns((_a1: string, a2: any, _a3: string, a4: string) => {
+                if (typeof a2 === 'string') {
+                    return Promise.resolve(a2);
+                } else {
+                    return Promise.resolve(a4);
+                }
+            });
         appShell
             .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(Uri.file('test.ipynb')));
@@ -1337,6 +1345,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return setting;
     }
 
+    public forceDataScienceSettingsChanged(dataScienceSettings: Partial<IDataScienceSettings>) {
+        this.forceSettingsChanged(undefined, this.getSettings().pythonPath, {
+            ...this.getSettings().datascience,
+            ...dataScienceSettings
+        });
+    }
+
     public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
         const settings = this.getSettings(resource) as any;
         settings.pythonPath = newPath;
@@ -1423,7 +1438,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
         } else {
-            this.missedMessages.push(msg);
+            this.missedMessages.push({ type: msg.type, payload: msg.payload });
         }
 
         if (this.extraListeners.length) {
@@ -1517,7 +1532,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 20000,
+            jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',

@@ -15,8 +15,6 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
     private _preloads: Uri[] = [];
     constructor() {
         const renderersFolder = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'renderers');
-        this._preloads.push(Uri.file(path.join(renderersFolder, 'pvscDummy.js')));
-        this._preloads.push(Uri.file(path.join(renderersFolder, 'main.js')));
         this._preloads.push(Uri.file(path.join(renderersFolder, 'renderers.js')));
     }
 

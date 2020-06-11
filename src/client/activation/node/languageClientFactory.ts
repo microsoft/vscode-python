@@ -8,7 +8,7 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
 import { FileBasedCancellationStrategy } from './cancellationUtils';
 

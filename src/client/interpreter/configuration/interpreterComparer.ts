@@ -5,7 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { getArchitectureDisplayName } from '../../common/platform/registry';
-import { IInterpreterHelper, PythonInterpreter } from '../contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
 
 @injectable()

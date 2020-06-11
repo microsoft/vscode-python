@@ -7,8 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IExperimentsManager, IPathUtils, Resource } from '../../../common/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { IInterpreterSecurityService } from '../../autoSelection/types';
-import { IInterpreterService, PythonInterpreter } from '../../contracts';
+import { IInterpreterService } from '../../contracts';
 import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector } from '../types';
 
 @injectable()

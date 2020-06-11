@@ -9,6 +9,7 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri } from 'vscode';
 
+import { CancellationToken } from 'vscode-jsonrpc';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     IDocumentManager,
@@ -24,7 +25,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     IEditorContentChange,
@@ -329,7 +329,7 @@ suite('DataScience - Native Editor Storage', () => {
             localMemento
         );
 
-        return new NotebookStorageProvider(notebookStorage, [], instance(workspace));
+        return new NotebookStorageProvider(notebookStorage, []);
     }
 
     teardown(() => {
@@ -479,8 +479,8 @@ suite('DataScience - Native Editor Storage', () => {
             'a'
         );
 
-        // Wait for a second so it has time to update
-        await sleep(1000);
+        // Force a backup
+        await storage.backup(model, CancellationToken.None);
 
         // Recreate
         storage = createStorage();
@@ -498,8 +498,8 @@ suite('DataScience - Native Editor Storage', () => {
         expect(model.isDirty).to.be.equal(false, 'Editor should not be dirty');
         insertCell(0, 'a=1');
 
-        // Wait for a second so it has time to update
-        await sleep(1000);
+        // Wait for backup
+        await storage.backup(model, CancellationToken.None);
 
         // Recreate
         storage = createStorage();

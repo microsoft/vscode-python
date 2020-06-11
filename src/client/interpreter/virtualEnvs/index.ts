@@ -12,7 +12,8 @@ import { ICurrentProcess, IPathUtils } from '../../common/types';
 import { getNamesAndValues } from '../../common/utils/enum';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterLocatorService, InterpreterType, IPipEnvService, PIPENV_SERVICE } from '../contracts';
+import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../contracts';
 import { IVirtualEnvironmentManager } from './types';
 
 const PYENVFILES = ['pyvenv.cfg', path.join('..', 'pyvenv.cfg')];

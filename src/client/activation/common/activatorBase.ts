@@ -30,7 +30,7 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import {
     ILanguageServerActivator,
     ILanguageServerDownloader,

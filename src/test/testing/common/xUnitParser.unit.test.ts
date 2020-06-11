@@ -139,7 +139,7 @@ suite('Testing - parse JUnit XML file', () => {
         fs.verifyAll();
     });
 
-    // Missing tests (see gh-7447):
+    // Missing tests (see https://github.com/microsoft/vscode-python/issues/7447):
     // * simple pytest
     // * simple nose
     // * complex

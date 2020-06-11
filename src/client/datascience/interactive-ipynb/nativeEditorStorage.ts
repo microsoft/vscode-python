@@ -9,8 +9,8 @@ import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { isUntitledFile, noop } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
@@ -35,9 +35,6 @@ interface INativeEditorStorageState {
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
-function isUntitledFile(file?: Uri) {
-    return file?.scheme === 'untitled';
-}
 export function isUntitled(model?: INotebookModel): boolean {
     return isUntitledFile(model?.file);
 }
@@ -331,7 +328,8 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private updateCellExecutionCount(cellId: string, executionCount?: number) {
         const index = this.cells.findIndex((v) => v.id === cellId);
         if (index >= 0) {
-            this._state.cells[index].data.execution_count = (executionCount || 0) > 0 ? executionCount : null;
+            this._state.cells[index].data.execution_count =
+                typeof executionCount === 'number' && executionCount > 0 ? executionCount : null;
             return true;
         }
         return false;
@@ -504,7 +502,12 @@ export class NativeEditorStorage implements INotebookStorage {
         return isUntitledFile(file);
     }
 
-    public async load(file: Uri, possibleContents?: string, skipDirtyContents?: boolean): Promise<INotebookModel> {
+    public getBackupId(model: INotebookModel): string {
+        const key = this.getStorageKey(model.file);
+        return this.getHashedFileName(key);
+    }
+
+    public load(file: Uri, possibleContents?: string, skipDirtyContents?: boolean): Promise<INotebookModel> {
         return this.loadFromFile(file, possibleContents, skipDirtyContents);
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
@@ -516,7 +519,6 @@ export class NativeEditorStorage implements INotebookStorage {
             oldDirty: model.isDirty,
             newDirty: false
         });
-        this.clearHotExit(model.file).ignoreErrors();
     }
 
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
@@ -528,10 +530,10 @@ export class NativeEditorStorage implements INotebookStorage {
             kind: 'saveAs',
             oldDirty: model.isDirty,
             newDirty: false,
-            target: file
+            target: file,
+            sourceUri: model.file
         });
         this.savedAs.fire({ new: file, old });
-        this.clearHotExit(old).ignoreErrors();
     }
     public async backup(model: INotebookModel, cancellation: CancellationToken): Promise<void> {
         // If we are already backing up, save this request replacing any other previous requests
@@ -554,6 +556,15 @@ export class NativeEditorStorage implements INotebookStorage {
             }
         });
     }
+
+    public async revert(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
+        // Revert to what is in the hot exit file
+        await this.loadFromFile(model.file);
+    }
+
+    public async deleteBackup(model: INotebookModel): Promise<void> {
+        return this.clearHotExit(model.file);
+    }
     /**
      * Stores the uncommitted notebook changes into a temporary location.
      * Also keep track of the current time. This way we can check whether changes were
@@ -574,7 +585,7 @@ export class NativeEditorStorage implements INotebookStorage {
     private async clearHotExit(file: Uri): Promise<void> {
         const key = this.getStorageKey(file);
         const filePath = this.getHashedFileName(key);
-        return this.writeToStorage(filePath, undefined);
+        await this.writeToStorage(filePath, undefined);
     }
 
     private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
@@ -583,10 +594,10 @@ export class NativeEditorStorage implements INotebookStorage {
                 if (contents) {
                     await this.fileSystem.createDirectory(path.dirname(filePath));
                     if (!cancelToken?.isCancellationRequested) {
-                        return await this.fileSystem.writeFile(filePath, contents);
+                        await this.fileSystem.writeFile(filePath, contents);
                     }
                 } else if (await this.fileSystem.fileExists(filePath)) {
-                    return await this.fileSystem.deleteFile(filePath);
+                    await this.fileSystem.deleteFile(filePath);
                 }
             }
         } catch (exc) {

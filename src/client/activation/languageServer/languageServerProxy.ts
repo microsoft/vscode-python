@@ -16,8 +16,8 @@ import {
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../interpreter/contracts';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
