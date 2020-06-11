@@ -9,13 +9,31 @@ import { TerminalShellType } from '../types';
 import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
 
 // For a given shell the scripts are in order of precedence.
-export const SCRIPTS: ActivationScripts = ({
+const SCRIPTS: ActivationScripts = ({
     // Group 1
     [TerminalShellType.commandPrompt]: ['activate.bat', 'Activate.ps1'],
     // Group 2
     [TerminalShellType.powershell]: ['Activate.ps1', 'activate.bat'],
     [TerminalShellType.powershellCore]: ['Activate.ps1', 'activate.bat']
 } as unknown) as ActivationScripts;
+
+export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
+    const scripts: string[] = [];
+    for (const key of Object.keys(SCRIPTS)) {
+        const shell = key as TerminalShellType;
+        for (const name of SCRIPTS[shell]) {
+            if (!scripts.includes(name)) {
+                scripts.push(
+                    name,
+                    // We also add scripts in subdirs.
+                    pathJoin('Scripts', name),
+                    pathJoin('scripts', name)
+                );
+            }
+        }
+    }
+    return scripts;
+}
 
 @injectable()
 export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvider {
