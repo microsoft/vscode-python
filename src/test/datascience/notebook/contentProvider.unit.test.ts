@@ -62,6 +62,9 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
+
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: (vscodeNotebookEnums as any).CellKind.Code,
