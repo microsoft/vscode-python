@@ -684,7 +684,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async exportAs(): Promise<void> {
-        this.commandManager.executeCommand(Commands.Export);
+        const activeEditor = this.editorProvider.activeEditor;
+        if (!activeEditor || !activeEditor.model) {
+            return;
+        }
+        this.commandManager.executeCommand(Commands.Export, activeEditor.model);
     }
 
     private logNativeCommand(args: INativeCommand) {

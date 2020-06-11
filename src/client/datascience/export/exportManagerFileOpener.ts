@@ -15,7 +15,7 @@ export class ExportManagerFileOpener implements IExportManager {
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`); // TODO: need to localize
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`); // need to localize
         let uri: Uri | undefined;
         try {
             uri = await this.manager.export(format, model);
@@ -25,7 +25,7 @@ export class ExportManagerFileOpener implements IExportManager {
         } finally {
             reporter.dispose();
         }
-        // maybe prompt
+        // maybe prompt before exporting
         if (format === ExportFormat.python) {
             await this.openPythonFile(uri);
         } else {

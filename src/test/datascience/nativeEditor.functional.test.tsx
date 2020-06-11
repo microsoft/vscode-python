@@ -613,9 +613,11 @@ df.head()`;
                         // Click export and wait for a document to change
                         const commandFired = createDeferred();
                         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+                        const editor = TypeMoq.Mock.ofType<INotebookEditorProvider>().object.activeEditor;
+                        const model = editor!.model!;
                         ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
                         commandManager
-                            .setup((cmd) => cmd.executeCommand(Commands.Export))
+                            .setup((cmd) => cmd.executeCommand(Commands.Export, model))
                             .returns(() => {
                                 commandFired.resolve();
                                 return Promise.resolve();
