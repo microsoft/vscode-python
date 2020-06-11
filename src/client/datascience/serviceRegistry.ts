@@ -3,7 +3,7 @@
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { UseCustomEditorApi } from '../common/constants';
-import { CustomEditorSupport, NativeNotebook } from '../common/experiments/groups';
+import { NotebookEditorSupport } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
@@ -160,8 +160,8 @@ import {
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
-    const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
-    const inCustomEditorApiExperiment = experiments.inExperiment(CustomEditorSupport.experiment);
+    const useVSCodeNotebookAPI = experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
+    const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
 

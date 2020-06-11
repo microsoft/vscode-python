@@ -14,7 +14,7 @@ import { IApplicationEnvironment } from '../../../client/common/application/type
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { NativeNotebook } from '../../../client/common/experiments/groups';
+import { NotebookEditorSupport } from '../../../client/common/experiments/groups';
 import {
     configUri,
     downloadedExperimentStorageKey,
@@ -895,8 +895,8 @@ suite('A/B experiments', () => {
         });
         test('NativeNotebook Experiment are not loaded in VSC Insiders', async () => {
             const storageValue = [
-                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
-                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+                { name: NotebookEditorSupport.control, salt: 'salt', min: 79, max: 94 },
+                { name: NotebookEditorSupport.nativeNotebookExperiment, salt: 'salt', min: 19, max: 30 }
             ];
             experimentStorage.setup((n) => n.value).returns(() => storageValue);
             when(appEnvironment.machineId).thenReturn('101');
@@ -907,8 +907,8 @@ suite('A/B experiments', () => {
         });
         test('NativeNotebook Experiment are loaded in VSC Insiders', async () => {
             const storageValue = [
-                { name: NativeNotebook.control, salt: 'salt', min: 79, max: 94 },
-                { name: NativeNotebook.experiment, salt: 'salt', min: 19, max: 30 }
+                { name: NotebookEditorSupport.control, salt: 'salt', min: 79, max: 94 },
+                { name: NotebookEditorSupport.nativeNotebookExperiment, salt: 'salt', min: 19, max: 30 }
             ];
             experimentStorage.setup((n) => n.value).returns(() => storageValue);
             when(appEnvironment.machineId).thenReturn('101');

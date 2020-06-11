@@ -14,7 +14,7 @@ import type {
     NotebookOutputSelector
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
-import { NativeNotebook } from '../experiments/groups';
+import { NotebookEditorSupport } from '../experiments/groups';
 import { IDisposableRegistry, IExperimentsManager } from '../types';
 import {
     IVSCodeNotebook,
@@ -66,7 +66,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentsManager) readonly experimentManager: IExperimentsManager
     ) {
-        if (this.useProposedApi && experimentManager.inExperiment(NativeNotebook.experiment)) {
+        if (this.useProposedApi && experimentManager.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             this.addEventHandlers();
         }
     }

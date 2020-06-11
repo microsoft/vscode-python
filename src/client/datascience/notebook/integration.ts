@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { NativeNotebook } from '../../common/experiments/groups';
+import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -35,7 +35,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
 
