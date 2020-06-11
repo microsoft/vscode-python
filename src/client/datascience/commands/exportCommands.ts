@@ -10,7 +10,7 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import { ExportFormat, ExportManager, IExportManager } from '../export/exportManager';
-import { INotebookModel } from '../types';
+import { INotebookEditorProvider, INotebookModel } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -22,7 +22,8 @@ export class ExportCommands implements IDisposable {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExportManager) private exportManager: ExportManager,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (model) => this.export(model, ExportFormat.python));
@@ -46,8 +47,12 @@ export class ExportCommands implements IDisposable {
 
     private async export(model: INotebookModel, exportMethod?: ExportFormat) {
         if (!model) {
-            // possibly show promp that you can't export if no model?
-            return;
+            // if no model then this was called from command pallete, need to get editor
+            const activeEditor = this.notebookProvider.activeEditor;
+            if (!activeEditor || !activeEditor.model) {
+                return;
+            }
+            model = activeEditor.model;
         }
 
         if (exportMethod) {
