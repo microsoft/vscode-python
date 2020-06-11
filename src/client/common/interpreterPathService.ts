@@ -9,6 +9,7 @@ import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri
 import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
 import { isTestExecution } from './constants';
+import { traceError } from './logger';
 import { FileSystemPaths } from './platform/fs-paths';
 import {
     IDisposable,
@@ -105,7 +106,8 @@ export class InterpreterPathService implements IInterpreterPathService {
             return;
         }
         if (!resource) {
-            throw new Error('Cannot update workspace settings as no workspace is opened');
+            traceError('Cannot update workspace settings as no workspace is opened');
+            return;
         }
         const settingKey = this.getSettingKey(resource, configTarget);
         const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
@@ -149,7 +151,11 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public async _copyWorkspaceFolderValueToNewStorage(resource: Resource, value: string | undefined): Promise<void> {
         // Copy workspace folder setting into the new storage if it hasn't been copied already
-        const workspaceFolderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
+        const workspaceFolderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
+        if (workspaceFolderKey === '') {
+            // No workspace folder is opened, simply return.
+            return;
+        }
         const flaggedWorkspaceFolderKeysStorage = this.persistentStateFactory.createGlobalPersistentState<string[]>(
             workspaceFolderKeysForWhichTheCopyIsDone_Key,
             []
