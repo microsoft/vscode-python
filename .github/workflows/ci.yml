@@ -88,19 +88,26 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: Login via Az module
-        uses: azure/login@v1.1
-        with:
-          creds: ${{secrets.AZURE_CREDENTIALS}}
-          enable-AzPSSession: true
+      # - name: Login via Az module
+      #   uses: azure/login@v1.1
+      #   with:
+      #     creds: ${{secrets.AZURE_CREDENTIALS}}
+      #     enable-AzPSSession: true
 
-      - name: Run Az CLI script
-        run: |
-          az webapp list --query "[?state=='Running']"
+      # - name: Run Az CLI script
+      #   run: |
+      #     az webapp list --query "[?state=='Running']"
+
+      # - name: Login into container
+      #   run: |
+      #     az acr login --name pvscContainers
 
       - name: Login into container
-        run: |
-          az acr login --name pvscContainers
+      - uses: azure/docker-login@v1
+        with:
+          login-server: pvsccontainers.azurecr.io
+          username: ${{ secrets.DOCKERIO_USERNAME }}
+          password: ${{ secrets.DOCKERIO_PASSWORD }}
 
       - name: Pull docker image
         run: |
