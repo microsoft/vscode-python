@@ -107,38 +107,39 @@ jobs:
   runInsideContainer:
     name: Run inside container
     runs-on: ubuntu-latest
+    container: docker://rizwan937/helm
     # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Login into container
-        uses: azure/docker-login@v1
-        with:
-          login-server: pvsccontainers.azurecr.io
-          username: ${{ secrets.DOCKERIO_USERNAME }}
-          password: ${{ secrets.DOCKERIO_PASSWORD }}
+    #   - name: Login into container
+    #     uses: azure/docker-login@v1
+    #     with:
+    #       login-server: pvsccontainers.azurecr.io
+    #       username: ${{ secrets.DOCKERIO_USERNAME }}
+    #       password: ${{ secrets.DOCKERIO_PASSWORD }}
 
-      - name: Pull docker image
-        run: |
-          docker pull pvsccontainers.azurecr.io/samples/2
-          docker tag pvsccontainers.azurecr.io/samples/2 python3.8.3
+    #   - name: Pull docker image
+    #     run: |
+    #       docker pull pvsccontainers.azurecr.io/samples/2
+    #       docker tag pvsccontainers.azurecr.io/samples/2 python3.8.3
 
-      - name: docker images
-        run: |
-          docker images
+    #   - name: docker images
+    #     run: |
+    #       docker images
 
-      - name: Create & start docker container
-        run: |
-          containerid=$(docker create python3.8.3)
-          docker start $(echo $containerid)
-          printenv
+    #   - name: Create & start docker container
+    #     run: |
+    #       containerid=$(docker create python3.8.3)
+    #       docker start $(echo $containerid)
+    #       printenv
 
-      - name: Run inside docker container
-        run: |
-          docker run -it python3.8.3 /bin/bash
-          printenv
+    #   - name: Run inside docker container
+    #     run: |
+    #       docker run -it python3.8.3 /bin/bash
+    #       printenv
 
       - name: Show all env vars
         run: |
