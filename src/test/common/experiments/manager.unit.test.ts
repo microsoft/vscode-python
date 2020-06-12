@@ -919,8 +919,8 @@ suite('A/B experiments', () => {
             expManager.populateUserExperiments();
             assert.deepEqual(expManager.userExperiments, [
                 {
-                    max: 0,
-                    min: 100,
+                    min: 0,
+                    max: 100,
                     name: 'NativeNotebook - experiment',
                     salt: 'salt'
                 }
