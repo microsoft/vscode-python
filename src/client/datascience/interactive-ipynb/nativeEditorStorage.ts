@@ -216,11 +216,19 @@ export class NativeEditorNotebookModel implements INotebookModel {
                 break;
             case 'save':
                 this._state.saveChangeCount = this._state.changeCount;
+                // Trigger event.
+                if (this.useNativeEditorApi) {
+                    changed = true;
+                }
                 break;
             case 'saveAs':
                 this._state.saveChangeCount = this._state.changeCount;
                 this._state.changeCount = this._state.saveChangeCount = 0;
                 this._state.file = change.target;
+                // Trigger event.
+                if (this.useNativeEditorApi) {
+                    changed = true;
+                }
                 break;
             default:
                 break;

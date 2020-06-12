@@ -44,12 +44,6 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         }
         if (model.isUntitled) {
             await this.commandManager.executeCommand('workbench.action.files.saveAs', document.uri);
-            // tslint:disable-next-line: no-suspicious-comment
-            //TODO: VSC doesn't handle this well.
-            // What if user doesn't save it.
-            if (model.isUntitled) {
-                throw new Error('Not saved');
-            }
         } else {
             await this.notebookStorage.save(model, cancellation);
         }
