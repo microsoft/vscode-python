@@ -10,6 +10,7 @@ import { ExportFormat, IExport } from '../../../client/datascience/export/export
 import { IExtensionTestApi } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
+import { IFileSystem } from '../../../client/common/platform/types';
 
 suite('DataScience - Export Python', () => {
     let api: IExtensionTestApi;
@@ -29,8 +30,9 @@ suite('DataScience - Export Python', () => {
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
+        const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
         const exportToPython = api.serviceContainer.get<IExport>(IExport, ExportFormat.python);
-        const target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
+        const target = Uri.file((await fileSystem.createTemporaryFile('.py')).filePath);
         await exportToPython.export(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
             target
