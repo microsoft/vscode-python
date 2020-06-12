@@ -437,7 +437,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     public setValue(text: string, cursorPos: CursorPos) {
         if (this.state.model && this.state.editor && this.state.model.getValue() !== text) {
-            this.forceValue(text, cursorPos);
+            this.forceValue(text, cursorPos, true);
         }
     }
 
@@ -469,19 +469,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition) {
+    private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition, allowNotifications?: boolean) {
         if (this.state.model && this.state.editor) {
             // Save current position. May need it to update after setting.
             const current = this.state.editor.getPosition();
 
-            // Disable change notifications as we know this
-            // is different.
-            this.skipNotifications = true;
+            // Disable change notifications if forcing this value should not allow them
+            this.skipNotifications = allowNotifications ? false : true;
 
             // Close any suggestions that are open
             this.closeSuggestWidget();
 
-            // Change our text. This shouldn't fire an update to the model
+            // Change our text.
             this.previousModelValue = text;
             this.state.model.setValue(text);
 
