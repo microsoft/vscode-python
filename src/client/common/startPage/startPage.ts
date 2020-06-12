@@ -234,7 +234,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
         const settings = this.configuration.getSettings();
 
-        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
+        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
             // extesionVersionChanged() reads CHANGELOG.md
             // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();
