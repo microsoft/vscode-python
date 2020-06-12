@@ -19,7 +19,8 @@
     background-color: var(--vscode-titleBar-activeBackground);
 }
 
-.icon:hover {
+.icon:hover,
+.text:hover {
     background-color: var(--vscode-editorIndentGuide-activeBackground);
     cursor: pointer;
 }
@@ -38,6 +39,7 @@
 .text {
     font-weight: 100;
     font-size: x-large;
+    width: fit-content;
 }
 
 .block {

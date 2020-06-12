@@ -71,7 +71,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
+                        <div className="text" onClick={this.openBlankNotebook} role="button">
                             {getLocString('StartPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
                         {this.renderNotebookDescription()}
@@ -86,7 +86,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
+                        <div className="text" role="button" onClick={this.createPythonFile}>
                             {getLocString('StartPage.createAPythonFile', 'Create a Python File')}
                         </div>
                         {this.renderPythonFileDescription()}
@@ -101,8 +101,11 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
-                            {getLocString('StartPage.openInteractiveWindow', 'Open the Interactive Window')}
+                        <div className="text" role="button" onClick={this.openInteractiveWindow}>
+                            {getLocString(
+                                'StartPage.openInteractiveWindow',
+                                'Use the Interactive Window to develop Python Scripts'
+                            )}
                         </div>
                         {this.renderInteractiveWindowDescription()}
                     </div>
@@ -165,7 +168,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+                        '- Create a new file with a .py extension<br />- <div class="link" role="button" onclick={0}>Create or Open a Python File, Folder, or Workspace</div>'
                     ).format('openFileBrowser()')
                 }}
             />

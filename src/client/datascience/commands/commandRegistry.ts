@@ -8,9 +8,8 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
-import { EnableStartPage } from '../../common/experiments/groups';
 import { IStartPage } from '../../common/startPage/types';
-import { IConfigurationService, IDisposable, IExperimentService, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -44,8 +43,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(IStartPage) private startPage: IStartPage,
-        @inject(IExperimentService) private readonly expService: IExperimentService
+        @inject(IStartPage) private startPage: IStartPage
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -351,9 +349,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async openStartPage(): Promise<void> {
-        if (await this.expService.inExperiment(EnableStartPage.experiment)) {
-            return this.startPage.open();
-        }
+        return this.startPage.open();
     }
 
     private viewJupyterOutput() {

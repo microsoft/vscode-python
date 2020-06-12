@@ -7,7 +7,7 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands, EditorContexts, Telemetry } from '../../datascience/constants';
+import { Commands, Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
 import { WebViewHost } from '../../datascience/webViewHost';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -19,7 +19,6 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../application/types';
-import { ContextKey } from '../contextKey';
 import { EnableStartPage } from '../experiments/groups';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
@@ -88,7 +87,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             await this.loadWebPanel(process.cwd());
             // open webview
             await super.show(true);
-        }, 0);
+        }, 5000);
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -216,22 +215,24 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     public async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
         const version: string = this.appEnvironment.packageJson.version;
+        let shouldShowStartPage: boolean;
 
         if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
             // There has not been an update
-            return false;
+            shouldShowStartPage = false;
+        } else {
+            shouldShowStartPage = true;
         }
 
         // savedVersion being undefined means this is the first time the user activates the extension.
         // if savedVersion != version, there was an update
         await this.context.globalState.update('extensionVersion', version);
-        return true;
+        return shouldShowStartPage;
     }
 
     private async activateBackground(): Promise<void> {
-        const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
-        const editorContext = new ContextKey(EditorContexts.StartPageEnabled, this.commandManager);
-        editorContext.set(enabled).ignoreErrors();
+        // const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
+        const enabled = true;
         const settings = this.configuration.getSettings();
 
         if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
@@ -275,11 +276,11 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         if (await this.file.fileExists(localizedFilePath)) {
             sampleNotebookPath = localizedFilePath;
         } else {
-            sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Welcome_To_VSCode_Notebooks.ipynb');
+            sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Notebooks intro.ipynb');
         }
 
         const content = await this.file.readFile(sampleNotebookPath);
-        await this.notebookEditorProvider.createNew(content);
+        await this.notebookEditorProvider.createNew(content, localize.StartPage.sampleNotebook());
     }
 
     private setTelemetryFlags() {

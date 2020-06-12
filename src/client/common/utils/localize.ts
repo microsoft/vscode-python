@@ -966,9 +966,12 @@ export namespace StartPage {
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+        '- Create a new file with a .py extension<br />- <div class="link" role="button" onclick={0}>Create or Open a Python File, Folder, or Workspace</div>'
     );
-    export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
+    export const openInteractiveWindow = localize(
+        'StartPage.openInteractiveWindow',
+        'Use the Interactive Window to develop Python Scripts'
+    );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
@@ -986,7 +989,7 @@ export namespace StartPage {
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro.ipynb');
 }
 
 export namespace DebugConfigStrings {
