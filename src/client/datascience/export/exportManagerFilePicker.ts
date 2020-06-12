@@ -31,6 +31,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
     ) {}
 
     public async getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined> {
+        // map each export method to a set of file extensions
         let fileExtensions;
         switch (format) {
             case ExportFormat.python:
