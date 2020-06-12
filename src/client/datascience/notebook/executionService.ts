@@ -5,6 +5,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
+import { IDisposable } from 'monaco-editor';
 import { Subscription } from 'rxjs';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
@@ -152,6 +153,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
 
         let subscription: Subscription | undefined;
+        let modelClearedEventHandler: IDisposable | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
             const observable = nb.executeObservable(
@@ -163,6 +165,15 @@ export class NotebookExecutionService implements INotebookExecutionService {
             );
             subscription = observable?.subscribe(
                 (cells) => {
+                    if (!modelClearedEventHandler) {
+                        modelClearedEventHandler = model.changed((e) => {
+                            if (e.kind === 'clear') {
+                                // If cell output has been cleared, then clear the output in the observed executable cell.
+                                // Else if user clears output while execuitng a cell, we add it back.
+                                cells.forEach((c) => (c.data.outputs = []));
+                            }
+                        });
+                    }
                     const rawCellOutput = cells
                         .filter((item) => item.id === cell.uri.fsPath)
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
@@ -221,6 +232,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             updateCellWithErrorStatus(cell, ex);
             this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
+            modelClearedEventHandler?.dispose(); // NOSONAR
             subscription?.unsubscribe(); // NOSONAR
             // Ensure we remove the cancellation.
             const cancellations = this.pendingExecutionCancellations.get(document.uri.fsPath);

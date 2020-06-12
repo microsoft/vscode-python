@@ -20,7 +20,11 @@ import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../logging';
 import { ICell, INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
-import { createCellFromVSCNotebookCell, createVSCCellOutputsFromOutputs } from './helpers';
+import {
+    createCellFromVSCNotebookCell,
+    createVSCCellOutputsFromOutputs,
+    updateVSCNotebookCellMetadata
+} from './helpers';
 
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
@@ -32,9 +36,7 @@ export function updateCellModelWithChangesToVSCCell(
 ) {
     switch (change.type) {
         case 'changeCellOutputs':
-            // We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
-            // I.e. cell output is already in our INotebookModel.
-            return;
+            return clearCellOutput(change, model);
         case 'changeCellLanguage':
             return changeCellLanguage(change, model);
         case 'changeCells':
@@ -43,6 +45,31 @@ export function updateCellModelWithChangesToVSCCell(
             // tslint:disable-next-line: no-string-literal
             assert.fail(`Unsupported cell change ${change['type']}`);
     }
+}
+
+/**
+ * We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
+ * I.e. cell output is already in our INotebookModel.
+ * However we are interested in cell output being cleared (when user clears output).
+ */
+function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel) {
+    if (!change.cells.every((cell) => cell.outputs.length === 0)) {
+        return;
+    }
+
+    // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
+    change.cells.forEach((vscCell) => {
+        const cell = findMappedNotebookCellModel(change.document, vscCell, model.cells);
+        cell.data.outputs = [];
+        updateVSCNotebookCellMetadata(vscCell.metadata, cell);
+        model.update({
+            source: 'user',
+            kind: 'clear',
+            oldDirty: model.isDirty,
+            newDirty: true,
+            oldCells: [cell]
+        });
+    });
 }
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {

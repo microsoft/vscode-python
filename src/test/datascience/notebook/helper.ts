@@ -240,6 +240,19 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     } else {
         expect(outputText).to.include(text, 'Output does not contain provided text');
     }
+    return true;
+}
+export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+    const cellOutputs = cell.outputs;
+    assert.ok(cellOutputs, 'No output');
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
+    if (isExactMatch) {
+        assert.notEqual(outputText, text, 'Incorrect output');
+    } else {
+        expect(outputText).to.not.include(text, 'Output does not contain provided text');
+    }
+    return true;
 }
 export function assertHasTextOutputInICell(cell: ICell, text: string, index: number) {
     const cellOutputs = cell.data.outputs as nbformat.IOutput[];
