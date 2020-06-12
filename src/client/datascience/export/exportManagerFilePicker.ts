@@ -6,6 +6,7 @@ import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
 import { ExportFormat } from './exportManager';
 
+// File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
 export const HTMLExtensions = { HTML: ['html', 'htm'] };
 export const PythonExtensions = { Python: ['py'] };
