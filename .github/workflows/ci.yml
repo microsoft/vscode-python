@@ -125,6 +125,7 @@ jobs:
 
   runInsideContainer:
     name: Run inside container
+    container: hello-world
     runs-on: ubuntu-latest
     # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
