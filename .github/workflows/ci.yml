@@ -103,7 +103,7 @@ jobs:
       #     az acr login --name pvscContainers
 
       - name: Login into container
-      - uses: azure/docker-login@v1
+        uses: azure/docker-login@v1
         with:
           login-server: pvsccontainers.azurecr.io
           username: ${{ secrets.DOCKERIO_USERNAME }}
