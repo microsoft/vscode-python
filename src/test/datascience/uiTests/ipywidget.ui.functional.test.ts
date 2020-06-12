@@ -145,7 +145,7 @@ use(chaiAsPromised);
                 assert.equal(count, 3);
             });
         });
-        test('IANHU Output displayed after executing a cell', async () => {
+        test('Output displayed after executing a cell', async () => {
             const { notebookUI } = await openABCIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(0));
 
