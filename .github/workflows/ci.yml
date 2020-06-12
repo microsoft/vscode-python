@@ -98,6 +98,10 @@ jobs:
         run: |
           az webapp list --query "[?state=='Running']"
 
+      - name: Login into container
+        run: |
+          az acr login --name pvscContainers
+
       - name: Pull docker image
         run: |
           docker pull pvsccontainers.azurecr.io/samples/python3
