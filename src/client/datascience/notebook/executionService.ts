@@ -5,13 +5,13 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import { IDisposable } from 'monaco-editor';
 import { Subscription } from 'rxjs';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import '../../common/extensions';
+import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
