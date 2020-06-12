@@ -94,6 +94,82 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
             }
         ]);
     });
+
+    test('Return notebook with csharp language', async () => {
+        const model: Partial<INotebookModel> = {
+            metadata: {
+                language_info: {
+                    name: 'csharp'
+                },
+                orig_nbformat: 5
+            },
+            cells: [
+                {
+                    data: {
+                        cell_type: 'code',
+                        execution_count: 10,
+                        hasExecutionOrder: true,
+                        outputs: [],
+                        source: 'Console.WriteLine("1")',
+                        metadata: {}
+                    },
+                    file: 'a.ipynb',
+                    id: 'MyCellId1',
+                    line: 0,
+                    state: CellState.init
+                },
+                {
+                    data: {
+                        cell_type: 'markdown',
+                        hasExecutionOrder: false,
+                        source: '# HEAD',
+                        metadata: {}
+                    },
+                    file: 'a.ipynb',
+                    id: 'MyCellId2',
+                    line: 0,
+                    state: CellState.init
+                }
+            ]
+        };
+        when(storageProvider.load(anything())).thenResolve((model as unknown) as INotebookModel);
+
+        const notebook = await contentProvider.openNotebook(fileUri);
+
+        assert.isOk(notebook);
+        assert.deepEqual(notebook.languages, ['csharp']);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
+
+        assert.deepEqual(notebook.cells, [
+            {
+                cellKind: (vscodeNotebookEnums as any).CellKind.Code,
+                language: 'csharp',
+                outputs: [],
+                source: 'print(1)',
+                metadata: {
+                    editable: true,
+                    executionOrder: 10,
+                    hasExecutionOrder: true,
+                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
+                    runnable: true
+                }
+            },
+            {
+                cellKind: (vscodeNotebookEnums as any).CellKind.Markdown,
+                language: MARKDOWN_LANGUAGE,
+                outputs: [],
+                source: '# HEAD',
+                metadata: {
+                    editable: true,
+                    executionOrder: undefined,
+                    hasExecutionOrder: false,
+                    runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
+                    runnable: false
+                }
+            }
+        ]);
+    });
     test('Verify mime types and order', () => {
         // https://github.com/microsoft/vscode-python/issues/11880
     });

@@ -16,7 +16,7 @@ import {
     NotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../logging';
 import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
@@ -74,16 +74,6 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
     const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
-
-    // VSC fires event if changing cell language from markdown to markdown.
-    // https://github.com/microsoft/vscode/issues/98836
-    if (
-        (change.language === PYTHON_LANGUAGE && cellModel.data.cell_type === 'code') ||
-        (change.language === MARKDOWN_LANGUAGE && cellModel.data.cell_type === 'markdown')
-    ) {
-        return;
-    }
-
     const cellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
     // tslint:disable-next-line: no-any
     change.cell.outputs = createVSCCellOutputsFromOutputs(cellData.outputs as any);
@@ -97,19 +87,6 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
-    // For some reason VSC fires a change even when opening a document.
-    // Ignore this https://github.com/microsoft/vscode/issues/98841
-    if (
-        change.changes.length === 1 &&
-        change.changes[0].deletedCount === 0 &&
-        change.changes[0].start === 0 &&
-        change.changes[0].items.length === model.cells.length &&
-        change.document.cells.length === model.cells.length
-    ) {
-        // This is an event fired when a document is opened, we can safely ignore this.
-        return;
-    }
-
     if (isCellMoveChange(change)) {
         handleCellMove(change, model);
     } else if (isCellDelete(change)) {
