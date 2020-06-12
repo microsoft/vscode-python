@@ -15,6 +15,11 @@ export interface IExportManagerFilePicker {
     getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
 }
 
+export function stripFileExtension(fileName: string): string {
+    const extension = path.extname(fileName);
+    return fileName.slice(0, fileName.length - extension.length);
+}
+
 @injectable()
 export class ExportManagerFilePicker implements IExportManagerFilePicker {
     private readonly defaultExportSaveLocation = ''; // set default save location
@@ -43,7 +48,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
-        const notebookFileName = path.basename(source.fsPath);
+        const notebookFileName = stripFileExtension(path.basename(source.fsPath));
         const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
         const options: SaveDialogOptions = {
             defaultUri: dialogUri,
@@ -68,8 +73,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
     }
 
     private updateFileSaveLocation(value: Uri) {
-        const filePath = value.fsPath;
-        // use path module
-        this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, filePath);
+        const location = path.dirname(value.fsPath);
+        this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, location);
     }
 }

@@ -32,7 +32,7 @@ export class ExportManager implements IExportManager {
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        // need to add telementry and status messages
+        // need to add telementry
         const target = await this.filePicker.getExportFileLocation(format, model.file);
         if (!target) {
             return;
@@ -61,7 +61,7 @@ export class ExportManager implements IExportManager {
                     break;
             }
         } finally {
-            tempFile.dispose(); // need to dispose of temp file
+            tempFile.dispose();
         }
 
         return target;
