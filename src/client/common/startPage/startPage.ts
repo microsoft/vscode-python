@@ -231,8 +231,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async activateBackground(): Promise<void> {
-        // const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
-        const enabled = true;
+        const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
         const settings = this.configuration.getSettings();
 
         if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
