@@ -209,7 +209,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
                     updateCellExecutionTimes(
                         notebookCellModel,
-                        model,
                         cell.metadata.runStartTime,
                         cell.metadata.lastRunDuration
                     );

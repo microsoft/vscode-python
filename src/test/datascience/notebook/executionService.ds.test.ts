@@ -208,4 +208,40 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Verify that it hasn't got added (even after interrupting).
         assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
     });
+    test('Clearing output when not executing', async () => {
+        await insertPythonCellAndWait('print("Foo Bar")', 0);
+        await insertPythonCellAndWait('print("Hello World")', 1);
+
+        const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cellModels = editorProvider.activeEditor?.model?.cells!;
+
+        await commands.executeCommand('notebook.execute');
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () =>
+                assertHasExecutionCompletedSuccessfully(vscCells[0]) &&
+                assertHasExecutionCompletedSuccessfully(vscCells[1]),
+            15_000,
+            'Cells did not get executed'
+        );
+        assert.lengthOf(vscCells[0].outputs, 1, 'Must have output');
+        assert.lengthOf(vscCells[1].outputs, 1, 'Must have output');
+        assert.lengthOf((cellModels[0].data.outputs as unknown) as [], 1, 'Must have output');
+        assert.lengthOf((cellModels[1].data.outputs as unknown) as [], 1, 'Must have output');
+
+        // Clear the cells
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () =>
+                vscCells[0].outputs.length === 0 &&
+                vscCells[1].outputs.length === 0 &&
+                ((cellModels[0].data.outputs as unknown) as []).length === 0 &&
+                ((cellModels[1].data.outputs as unknown) as []).length === 0,
+            5_000,
+            'Cell did not get cleared'
+        );
+    });
 });

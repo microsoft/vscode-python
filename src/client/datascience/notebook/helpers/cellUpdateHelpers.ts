@@ -18,7 +18,7 @@ import {
 } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../logging';
-import { ICell, INotebookModel } from '../../types';
+import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
 import {
     createCellFromVSCNotebookCell,
@@ -84,26 +84,16 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
         return;
     }
 
-    const newCellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
-    const newCell: ICell = {
-        ...cellModel,
-        data: newCellData
-    };
-
-    model.update({
-        source: 'user',
-        kind: 'modify',
-        newCells: [newCell],
-        oldCells: [cellModel],
-        oldDirty: model.isDirty,
-        newDirty: true
-    });
-
+    const cellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
     // tslint:disable-next-line: no-any
-    change.cell.outputs = createVSCCellOutputsFromOutputs(newCellData.outputs as any);
+    change.cell.outputs = createVSCCellOutputsFromOutputs(cellData.outputs as any);
     change.cell.metadata.executionOrder = undefined;
     change.cell.metadata.hasExecutionOrder = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
     change.cell.metadata.runnable = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
+
+    // Create a new cell & replace old one.
+    const oldCellIndex = model.cells.indexOf(cellModel);
+    model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.document, change.cell, model);
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
@@ -162,14 +152,10 @@ function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel)
     const cellToSwap = findMappedNotebookCellModel(change.document, insertChange.items[0]!, model.cells);
     const cellToSwapWith = model.cells[insertChange.start];
     assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
-    model.update({
-        source: 'user',
-        kind: 'swap',
-        oldDirty: model.isDirty,
-        newDirty: true,
-        firstCellId: cellToSwap.id,
-        secondCellId: cellToSwapWith.id
-    });
+
+    const indexOfCellToSwap = model.cells.indexOf(cellToSwap);
+    model.cells[insertChange.start] = cellToSwap;
+    model.cells[indexOfCellToSwap] = cellToSwapWith;
 }
 function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookModel) {
     assert.equal(change.changes.length, 1, 'When inserting cells we must have only 1 change');
@@ -177,27 +163,11 @@ function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookM
     const insertChange = change.changes[0];
     const cell = change.changes[0].items[0];
     const newCell = createCellFromVSCNotebookCell(change.document, cell, model);
-
-    model.update({
-        source: 'user',
-        kind: 'insert',
-        newDirty: true,
-        oldDirty: model.isDirty,
-        index: insertChange.start,
-        cell: newCell
-    });
+    model.cells.splice(insertChange.start, 0, newCell);
 }
 function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookModel) {
     assert.equal(change.changes.length, 1, 'When deleting cells we must have only 1 change');
     const deletionChange = change.changes[0];
     assert.equal(deletionChange.deletedCount, 1, 'Deleting more than one cell is not supported');
-    const cellToDelete = model.cells[deletionChange.start];
-    model.update({
-        source: 'user',
-        kind: 'remove',
-        oldDirty: model.isDirty,
-        newDirty: true,
-        cell: cellToDelete,
-        index: deletionChange.start
-    });
+    model.cells.splice(deletionChange.start, 1);
 }

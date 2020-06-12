@@ -8,7 +8,6 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
 import { IBaseCellVSCodeMetadata } from '../../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
-import { INotebookModelModifyChange } from '../../interactive-common/interactiveWindowTypes';
 import { ICell, INotebookModel } from '../../types';
 import { findMappedNotebookCell } from './cellMappers';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
@@ -118,51 +117,23 @@ export function updateCellOutput(vscCell: NotebookCell, cell: ICell, outputs: nb
 /**
  * Store execution start and end times in ISO format for portability.
  */
-export function updateCellExecutionTimes(
-    notebookCellModel: ICell,
-    model: INotebookModel,
-    startTime?: number,
-    duration?: number
-) {
+export function updateCellExecutionTimes(notebookCellModel: ICell, startTime?: number, duration?: number) {
     const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
     const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
-    updateCellMetadata(
-        notebookCellModel,
-        {
-            end_execution_time: endTimeISO,
-            start_execution_time: startTimeISO
-        },
-        model
-    );
+    updateCellMetadata(notebookCellModel, {
+        end_execution_time: endTimeISO,
+        start_execution_time: startTimeISO
+    });
 }
 
-export function updateCellMetadata(
-    notebookCellModel: ICell,
-    metadata: Partial<IBaseCellVSCodeMetadata>,
-    model: INotebookModel
-) {
+export function updateCellMetadata(notebookCellModel: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
     const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
     // Update our model with the new metadata stored in jupyter.
-    const newCell: ICell = {
-        ...notebookCellModel,
-        data: {
-            ...notebookCellModel.data,
-            metadata: {
-                ...notebookCellModel.data.metadata,
-                vscode: {
-                    ...originalVscodeMetadata,
-                    ...metadata
-                }
-            }
+    notebookCellModel.data.metadata = {
+        ...notebookCellModel.data.metadata,
+        vscode: {
+            ...originalVscodeMetadata,
+            ...metadata
         }
     };
-    const updateCell: INotebookModelModifyChange = {
-        kind: 'modify',
-        newCells: [newCell],
-        oldCells: [notebookCellModel],
-        newDirty: true,
-        oldDirty: model.isDirty === true,
-        source: 'user'
-    };
-    model.update(updateCell);
 }

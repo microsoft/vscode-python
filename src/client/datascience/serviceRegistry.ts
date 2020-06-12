@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { UseCustomEditorApi } from '../common/constants';
+import { UseCustomEditorApi, UseNativeEditorApi } from '../common/constants';
 import { NotebookEditorSupport } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
@@ -164,6 +164,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
+    serviceManager.addSingletonInstance<boolean>(UseNativeEditorApi, useVSCodeNotebookAPI);
 
     // This condition is temporary.
     const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
