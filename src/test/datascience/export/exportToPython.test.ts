@@ -30,9 +30,10 @@ suite('DataScience - Export Python', () => {
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
         const exportToPython = api.serviceContainer.get<IExport>(IExport, ExportFormat.python);
-
+        const target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         await exportToPython.export(
-            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb'))
+            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
+            target
         );
 
         const documentManager = api.serviceContainer.get<IDocumentManager>(IDocumentManager);
