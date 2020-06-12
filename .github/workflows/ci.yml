@@ -114,11 +114,6 @@ jobs:
           docker pull pvsccontainers.azurecr.io/samples/python3
           docker tag pvsccontainers.azurecr.io/samples/python3 python3.8.3
 
-      - name: Pull docker image
-        run: |
-          docker pull pvsccontainers.azurecr.io/samples/python3
-          docker tag pvsccontainers.azurecr.io/samples/python3 python3.8.3
-
       - name: docker images
         run: |
           docker images
@@ -132,6 +127,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
+      - name: Modify path variable
+        run: |
+          export PATH="$PATH:/usr/bin"
+        shell: bash
+
+      - name: docker images
+        run: |
+          /usr/bin/docker images
 
       - name: docker images
         run: |
