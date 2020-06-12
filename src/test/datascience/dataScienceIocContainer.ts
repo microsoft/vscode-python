@@ -94,7 +94,12 @@ import { WebPanelProvider } from '../../client/common/application/webPanels/webP
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi, UseNativeEditorApi, UseProposedApi } from '../../client/common/constants';
+import {
+    EXTENSION_ROOT_DIR,
+    UseCustomEditorApi,
+    UseNativeEditorApi,
+    UseProposedApi
+} from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
@@ -419,7 +424,6 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
-PanelProvider;';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
