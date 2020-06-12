@@ -99,3 +99,8 @@ export enum CustomEditorSupport {
     control = 'CustomEditorSupport - control',
     experiment = 'CustomEditorSupport - experiment'
 }
+
+// Experiment to turn on the start page
+export enum EnableStartPage {
+    experiment = 'EnableStartPage'
+}

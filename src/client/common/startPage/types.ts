@@ -2,12 +2,6 @@
 // Licensed under the MIT License.
 import { SharedMessages } from '../../datascience/messages';
 
-// Move to common/experiments/groups.ts when the VS Code webview bug is fixed
-export enum EnableStartPage {
-    control = 'EnableStartPage - control',
-    experiment = 'EnableStartPage - experiment'
-}
-
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;
