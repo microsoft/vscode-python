@@ -66,7 +66,7 @@ export interface IExtensionActivationService {
 export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
-    Node = 'Node',
+    Node = 'MPLS_NEW',
     None = 'None'
 }
 

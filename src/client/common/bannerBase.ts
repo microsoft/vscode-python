@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
 import { IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 
 // Base class for a popup (banner) that proposes user to try out a new feature of
 // the extension, and optionally enable that new feature if they choose to do so.
+@injectable()
 export abstract class BannerBase implements IPythonExtensionBanner {
     protected initialization = Promise.resolve();
     protected disabledInCurrentSession = false;

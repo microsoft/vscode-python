@@ -25,6 +25,7 @@ enum ProposeLSLabelIndex {
     Later
 }
 
+@injectable()
 abstract class ProposeLanguageServerBanner extends BannerBase {
     private sampleSizePerHundred: number;
     private bannerMessage: string = localize.LanguageService.proposeLanguageServerMessage();
@@ -89,7 +90,8 @@ abstract class ProposeLanguageServerBanner extends BannerBase {
         // for both Jedi and MPLSv1 users.
         await this.reactivateBannerForLSv2();
 
-        // we only want 10% of folks that use MPLSv1 to see the prompt for MPLS v2.
+        // we only want certain percentage of folks to see the prompt for MPLS v2.
+        // These are different for Jedi, MPLS v1 and None users.
         const randomSample: number = getRandomBetween(0, 100);
         if (randomSample >= this.sampleSizePerHundred) {
             await this.disable();

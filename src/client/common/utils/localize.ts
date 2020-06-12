@@ -144,7 +144,7 @@ export namespace LanguageService {
     );
     export const proposeLanguageServerMessage = localize(
         'LanguageService.proposeLanguageServerMessage',
-        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.'
+        'Try out a new faster, feature-rich language server for Python by Microsoft - MPLS_NEW!'
     );
     export const tryItNow = localize('LanguageService.tryItNow', 'Try it now');
     export const noThanks = localize('LanguageService.noThanks', 'No thanks');
