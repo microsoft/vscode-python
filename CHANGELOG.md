@@ -92,6 +92,8 @@
    ([#12225](https://github.com/Microsoft/vscode-python/issues/12225))
 1. Make stop during run by line interrupt the kernel.
    ([#12249](https://github.com/Microsoft/vscode-python/issues/12249))
+1. Have raw kernel respect the jupyter server disable auto start setting.
+   ([#12246](https://github.com/Microsoft/vscode-python/issues/12246))
 
 ### Code Health
 
