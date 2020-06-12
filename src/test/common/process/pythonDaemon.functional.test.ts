@@ -19,11 +19,12 @@ import {
     StreamMessageWriter
 } from 'vscode-jsonrpc';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
-import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
+import { IPythonExecutionService } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+import { PythonVersionInfo } from '../../../client/pythonEnvironments/discovery/types';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);

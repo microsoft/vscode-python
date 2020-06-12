@@ -102,7 +102,7 @@ async function activateUnsafe(
     const [serviceManager, serviceContainer] = initializeGlobals(context);
     activatedServiceContainer = serviceContainer;
     initializeComponents(context, serviceManager, serviceContainer);
-    const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+    const { activationPromise } = await activateComponents(context, serviceManager, serviceContainer);
 
     //===============================================
     // activation ends here

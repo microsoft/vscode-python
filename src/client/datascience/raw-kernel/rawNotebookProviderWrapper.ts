@@ -13,7 +13,6 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentsManager,
     IOutputChannel,
     Resource
 } from '../../common/types';
@@ -24,7 +23,14 @@ import { IRoleBasedObject, RoleBasedFactory } from '../jupyter/liveshare/roleBas
 import { ILiveShareHasRole } from '../jupyter/liveshare/types';
 import { IKernelLauncher } from '../kernel-launcher/types';
 import { ProgressReporter } from '../progress/progressReporter';
-import { IDataScience, INotebook, IRawConnection, IRawNotebookProvider } from '../types';
+import {
+    ConnectNotebookProviderOptions,
+    IDataScience,
+    INotebook,
+    IRawConnection,
+    IRawNotebookProvider,
+    IRawNotebookSupportedService
+} from '../types';
 import { GuestRawNotebookProvider } from './liveshare/guestRawNotebookProvider';
 import { HostRawNotebookProvider } from './liveshare/hostRawNotebookProvider';
 
@@ -46,7 +52,7 @@ type RawNotebookProviderClassType = {
         kernelSelector: KernelSelector,
         progressReporter: ProgressReporter,
         outputChannel: IOutputChannel,
-        experimentsManager: IExperimentsManager
+        rawKernelSupported: IRawNotebookSupportedService
     ): IRawNotebookProviderInterface;
 };
 // tslint:enable:callable-types
@@ -71,7 +77,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) outputChannel: IOutputChannel,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IRawNotebookSupportedService) rawNotebookSupported: IRawNotebookSupportedService
     ) {
         // The server factory will create the appropriate HostRawNotebookProvider or GuestRawNotebookProvider based on
         // the liveshare state.
@@ -92,7 +98,7 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
             kernelSelector,
             progressReporter,
             outputChannel,
-            experimentsManager
+            rawNotebookSupported
         );
     }
 
@@ -105,9 +111,9 @@ export class RawNotebookProviderWrapper implements IRawNotebookProvider, ILiveSh
         return notebookProvider.supported();
     }
 
-    public async connect(): Promise<IRawConnection> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
         const notebookProvider = await this.serverFactory.get();
-        return notebookProvider.connect();
+        return notebookProvider.connect(options);
     }
 
     public async createNotebook(

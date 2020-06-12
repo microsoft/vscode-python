@@ -15,7 +15,7 @@ import {
     IOutputChannel,
     Resource
 } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
+import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -54,6 +54,7 @@ export class JupyterServerBase implements INotebookServer {
         private jupyterOutputChannel: IOutputChannel
     ) {
         this.asyncRegistry.push(this);
+        traceInfo(`Creating jupyter server: ${this._id}`);
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
@@ -129,40 +130,49 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async shutdown(): Promise<void> {
-        // Order should be
-        // 1) connectionInfoDisconnectHandler - listens to process close
-        // 2) sessions (owned by the notebooks)
-        // 3) session manager (owned by this object)
-        // 4) connInfo (owned by this object) - kills the jupyter process
+        try {
+            // Order should be
+            // 1) connectionInfoDisconnectHandler - listens to process close
+            // 2) sessions (owned by the notebooks)
+            // 3) session manager (owned by this object)
+            // 4) connInfo (owned by this object) - kills the jupyter process
 
-        if (this.connectionInfoDisconnectHandler) {
-            this.connectionInfoDisconnectHandler.dispose();
-            this.connectionInfoDisconnectHandler = undefined;
-        }
+            if (this.connectionInfoDisconnectHandler) {
+                this.connectionInfoDisconnectHandler.dispose();
+                this.connectionInfoDisconnectHandler = undefined;
+            }
 
-        // Destroy the kernel spec
-        await this.destroyKernelSpec();
+            // Destroy the kernel spec
+            await this.destroyKernelSpec();
 
-        // Remove the saved session if we haven't passed it onto a notebook
-        if (this.savedSession) {
-            await this.savedSession.dispose();
-            this.savedSession = undefined;
-        }
+            // Remove the saved session if we haven't passed it onto a notebook
+            if (this.savedSession) {
+                await this.savedSession.dispose();
+                this.savedSession = undefined;
+            }
 
-        traceInfo(`Shutting down notebooks for ${this.id}`);
-        const notebooks = await Promise.all([...this.notebooks.values()]);
-        await Promise.all(notebooks.map((n) => n?.dispose()));
-        traceInfo(`Shut down session manager`);
-        if (this.sessionManager) {
-            await this.sessionManager.dispose();
-            this.sessionManager = undefined;
-        }
+            traceInfo(`Shutting down notebooks for ${this.id}`);
+            const notebooks = await Promise.all([...this.notebooks.values()]);
+            await Promise.all(notebooks.map((n) => n?.dispose()));
+            traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
+            if (this.sessionManager) {
+                // Session manager in remote case may take too long to shutdown. Don't wait that
+                // long.
+                const result = await Promise.race([sleep(10_000), this.sessionManager.dispose()]);
+                if (result === 10_000) {
+                    traceError(`Session shutdown timed out.`);
+                }
+                this.sessionManager = undefined;
+            }
 
-        // After shutting down notebooks and session manager, kill the main process.
-        if (this.launchInfo && this.launchInfo.connectionInfo) {
-            traceInfo('Shutdown server - dispose conn info');
-            this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
-            this.launchInfo = undefined;
+            // After shutting down notebooks and session manager, kill the main process.
+            if (this.launchInfo && this.launchInfo.connectionInfo) {
+                traceInfo('Shutdown server - dispose conn info');
+                this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
+                this.launchInfo = undefined;
+            }
+        } catch (e) {
+            traceError(`Error during shutdown: `, e);
         }
     }
 

@@ -14,8 +14,9 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { PipEnvActivationCommandProvider } from '../../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
-import { IInterpreterService, InterpreterType, IPipEnvService } from '../../../../client/interpreter/contracts';
+import { IInterpreterService, IPipEnvService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any
 

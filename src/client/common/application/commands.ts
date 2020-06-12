@@ -29,6 +29,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
+    ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
@@ -72,6 +73,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
+    [Commands.OpenStartPage]: [];
     [LSCommands.ClearAnalyisCache]: [];
 }
 
@@ -83,6 +85,8 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    ['vscode.openWith']: [Uri, string];
+    ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['setContext']: [string, boolean];
     ['python.reloadVSCode']: [string];
@@ -164,7 +168,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
-    [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
+    [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];

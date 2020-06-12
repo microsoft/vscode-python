@@ -8,9 +8,9 @@ import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace 
 import { Commands } from '../../client/common/constants';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
+import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { updateSetting } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';

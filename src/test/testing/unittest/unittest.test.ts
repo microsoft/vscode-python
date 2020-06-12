@@ -10,7 +10,7 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory, TestFile, TestFunction, Tests, TestsToRun } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';

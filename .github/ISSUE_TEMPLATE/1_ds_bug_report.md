@@ -33,6 +33,7 @@ _Please provide as much info as you readily know_
 -   **Jupyter server running:** Local | Remote | N/A
 -   **Extension version:** 20YY.MM.#####-xxx
 -   **VS Code version:** #.##
+-   **Setting python.jediEnabled:** true | false
 -   **Setting python.languageServer:** Jedi | Microsoft | None
 -   **Python and/or Anaconda version:** #.#.#
 -   **OS:** Windows | Mac | Linux (distro):

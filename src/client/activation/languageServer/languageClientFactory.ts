@@ -9,7 +9,7 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } from '../types';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file

@@ -4,7 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
+import type { NotebookCell, NotebookDocument, NotebookKernel as VSCNotebookKernel } from 'vscode-proposed';
 import { INotebookExecutionService } from './types';
 
 /**

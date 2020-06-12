@@ -18,7 +18,8 @@ import {
     ILinkClickAction,
     IOpenSettingsAction,
     IScrollAction,
-    IShowDataViewerAction
+    IShowDataViewerAction,
+    IVariableExplorerHeight
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
 
@@ -73,6 +74,8 @@ export const actionCreators = {
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> =>
         createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
+    setVariableExplorerHeight: (containerHeight: number, gridHeight: number): CommonAction<IVariableExplorerHeight> =>
+        createIncomingActionWithPayload(CommonActionType.SET_VARIABLE_EXPLORER_HEIGHT, { containerHeight, gridHeight }),
     expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),
     collapseAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.CollapseAll),
     export: (): CommonAction => createIncomingAction(CommonActionType.EXPORT),

@@ -26,6 +26,7 @@ async function openNotebookEditor(
 ): Promise<INotebookEditor> {
     const uri = Uri.file(filePath);
     iocC.setFileContents(uri, contents);
+    traceInfo(`NotebookHelper: opening notebook file ${filePath}`);
     const notebookEditorProvider = iocC.get<INotebookEditorProvider>(INotebookEditorProvider);
     return uri ? notebookEditorProvider.open(uri) : notebookEditorProvider.createNew();
 }
@@ -85,7 +86,7 @@ export async function openNotebook(
 ) {
     traceInfo(`Opening notebook for UI tests...`);
     const notebookFile = await createNotebookFileWithContents(notebookFileContents, disposables);
-    traceInfo(`Notebook UI Tests: have file`);
+    traceInfo(`Notebook UI Tests: have file ${notebookFile}`);
 
     const notebookUI = new NotebookEditorUI();
     disposables.push(notebookUI);

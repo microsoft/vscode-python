@@ -16,6 +16,10 @@
     cursor: hand;
 }
 
+.image-button-empty {
+    visibility: hidden;
+}
+
 .image-button-inner-disabled-filter {
     opacity: 0.5;
 }

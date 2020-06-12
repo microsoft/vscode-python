@@ -21,13 +21,13 @@
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
-        "min": 60
+        "min": 80
     },
     {
         "name": "ShowExtensionSurveyPrompt - control",
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
-        "max": 40
+        "max": 20
     },
     {
         "name": "DebugAdapterFactory - control",
@@ -102,18 +102,6 @@
         "max": 100
     },
     {
-        "name": "WebHostNotebook - experiment",
-        "salt": "WebHostNotebook",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "WebHostNotebook - control",
-        "salt": "WebHostNotebook",
-        "min": 0,
-        "max": 100
-    },
-    {
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
         "max": 0,
@@ -122,18 +110,6 @@
     {
         "name": "LocalZMQKernel - control",
         "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "NativeNotebook - experiment",
-        "salt": "NativeNotebook",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "NativeNotebook - control",
-        "salt": "NativeNotebook",
         "min": 0,
         "max": 100
     },
@@ -177,12 +153,12 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 0
+        "max": 10
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 100,
+        "min": 90,
         "max": 100
     },
     {
@@ -196,6 +172,23 @@
         "salt": "RunByLine",
         "max": 0,
         "min": 0
+    },
+    {
+        "name": "CustomEditorSupport - control",
+        "salt": "CustomEditorSupport",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CustomEditorSupport - experiment",
+        "salt": "CustomEditorSupport",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "NativeNotebook - experiment",
+        "salt": "CustomEditorSupport",
+        "max": 0,
+        "min": 0
     }
-
 ]

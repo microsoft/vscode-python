@@ -9,6 +9,7 @@ import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IPythonPathUpdaterServiceManager } from '../configuration/types';
@@ -16,7 +17,6 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    PythonInterpreter,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
 

@@ -20,7 +20,7 @@ import {
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { PythonInterpreter } from '../interpreter/contracts';
+import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**
@@ -116,6 +116,7 @@ export interface ILanguageServerFolderService {
     getLanguageServerFolderName(resource: Resource): Promise<string>;
     getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
+    skipDownload(): Promise<boolean>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');

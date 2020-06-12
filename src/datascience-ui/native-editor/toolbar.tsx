@@ -37,6 +37,7 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     save: typeof actionCreators.save;
     executeAllCells: typeof actionCreators.executeAllCells;
     toggleVariableExplorer: typeof actionCreators.toggleVariableExplorer;
+    setVariableExplorerHeight: typeof actionCreators.setVariableExplorerHeight;
     executeAbove: typeof actionCreators.executeAbove;
     executeCellAndBelow: typeof actionCreators.executeCellAndBelow;
     restartKernel: typeof actionCreators.restartKernel;
@@ -159,7 +160,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
-                            disabled={this.props.busy || !canRestartAndInterruptKernel}
+                            disabled={!canRestartAndInterruptKernel}
                             className="native-button"
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
@@ -172,7 +173,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
-                            disabled={this.props.busy || !canRestartAndInterruptKernel}
+                            disabled={!canRestartAndInterruptKernel}
                             className="native-button"
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >

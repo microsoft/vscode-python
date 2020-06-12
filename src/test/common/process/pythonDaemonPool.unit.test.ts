@@ -14,13 +14,9 @@ import { MessageConnection } from 'vscode-jsonrpc';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import {
-    InterpreterInformation,
-    IProcessLogger,
-    IPythonExecutionService,
-    Output
-} from '../../../client/common/process/types';
+import { IProcessLogger, IPythonExecutionService, Output } from '../../../client/common/process/types';
 import { sleep } from '../../../client/common/utils/async';
+import { InterpreterInformation } from '../../../client/pythonEnvironments/discovery/types';
 import { noop } from '../../core';
 use(chaiPromised);
 

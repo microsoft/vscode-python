@@ -9,10 +9,10 @@ import '../../../common/extensions';
 import {
     IInterpreterLocatorService,
     IInterpreterService,
-    InterpreterType,
     IPipEnvService,
     PIPENV_SERVICE
 } from '../../../interpreter/contracts';
+import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
 import { IWorkspaceService } from '../../application/types';
 import { IFileSystem } from '../../platform/types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';

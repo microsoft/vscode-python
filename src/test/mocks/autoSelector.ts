@@ -10,7 +10,7 @@ import {
     IInterpreterAutoSelectionService,
     IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 
 @injectable()
 export class MockAutoSelectionService

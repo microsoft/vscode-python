@@ -937,12 +937,56 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const runByLine = localize('DataScience.runByLine', 'Run by line');
-    export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
+    export const runByLine = localize('DataScience.runByLine', 'Run by line (F10)');
+    export const step = localize('DataScience.step', 'Run next line (F10)');
+    export const stopRunByLine = localize('DataScience.stopRunByLine', 'Stop');
     export const rawKernelSessionFailed = localize(
         'DataScience.rawKernelSessionFailed',
         'Unable to start session for kernel {0}. Select another kernel to launch with.'
     );
+    export const rawKernelConnectingSession = localize(
+        'DataScience.rawKernelConnectingSession',
+        'Connecting to kernel.'
+    );
+
+    export const reloadCustomEditor = localize(
+        'DataScience.reloadCustomEditor',
+        'Please reload VS Code to use the custom editor API'
+    );
+}
+
+export namespace StartPage {
+    export const getStarted = localize('StartPage.getStarted', 'Python - Get Started');
+    export const pythonExtensionTitle = localize('StartPage.pythonExtensionTitle', 'Python Extension');
+    export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
+    export const notebookDescription = localize(
+        'StartPage.notebookDescription',
+        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+    );
+    export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
+    export const pythonFileDescription = localize(
+        'StartPage.pythonFileDescription',
+        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+    );
+    export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
+    export const interactiveWindowDesc = localize(
+        'StartPage.interactiveWindowDesc',
+        '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
+    );
+
+    export const releaseNotes = localize(
+        'StartPage.releaseNotes',
+        'Take a look at our <a class="link" href={0}>Release Notes</a> to learn more about the latest features'
+    );
+    export const tutorialAndDoc = localize(
+        'StartPage.tutorialAndDoc',
+        'Explore more features in our <a class="link" href={0}>Tutorials</a> or check <a class="link" href={1}>Documentation</a> for tips and troubleshooting.'
+    );
+    export const dontShowAgain = localize('StartPage.dontShowAgain', "Don't show this page again");
+    export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
+    // When localizing sampleNotebook, the translated notebook must also be included in
+    // pythonFiles\*
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
 }
 
 export namespace DebugConfigStrings {

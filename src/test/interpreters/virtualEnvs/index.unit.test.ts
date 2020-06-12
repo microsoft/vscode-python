@@ -14,14 +14,10 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../../client/common/terminal/types';
 import { ICurrentProcess, IPathUtils } from '../../../client/common/types';
-import {
-    IInterpreterLocatorService,
-    InterpreterType,
-    IPipEnvService,
-    PIPENV_SERVICE
-} from '../../../client/interpreter/contracts';
+import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Manager', () => {

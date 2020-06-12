@@ -25,8 +25,9 @@ import { EnvironmentVariablesProvider } from '../../../client/common/variables/e
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {

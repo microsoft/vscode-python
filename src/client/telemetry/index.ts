@@ -23,8 +23,8 @@ import {
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
+import { InterpreterType } from '../pythonEnvironments/discovery/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -56,6 +56,24 @@ function isTelemetrySupported(): boolean {
 export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
     const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
     return settings.globalValue === false ? true : false;
+}
+
+// Shared properties set by the IExperimentationTelemetry implementation.
+const sharedProperties: Record<string, string> = {};
+/**
+ * Set shared properties for all telemetry events.
+ */
+export function setSharedProperty(name: string, value: string): void {
+    sharedProperties[name] = value;
+}
+
+/**
+ * Reset shared properties for testing purposes.
+ */
+export function _resetSharedProperties(): void {
+    for (const key of Object.keys(sharedProperties)) {
+        delete sharedProperties[key];
+    }
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
@@ -122,6 +140,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 }
             });
         }
+
+        // Add shared properties to telemetry props (we may overwrite existing ones).
+        Object.assign(customProperties, sharedProperties);
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -261,8 +282,8 @@ function serializeStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    // Ensure we always use `/` as path seperators.
-    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    // Ensure we always use `/` as path separators.
+    // This way stack traces (with relative paths) coming from different OS will always look the same.
     return trace.trim().replace(/\\/g, '/');
 }
 
@@ -2097,4 +2118,18 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RawKernelSessionStartException]: never | undefined;
     [Telemetry.RawKernelSessionStartTimeout]: never | undefined;
     [Telemetry.RawKernelSessionStartUserCancel]: never | undefined;
+
+    // Start Page Events
+    [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageTime]: never | undefined;
+    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
+    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
+    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
+    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
+    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
+    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
+    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
+    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
+    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
+    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
 }

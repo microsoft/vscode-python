@@ -4,11 +4,12 @@ export const JUPYTER_LANGUAGE = 'jupyter';
 
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 
+export const NotebookCellScheme = 'vscode-notebook-cell';
 export const PYTHON = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE },
     { scheme: 'vscode-notebook', language: PYTHON_LANGUAGE },
-    { scheme: 'vscode-notebook-cell', language: PYTHON_LANGUAGE }
+    { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE }
 ];
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
@@ -66,6 +67,7 @@ export namespace Commands {
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
     export const ResetInterpreterSecurityStorage = 'python.resetInterpreterSecurityStorage';
+    export const OpenStartPage = 'python.startPage.open';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
@@ -109,6 +111,7 @@ export function isUnitTestExecution(): boolean {
 
 // Temporary constant, used to indicate whether we're using custom editor api or not.
 export const UseCustomEditorApi = Symbol('USE_CUSTOM_EDITOR');
+export const UseNativeEditorApi = Symbol('USE_NATIVEEDITOR');
 export const UseProposedApi = Symbol('USE_VSC_PROPOSED_API');
 
 export * from '../constants';

@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment } from '../common/application/types';
-import { UseCustomEditorApi } from '../common/constants';
-import { NativeNotebook } from '../common/experiments/groups';
+import { UseCustomEditorApi, UseNativeEditorApi } from '../common/constants';
+import { NotebookEditorSupport } from '../common/experiments/groups';
+import { StartPage } from '../common/startPage/startPage';
+import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
 import { ProtocolParser } from '../debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../debugger/debugAdapter/types';
@@ -19,7 +20,10 @@ import { Identifiers } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
-import { DataViewerProvider } from './data-viewing/dataViewerProvider';
+import { DataViewerFactory } from './data-viewing/dataViewerFactory';
+import { JupyterVariableDataProvider } from './data-viewing/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from './data-viewing/jupyterVariableDataProviderFactory';
+import { IDataViewer, IDataViewerFactory } from './data-viewing/types';
 import { DataScience } from './datascience';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
@@ -101,6 +105,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
 import { ProgressReporter } from './progress/progressReporter';
 import { RawNotebookProviderWrapper } from './raw-kernel/rawNotebookProviderWrapper';
+import { RawNotebookSupportedService } from './raw-kernel/rawNotebookSupportedService';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -113,8 +118,6 @@ import {
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
-    IDataViewer,
-    IDataViewerProvider,
     IDebugLocationTracker,
     IGatherLogger,
     IGatherProvider,
@@ -131,6 +134,8 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     IKernelDependencyService,
     INotebookAndInteractiveWindowUsageTracker,
@@ -145,6 +150,7 @@ import {
     IPlotViewer,
     IPlotViewerProvider,
     IRawNotebookProvider,
+    IRawNotebookSupportedService,
     IStatusProvider,
     IThemeFinder
 } from './types';
@@ -153,16 +159,18 @@ import {
 
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
-    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson.enableProposedApi;
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
-    const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
-    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, enableProposedApi);
+    const useVSCodeNotebookAPI = experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
+    const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
+    const usingCustomEditor = inCustomEditorApiExperiment;
+    serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
+    serviceManager.addSingletonInstance<boolean>(UseNativeEditorApi, useVSCodeNotebookAPI);
 
     // This condition is temporary.
-    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : enableProposedApi ? NativeEditorProvider : NativeEditorProviderOld;
+    const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, notebookEditorProvider);
     if (!useVSCodeNotebookAPI) {
-        serviceManager.add<INotebookEditor>(INotebookEditor, enableProposedApi ? NativeEditor : NativeEditorOldWebView);
+        serviceManager.add<INotebookEditor>(INotebookEditor, usingCustomEditor ? NativeEditor : NativeEditorOldWebView);
         // These are never going to be required for new VSC NB.
         serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
@@ -189,6 +197,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INotebookStorage>(INotebookStorage, NativeEditorStorage);
     serviceManager.addSingleton<INotebookStorageProvider>(INotebookStorageProvider, NotebookStorageProvider);
     serviceManager.addSingleton<IRawNotebookProvider>(IRawNotebookProvider, RawNotebookProviderWrapper);
+    serviceManager.addSingleton<IRawNotebookSupportedService>(IRawNotebookSupportedService, RawNotebookSupportedService);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
     serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
@@ -203,7 +212,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
-    serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
@@ -250,9 +259,12 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.addSingleton<INotebookAndInteractiveWindowUsageTracker>(INotebookAndInteractiveWindowUsageTracker, NotebookAndInteractiveWindowUsageTracker);
     serviceManager.addSingleton<KernelDaemonPreWarmer>(KernelDaemonPreWarmer, KernelDaemonPreWarmer);
+    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, MultiplexingDebugService, Identifiers.MULTIPLEXING_DEBUGSERVICE);
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
+    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
+    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

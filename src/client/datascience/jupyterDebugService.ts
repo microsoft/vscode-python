@@ -78,7 +78,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
     private breakpointEmitter: EventEmitter<void> = new EventEmitter<void>();
     private debugAdapterTrackerFactories: DebugAdapterTrackerFactory[] = [];
     private debugAdapterTrackers: DebugAdapterTracker[] = [];
-    private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
+    private sessionChangedEvent: EventEmitter<DebugSession | undefined> = new EventEmitter<DebugSession>();
     private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
@@ -280,7 +280,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
         await this.sendConfigurationDone();
         traceInfo('Session started.');
         return attachPromise.then(() => {
-            this.sessionStartedEvent.fire(this.session);
+            this.sessionStartedEvent.fire(this.session!);
         });
     }
 
@@ -402,7 +402,7 @@ export class JupyterDebugService implements IJupyterDebugService, IDisposable {
 
     private onClose(): void {
         if (this.socket) {
-            this.sessionTerminatedEvent.fire(this.activeDebugSession);
+            this.sessionTerminatedEvent.fire(this.activeDebugSession!);
             this.session = undefined;
             this.sessionChangedEvent.fire(undefined);
             this.debugAdapterTrackers.forEach((d) => (d.onExit ? d.onExit(0, undefined) : noop()));

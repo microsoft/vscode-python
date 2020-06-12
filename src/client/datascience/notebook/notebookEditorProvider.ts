@@ -4,24 +4,34 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
+import type { NotebookDocument, NotebookEditor as VSCodeNotebookEditor } from 'vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IVSCodeNotebook,
+    IWorkspaceService,
+    NotebookCellLanguageChangeEvent,
+    NotebookCellOutputsChangeEvent,
+    NotebookCellsChangeEvent
+} from '../../common/application/types';
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { isUri } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
-import { monitorModelCellOutputChangesAndUpdateNotebookDocument } from './cellUpdateHelpers';
+import { JupyterNotebookView } from './constants';
+import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
+import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
 /**
- * Class responsbile for activating an registering the necessary event handlers in NotebookEditorProvider.
+ * Class responsible for activating an registering the necessary event handlers in NotebookEditorProvider.
  */
 @injectable()
 export class NotebookEditorProviderActivation implements IExtensionSingleActivationService {
@@ -64,11 +74,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
-    private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private executedEditors: Set<string> = new Set<string>();
+    private readonly openedEditors = new Set<INotebookEditor>();
+    private readonly trackedVSCodeNotebookEditors = new Set<VSCodeNotebookEditor>();
+    private readonly executedEditors = new Set<string>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
-    private readonly notebookEditors = new Map<NotebookDocument, INotebookEditor>();
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
@@ -87,7 +97,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     public activate() {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
-        this.disposables.push(this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this));
+        this.disposables.push(
+            this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
+        );
         this.disposables.push(this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this));
 
         // Swap the uris.
@@ -133,7 +145,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
 
         // Tell VSC to open the notebook, at which point it will fire a callback when a notebook document has been opened.
         // Then our promise will get resolved.
-        await this.commandManager.executeCommand('vscode.open', file);
+        await this.commandManager.executeCommand('vscode.openWith', file, JupyterNotebookView);
 
         // This gets resolved when we have handled the opening of the notebook.
         return deferred.promise;
@@ -176,6 +188,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
         const uri = doc.uri;
         const model = await this.storage.load(uri);
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: When VSC supports hot exit, they'll open a notebook without invoking our code to provide the contents.
+        // We need to handle those situations (cuz at that point we should load the old model and update it with the new model in the notebook).
+        mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
@@ -198,15 +214,35 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
-        if (!isUri(doc)) {
-            // This is where we ensure changes to our models are propagated back to the VSCode model.
-            this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
-            this.notebookEditors.set(doc, editor);
-        }
         this.notebookEditorsByUri.set(uri.toString(), editor);
+        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
-    private async onDidCloseNotebookDocument(doc: NotebookDocument | Uri): Promise<void> {
-        const editor = isUri(doc) ? this.notebookEditorsByUri.get(doc.toString()) : this.notebookEditors.get(doc);
+    private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
+        if (!editor || this.trackedVSCodeNotebookEditors.has(editor)) {
+            return;
+        }
+        this.trackedVSCodeNotebookEditors.add(editor);
+        this.disposables.push(editor.onDidDispose(() => this.onDidDisposeVSCodeNotebookEditor(editor)));
+    }
+    /**
+     * We know a notebook editor has been closed.
+     * We need to close/dispose all of our resources related to this notebook document.
+     * However we also need to check if there are other notebooks opened, that are associated with this same notebook.
+     * I.e. we may have closed a duplicate editor.
+     */
+    private async onDidDisposeVSCodeNotebookEditor(closedEditor: VSCodeNotebookEditor) {
+        const uri = closedEditor.document.uri;
+        if (
+            this.vscodeNotebook.notebookEditors.some(
+                (item) => item !== closedEditor && item.document.uri.toString() === uri.toString()
+            )
+        ) {
+            return;
+        }
+
+        // Ok, dispose all of the resources associated with this document.
+        // In our case, we only have one editor.
+        const editor = this.notebookEditorsByUri.get(uri.toString());
         if (editor) {
             this.closedEditor(editor);
             editor.dispose();
@@ -214,16 +250,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 editor.model.dispose();
             }
         }
-        if (isUri(doc)) {
-            this.notebookEditorsByUri.delete(doc.toString());
-            this.notebooksWaitingToBeOpenedByUri.delete(doc.toString());
-        } else {
-            this.notebookEditors.delete(doc);
-            this.notebookEditorsByUri.delete(doc.uri.toString());
-            this.notebooksWaitingToBeOpenedByUri.delete(doc.uri.toString());
-        }
+        this.notebookEditorsByUri.delete(uri.toString());
+        this.notebooksWaitingToBeOpenedByUri.delete(uri.toString());
     }
-    private async onDidChangeNotebookDocument(): Promise<void> {
-        // Noop.
+    private async onDidChangeNotebookDocument(
+        e: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
+    ): Promise<void> {
+        const model = await this.storage.load(e.document.uri);
+        updateCellModelWithChangesToVSCCell(e, model);
     }
 }

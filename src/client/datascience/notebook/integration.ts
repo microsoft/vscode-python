@@ -5,12 +5,13 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { NativeNotebook } from '../../common/experiments/groups';
+import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookKernel } from './notebookKernel';
+import { NotebookOutputRenderer } from './renderer';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -27,18 +28,19 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel
+        @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel,
+        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer
     ) {}
     public async activate(): Promise<void> {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
 
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
-        const content = JSON.parse(await this.fs.readFile(packageJsonFile));
+        const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
 
         // This code is temporary.
         if (
@@ -51,7 +53,24 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
                 {
                     viewType: 'jupyter-notebook-renderer',
                     displayName: 'Jupyter Notebook Renderer',
-                    mimeTypes: ['text/latex', 'application/vnd.plotly.v1+json', 'application/vnd.vega.v5+json']
+                    mimeTypes: [
+                        'application/geo+json',
+                        'application/vdom.v1+json',
+                        'application/vnd.dataresource+json',
+                        'application/vnd.plotly.v1+json',
+                        'application/vnd.vega.v2+json',
+                        'application/vnd.vega.v3+json',
+                        'application/vnd.vega.v4+json',
+                        'application/vnd.vega.v5+json',
+                        'application/vnd.vegalite.v1+json',
+                        'application/vnd.vegalite.v2+json',
+                        'application/vnd.vegalite.v3+json',
+                        'application/vnd.vegalite.v4+json',
+                        'application/x-nteract-model-debug+json',
+                        'image/gif',
+                        'text/latex',
+                        'text/vnd.plotly.v1+html'
+                    ]
                 }
             ];
             content.contributes.notebookProvider = [
@@ -77,6 +96,33 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         );
         this.disposables.push(
             this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+        );
+        this.disposables.push(
+            this.vscNotebook.registerNotebookOutputRenderer(
+                'jupyter-notebook-renderer',
+                {
+                    type: 'display_data',
+                    subTypes: [
+                        'application/geo+json',
+                        'application/vdom.v1+json',
+                        'application/vnd.dataresource+json',
+                        'application/vnd.plotly.v1+json',
+                        'application/vnd.vega.v2+json',
+                        'application/vnd.vega.v3+json',
+                        'application/vnd.vega.v4+json',
+                        'application/vnd.vega.v5+json',
+                        'application/vnd.vegalite.v1+json',
+                        'application/vnd.vegalite.v2+json',
+                        'application/vnd.vegalite.v3+json',
+                        'application/vnd.vegalite.v4+json',
+                        'application/x-nteract-model-debug+json',
+                        'image/gif',
+                        'text/latex',
+                        'text/vnd.plotly.v1+html'
+                    ]
+                },
+                this.renderer
+            )
         );
     }
 }

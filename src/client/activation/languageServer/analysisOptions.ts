@@ -10,7 +10,7 @@ import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, IExtensionContext, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { LanguageServerAnalysisOptionsBase } from '../common/analysisOptions';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 

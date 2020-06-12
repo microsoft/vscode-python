@@ -8,6 +8,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { Identifiers } from '../../client/datascience/constants';
@@ -21,6 +22,17 @@ export enum CursorPos {
     Top,
     Bottom,
     Current
+}
+
+// The state we are in for run by line debugging
+export enum DebugState {
+    Break,
+    Design,
+    Run
+}
+
+export function activeDebugState(state: DebugState): boolean {
+    return state === DebugState.Break || state === DebugState.Run;
 }
 
 export interface ICellViewModel {
@@ -42,7 +54,7 @@ export interface ICellViewModel {
     runDuringDebug?: boolean;
     codeVersion?: number;
     uiSideError?: string;
-    runningByLine: boolean;
+    runningByLine: DebugState;
     currentStack?: DebugProtocol.StackFrame[];
 }
 
@@ -122,6 +134,7 @@ export interface IServerState {
     jupyterServerStatus: ServerStatus;
     localizedUri: string;
     displayName: string;
+    language: string;
 }
 
 export enum ServerStatus {
@@ -179,7 +192,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         kernel: {
             localizedUri: 'No Kernel',
             displayName: 'Python',
-            jupyterServerStatus: ServerStatus.NotStarted
+            jupyterServerStatus: ServerStatus.NotStarted,
+            language: PYTHON_LANGUAGE
         }
     };
 }
@@ -209,7 +223,7 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        runningByLine: false
+        runningByLine: DebugState.Design
     };
 }
 
@@ -263,7 +277,7 @@ export function createCellVM(
         hasBeenRun: false,
         scrollCount: 0,
         runDuringDebug,
-        runningByLine: false
+        runningByLine: DebugState.Design
     };
 
     // Update the input text

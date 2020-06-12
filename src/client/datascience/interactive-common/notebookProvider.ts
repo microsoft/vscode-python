@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, EventEmitter, Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, Resource } from '../../common/types';
@@ -28,6 +28,7 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
     }
@@ -46,9 +47,17 @@ export class NotebookProvider implements INotebookProvider {
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
+        this.rawNotebookProvider
+            .supported()
+            .then((b) => (this._type = b ? 'raw' : 'jupyter'))
+            .ignoreErrors();
     }
     public get onNotebookCreated() {
         return this._notebookCreated.event;
+    }
+
+    public get type(): 'jupyter' | 'raw' {
+        return this._type;
     }
 
     // Disconnect from the specified provider
@@ -60,13 +69,10 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     // Attempt to connect to our server provider, and if we do, return the connection info
-    public async connect(
-        options: ConnectNotebookProviderOptions,
-        token?: CancellationToken
-    ): Promise<INotebookProviderConnection | undefined> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            return this.rawNotebookProvider.connect(token);
+            return this.rawNotebookProvider.connect(options);
         } else {
             return this.jupyterNotebookProvider.connect(options);
         }

@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { ColumnType, MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import './globalJQueryImports';
@@ -79,18 +79,12 @@ class ColumnFilter {
         if (text && text.length > 0) {
             const columnType = (column as any).type;
             switch (columnType) {
-                case 'string':
+                case ColumnType.String:
                 default:
                     this.matchFunc = (v: any) => !v || v.toString().includes(text);
                     break;
 
-                case 'integer':
-                case 'float':
-                case 'int64':
-                case 'int32':
-                case 'float32':
-                case 'float64':
-                case 'number':
+                case ColumnType.Number:
                     this.matchFunc = this.generateNumericOperation(text);
                     break;
             }

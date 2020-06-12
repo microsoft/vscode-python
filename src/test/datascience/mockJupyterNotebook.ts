@@ -20,7 +20,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
@@ -51,6 +51,10 @@ export class MockJupyterNotebook implements INotebook {
     >().event;
     public onDisposed = new EventEmitter<void>().event;
     public onKernelRestarted = new EventEmitter<void>().event;
+    public get onKernelInterrupted(): Event<void> {
+        return this.kernelInterrupted.event;
+    }
+    private kernelInterrupted = new EventEmitter<void>();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
     constructor(private providerConnection: INotebookProviderConnection | undefined) {

@@ -14,11 +14,12 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
-import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import {
     CondaInheritEnvPrompt,
     condaInheritEnvPromptKey
 } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
+import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
 
 // tslint:disable:no-any
 

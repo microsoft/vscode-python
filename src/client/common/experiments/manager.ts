@@ -28,7 +28,7 @@ import {
 import { sleep } from '../utils/async';
 import { swallowExceptions } from '../utils/decorators';
 import { Experiments } from '../utils/localize';
-import { NativeNotebook } from './groups';
+import { NotebookEditorSupport } from './groups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
@@ -131,6 +131,7 @@ export class ExperimentsManager implements IExperimentsManager {
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
+            // tslint:disable-next-line: no-console
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
@@ -157,7 +158,7 @@ export class ExperimentsManager implements IExperimentsManager {
             for (const experiment of this.experimentStorage.value) {
                 // User cannot belong to NotebookExperiment if they are not using Insiders.
                 if (
-                    (experiment.name === NativeNotebook.experiment || experiment.name === NativeNotebook.control) &&
+                    experiment.name === NotebookEditorSupport.nativeNotebookExperiment &&
                     this.appEnvironment.channel === 'stable'
                 ) {
                     continue;

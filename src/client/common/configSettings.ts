@@ -85,6 +85,7 @@ export class PythonSettings implements IPythonSettings {
         }
     }
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
+    public showStartPage = true;
     public downloadLanguageServer = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;

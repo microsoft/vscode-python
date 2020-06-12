@@ -8,7 +8,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import { CellState, ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { arePathsSame } from '../../../react-common/arePathsSame';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
-import { ICellViewModel, IMainState } from '../../mainState';
+import { DebugState, ICellViewModel, IMainState } from '../../mainState';
 import { CommonActionType, CommonReducerArg } from './types';
 
 const StackLimit = 10;
@@ -96,7 +96,7 @@ export namespace Helpers {
                         source: newVMs[index].cell.data.source
                     }
                 },
-                runningByLine: finished ? false : newVMs[index].runningByLine
+                runningByLine: finished ? DebugState.Design : newVMs[index].runningByLine
             };
             newVMs[index] = newVM;
 

@@ -8,12 +8,12 @@ import { LinterId } from './types';
 
 // All supported linters must be in this map.
 export const LINTERID_BY_PRODUCT = new Map<Product, LinterId>([
-    [Product.bandit, 'bandit'],
-    [Product.flake8, 'flake8'],
-    [Product.pylint, 'pylint'],
-    [Product.mypy, 'mypy'],
-    [Product.pycodestyle, 'pycodestyle'],
-    [Product.prospector, 'prospector'],
-    [Product.pydocstyle, 'pydocstyle'],
-    [Product.pylama, 'pylama']
+    [Product.bandit, LinterId.Bandit],
+    [Product.flake8, LinterId.Flake8],
+    [Product.pylint, LinterId.PyLint],
+    [Product.mypy, LinterId.MyPy],
+    [Product.pycodestyle, LinterId.PyCodeStyle],
+    [Product.prospector, LinterId.Prospector],
+    [Product.pydocstyle, LinterId.PyDocStyle],
+    [Product.pylama, LinterId.PyLama]
 ]);

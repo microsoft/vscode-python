@@ -53,9 +53,10 @@ import {
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 import { sleep } from '../../common';
 
 use(chaiAsPromised);

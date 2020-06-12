@@ -34,10 +34,15 @@ export class KernelSwitcher {
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService
     ) {}
 
-    public async switchKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
-        const kernel: KernelSpecInterpreter | undefined = await this.selectJupyterKernel(notebook);
+    public async switchKernel(
+        notebook: INotebook | undefined,
+        type: 'raw' | 'jupyter'
+    ): Promise<KernelSpecInterpreter | undefined> {
+        const kernel: KernelSpecInterpreter | undefined = await this.selectJupyterKernel(notebook, type);
         if (kernel && (kernel.kernelSpec || kernel.kernelModel)) {
-            await this.switchKernelWithRetry(notebook, kernel);
+            if (notebook) {
+                await this.switchKernelWithRetry(notebook, kernel);
+            }
             return kernel;
         }
     }
@@ -57,18 +62,21 @@ export class KernelSwitcher {
         }
     }
 
-    private async selectJupyterKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
+    private async selectJupyterKernel(
+        notebook: INotebook | undefined,
+        type: 'raw' | 'jupyter'
+    ): Promise<KernelSpecInterpreter | undefined> {
         let kernel: KernelSpecInterpreter | undefined;
 
-        const settings = this.configService.getSettings(notebook.resource);
+        const settings = this.configService.getSettings(notebook?.resource);
         const isLocalConnection =
-            notebook.connection?.localLaunch ??
+            notebook?.connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
             kernel = await this.selectLocalJupyterKernel(
-                notebook.resource,
-                notebook.connection?.type || 'noConnection',
+                notebook?.resource,
+                notebook?.connection?.type || type,
                 notebook?.getKernelSpec()
             );
         } else if (notebook) {

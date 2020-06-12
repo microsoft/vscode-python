@@ -37,8 +37,9 @@ import {
     IJupyterSession,
     IJupyterSessionManager
 } from '../../client/datascience/types';
-import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
+import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';

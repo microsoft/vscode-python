@@ -83,7 +83,7 @@ export class PylintLinterInfo extends LinterInfo {
         private readonly workspaceService: IWorkspaceService,
         configFileNames: string[] = []
     ) {
-        super(Product.pylint, 'pylint', configService, configFileNames);
+        super(Product.pylint, LinterId.PyLint, configService, configFileNames);
     }
     public isEnabled(resource?: Uri): boolean {
         // We want to be sure the setting is not default since default is `true` and hence

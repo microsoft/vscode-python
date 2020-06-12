@@ -36,13 +36,14 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IMemento,
-    Resource
+    Resource,
+    WORKSPACE_MEMENTO
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -54,19 +55,20 @@ import {
     IRunByLine,
     ISubmitNewCell,
     NotebookModelChange,
-    SysInfoReason
+    SysInfoReason,
+    VariableExplorerStateKeys
 } from '../interactive-common/interactiveWindowTypes';
 import {
     CellState,
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
-    IDataViewerProvider,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
+    IJupyterVariableDataProviderFactory,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
@@ -85,7 +87,9 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { isTestExecution, UseCustomEditorApi } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE, UseCustomEditorApi } from '../../common/constants';
+import { translateKernelLanguageToMonaco } from '../common';
+import { IDataViewerFactory } from '../data-viewing/types';
 import { getCellHashProvider } from '../editor-integration/cellhashprovider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
@@ -164,12 +168,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
-        @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
+        @inject(IDataViewerFactory) dataExplorerFactory: IDataViewerFactory,
+        @inject(IJupyterVariableDataProviderFactory)
+        jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
@@ -191,12 +198,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             configuration,
             jupyterExporter,
             workspaceService,
-            dataExplorerProvider,
+            dataExplorerFactory,
+            jupyterVariableDataProviderFactory,
             jupyterVariables,
             jupyterDebugger,
             errorHandler,
             commandManager,
             globalStorage,
+            workspaceStorage,
             nativeEditorDir,
             [
                 path.join(nativeEditorDir, 'require.js'),
@@ -229,6 +238,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Indicate we have our identity
         this.loadedPromise.resolve();
+
+        traceInfo(`Loading web panel for ${model.file}`);
 
         // Load the web panel using our file path so it can find
         // relative files next to the notebook.
@@ -552,13 +563,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async modelChanged(change: NotebookModelChange) {
         if (change.source !== 'user') {
-            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
-            await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
+            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change. Remove the
+            // the model so this doesn't have to be stringified
+            await this.postMessage(InteractiveWindowMessages.UpdateModel, { ...change, model: undefined });
+        }
+        if (change.kind === 'saveAs' && change.model) {
+            const newFileName = change.model.file.toString();
+            const oldFileName = change.sourceUri.toString();
+
+            if (newFileName !== oldFileName) {
+                // If the filename has changed
+                this.renameVariableExplorerHeights(oldFileName, newFileName);
+            }
         }
 
         // Use the current state of the model to indicate dirty (not the message itself)
         if (this.model && change.newDirty !== change.oldDirty) {
-            this.modifiedEvent.fire();
+            this.modifiedEvent.fire(this);
             if (this.model.isDirty) {
                 await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             } else {
@@ -567,6 +588,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         }
     }
+
+    private renameVariableExplorerHeights(name: string, updatedName: string) {
+        // Updates the workspace storage to reflect the updated name of the notebook
+        // should be called if the name of the notebook changes
+        // tslint:disable-next-line: no-any
+        const value = this.workspaceStorage.get(VariableExplorerStateKeys.height, {} as any);
+        if (!(name in value)) {
+            return; // Nothing to update
+        }
+
+        value[updatedName] = value[name];
+        delete value[name];
+        this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+    }
+
     private interruptExecution() {
         this.executeCancelTokens.forEach((t) => t.cancel());
     }
@@ -599,6 +635,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
+            traceInfo(`Exception executing cell ${cell.id}: `, exc);
+
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
@@ -695,7 +733,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: ServerStatus.NotStarted,
                     localizedUri: '',
-                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name
+                    displayName: metadata.kernelspec.display_name ?? metadata.kernelspec.name,
+                    language: translateKernelLanguageToMonaco(
+                        (metadata.kernelspec.language as string) ?? PYTHON_LANGUAGE
+                    )
                 }).ignoreErrors();
             }
         }

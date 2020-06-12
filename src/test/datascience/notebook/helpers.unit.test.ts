@@ -5,9 +5,11 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
-import { CellKind, CellOutput, CellOutputKind, NotebookCellRunState } from 'vscode';
+import type { CellOutput } from 'vscode-proposed';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers';
+import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 
 suite('Data Science - NativeNotebook helpers', () => {
@@ -44,36 +46,34 @@ suite('Data Science - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
+        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
         assert.deepEqual(notebook.cells, [
             {
-                cellKind: CellKind.Code,
+                cellKind: vscodeNotebookEnums.CellKind.Code,
                 language: PYTHON_LANGUAGE,
                 outputs: [],
                 source: 'print(1)',
                 metadata: {
                     editable: true,
                     executionOrder: 10,
-                    runState: NotebookCellRunState.Idle,
-                    runnable: true,
-                    custom: {
-                        cellId: 'MyCellId1'
-                    }
+                    hasExecutionOrder: true,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Success,
+                    runnable: true
                 }
             },
             {
-                cellKind: CellKind.Markdown,
+                cellKind: vscodeNotebookEnums.CellKind.Markdown,
                 language: MARKDOWN_LANGUAGE,
                 outputs: [],
                 source: '# HEAD',
                 metadata: {
                     editable: true,
                     executionOrder: undefined,
-                    runState: NotebookCellRunState.Idle,
-                    runnable: false,
-                    custom: {
-                        cellId: 'MyCellId2'
-                    }
+                    hasExecutionOrder: false,
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
+                    runnable: false
                 }
             }
         ]);
@@ -120,12 +120,12 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: CellOutputKind.Text,
-                        text: 'Error'
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
+                        data: { 'text/plain': 'Error' }
                     },
                     {
-                        outputKind: CellOutputKind.Text,
-                        text: 'NoError'
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
+                        data: { 'text/plain': 'NoError' }
                     }
                 ]
             );
@@ -141,9 +141,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: CellOutputKind.Rich,
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html': '<span style="color:var(--vscode-terminal-ansiYellow)">✅ </span> Loading\n',
                             'text/plain': '\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
                         }
                     }
@@ -161,9 +160,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: CellOutputKind.Rich,
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html': '<xmp>1 is < 2</xmp>',
                             'text/plain': '1 is < 2'
                         }
                     }
@@ -181,10 +179,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: CellOutputKind.Rich,
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                         data: {
-                            'text/html':
-                                '1 is < 2<span style="color:var(--vscode-terminal-ansiYellow)">✅ </span> Loading\n',
                             'text/plain': '1 is < 2\u001b[K\u001b[33m✅ \u001b[0m Loading\n'
                         }
                     }
@@ -203,9 +199,9 @@ suite('Data Science - NativeNotebook helpers', () => {
                 ],
                 [
                     {
-                        outputKind: CellOutputKind.Error,
-                        ename: 'Error Name',
-                        evalue: 'Error Value',
+                        outputKind: vscodeNotebookEnums.CellOutputKind.Error,
+                        ename: '',
+                        evalue: '',
                         traceback: ['stack1', 'stack2', 'stack3']
                     }
                 ]
@@ -226,7 +222,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/plain': 'Hello World!'
                                 }
@@ -248,7 +244,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'image/png': 'base64PNG',
                                     'image/jpeg': 'base64JPEG'
@@ -272,7 +268,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/html':
                                         '<div class=\'display\' style="overflow:scroll;background-color:white;"><img src="data:image/png;base64,base64PNG"   ></div>',
@@ -297,7 +293,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/html':
                                         '<div class=\'display\' style="overflow:scroll;background-color:black;"><img src="data:image/png;base64,base64PNG"   ></div>',
@@ -322,7 +318,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/html':
                                         '<div class=\'display\' style="overflow:scroll;"><img src="data:image/png;base64,base64PNG"  height=111px width=999px></div>',
@@ -348,7 +344,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                         ],
                         [
                             {
-                                outputKind: CellOutputKind.Rich,
+                                outputKind: vscodeNotebookEnums.CellOutputKind.Rich,
                                 data: {
                                     'text/html':
                                         '<div class=\'display\' style="overflow:scroll;"><img src="data:image/png;base64,base64PNG"   width=999px></div>',

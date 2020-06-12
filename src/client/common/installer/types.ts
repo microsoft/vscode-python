@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Uri } from 'vscode';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { Product, ProductType, Resource } from '../types';
 
 export type InterpreterUri = Resource | PythonInterpreter;

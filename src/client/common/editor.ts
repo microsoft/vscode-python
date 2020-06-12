@@ -5,7 +5,10 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
+import { traceError } from '../logging';
+import { WrappedError } from './errors/errorUtils';
 import { IEditorUtils } from './types';
+import { isNotebookCell } from './utils/misc';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
 enum EditAction {
@@ -245,19 +248,25 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 }
 
 export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
-    const ext = path.extname(document.uri.fsPath);
+    // Hardcode extension to `.py` for notebook cells (do not use `.ipyn` doesn't work).
+    const ext = isNotebookCell(document.uri) ? '.py' : path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
     // This means temp file has to be created in the same folder
     // as the original one and then removed.
 
-    // tslint:disable-next-line:no-require-imports
-    const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+    let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+
     try {
+        // When dealing with untitled notebooks, there's no original physical file, hence create a temp file.
+        if (isNotebookCell(document.uri) && !(await fs.fileExists(document.uri.fsPath))) {
+            fileName = (await fs.createTemporaryFile(`${path.basename(document.uri.fsPath)}${ext}`)).filePath;
+        }
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {
-        throw Error(`Failed to create a temporary file, ${ex.message}`);
+        traceError('Failed to create a temporary file', ex);
+        throw new WrappedError(`Failed to create a temporary file, ${ex.message}`, ex);
     }
     return fileName;
 }

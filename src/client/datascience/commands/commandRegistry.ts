@@ -7,7 +7,9 @@ import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
-import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
+import { Commands as coreCommands } from '../../common/constants';
+import { EnableStartPage, IStartPage } from '../../common/startPage/types';
+import { IConfigurationService, IDisposable, IExperimentService, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -40,7 +42,9 @@ export class CommandRegistry implements IDisposable {
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
+        @inject(IStartPage) private startPage: IStartPage,
+        @inject(IExperimentService) private readonly expService: IExperimentService
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
@@ -76,6 +80,7 @@ export class CommandRegistry implements IDisposable {
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
+        this.registerCommand(coreCommands.OpenStartPage, this.openStartPage);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -343,6 +348,13 @@ export class CommandRegistry implements IDisposable {
     private async createNewNotebook(): Promise<void> {
         await this.notebookEditorProvider.createNew();
     }
+
+    private async openStartPage(): Promise<void> {
+        if (await this.expService.inExperiment(EnableStartPage.experiment)) {
+            return this.startPage.open();
+        }
+    }
+
     private viewJupyterOutput() {
         this.jupyterOutput.show(true);
     }
