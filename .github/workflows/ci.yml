@@ -122,8 +122,8 @@ jobs:
 
       - name: Pull docker image
         run: |
-          docker pull pvsccontainers.azurecr.io/samples/python3
-          docker tag pvsccontainers.azurecr.io/samples/python3 python3.8.3
+          docker pull pvsccontainers.azurecr.io/samples/2
+          docker tag pvsccontainers.azurecr.io/samples/2 python3.8.3
 
       - name: docker images
         run: |
@@ -137,7 +137,7 @@ jobs:
 
       - name: Run inside docker container
         run: |
-          docker run -it python3.8.3
+          docker run -it python3.8.3 /bin/bash
           printenv
 
       - name: Show all env vars
@@ -276,7 +276,6 @@ jobs:
 
   ### Non-smoke tests
   tests:
-    container: pvsccontainers.azurecr.io/samples/python3
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
