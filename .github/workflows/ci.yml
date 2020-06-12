@@ -112,9 +112,19 @@ jobs:
       - name: Pull docker image
         run: |
           docker pull pvsccontainers.azurecr.io/samples/python3
+          docker tag pvsccontainers.azurecr.io/samples/python3 python3.8.3
+
+      - name: Pull docker image
+        run: |
+          docker pull pvsccontainers.azurecr.io/samples/python3
+          docker tag pvsccontainers.azurecr.io/samples/python3 python3.8.3
+
+      - name: docker images
+        run: |
+          docker images
 
   runInsideContainer:
-    container: pvsccontainers.azurecr.io/samples/python3
+    container: python3.8.3
     name: Run inside container
     runs-on: ubuntu-latest
     # if: github.repository == 'microsoft/vscode-python'
@@ -122,6 +132,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: docker images
+        run: |
+          docker images
 
       - name: Show all env vars
         run: |
