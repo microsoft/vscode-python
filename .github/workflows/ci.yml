@@ -109,10 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     container: docker://rizwan937/helm
     # if: github.repository == 'microsoft/vscode-python'
-    needs: [python-deps, js-ts-deps]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
 
     #   - name: Login into container
     #     uses: azure/docker-login@v1
