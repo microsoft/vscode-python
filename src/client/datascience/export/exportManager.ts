@@ -33,7 +33,7 @@ export class ExportManager implements IExportManager {
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         // need to add telementry and status messages
-        const target = await this.filePicker.getExportFileLocation(format);
+        const target = await this.filePicker.getExportFileLocation(format, model.file);
         if (!target) {
             return;
         }

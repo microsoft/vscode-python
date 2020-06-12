@@ -1,4 +1,5 @@
 import { inject, injectable, named } from 'inversify';
+import * as path from 'path';
 import { Memento, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
@@ -11,7 +12,7 @@ export const PythonExtensions = { Python: ['py'] };
 
 export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
 export interface IExportManagerFilePicker {
-    getExportFileLocation(format: ExportFormat): Promise<Uri | undefined>;
+    getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
 }
 
 @injectable()
@@ -23,7 +24,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
     ) {}
 
-    public async getExportFileLocation(format: ExportFormat): Promise<Uri | undefined> {
+    public async getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined> {
         let fileExtensions;
         switch (format) {
             case ExportFormat.python:
@@ -42,8 +43,10 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
+        const notebookFileName = path.basename(source.fsPath);
+        const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
         const options: SaveDialogOptions = {
-            defaultUri: this.getLastFileSaveLocation(),
+            defaultUri: dialogUri,
             saveLabel: 'Export',
             filters: fileExtensions
         };
