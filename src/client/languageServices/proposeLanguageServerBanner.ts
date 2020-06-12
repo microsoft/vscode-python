@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { LanguageServerType } from '../activation/types';
-import { IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { BannerBase } from '../common/bannerBase';
 import '../common/extensions';
 import { IConfigurationService, IPersistentStateFactory } from '../common/types';
@@ -15,8 +15,9 @@ import { getRandomBetween } from '../common/utils/random';
 
 // Persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner',
-    ReactivatedBannerForV2 = 'ReactivatedBannerForV2'
+    // State to remember that we've shown the banner. The name must be
+    // different from earlier 'ProposeLSBanner' which was used for MPLSv1.
+    ProposeLSBanner = 'ProposeLSBannerV2'
 }
 
 enum ProposeLSLabelIndex {
@@ -25,9 +26,16 @@ enum ProposeLSLabelIndex {
     Later
 }
 
+const bannerShowRate: Map<LanguageServerType, number> = new Map([
+    [LanguageServerType.Node, 0],
+    [LanguageServerType.Microsoft, 50],
+    [LanguageServerType.None, 50],
+    [LanguageServerType.Jedi, 10]
+]);
+
 @injectable()
-abstract class ProposeLanguageServerBanner extends BannerBase {
-    private sampleSizePerHundred: number;
+export class ProposeLanguageServerBanner extends BannerBase {
+    private readonly sampleSizePerHundred: number;
     private bannerMessage: string = localize.LanguageService.proposeLanguageServerMessage();
     private bannerLabels: string[] = [
         localize.LanguageService.tryItNow(),
@@ -36,13 +44,35 @@ abstract class ProposeLanguageServerBanner extends BannerBase {
     ];
 
     constructor(
-        private appShell: IApplicationShell,
-        persistentState: IPersistentStateFactory,
-        private configuration: IConfigurationService,
-        sampleSizePerOneHundredUsers: number = 10
+        @inject(IApplicationEnvironment) private readonly appEnvirontment: IApplicationEnvironment,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        sampleSizePerHundred: number = 10
     ) {
-        super(ProposeLSStateKeys.ShowBanner, persistentState);
-        this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
+        super(ProposeLSStateKeys.ProposeLSBanner, persistentState);
+        if (this.appEnvirontment.channel === 'insiders') {
+            // If this is insiders build, everyone gets the banner once. Default is 10%.
+            this.sampleSizePerHundred = 100;
+            return;
+        }
+        // Banner for general audience is suppressed until July 7th 2020.
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: remove this eventually.
+        const now = new Date();
+        const target = new Date('July 7, 2020 0:0:1');
+        if (
+            now.getFullYear() < target.getFullYear() ||
+            now.getMonth() < target.getMonth() ||
+            now.getDay() < target.getDay()
+        ) {
+            this.sampleSizePerHundred = 0;
+            this.disable();
+            return;
+        }
+
+        const ls = configuration.getSettings()?.languageServer ?? LanguageServerType.Jedi;
+        this.sampleSizePerHundred = sampleSizePerHundred ?? bannerShowRate.get(ls) ?? 10;
     }
 
     public async showBanner(): Promise<void> {
@@ -84,64 +114,11 @@ abstract class ProposeLanguageServerBanner extends BannerBase {
     }
 
     protected async initialize(): Promise<void> {
-        // With MPLSv1 preview user could get the offer to use LS and either
-        // accept or reject it. The state was then saved. With MPLSv2 we need
-        // to clear the state once in order to allow banner to appear again
-        // for both Jedi and MPLSv1 users.
-        await this.reactivateBannerForLSv2();
-
-        // we only want certain percentage of folks to see the prompt for MPLS v2.
-        // These are different for Jedi, MPLS v1 and None users.
+        // We only want certain percentage of folks to see the prompt.
         const randomSample: number = getRandomBetween(0, 100);
         if (randomSample >= this.sampleSizePerHundred) {
             await this.disable();
             return;
         }
-    }
-
-    private async reactivateBannerForLSv2(): Promise<void> {
-        const reactivatedPopupOnce = this.getStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, false);
-        if (!reactivatedPopupOnce) {
-            // Enable popup once.
-            await this.setStateValue(ProposeLSStateKeys.ShowBanner, true);
-            // Remember we've done it.
-            await this.setStateValue(ProposeLSStateKeys.ReactivatedBannerForV2, true);
-        }
-    }
-}
-
-@injectable()
-export class ProposeLanguageServerBannerOverJedi extends ProposeLanguageServerBanner {
-    constructor(
-        @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        sampleValue = 10
-    ) {
-        super(appShell, persistentState, configuration, sampleValue);
-    }
-}
-
-@injectable()
-export class ProposeLanguageServerBannerOverLSv1 extends ProposeLanguageServerBanner {
-    constructor(
-        @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) configuration: IConfigurationService,
-        sampleValue = 50
-    ) {
-        super(appShell, persistentState, configuration, sampleValue);
-    }
-}
-
-// tslint:disable-next-line:max-classes-per-file
-@injectable()
-export class ProposeLanguageServerBannerOverNone extends ProposeLanguageServerBanner {
-    constructor(
-        @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) configuration: IConfigurationService
-    ) {
-        super(appShell, persistentState, configuration, 50);
     }
 }

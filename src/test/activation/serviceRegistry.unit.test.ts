@@ -51,9 +51,7 @@ import {
     BANNER_NAME_DS_SURVEY,
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     BANNER_NAME_LS_SURVEY,
-    BANNER_NAME_PROPOSE_LS_OVER_JEDI,
-    BANNER_NAME_PROPOSE_LS_OVER_LSV1,
-    BANNER_NAME_PROPOSE_LS_OVER_NONE,
+    BANNER_NAME_PROPOSE_LS,
     IPythonExtensionBanner
 } from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
@@ -61,11 +59,7 @@ import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnter
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
-import {
-    ProposeLanguageServerBannerOverJedi,
-    ProposeLanguageServerBannerOverLSv1,
-    ProposeLanguageServerBannerOverNone
-} from '../../client/languageServices/proposeLanguageServerBanner';
+import { ProposeLanguageServerBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 
 // tslint:disable:max-func-body-length
 
@@ -116,22 +110,8 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(
             serviceManager.addSingleton<IPythonExtensionBanner>(
                 IPythonExtensionBanner,
-                ProposeLanguageServerBannerOverJedi,
-                BANNER_NAME_PROPOSE_LS_OVER_JEDI
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                ProposeLanguageServerBannerOverLSv1,
-                BANNER_NAME_PROPOSE_LS_OVER_LSV1
-            )
-        ).once();
-        verify(
-            serviceManager.addSingleton<IPythonExtensionBanner>(
-                IPythonExtensionBanner,
-                ProposeLanguageServerBannerOverNone,
-                BANNER_NAME_PROPOSE_LS_OVER_NONE
+                ProposeLanguageServerBanner,
+                BANNER_NAME_PROPOSE_LS
             )
         ).once();
         verify(

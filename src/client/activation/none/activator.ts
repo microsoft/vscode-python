@@ -21,7 +21,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { isTestExecution } from '../../common/constants';
-import { BANNER_NAME_PROPOSE_LS_OVER_NONE, IPythonExtensionBanner, Resource } from '../../common/types';
+import { BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner, Resource } from '../../common/types';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { ILanguageServerActivator } from '../types';
 
@@ -36,7 +36,7 @@ import { ILanguageServerActivator } from '../types';
 export class NoLanguageServerExtensionActivator implements ILanguageServerActivator {
     constructor(
         @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_PROPOSE_LS_OVER_NONE)
+        @named(BANNER_NAME_PROPOSE_LS)
         private readonly proposeNewLanguageServerPopup: IPythonExtensionBanner
     ) {}
 
