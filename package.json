@@ -183,6 +183,37 @@
                 "key": "Z",
                 "when": "notebookEditorFocused && !inputFocus",
                 "command": "notebook.undo"
+            },
+            {
+                "mac": "C",
+                "win": "C",
+                "linux": "C",
+                "key": "C",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.copy"
+            },
+            {
+                "mac": "X",
+                "win": "X",
+                "linux": "X",
+                "key": "X",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.cut"
+            },
+            {
+                "mac": "V",
+                "win": "V",
+                "linux": "V",
+                "key": "V",
+                "when": "notebookEditorFocused && !inputFocus",
+                "command": "notebook.cell.paste"
+            },
+            {
+                "mac": "ctrl+shift+-",
+                "win": "ctrl+shift+-",
+                "linux": "ctrl+shift+-",
+                "when": "editorTextFocus && inputFocus && notebookEditorFocused",
+                "command": "notebook.cell.split"
             }
         ],
         "commands": [
