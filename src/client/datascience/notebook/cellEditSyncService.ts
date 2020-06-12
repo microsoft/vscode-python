@@ -18,6 +18,7 @@ import { getOriginalCellId } from './helpers/cellMappers';
 export class CellEditSyncService implements IExtensionSingleActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private mappedDocuments = new WeakMap<TextDocument, { cellId: string; model: INotebookModel }>();
+    private nonJupyterNotebookDocuments = new WeakSet<TextDocument>();
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -65,6 +66,9 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         if (this.mappedDocuments.has(cellDocument)) {
             return this.mappedDocuments.get(cellDocument)!;
         }
+        if (this.nonJupyterNotebookDocuments.has(cellDocument)) {
+            return;
+        }
 
         let document: NotebookDocument | undefined;
         let cell: NotebookCell | undefined;
@@ -77,17 +81,14 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
             return !!found;
         });
 
-        if (!document) {
+        if (!document || !cell) {
+            if (this.isNonJupyterTextDocument(cellDocument)) {
+                return;
+            }
+
             traceError(
                 `Syncing Cell Editor aborted, Unable to find corresponding Notebook for ${cellDocument.uri.toString()}`,
                 new Error('Unable to find corresponding Notebook')
-            );
-            return;
-        }
-        if (!cell) {
-            traceError(
-                `Syncing Cell Editor aborted, Unable to find corresponding NotebookCell for ${cellDocument.uri.toString()}`,
-                new Error('Unable to find corresponding NotebookCell')
             );
             return;
         }
@@ -111,5 +112,20 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
 
         this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(cell)! });
         return this.mappedDocuments.get(cellDocument);
+    }
+    /**
+     * Check if the text document belongs to a notebook that's not ours.
+     */
+    private isNonJupyterTextDocument(cellDocument: TextDocument) {
+        // If this text document is for a note book thats
+        if (
+            this.vscNotebook.notebookDocuments.find(
+                (doc) => doc.cells.findIndex((cell) => cell.document === cellDocument) >= 0
+            )
+        ) {
+            this.nonJupyterNotebookDocuments.add(cellDocument);
+            return true;
+        }
+        return false;
     }
 }

@@ -27,6 +27,7 @@ import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusPro
 import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
+import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
@@ -186,6 +187,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
+        if (!isJupyterNotebook(doc)) {
+            return;
+        }
         const uri = doc.uri;
         const model = await this.storage.load(uri);
         // tslint:disable-next-line: no-suspicious-comment
@@ -256,6 +260,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidChangeNotebookDocument(
         e: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     ): Promise<void> {
+        if (!isJupyterNotebook(e.document)) {
+            return;
+        }
         const model = await this.storage.load(e.document.uri);
         updateCellModelWithChangesToVSCCell(e, model);
     }

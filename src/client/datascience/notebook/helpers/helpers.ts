@@ -14,7 +14,8 @@ import type {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
-    NotebookData
+    NotebookData,
+    NotebookDocument
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import {
@@ -31,11 +32,20 @@ import { mapVSCNotebookCellToCellModel } from './cellMappers';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { JupyterNotebookView } from '../constants';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
     end_execution_time?: string;
     start_execution_time?: string;
+}
+
+/**
+ * Whether this is a Notebook we created/manage/use.
+ * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
+ */
+export function isJupyterNotebook(notebook: NotebookDocument) {
+    return notebook.viewType === JupyterNotebookView;
 }
 
 /**
