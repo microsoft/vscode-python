@@ -14,6 +14,7 @@ import {
     DebugSession,
     Disposable,
     Event,
+    EventEmitter,
     LanguageConfiguration,
     Range,
     TextDocument,
@@ -21,7 +22,6 @@ import {
     Uri,
     WebviewPanel
 } from 'vscode';
-import { EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
@@ -282,7 +282,6 @@ export interface IGatherLogger extends INotebookExecutionLogger {
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
-    sessionChanged: Event<void>;
     serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;

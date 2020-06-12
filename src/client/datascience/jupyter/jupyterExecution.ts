@@ -37,7 +37,6 @@ const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
-    private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
@@ -69,10 +68,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             });
             this.disposableRegistry.push(disposable);
         }
-    }
-
-    public get sessionChanged(): Event<void> {
-        return this.eventEmitter.event;
     }
 
     public get serverStarted(): Event<INotebookServerOptions> {
