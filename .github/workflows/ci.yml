@@ -123,9 +123,9 @@ jobs:
     #       docker pull pvsccontainers.azurecr.io/samples/2
     #       docker tag pvsccontainers.azurecr.io/samples/2 python3.8.3
 
-    #   - name: docker images
-    #     run: |
-    #       docker images
+      - name: docker images
+        run: |
+          /usr/bin/docker images
 
     #   - name: Create & start docker container
     #     run: |
