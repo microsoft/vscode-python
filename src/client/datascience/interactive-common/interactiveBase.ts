@@ -194,7 +194,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 .ignoreErrors();
         }, 0);
 
-        // When a notebook provider first makes it's connection check it to see if we should create a notebook
+        // When a notebook provider first makes its connection check it to see if we should create a notebook
         this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
 
         // When the variable service requests a refresh, refresh our variable list

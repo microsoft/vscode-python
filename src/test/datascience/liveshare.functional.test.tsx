@@ -33,7 +33,7 @@ import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell, w
 //tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('IANHU DataScience LiveShare tests', () => {
+suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
