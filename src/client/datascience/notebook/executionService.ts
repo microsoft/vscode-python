@@ -179,7 +179,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
-                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
 
                     // Set execution count, all messages should have it
                     if (
@@ -206,7 +206,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     cell.metadata.statusMessage = '';
 
                     // Update metadata in our model.
-                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
                     updateCellExecutionTimes(
                         notebookCellModel,
                         cell.metadata.runStartTime,

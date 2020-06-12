@@ -109,7 +109,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
             return;
         }
 
-        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(document, cell)! });
+        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(cell)! });
         return this.mappedDocuments.get(cellDocument);
     }
 }

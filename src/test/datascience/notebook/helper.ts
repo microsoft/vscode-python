@@ -77,7 +77,7 @@ export async function insertPythonCell(source: string, index: number = 0) {
             await waitForCondition(
                 async () =>
                     vscEditor!.document.cells.every((cell) =>
-                        findMappedNotebookCellModel(vscEditor!.document, cell, nbEditor!.model!.cells)
+                        findMappedNotebookCellModel(cell, nbEditor!.model!.cells)
                     ),
                 1_000,
                 'Cell not assigned a cell Id'

@@ -14,8 +14,7 @@ import type {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
-    NotebookData,
-    NotebookDocument
+    NotebookData
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import {
@@ -76,11 +75,7 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         }
     };
 }
-export function createCellFromVSCNotebookCell(
-    document: NotebookDocument,
-    vscCell: NotebookCell,
-    model: INotebookModel
-): ICell {
+export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INotebookModel): ICell {
     const cell = (() => {
         if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
             return {
@@ -112,7 +107,7 @@ export function createCellFromVSCNotebookCell(
         };
     }
     // Ensure we add the cell id of the new cell to the VSC cell to map into ours.
-    mapVSCNotebookCellToCellModel(document, vscCell, cell);
+    mapVSCNotebookCellToCellModel(vscCell, cell);
 
     return cell;
 }

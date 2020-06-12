@@ -34,6 +34,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
         return this.notebook.onDidCloseNotebookDocument;
     }
+    public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
+        return this.notebook.notebookDocuments;
+    }
     public get notebookEditors() {
         return this.notebook.visibleNotebookEditors;
     }

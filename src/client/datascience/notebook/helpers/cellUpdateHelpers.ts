@@ -59,7 +59,7 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
 
     // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
-        const cell = findMappedNotebookCellModel(change.document, vscCell, model.cells);
+        const cell = findMappedNotebookCellModel(vscCell, model.cells);
         cell.data.outputs = [];
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);
         model.update({
@@ -73,7 +73,7 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
 }
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
-    const cellModel = findMappedNotebookCellModel(change.document, change.cell, model.cells);
+    const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
 
     // VSC fires event if changing cell language from markdown to markdown.
     // https://github.com/microsoft/vscode/issues/98836
@@ -93,7 +93,7 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
 
     // Create a new cell & replace old one.
     const oldCellIndex = model.cells.indexOf(cellModel);
-    model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.document, change.cell, model);
+    model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
@@ -149,7 +149,7 @@ function isCellInsertion(change: NotebookCellsChangeEvent) {
 function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel) {
     assert.equal(change.changes.length, 2, 'When moving cells we must have only 2 changes');
     const [, insertChange] = change.changes;
-    const cellToSwap = findMappedNotebookCellModel(change.document, insertChange.items[0]!, model.cells);
+    const cellToSwap = findMappedNotebookCellModel(insertChange.items[0]!, model.cells);
     const cellToSwapWith = model.cells[insertChange.start];
     assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
 
@@ -162,7 +162,7 @@ function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookM
     assert.equal(change.changes[0].items.length, 1, 'Insertion of more than 1 cell is not supported');
     const insertChange = change.changes[0];
     const cell = change.changes[0].items[0];
-    const newCell = createCellFromVSCNotebookCell(change.document, cell, model);
+    const newCell = createCellFromVSCNotebookCell(cell, model);
     model.cells.splice(insertChange.start, 0, newCell);
 }
 function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookModel) {
