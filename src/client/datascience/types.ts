@@ -21,6 +21,7 @@ import {
     Uri,
     WebviewPanel
 } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
@@ -243,6 +244,7 @@ export type ConnectNotebookProviderOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    onConnectionMadeEvent?: EventEmitter<void>; // Optional event to signal when a connection is first made to this provider
 };
 
 export interface INotebookServerOptions {
@@ -1052,6 +1054,7 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    onConnectionMadeEvent?: EventEmitter<void>; // Optional event to signal when a connection is first made to this provider
 };
 
 /**
@@ -1072,6 +1075,11 @@ export interface INotebookProvider {
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+
+    /**
+     * Fired just the first time that this provider connects
+     */
+    onConnectionMade: Event<void>;
 
     /**
      * List of all notebooks (active and ones that are being constructed).

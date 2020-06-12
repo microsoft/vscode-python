@@ -63,6 +63,11 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         // If not get only, create if needed and return
         if (!this.rawConnection) {
             this.rawConnection = new RawConnection();
+
+            // Fire our optional event that we have created a connection
+            if (options.onConnectionMadeEvent) {
+                options.onConnectionMadeEvent.fire();
+            }
         }
         return Promise.resolve(this.rawConnection);
     }

@@ -29,7 +29,9 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false, true].forEach((useRawKernel) => {
+//[false, true].forEach((useRawKernel) => {
+//[true].forEach((useRawKernel) => {
+[true].forEach((useRawKernel) => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`DataScience IPyWidgets (${useRawKernel ? 'With Direct Kernel' : 'With Jupyter Server'})`, () => {
         const disposables: Disposable[] = [];
@@ -145,7 +147,7 @@ use(chaiAsPromised);
                 assert.equal(count, 3);
             });
         });
-        test('Output displayed after executing a cell', async () => {
+        test('IANHU Output displayed after executing a cell', async () => {
             const { notebookUI } = await openABCIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(0));
 

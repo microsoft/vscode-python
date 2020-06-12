@@ -200,7 +200,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }, 0);
 
         // When a server starts, make sure we create a notebook if the server matches
-        jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+        // jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+
+        this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
 
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
