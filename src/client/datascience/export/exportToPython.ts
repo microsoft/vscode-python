@@ -13,10 +13,6 @@ export class ExportToPython implements IExport {
 
     public async export(source: Uri, target: Uri): Promise<void> {
         const contents = await this.importer.importFromFile(source.fsPath);
-        try {
-            await this.fileSystem.writeFile(target.fsPath, contents);
-        } catch {
-            throw new Error('Unable to export file.');
-        }
+        await this.fileSystem.writeFile(target.fsPath, contents);
     }
 }

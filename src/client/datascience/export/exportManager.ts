@@ -17,7 +17,7 @@ export interface IExportManager {
 
 export const IExport = Symbol('IExport');
 export interface IExport {
-    export(source: Uri, target?: Uri): Promise<void>;
+    export(source: Uri, target: Uri): Promise<void>;
 }
 
 @injectable()
@@ -33,9 +33,14 @@ export class ExportManager implements IExportManager {
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
         // need to add telementry
-        const target = await this.filePicker.getExportFileLocation(format, model.file);
-        if (!target) {
-            return;
+        let target;
+        if (format !== ExportFormat.python) {
+            target = await this.filePicker.getExportFileLocation(format, model.file);
+            if (!target) {
+                return;
+            }
+        } else {
+            target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         }
 
         const tempFile = await this.makeTemporaryFile(model);
@@ -43,8 +48,8 @@ export class ExportManager implements IExportManager {
             return; // error making temp file
         }
 
+        const source = Uri.file(tempFile.filePath);
         try {
-            const source = Uri.file(tempFile.filePath);
             switch (format) {
                 case ExportFormat.python:
                     await this.exportToPython.export(source, target);
