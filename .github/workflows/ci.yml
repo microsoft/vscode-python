@@ -102,6 +102,17 @@ jobs:
       #   run: |
       #     az acr login --name pvscContainers
 
+
+
+  runInsideContainer:
+    name: Run inside container
+    runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
+    needs: [python-deps, js-ts-deps]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Login into container
         uses: azure/docker-login@v1
         with:
@@ -118,33 +129,10 @@ jobs:
         run: |
           docker images
 
-  runInsideContainer:
-    name: Run inside container
-    container: docker://rizwan937/helm
-    runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-python'
-    needs: [python-deps, js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Show all env vars
+      - name: Create & start docker container
         run: |
-          printenv
-        shell: bash
-
-      - name: Modify path variable
-        run: |
-          export PATH="$PATH:/usr/bin"
-        shell: bash
-
-      - name: docker images
-        run: |
-          /usr/bin/docker images
-
-      - name: docker images
-        run: |
-          docker images
+          containerid=$(docker create python3.8.3)
+          docker start $(echo $containerid)
 
       - name: Show all env vars
         run: |
