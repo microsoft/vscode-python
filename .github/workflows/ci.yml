@@ -135,9 +135,9 @@ jobs:
           /usr/bin/docker ps --all --filter id=$(echo $containerid) --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
           /usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" $(echo $containerid)
 
-    #   - name: docker images
-    #     run: |
-    #       /usr/bin/docker images
+      - name: docker images
+        run: |
+          /usr/bin/docker images
 
     #   - name: Create & start docker container
     #     run: |
