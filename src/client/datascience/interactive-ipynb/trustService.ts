@@ -2,7 +2,6 @@ import { enc, HmacSHA256 } from 'crypto-js';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Database, OPEN_CREATE, OPEN_READWRITE, RunResult } from 'sqlite3';
-import { traceError } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExperimentsManager, IPathUtils } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
@@ -16,14 +15,16 @@ interface IDigestStorage {
 @injectable()
 export class DigestStorage implements IDigestStorage {
     private db: Database;
-    private osType: 'OSX' | 'Linux' | 'Windows';
-    private homeDir: string;
 
-    constructor(fs: IFileSystem, osType: 'OSX' | 'Linux' | 'Windows', homeDir: string) {
+    constructor(
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IPlatformService) private platformService: IPlatformService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+    ) {
         const defaultDatabaseLocation = this.getDefaultDatabaseLocation();
         const db = new Database(
             defaultDatabaseLocation,
-            fs.fileExists(defaultDatabaseLocation) ? OPEN_READWRITE : OPEN_CREATE
+            this.fs.fileExists(defaultDatabaseLocation) ? OPEN_READWRITE : OPEN_CREATE
         );
         db.serialize(() => {
             db.exec(`CREATE TABLE IF NOT EXISTS nbsignatures (
@@ -36,8 +37,6 @@ export class DigestStorage implements IDigestStorage {
             db.exec(`CREATE INDEX IF NOT EXISTS algosig ON nbsignatures(algorithm, signature)`);
         });
         this.db = db;
-        this.osType = osType;
-        this.homeDir = homeDir;
     }
 
     public saveDigest(digest: string, algorithm: string): Promise<void> {
@@ -75,13 +74,13 @@ export class DigestStorage implements IDigestStorage {
      * Windows: %APPDATA%/jupyter/nbsignatures.db
      */
     private getDefaultDatabaseLocation() {
-        switch (this.osType) {
+        switch (this.platformService.osType) {
             case OSType.Windows:
                 return path.join('%APPDATA%', 'jupyter', 'nbsignatures.db');
             case OSType.OSX:
-                return path.join(this.homeDir, 'Library', 'Jupyter', 'nbsignatures.db');
+                return path.join(this.pathUtils.home, 'Library', 'Jupyter', 'nbsignatures.db');
             case OSType.Linux:
-                return path.join(this.homeDir, '.local', 'share', 'jupyter', 'nbsignatures.db');
+                return path.join(this.pathUtils.home, '.local', 'share', 'jupyter', 'nbsignatures.db');
             default:
                 throw new Error('Not Supported');
         }
@@ -93,7 +92,6 @@ interface INotebookTrust {
     trustNotebook(notebookContents: string): Promise<void>;
 }
 
-@injectable()
 class NotebookTrust implements INotebookTrust {
     private key: string;
     private digestStorage: IDigestStorage;
@@ -118,129 +116,89 @@ class NotebookTrust implements INotebookTrust {
     private computeDigest(notebookContents: string) {
         switch (this.algorithm) {
             case 'sha256':
-                return HmacSHA256(notebookContents, this.key).toString(enc.Hex);
+                return HmacSHA256(notebookContents, this.key).toString(enc.Hex); // Switch this out for the MSR crypto lib implementation
             default:
                 throw new Error('Not supported');
         }
     }
 }
 
-// @injectable()
-// export class TrustService {
-//     constructor(
-//         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
-//         @inject(IFileSystem) private readonly fs: IFileSystem,
-//         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-//         @inject(IPlatformService) private readonly platformService: IPlatformService,
-//         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
-//     ) {}
+@injectable()
+export class TrustService {
+    private notebookTrust: INotebookTrust;
 
-//     /**
-//      * Default Jupyter secret key locations:
-//      * Linux:   ~/.local/share/jupyter/notebook_secret
-//      * OS X:    ~/Library/Jupyter/notebook_secret
-//      * Windows: %APPDATA%/jupyter/notebook_secret
-//      */
-//     private getDefaultKeyFileLocation() {
-//         switch (this.platformService.osType) {
-//             case OSType.Windows:
-//                 return path.join('%APPDATA%', 'jupyter', 'notebook_secret');
-//             case OSType.OSX:
-//                 return path.join(this.pathUtils.home, 'Library', 'Jupyter', 'notebook_secret');
-//             case OSType.Linux:
-//                 return path.join(this.pathUtils.home, '.local', 'share', 'jupyter', 'notebook_secret');
-//             default:
-//                 throw new Error('Not Supported');
-//         }
-//     }
+    constructor(
+        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
+    ) {
+        this.notebookTrust = new NotebookTrust(this.getOrCreateSecretKey(), digestStorage, 'sha256');
+    }
 
-//     /**
-//      * Get or create a local secret key, used in computing HMAC hashes of trusted
-//      * checkpoints in the notebook's execution history
-//      */
-//     private getOrCreateKeyFile(): string {
-//         // Determine user's OS
-//         const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
+    /**
+     * Default Jupyter secret key locations:
+     * Linux:   ~/.local/share/jupyter/notebook_secret
+     * OS X:    ~/Library/Jupyter/notebook_secret
+     * Windows: %APPDATA%/jupyter/notebook_secret
+     */
+    private getDefaultKeyFileLocation() {
+        switch (this.platformService.osType) {
+            case OSType.Windows:
+                return path.join('%APPDATA%', 'jupyter', 'notebook_secret');
+            case OSType.OSX:
+                return path.join(this.pathUtils.home, 'Library', 'Jupyter', 'notebook_secret');
+            case OSType.Linux:
+                return path.join(this.pathUtils.home, '.local', 'share', 'jupyter', 'notebook_secret');
+            default:
+                throw new Error('Not Supported');
+        }
+    }
 
-//         // Attempt to read from standard keyfile location for that OS
-//         if (this.fs.fileExists(defaultKeyFileLocation)) {
-//             return (await this.fs.readData(defaultKeyFileLocation)).toString();
-//         }
+    /**
+     * Get or create a local secret key, used in computing HMAC hashes of trusted
+     * checkpoints in the notebook's execution history
+     */
+    private async getOrCreateSecretKey(): string {
+        // Determine user's OS
+        const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
-//         // If it doesn't exist, create one
-//     }
+        // Attempt to read from standard keyfile location for that OS
+        if (this.fs.fileExists(defaultKeyFileLocation)) {
+            return (await this.fs.readData(defaultKeyFileLocation)).toString();
+        }
 
-//     /**
-//      * Given a newly opened notebook, determine if it is trusted
-//      */
-//     private isNotebookTrusted(filePath: string): boolean {
-//         const digest = this.computeDigest(filePath);
-//         return this.dbContains(digest);
-//     }
+        // If it doesn't exist, create one.
+        // Key must be generated from a cryptographically secure pseudorandom function
+    }
 
-//     /**
-//      * Calculate and return digest for a trusted notebook
-//      */
-//     private computeDigest(fileContents: string): string {
-//         return HmacSHA256(fileContents, this.key).toString(enc.Hex);
-//     }
+    private async onNotebookCreated(filePath: string) {
+        // Compute a digest for it and add to database
+        await this.notebookTrust.trustNotebook(filePath);
+    }
 
-//     /**
-//      * Update database with digest
-//      */
-//     private updateDb(digest: string) {
-//         this.db.run(`INSERT INTO nbsignatures (algorithm, signature);
-//                     VALUES (${digest}, 'sha256');`);
-//     }
+    /**
+     * When a notebook is opened, we check the database to see if a trusted checkpoint
+     * for this notebook exists by computing and looking up its digest.
+     * If the digest does not exist, we mark all the cells untrusted.
+     * Once a notebook is loaded in an untrusted state, no code will be executed and no
+     * markdown will be rendered until notebook as a whole is marked trusted
+     */
+    private async onNotebookOpened(filePath: string) {
+        // Compute digest and see if notebook is trusted
+        return this.notebookTrust.isNotebookTrusted(filePath);
+    }
 
-//     /**
-//      * Given a digest, check to see if the database contains it
-//      */
-//     private dbContains(digest: string): boolean {
-//         // Execute db query to see if this exact digest already exists
-
-//         return false;
-//     }
-
-//     /**
-//      * Computes and inserts a new digest representing a trusted checkpoint into database
-//      */
-//     private trustNotebook(filePath: string) {
-//         const digest = this.computeDigest(filePath);
-//         this.updateDb(digest);
-//     }
-
-//     private onNotebookCreated(filePath: string) {
-//         // Compute a digest for it and add to database
-//         this.trustNotebook(filePath);
-//     }
-
-//     /**
-//      * When a notebook is opened, we check the database to see if a trusted checkpoint
-//      * for this notebook exists by computing and looking up its digest.
-//      * If the digest does not exist, we mark all the cells untrusted.
-//      * Once a notebook is loaded in an untrusted state, all cells must be executed
-//      * by the current user before the notebook as a whole can be marked trusted
-//      */
-//     private onNotebookOpened(filePath: string) {
-//         // Compute digest and see if notebook is trusted
-//         const cellInitialTrustState = this.isNotebookTrusted(filePath);
-//         // Set all cell metadata flags accordingly
-//     }
-
-//     // /**
-//     //  * Marks notebook trusted if all the cells in the notebook have been executed
-//     //  * in the current user's context
-//     //  */
-//     // private onNotebookSaved() {
-//     //     // If all cells in notebook are trusted, compute digest and add to database
-//     //     if (this.notebookCanBeTrusted()) {
-//     //         this.trustNotebook();
-//     //     }
-//     //     // Otherwise, do nothing
-//     // }
-
-//     // private onCellExecuted() {
-//     //     // Set cell's trust flag to true
-//     // }
-// }
+    /**
+     * Marks notebook trusted if all the cells in the notebook have been executed
+     * in the current user's context
+     */
+    private async onNotebookSaved(notebookIsTrusted: boolean) {
+        // If all cells in notebook are trusted, compute digest and add to database
+        if (notebookIsTrusted) {
+            await this.notebookTrust.trustNotebook();
+        }
+        // Otherwise, do nothing
+    }
+}
