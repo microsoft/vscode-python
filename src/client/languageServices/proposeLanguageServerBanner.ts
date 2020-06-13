@@ -48,7 +48,8 @@ export class ProposeLanguageServerBanner extends BannerBase {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentState: IPersistentStateFactory,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        sampleSizePerHundred: number = 10
+        sampleSizePerHundred: number = 10,
+        disableGeneralAudienceUntil: Date = new Date('July 7, 2020 0:0:1')
     ) {
         super(ProposeLSStateKeys.ProposeLSBanner, persistentState);
         if (this.appEnvirontment.channel === 'insiders') {
@@ -60,11 +61,10 @@ export class ProposeLanguageServerBanner extends BannerBase {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: remove this eventually.
         const now = new Date();
-        const target = new Date('July 7, 2020 0:0:1');
         if (
-            now.getFullYear() < target.getFullYear() ||
-            now.getMonth() < target.getMonth() ||
-            now.getDay() < target.getDay()
+            now.getFullYear() < disableGeneralAudienceUntil.getFullYear() ||
+            now.getMonth() < disableGeneralAudienceUntil.getMonth() ||
+            now.getDay() < disableGeneralAudienceUntil.getDay()
         ) {
             this.sampleSizePerHundred = 0;
             this.disable();
@@ -73,6 +73,9 @@ export class ProposeLanguageServerBanner extends BannerBase {
 
         const ls = configuration.getSettings()?.languageServer ?? LanguageServerType.Jedi;
         this.sampleSizePerHundred = sampleSizePerHundred ?? bannerShowRate.get(ls) ?? 10;
+        if (this.sampleSizePerHundred === 0) {
+            this.disable();
+        }
     }
 
     public async showBanner(): Promise<void> {

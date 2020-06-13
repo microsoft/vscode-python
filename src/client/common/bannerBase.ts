@@ -41,9 +41,9 @@ export abstract class BannerBase implements IPythonExtensionBanner {
     }
 
     protected getStateValue(name: string, defaultValue: boolean): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(name, defaultValue).value;
+        return this.persistentState.createGlobalPersistentState(name, defaultValue).value;
     }
     protected async setStateValue(name: string, value: boolean): Promise<void> {
-        return this.persistentState.createGlobalPersistentState<boolean>(name, value).updateValue(value);
+        return this.persistentState.createGlobalPersistentState(name, value).updateValue(value);
     }
 }
