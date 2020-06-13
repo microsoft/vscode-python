@@ -173,9 +173,9 @@ export class TrustService {
         // Key must be generated from a cryptographically secure pseudorandom function
     }
 
-    private async onNotebookCreated(filePath: string) {
+    private async onNotebookCreated(notebookContents: string) {
         // Compute a digest for it and add to database
-        await this.notebookTrust.trustNotebook(filePath);
+        await this.notebookTrust.trustNotebook(notebookContents);
     }
 
     /**
@@ -185,9 +185,9 @@ export class TrustService {
      * Once a notebook is loaded in an untrusted state, no code will be executed and no
      * markdown will be rendered until notebook as a whole is marked trusted
      */
-    private async onNotebookOpened(filePath: string) {
+    private async onNotebookOpened(notebookContents: string) {
         // Compute digest and see if notebook is trusted
-        return this.notebookTrust.isNotebookTrusted(filePath);
+        return this.notebookTrust.isNotebookTrusted(notebookContents);
     }
 
     /**
