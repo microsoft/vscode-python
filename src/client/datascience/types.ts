@@ -14,7 +14,6 @@ import {
     DebugSession,
     Disposable,
     Event,
-    EventEmitter,
     LanguageConfiguration,
     Range,
     TextDocument,
@@ -244,7 +243,7 @@ export type ConnectNotebookProviderOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
-    onConnectionMadeEvent?: EventEmitter<void>; // Optional event to signal when a connection is first made to this provider
+    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
@@ -1053,7 +1052,7 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
-    onConnectionMadeEvent?: EventEmitter<void>; // Optional event to signal when a connection is first made to this provider
+    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 /**

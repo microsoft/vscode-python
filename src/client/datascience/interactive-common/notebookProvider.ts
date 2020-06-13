@@ -77,9 +77,15 @@ export class NotebookProvider implements INotebookProvider {
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            return this.rawNotebookProvider.connect({ ...options, onConnectionMadeEvent: this._connectionMade });
+            return this.rawNotebookProvider.connect({
+                ...options,
+                onConnectionMade: this.fireConnectionMade.bind(this)
+            });
         } else {
-            return this.jupyterNotebookProvider.connect({ ...options, onConnectionMadeEvent: this._connectionMade });
+            return this.jupyterNotebookProvider.connect({
+                ...options,
+                onConnectionMade: this.fireConnectionMade.bind(this)
+            });
         }
     }
 
@@ -137,6 +143,10 @@ export class NotebookProvider implements INotebookProvider {
         this.cacheNotebookPromise(options.identity, promise);
 
         return promise;
+    }
+
+    private fireConnectionMade() {
+        this._connectionMade.fire();
     }
 
     // Cache the promise that will return a notebook
