@@ -146,7 +146,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 cellKind: (vscodeNotebookEnums as any).CellKind.Code,
                 language: 'csharp',
                 outputs: [],
-                source: 'print(1)',
+                source: 'Console.WriteLine("1',
                 metadata: {
                     editable: true,
                     executionOrder: 10,
