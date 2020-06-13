@@ -13,7 +13,13 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { INotebook, IRawConnection, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
+import {
+    ConnectNotebookProviderOptions,
+    INotebook,
+    IRawConnection,
+    IRawNotebookProvider,
+    IRawNotebookSupportedService
+} from '../types';
 
 export class RawConnection implements IRawConnection {
     public readonly type = 'raw';
@@ -36,7 +42,7 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
     // Keep track of the notebooks that we have provided
     private notebooks = new Map<string, Promise<INotebook>>();
-    private rawConnection = new RawConnection();
+    private rawConnection: IRawConnection | undefined;
     private _id = uuid();
 
     constructor(
@@ -47,7 +53,17 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
         this.asyncRegistry.push(this);
     }
 
-    public connect(): Promise<IRawConnection> {
+    public connect(options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
+        // For getOnly, we don't want to create a connection, even though we don't have a server
+        // here we only want to be "connected" when requested to mimic jupyter server function
+        if (options.getOnly) {
+            return Promise.resolve(this.rawConnection);
+        }
+
+        // If not get only, create if needed and return
+        if (!this.rawConnection) {
+            this.rawConnection = new RawConnection();
+        }
         return Promise.resolve(this.rawConnection);
     }
 
@@ -87,6 +103,11 @@ export class RawNotebookProviderBase implements IRawNotebookProvider {
     }
 
     protected getConnection(): IRawConnection {
+        // At the time of getConnection force a connection if not created already
+        // should always have happened already, but the check here lets us avoid returning undefined option
+        if (!this.rawConnection) {
+            this.rawConnection = new RawConnection();
+        }
         return this.rawConnection;
     }
 

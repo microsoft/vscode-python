@@ -12,7 +12,7 @@ import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 import { ReactWrapper } from 'enzyme';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IDataScienceSettings } from '../../client/common/types';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
@@ -549,6 +549,52 @@ Type:      builtin_function_or_method`,
                 return Promise.resolve();
             });
             assert.equal(afterDelete.length, 2, `Delete should remove a cell`);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    const interruptCode = `
+import time
+for i in range(0, 100):
+    try:
+        time.sleep(0.5)
+    except KeyboardInterrupt:
+        time.sleep(0.5)`;
+
+    runMountedTest(
+        'Interrupt double',
+        async (wrapper) => {
+            let interruptedKernel = false;
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+            interactiveWindow.notebook?.onKernelInterrupted(() => (interruptedKernel = true));
+
+            let timerCount = 0;
+            addContinuousMockData(ioc, interruptCode, async (_c) => {
+                timerCount += 1;
+                await sleep(0.5);
+                return Promise.resolve({ result: '', haveMore: timerCount < 100 });
+            });
+
+            addMockData(ioc, interruptCode, undefined, 'text/plain');
+
+            // Run the interrupt code and then interrupt it twice to make sure we can interrupt twice
+            const waitForAdd = addCode(ioc, wrapper, interruptCode);
+
+            // 'Click' the button in the react control. We need to verify we can
+            // click it more than once.
+            const interrupt = findButton(wrapper, InteractivePanel, 4);
+            interrupt?.simulate('click');
+            await sleep(0.1);
+            interrupt?.simulate('click');
+
+            // We should get out of the wait for add
+            await waitForAdd;
+
+            // We should have also fired an interrupt
+            assert.ok(interruptedKernel, 'Kernel was not interrupted');
         },
         () => {
             return ioc;

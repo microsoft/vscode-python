@@ -6,7 +6,7 @@
 import { Event, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IPersistentState, Resource } from '../../common/types';
-import { PythonInterpreter } from '../contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 
 export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
 /**

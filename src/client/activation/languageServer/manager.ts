@@ -14,8 +14,8 @@ import {
     Resource
 } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
-import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';

@@ -36,7 +36,7 @@ suite('Linting Settings', () => {
 
     suiteSetup(async function () {
         // These tests are still consistently failing during teardown.
-        // See gh-4326.
+        // See https://github.com/Microsoft/vscode-python/issues/4326.
         // tslint:disable-next-line:no-invalid-this
         this.skip();
 

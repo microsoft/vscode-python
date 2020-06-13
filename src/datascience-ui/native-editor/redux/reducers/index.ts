@@ -19,7 +19,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.INSERT_ABOVE_AND_FOCUS_NEW_CELL]: Creation.insertAboveAndFocusCell,
     [CommonActionType.INSERT_ABOVE_FIRST_AND_FOCUS_NEW_CELL]: Creation.insertAboveFirstAndFocusCell,
     [CommonActionType.INSERT_BELOW_AND_FOCUS_NEW_CELL]: Creation.insertBelowAndFocusCell,
-    [CommonActionType.INSERT_ABOVE]: Creation.insertAbove,
+    [CommonActionType.INSERT_ABOVE]: Creation.insertNewAbove,
     [CommonActionType.INSERT_ABOVE_FIRST]: Creation.insertAboveFirst,
     [CommonActionType.INSERT_BELOW]: Creation.insertBelow,
     [CommonActionType.FOCUS_CELL]: Effects.focusCell,

@@ -133,7 +133,7 @@ export function reBroadcastMessageIfRequired(
     }
     // Check if we need to re-broadcast this message to other editors/sessions.
     // tslint:disable-next-line: no-any
-    const result = shouldRebroadcast(message as any);
+    const result = shouldRebroadcast(message as any, payload);
     if (result[0]) {
         // Mark message as incoming, to indicate this will be sent into the other webviews.
         // tslint:disable-next-line: no-any

@@ -44,7 +44,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import {
@@ -286,6 +286,43 @@ suite('DataScience Native Editor', () => {
                 );
 
                 runMountedTest(
+                    'Invalid kernel can be switched',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                                ...ioc.getSettings().datascience,
+                                jupyterLaunchRetries: 1,
+                                disableJupyterAutoStart: true
+                            });
+
+                            // Can only do this with the mock. Have to force the first call to idle on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingIdleFailure();
+
+                            // Create an editor so something is listening to messages
+                            const editor = (await createNewEditor(ioc)) as NativeEditorWebView;
+
+                            // Run a cell. It should fail.
+                            await addCell(wrapper, ioc, 'a=1\na');
+                            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 1);
+
+                            // Now switch to another kernel
+                            editor.onMessage(InteractiveWindowMessages.SelectKernel, undefined);
+
+                            // Verify we picked the valid kernel.
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 2);
+                        } else {
+                            context.skip();
+                        }
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
                     'Mime Types',
                     async (wrapper) => {
                         // Create an editor so something is listening to messages
@@ -489,8 +526,7 @@ df.head()`;
                     async (_wrapper, context) => {
                         if (ioc.mockJupyter) {
                             await ioc.activate();
-                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                                ...ioc.getSettings().datascience,
+                            ioc.forceDataScienceSettingsChanged({
                                 disableJupyterAutoStart: false
                             });
 
@@ -2196,8 +2232,7 @@ df.head()`;
 
                         // Update the settings and wait for the component to receive it and process it.
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...defaultDataScienceSettings(),
+                        ioc.forceDataScienceSettingsChanged({
                             showCellInputCode: false
                         });
                         await promise;
@@ -2212,7 +2247,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
                         // Also, send notification about changes to window state.
                         windowStateChangeHandlers.forEach((item) => item({ focused: false }));
                         windowStateChangeHandlers.forEach((item) => item({ focused: true }));
@@ -2237,7 +2272,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor);
+                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor!);
 
                         // At this point a message should be sent to extension asking it to save.
                         // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -2270,7 +2305,7 @@ df.head()`;
                         // Now that the notebook is dirty, change the active editor.
                         // This should not trigger a save of notebook (as its configured to save only when window state changes).
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
 
                         // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                         await expect(cleanPromise).to.eventually.be.rejected;
@@ -2510,6 +2545,7 @@ df.head()`;
                         saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
                         await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
                         await saved;
+                        await sleep(1000); // Make sure file finishes writing.
 
                         const nb = JSON.parse(
                             await fs.readFile(notebookFile.filePath, 'utf8')

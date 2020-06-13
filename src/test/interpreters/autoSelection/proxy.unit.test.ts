@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { InterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/proxy';
 import { IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../client/interpreter/contracts';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 suite('Interpreters - Auto Selection Proxy', () => {
     class InstanceClass implements IInterpreterAutoSeletionProxyService {

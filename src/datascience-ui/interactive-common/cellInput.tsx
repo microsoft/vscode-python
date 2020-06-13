@@ -18,6 +18,7 @@ import { Markdown } from './markdown';
 // tslint:disable-next-line: no-require-importss
 interface ICellInputProps {
     cellVM: ICellViewModel;
+    language: string;
     codeVersion: number;
     codeTheme: string;
     testMode?: boolean;
@@ -121,6 +122,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         version={this.props.codeVersion}
                         focusPending={this.props.focusPending}
                         ipLocation={this.getIpLine()}
+                        language={this.props.language}
                     />
                 </div>
             );

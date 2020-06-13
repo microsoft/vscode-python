@@ -17,7 +17,6 @@ export interface IKernelSelectionProps {
 export class KernelSelection extends React.Component<IKernelSelectionProps> {
     private get isKernelSelectionAllowed() {
         return (
-            this.props.kernel.jupyterServerStatus !== ServerStatus.NotStarted &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Restarting &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Starting
         );

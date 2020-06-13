@@ -9,9 +9,10 @@ import { traceDecorators, traceError } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { InterpreterType } from '../../pythonEnvironments/discovery/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IInterpreterService, InterpreterType } from '../contracts';
+import { IInterpreterService } from '../contracts';
 
 export const condaInheritEnvPromptKey = 'CONDA_INHERIT_ENV_PROMPT_KEY';
 

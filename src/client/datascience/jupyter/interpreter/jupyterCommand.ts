@@ -16,7 +16,8 @@ import {
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { JupyterCommands, JupyterDaemonModule } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 

@@ -9,7 +9,7 @@ import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
 @injectable()

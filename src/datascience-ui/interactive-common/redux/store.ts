@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 
+import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -13,7 +14,14 @@ import { MessageType } from '../../../client/datascience/interactive-common/sync
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
-import { getSelectedAndFocusedInfo, IMainState, ServerStatus } from '../../interactive-common/mainState';
+import {
+    activeDebugState,
+    DebugState,
+    getSelectedAndFocusedInfo,
+    ICellViewModel,
+    IMainState,
+    ServerStatus
+} from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
@@ -61,7 +69,8 @@ function generateDefaultState(
             kernel: {
                 displayName: getLocString('DataScience.noKernel', 'No Kernel'),
                 localizedUri: getLocString('DataScience.serverNotStarted', 'Not Started'),
-                jupyterServerStatus: ServerStatus.NotStarted
+                jupyterServerStatus: ServerStatus.NotStarted,
+                language: PYTHON_LANGUAGE
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
             editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
@@ -197,20 +206,32 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Special case for rendering complete
-        const prevFinished = prevState.main.cellVMs
-            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map((c) => c.cell.id);
-        const afterFinished = afterState.main.cellVMs
-            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map((c) => c.cell.id);
         if (
-            afterFinished.length > prevFinished.length ||
-            (afterFinished.length !== prevFinished.length &&
-                afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
+            action.type &&
+            action.type === InteractiveWindowMessages.FinishCell &&
+            action.payload.data &&
+            action.payload.data.data?.cell_type === 'code'
         ) {
-            const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
-            sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
+            sendMessage(InteractiveWindowMessages.ExecutionRendered);
+        }
+
+        if (!action.type || action.type !== InteractiveWindowMessages.FinishCell) {
+            // Might be a non finish but still update cells (like an undo or a delete)
+            const prevFinished = prevState.main.cellVMs
+                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+                .map((c) => c.cell.id);
+            const afterFinished = afterState.main.cellVMs
+                .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+                .map((c) => c.cell.id);
+            if (
+                afterFinished.length > prevFinished.length ||
+                (afterFinished.length !== prevFinished.length &&
+                    afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
+            ) {
+                // Send async so happens after the render is actually finished.
+                sendMessage(InteractiveWindowMessages.ExecutionRendered);
+            }
         }
 
         // Hiding/displaying output
@@ -238,11 +259,25 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.KernelIdle);
         }
 
+        // Debug state changing
+        const oldState = getDebugState(prevState.main.cellVMs);
+        const newState = getDebugState(afterState.main.cellVMs);
+        if (oldState !== newState) {
+            sendMessage(InteractiveWindowMessages.DebugStateChange, { oldState, newState });
+        }
+
         if (action.type !== 'action.postOutgoingMessage') {
             sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
         }
         return res;
     };
+}
+
+// Find the debug state for cell view models
+function getDebugState(vms: ICellViewModel[]): DebugState {
+    const firstNonDesign = vms.find((cvm) => activeDebugState(cvm.runningByLine));
+
+    return firstNonDesign ? firstNonDesign.runningByLine : DebugState.Design;
 }
 
 function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {

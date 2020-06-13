@@ -26,7 +26,7 @@ import {
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
-import { IAvailableLinterActivator, ILinterInfo } from '../../client/linters/types';
+import { IAvailableLinterActivator, ILinterInfo, LinterId } from '../../client/linters/types';
 
 // tslint:disable:max-func-body-length no-any
 suite('Linter Availability Provider tests', () => {
@@ -257,7 +257,7 @@ suite('Linter Availability Provider tests', () => {
                 this.testIsEnabled = enabled;
                 return Promise.resolve();
             }
-        })(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
+        })(Product.pylint, LinterId.PyLint, configServiceMock.object, ['.pylintrc', 'pylintrc']);
 
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         factoryMock
@@ -856,6 +856,6 @@ function getDependenciesForAvailabilityTests(): [
         TypeMoq.Mock.ofType<IWorkspaceService>(),
         TypeMoq.Mock.ofType<IConfigurationService>(),
         TypeMoq.Mock.ofType<IPersistentStateFactory>(),
-        new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc'])
+        new LinterInfo(Product.pylint, LinterId.PyLint, configServiceMock.object, ['.pylintrc', 'pylintrc'])
     ];
 }

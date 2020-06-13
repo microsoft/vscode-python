@@ -3,7 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
-import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
+import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -11,11 +11,12 @@ import {
     CommonActionType,
     IAddCellAction,
     ILoadIPyWidgetClassFailureAction,
+    IVariableExplorerHeight,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -68,6 +69,8 @@ export enum InteractiveWindowMessages {
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
+    SetVariableExplorerHeight = 'set_variable_explorer_height',
+    VariableExplorerHeightResponse = 'variable_explorer_height_response',
     ForceVariableRefresh = 'force_variable_refresh',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
@@ -132,6 +135,7 @@ export enum InteractiveWindowMessages {
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
+    DebugStateChange = 'debug_state_change',
     KernelIdle = 'kernel_idle'
 }
 
@@ -175,6 +179,10 @@ export interface IGotoCode {
 
 export interface ICopyCode {
     source: string;
+}
+
+export enum VariableExplorerStateKeys {
+    height = 'NBVariableHeights'
 }
 
 export enum SysInfoReason {
@@ -334,6 +342,11 @@ export interface IRenderComplete {
     ids: string[];
 }
 
+export interface IDebugStateChange {
+    oldState: DebugState;
+    newState: DebugState;
+}
+
 export interface IFocusedCellEditor {
     cellId: string;
 }
@@ -351,6 +364,7 @@ export interface INotebookModelSaved extends INotebookModelChange {
 export interface INotebookModelSavedAs extends INotebookModelChange {
     kind: 'saveAs';
     target: Uri;
+    sourceUri: Uri;
 }
 
 export interface INotebookModelRemoveAllChange extends INotebookModelChange {
@@ -362,6 +376,11 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     kind: 'modify';
     newCells: ICell[];
     oldCells: ICell[];
+}
+export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
+    kind: 'updateCellExecutionCount';
+    cellId: string;
+    executionCount?: number;
 }
 
 export interface INotebookModelClearChange extends INotebookModelChange {
@@ -478,11 +497,21 @@ export type NotebookModelChange =
     | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
-    | INotebookModelChangeTypeChange;
+    | INotebookModelChangeTypeChange
+    | INotebookModelCellExecutionCountChange;
 
 export interface IRunByLine {
     cell: ICell;
     expectedExecutionCount: number;
+}
+
+export interface ILoadTmLanguageResponse {
+    languageId: string;
+    scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
+    // tslint:disable-next-line: no-any
+    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageJSON: string; // Contents of the tmLanguage.json file
+    extensions: string[]; // Array of file extensions that map to this language
 }
 
 // Map all messages to specific payloads
@@ -546,6 +575,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
+    public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
+    public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
@@ -564,8 +595,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
+    public [InteractiveWindowMessages.LoadTmLanguageRequest]: string;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: ILoadTmLanguageResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;
@@ -593,7 +624,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
     public [InteractiveWindowMessages.DoSave]: never | undefined;
-    public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
+    public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
     public [InteractiveWindowMessages.OutputToggled]: never | undefined;
@@ -620,4 +651,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Step]: never | undefined;
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
+    public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
 }

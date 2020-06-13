@@ -19,7 +19,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -46,6 +46,7 @@ import {
     concatMultilineStringOutput,
     formatStreamText
 } from '../../../datascience-ui/common';
+import { PYTHON_LANGUAGE } from '../../common/constants';
 import { RefBool } from '../../common/refBool';
 
 class CellSubscriber {
@@ -166,7 +167,12 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
+
+    public get onKernelInterrupted(): Event<void> {
+        return this.kernelInterrupted.event;
+    }
     private readonly kernelRestarted = new EventEmitter<void>();
+    private readonly kernelInterrupted = new EventEmitter<void>();
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
@@ -209,22 +215,24 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async dispose(): Promise<void> {
-        if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.dispose();
-        }
-        if (this.sessionStatusChanged) {
-            this.sessionStatusChanged.dispose();
-        }
-
-        traceInfo(`Shutting down session ${this.identity.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
+            if (this.onStatusChangedEvent) {
+                this.onStatusChangedEvent.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+            if (this.sessionStatusChanged) {
+                this.sessionStatusChanged.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+
+            traceInfo(`Shutting down session ${this.identity.toString()}`);
             if (this.session) {
                 await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
+            this.loggers.forEach((d) => d.dispose());
+            this.disposed.fire();
         }
-        this.loggers.forEach((d) => d.dispose());
-        this.disposed.fire();
     }
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -518,6 +526,9 @@ export class JupyterNotebookBase implements INotebook {
 
                 // Cancel all other pending cells as we interrupted.
                 this.finishUncompletedCells();
+
+                // Fire event that we interrupted.
+                this.kernelInterrupted.fire();
 
                 // Indicate the interrupt worked.
                 return InterruptResult.Success;
@@ -927,6 +938,7 @@ export class JupyterNotebookBase implements INotebook {
         if (
             this._executionInfo &&
             this._executionInfo.connectionInfo.localLaunch &&
+            this._executionInfo.kernelSpec?.language === PYTHON_LANGUAGE &&
             (await this.fs.directoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));

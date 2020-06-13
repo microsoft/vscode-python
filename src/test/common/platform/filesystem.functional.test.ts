@@ -240,9 +240,10 @@ suite('FileSystem - raw', () => {
     suite('createReadStream', () => {
         setup(function () {
             // tslint:disable-next-line: no-suspicious-comment
-            // TODO(GH-10031) This appears to be producing
+            // TODO: This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
+            // See https://github.com/microsoft/vscode-python/issues/10031.
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         });
@@ -267,9 +268,10 @@ suite('FileSystem - raw', () => {
     suite('createWriteStream', () => {
         setup(function () {
             // tslint:disable-next-line: no-suspicious-comment
-            // TODO(GH-10031) This appears to be producing
+            // TODO This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
+            // See https://github.com/microsoft/vscode-python/issues/10031.
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         });
@@ -695,8 +697,25 @@ suite('FileSystem', () => {
                 await fix.createFile('x/y/z/spam-all.py');
                 await fix.createFile('x/y/z/spam');
                 await fix.createFile('x/spam.py');
-
+                await fix.createFile('x/y/z/.net.py');
                 let files = await fileSystem.search(pattern);
+
+                // For whatever reason, on Windows "search()" is
+                // returning filenames with forward slasshes...
+                files = files.map(fixPath);
+                expect(files.sort()).to.deep.equal(expected.sort());
+            });
+            test('found dot matches', async () => {
+                const dir = await fix.resolve(`x/y/z`);
+                const expected: string[] = [
+                    await fix.createFile('x/y/z/spam.py'),
+                    await fix.createFile('x/y/z/.net.py')
+                ];
+                // non-matches
+                await fix.createFile('x/spam.py');
+                await fix.createFile('x/y/z/spam');
+                await fix.createFile('x/spam.py');
+                let files = await fileSystem.search(`${dir}/**/*.py`, undefined, true);
 
                 // For whatever reason, on Windows "search()" is
                 // returning filenames with forward slasshes...

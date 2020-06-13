@@ -43,7 +43,7 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     }
     public set activeItems(items: QuickPickItem[]) {
         this._activeItems = items;
-        this.didChangeActiveEmitter.fire();
+        this.didChangeActiveEmitter.fire(items);
     }
     public get onDidChangeActive(): Event<QuickPickItem[]> {
         return this.didChangeActiveEmitter.event;

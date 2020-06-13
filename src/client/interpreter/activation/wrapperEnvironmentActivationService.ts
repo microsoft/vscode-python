@@ -18,9 +18,10 @@ import {
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IInterpreterService, PythonInterpreter } from '../contracts';
+import { IInterpreterService } from '../contracts';
 import { EnvironmentActivationService } from './service';
 import { TerminalEnvironmentActivationService } from './terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './types';

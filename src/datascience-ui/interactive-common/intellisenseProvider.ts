@@ -52,12 +52,16 @@ export class IntellisenseProvider
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
     private disposed = false;
     constructor(
-        private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void
+        private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(
+            type: T,
+            payload?: M[T]
+        ) => void,
+        readonly language: string
     ) {
         // Register a completion provider
-        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
-        this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
-        this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider('python', this));
+        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider(language, this));
+        this.registerDisposables.push(monacoEditor.languages.registerHoverProvider(language, this));
+        this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider(language, this));
     }
 
     public provideCompletionItems(

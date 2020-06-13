@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
+import { DotNetLanguageServerMinVersionKey } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
@@ -44,7 +45,7 @@ suite('Language Server Package Service', () => {
         );
         serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        const packageJson = { languageServerVersion: '0.0.1' };
+        const packageJson = { [DotNetLanguageServerMinVersionKey]: '0.0.1' };
         appEnv.setup((e) => e.packageJson).returns(() => packageJson);
         const platform = typeMoq.Mock.ofType<IPlatformService>();
         const lsPackageService = new DotNetLanguageServerPackageService(

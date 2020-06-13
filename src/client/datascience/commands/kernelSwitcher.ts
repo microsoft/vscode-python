@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { Commands } from '../constants';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
@@ -29,7 +28,10 @@ export class KernelSwitcherCommand implements IDisposable {
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
     }
-    private async switchKernel(notebook?: INotebook): Promise<KernelSpecInterpreter | undefined> {
+    private async switchKernel(
+        notebook: INotebook | undefined,
+        type: 'raw' | 'jupyter'
+    ): Promise<KernelSpecInterpreter | undefined> {
         // If notebook isn't know, then user invoked this command from command palette or similar.
         // We need to identify the current notebook (active native editor or interactive window).
         if (!notebook) {
@@ -37,10 +39,6 @@ export class KernelSwitcherCommand implements IDisposable {
                 this.notebookEditorProvider.activeEditor?.notebook ??
                 this.interactiveWindowProvider.getActive()?.notebook;
         }
-        if (!notebook) {
-            traceError('No active notebook');
-            return;
-        }
-        return this.kernelSwitcher.switchKernel(notebook);
+        return this.kernelSwitcher.switchKernel(notebook, type);
     }
 }

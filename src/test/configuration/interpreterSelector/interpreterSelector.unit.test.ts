@@ -13,7 +13,8 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

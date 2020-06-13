@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { PythonVersionInfo } from '../../../../pythonEnvironments/discovery/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { PythonVersionInfo } from '../../types';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');

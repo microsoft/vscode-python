@@ -6,7 +6,7 @@
 import type { Session } from '@jupyterlab/services';
 import { CancellationToken, QuickPickItem } from 'vscode';
 import { Resource } from '../../../common/types';
-import { PythonInterpreter } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
 import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
 
 export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };

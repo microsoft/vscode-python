@@ -42,7 +42,8 @@ export namespace Kernel {
                 kernel: {
                     localizedUri: arg.payload.data.localizedUri,
                     jupyterServerStatus: arg.payload.data.jupyterServerStatus,
-                    displayName: arg.payload.data.displayName
+                    displayName: arg.payload.data.displayName,
+                    language: arg.payload.data.language
                 }
             };
         }

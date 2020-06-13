@@ -125,7 +125,8 @@ export interface IInstaller {
 }
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8542): Drop IPathUtils in favor of IFileSystemPathUtils.
+// TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
+// See https://github.com/microsoft/vscode-python/issues/8542.
 export const IPathUtils = Symbol('IPathUtils');
 export interface IPathUtils {
     readonly delimiter: string;
@@ -616,6 +617,14 @@ export interface IExperimentsManager {
      * @param experimentName Name of the experiment
      */
     sendTelemetryIfInExperiment(experimentName: string): void;
+}
+
+/**
+ * Experiment service leveraging VS Code's experiment framework.
+ */
+export const IExperimentService = Symbol('IExperimentService');
+export interface IExperimentService {
+    inExperiment(experimentName: string): Promise<boolean>;
 }
 
 export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };

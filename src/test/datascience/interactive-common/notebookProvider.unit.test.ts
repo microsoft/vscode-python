@@ -60,6 +60,7 @@ suite('Data Science - NotebookProvider', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(dataScienceSettings.jupyterServerURI).thenReturn('local');
         when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
+        when(rawNotebookProvider.supported).thenReturn(() => Promise.resolve(false));
 
         notebookProvider = new NotebookProvider(
             instance(fileSystem),

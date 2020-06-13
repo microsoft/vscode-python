@@ -30,6 +30,7 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments/manager';
+import { ExperimentService } from '../../client/common/experiments/service';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
@@ -102,6 +103,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IEditorUtils,
+    IExperimentService,
     IExperimentsManager,
     IExtensions,
     IFeatureDeprecationManager,
@@ -124,11 +126,11 @@ import { Random } from '../../client/common/utils/random';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import { INotebookExecutionLogger } from '../../client/datascience/types';
 import { ICondaService } from '../../client/interpreter/contracts';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
-import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
-import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
-import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
+import { CondaService } from '../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { InterpreterHashProvider } from '../../client/pythonEnvironments/discovery/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/pythonEnvironments/discovery/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 import { rootWorkspaceUri, updateSetting } from '../common';
@@ -253,6 +255,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
         ioc.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
         ioc.serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
+        ioc.serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
         ioc.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         ioc.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

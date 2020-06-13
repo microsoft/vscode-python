@@ -267,4 +267,16 @@ suite('Language Server Folder Service', () => {
             assert.deepEqual(result, expectedLSDirectory);
         });
     });
+
+    suite('Method skipDownload()', () => {
+        setup(() => {
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
+        });
+
+        test('skipDownload is false', async () => {
+            const skipDownload = await languageServerFolderService.skipDownload();
+            expect(skipDownload).to.be.equal(false, 'skipDownload should be false');
+        });
+    });
 });
