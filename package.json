@@ -825,7 +825,7 @@
                     "command": "python.datascience.exportAsPythonScript",
                     "title": "%python.command.python.datascience.exportAsPythonScript.title%",
                     "category": "Python",
-                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused"
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.switchOffInsidersChannel",
