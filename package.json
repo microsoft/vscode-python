@@ -327,7 +327,8 @@
             {
                 "command": "python.datascience.exportAsPythonScript",
                 "title": "%python.command.python.datascience.exportAsPythonScript.title%",
-                "category": "Python"
+                "category": "Python",
+                "when": "python.datascience.isinteractiveactive && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.selectJupyterInterpreter",

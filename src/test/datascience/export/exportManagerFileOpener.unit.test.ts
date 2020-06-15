@@ -22,12 +22,13 @@ suite('Data Science - Export File Opener', () => {
     setup(async () => {
         exporter = mock<IExportManager>();
         documentManager = mock<IDocumentManager>();
-        fileSystem = mock(IFileSystem);
+        fileSystem = mock<IFileSystem>();
         const reporter = mock(ProgressReporter);
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         when(documentManager.openTextDocument(anything())).thenResolve();
         when(documentManager.showTextDocument(anything())).thenResolve();
+        when(fileSystem.readFile(anything())).thenResolve();
         fileOpener = new ExportManagerFileOpener(
             instance(exporter),
             instance(documentManager),
@@ -43,7 +44,7 @@ suite('Data Science - Export File Opener', () => {
 
         verify(documentManager.showTextDocument(anything())).never();
     });
-    test('File is opened if exported', async () => {
+    test('Python File is opened if exported', async () => {
         const uri = Uri.file('blah.python');
         when(exporter.export(anything(), anything())).thenResolve(uri);
 
