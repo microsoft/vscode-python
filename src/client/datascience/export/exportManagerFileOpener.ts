@@ -1,9 +1,11 @@
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
+import { IBrowserService } from '../../common/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
@@ -16,7 +18,8 @@ export class ExportManagerFileOpener implements IExportManager {
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IBrowserService) private readonly browserService: IBrowserService
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -50,7 +53,7 @@ export class ExportManagerFileOpener implements IExportManager {
         await this.applicationShell.showErrorMessage(getLocString('DataScience.failedExportMessage', 'Export failed'));
     }
 
-    private async askOpenFile(_uri: Uri): Promise<void> {
+    private async askOpenFile(uri: Uri): Promise<void> {
         const yes = getLocString('DataScience.openExportFileYes', 'Yes');
         const no = getLocString('DataScience.openExportFileNo', 'No');
         const items = [yes, no];
@@ -63,7 +66,7 @@ export class ExportManagerFileOpener implements IExportManager {
             .then((item) => item);
 
         if (selected === yes) {
-            // open file
+            this.browserService.launch(uri.toString());
         }
     }
 }
