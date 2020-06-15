@@ -198,12 +198,6 @@ suite('DataScience - Native Editor Provider', () => {
         when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
     });
 
-    teardown(async () => {
-        if (registeredProvider) {
-            await registeredProvider.dispose();
-        }
-    });
-
     function createNotebookProvider() {
         const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),

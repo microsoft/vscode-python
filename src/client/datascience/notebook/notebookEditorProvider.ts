@@ -11,7 +11,6 @@ import {
     IApplicationShell,
     ICommandManager,
     IVSCodeNotebook,
-    IWorkspaceService,
     NotebookCellLanguageChangeEvent,
     NotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent
@@ -20,8 +19,6 @@ import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
@@ -77,15 +74,11 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private readonly openedEditors = new Set<INotebookEditor>();
     private readonly trackedVSCodeNotebookEditors = new Set<VSCodeNotebookEditor>();
-    private readonly executedEditors = new Set<string>();
-    private notebookCount: number = 0;
-    private openedNotebookCount: number = 0;
     private readonly notebookEditorsByUri = new Map<string, INotebookEditor>();
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookExecutionService) private readonly executionService: INotebookExecutionService,
@@ -93,9 +86,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
-    ) {
-        disposables.push(this);
-    }
+    ) {}
     public activate() {
         this.disposables.push(this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this));
         this.disposables.push(
@@ -113,25 +104,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 }
             })
         );
-
-        // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
-        // on this though.
-        const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
-        if (findFilesPromise && findFilesPromise.then) {
-            findFilesPromise.then((r) => (this.notebookCount += r.length));
-        }
-    }
-    public dispose() {
-        // Send a bunch of telemetry
-        if (this.openedNotebookCount) {
-            sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
-        }
-        if (this.executedEditors.size) {
-            sendTelemetryEvent(Telemetry.NotebookRunCount, undefined, { count: this.executedEditors.size });
-        }
-        if (this.notebookCount) {
-            sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
-        }
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
@@ -157,19 +129,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     public async createNew(contents?: string): Promise<INotebookEditor> {
         const model = await this.storage.createNew(contents);
-
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: Need to do this.
-        // Update number of notebooks in the workspace
-        // this.notebookCount += 1;
-
         return this.open(model.file);
     }
     private onEditorOpened(editor: INotebookEditor): void {
-        this.openedNotebookCount += 1;
-        if (!this.executedEditors.has(editor.file.fsPath)) {
-            editor.executed(this.onExecuted.bind(this));
-        }
         this.openedEditors.add(editor);
         editor.closed(this.closedEditor.bind(this));
         this._onDidOpenNotebookEditor.fire(editor);
@@ -179,11 +141,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
-    }
-    private onExecuted(editor: INotebookEditor): void {
-        if (editor) {
-            this.executedEditors.add(editor.file.fsPath);
-        }
     }
 
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {

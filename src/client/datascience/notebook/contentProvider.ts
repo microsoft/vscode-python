@@ -12,6 +12,8 @@ import type {
     NotebookDocumentEditEvent
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 
@@ -37,6 +39,7 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         const model = await this.notebookStorage.load(uri);
         return notebookModelToVSCNotebookData(model);
     }
+    @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
         const model = await this.notebookStorage.load(document.uri);
         if (cancellation.isCancellationRequested) {
