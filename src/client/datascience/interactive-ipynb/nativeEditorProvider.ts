@@ -164,9 +164,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(contents?: string): Promise<INotebookEditor> {
+    public async createNew(contents?: string, title?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri();
+        const uri = this.getNextNewNotebookUri(title);
 
         // Set these contents into the storage before the file opens. Make sure not
         // load from the memento storage though as this is an entirely brand new file.

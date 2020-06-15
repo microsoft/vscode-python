@@ -2121,6 +2121,7 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
     [Telemetry.StartPageClosedWithoutAction]: never | undefined;
@@ -2132,4 +2133,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
     [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
+    [Telemetry.StartPageOpenFolder]: never | undefined;
+    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 }

@@ -94,3 +94,8 @@ export enum NotebookEditorSupport {
     customEditorExperiment = 'CustomEditorSupport - experiment',
     nativeNotebookExperiment = 'NativeNotebook - experiment'
 }
+
+// Experiment to turn on the start page
+export enum EnableStartPage {
+    experiment = 'EnableStartPage'
+}
