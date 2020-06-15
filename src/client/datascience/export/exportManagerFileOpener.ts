@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
@@ -33,6 +32,9 @@ export class ExportManagerFileOpener implements IExportManager {
             }
         } finally {
             reporter.dispose();
+        }
+        if (!(format in ExportFormat)) {
+            throw new Error('not supported');
         }
 
         if (format === ExportFormat.python) {
