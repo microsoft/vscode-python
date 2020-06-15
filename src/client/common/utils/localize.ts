@@ -992,7 +992,7 @@ export namespace StartPage {
     export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
     export const folderDesc = localize(
         'StartPage.folderDesc',
-        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
+        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
     );
 }
 

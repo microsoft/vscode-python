@@ -225,7 +225,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.folderDesc',
-                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
+                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
                     ).format('openFolder()', 'openWorkspace()')
                 }}
             />

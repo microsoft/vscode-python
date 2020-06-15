@@ -512,7 +512,7 @@
     "StartPage.helloWorld": "Hello world",
     "StartPage.sampleNotebook": "Notebooks intro",
     "StartPage.openFolder": "Open a Folder or Workspace",
-    "StartPage.folderDesc": "- Open a <div class=\"link\" role=\"button\" onclick={0}>Folder</div><br /> - Open a VS Code <div class=\"link\" role=\"button\" onclick={1}>Workspace</div>",
+    "StartPage.folderDesc": "- Open a <div class=\"link\" role=\"button\" onclick={0}>Folder</div><br /> - Open a <div class=\"link\" role=\"button\" onclick={1}>Workspace</div>",
     "DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter": "{0} requires {1} to be installed.",
     "DataScience.runByLine": "Run by line (F10)",
     "DataScience.stopRunByLine": "Stop",
