@@ -161,10 +161,17 @@ jobs:
           python3 -c"import sys;print(sys.executable)"
           python3 --version
 
+      - name: install libpython2.7
+        run: |
+          apt-get install libpython2.7
+          python --version
+          python -c"import sys;print(sys.executable)"
+
       - name: See if python is on PATH
         run: |
-          python -c"import sys;print(sys.executable)"
+          apt-get install libpython2.7
           python --version
+          python -c"import sys;print(sys.executable)"
 
       - name: Use Python 2.7
         uses: actions/setup-python@v2
