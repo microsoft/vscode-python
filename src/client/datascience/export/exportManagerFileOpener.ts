@@ -33,9 +33,6 @@ export class ExportManagerFileOpener implements IExportManager {
         } finally {
             reporter.dispose();
         }
-        if (!(format in ExportFormat)) {
-            throw new Error('not supported');
-        }
 
         if (format === ExportFormat.python) {
             await this.openPythonFile(uri);
