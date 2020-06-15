@@ -141,7 +141,7 @@ export function generateNewNotebookUri(counter: number, title?: string): Uri {
 
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = title ? title : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
+    const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
     const filePath = Uri.file(path.join(os.tmpdir(), fileName));
     // Turn this back into an untitled
     return filePath.with({ scheme: 'untitled', path: filePath.fsPath });

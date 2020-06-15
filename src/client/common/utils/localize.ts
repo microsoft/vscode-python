@@ -966,7 +966,7 @@ export namespace StartPage {
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file with a .py extension<br />- <div class="link" role="button" onclick={0}>Create or Open a Python File, Folder, or Workspace</div>'
+        '- Create a new file with a .py extension<br />- Open a <div class="link" role="button" onclick={0}>Python File</div>, <div class="link" role="button" onclick={1}>Folder</div>, or <div class="link" role="button" onclick={2}>Workspace</div>'
     );
     export const openInteractiveWindow = localize(
         'StartPage.openInteractiveWindow',
@@ -989,7 +989,7 @@ export namespace StartPage {
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro.ipynb');
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
 }
 
 export namespace DebugConfigStrings {

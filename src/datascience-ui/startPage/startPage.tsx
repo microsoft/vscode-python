@@ -38,11 +38,13 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
-        // Tell the plot viewer code we have started.
+        // Tell the start page code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
 
         // Bind some functions to the window, as we need them to be accessible with clean HTML to use translations
         (window as any).openFileBrowser = this.openFileBrowser.bind(this);
+        (window as any).openFolder = this.openFolder.bind(this);
+        (window as any).openWorkspace = this.openWorkspace.bind(this);
         (window as any).openCommandPalette = this.openCommandPalette.bind(this);
         (window as any).openCommandPaletteWithSelection = this.openCommandPaletteWithSelection.bind(this);
         (window as any).openSampleNotebook = this.openSampleNotebook.bind(this);
@@ -145,11 +147,19 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
     }
 
+    public openFolder() {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFolder);
+    }
+
+    public openWorkspace() {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenWorkspace);
+    }
+
     private renderNotebookDescription(): JSX.Element {
         // tslint:disable: react-no-dangerous-html
         return (
             <div
-                className="paragraph"
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
@@ -164,12 +174,12 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // tslint:disable: react-no-dangerous-html
         return (
             <div
-                className="paragraph"
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a new file with a .py extension<br />- <div class="link" role="button" onclick={0}>Create or Open a Python File, Folder, or Workspace</div>'
-                    ).format('openFileBrowser()')
+                        '- Create a new file with a .py extension<br />- Open a <div class="link" role="button" onclick={0}>Python File</div>, <div class="link" role="button" onclick={1}>Folder</div>, or <div class="link" role="button" onclick={2}>Workspace</div>'
+                    ).format('openFileBrowser()', 'openFolder()', 'openWorkspace()')
                 }}
             />
         );
@@ -178,7 +188,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     private renderInteractiveWindowDescription(): JSX.Element {
         // tslint:disable: react-no-dangerous-html
         return (
-            <p
+            <div
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.interactiveWindowDesc',
@@ -209,7 +220,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.releaseNotes.notes.forEach((rel, index) => {
             notes.push(<li key={index}>{rel}</li>);
         });
-        return <ul>{notes}</ul>;
+        return <ul className="list">{notes}</ul>;
     }
 
     private renderTutorialAndDoc(): JSX.Element {

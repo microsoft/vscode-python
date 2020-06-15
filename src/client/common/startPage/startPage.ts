@@ -38,6 +38,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     private actionTaken = false;
     private actionTakenOnFirstTime = false;
     private firstTime = false;
+    private webviewDidLoad = false;
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -87,7 +88,13 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             await this.loadWebPanel(process.cwd());
             // open webview
             await super.show(true);
-        }, 5000);
+
+            setTimeout(() => {
+                if (!this.webviewDidLoad) {
+                    sendTelemetryEvent(Telemetry.StartPageWebViewError);
+                }
+            }, 5000);
+        }, 3000);
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -109,6 +116,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     // tslint:disable-next-line: no-any
     public async onMessage(message: string, payload: any) {
         switch (message) {
+            case StartPageMessages.Started:
+                this.webviewDidLoad = true;
+                break;
             case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
                 const settings = this.configuration.getSettings();
                 const filteredNotes = await this.handleReleaseNotesRequest();
@@ -133,7 +143,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankPythonFile);
                 this.setTelemetryFlags();
 
-                const doc = await this.documentManager.openTextDocument({ language: 'python' });
+                const doc = await this.documentManager.openTextDocument({
+                    language: 'python',
+                    content: `print("${localize.StartPage.helloWorld()}")`
+                });
                 await this.documentManager.showTextDocument(doc, 1, true);
                 break;
             case StartPageMessages.OpenInteractiveWindow:
@@ -183,6 +196,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     await this.documentManager.showTextDocument(doc3);
                 }
                 break;
+            case StartPageMessages.OpenFolder:
+                sendTelemetryEvent(Telemetry.StartPageOpenFolder);
+                this.setTelemetryFlags();
+                this.commandManager.executeCommand('workbench.action.files.openFolder');
+                break;
+            case StartPageMessages.OpenWorkspace:
+                sendTelemetryEvent(Telemetry.StartPageOpenWorkspace);
+                this.setTelemetryFlags();
+                this.commandManager.executeCommand('workbench.action.openWorkspace');
+                break;
             case StartPageMessages.UpdateSettings:
                 if (payload === false) {
                     sendTelemetryEvent(Telemetry.StartPageClickedDontShowAgain);
@@ -199,16 +222,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     // This gets the most recent Enhancements and date from CHANGELOG.md
     // This is public for testing
     public async handleReleaseNotesRequest(): Promise<string[]> {
-        const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
-        const changelogBeginning = changelog.indexOf('### Enhancements');
-        const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
-        const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
-
-        const scrappedNotes = startOfLog.splitLines();
-        return scrappedNotes
-            .filter((line) => line.startsWith('1.'))
-            .slice(0, 5)
-            .map((line) => line.substr(3));
+        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
+        return releaseNotes.splitLines();
     }
 
     // Public for testing
@@ -269,7 +284,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async openSampleNotebook(): Promise<void> {
-        const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.StartPage.sampleNotebook());
+        const ipynb = '.ipynb';
+        const localizedFilePath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            localize.StartPage.sampleNotebook() + ipynb
+        );
         let sampleNotebookPath: string;
 
         if (await this.file.fileExists(localizedFilePath)) {

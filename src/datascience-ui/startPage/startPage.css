@@ -74,8 +74,12 @@
 
 .paragraph {
     display: block;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
+    margin-block-start: 5px;
+    margin-block-end: 5px;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
+}
+
+.list {
+    line-height: 1.5;
 }
