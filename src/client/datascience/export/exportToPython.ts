@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { INotebookImporter } from '../types';
-import { IExport } from './exportManager';
+import { IExport } from './types';
 
 @injectable()
 export class ExportToPython implements IExport {

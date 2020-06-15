@@ -10,7 +10,8 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { Commands } from '../constants';
-import { ExportFormat, ExportManager, IExportManager } from '../export/exportManager';
+import { ExportManager } from '../export/exportManager';
+import { ExportFormat, IExportManager } from '../export/types';
 import { INotebookEditorProvider, INotebookModel } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
@@ -88,7 +89,7 @@ export class ExportCommands implements IDisposable {
             ignoreFocusOut: false,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Export As...'
+            placeHolder: 'Export As...' // TODO: localize
         };
 
         return this.applicationShell.showQuickPick(items, options);

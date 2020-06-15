@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IExport } from './exportManager';
+import { IExport } from './types';
 
 @injectable()
 export class ExportToHTML implements IExport {

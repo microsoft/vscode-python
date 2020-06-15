@@ -3,22 +3,7 @@ import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IDataScienceErrorHandler, INotebookModel } from '../types';
 import { IExportManagerFilePicker } from './exportManagerFilePicker';
-
-export enum ExportFormat {
-    pdf = 'pdf',
-    html = 'html',
-    python = 'python'
-}
-
-export const IExportManager = Symbol('IExportManager');
-export interface IExportManager {
-    export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined>;
-}
-
-export const IExport = Symbol('IExport');
-export interface IExport {
-    export(source: Uri, target: Uri): Promise<void>;
-}
+import { ExportFormat, IExport, IExportManager } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {

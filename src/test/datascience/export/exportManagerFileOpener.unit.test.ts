@@ -8,8 +8,8 @@ import { Uri } from 'vscode';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
-import { ExportFormat, IExportManager } from '../../../client/datascience/export/exportManager';
 import { ExportManagerFileOpener } from '../../../client/datascience/export/exportManagerFileOpener';
+import { ExportFormat, IExportManager } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel } from '../../../client/datascience/types';
 

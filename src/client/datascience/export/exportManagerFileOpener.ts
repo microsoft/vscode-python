@@ -5,8 +5,8 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
-import { ExportFormat, IExportManager } from './exportManager';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
+import { ExportFormat, IExportManager } from './types';
 
 @injectable()
 export class ExportManagerFileOpener implements IExportManager {

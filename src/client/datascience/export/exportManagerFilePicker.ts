@@ -4,7 +4,7 @@ import { Memento, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
-import { ExportFormat } from './exportManager';
+import { ExportFormat } from './types';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
@@ -14,11 +14,6 @@ export const PythonExtensions = { Python: ['py'] };
 export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
 export interface IExportManagerFilePicker {
     getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
-}
-
-export function stripFileExtension(fileName: string): string {
-    const extension = path.extname(fileName);
-    return fileName.slice(0, fileName.length - extension.length);
 }
 
 @injectable()
@@ -50,7 +45,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
                 return;
         }
 
-        const notebookFileName = stripFileExtension(path.basename(source.fsPath));
+        const notebookFileName = path.basename(source.fsPath, path.extname(source.fsPath));
         const dialogUri = Uri.file(path.join(this.getLastFileSaveLocation().fsPath, notebookFileName));
         const options: SaveDialogOptions = {
             defaultUri: dialogUri,
@@ -60,7 +55,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
 
         const uri = await this.applicationShell.showSaveDialog(options);
         if (uri) {
-            this.updateFileSaveLocation(uri);
+            await this.updateFileSaveLocation(uri);
         }
         return uri;
     }
@@ -74,8 +69,8 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         return Uri.file(filePath);
     }
 
-    private updateFileSaveLocation(value: Uri) {
+    private async updateFileSaveLocation(value: Uri) {
         const location = path.dirname(value.fsPath);
-        this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, location);
+        await this.workspaceStorage.update(ExportNotebookSettings.lastSaveLocation, location);
     }
 }

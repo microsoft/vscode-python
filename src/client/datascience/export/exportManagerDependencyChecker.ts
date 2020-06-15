@@ -2,7 +2,8 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { IJupyterExecution, IJupyterInterpreterDependencyManager, INotebookModel } from '../types';
-import { ExportFormat, ExportManager, IExportManager } from './exportManager';
+import { ExportManager } from './exportManager';
+import { ExportFormat, IExportManager } from './types';
 
 @injectable()
 export class ExportManagerDependencyChecker implements IExportManager {
