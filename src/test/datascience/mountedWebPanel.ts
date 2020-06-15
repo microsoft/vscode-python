@@ -8,7 +8,6 @@ import {
     WebPanelMessage
 } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
-import { Deferred } from '../../client/common/utils/async';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
 // tslint:disable: no-any
@@ -81,9 +80,8 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
                 this.missedMessages.forEach((m) =>
                     this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
                 );
+                this.missedMessages = [];
             }, 0);
-
-            this.missedMessages = [];
         }
     }
 
