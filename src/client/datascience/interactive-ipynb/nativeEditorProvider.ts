@@ -237,7 +237,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
-    private getNextNewNotebookUri(): Uri {
-        return generateNewNotebookUri(this.untitledCounter);
+    private getNextNewNotebookUri(title?: string): Uri {
+        return generateNewNotebookUri(this.untitledCounter, title);
     }
 }
