@@ -227,9 +227,17 @@ export class PythonSettings implements IPythonSettings {
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
 
-        let ls = pythonSettings.get<LanguageServerType>('languageServer');
-        if (!ls) {
-            ls = LanguageServerType.Jedi;
+        // tslint:disable-next-line:no-suspicious-comment
+        // For test purposes support 'Node'. TODO: remove it eventually.
+        let ls: LanguageServerType | undefined;
+        const lsString = pythonSettings.get<string>('languageServer');
+        if (lsString === 'Node') {
+            ls = LanguageServerType.Node;
+        } else {
+            ls = pythonSettings.get<LanguageServerType>('languageServer');
+            if (!ls) {
+                ls = LanguageServerType.Jedi;
+            }
         }
         this.languageServer = systemVariables.resolveAny(ls)!;
 

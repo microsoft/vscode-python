@@ -46,10 +46,10 @@ suite('Propose New Language Server Banner', () => {
         const enabled = await testBanner.isEnabled();
         expect(enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
-    test('Banner should not use MPLSv1 key', async () => {
+    test('Banner should not use Microsoft LS key', async () => {
         expect(ProposeLSStateKeys.ProposeLSBanner).to.not.be.equal(
             'ProposeLSBanner',
-            'Banner should not using MPLSv1 storage key.'
+            'Banner should not using Microsoft LS storage key.'
         );
     });
     test('Do not show banner when it is disabled', async () => {

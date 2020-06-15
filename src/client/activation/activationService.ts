@@ -172,13 +172,13 @@ export class LanguageServerExtensionActivationService
 
     /**
      * Determines what language server to use depending on settings and experiments.
-     * Experiment is for LSv1 => LSv2. No experimentation with Jedi users.
+     * Experiment is for Microsoft => Node. No experimentation with Jedi users.
      * @returns `LanguageServerType`
      */
     public getLanguageServerType(): LanguageServerType {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const lsType = configurationService.getSettings(this.resource).languageServer;
-        // If user is using LSv1 and is assigned to an experiment (i.e. use LSv2), return false.
+        // If user is using Microsoft LS and is assigned to an experiment (i.e. use Node server), return false.
         if (lsType === LanguageServerType.Microsoft && this.abExperiments.inExperiment(LSEnabled)) {
             return LanguageServerType.Node;
         }
@@ -273,13 +273,13 @@ export class LanguageServerExtensionActivationService
                 outputLine = 'Starting Microsoft Python language server.';
                 break;
             case LanguageServerType.Node:
-                outputLine = 'Starting Node.js language server.';
+                outputLine = 'Starting Node language server.';
                 break;
             case LanguageServerType.None:
                 outputLine = 'Editor support is inactive since language server is set to None.';
                 break;
             default:
-                throw new Error('Unknown langauge server type in activator.');
+                throw new Error('Unknown language server type in activator.');
         }
         this.output.appendLine(outputLine);
     }

@@ -115,7 +115,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            undefined, // Survey is not active with MPLSv1.
+            undefined, // Survey is not active with Microsoft LS.
             this.experimentsManager,
             this.configService,
             LanguageServerType.Microsoft,

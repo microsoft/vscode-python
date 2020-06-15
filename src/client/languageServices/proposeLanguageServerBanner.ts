@@ -16,7 +16,7 @@ import { getRandomBetween } from '../common/utils/random';
 // Persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
     // State to remember that we've shown the banner. The name must be
-    // different from earlier 'ProposeLSBanner' which was used for MPLSv1.
+    // different from earlier 'ProposeLSBanner' which was used for Microsoft LS.
     ProposeLSBanner = 'ProposeLSBannerV2'
 }
 
