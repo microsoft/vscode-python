@@ -153,7 +153,7 @@ jobs:
 
       - uses: goanpeca/setup-miniconda@v1
         with:
-          miniconda-version: 4.7.6
+          miniconda-version: 4.7.10
           activate-environment: foo
       - name: Bash
         shell: bash -l {0}
@@ -268,7 +268,7 @@ jobs:
 
       - uses: goanpeca/setup-miniconda@v1
         with:
-          miniconda-version: "4.7.6"
+          miniconda-version: "4.7.10"
       - name: Sh
         shell: sh -l {0}
         run: |
