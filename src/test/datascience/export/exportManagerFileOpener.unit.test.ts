@@ -5,7 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IDocumentManager } from '../../../client/common/application/types';
+import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposable } from '../../../client/common/types';
 import { ExportManagerFileOpener } from '../../../client/datascience/export/exportManagerFileOpener';
@@ -18,11 +18,13 @@ suite('Data Science - Export File Opener', () => {
     let exporter: IExportManager;
     let documentManager: IDocumentManager;
     let fileSystem: IFileSystem;
+    let applicationShell: IApplicationShell;
     const model = instance(mock<INotebookModel>());
     setup(async () => {
         exporter = mock<IExportManager>();
         documentManager = mock<IDocumentManager>();
         fileSystem = mock<IFileSystem>();
+        applicationShell = mock<IApplicationShell>();
         const reporter = mock(ProgressReporter);
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
@@ -33,7 +35,8 @@ suite('Data Science - Export File Opener', () => {
             instance(exporter),
             instance(documentManager),
             instance(reporter),
-            instance(fileSystem)
+            instance(fileSystem),
+            instance(applicationShell)
         );
     });
 

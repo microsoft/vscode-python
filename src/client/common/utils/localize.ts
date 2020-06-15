@@ -768,6 +768,13 @@ export namespace DataScience {
     export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
+    export const openExportedFileMessage = localize(
+        'DataScience.openExportedFileMessage',
+        'Would you like to open the exported file?'
+    );
+    export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
+    export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
     export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');

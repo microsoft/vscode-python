@@ -35,6 +35,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
+import { ExportBase } from './export/exportBase';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
 import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
@@ -280,6 +281,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
     serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
 

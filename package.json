@@ -361,6 +361,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.exportToHTML",
+                "title": "%python.command.python.datascience.exportToHTML.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.selectJupyterInterpreter",
                 "title": "%python.command.python.datascience.selectJupyterInterpreter.title%",
                 "category": "Python"
@@ -855,6 +860,12 @@
                 {
                     "command": "python.datascience.exportAsPythonScript",
                     "title": "%python.command.python.datascience.exportAsPythonScript.title%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.exportToHTML",
+                    "title": "%python.command.python.datascience.exportToHTML.title%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
                 },

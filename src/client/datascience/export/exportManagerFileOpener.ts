@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IDocumentManager } from '../../common/application/types';
+import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
+import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -14,7 +15,8 @@ export class ExportManagerFileOpener implements IExportManager {
         @inject(ExportManagerDependencyChecker) private readonly manager: IExportManager,
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -23,6 +25,7 @@ export class ExportManagerFileOpener implements IExportManager {
         try {
             uri = await this.manager.export(format, model);
             if (!uri) {
+                await this.showExportFailed();
                 return;
             }
         } finally {
@@ -32,7 +35,7 @@ export class ExportManagerFileOpener implements IExportManager {
         if (format === ExportFormat.python) {
             await this.openPythonFile(uri);
         } else {
-            throw new Error('Not supported');
+            await this.askOpenFile(uri);
         }
     }
 
@@ -41,5 +44,26 @@ export class ExportManagerFileOpener implements IExportManager {
         await this.fileSystem.deleteFile(uri.fsPath);
         const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
         await this.documentManager.showTextDocument(doc);
+    }
+
+    private async showExportFailed() {
+        await this.applicationShell.showErrorMessage(getLocString('DataScience.failedExportMessage', 'Export failed'));
+    }
+
+    private async askOpenFile(_uri: Uri): Promise<void> {
+        const yes = getLocString('DataScience.openExportFileYes', 'Yes');
+        const no = getLocString('DataScience.openExportFileNo', 'No');
+        const items = [yes, no];
+
+        const selected = await this.applicationShell
+            .showInformationMessage(
+                getLocString('DataScience.openExportedFileMessage', 'Would you like to open the exported file?'),
+                ...items
+            )
+            .then((item) => item);
+
+        if (selected === yes) {
+            // open file
+        }
     }
 }

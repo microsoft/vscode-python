@@ -1,9 +1,20 @@
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IExport } from './types';
+import { ExportBase } from './exportBase';
 
 @injectable()
-export class ExportToHTML implements IExport {
-    // tslint:disable-next-line: no-empty
-    public async export(_source: Uri, _target: Uri): Promise<void> {}
+export class ExportToHTML extends ExportBase {
+    public async export(source: Uri, target: Uri): Promise<void> {
+        const daemon = await this.getDaemon();
+        if (!daemon) {
+            return;
+        }
+
+        const args = [source.fsPath, '--to', 'html', '--stdout'];
+        const content = await daemon
+            .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8' })
+            .then((output) => output.stdout);
+
+        await this.writeFile(target, content);
+    }
 }
