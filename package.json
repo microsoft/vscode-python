@@ -3341,7 +3341,7 @@
         "webpack-require-from": "^1.8.0",
         "why-is-node-running": "^2.0.3",
         "wtfnode": "^0.8.0",
-        "yargs": "^12.0.2"
+        "yargs": "^15.3.1"
     },
     "__metadata": {
         "id": "f1f59ae4-9318-4f3c-a9b5-81b2eaa5f8a5",
