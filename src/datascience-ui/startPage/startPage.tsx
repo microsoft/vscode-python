@@ -42,6 +42,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
 
         // Bind some functions to the window, as we need them to be accessible with clean HTML to use translations
+        (window as any).openBlankNotebook = this.openBlankNotebook.bind(this);
+        (window as any).createPythonFile = this.createPythonFile.bind(this);
         (window as any).openFileBrowser = this.openFileBrowser.bind(this);
         (window as any).openFolder = this.openFolder.bind(this);
         (window as any).openWorkspace = this.openWorkspace.bind(this);
@@ -113,6 +115,21 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                 </div>
                 <div className="row">
+                    <div className="icon" role="button" onClick={this.openFolder}>
+                        <Image
+                            baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
+                            class="image-button-image"
+                            image={ImageName.OpenFolder}
+                        />
+                    </div>
+                    <div className="block">
+                        <div className="text" role="button" onClick={this.openFolder}>
+                            {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
+                        </div>
+                        {this.renderFolderDescription()}
+                    </div>
+                </div>
+                <div className="row">
                     {this.renderReleaseNotesLink()}
                     {this.renderReleaseNotes()}
                     {this.renderTutorialAndDoc()}
@@ -147,9 +164,9 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
     }
 
-    public openFolder() {
+    public openFolder = () => {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFolder);
-    }
+    };
 
     public openWorkspace() {
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenWorkspace);
@@ -163,8 +180,14 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
-                        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
-                    ).format('openCommandPalette()', 'openCommandPaletteWithSelection()', 'openSampleNotebook()')
+                        '- <div class="link" role="button" onclick={0}>Create</div> or <div class="link" role="button" onclick={1}>open</div> a Notebook File<br />- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={2}>Command Palette</div> and type "<div class="link italics" role="button" onclick={3}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={4}>sample notebook</div> to learn about notebook features'
+                    ).format(
+                        'openBlankNotebook()',
+                        'openFileBrowser()',
+                        'openCommandPalette()',
+                        'openCommandPaletteWithSelection()',
+                        'openSampleNotebook()'
+                    )
                 }}
             />
         );
@@ -178,8 +201,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a new file with a .py extension<br />- Open a <div class="link" role="button" onclick={0}>Python File</div>, <div class="link" role="button" onclick={1}>Folder</div>, or <div class="link" role="button" onclick={2}>Workspace</div>'
-                    ).format('openFileBrowser()', 'openFolder()', 'openWorkspace()')
+                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension<br />- Open a <div class="link" role="button" onclick={1}>Python File</div>'
+                    ).format('createPythonFile()', 'openFileBrowser()')
                 }}
             />
         );
@@ -195,6 +218,21 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         'StartPage.interactiveWindowDesc',
                         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
                     )
+                }}
+            />
+        );
+    }
+
+    private renderFolderDescription(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph list"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'StartPage.folderDesc',
+                        '- Open a project <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
+                    ).format('openFolder()', 'openWorkspace()')
                 }}
             />
         );

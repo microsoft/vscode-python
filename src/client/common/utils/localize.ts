@@ -961,12 +961,12 @@ export namespace StartPage {
     export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
     export const notebookDescription = localize(
         'StartPage.notebookDescription',
-        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+        '- <div class="link" role="button" onclick={0}>Create</div> or <div class="link" role="button" onclick={1}>open</div> a Notebook File<br />- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={2}>Command Palette</div> and type "<div class="link italics" role="button" onclick={3}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={4}>sample notebook</div> to learn about notebook features'
     );
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file with a .py extension<br />- Open a <div class="link" role="button" onclick={0}>Python File</div>, <div class="link" role="button" onclick={1}>Folder</div>, or <div class="link" role="button" onclick={2}>Workspace</div>'
+        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension<br />- Open a <div class="link" role="button" onclick={1}>Python File</div>'
     );
     export const openInteractiveWindow = localize(
         'StartPage.openInteractiveWindow',
@@ -990,6 +990,11 @@ export namespace StartPage {
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
     export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
+    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
+    export const folderDesc = localize(
+        'StartPage.folderDesc',
+        '- Open a project <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
+    );
 }
 
 export namespace DebugConfigStrings {
