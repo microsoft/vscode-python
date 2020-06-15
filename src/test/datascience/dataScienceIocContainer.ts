@@ -1450,7 +1450,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private computeWebPanelId(options: IWebPanelOptions): string {
         // Should be based on title (for now)
-        if (options.title && options.title.endsWith('.ipynb')) {
+        if (options.title && (options.title.endsWith('.ipynb') || options.title.includes('Notebook'))) {
             return 'notebook';
         }
 
@@ -1461,6 +1461,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const id = this.computeWebPanelId(options);
         const panel = getMountedWebPanel(id);
         this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
+        panel.attach(options);
         return panel;
     }
 

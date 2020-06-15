@@ -1,7 +1,12 @@
 import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Uri } from 'vscode';
-import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from '../../client/common/application/types';
+import {
+    IWebPanel,
+    IWebPanelMessageListener,
+    IWebPanelOptions,
+    WebPanelMessage
+} from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { Deferred } from '../../client/common/utils/async';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -9,11 +14,11 @@ import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 // tslint:disable: no-any
 export interface IMountedWebView extends IWebPanel, IDisposable {
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
-    waitForMessageResponse(action: () => void): Promise<void>;
     postMessage(ev: WebPanelMessage): void;
     changeViewState(active: boolean, visible: boolean): void;
     addMessageListener(callback: (m: string, p: any) => void): void;
     removeMessageListener(callback: (m: string, p: any) => void): void;
+    attach(options: IWebPanelOptions): void;
 }
 
 const map = new Map<string, MountedWebPanel>();
@@ -22,8 +27,7 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     private missedMessages: any[] = [];
     private webPanelListener: IWebPanelMessageListener | undefined;
-    private wrapperCreatedPromise: Deferred<boolean> | undefined;
-    private postMessageCallback: ((ev: MessageEvent) => void) | undefined;
+    private reactMessageCallback: ((ev: MessageEvent) => void) | undefined;
     private extraListeners: ((m: string, p: any) => void)[] = [];
     private disposed = false;
     private active = true;
@@ -52,7 +56,7 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
         const oldListener = window.addEventListener;
         window.addEventListener = (event: string, cb: any) => {
             if (event === 'message') {
-                this.postMessageCallback = cb;
+                this.reactMessageCallback = cb;
             }
         };
 
@@ -64,8 +68,23 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
         window.addEventListener = oldListener;
     }
 
-    public async waitForMessageResponse(_action: () => void): Promise<void> {
-        noop();
+    public attach(options: IWebPanelOptions) {
+        this.webPanelListener = options.listener;
+
+        // Send messages that were already posted but were missed.
+        // During normal operation, the react control will not be created before
+        // the webPanelListener
+        if (this.missedMessages.length && this.webPanelListener) {
+            // This needs to be async because we are being called in the ctor of the webpanel. It can't
+            // handle some messages during the ctor.
+            setTimeout(() => {
+                this.missedMessages.forEach((m) =>
+                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                );
+            }, 0);
+
+            this.missedMessages = [];
+        }
     }
 
     public asWebviewUri(localResource: Uri): Uri {
@@ -81,11 +100,15 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
         return this.visible;
     }
     public postMessage(m: WebPanelMessage): void {
-        if (this.postMessageCallback) {
+        // Actually send to the UI
+        if (this.reactMessageCallback) {
             // tslint:disable-next-line: no-require-imports
             const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
             const message = reactHelpers.createMessageEvent(m);
-            this.postMessageCallback(message);
+            this.reactMessageCallback(message);
+            if (m.payload) {
+                delete m.payload;
+            }
         }
     }
     public close(): void {
@@ -128,9 +151,8 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
         } else {
             this.missedMessages.push({ type: msg.type, payload: msg.payload });
         }
-
-        if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
-            this.wrapperCreatedPromise.resolve();
+        if (this.extraListeners.length) {
+            this.extraListeners.forEach((e) => e(msg.type, msg.payload));
         }
 
         // Clear out msg payload
