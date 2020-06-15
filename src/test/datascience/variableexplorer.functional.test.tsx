@@ -12,6 +12,7 @@ import { IJupyterVariable } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { addCode, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
+import { getMountedWebPanel } from './mountedWebPanel';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     openVariableExplorer,
@@ -333,7 +334,7 @@ myDict = {'a': 1}`;
                 // Restart the kernel and repeat
                 const interactive = await getOrCreateInteractiveWindow(ioc);
 
-                const variablesComplete = waitForMessage('default', InteractiveWindowMessages.VariablesComplete);
+                const variablesComplete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                 await interactive.restartKernel();
                 await variablesComplete; // Restart should cause a variable refresh
 
@@ -520,11 +521,9 @@ Name: 0, dtype: float64`,
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
-                const complete = waitForMessage(
-                    t === 'native' ? 'notebook' : 'default',
-                    InteractiveWindowMessages.VariablesComplete,
-                    { numberOfTimes: 2 }
-                );
+                const complete = getMountedWebPanel(t).waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+                    numberOfTimes: 2
+                });
                 const grid = wrapper.find(AdazzleReactDataGrid);
                 const viewPort = grid.find('Viewport').instance();
                 const rowHeight = (viewPort.props as any).rowHeight as number;

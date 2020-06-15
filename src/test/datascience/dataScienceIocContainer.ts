@@ -491,6 +491,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
     private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+    private role: vsls.Role = vsls.Role.None;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -1307,18 +1308,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (role !== vsls.Role.None) {
             const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
             liveShareTest.forceRole(role);
+            this.role = role;
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        return createMountedWebPanel(mount, type).wrapper;
+        return createMountedWebPanel(mount, type, role).wrapper;
     }
 
     public getDefaultWrapper() {
-        return getMountedWebPanel('default').wrapper;
+        return getMountedWebPanel('default', this.role).wrapper;
+    }
+
+    public getDefaultWebPanel() {
+        return getMountedWebPanel('default', this.role);
     }
 
     public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
-        return getMountedWebPanel(type).postMessage(m);
+        return getMountedWebPanel(type, this.role).postMessage(m);
     }
 
     public getContext(name: string): boolean {
@@ -1425,7 +1431,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
     public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
-        const webPanel = getMountedWebPanel(type);
+        const webPanel = getMountedWebPanel(type, this.role);
         if (webPanel) {
             webPanel.changeViewState(active, visible);
         }
@@ -1448,18 +1454,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private computeWebPanelId(options: IWebPanelOptions): string {
+    private computeWebPanelId(title: string): string {
         // Should be based on title (for now)
-        if (options.title && (options.title.endsWith('.ipynb') || options.title.includes('Notebook'))) {
-            return 'notebook';
+        if (title && (title.toLowerCase().endsWith('.ipynb') || title.toLowerCase().includes('notebook'))) {
+            return `notebook`;
         }
 
         return 'default';
     }
 
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        const id = this.computeWebPanelId(options);
-        const panel = getMountedWebPanel(id);
+        const id = this.computeWebPanelId(options.title);
+        const panel = getMountedWebPanel(id, this.role);
         this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
         panel.attach(options);
         return panel;

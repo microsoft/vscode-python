@@ -149,7 +149,7 @@ suite('DataScience DataViewer tests', () => {
     }
 
     function getCompletedPromise(): Promise<void> {
-        return waitForMessage('default', DataViewerMessages.CompletedData);
+        return waitForMessage(ioc, DataViewerMessages.CompletedData);
     }
 
     // tslint:disable-next-line:no-any

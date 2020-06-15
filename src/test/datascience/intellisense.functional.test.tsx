@@ -16,15 +16,9 @@ import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
+import { getMountedWebPanel } from './mountedWebPanel';
 import * as NativeHelpers from './nativeEditorTestHelpers';
-import {
-    addMockData,
-    enterEditorKey,
-    getInteractiveEditor,
-    getNativeEditor,
-    typeCode,
-    waitForMessage
-} from './testHelpers';
+import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [LanguageServerType.Microsoft, LanguageServerType.Node].forEach((languageServerType) => {
@@ -457,7 +451,7 @@ import {
             'Hover on notebook',
             async (wrapper) => {
                 // Create an notebook so that it listens to the results.
-                const kernelIdle = waitForMessage('notebook', InteractiveWindowMessages.KernelIdle);
+                const kernelIdle = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.KernelIdle);
                 const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
                 await notebook.show();
                 await kernelIdle;

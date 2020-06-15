@@ -27,7 +27,8 @@ import {
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell, waitForMessage } from './testHelpers';
+import { getMountedWebPanel } from './mountedWebPanel';
+import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 //tslint:disable:trailing-comma no-any no-multiline-string
@@ -124,7 +125,9 @@ suite('DataScience LiveShare tests', () => {
         const guestStarted = isSessionStarted(vsls.Role.Guest);
         if (!guestStarted) {
             // NOTE: These tests aren't going to work unless there's more than just 'notebook' and 'default'
-            const hostRenderPromise = waitForMessage('default', InteractiveWindowMessages.ExecutionRendered);
+            const hostRenderPromise = getMountedWebPanel('default', vsls.Role.Host).waitForMessage(
+                InteractiveWindowMessages.ExecutionRendered
+            );
 
             // Generate our results
             await resultGenerator(false);
@@ -135,8 +138,12 @@ suite('DataScience LiveShare tests', () => {
             // Otherwise more complicated. We have to wait for renders on both
 
             // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = waitForMessage('default', InteractiveWindowMessages.ExecutionRendered);
-            const guestRenderPromise = waitForMessage('default', InteractiveWindowMessages.ExecutionRendered);
+            const hostRenderPromise = getMountedWebPanel('default', vsls.Role.Host).waitForMessage(
+                InteractiveWindowMessages.ExecutionRendered
+            );
+            const guestRenderPromise = getMountedWebPanel('default', vsls.Role.Guest).waitForMessage(
+                InteractiveWindowMessages.ExecutionRendered
+            );
 
             // Generate our results
             await resultGenerator(true);

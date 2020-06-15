@@ -209,8 +209,8 @@ suite('DataScience Debugger tests', () => {
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
-                    await waitForMessage(type, InteractiveWindowMessages.VariablesComplete);
-                    const variableRefresh = waitForMessage(type, InteractiveWindowMessages.VariablesComplete);
+                    await waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+                    const variableRefresh = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
                     await jupyterDebuggerService?.requestVariables();
                     await variableRefresh;
 
@@ -365,7 +365,8 @@ suite('DataScience Debugger tests', () => {
         async () => {
             // Create an editor so something is listening to messages
             await createNewEditor(ioc);
-            const wrapper = getMountedWebPanel('notebook').wrapper;
+            const webPanel = getMountedWebPanel('notebook');
+            const wrapper = webPanel.wrapper;
 
             // Add a cell into the UI and wait for it to render and submit it.
             await addCell(wrapper, 'a=1\na', true);
@@ -378,7 +379,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = waitForMessage('notebook', InteractiveWindowMessages.ShowingIp);
+            const promise = webPanel.waitForMessage(InteractiveWindowMessages.ShowingIp);
             runByLineButton.simulate('click');
             await promise;
 
@@ -410,7 +411,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = waitForMessage('notebook', InteractiveWindowMessages.DebugStateChange, {
+            const promise = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.DebugStateChange, {
                 withPayload: (p) => {
                     return p.oldState === DebugState.Design && p.newState === DebugState.Run;
                 }
@@ -426,11 +427,14 @@ suite('DataScience Debugger tests', () => {
             expect(runByLineButtonProps.disabled).to.equal(true, 'Run by line button not disabled when running');
 
             // Now wait for break mode
-            const breakPromise = waitForMessage('notebook', InteractiveWindowMessages.DebugStateChange, {
-                withPayload: (p) => {
-                    return p.oldState === DebugState.Run && p.newState === DebugState.Break;
+            const breakPromise = getMountedWebPanel('notebook').waitForMessage(
+                InteractiveWindowMessages.DebugStateChange,
+                {
+                    withPayload: (p) => {
+                        return p.oldState === DebugState.Run && p.newState === DebugState.Break;
+                    }
                 }
-            });
+            );
             await breakPromise;
 
             cell = getLastOutputCell(wrapper, 'NativeCell');

@@ -11,8 +11,6 @@ import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { traceInfo } from '../../client/common/logger';
-import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
@@ -26,7 +24,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getMountedWebPanel } from './mountedWebPanel';
+import { getMountedWebPanel, WaitForMessageOptions } from './mountedWebPanel';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 export * from './testHelpersCore';
 
@@ -43,27 +41,6 @@ export enum CellPosition {
     Last = 'last'
 }
 
-type WaitForMessageOptions = {
-    /**
-     * Timeout for waiting for message.
-     * Defaults to 65_000ms.
-     *
-     * @type {number}
-     */
-    timeoutMs?: number;
-    /**
-     * Number of times the message should be received.
-     * Defaults to 1.
-     *
-     * @type {number}
-     */
-    numberOfTimes?: number;
-
-    // Optional check for the payload of the message
-    // will only return (or count) message if this returns true
-    withPayload?(payload: any): boolean;
-};
-
 /**
  *
  *
@@ -75,64 +52,11 @@ type WaitForMessageOptions = {
  */
 // tslint:disable-next-line: unified-signatures
 export function waitForMessage(
-    type: 'notebook' | 'default',
+    ioc: DataScienceIocContainer,
     message: string,
     options?: WaitForMessageOptions
 ): Promise<void> {
-    const timeoutMs = options && options.timeoutMs ? options.timeoutMs : undefined;
-    const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
-    // Wait for the mounted web panel to send a message back to the data explorer
-    const promise = createDeferred<void>();
-    traceInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
-    const mountedWebPanel = getMountedWebPanel(type);
-    let handler: (m: string, p: any) => void;
-    const timer = timeoutMs
-        ? setTimeout(() => {
-              if (!promise.resolved) {
-                  promise.reject(new Error(`Waiting for ${message} timed out`));
-              }
-          }, timeoutMs)
-        : undefined;
-    let timesMessageReceived = 0;
-    const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-    handler = (m: string, payload: any) => {
-        if (m === message || m === dispatchedAction) {
-            // First verify the payload matches
-            if (options?.withPayload) {
-                if (!options.withPayload(payload)) {
-                    return;
-                }
-            }
-
-            timesMessageReceived += 1;
-            if (timesMessageReceived < numberOfTimes) {
-                return;
-            }
-            if (timer) {
-                clearTimeout(timer);
-            }
-            mountedWebPanel.removeMessageListener(handler);
-            // Make sure to rerender current state.
-            if (mountedWebPanel.wrapper) {
-                mountedWebPanel.wrapper.update();
-            }
-            if (m === message) {
-                promise.resolve();
-            } else {
-                // It could a redux dispatched message.
-                // Wait for 10ms, wait for other stuff to finish.
-                // We can wait for 100ms or 1s. But thats too long.
-                // The assumption is that currently we do not have any setTimeouts
-                // in UI code that's in the magnitude of 100ms or more.
-                // We do have a couple of setTiemout's, but they wait for 1ms, not 100ms.
-                // 10ms more than sufficient for all the UI timeouts.
-                setTimeout(() => promise.resolve(), 10);
-            }
-        }
-    };
-
-    mountedWebPanel.addMessageListener(handler);
-    return promise.promise;
+    return ioc.getDefaultWebPanel().waitForMessage(message, options);
 }
 
 async function testInnerLoop(
@@ -542,7 +466,7 @@ export async function getCellResults(
     // Get a render promise with the expected number of renders
     const renderPromise = renderPromiseGenerator
         ? renderPromiseGenerator()
-        : waitForMessage(type, InteractiveWindowMessages.ExecutionRendered);
+        : getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
@@ -609,7 +533,7 @@ export function simulateKey(
 export async function submitInput(type: 'notebook' | 'default', textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = waitForMessage(type, InteractiveWindowMessages.ExecutionRendered);
+    const renderPromise = getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Submit a keypress into the textarea
     simulateKey(textArea, 'Enter', true);
@@ -835,5 +759,5 @@ export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, Re
 }
 
 export async function waitForVariablesUpdated(type: 'notebook' | 'default', numberOfTimes?: number): Promise<void> {
-    return waitForMessage(type, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
+    return getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }

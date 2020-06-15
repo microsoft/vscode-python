@@ -98,7 +98,7 @@ suite('DataScience Interactive Window output tests', () => {
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
         const window = await getOrCreateInteractiveWindow(ioc);
         await window.show();
-        const update = waitForMessage('default', InteractiveWindowMessages.SettingsUpdated);
+        const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
         return update;
     }
@@ -631,9 +631,10 @@ for i in range(0, 100):
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Export should cause exportCalled to change to true
-            const exportPromise = waitForMessage('default', InteractiveWindowMessages.Export);
+            const exportPromise = waitForMessage(ioc, InteractiveWindowMessages.ReturnAllCells);
             interactiveWindow.exportCells();
             await exportPromise;
+            await sleep(100); // Give time for appshell to come up
             assert.equal(exportCalled, true, 'Export is not being called during export');
 
             // Remove the cell
@@ -758,7 +759,7 @@ for i in range(0, 100):
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Get an update promise so we can wait for the add code
-            const updatePromise = waitForMessage('default', InteractiveWindowMessages.ExecutionRendered);
+            const updatePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
             // Send some code to the interactive window
             await interactiveWindow.addCode('a=1\na', Uri.file('foo.py').fsPath, 2);
@@ -1015,7 +1016,7 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            const gatherPromise = waitForMessage('default', InteractiveWindowMessages.GatherCode);
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCode);
             gatherCode.simulate('click');
             await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -1058,7 +1059,7 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            const gatherPromise = waitForMessage('default', InteractiveWindowMessages.GatherCode);
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCode);
             gatherCode.simulate('click');
             await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;

@@ -12,14 +12,14 @@ import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { getMountedWebPanel } from './mountedWebPanel';
 import {
     addMockData,
     getCellResults,
     getNativeFocusedEditor,
     injectCode,
     mountWebView,
-    simulateKey,
-    waitForMessage
+    simulateKey
 } from './testHelpers';
 
 // tslint:disable: no-any
@@ -27,7 +27,7 @@ import {
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
     const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
-    const messageWaiter = waitForMessage('notebook', InteractiveWindowMessages.LoadAllCellsComplete);
+    const messageWaiter = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
     if (uri) {
         editor = await notebookEditorProvider.open(uri);
     } else {
@@ -98,7 +98,9 @@ export function focusCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Compone
     if (cell) {
         const vm = cell.props().cellVM;
         if (!vm.focused) {
-            const focusChange = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+            const focusChange = getMountedWebPanel('notebook').waitForMessage(
+                InteractiveWindowMessages.FocusedCellEditor
+            );
             cell.props().focusCell(vm.cell.id, CursorPos.Current);
             return focusChange;
         }
@@ -118,7 +120,7 @@ export async function addCell(
     const ImageButtons = toolbar.find(ImageButton);
     assert.equal(ImageButtons.length, 10, 'Toolbar buttons not found');
     const addButton = ImageButtons.at(5);
-    let update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+    let update = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
     await update;
@@ -132,7 +134,7 @@ export async function addCell(
 
     if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
-        update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+        update = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
         return update;
     }

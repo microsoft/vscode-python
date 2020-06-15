@@ -47,6 +47,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
+import { getMountedWebPanel, WaitForMessageOptions } from './mountedWebPanel';
 import {
     addCell,
     closeNotebook,
@@ -74,8 +75,7 @@ import {
     srcDirectory,
     typeCode,
     verifyCellIndex,
-    verifyHtmlOnCell,
-    waitForMessage
+    verifyHtmlOnCell
 } from './testHelpers';
 
 use(chaiAsPromised);
@@ -84,7 +84,9 @@ use(chaiAsPromised);
 async function updateFileConfig(ioc: DataScienceIocContainer, key: string, value: any) {
     return ioc.get<IWorkspaceService>(IWorkspaceService).getConfiguration('file').update(key, value);
 }
-
+function waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void> {
+    return getMountedWebPanel('notebook').waitForMessage(message, options);
+}
 suite('DataScience Native Editor', () => {
     const originalPlatform = window.navigator.platform;
     Object.defineProperty(
@@ -597,13 +599,13 @@ df.head()`;
 
                         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
                         await createNewEditor(ioc);
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         await addCell(wrapper, 'a=1\na');
                         await dirtyPromise;
 
                         // Export should cause exportCalled to change to true
                         const saveButton = findButton(wrapper, NativeEditor, 8);
-                        const saved = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');
                         await saved;
 
@@ -659,13 +661,13 @@ df.head()`;
 
                         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
                         await createNewEditor(ioc);
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         await addCell(wrapper, 'a=1\na');
                         await dirtyPromise;
 
                         // Export should cause exportCalled to change to true
                         const saveButton = findButton(wrapper, NativeEditor, 8);
-                        const saved = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');
                         await saved;
 
@@ -705,13 +707,9 @@ df.head()`;
 
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
                         // The render method needs to be executed 3 times for three cells.
-                        const threeCellsUpdated = waitForMessage(
-                            'notebook',
-                            InteractiveWindowMessages.ExecutionRendered,
-                            {
-                                numberOfTimes: 3
-                            }
-                        );
+                        const threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
                         runAllButton!.simulate('click');
                         await threeCellsUpdated;
 
@@ -754,13 +752,9 @@ df.head()`;
                         let editor = await openEditor(ioc, JSON.stringify(notebook));
 
                         // Run everything
-                        let threeCellsUpdated = waitForMessage(
-                            'notebook',
-                            InteractiveWindowMessages.ExecutionRendered,
-                            {
-                                numberOfTimes: 3
-                            }
-                        );
+                        let threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
                         let runAllButton = findButton(wrapper, NativeEditor, 0);
                         runAllButton!.simulate('click');
                         await threeCellsUpdated;
@@ -779,7 +773,7 @@ df.head()`;
                         assert.ok(newWrapper, 'Could not mount a second time');
                         editor = await openEditor(ioc, JSON.stringify(notebook));
 
-                        threeCellsUpdated = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered, {
+                        threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
                             numberOfTimes: 3
                         });
                         runAllButton = findButton(newWrapper!, NativeEditor, 0);
@@ -829,7 +823,7 @@ df.head()`;
                     assert.equal(imageButtons.length, 7, 'Cell buttons not found');
                     const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
-                    const update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered, {
+                    const update = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
                         numberOfTimes: 3
                     });
                     runButton.simulate('click');
@@ -1025,12 +1019,12 @@ df.head()`;
 
                     // First lose focus
                     clickCell(newCellIndex);
-                    let update = waitForMessage('notebook', InteractiveWindowMessages.UnfocusedCellEditor);
+                    let update = waitForMessage(InteractiveWindowMessages.UnfocusedCellEditor);
                     simulateKeyPressOnCell(1, { code: 'Escape' });
                     await update;
 
                     // Switch to markdown
-                    update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                    update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                     simulateKeyPressOnCell(newCellIndex, { code: 'm' });
                     await update;
 
@@ -1129,7 +1123,7 @@ df.head()`;
                         clickCell(0);
 
                         // Switch to markdown
-                        let update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        let update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(0, { code: 'm' });
                         await update;
 
@@ -1138,7 +1132,7 @@ df.head()`;
                         assert.ok(isCellMarkdown(wrapper, 'NativeCell', 0));
 
                         // Focus the cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(0, { code: 'Enter', editorInfo: undefined });
                         await update;
 
@@ -1168,7 +1162,7 @@ df.head()`;
                         }
 
                         // Now get the editor for the next cell and click it
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         await update;
 
@@ -1188,7 +1182,7 @@ df.head()`;
                     });
                     async function undo(): Promise<void> {
                         const uri = Uri.file(notebookFile.filePath);
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.ReceivedUpdateModel);
+                        const update = waitForMessage(InteractiveWindowMessages.ReceivedUpdateModel);
                         const editorService = ioc.serviceManager.get<ICustomEditorService>(
                             ICustomEditorService
                         ) as MockCustomEditorService;
@@ -1197,7 +1191,7 @@ df.head()`;
                     }
                     async function redo(): Promise<void> {
                         const uri = Uri.file(notebookFile.filePath);
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.ReceivedUpdateModel);
+                        const update = waitForMessage(InteractiveWindowMessages.ReceivedUpdateModel);
                         const editorService = ioc.serviceManager.get<ICustomEditorService>(
                             ICustomEditorService
                         ) as MockCustomEditorService;
@@ -1415,7 +1409,7 @@ df.head()`;
                         assert.equal(concatMultilineStringInput(model?.cells[3].data.source!), stringToType);
 
                         // Now hit escape.
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.UnfocusedCellEditor);
+                        let update = waitForMessage(InteractiveWindowMessages.UnfocusedCellEditor);
                         simulateKeyPressOnCell(cellIndex, { code: 'Escape' });
                         await update;
 
@@ -1424,7 +1418,7 @@ df.head()`;
                         assert.equal(isCellFocused(wrapper, 'NativeCell', cellIndex), false);
 
                         // Switch to markdown
-                        update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(cellIndex, { code: 'm' });
                         await update;
 
@@ -1516,7 +1510,7 @@ df.head()`;
                         const editor = wrapper.find(NativeCell).at(1).find(Editor).first();
                         (editor.instance() as Editor).giveFocus = () => editor.props().focused!();
 
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        const update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1527,7 +1521,7 @@ df.head()`;
 
                     test("Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
                         // First focus the cell.
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        let update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1537,7 +1531,7 @@ df.head()`;
                         assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
                         // Now hit escape.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.UnfocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.UnfocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Escape' });
                         await update;
 
@@ -1547,7 +1541,7 @@ df.head()`;
                     }).retries(3);
 
                     test("Pressing 'Shift+Enter' on a selected cell executes the cell and advances to the next cell", async () => {
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        let update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1555,7 +1549,7 @@ df.head()`;
                         // The 2nd cell should be focused
                         assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
 
-                        update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                        update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                         simulateKeyPressOnCell(1, { code: 'Enter', shiftKey: true, editorInfo: undefined });
                         await update;
                         wrapper.update();
@@ -1572,7 +1566,7 @@ df.head()`;
                         // Shift+enter on the last cell, it should behave differently. It should be selected and focused
 
                         // First focus the cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(2);
                         simulateKeyPressOnCell(2, { code: 'Enter', editorInfo: undefined });
                         await update;
@@ -1580,7 +1574,7 @@ df.head()`;
                         // The 3rd cell should be focused
                         assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
 
-                        update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                        update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                         simulateKeyPressOnCell(2, { code: 'Enter', shiftKey: true, editorInfo: undefined });
                         await update;
                         wrapper.update();
@@ -1593,7 +1587,7 @@ df.head()`;
                     });
 
                     test("Pressing 'Ctrl+Enter' on a selected cell executes the cell and cell selection is not changed", async () => {
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                        const update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', ctrlKey: true, editorInfo: undefined });
                         await update;
@@ -1610,7 +1604,7 @@ df.head()`;
                         wrapper.update();
                         assert.equal(wrapper.find('NativeCell').length, 3);
 
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        const update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         clickCell(1);
                         simulateKeyPressOnCell(1, { code: 'Enter', altKey: true, editorInfo: undefined });
                         await update;
@@ -1627,10 +1621,10 @@ df.head()`;
                         assert.equal(wrapper.find('NativeCell').length, 3);
 
                         // Give focus
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.SelectedCell);
+                        let update = waitForMessage(InteractiveWindowMessages.SelectedCell);
                         clickCell(1);
                         await update;
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
 
@@ -1664,16 +1658,16 @@ df.head()`;
                         const secondCell = 1;
 
                         // Set focus to the first cell.
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.SelectedCell);
+                        let update = waitForMessage(InteractiveWindowMessages.SelectedCell);
                         clickCell(firstCell);
                         await update;
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(firstCell, { code: 'Enter' });
                         await update;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', firstCell));
 
                         // Now press the down arrow, and focus should go to the next cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         let monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
                         monacoEditor.getCurrentVisibleLine = () => 0;
                         monacoEditor.getVisibleLineCount = () => 1;
@@ -1699,7 +1693,7 @@ df.head()`;
                         );
 
                         // Now press the up arrow, and focus should go back to the first cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
                         monacoEditor.getCurrentVisibleLine = () => 0;
                         monacoEditor.getVisibleLineCount = () => 1;
@@ -1742,17 +1736,17 @@ df.head()`;
                         const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // Set focus to the first cell.
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.SelectedCell);
+                        let update = waitForMessage(InteractiveWindowMessages.SelectedCell);
                         clickCell(0);
                         await update;
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(0, { code: 'Enter' });
                         await update;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
 
                         for (let index = 0; index < 5; index += 1) {
                             // 1. Now press the down arrow, and focus should go to the next cell.
-                            update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                            update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                             const monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
                             monacoEditor.getCurrentVisibleLine = () => 0;
                             monacoEditor.getVisibleLineCount = () => 1;
@@ -1787,8 +1781,8 @@ df.head()`;
                         assert.equal(wrapper.find('NativeCell').length, 3);
 
                         clickCell(0);
-                        const addedCell = waitForMessage('notebook', CommonActionType.INSERT_ABOVE_AND_FOCUS_NEW_CELL);
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.SelectedCell);
+                        const addedCell = waitForMessage(CommonActionType.INSERT_ABOVE_AND_FOCUS_NEW_CELL);
+                        const update = waitForMessage(InteractiveWindowMessages.SelectedCell);
                         simulateKeyPressOnCell(0, { code: 'a' });
                         await Promise.all([update, addedCell]);
 
@@ -1807,8 +1801,8 @@ df.head()`;
                         assert.equal(wrapper.find('NativeCell').length, 3);
 
                         clickCell(1);
-                        const addedCell = waitForMessage('notebook', CommonActionType.INSERT_BELOW_AND_FOCUS_NEW_CELL);
-                        const update = waitForMessage('notebook', InteractiveWindowMessages.SelectedCell);
+                        const addedCell = waitForMessage(CommonActionType.INSERT_BELOW_AND_FOCUS_NEW_CELL);
+                        const update = waitForMessage(InteractiveWindowMessages.SelectedCell);
                         simulateKeyPressOnCell(1, { code: 'b' });
                         await Promise.all([update, addedCell]);
 
@@ -1823,7 +1817,7 @@ df.head()`;
 
                     test('Toggle visibility of output', async () => {
                         // First execute contents of last cell.
-                        let update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                        let update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                         clickCell(2);
                         simulateKeyPressOnCell(2, { code: 'Enter', ctrlKey: true, editorInfo: undefined });
                         await update;
@@ -1832,7 +1826,7 @@ df.head()`;
                         verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2);
 
                         // Hide the output
-                        update = waitForMessage('notebook', InteractiveWindowMessages.OutputToggled);
+                        update = waitForMessage(InteractiveWindowMessages.OutputToggled);
                         simulateKeyPressOnCell(2, { code: 'o' });
                         await update;
 
@@ -1840,7 +1834,7 @@ df.head()`;
                         assert.throws(() => verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2));
 
                         // Display the output
-                        update = waitForMessage('notebook', InteractiveWindowMessages.OutputToggled);
+                        update = waitForMessage(InteractiveWindowMessages.OutputToggled);
                         simulateKeyPressOnCell(2, { code: 'o' });
                         await update;
 
@@ -1869,7 +1863,7 @@ df.head()`;
                     test("Toggle markdown and code modes using 'y' and 'm' keys (cells should not be focused)", async () => {
                         clickCell(1);
                         // Switch to markdown
-                        let update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        let update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(1, { code: 'm' });
                         await update;
 
@@ -1878,7 +1872,7 @@ df.head()`;
                         assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
 
                         // Switch to code
-                        update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(1, { code: 'y' });
                         await update;
 
@@ -1889,7 +1883,7 @@ df.head()`;
                     test("Toggle markdown and code modes using 'y' and 'm' keys & ensure changes to cells is preserved", async () => {
                         clickCell(1);
                         // Switch to markdown
-                        let update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        let update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(1, { code: 'm' });
                         await update;
 
@@ -1898,7 +1892,7 @@ df.head()`;
                         assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
 
                         // Focus the cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
 
@@ -1911,7 +1905,7 @@ df.head()`;
 
                         // Switch back to code mode.
                         // First lose focus
-                        update = waitForMessage('notebook', InteractiveWindowMessages.UnfocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.UnfocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Escape' });
                         await update;
 
@@ -1921,7 +1915,7 @@ df.head()`;
                         assert.equal(wrapper.find(NativeCell).at(1).find(MonacoEditor).length, 0);
 
                         // Switch to code
-                        update = waitForMessage('notebook', CommonActionType.CHANGE_CELL_TYPE);
+                        update = waitForMessage(CommonActionType.CHANGE_CELL_TYPE);
                         simulateKeyPressOnCell(1, { code: 'y' });
                         await update;
 
@@ -1929,7 +1923,7 @@ df.head()`;
                         assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
 
                         // Focus the cell.
-                        update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                        update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                         await update;
 
@@ -1949,7 +1943,7 @@ df.head()`;
                         // Add, then undo, keep doing at least 3 times and confirm it works as expected.
                         for (let i = 0; i < 3; i += 1) {
                             // Add a new cell
-                            let update = waitForMessage('notebook', InteractiveWindowMessages.FocusedCellEditor);
+                            let update = waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
                             simulateKeyPressOnCell(0, { code: 'a' });
                             await update;
 
@@ -1965,7 +1959,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
                             // Unfocus the cell
-                            update = waitForMessage('notebook', InteractiveWindowMessages.UnfocusedCellEditor);
+                            update = waitForMessage(InteractiveWindowMessages.UnfocusedCellEditor);
                             simulateKeyPressOnCell(0, { code: 'Escape' });
                             await update;
                             assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
@@ -1983,7 +1977,7 @@ df.head()`;
 
                             // Press 'z' to undo.
                             // Technically not really rendering, but it fires when the cell count changes
-                            update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                            update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z' });
                             await update;
 
@@ -1993,7 +1987,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 3);
 
                             // Press 'shift+z' to redo
-                            update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                            update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z', shiftKey: true });
                             await update;
 
@@ -2005,7 +1999,7 @@ df.head()`;
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
                             // Press 'z' to undo.
-                            update = waitForMessage('notebook', InteractiveWindowMessages.ExecutionRendered);
+                            update = waitForMessage(InteractiveWindowMessages.ExecutionRendered);
                             simulateKeyPressOnCell(0, { code: 'z' });
                             await update;
 
@@ -2024,7 +2018,7 @@ df.head()`;
                         (window.navigator as any).platform = 'Win';
                         clickCell(0);
 
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         await addCell(wrapper, 'a=1\na', true);
                         await dirtyPromise;
 
@@ -2034,7 +2028,7 @@ df.head()`;
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
 
-                        const clean = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const clean = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
                         await waitForCondition(
                             () => savedPromise.promise.then(() => true).catch(() => false),
@@ -2053,7 +2047,7 @@ df.head()`;
                         (window.navigator as any).platform = 'Mac';
                         clickCell(0);
 
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         await addCell(wrapper, 'a=1\na', true);
                         await dirtyPromise;
 
@@ -2085,7 +2079,7 @@ df.head()`;
 
                         clickCell(0);
 
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         await addCell(wrapper, 'a=1\na', true);
                         await dirtyPromise;
 
@@ -2097,7 +2091,7 @@ df.head()`;
 
                         simulateKeyPressOnCell(1, { code: 's', metaKey: true });
 
-                        const clean = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const clean = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         await waitForCondition(
                             () => savedPromise.promise.then(() => true).catch(() => false),
                             1_000,
@@ -2182,8 +2176,8 @@ df.head()`;
                          */
                         async function makeChangesAndConfirmFileIsUpdated() {
                             const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                            const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                            const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                            const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                            const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean);
 
                             await modifyNotebook();
                             await dirtyPromise;
@@ -2210,8 +2204,8 @@ df.head()`;
 
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean);
 
                         await modifyNotebook();
                         await dirtyPromise;
@@ -2234,14 +2228,14 @@ df.head()`;
                         await updateFileConfig(ioc, 'autoSaveDelay', 1_000);
 
                         // Update the settings and wait for the component to receive it and process it.
-                        const promise = waitForMessage('notebook', InteractiveWindowMessages.SettingsUpdated);
+                        const promise = waitForMessage(InteractiveWindowMessages.SettingsUpdated);
                         ioc.forceDataScienceSettingsChanged({
                             showCellInputCode: false
                         });
                         await promise;
 
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean, {
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean, {
                             timeoutMs: 5_000
                         });
 
@@ -2263,8 +2257,8 @@ df.head()`;
 
                     async function testAutoSavingWhenEditorFocusChanges(newEditor: TextEditor | undefined) {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean);
 
                         await modifyNotebook();
                         await dirtyPromise;
@@ -2293,8 +2287,8 @@ df.head()`;
 
                     test('Should not auto save notebook when active editor changes', async () => {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean, {
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean, {
                             timeoutMs: 5_000
                         });
 
@@ -2321,8 +2315,8 @@ df.head()`;
                         focused: boolean
                     ) {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean);
 
                         await modifyNotebook();
                         await dirtyPromise;
@@ -2353,8 +2347,8 @@ df.head()`;
 
                     test('Auto save notebook when view state changes', async () => {
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
-                        const dirtyPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookDirty);
-                        const cleanPromise = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const dirtyPromise = waitForMessage(InteractiveWindowMessages.NotebookDirty);
+                        const cleanPromise = waitForMessage(InteractiveWindowMessages.NotebookClean);
 
                         await modifyNotebook();
                         await dirtyPromise;
@@ -2458,18 +2452,14 @@ df.head()`;
                         // add cells, run them and save
                         await addCell(wrapper, 'a=1\na');
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
-                        const threeCellsUpdated = waitForMessage(
-                            'notebook',
-                            InteractiveWindowMessages.ExecutionRendered,
-                            {
-                                numberOfTimes: 3
-                            }
-                        );
+                        const threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
                         runAllButton!.simulate('click');
                         await threeCellsUpdated;
 
                         const saveButton = findButton(wrapper, NativeEditor, 8);
-                        const saved = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        const saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');
                         await saved;
 
@@ -2506,13 +2496,9 @@ df.head()`;
 
                     test('Clear Outputs in WebView', async () => {
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
-                        const threeCellsUpdated = waitForMessage(
-                            'notebook',
-                            InteractiveWindowMessages.ExecutionRendered,
-                            {
-                                numberOfTimes: 3
-                            }
-                        );
+                        const threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
                         runAllButton!.simulate('click');
                         await threeCellsUpdated;
 
@@ -2521,7 +2507,7 @@ df.head()`;
                         verifyExecutionCount(2, '3');
 
                         // Press clear all outputs
-                        const clearAllOutput = waitForMessage('notebook', InteractiveWindowMessages.ClearAllOutputs);
+                        const clearAllOutput = waitForMessage(InteractiveWindowMessages.ClearAllOutputs);
                         const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
                         clearAllOutputButton!.simulate('click');
                         await clearAllOutput;
@@ -2538,18 +2524,14 @@ df.head()`;
                         // add cells, run them and save
                         // await addCell(wrapper, 'a=1\na');
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
-                        const threeCellsUpdated = waitForMessage(
-                            'notebook',
-                            InteractiveWindowMessages.ExecutionRendered,
-                            {
-                                numberOfTimes: 3
-                            }
-                        );
+                        const threeCellsUpdated = waitForMessage(InteractiveWindowMessages.ExecutionRendered, {
+                            numberOfTimes: 3
+                        });
                         runAllButton!.simulate('click');
                         await threeCellsUpdated;
 
                         const saveButton = findButton(wrapper, NativeEditor, 8);
-                        let saved = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        let saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');
                         await saved;
 
@@ -2557,7 +2539,7 @@ df.head()`;
                         const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
                         clearAllOutputButton!.simulate('click');
 
-                        saved = waitForMessage('notebook', InteractiveWindowMessages.NotebookClean);
+                        saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');
                         await saved;
                         await sleep(1000); // Make sure file finishes writing.
