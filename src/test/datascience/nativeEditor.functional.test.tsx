@@ -15,6 +15,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import {
     IApplicationShell,
+    ICommandManager,
     ICustomEditorService,
     IDocumentManager,
     IWorkspaceService
@@ -22,7 +23,7 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Identifiers } from '../../client/datascience/constants';
+import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import {
@@ -610,19 +611,23 @@ df.head()`;
                         await saved;
 
                         // Click export and wait for a document to change
-                        const activeTextEditorChange = createDeferred();
-                        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
+                        const commandFired = createDeferred();
+                        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+                        const editor = TypeMoq.Mock.ofType<INotebookEditorProvider>().object.activeEditor;
+                        const model = editor!.model!;
+                        ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
+                        commandManager
+                            .setup((cmd) => cmd.executeCommand(Commands.Export, model))
+                            .returns(() => {
+                                commandFired.resolve();
+                                return Promise.resolve();
+                            });
+
                         const exportButton = findButton(wrapper, NativeEditor, 9);
                         await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
 
                         // This can be slow, hence wait for a max of 60.
-                        await waitForPromise(activeTextEditorChange.promise, 60_000);
-
-                        // Verify the new document is valid python
-                        const newDoc = docManager.activeTextEditor;
-                        assert.ok(newDoc, 'New doc not created');
-                        assert.ok(newDoc!.document.getText().includes('a=1'), 'Export did not create a python file');
+                        await waitForPromise(commandFired.promise, 60_000);
                     },
                     () => {
                         return ioc;

@@ -327,8 +327,7 @@
             {
                 "command": "python.datascience.exportAsPythonScript",
                 "title": "%python.command.python.datascience.exportAsPythonScript.title%",
-                "category": "Python",
-                "when": "python.datascience.isinteractiveactive && python.datascience.featureenabled"
+                "category": "Python"
             },
             {
                 "command": "python.datascience.selectJupyterInterpreter",
@@ -822,6 +821,12 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "python.datascience.exportAsPythonScript",
+                    "title": "%python.command.python.datascience.exportAsPythonScript.title%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled && notebookEditorFocused"
+                },
                 {
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
