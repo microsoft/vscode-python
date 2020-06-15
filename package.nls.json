@@ -111,6 +111,7 @@
     "DataScience.exportOpenQuestion": "Open in browser",
     "DataScience.exportOpenQuestion1": "Open in editor",
     "DataScience.notebookExportAs" : "Convert and save to a python script",
+    "DataScience.exportAsQuickPickPlaceholder" : "Export As...",
     "DataScience.exportPythonQuickPickLabel" : "Python Script",
     "DataScience.collapseInputTooltip": "Collapse input block",
     "DataScience.collapseVariableExplorerTooltip": "Hide variables active in jupyter kernel",
