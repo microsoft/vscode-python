@@ -248,8 +248,6 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 }
 
 export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
-    // Hardcode extension to `.py` for notebook cells (do not use `.ipyn` doesn't work).
-    const ext = isNotebookCell(document.uri) ? '.py' : path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
