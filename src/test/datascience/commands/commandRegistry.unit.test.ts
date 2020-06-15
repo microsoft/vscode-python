@@ -7,7 +7,6 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';

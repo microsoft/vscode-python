@@ -8,8 +8,8 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { Commands as coreCommands } from '../../common/constants';
-import { EnableStartPage, IStartPage } from '../../common/startPage/types';
-import { IConfigurationService, IDisposable, IExperimentService, IOutputChannel } from '../../common/types';
+import { IStartPage } from '../../common/startPage/types';
+import { IConfigurationService, IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -350,9 +350,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async openStartPage(): Promise<void> {
-        if (await this.expService.inExperiment(EnableStartPage.experiment)) {
-            return this.startPage.open();
-        }
+        return this.startPage.open();
     }
 
     private viewJupyterOutput() {

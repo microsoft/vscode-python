@@ -192,9 +192,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(contents?: string): Promise<INotebookEditor> {
+    public async createNew(contents?: string, title?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri();
+        const uri = this.getNextNewNotebookUri(title);
 
         // Update number of notebooks in the workspace
         this.notebookCount += 1;
@@ -281,7 +281,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         }
     }
 
-    private getNextNewNotebookUri(): Uri {
-        return generateNewNotebookUri(this.untitledCounter);
+    private getNextNewNotebookUri(title?: string): Uri {
+        return generateNewNotebookUri(this.untitledCounter, title);
     }
 }

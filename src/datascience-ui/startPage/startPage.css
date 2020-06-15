@@ -19,7 +19,8 @@
     background-color: var(--vscode-titleBar-activeBackground);
 }
 
-.icon:hover {
+.icon:hover,
+.text:hover {
     background-color: var(--vscode-editorIndentGuide-activeBackground);
     cursor: pointer;
 }
@@ -38,6 +39,7 @@
 .text {
     font-weight: 100;
     font-size: x-large;
+    width: fit-content;
 }
 
 .block {
@@ -48,6 +50,7 @@
 .row {
     display: block;
     min-height: 120px;
+    white-space: nowrap;
 }
 
 .link {
@@ -72,8 +75,13 @@
 
 .paragraph {
     display: block;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
+    margin-block-start: 5px;
+    margin-block-end: 5px;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
+}
+
+.list {
+    line-height: 1.5;
+    white-space: initial;
 }
