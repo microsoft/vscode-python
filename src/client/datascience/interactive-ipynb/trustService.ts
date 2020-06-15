@@ -1,47 +1,31 @@
+import { randomBytes } from 'crypto';
 import { enc, HmacSHA256 } from 'crypto-js';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Database, OPEN_CREATE, OPEN_READWRITE, RunResult } from 'sqlite3';
+import { IDigestStorage } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IExperimentsManager, IPathUtils } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 
-interface IDigestStorage {
-    saveDigest(digest: string, algorithm: string): Promise<void>;
-    containsDigest(digest: string): Promise<boolean>;
-}
-
 // Our implementation of the IDigestStorage interface, which internally uses a SQLite database
 @injectable()
 export class DigestStorage implements IDigestStorage {
-    private db: Database;
+    private defaultDatabaseLocation: string;
+    private db: Database | undefined;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
-        const defaultDatabaseLocation = this.getDefaultDatabaseLocation();
-        const db = new Database(
-            defaultDatabaseLocation,
-            this.fs.fileExists(defaultDatabaseLocation) ? OPEN_READWRITE : OPEN_CREATE
-        );
-        db.serialize(() => {
-            db.exec(`CREATE TABLE IF NOT EXISTS nbsignatures (
-                id integer PRIMARY KEY AUTOINCREMENT,
-                algorithm text,
-                signature text,
-                path text,
-                last_seen timestamp
-            );`);
-            db.exec(`CREATE INDEX IF NOT EXISTS algosig ON nbsignatures(algorithm, signature)`);
-        });
-        this.db = db;
+        this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
     }
 
-    public saveDigest(digest: string, algorithm: string): Promise<void> {
+    public async saveDigest(digest: string, algorithm: string): Promise<void> {
+        await this.initDb();
         return new Promise((resolve, reject) => {
-            this.db.run(
+            this.db!.run(
                 `INSERT INTO nbsignatures (algorithm, signature, last_seen);
                 VALUES (${algorithm}, '${digest}', ${Date.now().toString()});`,
                 (_runResult: RunResult, err: Error) => {
@@ -55,9 +39,10 @@ export class DigestStorage implements IDigestStorage {
         });
     }
 
-    public containsDigest(digest: string): Promise<boolean> {
+    public async containsDigest(digest: string): Promise<boolean> {
+        await this.initDb();
         return new Promise((resolve, reject) => {
-            this.db.get(`SELECT * FROM nbsignatures WHERE signature == ${digest}`, (err, rowData) => {
+            this.db!.get(`SELECT * FROM nbsignatures WHERE signature == ${digest}`, (err, rowData) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -65,6 +50,26 @@ export class DigestStorage implements IDigestStorage {
                 }
             });
         });
+    }
+
+    private async initDb() {
+        if (this.db === undefined) {
+            const db = new Database(
+                this.defaultDatabaseLocation,
+                (await this.fs.fileExists(this.defaultDatabaseLocation)) ? OPEN_READWRITE : OPEN_CREATE
+            );
+            db.serialize(() => {
+                db.exec(`CREATE TABLE IF NOT EXISTS nbsignatures (
+                    id integer PRIMARY KEY AUTOINCREMENT,
+                    algorithm text,
+                    signature text,
+                    path text,
+                    last_seen timestamp
+                );`);
+                db.exec(`CREATE INDEX IF NOT EXISTS algosig ON nbsignatures(algorithm, signature)`);
+            });
+            this.db = db;
+        }
     }
 
     /**
@@ -125,7 +130,7 @@ class NotebookTrust implements INotebookTrust {
 
 @injectable()
 export class TrustService {
-    private notebookTrust: INotebookTrust;
+    private notebookTrust: INotebookTrust | undefined;
 
     constructor(
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
@@ -133,8 +138,13 @@ export class TrustService {
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
-    ) {
-        this.notebookTrust = new NotebookTrust(this.getOrCreateSecretKey(), digestStorage, 'sha256');
+    ) {}
+
+    private async initNotebookTrust() {
+        if (this.notebookTrust === undefined) {
+            const key = await this.getOrCreateSecretKey();
+            this.notebookTrust = new NotebookTrust(key, this.digestStorage, 'sha256');
+        }
     }
 
     /**
@@ -160,22 +170,28 @@ export class TrustService {
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    private async getOrCreateSecretKey(): string {
+    private async getOrCreateSecretKey(): Promise<string> {
         // Determine user's OS
         const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
         // Attempt to read from standard keyfile location for that OS
-        if (this.fs.fileExists(defaultKeyFileLocation)) {
+        if (await this.fs.fileExists(defaultKeyFileLocation)) {
             return (await this.fs.readData(defaultKeyFileLocation)).toString();
         }
 
-        // If it doesn't exist, create one.
-        // Key must be generated from a cryptographically secure pseudorandom function
+        // If it doesn't exist, create one
+        // Key must be generated from a cryptographically secure pseudorandom function:
+        // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+        // No callback is provided so random bytes will be generated synchronously
+        const key = randomBytes(1024);
+        await this.fs.writeFile(defaultKeyFileLocation, key);
+        return key.toString();
     }
 
     private async onNotebookCreated(notebookContents: string) {
+        await this.initNotebookTrust();
         // Compute a digest for it and add to database
-        await this.notebookTrust.trustNotebook(notebookContents);
+        await this.notebookTrust!.trustNotebook(notebookContents);
     }
 
     /**
@@ -186,18 +202,20 @@ export class TrustService {
      * markdown will be rendered until notebook as a whole is marked trusted
      */
     private async onNotebookOpened(notebookContents: string) {
+        await this.initNotebookTrust();
         // Compute digest and see if notebook is trusted
-        return this.notebookTrust.isNotebookTrusted(notebookContents);
+        return this.notebookTrust!.isNotebookTrusted(notebookContents);
     }
 
     /**
      * Marks notebook trusted if all the cells in the notebook have been executed
      * in the current user's context
      */
-    private async onNotebookSaved(notebookIsTrusted: boolean) {
+    private async onNotebookSaved(notebookContents: string, notebookIsTrusted: boolean) {
+        await this.initNotebookTrust();
         // If all cells in notebook are trusted, compute digest and add to database
         if (notebookIsTrusted) {
-            await this.notebookTrust.trustNotebook();
+            await this.notebookTrust!.trustNotebook(notebookContents);
         }
         // Otherwise, do nothing
     }

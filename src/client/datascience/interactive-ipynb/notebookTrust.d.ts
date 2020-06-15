@@ -6,7 +6,7 @@ export class NotebookTrust {
 }
 
 // AzNB will need to provide something that implements this interface
-interface IDigestStorage {
-    saveDigest(digest: string, algorithm?: string): Promise<void>;
+export interface IDigestStorage {
+    saveDigest(digest: string, algorithm: string): Promise<void>;
     containsDigest(digest: string): Promise<boolean>;
 }
