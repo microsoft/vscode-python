@@ -88,6 +88,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
+    ['workbench.action.files.openFolder']: [];
+    ['workbench.action.openWorkspace']: [];
     ['setContext']: [string, boolean];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];

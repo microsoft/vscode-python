@@ -38,11 +38,15 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
-        // Tell the plot viewer code we have started.
+        // Tell the start page code we have started.
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.Started);
 
         // Bind some functions to the window, as we need them to be accessible with clean HTML to use translations
+        (window as any).openBlankNotebook = this.openBlankNotebook.bind(this);
+        (window as any).createPythonFile = this.createPythonFile.bind(this);
         (window as any).openFileBrowser = this.openFileBrowser.bind(this);
+        (window as any).openFolder = this.openFolder.bind(this);
+        (window as any).openWorkspace = this.openWorkspace.bind(this);
         (window as any).openCommandPalette = this.openCommandPalette.bind(this);
         (window as any).openCommandPaletteWithSelection = this.openCommandPaletteWithSelection.bind(this);
         (window as any).openSampleNotebook = this.openSampleNotebook.bind(this);
@@ -71,7 +75,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
+                        <div className="text" onClick={this.openBlankNotebook} role="button">
                             {getLocString('StartPage.CreateJupyterNotebook', 'Create a Jupyter Notebook')}
                         </div>
                         {this.renderNotebookDescription()}
@@ -86,10 +90,25 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
+                        <div className="text" role="button" onClick={this.createPythonFile}>
                             {getLocString('StartPage.createAPythonFile', 'Create a Python File')}
                         </div>
                         {this.renderPythonFileDescription()}
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="icon" role="button" onClick={this.openFolder}>
+                        <Image
+                            baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
+                            class="image-button-image"
+                            image={ImageName.OpenFolder}
+                        />
+                    </div>
+                    <div className="block">
+                        <div className="text" role="button" onClick={this.openFolder}>
+                            {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
+                        </div>
+                        {this.renderFolderDescription()}
                     </div>
                 </div>
                 <div className="row">
@@ -101,8 +120,11 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                         />
                     </div>
                     <div className="block">
-                        <div className="text">
-                            {getLocString('StartPage.openInteractiveWindow', 'Open the Interactive Window')}
+                        <div className="text" role="button" onClick={this.openInteractiveWindow}>
+                            {getLocString(
+                                'StartPage.openInteractiveWindow',
+                                'Use the Interactive Window to develop Python Scripts'
+                            )}
                         </div>
                         {this.renderInteractiveWindowDescription()}
                     </div>
@@ -142,16 +164,24 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFileBrowser);
     }
 
+    public openFolder = () => {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenFolder);
+    };
+
+    public openWorkspace() {
+        this.postOffice.sendMessage<IStartPageMapping>(StartPageMessages.OpenWorkspace);
+    }
+
     private renderNotebookDescription(): JSX.Element {
         // tslint:disable: react-no-dangerous-html
         return (
             <div
-                className="paragraph"
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
-                        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
-                    ).format('openCommandPalette()', 'openCommandPaletteWithSelection()', 'openSampleNotebook()')
+                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
+                    ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()')
                 }}
             />
         );
@@ -161,12 +191,12 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         // tslint:disable: react-no-dangerous-html
         return (
             <div
-                className="paragraph"
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
-                    ).format('openFileBrowser()')
+                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
+                    ).format('createPythonFile()')
                 }}
             />
         );
@@ -175,12 +205,28 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
     private renderInteractiveWindowDescription(): JSX.Element {
         // tslint:disable: react-no-dangerous-html
         return (
-            <p
+            <div
+                className="paragraph list"
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.interactiveWindowDesc',
                         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
                     )
+                }}
+            />
+        );
+    }
+
+    private renderFolderDescription(): JSX.Element {
+        // tslint:disable: react-no-dangerous-html
+        return (
+            <div
+                className="paragraph list"
+                dangerouslySetInnerHTML={{
+                    __html: getLocString(
+                        'StartPage.folderDesc',
+                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
+                    ).format('openFolder()', 'openWorkspace()')
                 }}
             />
         );
@@ -206,7 +252,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
         this.releaseNotes.notes.forEach((rel, index) => {
             notes.push(<li key={index}>{rel}</li>);
         });
-        return <ul>{notes}</ul>;
+        return <ul className="list">{notes}</ul>;
     }
 
     private renderTutorialAndDoc(): JSX.Element {

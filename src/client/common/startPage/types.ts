@@ -2,16 +2,9 @@
 // Licensed under the MIT License.
 import { SharedMessages } from '../../datascience/messages';
 
-// Move to common/experiments/groups.ts when the VS Code webview bug is fixed
-export enum EnableStartPage {
-    control = 'EnableStartPage - control',
-    experiment = 'EnableStartPage - experiment'
-}
-
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;
-    handleReleaseNotesRequest(): Promise<string[]>;
     extensionVersionChanged(): Promise<boolean>;
 }
 
@@ -32,6 +25,8 @@ export namespace StartPageMessages {
     export const OpenCommandPaletteWithOpenNBSelected = 'OpenCommandPaletteWithOpenNBSelected';
     export const OpenSampleNotebook = 'OpenSampleNotebook';
     export const OpenFileBrowser = 'OpenFileBrowser';
+    export const OpenFolder = 'OpenFolder';
+    export const OpenWorkspace = 'OpenWorkspace';
 }
 
 export class IStartPageMapping {
@@ -46,4 +41,6 @@ export class IStartPageMapping {
     public [StartPageMessages.OpenCommandPaletteWithOpenNBSelected]: never | undefined;
     public [StartPageMessages.OpenSampleNotebook]: never | undefined;
     public [StartPageMessages.OpenFileBrowser]: never | undefined;
+    public [StartPageMessages.OpenFolder]: never | undefined;
+    public [StartPageMessages.OpenWorkspace]: never | undefined;
 }

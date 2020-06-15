@@ -960,14 +960,17 @@ export namespace StartPage {
     export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
     export const notebookDescription = localize(
         'StartPage.notebookDescription',
-        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
     );
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
     );
-    export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
+    export const openInteractiveWindow = localize(
+        'StartPage.openInteractiveWindow',
+        'Use the Interactive Window to develop Python Scripts'
+    );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
@@ -985,7 +988,12 @@ export namespace StartPage {
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
+    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
+    export const folderDesc = localize(
+        'StartPage.folderDesc',
+        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
+    );
 }
 
 export namespace DebugConfigStrings {

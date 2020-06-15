@@ -1159,8 +1159,7 @@
                 {
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
-                    "category": "Python",
-                    "when": "python.datascience.startpageenabled"
+                    "category": "Python"
                 },
                 {
                     "command": "python.datascience.runtoline",

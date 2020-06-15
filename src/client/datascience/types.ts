@@ -530,7 +530,7 @@ export interface INotebookEditorProvider {
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
-    createNew(contents?: string): Promise<INotebookEditor>;
+    createNew(contents?: string, title?: string): Promise<INotebookEditor>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
