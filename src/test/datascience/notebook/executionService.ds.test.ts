@@ -5,6 +5,7 @@
 
 // tslint:disable:no-require-imports no-var-requires
 import { assert, expect } from 'chai';
+import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
@@ -18,6 +19,8 @@ import {
     assertHasExecutionCompletedWithErrors,
     assertHasTextOutputInICell,
     assertHasTextOutputInVSCode,
+    assertNotHasTextOutputInVSCode,
+    assertVSCCellHasErrors,
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
@@ -25,6 +28,7 @@ import {
     startJupyter,
     swallowSavingOfNotebooks
 } from './helper';
+
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -161,5 +165,83 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error, 'Incorrect State');
         assert.include(cell.metadata.statusMessage!, 'NameError', 'Must contain error message');
         assert.include(cell.metadata.statusMessage!, 'abcd', 'Must contain error message');
+    });
+    test('Clearing output while executing will ensure output is cleared', async () => {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertPythonCellAndWait(
+            dedent`
+                    print("Start")
+                    import time
+                    for i in range(100):
+                        time.sleep(0.1)
+                        print(i)
+
+                    print("End")`,
+            0
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.document.cells![0]!;
+
+        await commands.executeCommand('notebook.execute');
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () => assertHasTextOutputInVSCode(cell, 'Start', 0, false),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        // Clear the cells
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () => assertNotHasTextOutputInVSCode(cell, 'Start', 0, false),
+            5_000,
+            'Cell did not get cleared'
+        );
+
+        // Interrupt the kernel).
+        await commands.executeCommand('notebook.cancelExecution');
+        await waitForCondition(async () => assertVSCCellHasErrors(cell), 1_000, 'Execution not cancelled');
+
+        // Verify that it hasn't got added (even after interrupting).
+        assertNotHasTextOutputInVSCode(cell, 'Start', 0, false);
+    });
+    test('Clearing output when not executing', async () => {
+        await insertPythonCellAndWait('print("Foo Bar")', 0);
+        await insertPythonCellAndWait('print("Hello World")', 1);
+
+        const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const cellModels = editorProvider.activeEditor?.model?.cells!;
+
+        await commands.executeCommand('notebook.execute');
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () =>
+                assertHasExecutionCompletedSuccessfully(vscCells[0]) &&
+                assertHasExecutionCompletedSuccessfully(vscCells[1]),
+            15_000,
+            'Cells did not get executed'
+        );
+        assert.lengthOf(vscCells[0].outputs, 1, 'Must have output');
+        assert.lengthOf(vscCells[1].outputs, 1, 'Must have output');
+        assert.lengthOf((cellModels[0].data.outputs as unknown) as [], 1, 'Must have output');
+        assert.lengthOf((cellModels[1].data.outputs as unknown) as [], 1, 'Must have output');
+
+        // Clear the cells
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+
+        // Wait till execution count changes and status is error.
+        await waitForCondition(
+            async () =>
+                vscCells[0].outputs.length === 0 &&
+                vscCells[1].outputs.length === 0 &&
+                ((cellModels[0].data.outputs as unknown) as []).length === 0 &&
+                ((cellModels[1].data.outputs as unknown) as []).length === 0,
+            5_000,
+            'Cell did not get cleared'
+        );
     });
 });

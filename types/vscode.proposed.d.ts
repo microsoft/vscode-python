@@ -46,6 +46,13 @@ declare module 'vscode' {
         traceback: string[];
     }
 
+    export interface NotebookCellOutputMetadata {
+        /**
+         * Additional attributes of a cell metadata.
+         */
+        custom?: { [key: string]: any };
+    }
+
     export interface CellDisplayOutput {
         outputKind: CellOutputKind.Rich;
         /**
@@ -66,6 +73,8 @@ declare module 'vscode' {
          * }
          */
         data: { [key: string]: any };
+
+        readonly metadata?: NotebookCellOutputMetadata;
     }
 
     export type CellOutput = CellStreamOutput | CellErrorOutput | CellDisplayOutput;
@@ -133,11 +142,10 @@ declare module 'vscode' {
     }
 
     export interface NotebookCell {
+        readonly notebook: NotebookDocument;
         readonly uri: Uri;
         readonly cellKind: CellKind;
         readonly document: TextDocument;
-        // API remove `source` or doc it as shorthand for document.getText()
-        readonly source: string;
         language: string;
         outputs: CellOutput[];
         metadata: NotebookCellMetadata;
@@ -185,6 +193,7 @@ declare module 'vscode' {
     export interface NotebookDocument {
         readonly uri: Uri;
         readonly fileName: string;
+        readonly viewType: string;
         readonly isDirty: boolean;
         readonly cells: NotebookCell[];
         languages: string[];
@@ -287,6 +296,7 @@ declare module 'vscode' {
     export interface NotebookCellsChangeData {
         readonly start: number;
         readonly deletedCount: number;
+        readonly deletedItems: NotebookCell[];
         readonly items: NotebookCell[];
     }
 
@@ -384,11 +394,14 @@ declare module 'vscode' {
 
         export const onDidOpenNotebookDocument: Event<NotebookDocument>;
         export const onDidCloseNotebookDocument: Event<NotebookDocument>;
+
+        /**
+         * All currently known notebook documents.
+         */
+        export const notebookDocuments: ReadonlyArray<NotebookDocument>;
+
         export let visibleNotebookEditors: NotebookEditor[];
         export const onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
-
-        // remove activeNotebookDocument, now that there is activeNotebookEditor.document
-        export let activeNotebookDocument: NotebookDocument | undefined;
 
         export let activeNotebookEditor: NotebookEditor | undefined;
         export const onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;

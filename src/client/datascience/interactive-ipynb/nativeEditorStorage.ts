@@ -21,6 +21,7 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 import detectIndent = require('detect-indent');
 // tslint:disable-next-line:no-require-imports no-var-requires
 import cloneDeep = require('lodash/cloneDeep');
+import { UseNativeEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
@@ -106,6 +107,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private _id = uuid();
 
     constructor(
+        private readonly useNativeEditorApi: boolean,
         file: Uri,
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
@@ -131,6 +133,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
     public clone(file: Uri) {
         return new NativeEditorNotebookModel(
+            this.useNativeEditorApi,
             file,
             cloneDeep(this._state.cells),
             cloneDeep(this._state.notebookJson),
@@ -213,11 +216,19 @@ export class NativeEditorNotebookModel implements INotebookModel {
                 break;
             case 'save':
                 this._state.saveChangeCount = this._state.changeCount;
+                // Trigger event.
+                if (this.useNativeEditorApi) {
+                    changed = true;
+                }
                 break;
             case 'saveAs':
                 this._state.saveChangeCount = this._state.changeCount;
                 this._state.changeCount = this._state.saveChangeCount = 0;
                 this._state.file = change.target;
+                // Trigger event.
+                if (this.useNativeEditorApi) {
+                    changed = true;
+                }
                 break;
             default:
                 break;
@@ -361,6 +372,11 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 
     private clearOutputs(): boolean {
+        if (this.useNativeEditorApi) {
+            // Do not create new cells when using native editor.
+            // We'll update the cells in place (cuz undo/redo is handled by VS Code).
+            return true;
+        }
         const newCells = this.cells.map((c) =>
             this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } })
         );
@@ -496,7 +512,8 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
+        @inject(UseNativeEditorApi) private readonly useNativeEditorApi: boolean
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -669,7 +686,7 @@ export class NativeEditorStorage implements INotebookStorage {
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return new NativeEditorNotebookModel(file, []);
+            return new NativeEditorNotebookModel(this.useNativeEditorApi, file, []);
         }
     }
 
@@ -720,7 +737,15 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        return new NativeEditorNotebookModel(file, remapped, json, indentAmount, pythonNumber, isInitiallyDirty);
+        return new NativeEditorNotebookModel(
+            this.useNativeEditorApi,
+            file,
+            remapped,
+            json,
+            indentAmount,
+            pythonNumber,
+            isInitiallyDirty
+        );
     }
 
     private getStorageKey(file: Uri): string {

@@ -9,6 +9,7 @@ import { getExperimentationService, IExperimentationService, TargetPopulation } 
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
+import { PVSC_EXTENSION_ID } from '../constants';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IMemento, IPythonSettings } from '../types';
 import { ExperimentationTelemetry } from './telemetry';
 
@@ -47,7 +48,7 @@ export class ExperimentService implements IExperimentService {
 
         let targetPopulation: TargetPopulation;
 
-        if (this.appEnvironment.channel === 'insiders') {
+        if (this.appEnvironment.extensionChannel === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;
@@ -56,7 +57,7 @@ export class ExperimentService implements IExperimentService {
         const telemetryReporter = new ExperimentationTelemetry();
 
         this.experimentationService = getExperimentationService(
-            this.appEnvironment.extensionName,
+            PVSC_EXTENSION_ID,
             this.appEnvironment.packageJson.version!,
             targetPopulation,
             telemetryReporter,

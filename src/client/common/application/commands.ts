@@ -6,7 +6,7 @@
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { INotebook } from '../../datascience/types';
+import { INotebook, INotebookModel } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
@@ -170,6 +170,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
+    [DSCommands.ExportAsPythonScript]: [INotebookModel];
+    [DSCommands.ExportToHTML]: [INotebookModel];
+    [DSCommands.ExportToPDF]: [INotebookModel];
+    [DSCommands.Export]: [INotebookModel];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];

@@ -25,16 +25,16 @@ type ICellId = string;
 const cellMapsByNotebookDocument = new WeakMap<NotebookDocument, Map<VSCodeCellUri, ICellId>>();
 const mapOfCellsToNotebookCells = new WeakMap<ICell, VSCodeCellUri>();
 
-export function mapVSCNotebookCellToCellModel(document: NotebookDocument, vscCell: NotebookCell, cell: ICell) {
-    if (!cellMapsByNotebookDocument.has(document)) {
-        cellMapsByNotebookDocument.set(document, new Map<VSCodeCellUri, ICellId>());
+export function mapVSCNotebookCellToCellModel(vscCell: NotebookCell, cell: ICell) {
+    if (!cellMapsByNotebookDocument.has(vscCell.notebook)) {
+        cellMapsByNotebookDocument.set(vscCell.notebook, new Map<VSCodeCellUri, ICellId>());
     }
-    cellMapsByNotebookDocument.get(document)!.set(vscCell.uri.toString(), cell.id);
+    cellMapsByNotebookDocument.get(vscCell.notebook)!.set(vscCell.uri.toString(), cell.id);
     mapOfCellsToNotebookCells.set(cell, vscCell.uri.toString());
 }
 
-export function getOriginalCellId(document: NotebookDocument, cell: NotebookCell): string | undefined {
-    const map = cellMapsByNotebookDocument.get(document);
+export function getOriginalCellId(cell: NotebookCell): string | undefined {
+    const map = cellMapsByNotebookDocument.get(cell.notebook);
     if (!map) {
         return;
     }
@@ -61,7 +61,7 @@ export function mapVSCNotebookCellsToNotebookCellModels(document: NotebookDocume
 
     document.cells.forEach((vscCell, index) => {
         const cell = model.cells[index];
-        mapVSCNotebookCellToCellModel(document, vscCell, cell);
+        mapVSCNotebookCellToCellModel(vscCell, cell);
     });
 }
 
@@ -74,10 +74,10 @@ export function findMappedNotebookCell(source: ICell, cells: NotebookCell[]): No
     return found[0];
 }
 
-export function findMappedNotebookCellModel(document: NotebookDocument, source: NotebookCell, cells: ICell[]): ICell {
+export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
     // If so, then we have a problem.
-    const found = cells.filter((cell) => cell.id === getOriginalCellId(document, source));
-    assert.ok(found.length, `ICell not found, for CellId = ${getOriginalCellId(document, source)} in ${source}`);
+    const found = cells.filter((cell) => cell.id === getOriginalCellId(source));
+    assert.ok(found.length, `ICell not found, for CellId = ${getOriginalCellId(source)} in ${source}`);
 
     return found[0];
 }

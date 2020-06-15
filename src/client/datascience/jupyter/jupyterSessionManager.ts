@@ -3,6 +3,7 @@
 'use strict';
 import type { ContentsManager, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
+import * as nodeFetch from 'node-fetch';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceError, traceInfo } from '../../common/logger';
@@ -277,7 +278,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 cookieString,
                 allowUnauthorized
                 // tslint:disable-next-line:no-any
-            ) as any
+            ) as any,
+            // Redefine fetch to our node-modules so it picks up the correct version.
+            // Typecasting as any works fine as long as all 3 of these are the same version
+            // tslint:disable-next-line:no-any
+            fetch: nodeFetch.default as any,
+            // tslint:disable-next-line:no-any
+            Request: nodeFetch.Request as any,
+            // tslint:disable-next-line:no-any
+            Headers: nodeFetch.Headers as any
         };
 
         traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);

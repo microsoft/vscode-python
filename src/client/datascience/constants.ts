@@ -79,6 +79,10 @@ export namespace Commands {
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
+    export const ExportAsPythonScript = 'python.datascience.exportAsPythonScript';
+    export const ExportToHTML = 'python.datascience.exportToHTML';
+    export const ExportToPDF = 'python.datascience.exportToPDF';
+    export const Export = 'python.datascience.export';
     export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';

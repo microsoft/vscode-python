@@ -33,6 +33,7 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     sendCommand: typeof actionCreators.sendCommand;
     clearAllOutputs: typeof actionCreators.clearAllOutputs;
     export: typeof actionCreators.export;
+    exportAs: typeof actionCreators.exportAs;
     addCell: typeof actionCreators.addCell;
     save: typeof actionCreators.save;
     executeAllCells: typeof actionCreators.executeAllCells;
@@ -235,10 +236,10 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.export}
+                            onClick={this.props.exportAs}
                             disabled={!this.props.cellCount || this.props.busy}
                             className="native-button"
-                            tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
+                            tooltip={getLocString('DataScience.notebookExportAs', 'Export as')}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}

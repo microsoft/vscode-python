@@ -94,7 +94,12 @@ import { WebPanelProvider } from '../../client/common/application/webPanels/webP
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
-import { EXTENSION_ROOT_DIR, UseCustomEditorApi, UseProposedApi } from '../../client/common/constants';
+import {
+    EXTENSION_ROOT_DIR,
+    UseCustomEditorApi,
+    UseNativeEditorApi,
+    UseProposedApi
+} from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
@@ -616,6 +621,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
+        this.serviceManager.addSingletonInstance(UseNativeEditorApi, false);
         this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
         this.serviceManager.add<IJupyterVariableDataProvider>(
             IJupyterVariableDataProvider,

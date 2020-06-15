@@ -68,11 +68,7 @@ suite('DataScience - VSCode Notebook - (Open)', function () {
             const vscCell = notebook.cells[index];
             const cell = model.cells[index];
             // Given a VS Code Cell, we should be able to find the corresponding ICell.
-            assert.equal(
-                cell,
-                findMappedNotebookCellModel(notebook, vscCell, model.cells),
-                'Could not find mapped ICell'
-            );
+            assert.equal(cell, findMappedNotebookCellModel(vscCell, model.cells), 'Could not find mapped ICell');
 
             // Given an ICell, we should be able to find the corresponding VS Code Cell.
             assert.equal(vscCell, findMappedNotebookCell(cell, notebook.cells), 'Could not find mapped NotebookCell');

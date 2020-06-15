@@ -46,7 +46,7 @@ suite('Experimentation service', () => {
     }
 
     function configureApplicationEnvironment(channel: Channel, version: string) {
-        when(appEnvironment.channel).thenReturn(channel);
+        when(appEnvironment.extensionChannel).thenReturn(channel);
         when(appEnvironment.extensionName).thenReturn(PVSC_EXTENSION_ID_FOR_TESTS);
         when(appEnvironment.packageJson).thenReturn({ version });
     }

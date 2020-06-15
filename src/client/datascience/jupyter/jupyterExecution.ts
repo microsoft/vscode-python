@@ -18,6 +18,8 @@ import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -108,7 +110,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.usablePythonInterpreter;
     }
 
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    @reportAction(ReportableAction.CheckingIfImportIsSupported)
+    public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command nbconvert
         return this.jupyterInterpreterService.isExportSupported(cancelToken);
     }

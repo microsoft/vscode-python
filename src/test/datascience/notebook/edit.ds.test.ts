@@ -8,11 +8,9 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
 import { IDisposable } from '../../../client/common/types';
-import { NotebookModelChange } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditorProvider, INotebookModel } from '../../../client/datascience/types';
 import { splitMultilineString } from '../../../datascience-ui/common';
-import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
-import { createEventHandler, IExtensionTestApi, TestEventHandler, waitForCondition } from '../../common';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { initialize } from '../../initialize';
 import {
@@ -32,7 +30,6 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
     this.timeout(10_000);
 
     const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
-    let handler: TestEventHandler<NotebookModelChange>;
     let testIPynb: Uri;
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
@@ -59,83 +56,46 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
 
                 // Reset for tests, do this every time, as things can change due to config changes etc.
                 const editor = isUntitled ? await editorProvider.createNew() : await editorProvider.open(testIPynb);
-                handler = createEventHandler(editor.model!, 'changed', disposables);
                 model = editor.model!;
             });
             teardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-            test('Deleting a cell in an nb should trigger updates in our NotebookModel', async () => {
+            test('Deleting a cell in an nb should update our NotebookModel', async () => {
                 // Delete first cell.
                 await deleteCell(0);
 
-                // Verify events were fired.
-                await handler.assertFiredExactly(1);
-                assert.equal(handler.first.kind, 'remove', 'Incorrect event fired');
-
                 // Verify model state is correct.
-                assert.equal(model.cells.length, 0);
+                await waitForCondition(async () => model.cells.length === 0, 5_000, 'Not deleted');
             });
-            test('Adding a markdown cell in an nb should trigger updates in our NotebookModel', async () => {
+            test('Adding a markdown cell in an nb should update our NotebookModel', async () => {
                 await insertMarkdownCell('HELLO');
-
-                // Verify events were fired.
-                await handler.assertFiredExactly(1);
-                assert.equal(handler.first.kind, 'insert', 'Incorrect event fired');
-                if (handler.first.kind === 'insert') {
-                    const expectedCell = createMarkdownCell(splitMultilineString(['HELLO']), true);
-                    assert.equal(handler.first.index, 0);
-                    assert.deepEqual(handler.first.cell.data, expectedCell);
-                }
 
                 // Verify model has been updated
-                assert.equal(model.cells.length, 2);
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not inserted');
                 assertMarkdownCell(0, 'HELLO');
             });
-            test('Adding a markdown cell then deleting it should trigger updates in our NotebookModel', async () => {
+            test('Adding a markdown cell then deleting it should update our NotebookModel', async () => {
                 await insertMarkdownCell('HELLO');
 
                 // Verify events were fired.
-                await handler.assertFiredExactly(1);
-                assert.equal(handler.first.kind, 'insert', 'Incorrect event fired');
-                assert.equal(model.cells.length, 2);
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not inserted');
 
                 // Delete second cell.
                 await deleteCell(1);
 
-                // Verify events were fired.
-                await handler.assertFiredExactly(2);
-                assert.equal(handler.second.kind, 'remove', 'Incorrect event fired');
-                assert.equal(model.cells.length, 1);
+                await waitForCondition(async () => model.cells.length === 1, 5_000, 'Not Deleted');
             });
-            test('Adding a code cell in an nb should trigger updates in our NotebookModel', async () => {
+            test('Adding a code cell in an nb should update our NotebookModel', async () => {
                 await insertPythonCell('HELLO');
 
-                // Verify events were fired.
-                await handler.assertFiredExactly(1);
-                assert.equal(handler.first.kind, 'insert', 'Incorrect event fired');
-                if (handler.first.kind === 'insert') {
-                    const expectedCell = createCodeCell(['HELLO'], []);
-                    assert.equal(handler.first.index, 0);
-                    assert.deepEqual(handler.first.cell.data, expectedCell);
-                }
-
-                // Verify model has been updated
-                assert.equal(model.cells.length, 2);
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not Inserted');
                 assertCodeCell(0, 'HELLO');
             });
-            test('Adding a code cell in specific position should trigger updates in our NotebookModel', async () => {
+            test('Adding a code cell in specific position should update our NotebookModel', async () => {
                 await insertPythonCell('HELLO', 1);
 
                 // Verify events were fired.
-                await handler.assertFiredExactly(1);
-                assert.equal(handler.first.kind, 'insert', 'Incorrect event fired');
-                if (handler.first.kind === 'insert') {
-                    const expectedCell = createCodeCell(['HELLO'], []);
-                    assert.equal(handler.first.index, 1);
-                    assert.deepEqual(handler.first.cell.data, expectedCell);
-                }
-
-                // Verify model has been updated
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not Inserted');
                 assert.equal(model.cells.length, 2);
             });
             function assertCodeCell(index: number, text: string) {
@@ -156,58 +116,46 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Change cell to markdown', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('HELLO');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.changeToMarkdown');
 
                 await waitForCondition(async () => assertMarkdownCell(0, 'HELLO'), 1_000, 'Not Changed');
-                assert.isOk(handler.count);
             });
             test('Change cell to code', async function () {
                 this.timeout(10_000);
                 await deleteAllCellsAndWait();
                 await insertMarkdownCellAndWait('HELLO');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.changeToCode');
 
                 await waitForCondition(async () => assertCodeCell(0, 'HELLO'), 1_000, 'Not Changed');
-                assert.isOk(handler.count);
             });
             test('Toggle cells (code->mardown->code->markdown)', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('HELLO');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.changeToMarkdown');
                 await waitForCondition(async () => assertMarkdownCell(0, 'HELLO'), 1_000, 'Not Changed');
-                assert.isOk(handler.count);
 
-                handler.reset();
                 await commands.executeCommand('notebook.cell.changeToCode');
                 await waitForCondition(async () => assertCodeCell(0, 'HELLO'), 1_000, 'Not Changed');
-                assert.isOk(handler.count);
 
-                handler.reset();
                 await commands.executeCommand('notebook.cell.changeToMarkdown');
                 await waitForCondition(async () => assertMarkdownCell(0, 'HELLO'), 1_000, 'Not Changed');
-                assert.isOk(handler.count);
             });
             test('Cut cell', async () => {
                 await commands.executeCommand('notebook.cell.cut');
 
-                await handler.assertFiredExactly(1); // cut first cell
-                assert.lengthOf(model.cells, 0);
+                await waitForCondition(async () => model.cells.length === 0, 5_000, 'Not Cut');
             });
             test('Copy & paste (code cell)', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('HELLO');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.copy');
                 await commands.executeCommand('notebook.cell.paste');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertCodeCell(0, 'HELLO');
                 assertCodeCell(1, 'HELLO');
@@ -215,12 +163,11 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Copy & paste (markdown cell)', async () => {
                 await deleteAllCellsAndWait();
                 await insertMarkdownCellAndWait('HELLO');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.copy');
                 await commands.executeCommand('notebook.cell.paste');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertMarkdownCell(0, 'HELLO');
                 assertMarkdownCell(1, 'HELLO');
@@ -229,12 +176,11 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('PYTHON');
                 await commands.executeCommand('notebook.cell.copy');
-                handler.reset();
                 const oldCell = model.cells[0];
 
                 await commands.executeCommand('notebook.cell.pasteAbove');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertCodeCell(0, 'PYTHON');
                 assertCodeCell(1, 'PYTHON');
@@ -247,12 +193,11 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('PYTHON');
                 await commands.executeCommand('notebook.cell.copy');
-                handler.reset();
                 const oldCell = model.cells[0];
 
                 await commands.executeCommand('notebook.cell.paste');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertCodeCell(0, 'PYTHON');
                 assertCodeCell(1, 'PYTHON');
@@ -264,11 +209,10 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Insert code cell above', async () => {
                 await deleteAllCellsAndWait();
                 await insertMarkdownCellAndWait('MARKDOWN');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.insertCodeCellAbove');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertCodeCell(0, '');
                 assertMarkdownCell(1, 'MARKDOWN');
@@ -276,11 +220,10 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Insert code cell below', async () => {
                 await deleteAllCellsAndWait();
                 await insertMarkdownCellAndWait('MARKDOWN');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.insertCodeCellBelow');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertMarkdownCell(0, 'MARKDOWN');
                 assertCodeCell(1, '');
@@ -288,11 +231,10 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Insert markdown cell above', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('PYTHON');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.insertMarkdownCellAbove');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertMarkdownCell(0);
                 assertCodeCell(1, 'PYTHON');
@@ -300,11 +242,10 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
             test('Insert markdown cell below', async () => {
                 await deleteAllCellsAndWait();
                 await insertPythonCellAndWait('PYTHON');
-                handler.reset();
 
                 await commands.executeCommand('notebook.cell.insertMarkdownCellBelow');
 
-                await handler.assertFiredExactly(1); // paste cell.
+                await waitForCondition(async () => model.cells.length === 2, 5_000, 'Not pasted');
                 assert.lengthOf(model.cells, 2);
                 assertCodeCell(0, 'PYTHON');
                 assertMarkdownCell(1);
@@ -316,11 +257,9 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 assertCodeCell(0, 'PYTHON');
                 assertMarkdownCell(1, 'MARKDOWN');
 
-                handler.reset();
                 await commands.executeCommand('notebook.cell.moveDown');
 
-                await handler.assertFiredExactly(1); // paste cell.
-                assertMarkdownCell(0, 'MARKDOWN');
+                await waitForCondition(async () => assertMarkdownCell(0, 'MARKDOWN'), 5_000, 'Not pasted');
                 assertCodeCell(1, 'PYTHON');
             });
             test('Join cells', async () => {
@@ -331,12 +270,9 @@ suite('DataScience - VSCode Notebook (Edit)', function () {
                 assertCodeCell(0, 'PYTHON1');
                 assertCodeCell(1, 'PYTHON2');
 
-                handler.reset();
                 await commands.executeCommand('notebook.cell.joinBelow');
 
-                await handler.assertFiredExactly(1); // Delete last cell.
-                // Bug in VS Code.
-                assertCodeCell(0, 'PYTHON1\nPYTHON2');
+                await waitForCondition(async () => assertCodeCell(0, 'PYTHON1\nPYTHON2'), 5_000, 'Not pasted');
             });
         });
     });

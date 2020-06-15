@@ -11,6 +11,7 @@ import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import '../../common/extensions';
+import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -152,6 +153,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
 
         let subscription: Subscription | undefined;
+        let modelClearedEventHandler: IDisposable | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
             const observable = nb.executeObservable(
@@ -163,12 +165,21 @@ export class NotebookExecutionService implements INotebookExecutionService {
             );
             subscription = observable?.subscribe(
                 (cells) => {
+                    if (!modelClearedEventHandler) {
+                        modelClearedEventHandler = model.changed((e) => {
+                            if (e.kind === 'clear') {
+                                // If cell output has been cleared, then clear the output in the observed executable cell.
+                                // Else if user clears output while execuitng a cell, we add it back.
+                                cells.forEach((c) => (c.data.outputs = []));
+                            }
+                        });
+                    }
                     const rawCellOutput = cells
                         .filter((item) => item.id === cell.uri.fsPath)
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
                         .filter((output) => !hasTransientOutputForAnotherCell(output));
 
-                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
 
                     // Set execution count, all messages should have it
                     if (
@@ -195,10 +206,9 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     cell.metadata.statusMessage = '';
 
                     // Update metadata in our model.
-                    const notebookCellModel = findMappedNotebookCellModel(document, cell, model.cells);
+                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
                     updateCellExecutionTimes(
                         notebookCellModel,
-                        model,
                         cell.metadata.runStartTime,
                         cell.metadata.lastRunDuration
                     );
@@ -221,6 +231,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             updateCellWithErrorStatus(cell, ex);
             this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
+            modelClearedEventHandler?.dispose(); // NOSONAR
             subscription?.unsubscribe(); // NOSONAR
             // Ensure we remove the cancellation.
             const cancellations = this.pendingExecutionCancellations.get(document.uri.fsPath);
