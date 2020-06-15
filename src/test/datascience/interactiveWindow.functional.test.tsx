@@ -38,7 +38,6 @@ import {
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { createMessageEvent } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -58,8 +57,7 @@ import {
     typeCode,
     verifyHtmlOnCell,
     verifyLastCellInputState,
-    waitForMessage,
-    waitForMessageResponse
+    waitForMessage
 } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -100,7 +98,7 @@ suite('DataScience Interactive Window output tests', () => {
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
         const window = await getOrCreateInteractiveWindow(ioc);
         await window.show();
-        const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
+        const update = waitForMessage('default', InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
         return update;
     }
@@ -217,18 +215,17 @@ for i in range(10):
 
             const domDiv = reactDiv.querySelector('div');
 
-            if (domDiv && ioc.postMessage) {
+            if (domDiv && ioc.getDefaultWrapper()) {
                 domDiv.tabIndex = -1;
                 domDiv.focus();
 
                 // send the ctrl + 1/2 message, this should put focus back on the input box
-                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate, payload: undefined });
-                ioc.postMessage(message);
+                ioc.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined }, 'default');
 
                 // Then enter press shift + enter on the active element
                 const activeElement = document.activeElement;
                 if (activeElement) {
-                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                    await submitInput('default', activeElement as HTMLTextAreaElement);
                 }
             }
 
@@ -294,7 +291,7 @@ for i in range(10):
                 // Then enter press shift + enter on the active element
                 const activeElement = document.activeElement;
                 if (activeElement) {
-                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                    await submitInput('default', activeElement as HTMLTextAreaElement);
                 }
             }
 
@@ -434,7 +431,7 @@ Type:      builtin_function_or_method`,
             await addCode(ioc, wrapper, 'a=1\na');
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
+            let afterUndo = await getInteractiveCellResults(wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -442,7 +439,7 @@ Type:      builtin_function_or_method`,
             assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(ioc, wrapper, () => {
+            const afterRedo = await getInteractiveCellResults(wrapper, () => {
                 interactiveWindow.redoCells();
                 return Promise.resolve();
             });
@@ -453,14 +450,14 @@ Type:      builtin_function_or_method`,
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(ioc, wrapper, () => {
+            const afterClear = await getInteractiveCellResults(wrapper, () => {
                 interactiveWindow.removeAllCells();
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
+            afterUndo = await getInteractiveCellResults(wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -498,7 +495,7 @@ Type:      builtin_function_or_method`,
             const clear = findButton(wrapper, InteractivePanel, 0);
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
+            let afterUndo = await getInteractiveCellResults(wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -506,7 +503,7 @@ Type:      builtin_function_or_method`,
             assert.equal(afterUndo.length, 1, `Undo should remove cells`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(ioc, wrapper, async () => {
+            const afterRedo = await getInteractiveCellResults(wrapper, async () => {
                 redo!.simulate('click');
                 return Promise.resolve();
             });
@@ -517,14 +514,14 @@ Type:      builtin_function_or_method`,
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(ioc, wrapper, async () => {
+            const afterClear = await getInteractiveCellResults(wrapper, async () => {
                 clear!.simulate('click');
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(ioc, wrapper, async () => {
+            afterUndo = await getInteractiveCellResults(wrapper, async () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -539,12 +536,12 @@ Type:      builtin_function_or_method`,
             const deleteButton = ImageButtons.at(3);
 
             // Make sure goto works
-            await waitForMessageResponse(ioc, () => goto.simulate('click'));
+            goto.simulate('click');
             await waitForPromise(showedEditor.promise, 1000);
             assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
+            const afterDelete = await getInteractiveCellResults(wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
@@ -634,7 +631,9 @@ for i in range(0, 100):
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Export should cause exportCalled to change to true
-            await waitForMessageResponse(ioc, () => interactiveWindow.exportCells());
+            const exportPromise = waitForMessage('default', InteractiveWindowMessages.Export);
+            interactiveWindow.exportCells();
+            await exportPromise;
             assert.equal(exportCalled, true, 'Export is not being called during export');
 
             // Remove the cell
@@ -642,7 +641,7 @@ for i in range(0, 100):
             const undo = findButton(wrapper, InteractivePanel, 2);
 
             // Now verify if we undo, we have no cells
-            const afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
+            const afterUndo = await getInteractiveCellResults(wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -651,8 +650,8 @@ for i in range(0, 100):
 
             // Then verify we cannot click the button (it should be disabled)
             exportCalled = false;
-            const response = waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            await waitForPromise(response, 100);
+            exportButton!.simulate('click');
+            await sleep(100);
             assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
         },
         () => {
@@ -759,7 +758,7 @@ for i in range(0, 100):
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Get an update promise so we can wait for the add code
-            const updatePromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+            const updatePromise = waitForMessage('default', InteractiveWindowMessages.ExecutionRendered);
 
             // Send some code to the interactive window
             await interactiveWindow.addCode('a=1\na', Uri.file('foo.py').fsPath, 2);
@@ -851,7 +850,7 @@ for i in range(0, 100):
             await interactiveWindow.show();
 
             // Then enter some code.
-            await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
+            await enterInput(wrapper, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         },
         () => {
@@ -873,14 +872,14 @@ for i in range(0, 100):
             await interactiveWindow.show();
 
             // Then enter some code.
-            await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
+            await enterInput(wrapper, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
             const ImageButtons = getLastOutputCell(wrapper, 'InteractiveCell').find(ImageButton);
             assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
             const copyToSource = ImageButtons.at(2);
 
             // Then click the copy to source button
-            await waitForMessageResponse(ioc, () => copyToSource.simulate('click'));
+            copyToSource.simulate('click');
             await waitForPromise(showedEditor.promise, 100);
             assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
         },
@@ -897,7 +896,7 @@ for i in range(0, 100):
             await interactiveWindow.show();
 
             // Then enter some code.
-            await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
+            await enterInput(wrapper, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
             // Then delete the node
@@ -907,19 +906,19 @@ for i in range(0, 100):
             const deleteButton = ImageButtons.at(3);
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
+            const afterDelete = await getInteractiveCellResults(wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
             assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
 
             // Should be able to enter again
-            await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
+            await enterInput(wrapper, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
             // Try a 3rd time with some new input
             addMockData(ioc, 'print("hello")', 'hello');
-            await enterInput(wrapper, ioc, 'print("hello', 'InteractiveCell');
+            await enterInput(wrapper, 'print("hello', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', 'hello', CellPosition.Last);
         },
         () => {
@@ -1016,7 +1015,9 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
+            const gatherPromise = waitForMessage('default', InteractiveWindowMessages.GatherCode);
+            gatherCode.simulate('click');
+            await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
             if (docManager.activeTextEditor) {
@@ -1050,14 +1051,16 @@ for i in range(0, 100):
             await interactiveWindow.show();
 
             // Then enter some code.
-            await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
+            await enterInput(wrapper, 'a=1\na', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
             const ImageButtons = getLastOutputCell(wrapper, 'InteractiveCell').find(ImageButton);
             assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
+            const gatherPromise = waitForMessage('default', InteractiveWindowMessages.GatherCode);
+            gatherCode.simulate('click');
+            await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
 

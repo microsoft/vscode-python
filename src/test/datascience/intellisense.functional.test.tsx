@@ -457,7 +457,7 @@ import {
             'Hover on notebook',
             async (wrapper) => {
                 // Create an notebook so that it listens to the results.
-                const kernelIdle = waitForMessage(ioc, InteractiveWindowMessages.KernelIdle);
+                const kernelIdle = waitForMessage('notebook', InteractiveWindowMessages.KernelIdle);
                 const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
                 await notebook.show();
                 await kernelIdle;

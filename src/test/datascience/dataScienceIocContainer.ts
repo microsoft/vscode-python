@@ -85,7 +85,8 @@ import {
     IVSCodeNotebook,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -176,7 +177,7 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
-import { Deferred, sleep } from '../../client/common/utils/async';
+import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
@@ -399,7 +400,6 @@ import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironmen
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
-import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -417,7 +417,7 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
-import { createMountedWebPanel } from './mountedWebPanel';
+import { createMountedWebPanel, disposeMountedPanels, getMountedWebPanel } from './mountedWebPanel';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
@@ -479,7 +479,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         type: InterpreterType.Unknown,
         architecture: Architecture.x64
     };
-    private extraListeners: ((m: string, p: any) => void)[] = [];
 
     private webPanelProvider = mock(WebPanelProvider);
     private settingsMap = new Map<string, any>();
@@ -558,7 +557,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.settingsMap.clear();
         this.configMap.clear();
         this.setContexts = {};
-        this.extraListeners = [];
+        disposeMountedPanels();
         reset(this.webPanelProvider);
 
         // Turn off the static maps for the environment and conda services. Otherwise this
@@ -1301,6 +1300,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
+        type: 'notebook' | 'default',
         role: vsls.Role = vsls.Role.None
     ) {
         // Force the container to mock actual live share if necessary
@@ -1310,7 +1310,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        this.mountReactControl(mount);
+        return createMountedWebPanel(mount, type).wrapper;
+    }
+
+    public getDefaultWrapper() {
+        return getMountedWebPanel('default').wrapper;
+    }
+
+    public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
+        return getMountedWebPanel(type).postMessage(m);
     }
 
     public getContext(name: string): boolean {
@@ -1411,20 +1419,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.documentManager.addDocument(code, file);
     }
 
-    public addMessageListener(callback: (m: string, p: any) => void) {
-        this.extraListeners.push(callback);
-    }
-
-    public removeMessageListener(callback: (m: string, p: any) => void) {
-        const index = this.extraListeners.indexOf(callback);
-        if (index >= 0) {
-            this.extraListeners.splice(index, 1);
-        }
-    }
-
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
         if (this.mockJupyter) {
             this.mockJupyter.addInterpreter(newInterpreter, commands);
+        }
+    }
+    public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
+        const webPanel = getMountedWebPanel(type);
+        if (webPanel) {
+            webPanel.changeViewState(active, visible);
         }
     }
 
@@ -1444,8 +1447,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public setExperimentState(experimentName: string, enabled: boolean) {
         this.experimentState.set(experimentName, enabled);
     }
+
+    private computeWebPanelId(options: IWebPanelOptions): string {
+        // Should be based on title (for now)
+        if (options.title && options.title.endsWith('.ipynb')) {
+            return 'notebook';
+        }
+
+        return 'default';
+    }
+
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        const panel = createMountedWebPanel(this, options);
+        const id = this.computeWebPanelId(options);
+        const panel = getMountedWebPanel(id);
         this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
         return panel;
     }
@@ -1607,47 +1621,5 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         } catch (ex) {
             return 'python';
         }
-    }
-
-    private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
-        // This is a remount (or first time). Clear out messages that were sent
-        // by the last mount
-        this.missedMessages = [];
-        this.webPanelListener = undefined;
-        this.extraListeners = [];
-        this.wrapperCreatedPromise = undefined;
-
-        // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
-        const globalAcquireVsCodeApi = (): IVsCodeApi => {
-            return {
-                // tslint:disable-next-line:no-any
-                postMessage: (msg: any) => {
-                    this.postMessageToWebPanel(msg);
-                },
-                // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {},
-                // tslint:disable-next-line:no-any no-empty
-                getState: () => {
-                    return {};
-                }
-            };
-        };
-        // tslint:disable-next-line:no-string-literal
-        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
-
-        // Remap event handlers to point to the container.
-        const oldListener = window.addEventListener;
-        window.addEventListener = (event: string, cb: any) => {
-            if (event === 'message') {
-                this.postMessage = cb;
-            }
-        };
-
-        // Mount our main panel. This will make the global api be cached and have the event handler registered
-        this.wrapper = mount();
-
-        // We can remove the global api and event listener now.
-        delete (global as any).acquireVsCodeApi;
-        window.addEventListener = oldListener;
     }
 }
