@@ -104,10 +104,10 @@ jobs:
 
 
 
-  runInsideContainer:
+  runInsideWindows:
     name: Run inside container
-    runs-on: ubuntu-latest
-    container: docker://rizwan937/helm
+    runs-on: windows-latest
+    # container: docker://rizwan937/helm
     # if: github.repository == 'microsoft/vscode-python'
     steps:
 
@@ -151,6 +151,31 @@ jobs:
     #       docker run -it python3.8.3 /bin/bash
     #       printenv
 
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: 4.7.6
+          activate-environment: foo
+      - name: Bash
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+      - name: PowerShell
+        shell: powershell
+        run: |
+          conda info
+          conda list
+      - name: PowerShell Core
+        shell: pwsh
+        run: |
+          conda info
+          conda list
+      - name: Cmd.exe
+        shell: cmd /C CALL {0}
+        run: >-
+          conda info &&
+          conda list
+
       - name: Show all env vars
         run: |
           printenv
@@ -193,6 +218,116 @@ jobs:
       - name: docker images
         run: |
           docker images
+
+  installCondaUbuntu:
+    name: Install conda ubuntu
+    runs-on: ubuntu-latest
+    # container: docker://rizwan937/helm
+    # if: github.repository == 'microsoft/vscode-python'
+    steps:
+
+    #   - name: Login into container
+    #     uses: azure/docker-login@v1
+    #     with:
+    #       login-server: pvsccontainers.azurecr.io
+    #       username: ${{ secrets.DOCKERIO_USERNAME }}
+    #       password: ${{ secrets.DOCKERIO_PASSWORD }}
+
+    #   - name: Pull docker image
+    #     run: |
+    #       docker pull pvsccontainers.azurecr.io/samples/2
+    #       docker tag pvsccontainers.azurecr.io/samples/2 python3.8.3
+
+      # - name: Initialize containerszz
+      #   run: |
+      #     /usr/bin/docker version --format '{{.Server.APIVersion}}'
+      #     /usr/bin/docker version --format '{{.Client.APIVersion}}'
+      #     /usr/bin/docker ps --all --quiet --no-trunc --filter "label=3888d3"
+      #     /usr/bin/docker network prune --force --filter "label=3888d3"
+      #     /usr/bin/docker network create --label 3888d3 github_network_a9e98a49f3544e449bd784053f68b918
+      #     /usr/bin/docker pull rizwan937/helm
+      #     containerid=$(/usr/bin/docker create --name 66a6d2b8278a48b291b04a14378138ad_rizwan937helm_a1fe26 --label 3888d3 --workdir /__w/vscode-python/vscode-python --network github_network_a9e98a49f3544e449bd784053f68b918  -e "HAHAHAHAHAHAH=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/runners/2.263.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" rizwan937/helm "-f" "/dev/null")
+      #     /usr/bin/docker start $(echo $containerid)
+      #     /usr/bin/docker ps --all --filter id=$(echo $containerid) --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+      #     /usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" $(echo $containerid)
+
+      # - name: docker images
+      #   run: |
+      #     docker images
+
+    #   - name: Create & start docker container
+    #     run: |
+    #       containerid=$(docker create python3.8.3)
+    #       docker start $(echo $containerid)
+    #       printenv
+
+    #   - name: Run inside docker container
+    #     run: |
+    #       docker run -it python3.8.3 /bin/bash
+    #       printenv
+
+      - uses: goanpeca/setup-miniconda@v1
+        with:
+          miniconda-version: "4.7.6"
+      - name: Sh
+        shell: sh -l {0}
+        run: |
+          conda info
+          conda list
+      - name: Bash
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+      - name: PowerShell Core
+        shell: pwsh
+        run: |
+          conda info
+          conda list
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
+      - name: docker images
+        run: |
+          /usr/bin/docker images
+
+      # - name: See if python3 is installed
+      #   run: |
+      #     python3 -c"import sys;print(sys.executable)"
+      #     python3 --version
+
+      # - name: See if python is on PATH
+      #   run: |
+      #     apt-get install libpython2.7
+      #     python --version
+      #     python -c"import sys;print(sys.executable)"
+
+      # - name: Use Python 2.7
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: 2.7
+
+      - name: See if python is on PATH
+        run: |
+          python -c"import sys;print(sys.executable)"
+          python --version
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
+      - name: See if python3 is installed
+        run: |
+          python3 -c"import sys;print(sys.executable)"
+
+      - name: docker images
+        run: |
+          docker images
+
 
   ### Hygiene + VSIX upload
   compile-hygiene:
