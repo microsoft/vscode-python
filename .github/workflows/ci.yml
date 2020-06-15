@@ -107,7 +107,7 @@ jobs:
   runInsideContainer:
     name: Run inside container
     runs-on: ubuntu-latest
-    container: docker://karrtikr/python
+    container: docker://python:3.8.3-windowsservercore
     # if: github.repository == 'microsoft/vscode-python'
     steps:
 
@@ -156,27 +156,21 @@ jobs:
           printenv
         shell: bash
 
-      - name: See if python3 is installed
-        run: |
-          python3 -c"import sys;print(sys.executable)"
-          python3 --version
+      # - name: See if python3 is installed
+      #   run: |
+      #     python3 -c"import sys;print(sys.executable)"
+      #     python3 --version
 
-      - name: install libpython2.7
-        run: |
-          apt-get install libpython2.7
-          python --version
-          python -c"import sys;print(sys.executable)"
+      # - name: See if python is on PATH
+      #   run: |
+      #     apt-get install libpython2.7
+      #     python --version
+      #     python -c"import sys;print(sys.executable)"
 
-      - name: See if python is on PATH
-        run: |
-          apt-get install libpython2.7
-          python --version
-          python -c"import sys;print(sys.executable)"
-
-      - name: Use Python 2.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 2.7
+      # - name: Use Python 2.7
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: 2.7
 
       - name: See if python is on PATH
         run: |
@@ -194,7 +188,7 @@ jobs:
 
       - name: docker images
         run: |
-          usr/bin/docker images
+          docker images
 
   ### Hygiene + VSIX upload
   compile-hygiene:
