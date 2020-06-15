@@ -2181,6 +2181,7 @@
                     "enum": [
                         "Jedi",
                         "Microsoft",
+                        "Pylance",
                         "None"
                     ],
                     "default": "Jedi",

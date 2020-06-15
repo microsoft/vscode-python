@@ -62,7 +62,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         interpreter: PythonInterpreter | undefined,
         options: LanguageClientOptions
     ): Promise<void> {
-        // Offer MPLSv2
+        // Offer Pylance LS.
         if (!isTestExecution()) {
             await this.proposeNewLanguageServerPopup.showBanner();
         }
