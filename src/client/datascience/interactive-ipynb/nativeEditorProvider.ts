@@ -17,11 +17,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
