@@ -136,9 +136,9 @@ jobs:
       #     /usr/bin/docker ps --all --filter id=$(echo $containerid) --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
       #     /usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" $(echo $containerid)
 
-      - name: docker images
-        run: |
-          docker images
+      # - name: docker images
+      #   run: |
+      #     docker images
 
     #   - name: Create & start docker container
     #     run: |
@@ -184,6 +184,10 @@ jobs:
       - name: See if python3 is installed
         run: |
           python3 -c"import sys;print(sys.executable)"
+
+      - name: docker images
+        run: |
+          usr/bin/docker images
 
   ### Hygiene + VSIX upload
   compile-hygiene:
