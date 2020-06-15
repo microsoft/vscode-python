@@ -37,7 +37,6 @@ suite('Data Science - Commands', () => {
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
-        const experiment = mock(ExperimentService);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -52,8 +51,7 @@ suite('Data Science - Commands', () => {
             instance(configService),
             instance(appShell),
             new MockOutputChannel('Jupyter'),
-            instance(startPage),
-            instance(experiment)
+            instance(startPage)
         );
     });
 

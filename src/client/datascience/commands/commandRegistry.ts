@@ -43,8 +43,7 @@ export class CommandRegistry implements IDisposable {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(IStartPage) private startPage: IStartPage,
-        @inject(IExperimentService) private readonly expService: IExperimentService
+        @inject(IStartPage) private startPage: IStartPage
     ) {
         this.disposables.push(this.serverSelectedCommand);
         this.disposables.push(this.kernelSwitcherCommand);
