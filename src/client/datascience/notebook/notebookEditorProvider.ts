@@ -133,7 +133,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
     private onEditorOpened(editor: INotebookEditor): void {
         this.openedEditors.add(editor);
-        editor.closed(this.closedEditor.bind(this));
+        editor.closed(this.closedEditor, this, this.disposables);
         this._onDidOpenNotebookEditor.fire(editor);
         this._onDidChangeActiveNotebookEditor.fire(editor);
     }
