@@ -97,6 +97,21 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                     </div>
                 </div>
                 <div className="row">
+                    <div className="icon" role="button" onClick={this.openFolder}>
+                        <Image
+                            baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
+                            class="image-button-image"
+                            image={ImageName.OpenFolder}
+                        />
+                    </div>
+                    <div className="block">
+                        <div className="text" role="button" onClick={this.openFolder}>
+                            {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
+                        </div>
+                        {this.renderFolderDescription()}
+                    </div>
+                </div>
+                <div className="row">
                     <div className="icon" role="button" onClick={this.openInteractiveWindow}>
                         <Image
                             baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
@@ -112,21 +127,6 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                             )}
                         </div>
                         {this.renderInteractiveWindowDescription()}
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="icon" role="button" onClick={this.openFolder}>
-                        <Image
-                            baseTheme={this.props.baseTheme ? this.props.baseTheme : 'vscode-dark'}
-                            class="image-button-image"
-                            image={ImageName.OpenFolder}
-                        />
-                    </div>
-                    <div className="block">
-                        <div className="text" role="button" onClick={this.openFolder}>
-                            {getLocString('StartPage.openFolder', 'Open a Folder or Workspace')}
-                        </div>
-                        {this.renderFolderDescription()}
                     </div>
                 </div>
                 <div className="row">
@@ -180,14 +180,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.notebookDescription',
-                        '- <div class="link" role="button" onclick={0}>Create</div> or <div class="link" role="button" onclick={1}>open</div> a Notebook File<br />- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={2}>Command Palette</div> and type "<div class="link italics" role="button" onclick={3}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={4}>sample notebook</div> to learn about notebook features'
-                    ).format(
-                        'openBlankNotebook()',
-                        'openFileBrowser()',
-                        'openCommandPalette()',
-                        'openCommandPaletteWithSelection()',
-                        'openSampleNotebook()'
-                    )
+                        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
+                    ).format('openCommandPaletteWithSelection()', 'openSampleNotebook()')
                 }}
             />
         );
@@ -201,8 +195,8 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.pythonFileDescription',
-                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension<br />- Open a <div class="link" role="button" onclick={1}>Python File</div>'
-                    ).format('createPythonFile()', 'openFileBrowser()')
+                        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
+                    ).format('createPythonFile()')
                 }}
             />
         );
@@ -231,7 +225,7 @@ export class StartPage extends React.Component<IStartPageProps> implements IMess
                 dangerouslySetInnerHTML={{
                     __html: getLocString(
                         'StartPage.folderDesc',
-                        '- Open a project <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
+                        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a VS Code <div class="link" role="button" onclick={1}>Workspace</div>'
                     ).format('openFolder()', 'openWorkspace()')
                 }}
             />

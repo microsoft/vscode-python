@@ -50,6 +50,7 @@
 .row {
     display: block;
     min-height: 120px;
+    white-space: nowrap;
 }
 
 .link {
@@ -82,4 +83,5 @@
 
 .list {
     line-height: 1.5;
+    white-space: initial;
 }
