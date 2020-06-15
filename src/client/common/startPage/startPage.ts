@@ -219,13 +219,6 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         super.onMessage(message, payload);
     }
 
-    // This gets the most recent Enhancements and date from CHANGELOG.md
-    // This is public for testing
-    public async handleReleaseNotesRequest(): Promise<string[]> {
-        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
-        return releaseNotes.splitLines();
-    }
-
     // Public for testing
     public async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
@@ -243,6 +236,12 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         // if savedVersion != version, there was an update
         await this.context.globalState.update('extensionVersion', version);
         return shouldShowStartPage;
+    }
+
+    // This gets the release notes from StartPageReleaseNotes.md
+    private async handleReleaseNotesRequest(): Promise<string[]> {
+        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
+        return releaseNotes.splitLines();
     }
 
     private async activateBackground(): Promise<void> {

@@ -5,7 +5,6 @@ import { SharedMessages } from '../../datascience/messages';
 export const IStartPage = Symbol('IStartPage');
 export interface IStartPage {
     open(): Promise<void>;
-    handleReleaseNotesRequest(): Promise<string[]>;
     extensionVersionChanged(): Promise<boolean>;
 }
 
