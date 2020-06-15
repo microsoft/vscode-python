@@ -14,13 +14,11 @@ import { noop, swallowExceptions } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
+import { cleanEnvironment, findIndexOfConnectionFile } from '../jupyter/kernels/helpers';
 import { IJupyterKernelSpec } from '../types';
 import { PythonKernelLauncherDaemon } from './kernelLauncherDaemon';
 import { IKernelConnection, IKernelProcess, IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import { IFileSystem } from '../../common/platform/types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 
@@ -58,7 +56,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly interpreter?: PythonInterpreter
     ) {
         this.originalKernelSpec = kernelSpec;
-        this._kernelSpec = cloneDeep(kernelSpec);
+        this._kernelSpec = cleanEnvironment(kernelSpec);
     }
     public async interrupt(): Promise<void> {
         if (this.kernelDaemon) {

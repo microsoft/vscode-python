@@ -32,7 +32,7 @@ import {
     IKernelDependencyService,
     KernelInterpreterDependencyResponse
 } from '../../types';
-import { detectDefaultKernelName } from './helpers';
+import { cleanEnvironment, detectDefaultKernelName } from './helpers';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
@@ -395,14 +395,15 @@ export class KernelService {
         forceWrite?: boolean
     ) {
         const specedKernel = kernel as JupyterKernelSpec;
-        if (specedKernel.specFile && interpreter) {
-            const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
+        if (specedKernel.specFile) {
+            let specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
                 await this.fileSystem.readFile(specedKernel.specFile)
             );
+            let shouldUpdate = false;
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
-            if (specModel.metadata?.interpreter || forceWrite) {
+            if (interpreter && (specModel.metadata?.interpreter || forceWrite)) {
                 // Ensure we use a fully qualified path to the python interpreter in `argv`.
                 if (specModel.argv[0].toLowerCase() === 'conda') {
                     // If conda is the first word, its possible its a conda activation command.
@@ -438,7 +439,19 @@ export class KernelService {
                 // tslint:disable-next-line: no-any
                 specModel.metadata.interpreter = interpreter as any;
 
-                // Update the kernel.json with our new stuff.
+                // Indicate we need to write
+                shouldUpdate = true;
+            }
+
+            // Scrub the environment of the specmodel to make sure it has allowed values (they all must be strings)
+            // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
+            if (specModel.env) {
+                specModel = cleanEnvironment(specModel);
+                shouldUpdate = true;
+            }
+
+            // Update the kernel.json with our new stuff.
+            if (shouldUpdate) {
                 await this.fileSystem.writeFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2), {
                     flag: 'w',
                     encoding: 'utf8'

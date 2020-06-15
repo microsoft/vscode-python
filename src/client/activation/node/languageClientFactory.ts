@@ -31,9 +31,13 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
         const commandArgs = (clientOptions.connectionOptions
             ?.cancellationStrategy as FileBasedCancellationStrategy).getCommandLineArguments();
 
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.bundle.js');
-        const nonBundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.js');
+        const folderName = await this.languageServerFolderService.getLanguageServerFolderName(resource);
+        const languageServerFolder = path.isAbsolute(folderName)
+            ? folderName
+            : path.join(EXTENSION_ROOT_DIR, folderName);
+
+        const bundlePath = path.join(languageServerFolder, 'server.bundle.js');
+        const nonBundlePath = path.join(languageServerFolder, 'server.js');
         const modulePath = (await this.fs.fileExists(nonBundlePath)) ? nonBundlePath : bundlePath;
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
 

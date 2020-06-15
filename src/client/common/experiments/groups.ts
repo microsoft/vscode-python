@@ -37,12 +37,6 @@ export enum LocalZMQKernel {
     experiment = 'LocalZMQKernel - experiment'
 }
 
-// Experiment to use VSC Notebook Implementation
-export enum NativeNotebook {
-    control = 'NativeNotebook - control',
-    experiment = 'NativeNotebook - experiment'
-}
-
 // Experiment for supporting run by line in data science notebooks
 export enum RunByLine {
     control = 'RunByLine - control',
@@ -93,9 +87,10 @@ export enum DeprecatePythonPath {
 }
 
 /*
- * Experiment to turn on custom editor API support.
+ * Experiment to turn on custom editor or VS Code Native Notebook API support.
  */
-export enum CustomEditorSupport {
+export enum NotebookEditorSupport {
     control = 'CustomEditorSupport - control',
-    experiment = 'CustomEditorSupport - experiment'
+    customEditorExperiment = 'CustomEditorSupport - experiment',
+    nativeNotebookExperiment = 'NativeNotebook - experiment'
 }

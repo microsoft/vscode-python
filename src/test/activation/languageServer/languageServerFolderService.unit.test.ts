@@ -268,14 +268,15 @@ suite('Language Server Folder Service', () => {
         });
     });
 
-    suite('Method isBundled()', () => {
+    suite('Method skipDownload()', () => {
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
         });
 
-        test('isBundled is false', () => {
-            expect(languageServerFolderService.isBundled()).to.be.equal(false, 'isBundled should be false');
+        test('skipDownload is false', async () => {
+            const skipDownload = await languageServerFolderService.skipDownload();
+            expect(skipDownload).to.be.equal(false, 'skipDownload should be false');
         });
     });
 });

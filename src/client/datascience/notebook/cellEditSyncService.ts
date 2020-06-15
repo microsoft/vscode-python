@@ -7,11 +7,12 @@ import type { NotebookCell, NotebookDocument } from '../../../../typings/vscode-
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { NativeNotebook } from '../../common/experiments/groups';
+import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { traceError } from '../../logging';
 import { INotebookEditorProvider, INotebookModel } from '../types';
+import { getOriginalCellId } from './helpers/cellMappers';
 
 @injectable()
 export class CellEditSyncService implements IExtensionSingleActivationService, IDisposable {
@@ -32,7 +33,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         }
     }
     public async activate(): Promise<void> {
-        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
         this.documentManager.onDidChangeTextDocument(this.onDidChangeTextDocument, this, this.disposables);
@@ -108,7 +109,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
             return;
         }
 
-        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: cell.metadata.custom!.cellId });
+        this.mappedDocuments.set(cellDocument, { model: editor.model, cellId: getOriginalCellId(cell)! });
         return this.mappedDocuments.get(cellDocument);
     }
 }

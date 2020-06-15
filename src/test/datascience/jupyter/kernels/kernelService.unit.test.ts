@@ -585,7 +585,11 @@ suite('Data Science - KernelService', () => {
             const kernel = new JupyterKernelSpec(userKernelSpecModel, kernelJsonFile);
             when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));
-            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            let contents: string | undefined;
+            when(fs.writeFile(kernelJsonFile, anything(), anything())).thenCall((_f, c) => {
+                contents = c;
+                return Promise.resolve();
+            });
             const envVariables = { MYVAR: '1' };
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
                 envVariables
@@ -596,7 +600,9 @@ suite('Data Science - KernelService', () => {
 
             // tslint:disable-next-line: no-any
             assert.deepEqual(kernel, installedKernel as any);
-            verify(fs.writeFile(anything(), anything(), anything())).never();
+            assert.ok(contents, 'Env not updated');
+            const obj = JSON.parse(contents!);
+            assert.notOk(obj.metadata.interpreter, 'MetaData should not have been written');
         });
     });
 });

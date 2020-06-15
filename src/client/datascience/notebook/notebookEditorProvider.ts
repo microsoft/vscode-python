@@ -19,22 +19,19 @@ import {
 import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { isUri } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
-import {
-    monitorModelCellOutputChangesAndUpdateNotebookDocument,
-    updateCellModelWithChangesToVSCCell
-} from './cellUpdateHelpers';
 import { JupyterNotebookView } from './constants';
+import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
+import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
 /**
- * Class responsbile for activating an registering the necessary event handlers in NotebookEditorProvider.
+ * Class responsible for activating an registering the necessary event handlers in NotebookEditorProvider.
  */
 @injectable()
 export class NotebookEditorProviderActivation implements IExtensionSingleActivationService {
@@ -191,6 +188,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
         const uri = doc.uri;
         const model = await this.storage.load(uri);
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: When VSC supports hot exit, they'll open a notebook without invoking our code to provide the contents.
+        // We need to handle those situations (cuz at that point we should load the old model and update it with the new model in the notebook).
+        mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
@@ -213,10 +214,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
-        if (!isUri(doc)) {
-            // This is where we ensure changes to our models are propagated back to the VSCode model.
-            this.disposables.push(monitorModelCellOutputChangesAndUpdateNotebookDocument(doc, model));
-        }
         this.notebookEditorsByUri.set(uri.toString(), editor);
         this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }

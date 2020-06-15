@@ -3,23 +3,16 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { inject, injectable } from 'inversify';
-import * as semver from 'semver';
-import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
+import * as path from 'path';
+import { SemVer } from 'semver';
+import { IWorkspaceService } from '../../common/application/types';
 import { NugetPackage } from '../../common/nuget/types';
-import { IConfigurationService, Resource } from '../../common/types';
+import { IConfigurationService, IExtensions, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceWarning } from '../../logging';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
-import {
-    BundledLanguageServerFolder,
-    FolderVersionPair,
-    ILanguageServerFolderService,
-    NodeLanguageServerFolder
-} from '../types';
-
-// Must match languageServerVersion* keys in package.json
-export const NodeLanguageServerVersionKey = 'languageServerVersionV2';
+import { FolderVersionPair, ILanguageServerFolderService, NodeLanguageServerFolder } from '../types';
 
 class FallbackNodeLanguageServerFolderService extends LanguageServerFolderService {
     constructor(serviceContainer: IServiceContainer) {
@@ -31,62 +24,95 @@ class FallbackNodeLanguageServerFolderService extends LanguageServerFolderServic
     }
 }
 
+// Exported for testing.
+export interface ILanguageServerFolder {
+    path: string;
+    version: string; // SemVer, in string form to avoid cross-extension type issues.
+}
+
+// Exported for testing.
+export interface ILSExtensionApi {
+    languageServerFolder?(): Promise<ILanguageServerFolder>;
+}
+
 @injectable()
 export class NodeLanguageServerFolderService implements ILanguageServerFolderService {
-    private readonly _bundledVersion: semver.SemVer | undefined;
     private readonly fallback: FallbackNodeLanguageServerFolderService;
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IApplicationEnvironment) appEnv: IApplicationEnvironment
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IExtensions) readonly extensions: IExtensions
     ) {
         this.fallback = new FallbackNodeLanguageServerFolderService(serviceContainer);
-
-        // downloadLanguageServer is a bit of a misnomer; if false then this indicates that a local
-        // development copy should be run instead of a "real" build, telemetry discarded, etc.
-        // So, we require it to be true, even though in the bundled case no real download happens.
-        if (
-            configService.getSettings().downloadLanguageServer &&
-            !workspaceService.getConfiguration('python').get<string>('packageName')
-        ) {
-            const ver = appEnv.packageJson[NodeLanguageServerVersionKey] as string;
-            this._bundledVersion = semver.parse(ver) || undefined;
-            if (this._bundledVersion === undefined) {
-                traceWarning(
-                    `invalid language server version ${ver} in package.json (${NodeLanguageServerVersionKey})`
-                );
-            }
-        }
     }
 
-    public get bundledVersion(): semver.SemVer | undefined {
-        return this._bundledVersion;
-    }
-
-    public isBundled(): boolean {
-        return this._bundledVersion !== undefined;
+    public async skipDownload(): Promise<boolean> {
+        return (await this.lsExtensionApi()) !== undefined;
     }
 
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
-        if (this._bundledVersion) {
-            return BundledLanguageServerFolder;
+        const lsf = await this.languageServerFolder();
+        if (lsf) {
+            assert.ok(path.isAbsolute(lsf.path));
+            return lsf.path;
         }
         return this.fallback.getLanguageServerFolderName(resource);
     }
 
     public async getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
-        if (this._bundledVersion) {
+        if (await this.lsExtensionApi()) {
             return undefined;
         }
         return this.fallback.getLatestLanguageServerVersion(resource);
     }
 
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
-        if (this._bundledVersion) {
-            return { path: BundledLanguageServerFolder, version: this._bundledVersion };
+        const lsf = await this.languageServerFolder();
+        if (lsf) {
+            assert.ok(path.isAbsolute(lsf.path));
+            return {
+                path: lsf.path,
+                version: new SemVer(lsf.version)
+            };
         }
         return this.fallback.getCurrentLanguageServerDirectory();
+    }
+
+    protected async languageServerFolder(): Promise<ILanguageServerFolder | undefined> {
+        const extension = await this.lsExtensionApi();
+        if (!extension?.languageServerFolder) {
+            return undefined;
+        }
+        return extension.languageServerFolder();
+    }
+
+    private async lsExtensionApi(): Promise<ILSExtensionApi | undefined> {
+        // downloadLanguageServer is a bit of a misnomer; if false then this indicates that a local
+        // development copy should be run instead of a "real" build, telemetry discarded, etc.
+        // So, we require it to be true, even though in the pinned case no real download happens.
+        if (
+            !this.configService.getSettings().downloadLanguageServer ||
+            this.workspaceService.getConfiguration('python').get<string>('packageName')
+        ) {
+            return undefined;
+        }
+
+        const extensionName = this.workspaceService.getConfiguration('python').get<string>('lsExtensionName');
+        if (!extensionName) {
+            return undefined;
+        }
+
+        const extension = this.extensions.getExtension<ILSExtensionApi>(extensionName);
+        if (!extension) {
+            return undefined;
+        }
+
+        if (!extension.isActive) {
+            return extension.activate();
+        }
+
+        return extension.exports;
     }
 }

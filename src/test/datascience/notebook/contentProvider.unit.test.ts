@@ -62,6 +62,9 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
+
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: (vscodeNotebookEnums as any).CellKind.Code,
@@ -73,10 +76,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     executionOrder: 10,
                     hasExecutionOrder: true,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Success,
-                    runnable: true,
-                    custom: {
-                        cellId: 'MyCellId1'
-                    }
+                    runnable: true
                 }
             },
             {
@@ -89,10 +89,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                     executionOrder: undefined,
                     hasExecutionOrder: false,
                     runState: (vscodeNotebookEnums as any).NotebookCellRunState.Idle,
-                    runnable: false,
-                    custom: {
-                        cellId: 'MyCellId2'
-                    }
+                    runnable: false
                 }
             }
         ]);
