@@ -10,12 +10,12 @@ import {
     LanguageClientOptions
 } from 'vscode-languageclient';
 
+import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';
-import { IConfigurationService, IInterpreterPathService, Resource } from '../../common/types';
+import { IConfigurationService, IExperimentsManager, IInterpreterPathService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -35,11 +35,12 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     private lsVersion: string | undefined;
 
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -102,12 +103,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             const progressReporting = new ProgressReporting(this.languageClient!);
             this.disposables.push(progressReporting);
 
-            const interpreterPathService = this.serviceContainer.tryGet<IInterpreterPathService>(
-                IInterpreterPathService
-            );
-            if (interpreterPathService) {
+            if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
                 this.disposables.push(
-                    interpreterPathService.onDidChange(() => {
+                    this.interpreterPathService.onDidChange(() => {
                         // Manually send didChangeConfiguration in order to get the server to requery
                         // the workspace configurations (to then pick up pythonPath set in the middleware).
                         // This is needed as interpreter changes via the interpreter path service happen
