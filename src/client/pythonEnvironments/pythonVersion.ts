@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as semver from 'semver';
+import { SemVer } from 'semver';
 import '../common/extensions'; // For string.splitLines()
-import * as internalPython from '../common/process/internal/python';
+import { getVersion as getPythonVersionCommand } from '../common/process/internal/python';
 
 export type PythonVersion = {
     raw: string;
@@ -50,7 +50,7 @@ export function parsePythonVersion(raw: string): PythonVersion | undefined {
     }
     const numberParts = `${versionParts[0]}.${versionParts[1]}.${versionParts[2]}`;
     const rawVersion = versionParts.length === 4 ? `${numberParts}-${versionParts[3]}` : numberParts;
-    return new semver.SemVer(rawVersion);
+    return new SemVer(rawVersion);
 }
 
 type ExecutionResult = {
@@ -59,7 +59,7 @@ type ExecutionResult = {
 type ExecFunc = (command: string, args: string[]) => Promise<ExecutionResult>;
 
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
-    const [args, parse] = internalPython.getVersion();
+    const [args, parse] = getPythonVersionCommand();
     return exec(pythonPath, args)
         .then((result) => parse(result.stdout).splitLines()[0])
         .then((version) => (version.length === 0 ? defaultValue : version))
