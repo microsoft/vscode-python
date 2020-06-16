@@ -12,12 +12,13 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
 
 export function getInteractiveCellResults(
+    ioc: DataScienceIocContainer,
     // tslint:disable-next-line: no-any
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     updater: () => Promise<void>
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults('default', wrapper, 'InteractiveCell', updater);
+    return getCellResults(ioc, 'default', wrapper, 'InteractiveCell', updater);
 }
 
 export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
@@ -71,7 +72,7 @@ export async function addCode(
     // 3) Execute_Input message
     // 4) Output message (if there's only one)
     // 5) Status finished
-    return getInteractiveCellResults(wrapper, async () => {
+    return getInteractiveCellResults(ioc, wrapper, async () => {
         const history = await getOrCreateInteractiveWindow(ioc);
         const success = await history.addCode(code, uri.fsPath, 2);
         if (expectError) {

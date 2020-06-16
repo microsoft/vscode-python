@@ -24,7 +24,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getMountedWebPanel, WaitForMessageOptions } from './mountedWebPanel';
+import { WaitForMessageOptions } from './mountedWebView';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 export * from './testHelpersCore';
 
@@ -457,6 +457,7 @@ export function verifyLastCellInputState(
 }
 
 export async function getCellResults(
+    ioc: DataScienceIocContainer,
     type: 'notebook' | 'default',
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     cellType: string,
@@ -466,7 +467,7 @@ export async function getCellResults(
     // Get a render promise with the expected number of renders
     const renderPromise = renderPromiseGenerator
         ? renderPromiseGenerator()
-        : getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        : ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
@@ -530,10 +531,10 @@ export function simulateKey(
     }
 }
 
-export async function submitInput(type: 'notebook' | 'default', textArea: HTMLTextAreaElement): Promise<void> {
+export async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+    const renderPromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
     // Submit a keypress into the textarea
     simulateKey(textArea, 'Enter', true);
@@ -664,6 +665,7 @@ function getTextArea(
 
 export async function enterInput(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    ioc: DataScienceIocContainer,
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
@@ -673,7 +675,7 @@ export async function enterInput(
     const textArea = typeCode(editor, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
-    await submitInput(resultClass === 'InteractiveCell' ? 'default' : 'notebook', textArea!);
+    await submitInput(ioc, textArea!);
 
     // Return the result
     return wrapper.find(resultClass);
@@ -758,6 +760,10 @@ export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, Re
     }
 }
 
-export async function waitForVariablesUpdated(type: 'notebook' | 'default', numberOfTimes?: number): Promise<void> {
-    return getMountedWebPanel(type).waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
+export async function waitForVariablesUpdated(
+    ioc: DataScienceIocContainer,
+    type: 'default' | 'notebook',
+    numberOfTimes?: number
+): Promise<void> {
+    return ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }

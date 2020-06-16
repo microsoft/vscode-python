@@ -12,7 +12,6 @@ import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getMountedWebPanel } from './mountedWebPanel';
 import {
     addMockData,
     getCellResults,
@@ -27,7 +26,7 @@ import {
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
     const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
-    const messageWaiter = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
+    const messageWaiter = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
     if (uri) {
         editor = await notebookEditorProvider.open(uri);
     } else {
@@ -56,11 +55,12 @@ export async function openEditor(
 
 // tslint:disable-next-line: no-any
 export function getNativeCellResults(
+    ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     updater: () => Promise<void>,
     renderPromiseGenerator?: () => Promise<void>
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults('notebook', wrapper, 'NativeCell', updater, renderPromiseGenerator);
+    return getCellResults(ioc, 'notebook', wrapper, 'NativeCell', updater, renderPromiseGenerator);
 }
 
 // tslint:disable-next-line:no-any
@@ -93,14 +93,16 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
     }
 }
 
-export function focusCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): Promise<void> {
+export function focusCell(
+    ioc: DataScienceIocContainer,
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    index: number
+): Promise<void> {
     const cell = wrapper.find(NativeCell).at(index);
     if (cell) {
         const vm = cell.props().cellVM;
         if (!vm.focused) {
-            const focusChange = getMountedWebPanel('notebook').waitForMessage(
-                InteractiveWindowMessages.FocusedCellEditor
-            );
+            const focusChange = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
             cell.props().focusCell(vm.cell.id, CursorPos.Current);
             return focusChange;
         }
@@ -110,6 +112,7 @@ export function focusCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Compone
 
 // tslint:disable-next-line: no-any
 export async function addCell(
+    ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     code: string,
     submit: boolean = true
@@ -120,7 +123,7 @@ export async function addCell(
     const ImageButtons = toolbar.find(ImageButton);
     assert.equal(ImageButtons.length, 10, 'Toolbar buttons not found');
     const addButton = ImageButtons.at(5);
-    let update = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
+    let update = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
     await update;
@@ -134,14 +137,14 @@ export async function addCell(
 
     if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
-        update = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        update = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
         return update;
     }
 }
 
-export function closeNotebook(editor: INotebookEditor): Promise<void> {
+export function closeNotebook(ioc: DataScienceIocContainer, editor: INotebookEditor): Promise<void> {
     const promise = editor.dispose();
-    getMountedWebPanel('notebook').dispose();
+    ioc.getWebPanel('notebook').dispose();
     return promise;
 }

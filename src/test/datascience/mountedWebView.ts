@@ -1,7 +1,6 @@
 import { ReactWrapper } from 'enzyme';
 import { noop } from 'lodash';
 import { Uri } from 'vscode';
-import * as vsls from 'vsls/vscode';
 import {
     IWebPanel,
     IWebPanelMessageListener,
@@ -47,9 +46,7 @@ export interface IMountedWebView extends IWebPanel, IDisposable {
     waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void>;
 }
 
-const map = new Map<string, MountedWebPanel>();
-
-class MountedWebPanel implements IMountedWebView, IDisposable {
+export class MountedWebView implements IMountedWebView, IDisposable {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
     private missedMessages: any[] = [];
     private webPanelListener: IWebPanelMessageListener | undefined;
@@ -59,7 +56,11 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
     private active = true;
     private visible = true;
 
-    constructor(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, public readonly id: string) {
+    constructor(
+        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
+        public readonly id: string,
+        private disposedCallback: () => void
+    ) {
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {
@@ -207,7 +208,7 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
             if (this.wrapper.length) {
                 this.wrapper.unmount();
             }
-            map.delete(this.id);
+            this.disposedCallback();
         }
     }
 
@@ -246,39 +247,4 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
             this.dispose();
         }
     }
-}
-
-function generateKey(id: string, role?: vsls.Role) {
-    if (!role || role === vsls.Role.Host) {
-        return id;
-    }
-    return `${id}_guest`;
-}
-
-export function createMountedWebPanel(
-    mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
-    id: string,
-    role: vsls.Role
-): IMountedWebView {
-    const key = generateKey(id, role);
-    if (map.has(key)) {
-        throw new Error(`Mounting the same object more than once: ${id}`);
-    }
-    const obj = new MountedWebPanel(mount, key);
-    map.set(key, obj);
-    return obj;
-}
-
-export function getMountedWebPanel(id: string, role?: vsls.Role): IMountedWebView {
-    const key = generateKey(id, role);
-    const obj = map.get(key);
-    if (!obj) {
-        throw new Error(`Mounted web panel does not exist for ${key}`);
-    }
-    return obj;
-}
-
-export function disposeMountedPanels() {
-    map.forEach((v) => v.dispose());
-    map.clear();
 }

@@ -16,7 +16,6 @@ import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
-import { getMountedWebPanel } from './mountedWebPanel';
 import * as NativeHelpers from './nativeEditorTestHelpers';
 import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
 
@@ -451,7 +450,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
             'Hover on notebook',
             async (wrapper) => {
                 // Create an notebook so that it listens to the results.
-                const kernelIdle = getMountedWebPanel('notebook').waitForMessage(InteractiveWindowMessages.KernelIdle);
+                const kernelIdle = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.KernelIdle);
                 const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
                 await notebook.show();
                 await kernelIdle;
@@ -459,7 +458,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                 // Cause a hover event over the first character
                 await waitForHover('Native', wrapper, 1, 1);
                 verifyHoverVisible('Native', wrapper, 'a=1\na');
-                await NativeHelpers.closeNotebook(notebook);
+                await NativeHelpers.closeNotebook(ioc, notebook);
             },
             () => {
                 return ioc;

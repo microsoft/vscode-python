@@ -417,7 +417,7 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
-import { createMountedWebPanel, disposeMountedPanels, getMountedWebPanel } from './mountedWebPanel';
+import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
@@ -491,7 +491,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private experimentState = new Map<string, boolean>();
     private extensionRootPath: string | undefined;
     private languageServerType: LanguageServerType = LanguageServerType.Microsoft;
-    private role: vsls.Role = vsls.Role.None;
 
     constructor(private readonly uiTest: boolean = false) {
         super();
@@ -558,7 +557,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.settingsMap.clear();
         this.configMap.clear();
         this.setContexts = {};
-        disposeMountedPanels();
         reset(this.webPanelProvider);
 
         // Turn off the static maps for the environment and conda services. Otherwise this
@@ -600,6 +598,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
         }
 
+        this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
@@ -1308,23 +1307,26 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (role !== vsls.Role.None) {
             const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
             liveShareTest.forceRole(role);
-            this.role = role;
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        return createMountedWebPanel(mount, type, role).wrapper;
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(type, mount).wrapper;
     }
 
     public getDefaultWrapper() {
-        return getMountedWebPanel('default', this.role).wrapper;
+        return this.getDefaultWebPanel().wrapper;
     }
 
     public getDefaultWebPanel() {
-        return getMountedWebPanel('default', this.role);
+        return this.getWebPanel('default');
+    }
+
+    public getWebPanel(type: 'notebook' | 'default') {
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type);
     }
 
     public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
-        return getMountedWebPanel(type, this.role).postMessage(m);
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type).postMessage(m);
     }
 
     public getContext(name: string): boolean {
@@ -1431,7 +1433,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
     public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
-        const webPanel = getMountedWebPanel(type, this.role);
+        const webPanel = this.getWebPanel(type);
         if (webPanel) {
             webPanel.changeViewState(active, visible);
         }
@@ -1454,7 +1456,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private computeWebPanelId(title: string): string {
+    private computeWebPanelId(title: string): 'notebook' | 'default' {
         // Should be based on title (for now)
         if (title && (title.toLowerCase().endsWith('.ipynb') || title.toLowerCase().includes('notebook'))) {
             return `notebook`;
@@ -1465,7 +1467,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private async onCreateWebPanel(options: IWebPanelOptions) {
         const id = this.computeWebPanelId(options.title);
-        const panel = getMountedWebPanel(id, this.role);
+        const panel = this.getWebPanel(id);
         this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
         panel.attach(options);
         return panel;
