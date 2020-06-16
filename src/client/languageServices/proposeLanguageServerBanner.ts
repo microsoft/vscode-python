@@ -30,7 +30,8 @@ const bannerShowRate: Map<LanguageServerType, number> = new Map([
     [LanguageServerType.Node, 0],
     [LanguageServerType.Microsoft, 50],
     [LanguageServerType.None, 50],
-    [LanguageServerType.Jedi, 10]
+    // Banner for Jedi users is suppressed until further notice.
+    [LanguageServerType.Jedi, 0]
 ]);
 
 @injectable()
@@ -52,12 +53,7 @@ export class ProposeLanguageServerBanner extends BannerBase {
         disableGeneralAudienceUntil: Date = new Date('July 7, 2020 0:0:1')
     ) {
         super(ProposeLSStateKeys.ProposeLSBanner, persistentState);
-        if (this.appEnvirontment.channel === 'insiders') {
-            // If this is insiders build, everyone gets the banner once. Default is 10%.
-            this.sampleSizePerHundred = 100;
-            return;
-        }
-        // Banner for general audience is suppressed until July 7th 2020.
+        // Banner is suppressed until July 7th 2020.
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: remove this eventually.
         const now = new Date();
@@ -68,6 +64,13 @@ export class ProposeLanguageServerBanner extends BannerBase {
         ) {
             this.sampleSizePerHundred = 0;
             this.disable();
+            return;
+        }
+
+        if (this.appEnvirontment.channel === 'insiders') {
+            // If this is insiders build, everyone gets the banner once
+            // after the specified date.
+            this.sampleSizePerHundred = 100;
             return;
         }
 
