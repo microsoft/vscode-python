@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.6.0 (15 June 2020)
+## 2020.6.0 (16 June 2020)
 
 ### Enhancements
 
