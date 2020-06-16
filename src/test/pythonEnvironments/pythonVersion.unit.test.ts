@@ -16,7 +16,7 @@ interface IDeps {
 }
 
 suite('parsePythonVersion()', () => {
-    test('Must convert undefined if empty strinfg', async () => {
+    test('Must convert undefined if empty string', async () => {
         assert.equal(sut.parsePythonVersion(undefined as any), undefined);
         assert.equal(sut.parsePythonVersion(''), undefined);
     });
