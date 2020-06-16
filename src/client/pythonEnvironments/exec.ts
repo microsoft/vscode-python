@@ -9,13 +9,13 @@ export type PythonExecInfo = {
 };
 
 export function getPythonExecInfo(python: string | string[], pythonArgs?: string[]): PythonExecInfo {
-    if (typeof python === 'string') {
-        return { command: python, args: pythonArgs || [], python: [python] };
-    } else {
+    if (Array.isArray(python)) {
         const args = python.slice(1);
         if (pythonArgs) {
             args.push(...pythonArgs);
         }
         return { command: python[0], args, python };
+    } else {
+        return { command: python, args: pythonArgs || [], python: [python] };
     }
 }
