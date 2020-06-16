@@ -48,10 +48,10 @@ export function parsePythonVersion(raw: string): PythonVersion | undefined {
     return new SemVer(rawVersion);
 }
 
-type ExecutionResult = {
+type ExecResult = {
     stdout: string;
 };
-type ExecFunc = (command: string, args: string[]) => Promise<ExecutionResult>;
+type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonVersionCommand();
