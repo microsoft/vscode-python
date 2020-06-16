@@ -40,6 +40,9 @@ suite('DataScience - Export HTML', () => {
         );
 
         assert.equal(await fileSystem.fileExists(target.fsPath), true);
-        assert.equal(path.extname(target.fsPath), '.html');
+
+        const fileContents = await fileSystem.readFile(target.fsPath);
+        assert.include(path.extname(target.fsPath), '.htm');
+        assert.include(fileContents, '<!DOCTYPE html>');
     });
 });
