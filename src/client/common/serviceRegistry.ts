@@ -4,7 +4,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
 import { DigestStorage } from '../datascience/interactive-ipynb/trustService';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
-import { INotebookExecutionLogger } from '../datascience/types';
+import { INotebookExecutionLogger, IDigestStorage } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -30,7 +30,6 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDebugService,
-    IDigestStorage,
     IDocumentManager,
     ILanguageService,
     ILiveShareApi,

@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Database, OPEN_CREATE, OPEN_READWRITE, RunResult } from 'sqlite3';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IExperimentsManager, IPathUtils } from '../../common/types';
+import { /*IExperimentsManager,*/ IPathUtils } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 import { IDigestStorage, ITrustService } from '../types';
 
@@ -183,7 +183,7 @@ export class TrustService implements ITrustService {
     private notebookTrust: INotebookTrust | undefined;
 
     constructor(
-        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
+        // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
     ) {
         this.notebookTrust = new NotebookTrust(this.digestStorage, 'sha256');

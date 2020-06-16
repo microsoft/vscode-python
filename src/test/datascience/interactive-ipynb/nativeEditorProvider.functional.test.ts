@@ -41,7 +41,8 @@ import {
     IJupyterExecution,
     INotebookEditor,
     INotebookModel,
-    INotebookServerOptions
+    INotebookServerOptions,
+    ITrustService
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -63,6 +64,7 @@ suite('DataScience - Native Editor Provider', () => {
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
+    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -207,7 +209,8 @@ suite('DataScience - Native Editor Provider', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            trustService
         );
 
         const storage = new NotebookStorageProvider(notebookStorage, [], instance(workspace));

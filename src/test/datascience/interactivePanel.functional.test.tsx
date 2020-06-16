@@ -82,6 +82,7 @@ suite('DataScience Interactive Panel', () => {
             linkClick: noopAny,
             loaded: true,
             monacoReady: true,
+            notebookIsTrusted: true,
             openSettings: noopAny,
             redo: noopAny,
             redoStack: [],
