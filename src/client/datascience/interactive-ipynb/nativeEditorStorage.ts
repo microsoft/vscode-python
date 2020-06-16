@@ -729,7 +729,7 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        const isTrusted = contents ? await this.trustService.isNotebookTrusted(contents) : true;
+        const isTrusted = contents ? await this.trustService.isNotebookTrusted(contents) : true; // If no contents, this is a newly created notebook, so set to true
         return new NativeEditorNotebookModel(
             isTrusted,
             file,
