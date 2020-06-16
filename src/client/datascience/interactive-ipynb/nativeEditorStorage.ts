@@ -520,8 +520,7 @@ export class NativeEditorStorage implements INotebookStorage {
     }
 
     public generateBackupId(model: INotebookModel): string {
-        const key = this.getStaticStorageKey(model.file);
-        return `${key}-${uuid()}`;
+        return `${path.basename(model.file.fsPath)}-${uuid()}`;
     }
 
     public load(file: Uri, possibleContents?: string, backupId?: string): Promise<INotebookModel>;

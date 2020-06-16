@@ -89,7 +89,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
         _cancellation: CancellationToken
     ): Promise<CustomDocument> {
-        const model = await this.loadModel(uri, undefined, context.backupId ? false : true);
+        const model = await this.loadModel(uri, undefined, context.backupId);
         return {
             uri,
             dispose: () => model.dispose()
@@ -175,12 +175,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
+    public async loadModel(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: no-any
+    public async loadModel(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
         // Every time we load a new untitled file, up the counter past the max value for this counter
         this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
 
         // Load our model from our storage object.
-        const model = await this.storage.load(file, contents, skipDirtyContents);
+        const model = await this.storage.load(file, contents, options);
 
         // Make sure to listen to events on the model
         this.trackModel(model);
