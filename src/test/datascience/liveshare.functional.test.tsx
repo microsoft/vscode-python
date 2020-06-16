@@ -57,8 +57,12 @@ suite('DataScience LiveShare tests', () => {
                 await promise;
             }
         }
-        await hostContainer.dispose();
-        await guestContainer.dispose();
+        if (hostContainer) {
+            await hostContainer.dispose();
+        }
+        if (guestContainer) {
+            await guestContainer.dispose();
+        }
         lastErrorMessage = undefined;
     });
 
