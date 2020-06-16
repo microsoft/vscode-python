@@ -116,11 +116,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         cancellation: CancellationToken
     ): Promise<CustomDocumentBackup> {
         const model = await this.loadModel(document.uri);
-        const id = this.storage.getBackupId(model);
-        this.storage.backup(model, cancellation).ignoreErrors();
+        const id = this.storage.generateBackupId(model);
+        await this.storage.backup(model, cancellation, id);
         return {
             id,
-            delete: () => this.storage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+            delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
 

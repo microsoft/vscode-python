@@ -74,11 +74,11 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup> {
         const model = await this.notebookStorage.load(document.uri);
-        const id = this.notebookStorage.getBackupId(model);
-        this.notebookStorage.backup(model, cancellation).ignoreErrors();
+        const id = this.notebookStorage.generateBackupId(model);
+        await this.notebookStorage.backup(model, cancellation, id);
         return {
             id,
-            delete: () => this.notebookStorage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+            delete: () => this.notebookStorage.deleteBackup(model, id).ignoreErrors()
         };
     }
 }

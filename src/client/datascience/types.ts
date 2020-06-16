@@ -1031,13 +1031,15 @@ export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
     readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
-    getBackupId(model: INotebookModel): string;
+    generateBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
+    load(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
     load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
     revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
-    deleteBackup(model: INotebookModel): Promise<void>;
+    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
