@@ -296,6 +296,19 @@ export namespace DataScience {
         'DataScience.badWebPanelFormatString',
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
     );
+    export const checkingIfImportIsSupported = localize(
+        'DataScience.checkingIfImportIsSupported',
+        'Checking if import is supported'
+    );
+    export const installingMissingDependencies = localize(
+        'DataScience.installingMissingDependencies',
+        'Installing missing dependencies'
+    );
+    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const exportNotebookToPython = localize(
+        'DataScience.exportNotebookToPython',
+        'Exporting Notebook to Python'
+    );
     export const sessionDisposed = localize(
         'DataScience.sessionDisposed',
         'Cannot execute code, session has been disposed.'

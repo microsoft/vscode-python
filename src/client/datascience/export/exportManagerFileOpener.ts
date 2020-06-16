@@ -26,19 +26,20 @@ export class ExportManagerFileOpener implements IExportManager {
         let uri: Uri | undefined;
         try {
             uri = await this.manager.export(format, model);
-            if (!uri) {
-                await this.showExportFailed();
-                return;
-            }
+        } catch (e) {
+            await this.showExportFailed(e);
         } finally {
             reporter.dispose();
         }
 
-        if (format === ExportFormat.python) {
-            await this.openPythonFile(uri);
-        } else {
-            await this.askOpenFile(uri);
+        if (uri) {
+            if (format === ExportFormat.python) {
+                await this.openPythonFile(uri);
+            } else {
+                await this.askOpenFile(uri);
+            }
         }
+        return;
     }
 
     private async openPythonFile(uri: Uri): Promise<void> {
@@ -48,8 +49,11 @@ export class ExportManagerFileOpener implements IExportManager {
         await this.documentManager.showTextDocument(doc);
     }
 
-    private async showExportFailed() {
-        await this.applicationShell.showErrorMessage(getLocString('DataScience.failedExportMessage', 'Export failed'));
+    private async showExportFailed(msg: string) {
+        await this.applicationShell.showErrorMessage(
+            // tslint:disable-next-line: messages-must-be-localized
+            `${getLocString('DataScience.failedExportMessage', 'Export failed')} ${msg}`
+        );
     }
 
     private async askOpenFile(uri: Uri): Promise<void> {

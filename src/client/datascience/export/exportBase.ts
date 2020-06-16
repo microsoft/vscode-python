@@ -2,6 +2,8 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
 import { IExport } from './types';
 
@@ -18,6 +20,7 @@ export class ExportBase implements IExport {
     // tslint:disable-next-line: no-empty
     public async export(_source: Uri, _target: Uri): Promise<void> {}
 
+    @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(source: Uri, args: string[]): Promise<void> {
         const service = await this.getExecutionService(source);
         if (!service) {
