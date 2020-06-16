@@ -9,6 +9,7 @@ import { OSType } from '../../common/utils/platform';
 import { IDigestStorage, ITrustService } from '../types';
 
 // Our implementation of the IDigestStorage interface, which internally uses a SQLite database
+// NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
     private defaultDatabaseLocation: string;
@@ -184,7 +185,9 @@ export class TrustService implements ITrustService {
     constructor(
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
-    ) {}
+    ) {
+        this.notebookTrust = new NotebookTrust(this.digestStorage, 'sha256');
+    }
 
     /**
      * When a notebook is opened, we check the database to see if a trusted checkpoint
@@ -194,7 +197,6 @@ export class TrustService implements ITrustService {
      * markdown will be rendered until notebook as a whole is marked trusted
      */
     public async isNotebookTrusted(notebookContents: string) {
-        await this.initNotebookTrust();
         // Compute digest and see if notebook is trusted
         return this.notebookTrust!.isNotebookTrusted(notebookContents);
     }
@@ -205,16 +207,9 @@ export class TrustService implements ITrustService {
      * I.e. if the notebook has already been trusted by the user
      */
     public async updateTrust(notebookContents: string, notebookModelIsTrusted: boolean) {
-        await this.initNotebookTrust();
         if (notebookModelIsTrusted) {
             await this.notebookTrust!.trustNotebook(notebookContents);
         }
         // Otherwise, do nothing
-    }
-
-    private async initNotebookTrust() {
-        if (this.notebookTrust === undefined) {
-            this.notebookTrust = new NotebookTrust(this.digestStorage, 'sha256');
-        }
     }
 }

@@ -15,7 +15,15 @@ import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel, INotebookStorage } from '../types';
+import {
+    CellState,
+    ICell,
+    IJupyterExecution,
+    IJupyterKernelSpec,
+    INotebookModel,
+    INotebookStorage,
+    ITrustService
+} from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
@@ -33,6 +41,7 @@ interface INativeEditorStorageState {
     changeCount: number;
     saveChangeCount: number;
     notebookJson: Partial<nbformat.INotebookContent>;
+    isTrusted: boolean;
 }
 
 export function isUntitledFile(file?: Uri) {
@@ -94,6 +103,9 @@ export class NativeEditorNotebookModel implements INotebookModel {
     public get id() {
         return this._id;
     }
+    public get isTrusted() {
+        return this._state.isTrusted;
+    }
     private _disposed = new EventEmitter<void>();
     private _isDisposed?: boolean;
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
@@ -103,12 +115,14 @@ export class NativeEditorNotebookModel implements INotebookModel {
         changeCount: 0,
         saveChangeCount: 0,
         cells: [],
-        notebookJson: {}
+        notebookJson: {},
+        isTrusted: false
     };
 
     private _id = uuid();
 
     constructor(
+        isTrusted: boolean,
         file: Uri,
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
@@ -119,6 +133,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
         this._state.file = file;
         this._state.cells = cells;
         this._state.notebookJson = json;
+        this._state.isTrusted = isTrusted;
         this.ensureNotebookJson();
         if (isInitiallyDirty) {
             // This means we're dirty. Indicate dirty and load from this content
@@ -134,6 +149,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
     public clone(file: Uri) {
         return new NativeEditorNotebookModel(
+            this._state.isTrusted,
             file,
             cloneDeep(this._state.cells),
             cloneDeep(this._state.notebookJson),
@@ -499,7 +515,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
+        @inject(ITrustService) private trustService: ITrustService
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -511,6 +527,7 @@ export class NativeEditorStorage implements INotebookStorage {
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
         await this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8');
+        await this.trustService.updateTrust(contents, model.isTrusted);
         model.update({
             source: 'user',
             kind: 'save',
@@ -524,6 +541,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const old = model.file;
         const contents = model.getContent();
         await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
+        await this.trustService.updateTrust(contents, model.isTrusted);
         model.update({
             source: 'user',
             kind: 'saveAs',
@@ -660,7 +678,7 @@ export class NativeEditorStorage implements INotebookStorage {
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return new NativeEditorNotebookModel(file, []);
+            return new NativeEditorNotebookModel(false, file, []); // Distrust notebook on error
         }
     }
 
@@ -711,7 +729,16 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        return new NativeEditorNotebookModel(file, remapped, json, indentAmount, pythonNumber, isInitiallyDirty);
+        const isTrusted = contents ? await this.trustService.isNotebookTrusted(contents) : true;
+        return new NativeEditorNotebookModel(
+            isTrusted,
+            file,
+            remapped,
+            json,
+            indentAmount,
+            pythonNumber,
+            isInitiallyDirty
+        );
     }
 
     private getStorageKey(file: Uri): string {
