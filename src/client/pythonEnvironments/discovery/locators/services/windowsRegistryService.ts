@@ -183,14 +183,14 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         : InterpreterType.Unknown
                 } as PythonInterpreter;
             })
-            .then((interpreter) => {
-                return interpreter
+            .then((interpreter) =>
+                interpreter
                     ? this.fs
                           .fileExists(interpreter.path)
                           .catch(() => false)
                           .then((exists) => (exists ? interpreter : null))
-                    : null;
-            })
+                    : null
+            )
             .catch((error) => {
                 traceError(
                     `Failed to retrieve interpreter details for company ${companyKey},tag: ${tagKey}, hive: ${hive}, arch: ${arch}`,
