@@ -1655,10 +1655,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
-    [Telemetry.PtvsdInstallCancelled]: never | undefined;
-    [Telemetry.PtvsdInstallFailed]: never | undefined;
-    [Telemetry.PtvsdPromptToInstall]: never | undefined;
-    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
+    [Telemetry.DebugpyInstallCancelled]: never | undefined;
+    [Telemetry.DebugpyInstallFailed]: never | undefined;
+    [Telemetry.DebugpyPromptToInstall]: never | undefined;
+    [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
     [Telemetry.OpenedInteractiveWindow]: never | undefined;

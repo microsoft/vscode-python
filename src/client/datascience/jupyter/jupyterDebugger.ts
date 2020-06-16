@@ -244,7 +244,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
         // tslint:disable-next-line:no-multiline-string
-        let settingsPath = this.configService.getSettings(notebook.resource).datascience.ptvsdDistPath;
+        let settingsPath = this.configService.getSettings(notebook.resource).datascience.debugpyDistPath;
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {
             if (this.platform.isWindows) {
@@ -376,7 +376,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return version.major > required.major || (version.major === required.major && version.minor >= required.minor);
     }
 
-    @captureTelemetry(Telemetry.PtvsdPromptToInstall)
+    @captureTelemetry(Telemetry.DebugpyPromptToInstall)
     private async promptToInstallDebugger(
         notebook: INotebook,
         oldVersion: Version | undefined,
@@ -399,7 +399,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             await this.installDebugger(notebook);
         } else {
             // If they don't want to install, throw so we exit out of debugging
-            sendTelemetryEvent(Telemetry.PtvsdInstallCancelled);
+            sendTelemetryEvent(Telemetry.DebugpyInstallCancelled);
             throw new JupyterDebuggerNotInstalledError(this.debuggerPackage);
         }
     }
@@ -416,13 +416,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             const installResultsString = this.extractOutput(debuggerInstallResults[0]);
 
             if (installResultsString && installResultsString.includes('Successfully installed')) {
-                sendTelemetryEvent(Telemetry.PtvsdSuccessfullyInstalled);
+                sendTelemetryEvent(Telemetry.DebugpySuccessfullyInstalled);
                 traceInfo(`${this.debuggerPackage} successfully installed`);
                 return;
             }
         }
         traceCellResults(`Installing ${this.debuggerPackage}`, debuggerInstallResults);
-        sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
+        sendTelemetryEvent(Telemetry.DebugpyInstallFailed);
         traceError(`Failed to install ${this.debuggerPackage}`);
         // Failed to install debugger, throw to exit debugging
         throw new JupyterDebuggerNotInstalledError(this.debuggerPackage);
