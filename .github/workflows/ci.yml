@@ -172,11 +172,11 @@ jobs:
       - uses: goanpeca/setup-miniconda@v1
         with:
           miniconda-version: "latest"
-      - name: Sh
-        shell: sh -l {0}
-        run: |
-          conda info
-          conda list
+    #   - name: Sh
+    #     shell: sh -l {0}
+    #     run: |
+    #       conda info
+    #       conda list
       - name: Bash
         shell: bash -l {0}
         run: |
@@ -246,11 +246,11 @@ jobs:
       - uses: goanpeca/setup-miniconda@v1
         with:
           miniconda-version: "4.6.14"
-      - name: Sh
-        shell: sh -l {0}
-        run: |
-          conda info
-          conda list
+    #   - name: Sh
+    #     shell: sh -l {0}
+    #     run: |
+    #       conda info
+    #       conda list
       - name: Bash
         shell: bash -l {0}
         run: |
