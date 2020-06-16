@@ -12,6 +12,7 @@ import { ExportManagerFileOpener } from '../../../client/datascience/export/expo
 import { ExportFormat, IExportManager } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel } from '../../../client/datascience/types';
+import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
 suite('Data Science - Export File Opener', () => {
     let fileOpener: ExportManagerFileOpener;
@@ -51,11 +52,33 @@ suite('Data Science - Export File Opener', () => {
         verify(documentManager.showTextDocument(anything())).never();
     });
     test('Python File is opened if exported', async () => {
-        const uri = Uri.file('blah.python');
+        const uri = Uri.file('test.python');
         when(exporter.export(anything(), anything())).thenResolve(uri);
 
         await fileOpener.export(ExportFormat.python, model);
 
         verify(documentManager.showTextDocument(anything())).once();
+    });
+    test('HTML File opened if yes button pressed', async () => {
+        const uri = Uri.file('test.html');
+        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
+            Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
+        );
+
+        await fileOpener.export(ExportFormat.html, model);
+
+        verify(browserService.launch(anything())).once();
+    });
+    test('HTML File not opened if no button button pressed', async () => {
+        const uri = Uri.file('test.html');
+        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
+            Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
+        );
+
+        await fileOpener.export(ExportFormat.html, model);
+
+        verify(browserService.launch(anything())).never();
     });
 });

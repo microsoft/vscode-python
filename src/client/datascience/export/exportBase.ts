@@ -1,8 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem } from '../../common/platform/types';
-import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../../common/process/types';
-import { JupyterDaemonModule } from '../constants';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../common/process/types';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
 import { IExport } from './types';
 
@@ -16,23 +15,22 @@ export class ExportBase implements IExport {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
     ) {}
 
-    public async export(_source: Uri, _target: Uri): Promise<void> {
-        return;
-    }
+    // tslint:disable-next-line: no-empty
+    public async export(_source: Uri, _target: Uri): Promise<void> {}
 
-    protected async getDaemon(): Promise<IPythonDaemonExecutionService | undefined> {
-        const interpreter = await this.jupyterService.getSelectedInterpreter();
-        if (!interpreter) {
+    public async executeCommand(source: Uri, args: string[]): Promise<void> {
+        const service = await this.getExecutionService(source);
+        if (!service) {
             return;
         }
-
-        return this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
-            daemonModule: JupyterDaemonModule,
-            pythonPath: interpreter.path
-        });
+        await service.execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8' });
     }
 
-    protected async writeFile(file: Uri, content: string): Promise<void> {
-        await this.fileSystem.writeFile(file.fsPath, content, { encoding: 'utf-8' });
+    protected async getExecutionService(source: Uri): Promise<IPythonExecutionService | undefined> {
+        return this.pythonExecutionFactory.createActivatedEnvironment({
+            resource: source,
+            allowEnvironmentFetchExceptions: false,
+            bypassCondaExecution: true
+        });
     }
 }
