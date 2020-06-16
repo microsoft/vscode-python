@@ -75,11 +75,11 @@ suite('Daemon', () => {
         );
     });
     teardown(() => {
-        pythonProc.kill();
+        pythonProc?.kill();
         if (connection) {
             connection.dispose();
         }
-        pythonDaemon.dispose();
+        pythonDaemon?.dispose();
         disposables.forEach((item) => item.dispose());
         disposables = [];
     });

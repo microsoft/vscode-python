@@ -2,9 +2,7 @@
     "spec": "./out/test/**/*.functional.test.js",
     "require": ["out/test/unittests.js"],
     "reporter": "mocha-multi-reporters",
-    "reporter-options": {
-        "configFile": "build/.mocha.perf.config"
-    },
+    "reporter-option": "configFile=build/.mocha.perf.config",
     "ui": "tdd",
     "recursive": true,
     "colors": true,
