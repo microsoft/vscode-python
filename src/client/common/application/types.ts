@@ -1478,9 +1478,3 @@ export interface IVSCodeNotebook {
         renderer: NotebookOutputRenderer
     ): Disposable;
 }
-
-export const IDigestStorage = Symbol('IDigestStorage');
-export interface IDigestStorage {
-    saveDigest(digest: string, algorithm: string): Promise<void>;
-    containsDigest(digest: string, algorithm: string): Promise<boolean>;
-}
