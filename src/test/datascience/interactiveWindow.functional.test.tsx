@@ -38,6 +38,7 @@ import {
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -686,7 +687,7 @@ for i in range(0, 100):
                     activeInterpreter?.path,
                     'Active intrepreter not used to launch notebook'
                 );
-                await closeInteractiveWindow(window, wrapper);
+                await closeInteractiveWindow(ioc, window);
 
                 // Add another python path
                 const secondUri = Uri.file('bar.py');
@@ -1173,4 +1174,37 @@ for i in range(0, 100):
             return ioc;
         }
     );
+
+    test('Open notebook and interactive at the same time', async () => {
+        addMockData(ioc, 'a=1\na', 1, 'text/plain');
+        addMockData(ioc, 'b=2\nb', 2, 'text/plain');
+
+        // Mount two different webviews
+        const nativeWrapper = mountWebView(ioc, 'native');
+        let interactiveWrapper = mountWebView(ioc, 'interactive');
+        await createNewEditor(ioc);
+        let interactiveEditor = await getOrCreateInteractiveWindow(ioc);
+
+        // Run code in both
+        await addCode(ioc, interactiveWrapper, 'a=1\na');
+        await addCell(ioc, nativeWrapper, 'a=1\na', true);
+
+        // Make sure both are correct
+        verifyHtmlOnCell(interactiveWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(nativeWrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
+
+        // Close the interactive editor.
+        await closeInteractiveWindow(ioc, interactiveEditor);
+
+        // Run another cell and make sure it works in the notebook
+        await addCell(ioc, nativeWrapper, 'b=2\nb', true);
+        verifyHtmlOnCell(nativeWrapper, 'NativeCell', '<span>2</span>', CellPosition.Last);
+
+        // Rerun the interactive window
+        interactiveWrapper = mountWebView(ioc, 'interactive');
+        interactiveEditor = await getOrCreateInteractiveWindow(ioc);
+        await addCode(ioc, interactiveWrapper, 'a=1\na');
+
+        verifyHtmlOnCell(interactiveWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    });
 });

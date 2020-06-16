@@ -480,7 +480,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                 await waitForHover('Interactive', wrapper, 1, 1);
                 verifyHoverVisible('Interactive', wrapper, 'a=1\na\nb=2\nb');
 
-                await InteractiveHelpers.closeInteractiveWindow(window, wrapper);
+                await InteractiveHelpers.closeInteractiveWindow(ioc, window);
             },
             () => {
                 return ioc;

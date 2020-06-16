@@ -230,7 +230,7 @@ export function getLastOutputCell(
 
 export function verifyHtmlOnCell(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    cellType: string,
+    cellType: 'NativeCell' | 'InteractiveCell',
     html: string | undefined | RegExp,
     cellIndex: number | CellPosition
 ) {
