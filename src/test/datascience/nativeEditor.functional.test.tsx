@@ -760,7 +760,7 @@ df.head()`;
                         await threeCellsUpdated;
 
                         // Close editor. Should still have the server up
-                        await closeNotebook(editor, wrapper);
+                        await closeNotebook(editor);
                         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
                         const server = await jupyterExecution.getServer({
                             allowUI: () => false,
@@ -2536,8 +2536,10 @@ df.head()`;
                         await saved;
 
                         // press clear all outputs, and save
+                        const cleared = waitForMessage(InteractiveWindowMessages.NotebookDirty);
                         const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
                         clearAllOutputButton!.simulate('click');
+                        await cleared;
 
                         saved = waitForMessage(InteractiveWindowMessages.NotebookClean);
                         saveButton!.simulate('click');

@@ -10,6 +10,7 @@ import {
 } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { traceInfo } from '../../client/logging';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
@@ -239,6 +240,11 @@ class MountedWebPanel implements IMountedWebView, IDisposable {
 
         // Clear out msg payload
         delete msg.payload;
+
+        // unmount ourselves if this is the close message
+        if (msg.type === InteractiveWindowMessages.NotebookClose) {
+            this.dispose();
+        }
     }
 }
 

@@ -140,11 +140,8 @@ export async function addCell(
     }
 }
 
-export function closeNotebook(
-    editor: INotebookEditor,
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
-): Promise<void> {
+export function closeNotebook(editor: INotebookEditor): Promise<void> {
     const promise = editor.dispose();
-    wrapper.unmount();
+    getMountedWebPanel('notebook').dispose();
     return promise;
 }

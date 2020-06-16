@@ -459,7 +459,7 @@ import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typ
                 // Cause a hover event over the first character
                 await waitForHover('Native', wrapper, 1, 1);
                 verifyHoverVisible('Native', wrapper, 'a=1\na');
-                await NativeHelpers.closeNotebook(notebook, wrapper);
+                await NativeHelpers.closeNotebook(notebook);
             },
             () => {
                 return ioc;

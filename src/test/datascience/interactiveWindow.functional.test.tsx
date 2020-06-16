@@ -1016,7 +1016,7 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCode);
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCodeToScript);
             gatherCode.simulate('click');
             await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -1059,7 +1059,7 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCode);
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCodeToScript);
             gatherCode.simulate('click');
             await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
