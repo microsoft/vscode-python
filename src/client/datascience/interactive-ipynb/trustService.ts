@@ -39,16 +39,19 @@ export class DigestStorage implements IDigestStorage {
         });
     }
 
-    public async containsDigest(digest: string): Promise<boolean> {
+    public async containsDigest(digest: string, algorithm: string): Promise<boolean> {
         await this.initDb();
         return new Promise((resolve, reject) => {
-            this.db!.get(`SELECT * FROM nbsignatures WHERE signature == ${digest}`, (err, rowData) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(rowData === undefined);
+            this.db!.get(
+                `SELECT * FROM nbsignatures WHERE signature == ${digest} AND algorithm == ${algorithm}`,
+                (err, rowData) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(rowData === undefined);
+                    }
                 }
-            });
+            );
         });
     }
 
@@ -110,7 +113,7 @@ class NotebookTrust implements INotebookTrust {
 
     public isNotebookTrusted(notebookContents: string): Promise<boolean> {
         const digest = this.computeDigest(notebookContents);
-        return this.digestStorage.containsDigest(digest);
+        return this.digestStorage.containsDigest(digest, this.algorithm);
     }
 
     public trustNotebook(notebookContents: string): Promise<void> {
