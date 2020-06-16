@@ -29,7 +29,8 @@ suite('Unit Tests - Navigation Command Handler', () => {
         fileHandler = mock(TestFileCodeNavigator);
         functionHandler = mock(TestFunctionCodeNavigator);
         suiteHandler = mock(TestSuiteCodeNavigator);
-        disposableRegistry = mock(AsyncDisposableRegistry);
+        // tslint:disable-next-line: no-any
+        disposableRegistry = mock(AsyncDisposableRegistry) as any;
         commandHandler = new TestCodeNavigatorCommandHandler(
             instance(cmdManager),
             instance(fileHandler),

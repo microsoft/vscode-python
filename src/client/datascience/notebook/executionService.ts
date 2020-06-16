@@ -16,7 +16,8 @@ import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { Commands } from '../constants';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
@@ -43,6 +44,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     private _notebookProvider?: INotebookProvider;
     private readonly pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
     private readonly tokensInterrupted = new WeakSet<CancellationToken>();
+    private sentExecuteCellTelemetry: boolean = false;
     private get notebookProvider(): INotebookProvider {
         this._notebookProvider =
             this._notebookProvider || this.serviceContainer.get<INotebookProvider>(INotebookProvider);
@@ -54,7 +56,9 @@ export class NotebookExecutionService implements INotebookExecutionService {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {}
+    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
         const model = await this.notebookStorage.load(document.uri);
         if (token.isCancellationRequested) {
             return;
@@ -72,9 +76,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
         if (!nb) {
             throw new Error('Unable to get Notebook object to run cell');
         }
-        await this.executeIndividualCell(model, document, cell, nb, token);
+        await this.executeIndividualCell(model, document, cell, nb, token, stopWatch);
     }
+    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
         const model = await this.notebookStorage.load(document.uri);
         if (token.isCancellationRequested) {
             return;
@@ -93,18 +99,31 @@ export class NotebookExecutionService implements INotebookExecutionService {
             throw new Error('Unable to get Notebook object to run cell');
         }
         await Promise.all(
-            document.cells.map((cellToExecute) => this.executeIndividualCell(model, document, cellToExecute, nb, token))
+            document.cells.map((cellToExecute) =>
+                this.executeIndividualCell(model, document, cellToExecute, nb, token, stopWatch)
+            )
         );
     }
     public cancelPendingExecutions(document: NotebookDocument): void {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
     }
+    private sendPerceivedCellExecute(runningStopWatch: StopWatch) {
+        const props = { notebook: true };
+        if (!this.sentExecuteCellTelemetry) {
+            this.sentExecuteCellTelemetry = true;
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime, props);
+        } else {
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime, props);
+        }
+    }
+
     private async executeIndividualCell(
         model: INotebookModel,
         document: NotebookDocument,
         cell: NotebookCell,
         nb: INotebook,
-        token: CancellationToken
+        token: CancellationToken,
+        stopWatch: StopWatch
     ): Promise<void> {
         if (token.isCancellationRequested) {
             return;
@@ -134,7 +153,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         this.handleDisplayDataMessages(model, document, nb);
 
         const deferred = createDeferred();
-        const stopWatch = new StopWatch();
+        const executionStopWatch = new StopWatch();
 
         wrappedToken.onCancellationRequested(() => {
             if (deferred.completed) {
@@ -199,7 +218,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
                 () => {
-                    cell.metadata.lastRunDuration = stopWatch.elapsedTime;
+                    cell.metadata.lastRunDuration = executionStopWatch.elapsedTime;
                     cell.metadata.runState = wrappedToken.isCancellationRequested
                         ? vscodeNotebookEnums.NotebookCellRunState.Idle
                         : vscodeNotebookEnums.NotebookCellRunState.Success;
@@ -231,6 +250,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
             updateCellWithErrorStatus(cell, ex);
             this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
+            this.sendPerceivedCellExecute(stopWatch);
             modelClearedEventHandler?.dispose(); // NOSONAR
             subscription?.unsubscribe(); // NOSONAR
             // Ensure we remove the cancellation.

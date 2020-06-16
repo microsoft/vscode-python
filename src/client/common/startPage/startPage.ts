@@ -7,7 +7,7 @@ import * as path from 'path';
 import { ConfigurationTarget, EventEmitter, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { Commands, EditorContexts, Telemetry } from '../../datascience/constants';
+import { Commands, Telemetry } from '../../datascience/constants';
 import { ICodeCssGenerator, INotebookEditorProvider, IThemeFinder } from '../../datascience/types';
 import { WebViewHost } from '../../datascience/webViewHost';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -19,13 +19,13 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../application/types';
-import { ContextKey } from '../contextKey';
+import { EnableStartPage } from '../experiments/groups';
 import { IFileSystem } from '../platform/types';
 import { IConfigurationService, IExperimentService, IExtensionContext, Resource } from '../types';
 import * as localize from '../utils/localize';
 import { StopWatch } from '../utils/stopWatch';
 import { StartPageMessageListener } from './startPageMessageListener';
-import { EnableStartPage, IStartPage, IStartPageMapping, StartPageMessages } from './types';
+import { IStartPage, IStartPageMapping, StartPageMessages } from './types';
 
 const startPageDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 
@@ -38,6 +38,7 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     private actionTaken = false;
     private actionTakenOnFirstTime = false;
     private firstTime = false;
+    private webviewDidLoad = false;
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -87,7 +88,13 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             await this.loadWebPanel(process.cwd());
             // open webview
             await super.show(true);
-        }, 0);
+
+            setTimeout(() => {
+                if (!this.webviewDidLoad) {
+                    sendTelemetryEvent(Telemetry.StartPageWebViewError);
+                }
+            }, 5000);
+        }, 3000);
     }
 
     public async getOwningResource(): Promise<Resource> {
@@ -109,6 +116,9 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     // tslint:disable-next-line: no-any
     public async onMessage(message: string, payload: any) {
         switch (message) {
+            case StartPageMessages.Started:
+                this.webviewDidLoad = true;
+                break;
             case StartPageMessages.RequestReleaseNotesAndShowAgainSetting:
                 const settings = this.configuration.getSettings();
                 const filteredNotes = await this.handleReleaseNotesRequest();
@@ -133,7 +143,10 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                 sendTelemetryEvent(Telemetry.StartPageOpenBlankPythonFile);
                 this.setTelemetryFlags();
 
-                const doc = await this.documentManager.openTextDocument({ language: 'python' });
+                const doc = await this.documentManager.openTextDocument({
+                    language: 'python',
+                    content: `print("${localize.StartPage.helloWorld()}")`
+                });
                 await this.documentManager.showTextDocument(doc, 1, true);
                 break;
             case StartPageMessages.OpenInteractiveWindow:
@@ -183,6 +196,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
                     await this.documentManager.showTextDocument(doc3);
                 }
                 break;
+            case StartPageMessages.OpenFolder:
+                sendTelemetryEvent(Telemetry.StartPageOpenFolder);
+                this.setTelemetryFlags();
+                this.commandManager.executeCommand('workbench.action.files.openFolder');
+                break;
+            case StartPageMessages.OpenWorkspace:
+                sendTelemetryEvent(Telemetry.StartPageOpenWorkspace);
+                this.setTelemetryFlags();
+                this.commandManager.executeCommand('workbench.action.openWorkspace');
+                break;
             case StartPageMessages.UpdateSettings:
                 if (payload === false) {
                     sendTelemetryEvent(Telemetry.StartPageClickedDontShowAgain);
@@ -196,44 +219,36 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         super.onMessage(message, payload);
     }
 
-    // This gets the most recent Enhancements and date from CHANGELOG.md
-    // This is public for testing
-    public async handleReleaseNotesRequest(): Promise<string[]> {
-        const changelog = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'CHANGELOG.md'));
-        const changelogBeginning = changelog.indexOf('### Enhancements');
-        const changelogEnding = changelog.indexOf('### Fixes', changelogBeginning);
-        const startOfLog = changelog.substring(changelogBeginning, changelogEnding);
-
-        const scrappedNotes = startOfLog.splitLines();
-        return scrappedNotes
-            .filter((line) => line.startsWith('1.'))
-            .slice(0, 5)
-            .map((line) => line.substr(3));
-    }
-
     // Public for testing
     public async extensionVersionChanged(): Promise<boolean> {
         const savedVersion: string | undefined = this.context.globalState.get('extensionVersion');
         const version: string = this.appEnvironment.packageJson.version;
+        let shouldShowStartPage: boolean;
 
         if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
             // There has not been an update
-            return false;
+            shouldShowStartPage = false;
+        } else {
+            shouldShowStartPage = true;
         }
 
         // savedVersion being undefined means this is the first time the user activates the extension.
         // if savedVersion != version, there was an update
         await this.context.globalState.update('extensionVersion', version);
-        return true;
+        return shouldShowStartPage;
+    }
+
+    // This gets the release notes from StartPageReleaseNotes.md
+    private async handleReleaseNotesRequest(): Promise<string[]> {
+        const releaseNotes = await this.file.readFile(path.join(EXTENSION_ROOT_DIR, 'StartPageReleaseNotes.md'));
+        return releaseNotes.splitLines();
     }
 
     private async activateBackground(): Promise<void> {
         const enabled = await this.expService.inExperiment(EnableStartPage.experiment);
-        const editorContext = new ContextKey(EditorContexts.StartPageEnabled, this.commandManager);
-        editorContext.set(enabled).ignoreErrors();
         const settings = this.configuration.getSettings();
 
-        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'insiders') {
+        if (enabled && settings.showStartPage && this.appEnvironment.extensionChannel === 'stable') {
             // extesionVersionChanged() reads CHANGELOG.md
             // So we use separate if's to try and avoid reading a file every time
             const firstTimeOrUpdate = await this.extensionVersionChanged();
@@ -268,17 +283,22 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
     }
 
     private async openSampleNotebook(): Promise<void> {
-        const localizedFilePath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', localize.StartPage.sampleNotebook());
+        const ipynb = '.ipynb';
+        const localizedFilePath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            localize.StartPage.sampleNotebook() + ipynb
+        );
         let sampleNotebookPath: string;
 
         if (await this.file.fileExists(localizedFilePath)) {
             sampleNotebookPath = localizedFilePath;
         } else {
-            sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Welcome_To_VSCode_Notebooks.ipynb');
+            sampleNotebookPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'Notebooks intro.ipynb');
         }
 
         const content = await this.file.readFile(sampleNotebookPath);
-        await this.notebookEditorProvider.createNew(content);
+        await this.notebookEditorProvider.createNew(content, localize.StartPage.sampleNotebook());
     }
 
     private setTelemetryFlags() {

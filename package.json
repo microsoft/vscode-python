@@ -59,6 +59,9 @@
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.datascience.viewJupyterOutput",
+        "onCommand:python.datascience.exportAsPythonScript",
+        "onCommand:python.datascience.exportToHTML",
+        "onCommand:python.datascience.exportToPDF",
         "onCommand:python.selectAndRunTestMethod",
         "onCommand:python.selectAndDebugTestMethod",
         "onCommand:python.selectAndRunTestFile",
@@ -350,6 +353,11 @@
             {
                 "command": "python.datascience.viewJupyterOutput",
                 "title": "%python.command.python.datascience.viewJupyterOutput.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.exportAsPythonScript",
+                "title": "%python.command.python.datascience.exportAsPythonScript.title%",
                 "category": "Python"
             },
             {
@@ -845,6 +853,12 @@
             ],
             "commandPalette": [
                 {
+                    "command": "python.datascience.exportAsPythonScript",
+                    "title": "%python.command.python.datascience.exportAsPythonScript.title%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                },
+                {
                     "command": "python.switchOffInsidersChannel",
                     "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "category": "Python",
@@ -1145,8 +1159,7 @@
                 {
                     "command": "python.startPage.open",
                     "title": "%python.command.python.startPage.open.title%",
-                    "category": "Python",
-                    "when": "python.datascience.startpageenabled"
+                    "category": "Python"
                 },
                 {
                     "command": "python.datascience.runtoline",
@@ -3104,7 +3117,7 @@
         "vscode-languageclient": "^6.2.0-next.2",
         "vscode-languageserver": "^6.2.0-next.2",
         "vscode-languageserver-protocol": "^3.16.0-next.2",
-        "vscode-tas-client": "^0.0.757",
+        "vscode-tas-client": "^0.0.864",
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",

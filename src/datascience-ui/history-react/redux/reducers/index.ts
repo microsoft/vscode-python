@@ -21,6 +21,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.SELECT_SERVER]: Kernel.selectJupyterURI,
     [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
     [CommonActionType.EXPORT]: Transfer.exportCells,
+    [CommonActionType.EXPORT_NOTEBOOK_AS]: Transfer.showExportAsMenu,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [CommonActionType.DELETE_CELL]: Creation.deleteCell,

@@ -567,6 +567,7 @@ export namespace DataScience {
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
+    export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
@@ -771,11 +772,9 @@ export namespace DataScience {
         'DataScience.remoteDebuggerNotSupported',
         'Debugging while attached to a remote server is not currently supported.'
     );
-    export const exportAsPythonFileTooltip = localize(
-        'DataScience.exportAsPythonFileTooltip',
-        'Convert and save to a python script'
-    );
+    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
     export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');
@@ -968,14 +967,17 @@ export namespace StartPage {
     export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
     export const notebookDescription = localize(
         'StartPage.notebookDescription',
-        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
     );
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
     );
-    export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
+    export const openInteractiveWindow = localize(
+        'StartPage.openInteractiveWindow',
+        'Use the Interactive Window to develop Python Scripts'
+    );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
@@ -993,7 +995,12 @@ export namespace StartPage {
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
+    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
+    export const folderDesc = localize(
+        'StartPage.folderDesc',
+        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
+    );
 }
 
 export namespace DebugConfigStrings {

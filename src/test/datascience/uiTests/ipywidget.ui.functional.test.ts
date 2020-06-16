@@ -201,7 +201,7 @@ use(chaiAsPromised);
                 assert.include(outputHtml, '<input type="text');
             });
         });
-        test('Checkox Widget', async () => {
+        test('Checkbox Widget', async () => {
             const { notebookUI } = await openStandardWidgetsIpynb();
             await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
 
@@ -232,7 +232,7 @@ use(chaiAsPromised);
                 assert.include(cellOutput, 'World</td>');
             });
         });
-        test('Widget renderes after closing and re-opening notebook', async () => {
+        test('Widget renders after closing and re-opening notebook', async () => {
             const result = await openNotebookAndTestSliderWidget();
 
             await result.notebookUI.page?.close();
@@ -241,7 +241,7 @@ use(chaiAsPromised);
             // Open the same notebook again and test.
             await openNotebookAndTestSliderWidget();
         });
-        test('Widget renderes after restarting kernel', async () => {
+        test('Widget renders after restarting kernel', async () => {
             const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
 
             // Clear the output
@@ -254,7 +254,7 @@ use(chaiAsPromised);
             // Execute cell again and verify output is displayed.
             await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
         });
-        test('Widget renderes after interrupting kernel', async () => {
+        test('Widget renders after interrupting kernel', async () => {
             const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
 
             // Clear the output

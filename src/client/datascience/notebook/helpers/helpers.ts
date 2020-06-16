@@ -4,7 +4,6 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as assert from 'assert';
 import * as uuid from 'uuid/v4';
 import type {
     CellDisplayOutput,
@@ -14,7 +13,8 @@ import type {
     NotebookCell,
     NotebookCellData,
     NotebookCellMetadata,
-    NotebookData
+    NotebookData,
+    NotebookDocument
 } from 'vscode-proposed';
 import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import {
@@ -31,6 +31,7 @@ import { mapVSCNotebookCellToCellModel } from './cellMappers';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { JupyterNotebookView } from '../constants';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
@@ -39,17 +40,26 @@ interface IBaseCellVSCodeMetadata {
 }
 
 /**
+ * Whether this is a Notebook we created/manage/use.
+ * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
+ */
+export function isJupyterNotebook(notebook: NotebookDocument) {
+    return notebook.viewType === JupyterNotebookView;
+}
+
+/**
  * Converts a NotebookModel into VSCode friendly format.
  */
 export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookData {
     const cells = model.cells
-        .map(createVSCNotebookCellDataFromCell)
+        .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
         .filter((item) => !!item)
         .map((item) => item!);
 
+    const defaultLangauge = getDefaultCodeLanguage(model);
     return {
         cells,
-        languages: [PYTHON_LANGUAGE],
+        languages: [defaultLangauge],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
@@ -86,10 +96,7 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
                 state: CellState.init
             };
         }
-        assert.equal(vscCell.language, PYTHON_LANGUAGE, 'Cannot create a non Python cell');
         return {
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: #12068 Translate output into nbformat.IOutput.
             data: createCodeCell([vscCell.document.getText()], []),
             file: model.file.toString(),
             id: uuid(),
@@ -130,7 +137,14 @@ export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata
     });
 }
 
-export function createVSCNotebookCellDataFromCell(cell: ICell): NotebookCellData | undefined {
+export function getDefaultCodeLanguage(model: INotebookModel) {
+    return model.metadata?.language_info?.name &&
+        model.metadata?.language_info?.name.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
+        ? model.metadata?.language_info?.name
+        : PYTHON_LANGUAGE;
+}
+
+export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
@@ -138,7 +152,7 @@ export function createVSCNotebookCellDataFromCell(cell: ICell): NotebookCellData
 
     // tslint:disable-next-line: no-any
     const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
-
+    const defaultCodeLanguage = getDefaultCodeLanguage(model);
     // If we have an execution count & no errors, then success state.
     // If we have an execution count &  errors, then error state.
     // Else idle state.
@@ -160,7 +174,7 @@ export function createVSCNotebookCellDataFromCell(cell: ICell): NotebookCellData
     const notebookCellData: NotebookCellData = {
         cellKind:
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
-        language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
+        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
         metadata: {
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,

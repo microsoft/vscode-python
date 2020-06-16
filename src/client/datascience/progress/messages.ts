@@ -14,7 +14,10 @@ const progressMessages = {
     [ReportableAction.KernelsRegisterKernel]: DataScience.registeringKernel(),
     [ReportableAction.NotebookConnect]: DataScience.connectingToJupyter(),
     [ReportableAction.NotebookStart]: DataScience.startingJupyterNotebook(),
-    [ReportableAction.RawKernelConnecting]: DataScience.rawKernelConnectingSession()
+    [ReportableAction.RawKernelConnecting]: DataScience.rawKernelConnectingSession(),
+    [ReportableAction.CheckingIfImportIsSupported]: 'Checking if import is supported', // Localize these later
+    [ReportableAction.InstallingMissingDependencies]: 'Installing missing dependencies',
+    [ReportableAction.ExportNotebookToPython]: 'Exporting Notebook to Python'
 };
 
 /**

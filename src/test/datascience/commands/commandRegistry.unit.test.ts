@@ -7,10 +7,10 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentService } from '../../../client/common/experiments/service';
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
+import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
@@ -38,7 +38,7 @@ suite('Data Science - Commands', () => {
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
-        const experiment = mock(ExperimentService);
+        const exportCommand = mock(ExportCommands);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -54,7 +54,7 @@ suite('Data Science - Commands', () => {
             instance(appShell),
             new MockOutputChannel('Jupyter'),
             instance(startPage),
-            instance(experiment)
+            instance(exportCommand)
         );
     });
 

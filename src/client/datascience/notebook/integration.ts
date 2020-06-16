@@ -9,6 +9,7 @@ import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { JupyterNotebookView } from './constants';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
@@ -75,7 +76,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             ];
             content.contributes.notebookProvider = [
                 {
-                    viewType: 'jupyter-notebook',
+                    viewType: JupyterNotebookView,
                     displayName: 'Jupyter Notebook',
                     selector: [
                         {
@@ -92,10 +93,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
 
         this.disposables.push(
-            this.vscNotebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
+            this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
         );
         this.disposables.push(
-            this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+            this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], this.notebookKernel)
         );
         this.disposables.push(
             this.vscNotebook.registerNotebookOutputRenderer(

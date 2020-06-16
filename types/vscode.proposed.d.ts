@@ -283,14 +283,21 @@ declare module 'vscode' {
         subTypes?: string[];
     }
 
+    export interface NotebookRenderRequest {
+        output: CellDisplayOutput;
+        mimeType: string;
+        outputId: string;
+    }
+
     export interface NotebookOutputRenderer {
         /**
          *
          * @returns HTML fragment. We can probably return `CellOutput` instead of string ?
          *
          */
-        render(document: NotebookDocument, output: CellDisplayOutput, mimeType: string): string;
-        preloads?: Uri[];
+        render(document: NotebookDocument, request: NotebookRenderRequest): string;
+
+        readonly preloads?: Uri[];
     }
 
     export interface NotebookCellsChangeData {
@@ -355,14 +362,42 @@ declare module 'vscode' {
         readonly document: NotebookDocument;
     }
 
+    interface NotebookDocumentBackup {
+        /**
+         * Unique identifier for the backup.
+         *
+         * This id is passed back to your extension in `openCustomDocument` when opening a custom editor from a backup.
+         */
+        readonly id: string;
+
+        /**
+         * Delete the current backup.
+         *
+         * This is called by VS Code when it is clear the current backup is no longer needed, such as when a new backup
+         * is made or when the file is saved.
+         */
+        delete(): void;
+    }
+
+    interface NotebookDocumentBackupContext {
+        readonly destination: Uri;
+    }
+
+    interface NotebookDocumentOpenContext {
+        readonly backupId?: string;
+    }
+
     export interface NotebookContentProvider {
-        openNotebook(uri: Uri): NotebookData | Promise<NotebookData>;
+        openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Promise<NotebookData>;
         saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
         saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
         readonly onDidChangeNotebook: Event<NotebookDocumentEditEvent>;
-
-        // revert?(document: NotebookDocument, cancellation: CancellationToken): Thenable<void>;
-        // backup?(document: NotebookDocument, cancellation: CancellationToken): Thenable<CustomDocumentBackup>;
+        revertNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
+        backupNotebook(
+            document: NotebookDocument,
+            context: NotebookDocumentBackupContext,
+            cancellation: CancellationToken
+        ): Promise<NotebookDocumentBackup>;
 
         kernel?: NotebookKernel;
     }

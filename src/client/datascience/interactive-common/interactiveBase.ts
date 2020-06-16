@@ -80,7 +80,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -134,7 +133,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() private statusProvider: IStatusProvider,
-        @unmanaged() protected jupyterExecution: IJupyterExecution,
         @unmanaged() protected fileSystem: IFileSystem,
         @unmanaged() protected configuration: IConfigurationService,
         @unmanaged() protected jupyterExporter: INotebookExporter,
@@ -178,9 +176,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activating());
         this.disposables.push(handler);
 
-        // If our execution changes its liveshare session, we need to close our server
-        this.jupyterExecution.sessionChanged(() => this.reloadAfterShutdown());
-
         // For each listener sign up for their post events
         this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
         // Channel for listeners to send messages to the interactive base.
@@ -199,8 +194,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 .ignoreErrors();
         }, 0);
 
-        // When a server starts, make sure we create a notebook if the server matches
-        jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+        // When a notebook provider first makes its connection check it to see if we should create a notebook
+        this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
 
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
@@ -1046,27 +1041,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     };
 
-    private async stopServer(): Promise<void> {
-        // Finish either of our notebook promises
-        if (this.connectionAndNotebookPromise) {
-            await this.connectionAndNotebookPromise;
-            this.connectionAndNotebookPromise = undefined;
-        }
-        if (this.notebookPromise) {
-            await this.notebookPromise;
-            this.notebookPromise = undefined;
-        }
-        // If we have a notebook dispose of it
-        if (this._notebook) {
-            const notebook = this._notebook;
-            this._notebook = undefined;
-            await notebook.dispose();
-        }
-
-        // Disconnect from our notebook provider
-        await this.notebookProvider.disconnect({ getOnly: true });
-    }
-
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // tslint:disable-next-line: member-ordering
@@ -1203,20 +1177,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.errorHandler.handleError(e).ignoreErrors();
             }
         }
-    }
-
-    private async reloadAfterShutdown(): Promise<void> {
-        try {
-            await this.stopServer();
-        } catch {
-            // We just switched from host to guest mode. Don't really care
-            // if closing the host server kills it.
-            this._notebook = undefined;
-        } finally {
-            this.connectionAndNotebookPromise = undefined;
-            this.notebookPromise = undefined;
-        }
-        await this.ensureConnectionAndNotebook();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
