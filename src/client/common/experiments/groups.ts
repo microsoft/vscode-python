@@ -99,3 +99,8 @@ export enum NotebookEditorSupport {
 export enum EnableStartPage {
     experiment = 'EnableStartPage'
 }
+
+// Experiment to turn on the start page
+export enum EnableStartPage {
+    experiment = 'EnableStartPage'
+}
