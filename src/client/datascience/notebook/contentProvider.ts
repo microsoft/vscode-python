@@ -9,7 +9,10 @@ import type {
     NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
-    NotebookDocumentEditEvent
+    NotebookDocumentBackup,
+    NotebookDocumentBackupContext,
+    NotebookDocumentEditEvent,
+    NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
@@ -33,8 +36,8 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
-    public async openNotebook(uri: Uri): Promise<NotebookData> {
-        const model = await this.notebookStorage.load(uri);
+    public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
+        const model = await this.notebookStorage.load(uri, undefined, !openContext.backupId);
         return notebookModelToVSCNotebookData(model);
     }
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
@@ -58,5 +61,21 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
+    }
+    public async revertNotebook(_document: NotebookDocument, _cancellation: CancellationToken): Promise<void> {
+        // Not implemented, waiting on VSCode API changes.
+    }
+    public async backupNotebook(
+        document: NotebookDocument,
+        _context: NotebookDocumentBackupContext,
+        cancellation: CancellationToken
+    ): Promise<NotebookDocumentBackup> {
+        const model = await this.notebookStorage.load(document.uri);
+        const id = this.notebookStorage.getBackupId(model);
+        this.notebookStorage.backup(model, cancellation).ignoreErrors();
+        return {
+            id,
+            delete: () => this.notebookStorage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+        };
     }
 }
