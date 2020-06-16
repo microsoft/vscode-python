@@ -16,7 +16,7 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { Product } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
 import { DiscoveredTests } from '../../../client/testing/common/services/types';

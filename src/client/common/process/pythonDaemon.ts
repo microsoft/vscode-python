@@ -5,16 +5,16 @@
 
 import { ChildProcess } from 'child_process';
 import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { InterpreterInformation, PythonVersionInfo } from '../../pythonEnvironments/discovery/types';
+import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info';
 import { traceWarning } from '../logger';
-import { Architecture } from '../utils/platform';
-import { parsePythonVersion } from '../utils/version';
 import { BasePythonDaemon } from './baseDaemon';
+import { PythonEnvInfo } from './internal/scripts';
 import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
-    PythonExecutionInfo,
     SpawnOptions
 } from './types';
 
@@ -43,25 +43,12 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
-            type InterpreterInfoResponse = ErrorResponse & {
-                versionInfo: PythonVersionInfo;
-                sysPrefix: string;
-                sysVersion: string;
-                is64Bit: boolean;
-            };
-            const request = new RequestType0<InterpreterInfoResponse, void, void>('get_interpreter_information');
+            const request = new RequestType0<PythonEnvInfo & ErrorResponse, void, void>('get_interpreter_information');
             const response = await this.sendRequestWithoutArgs(request);
-            const versionValue =
-                response.versionInfo.length === 4
-                    ? `${response.versionInfo.slice(0, 3).join('.')}-${response.versionInfo[3]}`
-                    : response.versionInfo.join('.');
-            return {
-                architecture: response.is64Bit ? Architecture.x64 : Architecture.x86,
-                path: this.pythonPath,
-                version: parsePythonVersion(versionValue),
-                sysVersion: response.sysVersion,
-                sysPrefix: response.sysPrefix
-            };
+            if (response.error) {
+                throw Error(response.error);
+            }
+            return extractInterpreterInfo(this.pythonPath, response);
         } catch (ex) {
             traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.getInterpreterInformation();
@@ -82,7 +69,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.getExecutablePath();
         }
     }
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {

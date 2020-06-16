@@ -78,3 +78,7 @@ export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
     return uri.scheme.includes(NotebookCellScheme);
 }
+
+export function isUntitledFile(file?: Uri) {
+    return file?.scheme === 'untitled';
+}

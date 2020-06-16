@@ -49,8 +49,8 @@ type JupyterExecutionClassType = {
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<
-        INotebookServerOptions
+    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions | undefined> = new EventEmitter<
+        INotebookServerOptions | undefined
     >();
 
     constructor(
@@ -92,7 +92,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return this.sessionChangedEventEmitter.event;
     }
 
-    public get serverStarted(): Event<INotebookServerOptions> {
+    public get serverStarted(): Event<INotebookServerOptions | undefined> {
         return this.serverStartedEventEmitter.event;
     }
 

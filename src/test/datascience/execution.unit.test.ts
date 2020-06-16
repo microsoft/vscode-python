@@ -36,7 +36,6 @@ import {
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
     IOutputChannel,
     IPathUtils,
     Product
@@ -60,8 +59,8 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
+import { KnownSearchPathsForInterpreters } from '../../client/pythonEnvironments/discovery/locators/services/KnownPathsService';
 import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
@@ -70,12 +69,10 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterServer } from './mockJupyterServer';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistry {
+class DisposableRegistry implements IAsyncDisposableRegistry {
     private disposables: Disposable[] = [];
 
-    public push = (disposable: Disposable): void => {
-        this.disposables.push(disposable);
-    };
+    public push = (disposable: Disposable) => this.disposables.push(disposable);
 
     public dispose = async (): Promise<void> => {
         for (const disposable of this.disposables) {
@@ -1029,7 +1026,7 @@ suite('Jupyter Execution', async () => {
             jupyterExecutionFactory: new JupyterExecutionFactory(
                 instance(liveShare),
                 instance(interpreterService),
-                disposableRegistry,
+                (disposableRegistry as unknown) as any[],
                 disposableRegistry,
                 instance(fileSystem),
                 instance(workspaceService),

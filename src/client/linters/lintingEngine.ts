@@ -11,6 +11,7 @@ import { IDocumentManager, IWorkspaceService } from '../common/application/types
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IOutputChannel } from '../common/types';
+import { isNotebookCell } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryWhenDone } from '../telemetry';
@@ -65,6 +66,9 @@ export class LintingEngine implements ILintingEngine {
     }
 
     public async lintDocument(document: vscode.TextDocument, trigger: LinterTrigger): Promise<void> {
+        if (isNotebookCell(document)) {
+            return;
+        }
         this.diagnosticCollection.set(document.uri, []);
 
         // Check if we need to lint this document

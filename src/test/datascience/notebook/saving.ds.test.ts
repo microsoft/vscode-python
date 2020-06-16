@@ -35,8 +35,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Saving)', function () {
-    this.timeout(15_000);
-    this.retries(0);
+    this.timeout(60_000);
     const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
     let api: IExtensionTestApi;
     let testIPynb: Uri;
@@ -44,8 +43,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     suiteSetup(async function () {
-        this.timeout(15_000);
-        this.retries(0);
+        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();
@@ -138,10 +136,10 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
             );
             assert.isNotOk(cell4.metadata.executionOrder, 'Execution count should be 0|null');
 
-            assert.isEmpty(cell1.metadata.statusMessage, 'Cell 1 status should be empty'); // No errors.
+            assert.isEmpty(cell1.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors.
             assert.isNotEmpty(cell2.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors.
             assert.isNotEmpty(cell3.metadata.statusMessage, 'Cell 1 status should be empty'); // Errors (interrupted).
-            assert.isEmpty(cell4.metadata.statusMessage, 'Cell 1 status should be empty'); // No errors (didn't run).
+            assert.isEmpty(cell4.metadata.statusMessage || '', 'Cell 1 status should be empty'); // No errors (didn't run).
 
             assert.isOk(cell1.metadata.runStartTime, 'Start time should be > 0');
             assert.isOk(cell1.metadata.lastRunDuration, 'Duration should be > 0');

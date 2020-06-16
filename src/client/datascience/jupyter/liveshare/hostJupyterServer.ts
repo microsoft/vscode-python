@@ -81,9 +81,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     public async dispose(): Promise<void> {
         if (!this.disposed) {
             this.disposed = true;
+            traceInfo(`Disposing HostJupyterServer`);
             await super.dispose();
             const api = await this.api;
-            return this.onDetach(api);
+            await this.onDetach(api);
+            traceInfo(`Finished disposing HostJupyterServer`);
         }
     }
 

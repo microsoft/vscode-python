@@ -16,18 +16,12 @@
     width: 45px;
     padding: 20px 25px 20px 25px;
     margin-right: 30px;
+    background-color: var(--vscode-titleBar-activeBackground);
 }
 
-.icon-dark {
-    background-color: #1a1a1a;
-}
-
-.icon-light {
-    background-color: #efefef;
-}
-
-.icon:hover {
-    background-color: var(--vscode-editorGroup-dropBackground);
+.icon:hover,
+.text:hover {
+    background-color: var(--vscode-editorIndentGuide-activeBackground);
     cursor: pointer;
 }
 
@@ -45,6 +39,7 @@
 .text {
     font-weight: 100;
     font-size: x-large;
+    width: fit-content;
 }
 
 .block {
@@ -55,6 +50,7 @@
 .row {
     display: block;
     min-height: 120px;
+    white-space: nowrap;
 }
 
 .link {
@@ -79,8 +75,13 @@
 
 .paragraph {
     display: block;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
+    margin-block-start: 5px;
+    margin-block-end: 5px;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
+}
+
+.list {
+    line-height: 1.5;
+    white-space: initial;
 }

@@ -6,6 +6,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import {
     createEmptyCell,
     CursorPos,
+    DebugState,
     extractInputText,
     ICellViewModel
 } from '../../datascience-ui/interactive-common/mainState';
@@ -47,7 +48,7 @@ suite('Data Science MainState', () => {
             scrollCount: 0,
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
-            runningByLine: false
+            runningByLine: DebugState.Design
         };
         assert.equal(extractInputText(cloneVM(cvm, '# %%\na=1'), settings), 'a=1', 'Cell marker not removed');
         assert.equal(

@@ -79,6 +79,7 @@ export const actionCreators = {
     expandAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ExpandAll),
     collapseAll: (): CommonAction => createIncomingAction(InteractiveWindowMessages.CollapseAll),
     export: (): CommonAction => createIncomingAction(CommonActionType.EXPORT),
+    exportAs: (): CommonAction => createIncomingAction(CommonActionType.EXPORT_NOTEBOOK_AS),
     showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> =>
         createIncomingActionWithPayload(CommonActionType.SHOW_DATA_VIEWER, { variable, columnSize }),
     editorLoaded: (): CommonAction => createIncomingAction(CommonActionType.EDITOR_LOADED),

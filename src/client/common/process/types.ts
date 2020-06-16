@@ -7,6 +7,7 @@ import { CancellationToken, Uri } from 'vscode';
 
 import { Newable } from '../../ioc/types';
 import { InterpreterInformation, PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ExecutionInfo, IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -167,7 +168,7 @@ export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+    getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -176,12 +177,6 @@ export interface IPythonExecutionService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
-export type PythonExecutionInfo = {
-    command: string;
-    args: string[];
-
-    python: string[];
-};
 /**
  * Identical to the PythonExecutionService, but with a `dispose` method.
  * This is a daemon process that lives on until it is disposed, hence the `IDisposable`.

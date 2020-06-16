@@ -10,6 +10,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { StartPage } from '../../../client/common/startPage/startPage';
 import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
+import { ExportCommands } from '../../../client/datascience/commands/exportCommands';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
 import { Commands } from '../../../client/datascience/constants';
@@ -37,6 +38,7 @@ suite('Data Science - Commands', () => {
         const configService = mock(ConfigurationService);
         const appShell = mock(ApplicationShell);
         const startPage = mock(StartPage);
+        const exportCommand = mock(ExportCommands);
 
         commandRegistry = new CommandRegistry(
             documentManager,
@@ -51,7 +53,8 @@ suite('Data Science - Commands', () => {
             instance(configService),
             instance(appShell),
             new MockOutputChannel('Jupyter'),
-            instance(startPage)
+            instance(startPage),
+            instance(exportCommand)
         );
     });
 

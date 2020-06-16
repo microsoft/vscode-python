@@ -8,7 +8,13 @@ import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../interactive-common/mainState';
+import {
+    activeDebugState,
+    DebugState,
+    getSelectedAndFocusedInfo,
+    ICellViewModel,
+    IMainState
+} from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
@@ -225,16 +231,24 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
             case 'F10':
                 if (this.props.debugging) {
-                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
+                    // Only allow step if debugging in break mode
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine === DebugState.Break);
                     if (debuggingCell) {
                         this.props.step(debuggingCell.cell.id);
                     }
                     event.stopPropagation();
+                } else {
+                    // Otherwise if not debugging, run by line the current focused cell
+                    const focusedCell = getSelectedAndFocusedInfo(this.props).focusedCellId;
+                    if (focusedCell) {
+                        this.props.runByLine(focusedCell);
+                    }
                 }
                 break;
             case 'F5':
                 if (this.props.debugging) {
-                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine);
+                    // Only allow continue if debugging in break mode
+                    const debuggingCell = this.props.cellVMs.find((cvm) => cvm.runningByLine === DebugState.Break);
                     if (debuggingCell) {
                         this.props.continue(debuggingCell.cell.id);
                     }
@@ -299,7 +313,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             ) : null;
 
         const otherCellRunningByLine = this.props.cellVMs.find(
-            (cvm) => cvm.runningByLine && cvm.cell.id !== cellVM.cell.id
+            (cvm) => activeDebugState(cvm.runningByLine) && cvm.cell.id !== cellVM.cell.id
         );
         const maxOutputSize = this.props.settings.maxOutputSize;
         const outputSizeLimit = 10000;

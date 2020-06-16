@@ -48,5 +48,8 @@ export enum ReportableAction {
     /**
      * Connecting a raw kernel session
      */
-    RawKernelConnecting = 'RawKernelConnecting'
+    RawKernelConnecting = 'RawKernelConnecting',
+    CheckingIfImportIsSupported = 'CheckingIfImportIsSupported',
+    InstallingMissingDependencies = 'InstallingMissingDependencies',
+    ExportNotebookToPython = 'ExportNotebookToPython'
 }

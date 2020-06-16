@@ -136,7 +136,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
-                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
                             <Image
@@ -148,7 +147,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
-                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
                             <Image
@@ -170,7 +168,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.export}
+                            onClick={this.props.exportAs}
                             disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
@@ -341,12 +339,14 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         // Note: MaxOutputSize and enableScrollingForCellOutputs is being ignored on purpose for
         // the interactive window. See bug: https://github.com/microsoft/vscode-python/issues/11421
         if (this.props.settings && this.props.editorOptions) {
+            // Disable hover for collapsed code blocks
+            const options = { ...this.props.editorOptions, hover: { enabled: cellVM.inputBlockOpen } };
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
                         <InteractiveCellComponent
                             role="listitem"
-                            editorOptions={this.props.editorOptions}
+                            editorOptions={options}
                             maxTextSize={undefined}
                             enableScroll={false}
                             autoFocus={false}

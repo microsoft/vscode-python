@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { parseLine } from '../../client/linters/baseLinter';
 import { REGEX } from '../../client/linters/mypy';
-import { ILintMessage } from '../../client/linters/types';
+import { ILintMessage, LinterId } from '../../client/linters/types';
 
 // This following is a real-world example. See gh=2380.
 // tslint:disable-next-line:no-multiline-string
@@ -57,7 +57,7 @@ suite('Linting - MyPy', () => {
             ]
         ];
         for (const [line, expected] of tests) {
-            const msg = parseLine(line, REGEX, 'mypy');
+            const msg = parseLine(line, REGEX, LinterId.MyPy);
 
             expect(msg).to.deep.equal(expected);
         }

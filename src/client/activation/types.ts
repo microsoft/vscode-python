@@ -72,7 +72,6 @@ export enum LanguageServerType {
 
 export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
-export const BundledLanguageServerFolder = 'bundledLanguageServer';
 
 // tslint:disable-next-line: interface-name
 export interface DocumentHandler {
@@ -117,7 +116,7 @@ export interface ILanguageServerFolderService {
     getLanguageServerFolderName(resource: Resource): Promise<string>;
     getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
-    isBundled(): boolean;
+    skipDownload(): Promise<boolean>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');

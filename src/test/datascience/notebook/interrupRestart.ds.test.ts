@@ -36,7 +36,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * This is done by stubbing out some methods.
  */
 suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', function () {
-    this.timeout(15_000);
+    this.timeout(60_000);
 
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;
@@ -46,7 +46,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
     let vscodeNotebook: IVSCodeNotebook;
     const suiteDisposables: IDisposable[] = [];
     suiteSetup(async function () {
-        this.timeout(15_000);
+        this.timeout(60_000);
         api = await initialize();
         if (!(await canRunTests())) {
             return this.skip();

@@ -152,7 +152,7 @@ export interface IRawNotebookSupportedService {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     supported(): Promise<boolean>;
-    connect(token?: CancellationToken): Promise<IRawConnection>;
+    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         identity: Uri,
         resource: Resource,
@@ -182,6 +182,7 @@ export interface INotebook extends IAsyncDisposable {
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     onKernelRestarted: Event<void>;
+    onKernelInterrupted: Event<void>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -242,6 +243,7 @@ export type ConnectNotebookProviderOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 export interface INotebookServerOptions {
@@ -279,8 +281,7 @@ export interface IGatherLogger extends INotebookExecutionLogger {
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
-    sessionChanged: Event<void>;
-    serverStarted: Event<INotebookServerOptions>;
+    serverStarted: Event<INotebookServerOptions | undefined>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
@@ -529,7 +530,7 @@ export interface INotebookEditorProvider {
     readonly onDidCloseNotebookEditor: Event<INotebookEditor>;
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
-    createNew(contents?: string): Promise<INotebookEditor>;
+    createNew(contents?: string, title?: string): Promise<INotebookEditor>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -1031,10 +1032,15 @@ export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
     readonly onSavedAs: Event<{ new: Uri; old: Uri }>;
+    generateBackupId(model: INotebookModel): string;
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
-    backup(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
+    load(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
     load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
+    deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
@@ -1049,6 +1055,7 @@ export type GetServerOptions = {
     disableUI?: boolean;
     localOnly?: boolean;
     token?: CancellationToken;
+    onConnectionMade?(): void; // Optional callback for when the first connection is made
 };
 
 /**
@@ -1069,6 +1076,11 @@ export interface INotebookProvider {
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+
+    /**
+     * Fired just the first time that this provider connects
+     */
+    onConnectionMade: Event<void>;
 
     /**
      * List of all notebooks (active and ones that are being constructed).

@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { NativeNotebook } from '../../common/experiments/groups';
+import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { EditorContexts } from '../constants';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../types';
@@ -72,7 +72,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
             this.onDidChangeActiveTextEditor(this.docManager.activeTextEditor);
         }
-        if (this.experiments.inExperiment(NativeNotebook.experiment)) {
+        if (this.experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
             this.vscodeNotebook.onDidCloseNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
             this.vscodeNotebook.onDidOpenNotebookDocument(this.onDidChangeVSCodeNotebook, this, this.disposables);
@@ -81,7 +81,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
 
     private udpateNativeNotebookCellContext() {
-        if (!this.experiments.inExperiment(NativeNotebook.experiment)) {
+        if (!this.experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
         this.hasNativeNotebookCells

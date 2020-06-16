@@ -3,7 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
-import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
+import { DebugState, IServerState } from '../../../datascience-ui/interactive-common/mainState';
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -43,6 +43,7 @@ export enum InteractiveWindowMessages {
     NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
     Export = 'export_to_ipynb',
+    ExportNotebookAs = 'export_as_menu',
     GetAllCells = 'get_all_cells',
     ReturnAllCells = 'return_all_cells',
     DeleteAllCells = 'delete_all_cells',
@@ -135,6 +136,7 @@ export enum InteractiveWindowMessages {
     ShowContinue = 'show_continue',
     ShowBreak = 'show_break',
     ShowingIp = 'showing_ip',
+    DebugStateChange = 'debug_state_change',
     KernelIdle = 'kernel_idle'
 }
 
@@ -182,6 +184,10 @@ export interface ICopyCode {
 
 export enum VariableExplorerStateKeys {
     height = 'NBVariableHeights'
+}
+
+export enum ExportNotebookSettings {
+    lastSaveLocation = 'NBExportSaveLocation'
 }
 
 export enum SysInfoReason {
@@ -339,6 +345,11 @@ export interface INativeCommand {
 
 export interface IRenderComplete {
     ids: string[];
+}
+
+export interface IDebugStateChange {
+    oldState: DebugState;
+    newState: DebugState;
 }
 
 export interface IFocusedCellEditor {
@@ -547,6 +558,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
+    public [InteractiveWindowMessages.ExportNotebookAs]: never | undefined;
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
@@ -618,7 +630,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
     public [InteractiveWindowMessages.DoSave]: never | undefined;
-    public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
+    public [InteractiveWindowMessages.ExecutionRendered]: never | undefined;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.SelectedCell]: IFocusedCellEditor;
     public [InteractiveWindowMessages.OutputToggled]: never | undefined;
@@ -645,4 +657,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Step]: never | undefined;
     public [InteractiveWindowMessages.ShowingIp]: never | undefined;
     public [InteractiveWindowMessages.KernelIdle]: never | undefined;
+    public [InteractiveWindowMessages.DebugStateChange]: IDebugStateChange;
 }

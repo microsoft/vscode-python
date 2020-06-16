@@ -1,21 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CondaEnvironmentInfo } from '../../interpreter/contracts';
+import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
 import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { getPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
+import { extractInterpreterInfo } from '../../pythonEnvironments/info';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { Architecture } from '../utils/platform';
-import { parsePythonVersion } from '../utils/version';
 import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
-import { ExecutionResult, IProcessService, PythonExecutionInfo, ShellOptions, SpawnOptions } from './types';
-
-function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecutionInfo {
-    const args = python.slice(1);
-    args.push(...pythonArgs);
-    return { command: python[0], args, python };
-}
+import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
@@ -33,13 +27,13 @@ class PythonEnvironment {
         }
     ) {}
 
-    public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return getPythonExecInfo(python, pythonArgs);
     }
-    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return getPythonExecInfo(python, pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
@@ -96,17 +90,7 @@ class PythonEnvironment {
             }
             const json = parse(result.stdout);
             traceInfo(`Found interpreter for ${argv}`);
-            const versionValue =
-                json.versionInfo.length === 4
-                    ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
-                    : json.versionInfo.join('.');
-            return {
-                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                path: this.pythonPath,
-                version: parsePythonVersion(versionValue),
-                sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix
-            };
+            return extractInterpreterInfo(this.pythonPath, json);
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
@@ -166,8 +150,9 @@ export function createCondaEnv(
         async (filename) => fs.fileExists(filename),
         pythonArgv,
         // tslint:disable-next-line:no-suspicious-comment
-        // TODO(gh-8473): Use pythonArgv here once 'conda run' can be
+        // TODO: Use pythonArgv here once 'conda run' can be
         // run without buffering output.
+        // See https://github.com/microsoft/vscode-python/issues/8473.
         undefined,
         (file, args, opts) => procs.exec(file, args, opts),
         (command, opts) => procs.shellExec(command, opts)

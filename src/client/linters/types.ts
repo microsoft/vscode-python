@@ -11,9 +11,16 @@ export interface IErrorHandler {
     handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo): Promise<boolean>;
 }
 
-// tslint:disable-next-line:no-suspicious-comment
-// TODO: Use an enum for LinterID instead of a union of string literals.
-export type LinterId = 'flake8' | 'mypy' | 'pycodestyle' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint' | 'bandit';
+export enum LinterId {
+    Flake8 = 'flake8',
+    MyPy = 'mypy',
+    PyCodeStyle = 'pycodestyle',
+    Prospector = 'prospector',
+    PyDocStyle = 'pydocstyle',
+    PyLama = 'pylama',
+    PyLint = 'pylint',
+    Bandit = 'bandit'
+}
 
 export interface ILinterInfo {
     readonly id: LinterId;

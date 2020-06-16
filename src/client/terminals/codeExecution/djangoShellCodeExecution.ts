@@ -9,9 +9,9 @@ import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
@@ -32,7 +32,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
 
-    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
+    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
         const { command, args: executableArgs, python } = await super.getExecutableInfo(resource, args);
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
@@ -48,7 +48,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         return { command, args: executableArgs, python };
     }
 
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         // We need the executable info but not the 'manage.py shell' args
         const { command, args, python } = await super.getExecutableInfo(resource);
         return { command, args: args.concat(executeArgs), python };

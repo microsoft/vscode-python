@@ -15,6 +15,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import {
     IApplicationShell,
+    ICommandManager,
     ICustomEditorService,
     IDocumentManager,
     IWorkspaceService
@@ -22,7 +23,7 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { Identifiers } from '../../client/datascience/constants';
+import { Commands, Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import {
@@ -44,7 +45,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { defaultDataScienceSettings, takeSnapshot, writeDiffSnapshot } from './helpers';
+import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import {
@@ -526,8 +527,7 @@ df.head()`;
                     async (_wrapper, context) => {
                         if (ioc.mockJupyter) {
                             await ioc.activate();
-                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                                ...ioc.getSettings().datascience,
+                            ioc.forceDataScienceSettingsChanged({
                                 disableJupyterAutoStart: false
                             });
 
@@ -611,19 +611,23 @@ df.head()`;
                         await saved;
 
                         // Click export and wait for a document to change
-                        const activeTextEditorChange = createDeferred();
-                        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
+                        const commandFired = createDeferred();
+                        const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+                        const editor = TypeMoq.Mock.ofType<INotebookEditorProvider>().object.activeEditor;
+                        const model = editor!.model!;
+                        ioc.serviceManager.rebindInstance<ICommandManager>(ICommandManager, commandManager.object);
+                        commandManager
+                            .setup((cmd) => cmd.executeCommand(Commands.Export, model))
+                            .returns(() => {
+                                commandFired.resolve();
+                                return Promise.resolve();
+                            });
+
                         const exportButton = findButton(wrapper, NativeEditor, 9);
                         await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
 
                         // This can be slow, hence wait for a max of 60.
-                        await waitForPromise(activeTextEditorChange.promise, 60_000);
-
-                        // Verify the new document is valid python
-                        const newDoc = docManager.activeTextEditor;
-                        assert.ok(newDoc, 'New doc not created');
-                        assert.ok(newDoc!.document.getText().includes('a=1'), 'Export did not create a python file');
+                        await waitForPromise(commandFired.promise, 60_000);
                     },
                     () => {
                         return ioc;
@@ -2233,8 +2237,7 @@ df.head()`;
 
                         // Update the settings and wait for the component to receive it and process it.
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
-                            ...defaultDataScienceSettings(),
+                        ioc.forceDataScienceSettingsChanged({
                             showCellInputCode: false
                         });
                         await promise;
@@ -2249,7 +2252,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
                         // Also, send notification about changes to window state.
                         windowStateChangeHandlers.forEach((item) => item({ focused: false }));
                         windowStateChangeHandlers.forEach((item) => item({ focused: true }));
@@ -2274,7 +2277,7 @@ df.head()`;
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor);
+                        docManager.didChangeActiveTextEditorEmitter.fire(newEditor!);
 
                         // At this point a message should be sent to extension asking it to save.
                         // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -2307,7 +2310,7 @@ df.head()`;
                         // Now that the notebook is dirty, change the active editor.
                         // This should not trigger a save of notebook (as its configured to save only when window state changes).
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                        docManager.didChangeActiveTextEditorEmitter.fire();
+                        docManager.didChangeActiveTextEditorEmitter.fire({} as any);
 
                         // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                         await expect(cleanPromise).to.eventually.be.rejected;
@@ -2547,6 +2550,7 @@ df.head()`;
                         saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
                         await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
                         await saved;
+                        await sleep(1000); // Make sure file finishes writing.
 
                         const nb = JSON.parse(
                             await fs.readFile(notebookFile.filePath, 'utf8')

@@ -29,7 +29,7 @@ import { IJupyterDebugService } from './types';
 @injectable()
 export class MultiplexingDebugService implements IJupyterDebugService {
     private lastStartedService: IDebugService | undefined;
-    private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
+    private sessionChangedEvent: EventEmitter<DebugSession | undefined> = new EventEmitter<DebugSession | undefined>();
     private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();

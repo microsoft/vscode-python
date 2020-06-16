@@ -11,6 +11,7 @@ import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import {
     CursorPos,
+    DebugState,
     getSelectedAndFocusedInfo,
     ICellViewModel,
     IMainState
@@ -279,7 +280,7 @@ export namespace Execution {
             });
             const newVM = {
                 ...arg.prevState.cellVMs[index],
-                runningByLine: true
+                runningByLine: DebugState.Run
             };
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = newVM;
@@ -298,7 +299,7 @@ export namespace Execution {
         if (index >= 0) {
             const newVM = {
                 ...arg.prevState.cellVMs[index],
-                runningByLine: true,
+                runningByLine: DebugState.Break,
                 currentStack: arg.payload.data.frames
             };
             const newVMs = [...arg.prevState.cellVMs];
@@ -316,7 +317,7 @@ export namespace Execution {
         if (index >= 0) {
             const newVM = {
                 ...arg.prevState.cellVMs[index],
-                runningByLine: true,
+                runningByLine: DebugState.Run,
                 currentStack: undefined
             };
             const newVMs = [...arg.prevState.cellVMs];

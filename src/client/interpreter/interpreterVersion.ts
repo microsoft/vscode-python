@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import '../common/extensions';
 import * as internalPython from '../common/process/internal/python';
 import { IProcessServiceFactory } from '../common/process/types';
+import { getPythonVersion } from '../pythonEnvironments/pythonVersion';
 import { IInterpreterVersionService } from './contracts';
 
 export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)?';
@@ -9,15 +10,14 @@ export const PIP_VERSION_REGEX = '\\d+\\.\\d+(\\.\\d+)?';
 @injectable()
 export class InterpreterVersionService implements IInterpreterVersionService {
     constructor(@inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory) {}
+
     public async getVersion(pythonPath: string, defaultValue: string): Promise<string> {
-        const [args, parse] = internalPython.getVersion();
         const processService = await this.processServiceFactory.create();
-        return processService
-            .exec(pythonPath, args, { mergeStdOutErr: true })
-            .then((output) => parse(output.stdout).splitLines()[0])
-            .then((version) => (version.length === 0 ? defaultValue : version))
-            .catch(() => defaultValue);
+        return getPythonVersion(pythonPath, defaultValue, (cmd, args) =>
+            processService.exec(cmd, args, { mergeStdOutErr: true })
+        );
     }
+
     public async getPipVersion(pythonPath: string): Promise<string> {
         const [args, parse] = internalPython.getModuleVersion('pip');
         const processService = await this.processServiceFactory.create();

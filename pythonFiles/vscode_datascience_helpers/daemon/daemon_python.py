@@ -198,7 +198,7 @@ class PythonDaemon(MethodDispatcher):
 
     def m_get_interpreter_information(self):
         return {
-            "versionInfo": sys.version_info[:4],
+            "versionInfo": tuple(sys.version_info),
             "sysPrefix": sys.prefix,
             "version": sys.version,
             "is64Bit": sys.maxsize > 2 ** 32,

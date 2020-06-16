@@ -46,6 +46,7 @@ export enum CommonActionType {
     EXECUTE_CELL_AND_ADVANCE = 'action.execute_cell_and_advance',
     EXECUTE_CELL_AND_BELOW = 'action.execute_cell_and_below',
     EXPORT = 'action.export',
+    EXPORT_NOTEBOOK_AS = 'action.export_As',
     FOCUS_CELL = 'action.focus_cell',
     FOCUS_INPUT = 'action.focus_input',
     GATHER_CELL = 'action.gather_cell',
@@ -106,6 +107,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.RESTART_KERNEL]: never | undefined;
     [CommonActionType.INTERRUPT_KERNEL]: never | undefined;
     [CommonActionType.EXPORT]: never | undefined;
+    [CommonActionType.EXPORT_NOTEBOOK_AS]: never | undefined;
     [CommonActionType.SAVE]: never | undefined;
     [CommonActionType.SHOW_DATA_VIEWER]: IShowDataViewerAction;
     [CommonActionType.SEND_COMMAND]: ISendCommandAction;

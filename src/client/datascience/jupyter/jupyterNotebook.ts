@@ -167,7 +167,12 @@ export class JupyterNotebookBase implements INotebook {
     public get onKernelRestarted(): Event<void> {
         return this.kernelRestarted.event;
     }
+
+    public get onKernelInterrupted(): Event<void> {
+        return this.kernelInterrupted.event;
+    }
     private readonly kernelRestarted = new EventEmitter<void>();
+    private readonly kernelInterrupted = new EventEmitter<void>();
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
@@ -210,22 +215,24 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async dispose(): Promise<void> {
-        if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.dispose();
-        }
-        if (this.sessionStatusChanged) {
-            this.sessionStatusChanged.dispose();
-        }
-
-        traceInfo(`Shutting down session ${this.identity.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
+            if (this.onStatusChangedEvent) {
+                this.onStatusChangedEvent.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+            if (this.sessionStatusChanged) {
+                this.sessionStatusChanged.dispose();
+                this.onStatusChangedEvent = undefined;
+            }
+
+            traceInfo(`Shutting down session ${this.identity.toString()}`);
             if (this.session) {
                 await this.session.dispose().catch(traceError.bind('Failed to dispose session from JupyterNotebook'));
             }
+            this.loggers.forEach((d) => d.dispose());
+            this.disposed.fire();
         }
-        this.loggers.forEach((d) => d.dispose());
-        this.disposed.fire();
     }
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -519,6 +526,9 @@ export class JupyterNotebookBase implements INotebook {
 
                 // Cancel all other pending cells as we interrupted.
                 this.finishUncompletedCells();
+
+                // Fire event that we interrupted.
+                this.kernelInterrupted.fire();
 
                 // Indicate the interrupt worked.
                 return InterruptResult.Success;
