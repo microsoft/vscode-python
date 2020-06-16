@@ -383,7 +383,7 @@ suite('DataScience Debugger tests', () => {
             // We should be in the break state. See if buttons indicate that or not
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 4, 'Cell buttons wrong number');
+            assert.equal(ImageButtons.length, 5, 'Cell buttons wrong number');
         },
         () => {
             ioc.setExperimentState(RunByLine.experiment, true);
