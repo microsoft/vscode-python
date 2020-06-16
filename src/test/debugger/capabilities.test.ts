@@ -44,7 +44,7 @@ suite('Debugging - Capabilities', function () {
         disposables = [];
     });
     teardown(() => {
-        disposables.forEach((disposable) => {
+        disposables?.forEach((disposable) => {
             try {
                 disposable.dispose!();
             } catch {
