@@ -33,7 +33,13 @@ import {
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookModel, INotebookServerOptions } from '../../../client/datascience/types';
+import {
+    ICell,
+    IJupyterExecution,
+    INotebookModel,
+    INotebookServerOptions,
+    ITrustService
+} from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
@@ -54,6 +60,7 @@ suite('DataScience - Native Editor Storage', () => {
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
+    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -326,7 +333,8 @@ suite('DataScience - Native Editor Storage', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            trustService
         );
 
         return new NotebookStorageProvider(notebookStorage, [], instance(workspace));

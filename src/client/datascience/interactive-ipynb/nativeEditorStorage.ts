@@ -515,6 +515,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService
     ) {}
     private static isUntitledFile(file: Uri) {
