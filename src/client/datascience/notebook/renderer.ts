@@ -4,7 +4,8 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CellOutput, CellOutputKind, NotebookOutputRenderer as VSCNotebookOutputRenderer, Uri } from 'vscode';
+import { CellOutputKind, NotebookOutputRenderer as VSCNotebookOutputRenderer, Uri } from 'vscode';
+import { NotebookRenderRequest } from 'vscode-proposed';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 
 @injectable()
@@ -16,20 +17,20 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
     }
 
     // @ts-ignore
-    public render(document: NotebookDocument, output: CellOutput, mimeType: string) {
-        let outputToSend = output;
-        if (output.outputKind === CellOutputKind.Rich && mimeType in output.data) {
+    public render(document: NotebookDocument, request: NotebookRenderRequest) {
+        let outputToSend = request.output;
+        if (request.output.outputKind === CellOutputKind.Rich && request.mimeType in request.output.data) {
             outputToSend = {
-                ...output,
+                ...request.output,
                 // Send only what we need & ignore other mimetypes.
                 data: {
-                    [mimeType]: output.data[mimeType]
+                    [request.mimeType]: request.output.data[request.mimeType]
                 }
             };
         }
         const id = uuid();
         return `
-            <script id="${id}" data-mime-type="${mimeType}" type="application/vscode-jupyter+json">
+            <script id="${id}" data-mime-type="${request.mimeType}" type="application/vscode-jupyter+json">
                 ${JSON.stringify(outputToSend)}
             </script>
             <script type="text/javascript">
@@ -39,7 +40,7 @@ export class NotebookOutputRenderer implements VSCNotebookOutputRenderer {
                         const tag = document.getElementById("${id}");
                         window['vscode-jupyter']['renderOutput'](tag);
                     } catch (ex){
-                        console.error("Failed to render ${mimeType}", ex);
+                        console.error("Failed to render ${request.mimeType}", ex);
                     }
                 }
             </script>

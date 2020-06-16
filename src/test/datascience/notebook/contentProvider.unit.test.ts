@@ -9,6 +9,7 @@ import { Uri } from 'vscode';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import type { NotebookContentProvider as VSCodeNotebookContentProvider } from 'vscode-proposed';
+import { NotebookCellData } from '../../../../typings/vscode-proposed';
 import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
@@ -58,7 +59,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
         };
         when(storageProvider.load(anything())).thenResolve((model as unknown) as INotebookModel);
 
-        const notebook = await contentProvider.openNotebook(fileUri);
+        const notebook = await contentProvider.openNotebook(fileUri, {});
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
@@ -134,12 +135,12 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
         };
         when(storageProvider.load(anything())).thenResolve((model as unknown) as INotebookModel);
 
-        const notebook = await contentProvider.openNotebook(fileUri);
+        const notebook = await contentProvider.openNotebook(fileUri, {});
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, ['csharp']);
         // ignore metadata we add.
-        notebook.cells.forEach((cell) => delete cell.metadata.custom);
+        notebook.cells.forEach((cell: NotebookCellData) => delete cell.metadata.custom);
 
         assert.deepEqual(notebook.cells, [
             {
