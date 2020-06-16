@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { assert } from 'chai';
 import { join as pathJoin } from 'path';
 import { It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
@@ -16,6 +14,7 @@ interface IDeps {
 
 suite('parsePythonVersion()', () => {
     test('Must convert undefined if empty string', async () => {
+        // tslint:disable-next-line: no-any
         assert.equal(parsePythonVersion(undefined as any), undefined);
         assert.equal(parsePythonVersion(''), undefined);
     });
