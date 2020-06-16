@@ -57,7 +57,9 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 }
             ]
         };
-        when(storageProvider.load(anything())).thenResolve((model as unknown) as INotebookModel);
+        when(storageProvider.load(anything(), anything(), anything())).thenResolve(
+            (model as unknown) as INotebookModel
+        );
 
         const notebook = await contentProvider.openNotebook(fileUri, {});
 
@@ -133,7 +135,9 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 }
             ]
         };
-        when(storageProvider.load(anything())).thenResolve((model as unknown) as INotebookModel);
+        when(storageProvider.load(anything(), anything(), anything())).thenResolve(
+            (model as unknown) as INotebookModel
+        );
 
         const notebook = await contentProvider.openNotebook(fileUri, {});
 
