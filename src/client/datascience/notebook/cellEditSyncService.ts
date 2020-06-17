@@ -7,8 +7,7 @@ import type { NotebookCell, NotebookDocument } from '../../../../typings/vscode-
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
-import { NotebookEditorSupport } from '../../common/experiments/groups';
-import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
 import { traceError } from '../../logging';
 import { INotebookEditorProvider, INotebookModel } from '../types';
@@ -23,8 +22,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-        @inject(IExperimentsManager) private readonly experiment: IExperimentsManager
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider
     ) {
         disposableRegistry.push(this);
     }
@@ -34,9 +32,6 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         }
     }
     public async activate(): Promise<void> {
-        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
-            return;
-        }
         this.documentManager.onDidChangeTextDocument(this.onDidChangeTextDocument, this, this.disposables);
     }
 

@@ -495,3 +495,6 @@ export namespace LiveShareCommands {
     export const rawKernelSupported = 'rawKernelSupported';
     export const createRawNotebook = 'createRawNotebook';
 }
+
+export const VSCodeNotebookProvider = 'V;SCodeNotebookProvider';
+export const OurNotebookProvider = 'OurNotebookProvider';

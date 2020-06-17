@@ -8,6 +8,7 @@ import { ICommandManager, IVSCodeNotebook } from '../../common/application/types
 import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
 import { NotebookContentProvider } from './contentProvider';
@@ -36,60 +37,19 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
-            return;
-        }
+        if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
+            const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
+            const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
 
-        const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
-        const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
+            // This code is temporary.
+            if (content.contributes.notebookProvider[0].priority !== 'default') {
+                content.contributes.notebookProvider[0].priority = 'default';
 
-        // This code is temporary.
-        if (
-            !content.enableProposedApi ||
-            !Array.isArray(content.contributes.notebookOutputRenderer) ||
-            !Array.isArray(content.contributes.notebookProvider)
-        ) {
-            content.enableProposedApi = true;
-            content.contributes.notebookOutputRenderer = [
-                {
-                    viewType: 'jupyter-notebook-renderer',
-                    displayName: 'Jupyter Notebook Renderer',
-                    mimeTypes: [
-                        'application/geo+json',
-                        'application/vdom.v1+json',
-                        'application/vnd.dataresource+json',
-                        'application/vnd.plotly.v1+json',
-                        'application/vnd.vega.v2+json',
-                        'application/vnd.vega.v3+json',
-                        'application/vnd.vega.v4+json',
-                        'application/vnd.vega.v5+json',
-                        'application/vnd.vegalite.v1+json',
-                        'application/vnd.vegalite.v2+json',
-                        'application/vnd.vegalite.v3+json',
-                        'application/vnd.vegalite.v4+json',
-                        'application/x-nteract-model-debug+json',
-                        'image/gif',
-                        'text/latex',
-                        'text/vnd.plotly.v1+html'
-                    ]
-                }
-            ];
-            content.contributes.notebookProvider = [
-                {
-                    viewType: JupyterNotebookView,
-                    displayName: 'Jupyter Notebook',
-                    selector: [
-                        {
-                            filenamePattern: '*.ipynb'
-                        }
-                    ]
-                }
-            ];
-
-            await this.fs.writeFile(packageJsonFile, JSON.stringify(content, undefined, 4));
-            await this.commandManager
-                .executeCommand('python.reloadVSCode', 'Please reload VS Code to use the new VS Code Notebook API')
-                .then(noop, noop);
+                await this.fs.writeFile(packageJsonFile, JSON.stringify(content, undefined, 4));
+                await this.commandManager
+                    .executeCommand('python.reloadVSCode', DataScience.reloadVSCodeNotebookEditor())
+                    .then(noop, noop);
+            }
         }
 
         this.disposables.push(

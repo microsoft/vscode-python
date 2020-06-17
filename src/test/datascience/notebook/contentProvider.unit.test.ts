@@ -14,6 +14,7 @@ import { ICommandManager } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { INotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { NotebookEditorCompatibilitySupport } from '../../../client/datascience/notebook/notebookEditorCompatibilitySupport';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 // tslint:disable: no-any
 suite('Data Science - NativeNotebook ContentProvider', () => {
@@ -23,7 +24,15 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
     setup(async () => {
         storageProvider = mock<INotebookStorageProvider>();
         const commandManager = mock<ICommandManager>();
-        contentProvider = new NotebookContentProvider(instance(storageProvider), instance(commandManager));
+        const compatSupport = mock(NotebookEditorCompatibilitySupport);
+        when(compatSupport.canOpenWithOurNotebookEditor(anything())).thenReturn(true);
+        when(compatSupport.canOpenWithVSCodeNotebookEditor(anything())).thenReturn(true);
+        contentProvider = new NotebookContentProvider(
+            instance(storageProvider),
+            instance(commandManager),
+            true,
+            instance(compatSupport)
+        );
     });
 
     test('Return notebook with 2 cells', async () => {

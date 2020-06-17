@@ -21,7 +21,7 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 import detectIndent = require('detect-indent');
 // tslint:disable-next-line:no-require-imports no-var-requires
 import cloneDeep = require('lodash/cloneDeep');
-import { UseNativeEditorApi } from '../../common/constants';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
@@ -107,7 +107,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private _id = uuid();
 
     constructor(
-        private readonly useNativeEditorApi: boolean,
+        public useNativeEditorApi: boolean,
         file: Uri,
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
@@ -494,6 +494,17 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 }
 
+/**
+ * Temporary hack to ensure we can use VS Code notebooks along with our standard notbooked editors.
+ */
+export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
+    if (!(model instanceof NativeEditorNotebookModel)) {
+        throw new Error('Unsupported NotebookModel');
+    }
+    const rawModel = model as NativeEditorNotebookModel;
+    rawModel.useNativeEditorApi = true;
+}
+
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
     public get onSavedAs(): Event<{ new: Uri; old: Uri }> {
@@ -513,7 +524,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
-        @inject(UseNativeEditorApi) private readonly useNativeEditorApi: boolean
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeEditorApi: boolean
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);

@@ -15,10 +15,16 @@ import type {
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
+import { MARKDOWN_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
+import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * This class is responsible for reading a notebook file (ipynb or other files) and returning VS Code with the NotebookData.
@@ -36,10 +42,34 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     }
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean,
+        @inject(NotebookEditorCompatibilitySupport)
+        private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
+        if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
+            // If not supported, return a notebook with error displayed.
+            // We cannot, not display a notebook.
+            return {
+                cells: [
+                    {
+                        cellKind: vscodeNotebookEnums.CellKind.Markdown,
+                        language: MARKDOWN_LANGUAGE,
+                        source: `# ${DataScience.usingPreviewNotebookWithOtherNotebookWarning()}`,
+                        metadata: { editable: false, runnable: false },
+                        outputs: []
+                    }
+                ],
+                languages: [],
+                metadata: { cellEditable: false, editable: false, runnable: false }
+            };
+        }
         const model = await this.notebookStorage.load(uri, undefined, !openContext.backupId);
+        // If experiment is not enabled, then this method was invoked as user opted to try and open using the new API.
+        if (!this.useVSCodeNotebookEditorApi) {
+            updateModelForUseWithVSCodeNotebook(model);
+        }
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
