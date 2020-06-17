@@ -268,4 +268,15 @@ $$`;
         const result2 = fixLatexEquations(markdown6, false);
         expect(result2).to.be.equal(output6_nonSingle, 'Result is incorrect');
     });
+
+    test('Links - Change HTML links to Markdown links', () => {
+        const result = fixLatexEquations(`<a href='https://aka.ms/AA8dqti'>link</a>`);
+        expect(result).to.be.equal(`[link](https://aka.ms/AA8dqti)`, 'Result is incorrect');
+
+        const result2 = fixLatexEquations(`<a href="https://aka.ms/AA8dqti">link <a</a>`);
+        expect(result2).to.be.equal(`[link <a](https://aka.ms/AA8dqti)`, 'Result is incorrect');
+
+        const result3 = fixLatexEquations(`<a href = "https://aka.ms/AA8dqti">link </a></a>`);
+        expect(result3).to.be.equal(`[link ](https://aka.ms/AA8dqti)</a>`, 'Result is incorrect');
+    });
 });
