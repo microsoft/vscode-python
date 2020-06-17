@@ -632,9 +632,12 @@ export class NativeEditorStorage implements INotebookStorage {
                         await this.fileSystem.writeFile(filePath, contents);
                     }
                 } else {
-                    await this.fileSystem
-                        .deleteFile(filePath)
-                        .catch((ex) => traceError('Failed to delete hotExit file. Possible it does not exist', ex));
+                    await this.fileSystem.deleteFile(filePath).catch((ex) => {
+                        // No need to log error if file doesn't exist.
+                        if (!isFileNotFoundError(ex)) {
+                            traceError('Failed to delete hotExit file. Possible it does not exist', ex);
+                        }
+                    });
                 }
             }
         } catch (exc) {

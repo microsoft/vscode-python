@@ -65,7 +65,10 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
                 metadata: { cellEditable: false, editable: false, runnable: false }
             };
         }
-        const model = await this.notebookStorage.load(uri, undefined, !openContext.backupId);
+        // If there's no backup id, then skip loading dirty contents.
+        const model = await (openContext.backupId
+            ? this.notebookStorage.load(uri, undefined, openContext.backupId)
+            : this.notebookStorage.load(uri, undefined, true));
         // If experiment is not enabled, then this method was invoked as user opted to try and open using the new API.
         if (!this.useVSCodeNotebookEditorApi) {
             updateModelForUseWithVSCodeNotebook(model);
