@@ -12,6 +12,7 @@ import {
     InitializeResult,
     LanguageClient,
     LanguageClientOptions,
+    MessageSignature,
     MessageTransports,
     NotificationHandler,
     NotificationHandler0,
@@ -216,6 +217,9 @@ export class MockLanguageClient extends LanguageClient {
         throw new Error('Method not implemented.');
     }
     public registerFeature(_feature: StaticFeature | DynamicFeature<any>): void {
+        throw new Error('Method not implemented.');
+    }
+    public handleFailedRequest<T>(_type: MessageSignature, _error: any, _defaultValue: T): T {
         throw new Error('Method not implemented.');
     }
     protected handleConnectionClosed(): void {
