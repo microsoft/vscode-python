@@ -14,9 +14,10 @@ const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/es
 // LaTeX seems to follow the pattern of \begin{name} or is escaped with $$ or $. See here for a bunch of examples:
 // https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Typesetting%20Equations.html
 // tslint:disable-next-line: cyclomatic-complexity
-export function fixLatexEquations(input: string, wrapSingles: boolean = false): string {
+export function fixMarkdown(input: string, wrapSingles: boolean = false): string {
     const output: string[] = [];
 
+    // change latex
     // Search for begin/end pairs, outputting as we go
     let start = 0;
 

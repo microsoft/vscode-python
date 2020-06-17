@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
-import { fixLatexEquations } from '../../datascience-ui/interactive-common/latexManipulation';
+import { fixMarkdown } from '../../datascience-ui/interactive-common/markdownManipulation';
 
 // tslint:disable: max-func-body-length
 suite('Data Science - LaTeX Manipulation', () => {
@@ -225,58 +225,58 @@ X^TX\\omega = X^TT
 $$`;
 
     test("Latex - Equations don't have $$", () => {
-        const result = fixLatexEquations(markdown1);
+        const result = fixMarkdown(markdown1);
         expect(result).to.be.equal(output1, 'Result is incorrect');
     });
 
     test('Latex - Equations have $', () => {
-        const result = fixLatexEquations(markdown2);
+        const result = fixMarkdown(markdown2);
         expect(result).to.be.equal(markdown2, 'Result is incorrect');
     });
 
     test("Latex - Multiple equations don't have $$", () => {
-        const result = fixLatexEquations(markdown3);
+        const result = fixMarkdown(markdown3);
         expect(result).to.be.equal(output3, 'Result is incorrect');
     });
 
     test('Latex - All on the same line', () => {
         const line = '\\begin{matrix}1 & 0\\0 & 1\\end{matrix}';
         const after = '\n$$\n\\begin{matrix}1 & 0\\0 & 1\\end{matrix}\n$$\n';
-        const result = fixLatexEquations(line);
+        const result = fixMarkdown(line);
         expect(result).to.be.equal(after, 'Result is incorrect');
     });
 
     test('Latex - Invalid', () => {
         const invalid = '\n\\begin{eq*}do stuff\\end{eq}';
-        const result = fixLatexEquations(invalid);
+        const result = fixMarkdown(invalid);
         expect(result).to.be.equal(invalid, 'Result should not have changed');
     });
 
     test('Latex - $$ already present', () => {
-        const result = fixLatexEquations(markdown4);
+        const result = fixMarkdown(markdown4);
         expect(result).to.be.equal(markdown4, 'Result should not have changed');
     });
 
     test('Latex - Multiple types', () => {
-        const result = fixLatexEquations(markdown5);
+        const result = fixMarkdown(markdown5);
         expect(result).to.be.equal(output5, 'Result is incorrect');
     });
 
     test('Latex - Multiple /begins inside $$', () => {
-        const result = fixLatexEquations(markdown6, true);
+        const result = fixMarkdown(markdown6, true);
         expect(result).to.be.equal(output6, 'Result is incorrect');
-        const result2 = fixLatexEquations(markdown6, false);
+        const result2 = fixMarkdown(markdown6, false);
         expect(result2).to.be.equal(output6_nonSingle, 'Result is incorrect');
     });
 
     test('Links - Change HTML links to Markdown links', () => {
-        const result = fixLatexEquations(`<a href='https://aka.ms/AA8dqti'>link</a>`);
+        const result = fixMarkdown(`<a href='https://aka.ms/AA8dqti'>link</a>`);
         expect(result).to.be.equal(`[link](https://aka.ms/AA8dqti)`, 'Result is incorrect');
 
-        const result2 = fixLatexEquations(`<a href="https://aka.ms/AA8dqti">link <a</a>`);
+        const result2 = fixMarkdown(`<a href="https://aka.ms/AA8dqti">link <a</a>`);
         expect(result2).to.be.equal(`[link <a](https://aka.ms/AA8dqti)`, 'Result is incorrect');
 
-        const result3 = fixLatexEquations(`<a href = "https://aka.ms/AA8dqti">link </a></a>`);
+        const result3 = fixMarkdown(`<a href = "https://aka.ms/AA8dqti">link </a></a>`);
         expect(result3).to.be.equal(`[link ](https://aka.ms/AA8dqti)</a>`, 'Result is incorrect');
     });
 });
