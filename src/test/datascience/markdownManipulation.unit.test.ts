@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { fixMarkdown } from '../../datascience-ui/interactive-common/markdownManipulation';
 
 // tslint:disable: max-func-body-length
-suite('Data Science - LaTeX Manipulation', () => {
+suite('Data Science - Markdown Manipulation', () => {
     const markdown1 = `\\begin{align}
 \\nabla \\cdot \\vec{\\mathbf{E}} & = 4 \\pi \\rho \\\\
 \\nabla \\times \\vec{\\mathbf{E}}\\, +\\, \\frac1c\\, \\frac{\\partial\\vec{\\mathbf{B}}}{\\partial t} & = \\vec{\\mathbf{0}} \\\\
@@ -270,13 +270,20 @@ $$`;
     });
 
     test('Links - Change HTML links to Markdown links', () => {
+        // tag with single quotes
         const result = fixMarkdown(`<a href='https://aka.ms/AA8dqti'>link</a>`);
         expect(result).to.be.equal(`[link](https://aka.ms/AA8dqti)`, 'Result is incorrect');
 
+        // tag with double quotes
         const result2 = fixMarkdown(`<a href="https://aka.ms/AA8dqti">link <a</a>`);
         expect(result2).to.be.equal(`[link <a](https://aka.ms/AA8dqti)`, 'Result is incorrect');
 
+        // tag with space in href and two endings
         const result3 = fixMarkdown(`<a href = "https://aka.ms/AA8dqti">link </a></a>`);
         expect(result3).to.be.equal(`[link ](https://aka.ms/AA8dqti)</a>`, 'Result is incorrect');
+
+        // mal formed tag
+        const result4 = fixMarkdown(`<a href = "https://aka.ms/AA8dqti" link </a></a>`);
+        expect(result4).to.be.equal(`<a href = "https://aka.ms/AA8dqti" link </a></a>`, 'Result is incorrect');
     });
 });
