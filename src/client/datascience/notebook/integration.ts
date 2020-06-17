@@ -39,9 +39,11 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
 
         // This code is temporary.
         return (
-            !content.enableProposedApi &&
-            !Array.isArray(content.contributes.notebookOutputRenderer) &&
-            !Array.isArray(content.contributes.notebookProvider)
+            content.enableProposedApi &&
+            Array.isArray(content.contributes.notebookOutputRenderer) &&
+            (content.contributes.notebookOutputRenderer as []).length > 0 &&
+            Array.isArray(content.contributes.notebookProvider) &&
+            (content.contributes.notebookProvider as []).length > 0
         );
     }
     public async enableSideBySideUsage() {
@@ -51,10 +53,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
-            return;
+        if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
+            await this.enableNotebooks(true);
         }
-        await this.enableNotebooks(true);
         this.disposables.push(
             this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
         );
@@ -127,7 +128,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             content.contributes.notebookProvider = [
                 {
                     viewType: JupyterNotebookView,
-                    displayName: 'Jupyter Notebook',
+                    displayName: 'Jupyter Notebook (preview)',
                     selector: [
                         {
                             filenamePattern: '*.ipynb'
