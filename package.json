@@ -88,6 +88,7 @@
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
         "onCommand:python.datascience.opennotebook",
+        "onCommand:python.datascience.opennotebookInPreviewEditor",
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
@@ -599,6 +600,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.opennotebookInPreviewEditor",
+                "title": "%python.command.python.datascience.opennotebookInPreviewEditor.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.exportoutputasnotebook",
                 "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
                 "category": "Python"
@@ -848,6 +854,11 @@
                 {
                     "when": "resourceLangId == jupyter",
                     "command": "python.datascience.opennotebook",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter && python.vscode.channel == 'insiders'",
+                    "command": "python.datascience.opennotebookInPreviewEditor",
                     "group": "Python"
                 },
                 {

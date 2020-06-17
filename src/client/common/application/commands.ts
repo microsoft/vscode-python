@@ -11,6 +11,7 @@ import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
+import { Channel } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -90,7 +91,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
-    ['setContext']: [string, boolean];
+    ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
@@ -160,6 +161,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugFileInInteractiveWindows]: [string];

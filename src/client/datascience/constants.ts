@@ -46,6 +46,7 @@ export namespace Commands {
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
+    export const OpenNotebookInPreviewEditor = 'python.datascience.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
