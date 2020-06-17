@@ -11,7 +11,7 @@ export type PythonExecInfo = {
 };
 
 // Compose Python execution info for the given executable.
-export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, pythonArgs?: string[]): PythonExecInfo {
+export function buildPythonExecInfo(python: string | string[], pythonArgs?: string[]): PythonExecInfo {
     if (Array.isArray(python)) {
         const args = python.slice(1);
         if (pythonArgs) {
@@ -23,21 +23,6 @@ export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, 
             python,
             pythonExecutable: python[python.length - 1]
         };
-    } else if (python instanceof Object) {
-        const info = {
-            command: python.command,
-            args: [...python.args],
-            python: [...python.python],
-            pythonExecutable: python.pythonExecutable
-        };
-        if (pythonArgs) {
-            info.args.push(...pythonArgs);
-        }
-        if (info.pythonExecutable === undefined) {
-            // This isn't necessarily true...
-            info.pythonExecutable = info.python[info.python.length - 1];
-        }
-        return info;
     } else {
         return {
             command: python,
@@ -46,4 +31,22 @@ export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, 
             pythonExecutable: python
         };
     }
+}
+
+// Create a copy, optionally adding to the args to pass to Python.
+export function copyPythonExecInfo(orig: PythonExecInfo, extraPythonArgs?: string[]): PythonExecInfo {
+    const info = {
+        command: orig.command,
+        args: [...orig.args],
+        python: [...orig.python],
+        pythonExecutable: orig.pythonExecutable
+    };
+    if (extraPythonArgs) {
+        info.args.push(...extraPythonArgs);
+    }
+    if (info.pythonExecutable === undefined) {
+        // This isn't necessarily true...
+        info.pythonExecutable = info.python[info.python.length - 1];
+    }
+    return info;
 }

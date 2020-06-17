@@ -4,7 +4,7 @@
 import { InterpreterInformation } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
 import { Architecture } from '../../common/utils/platform';
-import { buildPythonExecInfo, PythonExecInfo } from '../exec';
+import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 import { parsePythonVersion } from './pythonVersion';
 
 // Composse full interpreter information based on the given data.
@@ -38,7 +38,7 @@ export async function getInterpreterInfo(
     logger?: Logger
 ): Promise<InterpreterInformation | undefined> {
     const [args, parse] = getInterpreterInfoCommand();
-    const info = buildPythonExecInfo(python, args);
+    const info = copyPythonExecInfo(python, args);
     const argv = [info.command, ...info.args];
 
     // Concat these together to make a set of quoted strings

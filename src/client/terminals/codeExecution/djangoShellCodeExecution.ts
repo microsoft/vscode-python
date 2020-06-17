@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
+import { copyPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
@@ -43,12 +43,12 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 
-        return buildPythonExecInfo(info, [managePyPath.fileToCommandArgument(), 'shell']);
+        return copyPythonExecInfo(info, [managePyPath.fileToCommandArgument(), 'shell']);
     }
 
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         // We need the executable info but not the 'manage.py shell' args
         const info = await super.getExecutableInfo(resource);
-        return buildPythonExecInfo(info, executeArgs);
+        return copyPythonExecInfo(info, executeArgs);
     }
 }
