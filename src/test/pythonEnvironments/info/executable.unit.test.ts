@@ -33,12 +33,13 @@ suite('getExecutablePath()', () => {
         const expected = 'path/to/dummy/executable';
         const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
         deps.setup((d) => d.exec(python.command, argv))
+            // Return the expected value.
             .returns(() => Promise.resolve({ stdout: expected }));
         const exec = async (c: string, a: string[]) => deps.object.exec(c, a);
 
         const result = await getExecutablePath(python, exec);
 
-        expect(result).to.equal(expected, "getExecutablePath() sbould return get the value by running Python");
+        expect(result).to.equal(expected, 'getExecutablePath() sbould return get the value by running Python');
         verifyAll();
     });
 
@@ -46,6 +47,7 @@ suite('getExecutablePath()', () => {
         const stderr = 'oops';
         const argv = [isolated, '-c', 'import sys;print(sys.executable)'];
         deps.setup((d) => d.exec(python.command, argv))
+            // Throw an error.
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const exec = async (c: string, a: string[]) => deps.object.exec(c, a);
 
