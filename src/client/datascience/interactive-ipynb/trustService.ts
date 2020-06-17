@@ -1,17 +1,14 @@
+import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
-import { IDigestStorage, INotebookTrust, ITrustService } from '../types';
-import { NotebookTrust } from './notebookTrust';
+import { IDigestStorage, ITrustService } from '../types';
 
 @injectable()
 export class TrustService implements ITrustService {
-    private notebookTrust: INotebookTrust | undefined;
-
     constructor(
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
-        @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
-    ) {
-        this.notebookTrust = new NotebookTrust(this.digestStorage, 'sha256'); // Inject this if we end up not codesharing
-    }
+        @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
+        private algorithm: string = 'sha256'
+    ) {}
 
     /**
      * When a notebook is opened, we check the database to see if a trusted checkpoint
@@ -22,7 +19,8 @@ export class TrustService implements ITrustService {
      */
     public async isNotebookTrusted(notebookContents: string) {
         // Compute digest and see if notebook is trusted
-        return this.notebookTrust!.isNotebookTrusted(notebookContents);
+        const digest = this.computeDigest(notebookContents);
+        return this.digestStorage.containsDigest(digest, this.algorithm);
     }
 
     /**
@@ -32,8 +30,15 @@ export class TrustService implements ITrustService {
      */
     public async updateTrust(notebookContents: string, notebookModelIsTrusted: boolean) {
         if (notebookModelIsTrusted) {
-            await this.notebookTrust!.trustNotebook(notebookContents);
+            const digest = this.computeDigest(notebookContents);
+            return this.digestStorage.saveDigest(digest, this.algorithm);
         }
         // Otherwise, do nothing
+    }
+
+    private computeDigest(notebookContents: string) {
+        const hmac = createHmac(this.algorithm, this.digestStorage.key);
+        hmac.update(notebookContents);
+        return hmac.digest('hex');
     }
 }
