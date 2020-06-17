@@ -5,13 +5,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as fastDeepEqual from 'fast-deep-equal';
-// import * as kt from 'katex';
-// const kt = require('katex');
-import * as MarkdownIt from 'markdown-it';
-import markdownItLatex from 'markdown-it-latex';
-import 'markdown-it-latex/dist/index.css';
-// declare module 'markdown-it-latex';
-// import * as tm from 'markdown-it-texmath';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
@@ -298,35 +291,14 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        // const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
-        const Transform = getTransform('text/latex');
+        const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
+        const Transform = getTransform('text/markdown');
         const MarkdownClassName = 'markdown-cell-output';
-
-        // const kt = require('katex');
-        // const tm = require('markdown-it-texmath').use(kt);
-
-        const mdit = new MarkdownIt();
-        // mdit.use(markdownItLatex);
-
-        // const delimiters = 'dollars';
-        // const options = { delimiters };
-        const source2 = mdit
-            .render(fixLatexEquations(concatMultilineStringInput(markdown.source)))
-            .replace(/&gt;/g, '>')
-            .replace(/&lt;/g, '<');
-        console.log(source2);
-
-        const bundlePath = './latex2html5.bundle.js';
-
-        const source3 = `<div><script src="${bundlePath}"></script><script type="text/latex">
-          ${source2}
-          </script><script>LaTeX2HTML5.init();</script></div>`;
 
         return [
             <div key={0} className={MarkdownClassName}>
-                <Transform key={0} data={source2} />
+                <Transform key={0} data={source} />
             </div>
-            // <div dangerouslySetInnerHTML={{ __html: source3 }} />
         ];
     };
 
