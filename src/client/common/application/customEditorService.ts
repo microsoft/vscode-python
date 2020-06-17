@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DataScience } from '../../common/utils/localize';
 
-import { traceError } from '../../logging';
+import { logError } from '../../logging';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { noop } from '../utils/misc';
@@ -20,7 +20,7 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem
     ) {
-        this.verifyPackageJson().catch((e) => traceError(`Error rewriting package json: `, e));
+        this.verifyPackageJson().catch((e) => logError(`Error rewriting package json: `, e));
     }
 
     public registerCustomEditorProvider(

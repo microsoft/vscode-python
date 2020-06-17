@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
 import { IDisposableRegistry } from '../../common/types';
-import { traceError } from '../../logging';
+import { logError } from '../../logging';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
@@ -108,7 +108,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     private async restartKernel() {
         const activeEditor = this.provider.activeEditor;
         if (activeEditor) {
-            await activeEditor.restartKernel().catch(traceError.bind('Failed to restart kernel'));
+            await activeEditor.restartKernel().catch(logError.bind('Failed to restart kernel'));
         }
     }
 

@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 import { noop } from '../../client/common/utils/misc';
 import { traceCellResults } from '../../client/datascience/common';
 import { ICell, INotebookExecutionLogger } from '../../client/datascience/types';
-import { traceInfo } from '../../client/logging';
+import { logInfo } from '../../client/logging';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 
 @injectable()
@@ -13,7 +13,7 @@ export class TestExecutionLogger implements INotebookExecutionLogger {
         noop();
     }
     public preExecute(cell: ICell, _silent: boolean): Promise<void> {
-        traceInfo(`Cell Execution for ${cell.id} : \n${concatMultilineStringInput(cell.data.source)}\n`);
+        logInfo(`Cell Execution for ${cell.id} : \n${concatMultilineStringInput(cell.data.source)}\n`);
         return Promise.resolve();
     }
     public postExecute(cell: ICell, _silent: boolean): Promise<void> {

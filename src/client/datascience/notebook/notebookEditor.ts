@@ -9,7 +9,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import { IConfigurationService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { traceError } from '../../logging';
+import { logError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -157,7 +157,7 @@ export class NotebookEditor implements INotebookEditor {
             }
         } catch (err) {
             status.dispose();
-            traceError(err);
+            logError(err);
             this.applicationShell.showErrorMessage(err);
         } finally {
             this.restartingKernel = false;
@@ -233,7 +233,7 @@ export class NotebookEditor implements INotebookEditor {
             } else {
                 // Show the error message
                 this.applicationShell.showErrorMessage(exc);
-                traceError(exc);
+                logError(exc);
             }
         } finally {
             status.dispose();

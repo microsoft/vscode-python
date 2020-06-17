@@ -366,7 +366,7 @@ import { registerInterpreterTypes } from '../../client/interpreter/serviceRegist
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
-import { traceInfo } from '../../client/logging';
+import { logInfo } from '../../client/logging';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
@@ -1280,7 +1280,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
                     // Log this all the time. Useful in determining why a test may not pass.
                     const message = `Setting interpreter to ${list[0].displayName || list[0].path} -> ${list[0].path}`;
-                    traceInfo(message);
+                    logInfo(message);
                     // tslint:disable-next-line: no-console
                     console.log(message);
 

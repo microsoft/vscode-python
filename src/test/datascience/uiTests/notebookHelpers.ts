@@ -12,7 +12,7 @@ import { EventEmitter, Uri, ViewColumn, WebviewPanel } from 'vscode';
 import { noop } from '../../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
-import { traceInfo } from '../../../client/logging';
+import { logInfo } from '../../../client/logging';
 import { createTemporaryFile } from '../../utils/fs';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -26,7 +26,7 @@ async function openNotebookEditor(
 ): Promise<INotebookEditor> {
     const uri = Uri.file(filePath);
     iocC.setFileContents(uri, contents);
-    traceInfo(`NotebookHelper: opening notebook file ${filePath}`);
+    logInfo(`NotebookHelper: opening notebook file ${filePath}`);
     const notebookEditorProvider = iocC.get<INotebookEditorProvider>(INotebookEditorProvider);
     return uri ? notebookEditorProvider.open(uri) : notebookEditorProvider.createNew();
 }
@@ -47,7 +47,7 @@ async function createNotebookFileWithContents(contents: string, disposables: IDi
 }
 
 function createWebViewPanel(): WebviewPanel {
-    traceInfo(`creating dummy webview panel`);
+    logInfo(`creating dummy webview panel`);
     const disposeEventEmitter = new EventEmitter<void>();
     const webViewPanel: Partial<WebviewPanel> = {
         webview: {
@@ -70,7 +70,7 @@ function createWebViewPanel(): WebviewPanel {
             w.createWebviewPanel(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
         )
         .returns(() => {
-            traceInfo(`Mock webview ${JSON.stringify(webViewPanel)} should be returned.`);
+            logInfo(`Mock webview ${JSON.stringify(webViewPanel)} should be returned.`);
             // tslint:disable-next-line: no-any
             return webViewPanel as any;
         });
@@ -84,9 +84,9 @@ export async function openNotebook(
     disposables: IDisposable[],
     notebookFileContents: string
 ) {
-    traceInfo(`Opening notebook for UI tests...`);
+    logInfo(`Opening notebook for UI tests...`);
     const notebookFile = await createNotebookFileWithContents(notebookFileContents, disposables);
-    traceInfo(`Notebook UI Tests: have file ${notebookFile}`);
+    logInfo(`Notebook UI Tests: have file ${notebookFile}`);
 
     const notebookUI = new NotebookEditorUI();
     disposables.push(notebookUI);
@@ -95,7 +95,7 @@ export async function openNotebook(
 
     const port = await getFreePort({ host: 'localhost' });
     process.env.VSC_PYTHON_DS_UI_PORT = port.toString();
-    traceInfo(`Notebook UI Tests: have port ${port}`);
+    logInfo(`Notebook UI Tests: have port ${port}`);
 
     // Wait for the browser to launch and open the UI.
     // I.e. wait until we open the notebook react ui in browser.
@@ -116,13 +116,13 @@ export async function openNotebook(
     });
 
     const webViewPanel = createWebViewPanel();
-    traceInfo(`Notebook UI Tests: about to open editor`);
+    logInfo(`Notebook UI Tests: about to open editor`);
 
     const kernelIdle = notebookUI.waitForMessageAfterServer(InteractiveWindowMessages.KernelIdle);
     const notebookEditor = await openNotebookEditor(ioc, notebookFileContents, notebookFile);
-    traceInfo(`Notebook UI Tests: have editor`);
+    logInfo(`Notebook UI Tests: have editor`);
     await uiLoaded;
-    traceInfo(`Notebook UI Tests: UI complete`);
+    logInfo(`Notebook UI Tests: UI complete`);
 
     // Wait for kernel to be idle before finishing. (Prevents early shutdown problems in tests)
     await kernelIdle;

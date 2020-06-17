@@ -24,7 +24,7 @@ import {
 } from '../../../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
-import { traceError, traceWarning } from '../../../logging';
+import { logError, logWarning } from '../../../logging';
 import { CellState, ICell, INotebookModel } from '../../types';
 import { mapVSCNotebookCellToCellModel } from './cellMappers';
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -146,7 +146,7 @@ export function getDefaultCodeLanguage(model: INotebookModel) {
 
 export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
-        traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
+        logError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
     }
 
@@ -229,7 +229,7 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
     if (fn) {
         return fn(output);
     }
-    traceWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
+    logWarning(`Unable to translate cell from ${output.output_type} to NotebookCellData for VS Code.`);
 }
 
 /**

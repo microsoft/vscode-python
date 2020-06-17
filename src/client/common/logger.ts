@@ -1,10 +1,10 @@
+// These are all just temporary aliases, for backward compatibility
+// and to avoid churn.
 export {
-    // aliases:
-    // (temporarily for backward compatibility and to avoid churn)
     traceDecorators,
-    traceError,
-    traceInfo,
-    traceVerbose,
-    traceWarning
-} from '../logging/_trace';
-export { TraceOptions as LogOptions } from '../logging/types';
+    logError as traceError,
+    logInfo as traceInfo,
+    logVerbose as traceVerbose,
+    logWarning as traceWarning
+} from '../logging';
+export { TraceOptions as LogOptions } from '../logging/trace';

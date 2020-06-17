@@ -9,7 +9,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
-import { traceError } from '../../logging';
+import { logError } from '../../logging';
 import { INotebookEditorProvider, INotebookModel } from '../types';
 import { getOriginalCellId } from './helpers/cellMappers';
 
@@ -47,7 +47,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
 
         const cell = details.model.cells.find((item) => item.id === details.cellId);
         if (!cell) {
-            traceError(
+            logError(
                 `Syncing Cell Editor aborted, Unable to find corresponding ICell for ${e.document.uri.toString()}`,
                 new Error('ICell not found')
             );
@@ -81,7 +81,7 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
                 return;
             }
 
-            traceError(
+            logError(
                 `Syncing Cell Editor aborted, Unable to find corresponding Notebook for ${cellDocument.uri.toString()}`,
                 new Error('Unable to find corresponding Notebook')
             );
@@ -91,14 +91,14 @@ export class CellEditSyncService implements IExtensionSingleActivationService, I
         // Check if we have an editor associated with this document.
         const editor = this.editorProvider.editors.find((item) => item.file.toString() === document?.uri.toString());
         if (!editor) {
-            traceError(
+            logError(
                 `Syncing Cell Editor aborted, Unable to find corresponding Editor for ${cellDocument.uri.toString()}`,
                 new Error('Unable to find corresponding Editor')
             );
             return;
         }
         if (!editor.model) {
-            traceError(
+            logError(
                 `Syncing Cell Editor aborted, Unable to find corresponding INotebookModel for ${cellDocument.uri.toString()}`,
                 new Error('No INotebookModel in editor')
             );

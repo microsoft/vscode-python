@@ -10,7 +10,7 @@ import {
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { traceInfo } from '../../client/logging';
+import { logInfo } from '../../client/logging';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
 export type WaitForMessageOptions = {
@@ -118,7 +118,7 @@ export class MountedWebView implements IMountedWebView, IDisposable {
         const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
         // Wait for the mounted web panel to send a message back to the data explorer
         const promise = createDeferred<void>();
-        traceInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
+        logInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
         let handler: (m: string, p: any) => void;
         const timer = timeoutMs
             ? setTimeout(() => {

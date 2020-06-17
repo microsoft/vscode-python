@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
-import { traceError, traceInfo } from '../../../logging';
+import { logError, logInfo } from '../../../logging';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 
@@ -112,10 +112,10 @@ export class ServerCache implements IAsyncDisposable {
                             // tslint:disable-next-line: no-any
                             await (server as any).dispose();
                         } else {
-                            traceInfo('ServerCache Dispose, no server');
+                            logInfo('ServerCache Dispose, no server');
                         }
                     } catch (e) {
-                        traceError(`Dispose error in ServerCache: `, e);
+                        logError(`Dispose error in ServerCache: `, e);
                     }
                 })
             );

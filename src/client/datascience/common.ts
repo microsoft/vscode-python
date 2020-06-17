@@ -8,7 +8,7 @@ import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { traceError, traceInfo } from '../logging';
+import { logError, logInfo } from '../logging';
 import { Settings } from './constants';
 import { ICell } from './types';
 
@@ -109,18 +109,18 @@ export function traceCellResults(prefix: string, results: ICell[]) {
         const cell = results[0].data as nbformat.ICodeCell;
         const error = cell.outputs && cell.outputs[0] ? cell.outputs[0].evalue : undefined;
         if (error) {
-            traceError(`${prefix} Error : ${error}`);
+            logError(`${prefix} Error : ${error}`);
         } else if (cell.outputs && cell.outputs[0]) {
             if (cell.outputs[0].output_type.includes('image')) {
-                traceInfo(`${prefix} Output: image`);
+                logInfo(`${prefix} Output: image`);
             } else {
                 const data = cell.outputs[0].data;
                 const text = cell.outputs[0].text;
-                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
+                logInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
             }
         }
     } else {
-        traceInfo(`${prefix} no output.`);
+        logInfo(`${prefix} no output.`);
     }
 }
 

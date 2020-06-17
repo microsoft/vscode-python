@@ -18,7 +18,7 @@ import {
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { traceInfo } from '../../../logging';
+import { logInfo } from '../../../logging';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
@@ -69,23 +69,23 @@ export class HostJupyterExecution
     }
 
     public async dispose(): Promise<void> {
-        traceInfo(`Disposing HostJupyterExecution ${this._id}`);
+        logInfo(`Disposing HostJupyterExecution ${this._id}`);
         if (!this._disposed) {
             this._disposed = true;
-            traceInfo(`Disposing super HostJupyterExecution ${this._id}`);
+            logInfo(`Disposing super HostJupyterExecution ${this._id}`);
             await super.dispose();
-            traceInfo(`Getting live share API during dispose HostJupyterExecution ${this._id}`);
+            logInfo(`Getting live share API during dispose HostJupyterExecution ${this._id}`);
             const api = await this.api;
-            traceInfo(`Detaching HostJupyterExecution ${this._id}`);
+            logInfo(`Detaching HostJupyterExecution ${this._id}`);
             await this.onDetach(api);
 
             // Cleanup on dispose. We are going away permanently
             if (this.serverCache) {
-                traceInfo(`Cleaning up server cache ${this._id}`);
+                logInfo(`Cleaning up server cache ${this._id}`);
                 await this.serverCache.dispose();
             }
         }
-        traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
+        logInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
     public async hostConnectToNotebookServer(

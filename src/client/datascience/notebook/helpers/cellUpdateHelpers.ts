@@ -17,7 +17,7 @@ import {
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
-import { traceError } from '../../../logging';
+import { logError } from '../../../logging';
 import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
 import {
@@ -94,7 +94,7 @@ function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebook
     } else if (isCellInsertion(change)) {
         handleCellInsertion(change, model);
     } else {
-        traceError('Unsupported cell change', change);
+        logError('Unsupported cell change', change);
         throw new Error('Unsupported cell change');
     }
 }
