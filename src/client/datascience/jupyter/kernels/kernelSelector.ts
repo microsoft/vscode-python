@@ -458,7 +458,7 @@ export class KernelSelector {
      * @param type
      * @param {string} [displayNameOfKernelNotFound]
      * @param {IJupyterSessionManager} [session]
-     * @param [disableUI]
+     * @param {boolean} [disableUI]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
