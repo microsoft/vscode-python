@@ -287,7 +287,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return [];
     };
 
-    // tslint:disable: no-require-imports
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
