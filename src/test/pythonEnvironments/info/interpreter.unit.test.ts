@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as path from 'path';
+import { join as pathJoin } from 'path';
 import { SemVer } from 'semver';
-import * as TypeMoq from 'typemoq';
+import { IMock, It as TypeMoqIt, Mock, MockBehavior } from 'typemoq';
 import { StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
-import * as sut from '../../../client/pythonEnvironments/info/interpreter';
+import { getInterpreterInfo } from '../../../client/pythonEnvironments/info/interpreter';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
+const isolated = pathJoin(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
+const script = pathJoin(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
 
 suite('extractInterpreterInfo()', () => {
     // Tests go here.
@@ -26,11 +27,11 @@ interface IDeps {
 }
 
 suite('getInterpreterInfo()', () => {
-    let deps: TypeMoq.IMock<IDeps>;
+    let deps: IMock<IDeps>;
     const python = buildPythonExecInfo('path/to/python');
 
     setup(() => {
-        deps = TypeMoq.Mock.ofType<IDeps>(undefined, TypeMoq.MockBehavior.Strict);
+        deps = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
     });
     function verifyAll() {
         deps.verifyAll();
@@ -43,7 +44,6 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true
         };
-        const script = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
         const cmd = `"${python.command}" "${isolated}" "${script}"`;
         deps
             // Checking the args is the key point of this test.
@@ -51,7 +51,7 @@ suite('getInterpreterInfo()', () => {
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        await sut.getInterpreterInfo(python, shellExec);
+        await getInterpreterInfo(python, shellExec);
 
         verifyAll();
     });
@@ -63,7 +63,6 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true
         };
-        const script = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
         const _python = buildPythonExecInfo(' path to /my python ');
         const cmd = `" path to /my python " "${isolated}" "${script}"`;
         deps
@@ -72,7 +71,7 @@ suite('getInterpreterInfo()', () => {
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        await sut.getInterpreterInfo(_python, shellExec);
+        await getInterpreterInfo(_python, shellExec);
 
         verifyAll();
     });
@@ -84,7 +83,6 @@ suite('getInterpreterInfo()', () => {
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
             is64Bit: true
         };
-        const script = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
         const _python = buildPythonExecInfo(['path/to/conda', 'run', '-n', 'my-env', 'python']);
         const cmd = `"path/to/conda" "run" "-n" "my-env" "python" "${isolated}" "${script}"`;
         deps
@@ -93,7 +91,7 @@ suite('getInterpreterInfo()', () => {
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        await sut.getInterpreterInfo(_python, shellExec);
+        await getInterpreterInfo(_python, shellExec);
 
         verifyAll();
     });
@@ -115,11 +113,11 @@ suite('getInterpreterInfo()', () => {
         };
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = await sut.getInterpreterInfo(python, shellExec);
+        const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
         verifyAll();
@@ -141,11 +139,11 @@ suite('getInterpreterInfo()', () => {
         };
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = await sut.getInterpreterInfo(python, shellExec);
+        const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
         verifyAll();
@@ -167,11 +165,11 @@ suite('getInterpreterInfo()', () => {
         };
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = await sut.getInterpreterInfo(python, shellExec);
+        const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
         verifyAll();
@@ -181,11 +179,11 @@ suite('getInterpreterInfo()', () => {
         const err = new StdErrError('oops!');
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.reject(err));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = sut.getInterpreterInfo(python, shellExec);
+        const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejectedWith(err);
         verifyAll();
@@ -195,11 +193,11 @@ suite('getInterpreterInfo()', () => {
         const err = new Error('oops');
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.reject(err));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = sut.getInterpreterInfo(python, shellExec);
+        const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejectedWith(err);
         verifyAll();
@@ -208,11 +206,11 @@ suite('getInterpreterInfo()', () => {
     test('should fail if the json value returned by interpreterInfo.py is not valid', async () => {
         deps
             // We check the args in other tests.
-            .setup((d) => d.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((d) => d.shellExec(TypeMoqIt.isAny(), TypeMoqIt.isAny()))
             .returns(() => Promise.resolve({ stdout: 'bad json' }));
         const shellExec = async (c: string, t: number) => deps.object.shellExec(c, t);
 
-        const result = sut.getInterpreterInfo(python, shellExec);
+        const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejected;
         verifyAll();

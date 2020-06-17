@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-//import * as internalScripts from '../../common/process/internal/scripts';
+import { InterpreterInformation } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts';
 import { Architecture } from '../../common/utils/platform';
 import { buildPythonExecInfo, PythonExecInfo } from '../exec';
-import { InterpreterInformation } from '.';
 import { parsePythonVersion } from './pythonVersion';
 
 export function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {

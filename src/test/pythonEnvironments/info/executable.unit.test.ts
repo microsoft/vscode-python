@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as path from 'path';
-import * as TypeMoq from 'typemoq';
+import { join as pathJoin } from 'path';
+import { IMock, Mock, MockBehavior } from 'typemoq';
 import { StdErrError } from '../../../client/common/process/types';
 import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
-import * as sut from '../../../client/pythonEnvironments/info/executable';
+import { getExecutablePath } from '../../../client/pythonEnvironments/info/executable';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
+const isolated = pathJoin(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
 
 type ExecResult = {
     stdout: string;
@@ -19,11 +19,11 @@ interface IDeps {
 }
 
 suite('getExecutablePath()', () => {
-    let deps: TypeMoq.IMock<IDeps>;
+    let deps: IMock<IDeps>;
     const python = buildPythonExecInfo('path/to/python');
 
     setup(() => {
-        deps = TypeMoq.Mock.ofType<IDeps>(undefined, TypeMoq.MockBehavior.Strict);
+        deps = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
     });
     function verifyAll() {
         deps.verifyAll();
@@ -36,7 +36,7 @@ suite('getExecutablePath()', () => {
             .returns(() => Promise.resolve({ stdout: expected }));
         const exec = async (c: string, a: string[]) => deps.object.exec(c, a);
 
-        const result = await sut.getExecutablePath(python, exec);
+        const result = await getExecutablePath(python, exec);
 
         expect(result).to.equal(expected, "getExecutablePath() sbould return get the value by running Python");
         verifyAll();
@@ -49,7 +49,7 @@ suite('getExecutablePath()', () => {
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const exec = async (c: string, a: string[]) => deps.object.exec(c, a);
 
-        const result = sut.getExecutablePath(python, exec);
+        const result = getExecutablePath(python, exec);
 
         expect(result).to.eventually.be.rejectedWith(stderr);
         verifyAll();
