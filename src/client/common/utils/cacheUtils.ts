@@ -25,7 +25,7 @@ const resourceSpecificCacheStores = new Map<string, Map<string, CacheData>>();
  *  used in a workspace will affect the cache key.
  * @param {Resource} resource
  * @param {VSCodeType} [vscode=require('vscode')]
- * @param {IServiceContainer} serviceContainer
+ * @param serviceContainer
  * @returns
  */
 function getCacheKey(
