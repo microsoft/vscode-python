@@ -97,8 +97,8 @@ import { PythonSettings } from '../../client/common/configSettings';
 import {
     EXTENSION_ROOT_DIR,
     UseCustomEditorApi,
-    UseVSCodeNotebookEditorApi,
-    UseProposedApi
+    UseProposedApi,
+    UseVSCodeNotebookEditorApi
 } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
