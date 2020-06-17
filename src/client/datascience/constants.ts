@@ -496,5 +496,5 @@ export namespace LiveShareCommands {
     export const createRawNotebook = 'createRawNotebook';
 }
 
-export const VSCodeNotebookProvider = 'V;SCodeNotebookProvider';
+export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
 export const OurNotebookProvider = 'OurNotebookProvider';
