@@ -113,23 +113,10 @@ gulp.task('checkNativeDependencies', (done) => {
     done();
 });
 
-gulp.task('validate-packagejson', () => validatePackageJson());
 gulp.task('compile-ipywidgets', () => buildIPyWidgets());
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
-async function validatePackageJson() {
-    const json = require('./package.json');
-    if (json.enableProposedApi) {
-        throw new Error('package.json has enableProposedApi setting enabled');
-    }
-    if (json.contributes.notebookOutputRenderer) {
-        throw new Error('Package.json contains entry for contributes.notebookOutputRenderer');
-    }
-    if (json.contributes.notebookProvider) {
-        throw new Error('Package.json contains entry for contributes.notebookProvider');
-    }
-}
 
 async function buildIPyWidgets() {
     // if the output ipywidgest file exists, then no need to re-build.
