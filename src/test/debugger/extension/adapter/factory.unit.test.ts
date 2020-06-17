@@ -29,7 +29,7 @@ import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/exten
 import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
 import { MockOutputChannel } from '../../../mockClasses';

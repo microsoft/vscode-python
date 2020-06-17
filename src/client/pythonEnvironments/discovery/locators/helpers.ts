@@ -6,7 +6,7 @@ import { IS_WINDOWS } from '../../../common/platform/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import { IInterpreterLocatorHelper } from '../../../interpreter/contracts';
 import { IPipEnvServiceHelper } from '../../../interpreter/locators/types';
-import { InterpreterType, PythonInterpreter } from '../types';
+import { InterpreterType, PythonInterpreter } from '../../info';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 

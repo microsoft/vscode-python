@@ -11,8 +11,6 @@ import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { traceInfo } from '../../client/common/logger';
-import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
@@ -26,6 +24,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { WaitForMessageOptions } from './mountedWebView';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 export * from './testHelpersCore';
 
@@ -42,27 +41,6 @@ export enum CellPosition {
     Last = 'last'
 }
 
-type WaitForMessageOptions = {
-    /**
-     * Timeout for waiting for message.
-     * Defaults to 65_000ms.
-     *
-     * @type {number}
-     */
-    timeoutMs?: number;
-    /**
-     * Number of times the message should be received.
-     * Defaults to 1.
-     *
-     * @type {number}
-     */
-    numberOfTimes?: number;
-
-    // Optional check for the payload of the message
-    // will only return (or count) message if this returns true
-    withPayload?(payload: any): boolean;
-};
-
 /**
  *
  *
@@ -78,65 +56,7 @@ export function waitForMessage(
     message: string,
     options?: WaitForMessageOptions
 ): Promise<void> {
-    const timeoutMs = options && options.timeoutMs ? options.timeoutMs : undefined;
-    const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
-    // Wait for the mounted web panel to send a message back to the data explorer
-    const promise = createDeferred<void>();
-    traceInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
-    let handler: (m: string, p: any) => void;
-    const timer = timeoutMs
-        ? setTimeout(() => {
-              if (!promise.resolved) {
-                  promise.reject(new Error(`Waiting for ${message} timed out`));
-              }
-          }, timeoutMs)
-        : undefined;
-    let timesMessageReceived = 0;
-    const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-    handler = (m: string, payload: any) => {
-        if (m === message || m === dispatchedAction) {
-            // First verify the payload matches
-            if (options?.withPayload) {
-                if (!options.withPayload(payload)) {
-                    return;
-                }
-            }
-
-            timesMessageReceived += 1;
-            if (timesMessageReceived < numberOfTimes) {
-                return;
-            }
-            if (timer) {
-                clearTimeout(timer);
-            }
-            ioc.removeMessageListener(handler);
-            // Make sure to rerender current state.
-            if (ioc.wrapper) {
-                ioc.wrapper.update();
-            }
-            if (m === message) {
-                promise.resolve();
-            } else {
-                // It could a redux dispatched message.
-                // Wait for 10ms, wait for other stuff to finish.
-                // We can wait for 100ms or 1s. But thats too long.
-                // The assumption is that currently we do not have any setTimeouts
-                // in UI code that's in the magnitude of 100ms or more.
-                // We do have a couple of setTiemout's, but they wait for 1ms, not 100ms.
-                // 10ms more than sufficient for all the UI timeouts.
-                setTimeout(() => promise.resolve(), 10);
-            }
-        }
-    };
-    ioc.addMessageListener(handler);
-    return promise.promise;
-}
-
-export async function waitForMessageResponse(ioc: DataScienceIocContainer, action: () => void): Promise<void> {
-    ioc.wrapperCreatedPromise = createDeferred<boolean>();
-    action();
-    await ioc.wrapperCreatedPromise.promise;
-    ioc.wrapperCreatedPromise = undefined;
+    return ioc.getDefaultWebPanel().waitForMessage(message, options);
 }
 
 async function testInnerLoop(
@@ -212,8 +132,7 @@ export function mountWebView(
     type: 'native' | 'interactive'
 ): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Setup our webview panel
-    ioc.createWebView(() => mountConnectedMainPanel(type));
-    return ioc.wrapper!;
+    return ioc.createWebView(() => mountConnectedMainPanel(type), type === 'native' ? 'notebook' : 'default');
 }
 
 export function addMockData(
@@ -311,7 +230,7 @@ export function getLastOutputCell(
 
 export function verifyHtmlOnCell(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    cellType: string,
+    cellType: 'NativeCell' | 'InteractiveCell',
     html: string | undefined | RegExp,
     cellIndex: number | CellPosition
 ) {
@@ -539,6 +458,7 @@ export function verifyLastCellInputState(
 
 export async function getCellResults(
     ioc: DataScienceIocContainer,
+    type: 'notebook' | 'default',
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     cellType: string,
     updater: () => Promise<void>,
@@ -547,7 +467,7 @@ export async function getCellResults(
     // Get a render promise with the expected number of renders
     const renderPromise = renderPromiseGenerator
         ? renderPromiseGenerator()
-        : waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+        : ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
@@ -840,6 +760,10 @@ export function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, Re
     }
 }
 
-export async function waitForVariablesUpdated(ioc: DataScienceIocContainer, numberOfTimes?: number): Promise<void> {
-    return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
+export async function waitForVariablesUpdated(
+    ioc: DataScienceIocContainer,
+    type: 'default' | 'notebook',
+    numberOfTimes?: number
+): Promise<void> {
+    return ioc.getWebPanel(type).waitForMessage(InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
 }

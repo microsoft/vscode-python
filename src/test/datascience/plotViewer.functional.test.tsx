@@ -28,12 +28,15 @@ suite('DataScience PlotViewer tests', () => {
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />));
+        ioc.createWebView(
+            () => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
+            'default'
+        );
 
         // Make sure the plot viewer provider and execution factory in the container is created (the extension does this on startup in the extension)
         plotViewerProvider = ioc.get<IPlotViewerProvider>(IPlotViewerProvider);
 
-        return ioc.wrapper!;
+        return ioc.getDefaultWrapper();
     }
 
     function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>): Promise<void> {

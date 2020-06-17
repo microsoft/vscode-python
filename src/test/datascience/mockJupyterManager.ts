@@ -39,7 +39,7 @@ import {
 } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';

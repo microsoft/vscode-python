@@ -12,9 +12,11 @@ import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
+import { reportAction } from '../../progress/decorator';
+import { ReportableAction } from '../../progress/types';
 import { IJupyterCommandFactory } from '../../types';
 import { JupyterInstallError } from '../jupyterInstallError';
 
@@ -126,6 +128,7 @@ export class JupyterInterpreterDependencyService {
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
      * @memberof JupyterInterpreterDependencyService
      */
+    @reportAction(ReportableAction.InstallingMissingDependencies)
     public async installMissingDependencies(
         interpreter: PythonInterpreter,
         _error?: JupyterInstallError,

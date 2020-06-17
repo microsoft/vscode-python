@@ -44,7 +44,7 @@ import { sleep } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;

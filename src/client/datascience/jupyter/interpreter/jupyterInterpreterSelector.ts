@@ -11,7 +11,7 @@ import { Cancellation } from '../../../common/cancellation';
 import { IPathUtils } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 
 /**

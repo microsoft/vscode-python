@@ -4,28 +4,34 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as assert from 'assert';
+import * as uuid from 'uuid/v4';
 import type {
     CellDisplayOutput,
     CellErrorOutput,
     CellOutput,
     CellStreamOutput,
+    NotebookCell,
     NotebookCellData,
-    NotebookData
+    NotebookCellMetadata,
+    NotebookData,
+    NotebookDocument
 } from 'vscode-proposed';
-// tslint:disable-next-line: no-var-requires no-require-imports
-const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
-import * as uuid from 'uuid/v4';
-import { NotebookCellRunState } from '../../../../typings/vscode-proposed';
+import { NotebookCellRunState } from '../../../../../typings/vscode-proposed';
 import {
     concatMultilineStringInput,
     concatMultilineStringOutput,
     splitMultilineString
-} from '../../../datascience-ui/common';
-import { createCodeCell, createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
-import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceError, traceWarning } from '../../logging';
-import { CellState, ICell, INotebookModel } from '../types';
+} from '../../../../datascience-ui/common';
+import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/common/cellFactory';
+import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
+import { traceError, traceWarning } from '../../../logging';
+import { CellState, ICell, INotebookModel } from '../../types';
+import { mapVSCNotebookCellToCellModel } from './cellMappers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+import { JupyterNotebookView } from '../constants';
 
 // This is the custom type we are adding into nbformat.IBaseCellMetadata
 interface IBaseCellVSCodeMetadata {
@@ -34,17 +40,26 @@ interface IBaseCellVSCodeMetadata {
 }
 
 /**
+ * Whether this is a Notebook we created/manage/use.
+ * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
+ */
+export function isJupyterNotebook(notebook: NotebookDocument) {
+    return notebook.viewType === JupyterNotebookView;
+}
+
+/**
  * Converts a NotebookModel into VSCode friendly format.
  */
 export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookData {
     const cells = model.cells
-        .map(cellToVSCNotebookCellData)
+        .map(createVSCNotebookCellDataFromCell.bind(undefined, model))
         .filter((item) => !!item)
         .map((item) => item!);
 
+    const defaultLangauge = getDefaultCodeLanguage(model);
     return {
         cells,
-        languages: [PYTHON_LANGUAGE],
+        languages: [defaultLangauge],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
@@ -70,36 +85,74 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         }
     };
 }
-export function vscNotebookCellToCellModel(cell: NotebookCellData, model: INotebookModel): ICell {
-    if (cell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INotebookModel): ICell {
+    const cell = (() => {
+        if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Markdown) {
+            return {
+                data: createMarkdownCell(splitMultilineString(vscCell.document.getText()), true),
+                file: model.file.toString(),
+                id: uuid(),
+                line: 0,
+                state: CellState.init
+            };
+        }
         return {
-            data: createMarkdownCell(splitMultilineString(cell.source), true),
+            data: createCodeCell([vscCell.document.getText()], []),
             file: model.file.toString(),
             id: uuid(),
             line: 0,
             state: CellState.init
         };
+    })();
+
+    // Add the metadata back to the cell if we have any.
+    // Refer to `addCellMetadata` to see how metadata is stored in VSC Cells.
+    if (vscCell.metadata.custom?.vscodeMetadata) {
+        cell.data = {
+            ...cell.data,
+            ...vscCell.metadata.custom?.vscodeMetadata
+        };
     }
-    assert.equal(cell.language, PYTHON_LANGUAGE, 'Cannot create a non Python cell');
-    return {
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: #12068 Translate output into nbformat.IOutput.
-        data: createCodeCell([cell.source], []),
-        file: model.file.toString(),
-        id: uuid(),
-        line: 0,
-        state: CellState.init
-    };
+    // Ensure we add the cell id of the new cell to the VSC cell to map into ours.
+    mapVSCNotebookCellToCellModel(vscCell, cell);
+
+    return cell;
 }
-export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undefined {
+
+/**
+ * Updates the VSC Cell metadata with metadata from our cells.
+ * If user exits without saving, then we have all metadata in VSC document.
+ * (required for hot exit).
+ */
+export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
+    cellMetadata.custom = cellMetadata.custom ?? {};
+    // tslint:disable-next-line: no-any
+    const metadata: Record<string, any> = {};
+    cellMetadata.custom.vscodeMetadata = metadata;
+    const propertiesToClone = ['metadata', 'attachments', 'outputs'];
+    propertiesToClone.forEach((propertyToClone) => {
+        if (cell.data[propertyToClone]) {
+            metadata[propertyToClone] = cloneDeep(cell.data[propertyToClone]);
+        }
+    });
+}
+
+export function getDefaultCodeLanguage(model: INotebookModel) {
+    return model.metadata?.language_info?.name &&
+        model.metadata?.language_info?.name.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()
+        ? model.metadata?.language_info?.name
+        : PYTHON_LANGUAGE;
+}
+
+export function createVSCNotebookCellDataFromCell(model: INotebookModel, cell: ICell): NotebookCellData | undefined {
     if (cell.data.cell_type !== 'code' && cell.data.cell_type !== 'markdown') {
         traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.data.cell_type}`);
         return;
     }
 
     // tslint:disable-next-line: no-any
-    const outputs = cellOutputsToVSCCellOutputs(cell.data.outputs as any);
-
+    const outputs = createVSCCellOutputsFromOutputs(cell.data.outputs as any);
+    const defaultCodeLanguage = getDefaultCodeLanguage(model);
     // If we have an execution count & no errors, then success state.
     // If we have an execution count &  errors, then error state.
     // Else idle state.
@@ -121,16 +174,13 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
     const notebookCellData: NotebookCellData = {
         cellKind:
             cell.data.cell_type === 'code' ? vscodeNotebookEnums.CellKind.Code : vscodeNotebookEnums.CellKind.Markdown,
-        language: cell.data.cell_type === 'code' ? PYTHON_LANGUAGE : MARKDOWN_LANGUAGE,
+        language: cell.data.cell_type === 'code' ? defaultCodeLanguage : MARKDOWN_LANGUAGE,
         metadata: {
             editable: true,
             executionOrder: typeof cell.data.execution_count === 'number' ? cell.data.execution_count : undefined,
             hasExecutionOrder: cell.data.cell_type === 'code',
             runState,
-            runnable: cell.data.cell_type === 'code',
-            custom: {
-                cellId: cell.id
-            }
+            runnable: cell.data.cell_type === 'code'
         },
         source: concatMultilineStringInput(cell.data.source),
         outputs
@@ -152,10 +202,11 @@ export function cellToVSCNotebookCellData(cell: ICell): NotebookCellData | undef
         notebookCellData.metadata.lastRunDuration = endExecutionTime - startExecutionTime;
     }
 
+    updateVSCNotebookCellMetadata(notebookCellData.metadata, cell);
     return notebookCellData;
 }
 
-export function cellOutputsToVSCCellOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
+export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): CellOutput[] {
     const cellOutputs: nbformat.IOutput[] = Array.isArray(outputs) ? (outputs as []) : [];
     return cellOutputs
         .map(cellOutputToVSCCellOutput)

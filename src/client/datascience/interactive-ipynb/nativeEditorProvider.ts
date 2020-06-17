@@ -17,12 +17,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry
-} from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -37,7 +32,7 @@ import { INotebookStorageProvider } from './notebookStorageProvider';
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
 // opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
 @injectable()
-export class NativeEditorProvider implements INotebookEditorProvider, CustomEditorProvider, IAsyncDisposable {
+export class NativeEditorProvider implements INotebookEditorProvider, CustomEditorProvider {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
@@ -65,10 +60,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     protected customDocuments = new Map<string, CustomDocument>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private executedEditors: Set<string> = new Set<string>();
     private models = new Set<INotebookModel>();
-    private notebookCount: number = 0;
-    private openedNotebookCount: number = 0;
     private _id = uuid();
     private untitledCounter = 1;
     constructor(
@@ -81,14 +73,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         @inject(INotebookStorageProvider) protected readonly storage: INotebookStorageProvider
     ) {
         traceInfo(`id is ${this._id}`);
-        asyncRegistry.push(this);
-
-        // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
-        // on this though.
-        const findFilesPromise = workspace.findFiles('**/*.ipynb');
-        if (findFilesPromise && findFilesPromise.then) {
-            findFilesPromise.then((r) => (this.notebookCount += r.length));
-        }
 
         // Register for the custom editor service.
         customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
@@ -105,7 +89,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         context: CustomDocumentOpenContext, // This has info about backups. right now we use our own data.
         _cancellation: CancellationToken
     ): Promise<CustomDocument> {
-        const model = await this.loadModel(uri, undefined, context.backupId ? false : true);
+        const model = await this.loadModel(uri, undefined, context.backupId);
         return {
             uri,
             dispose: () => model.dispose()
@@ -132,11 +116,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         cancellation: CancellationToken
     ): Promise<CustomDocumentBackup> {
         const model = await this.loadModel(document.uri);
-        const id = this.storage.getBackupId(model);
-        this.storage.backup(model, cancellation).ignoreErrors();
+        const id = this.storage.generateBackupId(model);
+        await this.storage.backup(model, cancellation, id);
         return {
             id,
-            delete: () => this.storage.deleteBackup(model).ignoreErrors() // This cleans up after save has happened.
+            delete: () => this.storage.deleteBackup(model, id).ignoreErrors() // This cleans up after save has happened.
         };
     }
 
@@ -149,19 +133,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     public async resolveCustomDocument(document: CustomDocument): Promise<void> {
         this.customDocuments.set(document.uri.fsPath, document);
         await this.loadModel(document.uri);
-    }
-
-    public async dispose(): Promise<void> {
-        // Send a bunch of telemetry
-        if (this.openedNotebookCount) {
-            sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
-        }
-        if (this.executedEditors.size) {
-            sendTelemetryEvent(Telemetry.NotebookRunCount, undefined, { count: this.executedEditors.size });
-        }
-        if (this.notebookCount) {
-            sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
-        }
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
@@ -193,12 +164,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(contents?: string): Promise<INotebookEditor> {
+    public async createNew(contents?: string, title?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri();
-
-        // Update number of notebooks in the workspace
-        this.notebookCount += 1;
+        const uri = this.getNextNewNotebookUri(title);
 
         // Set these contents into the storage before the file opens. Make sure not
         // load from the memento storage though as this is an entirely brand new file.
@@ -207,12 +175,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         return this.open(uri);
     }
 
-    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean) {
+    public async loadModel(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
+    public async loadModel(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: no-any
+    public async loadModel(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
         // Every time we load a new untitled file, up the counter past the max value for this counter
         this.untitledCounter = getNextUntitledCounter(file, this.untitledCounter);
 
         // Load our model from our storage object.
-        const model = await this.storage.load(file, contents, skipDirtyContents);
+        const model = await this.storage.load(file, contents, options);
 
         // Make sure to listen to events on the model
         this.trackModel(model);
@@ -237,13 +209,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
     }
 
     protected openedEditor(editor: INotebookEditor): void {
-        this.openedNotebookCount += 1;
-        if (!this.executedEditors.has(editor.file.fsPath)) {
-            editor.executed(this.onExecuted.bind(this));
-        }
         this.disposables.push(editor.onDidChangeViewState(this.onChangedViewState, this));
         this.openedEditors.add(editor);
-        editor.closed(this.closedEditor.bind(this));
+        editor.closed(this.closedEditor, this, this.disposables);
         this._onDidOpenNotebookEditor.fire(editor);
     }
 
@@ -273,13 +241,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
-    private onExecuted(editor: INotebookEditor): void {
-        if (editor) {
-            this.executedEditors.add(editor.file.fsPath);
-        }
-    }
-
-    private getNextNewNotebookUri(): Uri {
-        return generateNewNotebookUri(this.untitledCounter);
+    private getNextNewNotebookUri(title?: string): Uri {
+        return generateNewNotebookUri(this.untitledCounter, title);
     }
 }

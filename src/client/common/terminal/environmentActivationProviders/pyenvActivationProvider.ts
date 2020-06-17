@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../pythonEnvironments/info';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()

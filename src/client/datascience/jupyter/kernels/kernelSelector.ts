@@ -14,7 +14,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';

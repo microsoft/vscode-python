@@ -5,7 +5,7 @@ import { traceError } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';

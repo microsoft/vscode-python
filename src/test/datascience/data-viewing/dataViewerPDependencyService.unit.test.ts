@@ -16,7 +16,7 @@ import { IInstaller, Product } from '../../../client/common/types';
 import { Common, DataScience } from '../../../client/common/utils/localize';
 import { Architecture } from '../../../client/common/utils/platform';
 import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 suite('Data Science - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;

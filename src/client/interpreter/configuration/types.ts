@@ -1,6 +1,6 @@
 import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 
 export interface IPythonPathUpdaterService {
     updatePythonPath(pythonPath: string | undefined): Promise<void>;

@@ -17,7 +17,7 @@ import { IPersistentState, IPersistentStateFactory, Product } from '../../../cli
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 use(chaiAsPromised);
 

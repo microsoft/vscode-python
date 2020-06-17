@@ -53,7 +53,14 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
-            return this.createServer(options, token);
+            return this.createServer(options, token).then((val) => {
+                // If we created a new server notify of our first time provider connection
+                if (val && options.onConnectionMade) {
+                    options.onConnectionMade();
+                }
+
+                return val;
+            });
         }
     }
 

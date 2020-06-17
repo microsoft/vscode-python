@@ -12,7 +12,7 @@ import { JupyterInterpreterService } from '../../client/datascience/jupyter/inte
 import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { sleep } from '../core';
 
 suite('DataScience - PreWarm Env Vars', () => {

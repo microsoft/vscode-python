@@ -24,7 +24,7 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
-import { InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -2121,6 +2121,7 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
     [Telemetry.StartPageClosedWithoutAction]: never | undefined;
@@ -2132,4 +2133,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
     [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
+    [Telemetry.StartPageOpenFolder]: never | undefined;
+    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 }

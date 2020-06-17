@@ -30,7 +30,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { IDataViewerFactory } from '../data-viewing/types';
@@ -52,7 +52,6 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterDebugger,
-    IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -96,7 +95,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager,
@@ -127,7 +125,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             cssGenerator,
             themeFinder,
             statusProvider,
-            jupyterExecution,
             fileSystem,
             configuration,
             jupyterExporter,

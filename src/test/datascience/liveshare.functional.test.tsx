@@ -27,7 +27,7 @@ import {
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell, waitForMessage } from './testHelpers';
+import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 //tslint:disable:trailing-comma no-any no-multiline-string
@@ -56,8 +56,12 @@ suite('DataScience LiveShare tests', () => {
                 await promise;
             }
         }
-        await hostContainer.dispose();
-        await guestContainer.dispose();
+        if (hostContainer) {
+            await hostContainer.dispose();
+        }
+        if (guestContainer) {
+            await guestContainer.dispose();
+        }
         lastErrorMessage = undefined;
     });
 
@@ -91,7 +95,7 @@ suite('DataScience LiveShare tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mountConnectedMainPanel('interactive'), role);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), 'default', role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
@@ -123,7 +127,10 @@ suite('DataScience LiveShare tests', () => {
         // If just the host session has started or nobody, just run the host.
         const guestStarted = isSessionStarted(vsls.Role.Guest);
         if (!guestStarted) {
-            const hostRenderPromise = waitForMessage(hostContainer, InteractiveWindowMessages.ExecutionRendered);
+            // NOTE: These tests aren't going to work unless there's more than just 'notebook' and 'default'
+            const hostRenderPromise = hostContainer
+                .getWebPanel('default')
+                .waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(false);
@@ -134,8 +141,12 @@ suite('DataScience LiveShare tests', () => {
             // Otherwise more complicated. We have to wait for renders on both
 
             // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = waitForMessage(hostContainer, InteractiveWindowMessages.ExecutionRendered);
-            const guestRenderPromise = waitForMessage(guestContainer, InteractiveWindowMessages.ExecutionRendered);
+            const hostRenderPromise = hostContainer
+                .getWebPanel('default')
+                .waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+            const guestRenderPromise = guestContainer
+                .getWebPanel('default')
+                .waitForMessage(InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(true);
@@ -146,7 +157,7 @@ suite('DataScience LiveShare tests', () => {
                 isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()
             ]);
         }
-        return container.wrapper!;
+        return container.getDefaultWrapper();
     }
 
     async function addCodeToRole(
@@ -221,8 +232,8 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Verify it ended up on the guest too
-        assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-        verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        assert.ok(guestContainer.getDefaultWrapper(), 'Guest wrapper not created');
+        verifyHtmlOnCell(guestContainer.getDefaultWrapper()!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Host starts LiveShare after starting Jupyter', async function () {
@@ -240,8 +251,8 @@ suite('DataScience LiveShare tests', () => {
 
         wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
 
-        assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-        verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
+        assert.ok(guestContainer.getDefaultWrapper(), 'Guest wrapper not created');
+        verifyHtmlOnCell(guestContainer.getDefaultWrapper()!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
     });
 
     test('Host Shutdown and Run', async () => {
@@ -286,8 +297,8 @@ suite('DataScience LiveShare tests', () => {
         wrapper = await addCodeToRole(vsls.Role.Guest, 'a=1\na');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        assert.ok(hostContainer.wrapper, 'Host wrapper not created');
-        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        assert.ok(hostContainer.getDefaultWrapper(), 'Host wrapper not created');
+        verifyHtmlOnCell(hostContainer.getDefaultWrapper()!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Going through codewatcher', async () => {
@@ -315,8 +326,8 @@ suite('DataScience LiveShare tests', () => {
             await codeWatcher.runAllCells();
         });
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-        assert.ok(hostContainer.wrapper, 'Host wrapper not created for some reason');
-        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        assert.ok(hostContainer.getDefaultWrapper(), 'Host wrapper not created for some reason');
+        verifyHtmlOnCell(hostContainer.getDefaultWrapper()!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Export from guest', async () => {

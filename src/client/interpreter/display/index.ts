@@ -6,7 +6,7 @@ import '../../common/extensions';
 import { IDisposableRegistry, IOutputChannel, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { IInterpreterAutoSelectionService } from '../autoSelection/types';
 import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from '../contracts';
 

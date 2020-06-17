@@ -38,6 +38,7 @@ suite('DataScience Native Toolbar', () => {
             cellCount: 0,
             dirty: false,
             export: sinon.stub(),
+            exportAs: sinon.stub(),
             font: { family: '', size: 1 },
             interruptKernel: sinon.stub(),
             kernel: {

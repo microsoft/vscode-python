@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { UseCustomEditorApi } from '../common/constants';
-import { CustomEditorSupport, NativeNotebook } from '../common/experiments/groups';
+import { UseCustomEditorApi, UseNativeEditorApi } from '../common/constants';
+import { NotebookEditorSupport } from '../common/experiments/groups';
 import { StartPage } from '../common/startPage/startPage';
 import { IStartPage } from '../common/startPage/types';
 import { IExperimentsManager } from '../common/types';
@@ -14,6 +14,7 @@ import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
+import { ExportCommands } from './commands/exportCommands';
 import { KernelSwitcherCommand } from './commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { Identifiers } from './constants';
@@ -34,6 +35,15 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
+import { ExportBase } from './export/exportBase';
+import { ExportManager } from './export/exportManager';
+import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
+import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
+import { ExportManagerFilePicker, IExportManagerFilePicker } from './export/exportManagerFilePicker';
+import { ExportToHTML } from './export/exportToHTML';
+import { ExportToPDF } from './export/exportToPDF';
+import { ExportToPython } from './export/exportToPython';
+import { ExportFormat, IExport, IExportManager } from './export/types';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
@@ -41,6 +51,7 @@ import { IntellisenseProvider } from './interactive-common/intellisense/intellis
 import { LinkProvider } from './interactive-common/linkProvider';
 import { NotebookProvider } from './interactive-common/notebookProvider';
 import { NotebookServerProvider } from './interactive-common/notebookServerProvider';
+import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
@@ -160,10 +171,11 @@ import {
 // tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager) {
     const experiments = serviceManager.get<IExperimentsManager>(IExperimentsManager);
-    const useVSCodeNotebookAPI = experiments.inExperiment(NativeNotebook.experiment);
-    const inCustomEditorApiExperiment = experiments.inExperiment(CustomEditorSupport.experiment);
+    const useVSCodeNotebookAPI = experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment);
+    const inCustomEditorApiExperiment = experiments.inExperiment(NotebookEditorSupport.customEditorExperiment);
     const usingCustomEditor = inCustomEditorApiExperiment;
     serviceManager.addSingletonInstance<boolean>(UseCustomEditorApi, usingCustomEditor);
+    serviceManager.addSingletonInstance<boolean>(UseNativeEditorApi, useVSCodeNotebookAPI);
 
     // This condition is temporary.
     const notebookEditorProvider = useVSCodeNotebookAPI ? NotebookEditorProvider : usingCustomEditor ? NativeEditorProvider : NativeEditorProviderOld;
@@ -219,6 +231,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreWarmActivatedJupyterEnvironmentVariables);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NativeEditorViewTracker);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, NotebookUsageTracker);
     serviceManager.addSingleton<IInteractiveWindowListener>(IInteractiveWindowListener, DataScienceSurveyBannerLogger);
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [ICellHashListener]);
@@ -264,6 +277,15 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IJupyterDebugService>(IJupyterDebugService, JupyterDebugService, Identifiers.RUN_BY_LINE_DEBUGSERVICE);
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(IJupyterVariableDataProviderFactory, JupyterVariableDataProviderFactory);
+    serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
+    serviceManager.addSingleton<IExportManager>(ExportManagerDependencyChecker, ExportManagerDependencyChecker);
+    serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
+    serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
+    serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
+    serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

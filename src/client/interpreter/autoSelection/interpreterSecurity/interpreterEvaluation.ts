@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { IBrowserService, Resource } from '../../../common/types';
 import { Common, Interpreters } from '../../../common/utils/localize';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterHelper } from '../../contracts';

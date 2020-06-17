@@ -63,6 +63,7 @@ suite('DataScience Interactive Panel', () => {
             editorUnmounted: noopAny,
             expandAll: noopAny,
             export: noopAny,
+            exportAs: noopAny,
             focusInput: noopAny,
             focusPending: 0,
             font: { family: '', size: 1 },

@@ -12,7 +12,7 @@ import {
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { AnacondaCompanyName } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaEnvFileService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvFileService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 
 const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'environments');

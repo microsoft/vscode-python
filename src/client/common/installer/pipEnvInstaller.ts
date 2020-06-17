@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../pythonEnvironments/info';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';

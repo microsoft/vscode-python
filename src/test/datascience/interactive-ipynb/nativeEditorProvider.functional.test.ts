@@ -118,9 +118,6 @@ suite('DataScience - Native Editor Provider', () => {
         const editorChangeEvent = new EventEmitter<TextEditor | undefined>();
         when(docManager.onDidChangeActiveTextEditor).thenReturn(editorChangeEvent.event);
 
-        const sessionChangedEvent = new EventEmitter<void>();
-        when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
-
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
@@ -198,12 +195,6 @@ suite('DataScience - Native Editor Provider', () => {
         when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
     });
 
-    teardown(async () => {
-        if (registeredProvider) {
-            await registeredProvider.dispose();
-        }
-    });
-
     function createNotebookProvider() {
         const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
@@ -211,7 +202,8 @@ suite('DataScience - Native Editor Provider', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            false
         );
 
         storageProvider = new NotebookStorageProvider(notebookStorage, []);

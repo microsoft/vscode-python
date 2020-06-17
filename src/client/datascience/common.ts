@@ -132,7 +132,7 @@ export function translateKernelLanguageToMonaco(kernelLanguage: string): string 
     return kernelLanguage.toLowerCase();
 }
 
-export function generateNewNotebookUri(counter: number): Uri {
+export function generateNewNotebookUri(counter: number, title?: string): Uri {
     // Because of this bug here:
     // https://github.com/microsoft/vscode/issues/93441
     // We can't create 'untitled' files anymore. The untitled scheme will just be ignored.
@@ -141,7 +141,7 @@ export function generateNewNotebookUri(counter: number): Uri {
 
     // However if there are files already on disk, we should be able to overwrite them because
     // they will only ever be used by 'open' editors. So just use the current counter for our untitled count.
-    const fileName = `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
+    const fileName = title ? `${title}-${counter}.ipynb` : `${DataScience.untitledNotebookFileName()}-${counter}.ipynb`;
     const filePath = Uri.file(path.join(os.tmpdir(), fileName));
     // Turn this back into an untitled
     return filePath.with({ scheme: 'untitled', path: filePath.fsPath });

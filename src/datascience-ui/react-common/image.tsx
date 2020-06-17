@@ -50,6 +50,7 @@ export enum ImageName {
     Interactive,
     Python,
     PythonColor,
+    OpenFolder,
     RunByLine
 }
 
@@ -217,6 +218,10 @@ const images: { [key: string]: { light: string; dark: string } } = {
     PythonColor: {
         light: require('./images/StartPage/Python-color.svg'),
         dark: require('./images/StartPage/Python-color.svg')
+    },
+    OpenFolder: {
+        light: require('./images/StartPage/OpenFolder.svg'),
+        dark: require('./images/StartPage/OpenFolder-inverse.svg')
     },
     RunByLine: {
         light: require('./images/RunByLine/runbyline_light.svg'),

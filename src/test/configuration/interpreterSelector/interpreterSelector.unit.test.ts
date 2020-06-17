@@ -14,7 +14,7 @@ import { IInterpreterSecurityService } from '../../../client/interpreter/autoSel
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,

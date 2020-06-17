@@ -22,9 +22,9 @@ import { PythonDaemonExecutionService } from '../../../client/common/process/pyt
 import { IPythonExecutionService } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { PythonVersionInfo } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonVersionInfo } from '../../../client/pythonEnvironments/info';
+import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
@@ -75,11 +75,11 @@ suite('Daemon', () => {
         );
     });
     teardown(() => {
-        pythonProc.kill();
+        pythonProc?.kill();
         if (connection) {
             connection.dispose();
         }
-        pythonDaemon.dispose();
+        pythonDaemon?.dispose();
         disposables.forEach((item) => item.dispose());
         disposables = [];
     });

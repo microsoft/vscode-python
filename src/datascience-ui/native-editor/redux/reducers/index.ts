@@ -35,6 +35,7 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
     [InteractiveWindowMessages.ClearAllOutputs]: Execution.clearAllOutputs,
     [CommonActionType.EXPORT]: Transfer.exportCells,
+    [CommonActionType.EXPORT_NOTEBOOK_AS]: Transfer.showExportAsMenu,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [CommonActionType.SEND_COMMAND]: Transfer.sendCommand,

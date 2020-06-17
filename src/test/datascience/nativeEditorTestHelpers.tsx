@@ -18,8 +18,7 @@ import {
     getNativeFocusedEditor,
     injectCode,
     mountWebView,
-    simulateKey,
-    waitForMessage
+    simulateKey
 } from './testHelpers';
 
 // tslint:disable: no-any
@@ -27,7 +26,7 @@ import {
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
     const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
-    const messageWaiter = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
+    const messageWaiter = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
     if (uri) {
         editor = await notebookEditorProvider.open(uri);
     } else {
@@ -61,7 +60,7 @@ export function getNativeCellResults(
     updater: () => Promise<void>,
     renderPromiseGenerator?: () => Promise<void>
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(ioc, wrapper, 'NativeCell', updater, renderPromiseGenerator);
+    return getCellResults(ioc, 'notebook', wrapper, 'NativeCell', updater, renderPromiseGenerator);
 }
 
 // tslint:disable-next-line:no-any
@@ -103,7 +102,7 @@ export function focusCell(
     if (cell) {
         const vm = cell.props().cellVM;
         if (!vm.focused) {
-            const focusChange = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+            const focusChange = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
             cell.props().focusCell(vm.cell.id, CursorPos.Current);
             return focusChange;
         }
@@ -113,8 +112,8 @@ export function focusCell(
 
 // tslint:disable-next-line: no-any
 export async function addCell(
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     ioc: DataScienceIocContainer,
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     code: string,
     submit: boolean = true
 ): Promise<void> {
@@ -124,7 +123,7 @@ export async function addCell(
     const ImageButtons = toolbar.find(ImageButton);
     assert.equal(ImageButtons.length, 10, 'Toolbar buttons not found');
     const addButton = ImageButtons.at(5);
-    let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+    let update = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
     await update;
@@ -138,17 +137,14 @@ export async function addCell(
 
     if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
-        update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
+        update = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
         return update;
     }
 }
 
-export function closeNotebook(
-    editor: INotebookEditor,
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
-): Promise<void> {
+export function closeNotebook(ioc: DataScienceIocContainer, editor: INotebookEditor): Promise<void> {
     const promise = editor.dispose();
-    wrapper.unmount();
+    ioc.getWebPanel('notebook').dispose();
     return promise;
 }

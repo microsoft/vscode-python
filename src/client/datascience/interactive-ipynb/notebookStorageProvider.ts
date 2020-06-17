@@ -44,19 +44,24 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         this.storageAndModels.delete(oldUri.toString());
         this.storageAndModels.set(targetResource.toString(), Promise.resolve(model));
     }
-    public getBackupId(model: INotebookModel): string {
-        return this.storage.getBackupId(model);
+    public generateBackupId(model: INotebookModel): string {
+        return this.storage.generateBackupId(model);
     }
-    public backup(model: INotebookModel, cancellation: CancellationToken) {
-        return this.storage.backup(model, cancellation);
+    public backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string) {
+        return this.storage.backup(model, cancellation, backupId);
     }
     public revert(model: INotebookModel, cancellation: CancellationToken) {
         return this.storage.revert(model, cancellation);
     }
-    public deleteBackup(model: INotebookModel) {
-        return this.storage.deleteBackup(model);
+    public deleteBackup(model: INotebookModel, backupId?: string) {
+        return this.storage.deleteBackup(model, backupId);
     }
-    public load(file: Uri, contents?: string | undefined, skipDirtyContents?: boolean): Promise<INotebookModel> {
+    public load(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
+    // tslint:disable-next-line: unified-signatures
+    public load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+
+    // tslint:disable-next-line: no-any
+    public load(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {
             // Every time we load a new untitled file, up the counter past the max value for this counter
@@ -64,7 +69,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
                 file,
                 NotebookStorageProvider.untitledCounter
             );
-            const promise = this.storage.load(file, contents, skipDirtyContents);
+            const promise = this.storage.load(file, contents, options);
             this.storageAndModels.set(key, promise.then(this.trackModel.bind(this)));
         }
         return this.storageAndModels.get(key)!;
