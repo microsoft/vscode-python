@@ -3,8 +3,10 @@
 import { inject, injectable } from 'inversify';
 
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
-import ProtocolCompletionItem from 'vscode-languageclient/lib/common/ProtocolCompletionItem';
-import * as vscodeLanguageClient from 'vscode-languageclient/node';
+// tslint:disable-next-line: import-name
+import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
+import { CompletionResolveRequest } from 'vscode-languageclient/node';
+
 // tslint:disable-next-line: import-name
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
@@ -56,11 +58,7 @@ export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
             Object.assign(protoItem, item);
 
             const args = languageClient.code2ProtocolConverter.asCompletionItem(protoItem);
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.CompletionResolveRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(CompletionResolveRequest.type, args, token);
 
             if (result) {
                 return languageClient.protocol2CodeConverter.asCompletionItem(result);
