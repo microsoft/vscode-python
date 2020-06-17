@@ -176,8 +176,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "DataScience - Export HTML", // Modify this to run a subset of the single workspace tests
-                "VSCODE_PYTHON_ROLLING": "true"
+                "VSC_PYTHON_CI_TEST_GREP": "DataScience - Export HTML" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
