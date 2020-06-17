@@ -27,6 +27,8 @@ import {
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
+import { MockFileSystem } from './mockFileSystem';
+import { mountNativeWebView } from './nativeEditorTestHelpers';
 import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
@@ -331,6 +333,8 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Export from guest', async () => {
+        const originalFileSystem = guestContainer.get<IFileSystem>(IFileSystem) as MockFileSystem;
+
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 
@@ -343,6 +347,10 @@ suite('DataScience LiveShare tests', () => {
             .setup((f) => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_f, c) => {
                 outputContents = c.toString();
+
+                // Tell the mock file system that a certain file exists
+                originalFileSystem.addFileContents(Uri.file('test.ipynb').fsPath, outputContents!);
+
                 return Promise.resolve();
             });
         fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
@@ -361,6 +369,9 @@ suite('DataScience LiveShare tests', () => {
         // Create a document on the guest
         guestContainer!.addDocument('#%%\na=1\na', Uri.file('foo.py').fsPath);
         guestContainer!.get<IDocumentManager>(IDocumentManager).showTextDocument(Uri.file('foo.py'));
+
+        // Mount the webview for the opening of the editor
+        mountNativeWebView(guestContainer);
 
         // Attempt to export a file from the guest by running an ExportFileAndOutputAsNotebook
         const executePromise = guestCommandManager.executeCommand(
