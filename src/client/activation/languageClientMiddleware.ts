@@ -123,7 +123,7 @@ export class LanguageClientMiddleware implements Middleware {
     private connected = false; // Default to not forwarding to VS code.
 
     public constructor(
-        private readonly surveyBanner: IPythonExtensionBanner,
+        private readonly surveyBanner: IPythonExtensionBanner | undefined,
         experimentsManager: IExperimentsManager,
         private readonly configService: IConfigurationService,
         serverType: LanguageServerType,
@@ -165,7 +165,7 @@ export class LanguageClientMiddleware implements Middleware {
         token: CancellationToken,
         next: ProvideCompletionItemsSignature
     ) {
-        if (this.connected) {
+        if (this.connected && this.surveyBanner) {
             this.surveyBanner.showBanner().ignoreErrors();
             return next(document, position, context, token);
         }
