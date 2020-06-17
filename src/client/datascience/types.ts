@@ -1243,3 +1243,9 @@ export interface ITrustService {
     isNotebookTrusted(notebookContents: string): Promise<boolean>;
     updateTrust(notebookContents: string, isNotebookModelTrusted: boolean): Promise<void>;
 }
+
+export const INotebookTrust = Symbol('INotebookTrust');
+export interface INotebookTrust {
+    isNotebookTrusted(notebookContents: string): Promise<boolean>;
+    trustNotebook(notebookContents: string): Promise<void>;
+}
