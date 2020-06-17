@@ -4,7 +4,7 @@
 import '../../../common/extensions';
 
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { Identifiers } from '../../constants';

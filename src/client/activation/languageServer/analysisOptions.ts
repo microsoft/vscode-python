@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, WorkspaceFolder } from 'vscode';
-import { DocumentFilter } from 'vscode-languageclient';
+import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError } from '../../common/logger';

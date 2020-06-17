@@ -18,7 +18,7 @@ import {
     Uri
 } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 import { concatMultilineStringInput } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';

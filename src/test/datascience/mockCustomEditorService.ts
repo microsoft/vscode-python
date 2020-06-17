@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { CancellationTokenSource, Disposable, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
-import { CancellationToken } from 'vscode-languageclient';
+import { CancellationToken } from 'vscode-languageclient/node';
 import {
     CustomDocument,
     CustomEditorProvider,

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
-import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
+import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';

@@ -3,7 +3,7 @@
 'use strict';
 import { injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClientOptions } from 'vscode-languageclient/node';
 
 import { ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { Resource } from '../../client/common/types';

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
-import { CancellationToken } from 'vscode-languageclient';
+import { CancellationToken } from 'vscode-languageclient/node';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
     CustomDocument,

@@ -11,7 +11,7 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import { LanguageClient } from 'vscode-languageclient';
+import { LanguageClient } from 'vscode-languageclient/node';
 import { IFileSystem } from '../common/platform/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';

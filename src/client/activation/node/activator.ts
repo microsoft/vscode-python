@@ -3,9 +3,9 @@
 import { inject, injectable } from 'inversify';
 
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import ProtocolCompletionItem from 'vscode-languageclient/lib/common/ProtocolCompletionItem';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 // tslint:disable-next-line: import-name
-import ProtocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';

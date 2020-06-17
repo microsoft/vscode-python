@@ -8,7 +8,7 @@ import {
     Disposable,
     LanguageClient,
     LanguageClientOptions
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 
 import { DeprecatePythonPath } from '../../common/experiments/groups';
 import { traceDecorators, traceError } from '../../common/logger';

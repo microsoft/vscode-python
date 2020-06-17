@@ -3,7 +3,7 @@
 
 import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
-import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, Resource } from '../../common/types';
@@ -40,7 +40,7 @@ export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFac
             run: { command: serverModule, args: [], options },
             debug: { command: serverModule, args: ['--debug'], options }
         };
-        const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
+        const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node');
         return new vscodeLanguageClient.LanguageClient(
             PYTHON_LANGUAGE,
             languageClientName,
@@ -69,7 +69,7 @@ export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory
             run: { command: dotNetCommand, args: [serverModule], options },
             debug: { command: dotNetCommand, args: [serverModule, '--debug'], options }
         };
-        const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
+        const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node');
         return new vscodeLanguageClient.LanguageClient(
             PYTHON_LANGUAGE,
             languageClientName,

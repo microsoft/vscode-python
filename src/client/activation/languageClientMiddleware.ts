@@ -56,9 +56,9 @@ import {
     ResolveCompletionItemSignature,
     ResolveDocumentLinkSignature,
     ResponseError
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 
-import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
+import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/common/declaration';
 import { HiddenFilePrefix } from '../common/constants';
 import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experiments/groups';
 import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../common/types';

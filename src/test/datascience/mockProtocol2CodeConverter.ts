@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as code from 'vscode';
-import { Protocol2CodeConverter } from 'vscode-languageclient';
+import { Protocol2CodeConverter } from 'vscode-languageclient/node';
 // tslint:disable-next-line: match-default-export-name
-import protocolCompletionItem from 'vscode-languageclient/lib/protocolCompletionItem';
+import protocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import * as proto from 'vscode-languageserver-protocol';
 
 // tslint:disable:no-any unified-signatures

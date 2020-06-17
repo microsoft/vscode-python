@@ -22,7 +22,7 @@ import {
     TextDocumentContentChangeEvent,
     WorkspaceEdit
 } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';

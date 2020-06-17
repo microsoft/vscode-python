@@ -3,7 +3,7 @@
 'use strict';
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 
 import { ILanguageServerProxy } from '../../client/activation/types';
 import { PythonInterpreter } from '../../client/pythonEnvironments/info';
