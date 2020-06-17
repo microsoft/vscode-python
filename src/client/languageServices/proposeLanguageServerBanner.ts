@@ -67,7 +67,7 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         }
     }
     public get enabled(): boolean {
-        // Survey is deactivated.
+        // Banner is deactivated.
         return false;
         // return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }

@@ -165,8 +165,8 @@ export class LanguageClientMiddleware implements Middleware {
         token: CancellationToken,
         next: ProvideCompletionItemsSignature
     ) {
-        if (this.connected && this.surveyBanner) {
-            this.surveyBanner.showBanner().ignoreErrors();
+        if (this.connected) {
+            this.surveyBanner?.showBanner().ignoreErrors();
             return next(document, position, context, token);
         }
     }
