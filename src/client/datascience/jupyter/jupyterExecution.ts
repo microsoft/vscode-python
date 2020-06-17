@@ -12,11 +12,14 @@ import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../.
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 import {
     IJupyterConnection,
     IJupyterExecution,
@@ -36,7 +39,6 @@ const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
-    private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
@@ -68,10 +70,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             });
             this.disposableRegistry.push(disposable);
         }
-    }
-
-    public get sessionChanged(): Event<void> {
-        return this.eventEmitter.event;
     }
 
     public get serverStarted(): Event<INotebookServerOptions> {
@@ -107,7 +105,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return this.usablePythonInterpreter;
     }
 
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    @reportAction(ReportableAction.CheckingIfImportIsSupported)
+    public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command nbconvert
         return this.jupyterInterpreterService.isExportSupported(cancelToken);
     }

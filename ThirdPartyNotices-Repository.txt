@@ -1127,6 +1127,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================
 END OF enchannel-zmq-backend NOTICES, INFORMATION, AND LICENSE
 =======
+
 %% font-awesome NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
 Font Name - FontAwesome

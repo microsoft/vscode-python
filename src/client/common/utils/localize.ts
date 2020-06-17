@@ -296,6 +296,19 @@ export namespace DataScience {
         'DataScience.badWebPanelFormatString',
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
     );
+    export const checkingIfImportIsSupported = localize(
+        'DataScience.checkingIfImportIsSupported',
+        'Checking if import is supported'
+    );
+    export const installingMissingDependencies = localize(
+        'DataScience.installingMissingDependencies',
+        'Installing missing dependencies'
+    );
+    export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const exportNotebookToPython = localize(
+        'DataScience.exportNotebookToPython',
+        'Exporting Notebook to Python'
+    );
     export const sessionDisposed = localize(
         'DataScience.sessionDisposed',
         'Cannot execute code, session has been disposed.'
@@ -560,6 +573,8 @@ export namespace DataScience {
     export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
+    export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
+    export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', ' HTML');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
@@ -764,11 +779,16 @@ export namespace DataScience {
         'DataScience.remoteDebuggerNotSupported',
         'Debugging while attached to a remote server is not currently supported.'
     );
-    export const exportAsPythonFileTooltip = localize(
-        'DataScience.exportAsPythonFileTooltip',
-        'Convert and save to a python script'
-    );
+    export const notebookExportAs = localize('DataScience.notebookExportAs', 'Convert and save to a python script');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const exportAsQuickPickPlaceholder = localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
+    export const openExportedFileMessage = localize(
+        'DataScience.openExportedFileMessage',
+        'Would you like to open the exported file?'
+    );
+    export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
+    export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
     export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');
@@ -937,11 +957,21 @@ export namespace DataScience {
     );
 
     export const kernelStarted = localize('DataScience.kernelStarted', 'Started kernel {0}.');
-    export const runByLine = localize('DataScience.runByLine', 'Run by line');
-    export const continueRunByLine = localize('DataScience.continueRunByLine', 'Stop');
+    export const runByLine = localize('DataScience.runByLine', 'Run by line (F10)');
+    export const step = localize('DataScience.step', 'Run next line (F10)');
+    export const stopRunByLine = localize('DataScience.stopRunByLine', 'Stop');
     export const rawKernelSessionFailed = localize(
         'DataScience.rawKernelSessionFailed',
         'Unable to start session for kernel {0}. Select another kernel to launch with.'
+    );
+    export const rawKernelConnectingSession = localize(
+        'DataScience.rawKernelConnectingSession',
+        'Connecting to kernel.'
+    );
+
+    export const reloadCustomEditor = localize(
+        'DataScience.reloadCustomEditor',
+        'Please reload VS Code to use the custom editor API'
     );
 }
 
@@ -951,14 +981,17 @@ export namespace StartPage {
     export const createJupyterNotebook = localize('StartPage.createJupyterNotebook', 'Create a Jupyter Notebook');
     export const notebookDescription = localize(
         'StartPage.notebookDescription',
-        '- Use "<div class="italics">Shift + Command + P</div> " to open the <div class="link" role="button" onclick={0}>Command Palette</div><br />- Type "<div class="link italics" role="button" onclick={1}>Create New Blank Jupyter Notebook</div> "<br />- Explore our <div class="link" role="button" onclick={2}>sample notebook</div> to learn about notebook features'
+        '- Run "<div class="link italics" role="button" onclick={0}>Create New Blank Jupyter Notebook</div>" in the Command Palette (<div class="italics">Shift + Command + P</div>)<br />- Explore our <div class="link" role="button" onclick={1}>sample notebook</div> to learn about notebook features'
     );
     export const createAPythonFile = localize('StartPage.createAPythonFile', 'Create a Python File');
     export const pythonFileDescription = localize(
         'StartPage.pythonFileDescription',
-        '- Create a new file and use the .py extension<br />- <div class="link" role="button" onclick={0}>Open a file or workspace</div> to continue work'
+        '- Create a <div class="link" role="button" onclick={0}>new file</div> with a .py extension'
     );
-    export const openInteractiveWindow = localize('StartPage.openInteractiveWindow', 'Open the Interactive Window');
+    export const openInteractiveWindow = localize(
+        'StartPage.openInteractiveWindow',
+        'Use the Interactive Window to develop Python Scripts'
+    );
     export const interactiveWindowDesc = localize(
         'StartPage.interactiveWindowDesc',
         '- You can create cells on a Python file by typing "#%%" <br /> - Use "<div class="italics">Shift + Enter</div> " to run a cell, the output will be shown in the interactive window'
@@ -976,7 +1009,12 @@ export namespace StartPage {
     export const helloWorld = localize('StartPage.helloWorld', 'Hello world');
     // When localizing sampleNotebook, the translated notebook must also be included in
     // pythonFiles\*
-    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Welcome_To_VSCode_Notebooks.ipynb');
+    export const sampleNotebook = localize('StartPage.sampleNotebook', 'Notebooks intro');
+    export const openFolder = localize('StartPage.openFolder', 'Open a Folder or Workspace');
+    export const folderDesc = localize(
+        'StartPage.folderDesc',
+        '- Open a <div class="link" role="button" onclick={0}>Folder</div><br /> - Open a <div class="link" role="button" onclick={1}>Workspace</div>'
+    );
 }
 
 export namespace DebugConfigStrings {

@@ -65,7 +65,10 @@ suite('DataScience DataViewer tests', () => {
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />));
+        const wrapper = ioc.createWebView(
+            () => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />),
+            'default'
+        );
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataViewerFactory = ioc.get<IDataViewerFactory>(IDataViewerFactory);
@@ -73,7 +76,7 @@ suite('DataScience DataViewer tests', () => {
             IJupyterVariableDataProviderFactory
         );
 
-        return ioc.wrapper!;
+        return wrapper;
     }
 
     teardown(async () => {

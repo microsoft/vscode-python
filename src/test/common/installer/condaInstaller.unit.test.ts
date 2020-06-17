@@ -11,10 +11,11 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InterpreterUri } from '../../../client/common/installer/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../../client/common/types';
-import { CondaEnvironmentInfo, ICondaService } from '../../../client/interpreter/contracts';
-import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { ICondaService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
+import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Common - Conda Installer', () => {

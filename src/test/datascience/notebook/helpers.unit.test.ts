@@ -9,7 +9,7 @@ import type { CellOutput } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers';
+import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 
 suite('Data Science - NativeNotebook helpers', () => {
@@ -46,7 +46,9 @@ suite('Data Science - NativeNotebook helpers', () => {
         const notebook = notebookModelToVSCNotebookData((model as unknown) as INotebookModel);
 
         assert.isOk(notebook);
-        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE, MARKDOWN_LANGUAGE]);
+        assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
@@ -57,11 +59,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                     editable: true,
                     executionOrder: 10,
                     hasExecutionOrder: true,
-                    runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
-                    runnable: true,
-                    custom: {
-                        cellId: 'MyCellId1'
-                    }
+                    runState: vscodeNotebookEnums.NotebookCellRunState.Success,
+                    runnable: true
                 }
             },
             {
@@ -74,10 +73,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                     executionOrder: undefined,
                     hasExecutionOrder: false,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
-                    runnable: false,
-                    custom: {
-                        cellId: 'MyCellId2'
-                    }
+                    runnable: false
                 }
             }
         ]);
@@ -204,8 +200,8 @@ suite('Data Science - NativeNotebook helpers', () => {
                 [
                     {
                         outputKind: vscodeNotebookEnums.CellOutputKind.Error,
-                        ename: 'Error Name',
-                        evalue: 'Error Value',
+                        ename: '',
+                        evalue: '',
                         traceback: ['stack1', 'stack2', 'stack3']
                     }
                 ]

@@ -8,6 +8,9 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+
 // Helper functions for dealing with kernels and kernelspecs
 
 export const defaultKernelSpecName = 'python_defaultSpec_';
@@ -41,4 +44,25 @@ export function createDefaultKernelSpec(displayName?: string): IJupyterKernelSpe
 export function detectDefaultKernelName(name: string) {
     const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
     return regEx.exec(name.toLowerCase());
+}
+
+export function cleanEnvironment<T>(spec: T): T {
+    // tslint:disable-next-line: no-any
+    const copy = cloneDeep(spec) as { env?: any };
+
+    if (copy.env) {
+        // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
+        // See this issue here: https://github.com/microsoft/vscode-python/issues/11749
+        const keys = Object.keys(copy.env);
+        keys.forEach((k) => {
+            if (copy.env) {
+                const value = copy.env[k];
+                if (value !== null && value !== undefined) {
+                    copy.env[k] = value.toString();
+                }
+            }
+        });
+    }
+
+    return copy as T;
 }

@@ -28,7 +28,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebook
 } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { noop } from '../../../core';
 
 // tslint:disable: max-func-body-length no-any
@@ -118,9 +118,12 @@ suite('Data Science - Kernel Switcher', () => {
                 };
                 when(notebook.connection).thenReturn(jupyterConnection);
             });
-            teardown(() => {
-                // We should have checked if it was a local connection.
-                verify(notebook.connection).atLeast(1);
+            teardown(function () {
+                // tslint:disable-next-line: no-invalid-this
+                if (this.runnable().state) {
+                    // We should have checked if it was a local connection.
+                    verify(notebook.connection).atLeast(1);
+                }
             });
 
             [
@@ -132,30 +135,33 @@ suite('Data Science - Kernel Switcher', () => {
                         when(notebook.getKernelSpec()).thenReturn(currentKernelInfo.currentKernel);
                     });
 
-                    teardown(() => {
-                        verify(notebook.getKernelSpec()).once();
+                    teardown(function () {
+                        // tslint:disable-next-line: no-invalid-this
+                        if (this.runnable().state) {
+                            verify(notebook.getKernelSpec()).once();
 
-                        if (isLocalConnection) {
-                            verify(
-                                kernelSelector.selectLocalKernel(
-                                    anything(),
-                                    anything(),
-                                    anything(),
-                                    undefined,
-                                    undefined,
-                                    currentKernelInfo.currentKernel
-                                )
-                            ).once();
-                        } else {
-                            verify(
-                                kernelSelector.selectRemoteKernel(
-                                    anything(),
-                                    anything(),
-                                    anything(),
-                                    anything(),
-                                    anything()
-                                )
-                            ).once();
+                            if (isLocalConnection) {
+                                verify(
+                                    kernelSelector.selectLocalKernel(
+                                        anything(),
+                                        anything(),
+                                        anything(),
+                                        undefined,
+                                        undefined,
+                                        currentKernelInfo.currentKernel
+                                    )
+                                ).once();
+                            } else {
+                                verify(
+                                    kernelSelector.selectRemoteKernel(
+                                        anything(),
+                                        anything(),
+                                        anything(),
+                                        anything(),
+                                        anything()
+                                    )
+                                ).once();
+                            }
                         }
                     });
 
@@ -209,9 +215,12 @@ suite('Data Science - Kernel Switcher', () => {
                                 });
                             }
                         });
-                        teardown(() => {
-                            // Verify display of progress message.
-                            verify(appShell.withProgress(anything(), anything())).atLeast(1);
+                        teardown(function () {
+                            // tslint:disable-next-line: no-invalid-this
+                            if (this.runnable().state) {
+                                // Verify display of progress message.
+                                verify(appShell.withProgress(anything(), anything())).atLeast(1);
+                            }
                         });
 
                         test('Switch to the selected kernel', async () => {

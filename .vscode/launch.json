@@ -25,7 +25,7 @@
                 // Enable this to turn on redux logging during debugging
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Enable this to try out new experiments locally
-                "XVSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
+                "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "1",
                 // Enable this to log telemetry to the output during debugging
                 "XVSC_PYTHON_LOG_TELEMETRY": "1",
                 // Enable this to log debugger output. Directory must exist ahead of time
@@ -176,7 +176,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_GREP": "DataScience - Export HTML" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -204,7 +204,7 @@
             "env": {
                 "VSC_PYTHON_CI_TEST_GREP": "", // Modify this to run a subset of the single workspace tests
                 "VSC_PYTHON_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
-                
+
                 "VSC_PYTHON_LOAD_EXPERIMENTS_FROM_FILE": "true",
                 "TEST_FILES_SUFFIX": "ds.test"
             },

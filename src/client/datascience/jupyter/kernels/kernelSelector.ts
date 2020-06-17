@@ -13,7 +13,8 @@ import { Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { IKernelFinder } from '../../kernel-launcher/types';
@@ -304,7 +305,7 @@ export class KernelSelector {
                     selection.kernelSpec,
                     cancelToken
                 );
-            } else {
+            } else if (!cancelToken?.isCancellationRequested) {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
                 if (activeInterpreter) {
@@ -328,7 +329,7 @@ export class KernelSelector {
                     );
                 }
             }
-        } else {
+        } else if (!cancelToken?.isCancellationRequested) {
             // No kernel info, hence use current interpreter as a kernel.
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (activeInterpreter) {

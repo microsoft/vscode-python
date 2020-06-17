@@ -21,7 +21,7 @@ import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
-import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
+import { activeDebugState, CursorPos, DebugState, ICellViewModel, IFont } from '../interactive-common/mainState';
 import { getOSType } from '../react-common/constants';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
@@ -30,9 +30,6 @@ import { getLocString } from '../react-common/locReactSide';
 import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
-
-import { CodIcon } from '../react-common/codicon/codicon';
-import '../react-common/codicon/codicon.css';
 
 namespace CssConstants {
     export const CellOutputWrapper = 'cell-output-wrapper';
@@ -61,7 +58,7 @@ interface INativeCellBaseProps {
     focusPending: number;
     busy: boolean;
     useCustomEditorApi: boolean;
-    runningByLine: boolean;
+    runningByLine: DebugState;
     supportsRunByLine: boolean;
 }
 
@@ -577,8 +574,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.focusCell(cellId);
             this.props.runByLine(cellId);
         };
-        const cont = () => {
-            this.props.continue(cellId);
+        const stop = () => {
+            this.props.interruptKernel();
         };
         const step = () => {
             this.props.focusCell(cellId);
@@ -611,30 +608,44 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
-        if (this.props.runningByLine && !this.isMarkdownCell()) {
+        if (activeDebugState(this.props.runningByLine) && !this.isMarkdownCell()) {
             return (
                 <div className={toolbarClassName}>
                     <div className="native-editor-celltoolbar-middle">
                         <ImageButton
+                            className={'image-button-empty'} // Just takes up space for now
                             baseTheme={this.props.baseTheme}
-                            onClick={cont}
-                            tooltip={getLocString('DataScience.continueRunByLine', 'Stop')}
+                            onClick={runCell}
+                            tooltip={getLocString('DataScience.runCell', 'Run cell')}
                             hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy}
+                            disabled={true}
                         >
-                            <div className="codicon codicon-button">{CodIcon.Stop}</div>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={step}
-                            tooltip={getLocString('DataScience.step', 'Run next line')}
+                            tooltip={getLocString('DataScience.step', 'Run next line (F10)')}
                             hidden={this.isMarkdownCell()}
-                            disabled={this.props.busy}
+                            disabled={this.props.busy || this.props.runningByLine === DebugState.Run}
                         >
                             <Image
                                 baseTheme={this.props.baseTheme}
                                 class="image-button-image"
                                 image={ImageName.RunByLine}
+                            />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={stop}
+                            tooltip={getLocString('DataScience.stopRunByLine', 'Stop')}
+                            hidden={this.isMarkdownCell()}
+                            disabled={false}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Interrupt}
                             />
                         </ImageButton>
                     </div>

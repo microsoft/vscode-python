@@ -13,8 +13,9 @@ import {
     IDisposableRegistry,
     IOutputChannel
 } from '../../common/types';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
@@ -48,8 +49,8 @@ type JupyterExecutionClassType = {
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<
-        INotebookServerOptions
+    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions | undefined> = new EventEmitter<
+        INotebookServerOptions | undefined
     >();
 
     constructor(
@@ -91,7 +92,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return this.sessionChangedEventEmitter.event;
     }
 
-    public get serverStarted(): Event<INotebookServerOptions> {
+    public get serverStarted(): Event<INotebookServerOptions | undefined> {
         return this.serverStartedEventEmitter.event;
     }
 

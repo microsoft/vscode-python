@@ -20,23 +20,25 @@ import {
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
+import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
-    GetInterpreterOptions,
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterService,
-    INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType,
-    PythonInterpreter
+    INTERPRETER_LOCATOR_SERVICE
 } from './contracts';
-import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
+
+export type GetInterpreterOptions = {
+    onSuggestion?: boolean;
+};
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
@@ -85,7 +87,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const disposables = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         disposables.push(
-            documentManager.onDidChangeActiveTextEditor((e) => (e ? this.refresh(e.document.uri) : undefined))
+            documentManager.onDidChangeActiveTextEditor((e) =>
+                e && e.document ? this.refresh(e.document.uri) : undefined
+            )
         );
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
@@ -136,9 +140,14 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
-        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonExecutionService = await pythonExecutionFactory.create({ resource });
-        const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
+        // During shutdown we might not be able to get items out of the service container.
+        const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const pythonExecutionService = pythonExecutionFactory
+            ? await pythonExecutionFactory.create({ resource })
+            : undefined;
+        const fullyQualifiedPath = pythonExecutionService
+            ? await pythonExecutionService.getExecutablePath().catch(() => undefined)
+            : undefined;
         // Python path is invalid or python isn't installed.
         if (!fullyQualifiedPath) {
             return;

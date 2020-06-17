@@ -3,7 +3,6 @@
 
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { PythonVersionInfo } from '../../types';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 export const _SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -41,7 +40,9 @@ export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 //============================
 // interpreterInfo.py
 
-type PythonEnvInfo = {
+type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
+export type PythonEnvInfo = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;
     sysVersion: string;

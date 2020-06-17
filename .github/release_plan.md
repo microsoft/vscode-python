@@ -71,6 +71,9 @@
     -   [ ] Make sure the "Upload" stage on the release page succeeded
     -   [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
     -   [ ] Deploy the "Publish" stage
+-   [ ] Create a [GitHub release](https://github.com/microsoft/vscode-python/releases)
+    -   [ ] Have tag match the released version
+    -   [ ] Copy the changelog entry for the release as the description
 -   [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 -   [ ] Publish the [blog](http://aka.ms/pythonblog) post
 -   [ ] Determine if a hotfix is needed

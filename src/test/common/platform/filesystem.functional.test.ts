@@ -240,9 +240,10 @@ suite('FileSystem - raw', () => {
     suite('createReadStream', () => {
         setup(function () {
             // tslint:disable-next-line: no-suspicious-comment
-            // TODO(GH-10031) This appears to be producing
+            // TODO: This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
+            // See https://github.com/microsoft/vscode-python/issues/10031.
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         });
@@ -267,9 +268,10 @@ suite('FileSystem - raw', () => {
     suite('createWriteStream', () => {
         setup(function () {
             // tslint:disable-next-line: no-suspicious-comment
-            // TODO(GH-10031) This appears to be producing
+            // TODO This appears to be producing
             // false negative test results, so we're skipping
             // it for now.
+            // See https://github.com/microsoft/vscode-python/issues/10031.
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         });

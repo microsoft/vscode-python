@@ -28,7 +28,7 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -43,9 +43,9 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { Commands, EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
@@ -66,7 +66,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -160,7 +159,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IStatusProvider) statusProvider: IStatusProvider,
-        @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(ICommandManager) commandManager: ICommandManager,
@@ -193,7 +191,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             cssGenerator,
             themeFinder,
             statusProvider,
-            jupyterExecution,
             fileSystem,
             configuration,
             jupyterExporter,
@@ -239,6 +236,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Indicate we have our identity
         this.loadedPromise.resolve();
 
+        traceInfo(`Loading web panel for ${model.file}`);
+
         // Load the web panel using our file path so it can find
         // relative files next to the notebook.
         await super.loadWebPanel(path.dirname(this.file.fsPath), webViewPanel);
@@ -276,8 +275,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.handleMessage(message, payload, this.saveAll);
                 break;
 
-            case InteractiveWindowMessages.Export:
-                this.handleMessage(message, payload, this.export);
+            case InteractiveWindowMessages.ExportNotebookAs:
+                this.handleMessage(message, payload, this.exportAs);
                 break;
 
             case InteractiveWindowMessages.UpdateModel:
@@ -561,8 +560,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async modelChanged(change: NotebookModelChange) {
         if (change.source !== 'user') {
-            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change
-            await this.postMessage(InteractiveWindowMessages.UpdateModel, change);
+            // VS code is telling us to broadcast this to our UI. Tell the UI about the new change. Remove the
+            // the model so this doesn't have to be stringified
+            await this.postMessage(InteractiveWindowMessages.UpdateModel, { ...change, model: undefined });
         }
         if (change.kind === 'saveAs' && change.model) {
             const newFileName = change.model.file.toString();
@@ -576,7 +576,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Use the current state of the model to indicate dirty (not the message itself)
         if (this.model && change.newDirty !== change.oldDirty) {
-            this.modifiedEvent.fire();
+            this.modifiedEvent.fire(this);
             if (this.model.isDirty) {
                 await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             } else {
@@ -632,6 +632,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.submitCode(code, Identifiers.EmptyFileName, 0, cell.id, cell.data, undefined, cancelToken);
             }
         } catch (exc) {
+            traceInfo(`Exception executing cell ${cell.id}: `, exc);
+
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
@@ -678,36 +680,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
-    @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
-    private async export(): Promise<void> {
-        const status = this.setStatus(localize.DataScience.convertingToPythonFile(), false);
-        // First generate a temporary notebook with these cells.
-        let tempFile: TemporaryFile | undefined;
-        try {
-            tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-
-            // Translate the cells into a notebook
-            const content = this.model ? this.model.getContent() : '';
-            await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
-
-            // Import this file and show it
-            const contents = await this.importer.importFromFile(tempFile.filePath, this.file.fsPath);
-            if (contents) {
-                await this.viewDocument(contents);
-            }
-        } catch (e) {
-            await this.errorHandler.handleError(e);
-        } finally {
-            if (tempFile) {
-                tempFile.dispose();
-            }
-            status.dispose();
+    private async exportAs(): Promise<void> {
+        const activeEditor = this.editorProvider.activeEditor;
+        if (!activeEditor || !activeEditor.model) {
+            return;
         }
-    }
-
-    private async viewDocument(contents: string): Promise<void> {
-        const doc = await this.documentManager.openTextDocument({ language: 'python', content: contents });
-        await this.documentManager.showTextDocument(doc, ViewColumn.One);
+        this.commandManager.executeCommand(Commands.Export, activeEditor.model);
     }
 
     private logNativeCommand(args: INativeCommand) {

@@ -27,10 +27,10 @@ import { IConfigurationService, IDisposableRegistry } from '../../client/common/
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LinterId, LintMessageSeverity } from '../../client/linters/types';
+import { WindowsStoreInterpreter } from '../../client/pythonEnvironments/discovery/locators/services/windowsStoreInterpreter';
 import { deleteFile, PYTHON_PATH } from '../common';
 import { BaseTestFixture, getLinterID, getProductName, newMockDocument, throwUnknownProduct } from './common';
 
@@ -40,14 +40,14 @@ const pythonFilesDir = path.join(workspaceDir, 'pythonFiles', 'linting');
 const fileToLint = path.join(pythonFilesDir, 'file.py');
 
 const linterConfigDirs = new Map<LinterId, string>([
-    ['flake8', path.join(pythonFilesDir, 'flake8config')],
-    ['pycodestyle', path.join(pythonFilesDir, 'pycodestyleconfig')],
-    ['pydocstyle', path.join(pythonFilesDir, 'pydocstyleconfig27')],
-    ['pylint', path.join(pythonFilesDir, 'pylintconfig')]
+    [LinterId.Flake8, path.join(pythonFilesDir, 'flake8config')],
+    [LinterId.PyCodeStyle, path.join(pythonFilesDir, 'pycodestyleconfig')],
+    [LinterId.PyDocStyle, path.join(pythonFilesDir, 'pydocstyleconfig27')],
+    [LinterId.PyLint, path.join(pythonFilesDir, 'pylintconfig')]
 ]);
 const linterConfigRCFiles = new Map<LinterId, string>([
-    ['pylint', '.pylintrc'],
-    ['pydocstyle', '.pydocstyle']
+    [LinterId.PyLint, '.pylintrc'],
+    [LinterId.PyDocStyle, '.pydocstyle']
 ]);
 
 const pylintMessagesToBeReturned: ILintMessage[] = [

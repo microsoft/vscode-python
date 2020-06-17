@@ -18,15 +18,16 @@ import {
     IPythonSettings
 } from '../../client/common/types';
 import { OSType } from '../../client/common/utils/platform';
-import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/interpreter/locators/services/currentPathService';
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/pythonEnvironments/discovery/locators/services/currentPathService';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');

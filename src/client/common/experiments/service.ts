@@ -3,15 +3,17 @@
 
 'use strict';
 
-import { inject, named } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
+import { PVSC_EXTENSION_ID } from '../constants';
 import { GLOBAL_MEMENTO, IConfigurationService, IExperimentService, IMemento, IPythonSettings } from '../types';
 import { ExperimentationTelemetry } from './telemetry';
 
+@injectable()
 export class ExperimentService implements IExperimentService {
     /**
      * Experiments the user requested to opt into manually.
@@ -46,7 +48,7 @@ export class ExperimentService implements IExperimentService {
 
         let targetPopulation: TargetPopulation;
 
-        if (this.appEnvironment.channel === 'insiders') {
+        if (this.appEnvironment.extensionChannel === 'insiders') {
             targetPopulation = TargetPopulation.Insiders;
         } else {
             targetPopulation = TargetPopulation.Public;
@@ -55,7 +57,7 @@ export class ExperimentService implements IExperimentService {
         const telemetryReporter = new ExperimentationTelemetry();
 
         this.experimentationService = getExperimentationService(
-            this.appEnvironment.extensionName,
+            PVSC_EXTENSION_ID,
             this.appEnvironment.packageJson.version!,
             targetPopulation,
             telemetryReporter,

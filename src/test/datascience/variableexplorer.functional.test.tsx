@@ -80,11 +80,11 @@ const rangeInclusive = require('range-inclusive');
             waitForVariablesCount: number = 1,
             expectError: boolean = false
         ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-            const variablesUpdated = waitForVariables
-                ? waitForVariablesUpdated(ioc, waitForVariablesCount)
-                : Promise.resolve();
             const nodes = wrapper.find('InteractivePanel');
             if (nodes.length > 0) {
+                const variablesUpdated = waitForVariables
+                    ? waitForVariablesUpdated(ioc, 'default', waitForVariablesCount)
+                    : Promise.resolve();
                 const result = await addCode(ioc, wrapper, code, expectError);
                 await variablesUpdated;
                 return result;
@@ -94,7 +94,10 @@ const rangeInclusive = require('range-inclusive');
                     await createNewEditor(ioc);
                     createdNotebook = true;
                 }
-                await addCell(wrapper, ioc, code, true);
+                const variablesUpdated = waitForVariables
+                    ? waitForVariablesUpdated(ioc, 'notebook', waitForVariablesCount)
+                    : Promise.resolve();
+                await addCell(ioc, wrapper, code, true);
                 await variablesUpdated;
                 return wrapper;
             }
@@ -517,7 +520,11 @@ Name: 0, dtype: float64`,
                 verifyVariables(wrapper, targetVariables);
 
                 // Force a scroll to the bottom
-                const complete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes: 2 });
+                const complete = ioc
+                    .getWebPanel(t === 'native' ? 'notebook' : 'default')
+                    .waitForMessage(InteractiveWindowMessages.VariablesComplete, {
+                        numberOfTimes: 2
+                    });
                 const grid = wrapper.find(AdazzleReactDataGrid);
                 const viewPort = grid.find('Viewport').instance();
                 const rowHeight = (viewPort.props as any).rowHeight as number;

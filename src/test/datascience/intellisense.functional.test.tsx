@@ -17,14 +17,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { takeSnapshot, writeDiffSnapshot } from './helpers';
 import * as InteractiveHelpers from './interactiveWindowTestHelpers';
 import * as NativeHelpers from './nativeEditorTestHelpers';
-import {
-    addMockData,
-    enterEditorKey,
-    getInteractiveEditor,
-    getNativeEditor,
-    typeCode,
-    waitForMessage
-} from './testHelpers';
+import { addMockData, enterEditorKey, getInteractiveEditor, getNativeEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 [LanguageServerType.Microsoft, LanguageServerType.Node].forEach((languageServerType) => {
@@ -457,7 +450,7 @@ import {
             'Hover on notebook',
             async (wrapper) => {
                 // Create an notebook so that it listens to the results.
-                const kernelIdle = waitForMessage(ioc, InteractiveWindowMessages.KernelIdle);
+                const kernelIdle = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.KernelIdle);
                 const notebook = await NativeHelpers.openEditor(ioc, JSON.stringify(notebookJSON));
                 await notebook.show();
                 await kernelIdle;
@@ -465,7 +458,7 @@ import {
                 // Cause a hover event over the first character
                 await waitForHover('Native', wrapper, 1, 1);
                 verifyHoverVisible('Native', wrapper, 'a=1\na');
-                await NativeHelpers.closeNotebook(notebook, wrapper);
+                await NativeHelpers.closeNotebook(ioc, notebook);
             },
             () => {
                 return ioc;
@@ -487,7 +480,7 @@ import {
                 await waitForHover('Interactive', wrapper, 1, 1);
                 verifyHoverVisible('Interactive', wrapper, 'a=1\na\nb=2\nb');
 
-                await InteractiveHelpers.closeInteractiveWindow(window, wrapper);
+                await InteractiveHelpers.closeInteractiveWindow(ioc, window);
             },
             () => {
                 return ioc;

@@ -1,16 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python';
-import {
-    ExecutionResult,
-    IProcessService,
-    ObservableExecutionResult,
-    PythonExecutionInfo,
-    SpawnOptions
-} from './types';
+import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types';
 
 class PythonProcessService {
     constructor(
@@ -18,8 +13,8 @@ class PythonProcessService {
         private readonly deps: {
             // from PythonEnvironment:
             isModuleInstalled(moduleName: string): Promise<boolean>;
-            getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-            getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
+            getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
+            getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
             // from ProcessService:
             exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
             execObservable(file: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -75,8 +70,8 @@ export function createPythonProcessService(
     procs: IProcessService,
     // from PythonEnvironment:
     env: {
-        getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
-        getExecutionObservableInfo(pythonArgs?: string[]): PythonExecutionInfo;
+        getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
+        getExecutionObservableInfo(pythonArgs?: string[]): PythonExecInfo;
         isModuleInstalled(moduleName: string): Promise<boolean>;
     }
 ) {

@@ -189,7 +189,8 @@ export interface IFileSystemUtils {
 }
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8542): Later we will drop IFileSystem, switching usage to IFileSystemUtils.
+// TODO: Later we will drop IFileSystem, switching usage to IFileSystemUtils.
+// See https://github.com/microsoft/vscode-python/issues/8542.
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {

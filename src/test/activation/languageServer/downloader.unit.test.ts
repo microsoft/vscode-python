@@ -321,7 +321,7 @@ suite('Language Server Activation - Downloader', () => {
             );
         });
         test('Display error message if LS downloading fails', async () => {
-            folderService.setup((f) => f.isBundled()).returns(() => false);
+            folderService.setup((f) => f.skipDownload()).returns(async () => false);
             const pkg = makePkgInfo('ls', 'xyz');
             folderService.setup((f) => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup((o) => o.appendLine(LanguageService.downloadFailedOutputMessage()));
@@ -345,7 +345,7 @@ suite('Language Server Activation - Downloader', () => {
             platformData.verifyAll();
         });
         test('Display error message if LS extraction fails', async () => {
-            folderService.setup((f) => f.isBundled()).returns(() => false);
+            folderService.setup((f) => f.skipDownload()).returns(async () => false);
             const pkg = makePkgInfo('ls', 'xyz');
             folderService.setup((f) => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup((o) => o.appendLine(LanguageService.extractionFailedOutputMessage()));
@@ -369,7 +369,7 @@ suite('Language Server Activation - Downloader', () => {
             platformData.verifyAll();
         });
         test('No download if bundled', async () => {
-            folderService.setup((f) => f.isBundled()).returns(() => true);
+            folderService.setup((f) => f.skipDownload()).returns(async () => true);
 
             await languageServerBundledTest.downloadLanguageServer('', resource);
 

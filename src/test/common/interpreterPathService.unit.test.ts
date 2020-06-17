@@ -92,7 +92,7 @@ suite('Interpreter Path Service', async () => {
     test('If the one-off transfer to new storage has not happened yet for the workspace folder, do it and record the transfer', async () => {
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string[]>>();
-        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
+        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource, '')).returns(() => resource.fsPath);
         persistentStateFactory
             .setup((p) => p.createGlobalPersistentState<string[]>(workspaceFolderKeysForWhichTheCopyIsDone_Key, []))
             .returns(() => persistentState.object);
@@ -112,11 +112,28 @@ suite('Interpreter Path Service', async () => {
     test('If the one-off transfer to new storage has already happened for the workspace folder, do not update and simply return', async () => {
         const update = sinon.stub(InterpreterPathService.prototype, 'update');
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string[]>>();
-        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource)).returns(() => resource.fsPath);
+        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource, '')).returns(() => resource.fsPath);
         persistentStateFactory
             .setup((p) => p.createGlobalPersistentState<string[]>(workspaceFolderKeysForWhichTheCopyIsDone_Key, []))
             .returns(() => persistentState.object);
         persistentState.setup((p) => p.value).returns(() => [resource.fsPath, '...storedWorkspaceKeys']);
+        persistentState.setup((p) => p.updateValue(TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
+
+        interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
+        await interpreterPathService._copyWorkspaceFolderValueToNewStorage(resource, 'workspaceFolderPythonPath');
+
+        assert(update.notCalled);
+        persistentState.verifyAll();
+    });
+
+    test('If no folder is opened, do not do the one-off transfer to new storage for the workspace folder', async () => {
+        const update = sinon.stub(InterpreterPathService.prototype, 'update');
+        const persistentState = TypeMoq.Mock.ofType<IPersistentState<string[]>>();
+        workspaceService.setup((w) => w.getWorkspaceFolderIdentifier(resource, '')).returns(() => '');
+        persistentStateFactory
+            .setup((p) => p.createGlobalPersistentState<string[]>(workspaceFolderKeysForWhichTheCopyIsDone_Key, []))
+            .returns(() => persistentState.object);
+        persistentState.setup((p) => p.value).returns(() => ['...storedWorkspaceKeys']);
         persistentState.setup((p) => p.updateValue(TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
@@ -395,7 +412,7 @@ suite('Interpreter Path Service', async () => {
         _didChangeInterpreterEmitter.verifyAll();
     });
 
-    test('Updating workspace settings throws error if no workspace is opened', async () => {
+    test('Updating workspace settings simply returns if no workspace is opened', async () => {
         const expectedSettingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
@@ -408,18 +425,13 @@ suite('Interpreter Path Service', async () => {
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
-        const promise = interpreterPathService.update(
-            resourceOutsideOfWorkspace,
-            ConfigurationTarget.Workspace,
-            interpreterPath
-        );
-        await expect(promise).to.eventually.be.rejectedWith(Error);
+        await interpreterPathService.update(resourceOutsideOfWorkspace, ConfigurationTarget.Workspace, interpreterPath);
 
         persistentState.verifyAll();
         persistentStateFactory.verifyAll();
     });
 
-    test('Updating workspace folder settings throws error if no workspace is opened', async () => {
+    test('Updating workspace folder settings simply returns if no workspace is opened', async () => {
         const expectedSettingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
         const persistentState = TypeMoq.Mock.ofType<IPersistentState<string | undefined>>();
         workspaceService.setup((w) => w.workspaceFolders).returns(() => undefined);
@@ -432,12 +444,7 @@ suite('Interpreter Path Service', async () => {
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
-        const promise = interpreterPathService.update(
-            resourceOutsideOfWorkspace,
-            ConfigurationTarget.Workspace,
-            interpreterPath
-        );
-        await expect(promise).to.eventually.be.rejectedWith(Error);
+        await interpreterPathService.update(resourceOutsideOfWorkspace, ConfigurationTarget.Workspace, interpreterPath);
 
         persistentState.verifyAll();
         persistentStateFactory.verifyAll();

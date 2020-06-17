@@ -73,6 +73,15 @@ export class ServiceManager implements IServiceManager {
     public get<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T {
         return name ? this.container.getNamed<T>(serviceIdentifier, name) : this.container.get<T>(serviceIdentifier);
     }
+    public tryGet<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T | undefined {
+        try {
+            return name
+                ? this.container.getNamed<T>(serviceIdentifier, name)
+                : this.container.get<T>(serviceIdentifier);
+        } catch {
+            // This might happen after the container has been destroyed
+        }
+    }
     public getAll<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T[] {
         return name
             ? this.container.getAllNamed<T>(serviceIdentifier, name)

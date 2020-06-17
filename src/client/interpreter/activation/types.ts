@@ -4,7 +4,7 @@
 'use strict';
 
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../contracts';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 
 export const IEnvironmentActivationService = Symbol('IEnvironmentActivationService');
 export interface IEnvironmentActivationService {

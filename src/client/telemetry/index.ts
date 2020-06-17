@@ -23,8 +23,8 @@ import {
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
+import { InterpreterType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -282,8 +282,8 @@ function serializeStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    // Ensure we always use `/` as path seperators.
-    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    // Ensure we always use `/` as path separators.
+    // This way stack traces (with relative paths) coming from different OS will always look the same.
     return trace.trim().replace(/\\/g, '/');
 }
 
@@ -2121,6 +2121,7 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
     [Telemetry.StartPageClosedWithoutAction]: never | undefined;
@@ -2132,4 +2133,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
     [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
+    [Telemetry.StartPageOpenFolder]: never | undefined;
+    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 }

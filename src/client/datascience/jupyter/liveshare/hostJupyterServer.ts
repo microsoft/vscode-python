@@ -24,8 +24,9 @@ import {
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScience,
@@ -80,9 +81,11 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     public async dispose(): Promise<void> {
         if (!this.disposed) {
             this.disposed = true;
+            traceInfo(`Disposing HostJupyterServer`);
             await super.dispose();
             const api = await this.api;
-            return this.onDetach(api);
+            await this.onDetach(api);
+            traceInfo(`Finished disposing HostJupyterServer`);
         }
     }
 

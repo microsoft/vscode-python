@@ -20,7 +20,7 @@ import {
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { PythonInterpreter } from '../interpreter/contracts';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**
@@ -72,7 +72,6 @@ export enum LanguageServerType {
 
 export const DotNetLanguageServerFolder = 'languageServer';
 export const NodeLanguageServerFolder = 'nodeLanguageServer';
-export const BundledLanguageServerFolder = 'bundledLanguageServer';
 
 // tslint:disable-next-line: interface-name
 export interface DocumentHandler {
@@ -117,7 +116,7 @@ export interface ILanguageServerFolderService {
     getLanguageServerFolderName(resource: Resource): Promise<string>;
     getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
-    isBundled(): boolean;
+    skipDownload(): Promise<boolean>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');

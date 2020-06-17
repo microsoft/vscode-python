@@ -11,13 +11,15 @@ import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import { commands } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
+import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
 import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
-import { waitForCondition } from '../../common';
+import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { closeActiveWindows, initialize } from '../../initialize';
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -71,11 +73,12 @@ export async function insertPythonCell(source: string, index: number = 0) {
                 1_000,
                 'Cell not inserted'
             );
-            // All cells must have same cell id as in INotebookModel.
+            // All cells must have a corresponding cell in INotebookModel.
             await waitForCondition(
                 async () =>
-                    vscEditor?.document.cells.map((cell) => cell.metadata.custom?.cellId || '').join('') ===
-                    nbEditor?.model?.cells.map((cell) => cell.id).join(''),
+                    vscEditor!.document.cells.every((cell) =>
+                        findMappedNotebookCellModel(cell, nbEditor!.model!.cells)
+                    ),
                 1_000,
                 'Cell not assigned a cell Id'
             );
@@ -84,6 +87,9 @@ export async function insertPythonCell(source: string, index: number = 0) {
 }
 export async function insertPythonCellAndWait(source: string, index: number = 0) {
     await (await insertPythonCell(source, index)).waitForCellToGetAdded();
+}
+export async function insertMarkdownCellAndWait(source: string, index: number = 0) {
+    await (await insertMarkdownCell(source, index)).waitForCellToGetAdded();
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
@@ -131,6 +137,7 @@ export async function createTemporaryFile(options: {
 
 export async function createTemporaryNotebook(templateFile: string, disposables: IDisposable[]): Promise<string> {
     const extension = path.extname(templateFile);
+    fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'));
     const tempFile = tmp.tmpNameSync({ postfix: extension, dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp') });
     await fs.copyFile(templateFile, tempFile);
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
@@ -211,6 +218,12 @@ export function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Success
     );
 }
+export function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
+    return (
+        (cell.metadata.executionOrder ?? 0) > 0 &&
+        cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Error
+    );
+}
 export function hasOutputInVSCode(cell: NotebookCell) {
     assert.ok(cell.outputs.length, 'No output');
 }
@@ -220,13 +233,26 @@ export function hasOutputInICell(cell: ICell) {
 export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs, 'No output');
-    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Text, 'Incorrect output kind');
-    const outputText = (cellOutputs[index] as any).text.trim();
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
     if (isExactMatch) {
         assert.equal(outputText, text, 'Incorrect output');
     } else {
         expect(outputText).to.include(text, 'Output does not contain provided text');
     }
+    return true;
+}
+export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+    const cellOutputs = cell.outputs;
+    assert.ok(cellOutputs, 'No output');
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
+    if (isExactMatch) {
+        assert.notEqual(outputText, text, 'Incorrect output');
+    } else {
+        expect(outputText).to.not.include(text, 'Output does not contain provided text');
+    }
+    return true;
 }
 export function assertHasTextOutputInICell(cell: ICell, text: string, index: number) {
     const cellOutputs = cell.data.outputs as nbformat.IOutput[];
@@ -240,4 +266,24 @@ export function assertVSCCellIsRunning(cell: NotebookCell) {
 export function assertVSCCellIsIdle(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
     return true;
+}
+export function assertVSCCellHasErrors(cell: NotebookCell) {
+    assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Error);
+    return true;
+}
+export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
+    assert.ok(
+        cell.outputs.filter((output) => output.outputKind === vscodeNotebookEnums.CellOutputKind.Error).length,
+        'No error output in cell'
+    );
+    return true;
+}
+
+export async function saveActiveNotebook(disposables: IDisposable[]) {
+    const api = await initialize();
+    const editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const savedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
+    await commands.executeCommand('workbench.action.files.saveAll');
+
+    await waitForCondition(async () => savedEvent.all.some((e) => e.kind === 'save'), 5_000, 'Not saved');
 }

@@ -1,5 +1,6 @@
 // tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8542): Drop this file.
+// TODO: Drop this file.
+// See https://github.com/microsoft/vscode-python/issues/8542.
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';

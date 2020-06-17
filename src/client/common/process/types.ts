@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
-import { PythonInterpreter } from '../../interpreter/contracts';
 import { Newable } from '../../ioc/types';
-import { ExecutionInfo, IDisposable, Version } from '../types';
-import { Architecture } from '../utils/platform';
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { InterpreterInformation, PythonInterpreter } from '../../pythonEnvironments/info';
+import { ExecutionInfo, IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
@@ -161,23 +162,13 @@ export interface IPythonExecutionFactory {
         resource?: Uri
     ): Promise<IPythonExecutionService | undefined>;
 }
-export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
-export type PythonVersionInfo = [number, number, number, ReleaseLevel];
-export type InterpreterInformation = {
-    path: string;
-    version?: Version;
-    sysVersion: string;
-    architecture: Architecture;
-    sysPrefix: string;
-    pipEnvWorkspaceFolder?: string;
-};
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
+    getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -186,12 +177,6 @@ export interface IPythonExecutionService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
-export type PythonExecutionInfo = {
-    command: string;
-    args: string[];
-
-    python: string[];
-};
 /**
  * Identical to the PythonExecutionService, but with a `dispose` method.
  * This is a daemon process that lives on until it is disposed, hence the `IDisposable`.

@@ -13,7 +13,12 @@ const progressMessages = {
     [ReportableAction.KernelsGetKernelSpecs]: DataScience.gettingListOfKernelSpecs(),
     [ReportableAction.KernelsRegisterKernel]: DataScience.registeringKernel(),
     [ReportableAction.NotebookConnect]: DataScience.connectingToJupyter(),
-    [ReportableAction.NotebookStart]: DataScience.startingJupyterNotebook()
+    [ReportableAction.NotebookStart]: DataScience.startingJupyterNotebook(),
+    [ReportableAction.RawKernelConnecting]: DataScience.rawKernelConnectingSession(),
+    [ReportableAction.CheckingIfImportIsSupported]: DataScience.checkingIfImportIsSupported(), // Localize these later
+    [ReportableAction.InstallingMissingDependencies]: DataScience.installingMissingDependencies(),
+    [ReportableAction.ExportNotebookToPython]: DataScience.exportNotebookToPython(),
+    [ReportableAction.PerformingExport]: DataScience.performingExport()
 };
 
 /**

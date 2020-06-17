@@ -5,28 +5,35 @@
 
 import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
+import { Extension, Uri, WorkspaceConfiguration } from 'vscode';
 import {
-    NodeLanguageServerFolderService,
-    NodeLanguageServerVersionKey
+    ILanguageServerFolder,
+    ILSExtensionApi,
+    NodeLanguageServerFolderService
 } from '../../../client/activation/node/languageServerFolderService';
-import { BundledLanguageServerFolder } from '../../../client/activation/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { IConfigurationService, IExtensions, IPythonSettings } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable:max-func-body-length
 
 suite('Node Language Server Folder Service', () => {
     const resource = Uri.parse('a');
-    const version = '0.0.1-test';
+    const extensionName = 'some.extension';
 
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let workspaceConfiguration: TypeMoq.IMock<WorkspaceConfiguration>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
+    let extensions: TypeMoq.IMock<IExtensions>;
+
+    class TestService extends NodeLanguageServerFolderService {
+        // tslint:disable-next-line: no-unnecessary-override
+        public languageServerFolder(): Promise<ILanguageServerFolder | undefined> {
+            return super.languageServerFolder();
+        }
+    }
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -38,83 +45,136 @@ suite('Node Language Server Folder Service', () => {
         workspaceService
             .setup((ws) => ws.getConfiguration('python', TypeMoq.It.isAny()))
             .returns(() => workspaceConfiguration.object);
-        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+        extensions = TypeMoq.Mock.ofType<IExtensions>();
     });
 
-    test('With packageName set', () => {
+    test('With packageName set', async () => {
         pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        appEnvironment.setup((e) => e.packageJson).returns(() => ({ [NodeLanguageServerVersionKey]: version }));
         workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => 'somePackageName');
 
-        const folderService = new NodeLanguageServerFolderService(
+        const folderService = new TestService(
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            appEnvironment.object
+            extensions.object
         );
 
-        expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
-        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
+        const lsf = await folderService.languageServerFolder();
+        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
+        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
     });
 
-    test('Invalid version', () => {
+    test('Invalid version', async () => {
         pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-        appEnvironment.setup((e) => e.packageJson).returns(() => ({ [NodeLanguageServerVersionKey]: 'fakeversion' }));
         workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
 
-        const folderService = new NodeLanguageServerFolderService(
+        const folderService = new TestService(
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            appEnvironment.object
+            extensions.object
         );
 
-        expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
-        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
+        const lsf = await folderService.languageServerFolder();
+        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
+        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
     });
 
-    test('downloadLanguageServer set to false', () => {
+    test('downloadLanguageServer set to false', async () => {
         pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => false);
-        appEnvironment.setup((e) => e.packageJson).returns(() => ({ [NodeLanguageServerVersionKey]: 'fakeversion' }));
         workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
 
-        const folderService = new NodeLanguageServerFolderService(
+        const folderService = new TestService(
             serviceContainer.object,
             configService.object,
             workspaceService.object,
-            appEnvironment.object
+            extensions.object
         );
 
-        expect(folderService.bundledVersion).to.be.equal(undefined, 'expected bundledVersion to be undefined');
-        expect(folderService.isBundled()).to.be.equal(false, 'isBundled should be false');
+        const lsf = await folderService.languageServerFolder();
+        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
+        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
+    });
+
+    test('lsExtensionName is undefined', async () => {
+        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
+        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
+        workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => undefined);
+
+        const folderService = new TestService(
+            serviceContainer.object,
+            configService.object,
+            workspaceService.object,
+            extensions.object
+        );
+
+        const lsf = await folderService.languageServerFolder();
+        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
+        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
+    });
+
+    test('lsExtension not installed', async () => {
+        pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
+        workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
+        workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => extensionName);
+        extensions.setup((e) => e.getExtension(extensionName)).returns(() => undefined);
+
+        const folderService = new TestService(
+            serviceContainer.object,
+            configService.object,
+            workspaceService.object,
+            extensions.object
+        );
+
+        const lsf = await folderService.languageServerFolder();
+        expect(lsf).to.be.equal(undefined, 'expected languageServerFolder to be undefined');
+        expect(await folderService.skipDownload()).to.be.equal(false, 'skipDownload should be false');
     });
 
     suite('Valid configuration', () => {
-        let folderService: NodeLanguageServerFolderService;
+        const lsPath = '/some/absolute/path';
+        const lsVersion = '0.0.1-test';
+        const extensionApi: ILSExtensionApi = {
+            languageServerFolder: async () => ({
+                path: lsPath,
+                version: lsVersion
+            })
+        };
+
+        let folderService: TestService;
+        let extension: TypeMoq.IMock<Extension<ILSExtensionApi>>;
 
         setup(() => {
+            extension = TypeMoq.Mock.ofType<Extension<ILSExtensionApi>>();
+            extension.setup((e) => e.activate()).returns(() => Promise.resolve(extensionApi));
+            extension.setup((e) => e.exports).returns(() => extensionApi);
             pythonSettings.setup((p) => p.downloadLanguageServer).returns(() => true);
-            appEnvironment.setup((e) => e.packageJson).returns(() => ({ [NodeLanguageServerVersionKey]: version }));
             workspaceConfiguration.setup((wc) => wc.get('packageName')).returns(() => undefined);
-            folderService = new NodeLanguageServerFolderService(
+            workspaceConfiguration.setup((wc) => wc.get('lsExtensionName')).returns(() => extensionName);
+            extensions.setup((e) => e.getExtension(extensionName)).returns(() => extension.object);
+            folderService = new TestService(
                 serviceContainer.object,
                 configService.object,
                 workspaceService.object,
-                appEnvironment.object
+                extensions.object
             );
         });
 
-        test('isBundled is true', () => {
-            expect(folderService.isBundled()).to.be.equal(true, 'isBundled should be true');
+        test('skipDownload is true', async () => {
+            const skipDownload = await folderService.skipDownload();
+            expect(skipDownload).to.be.equal(true, 'skipDownload should be true');
         });
 
-        test('Parsed version is correct', () => {
-            expect(folderService.bundledVersion!.format()).to.be.equal(version);
+        test('Parsed version is correct', async () => {
+            const lsf = await folderService.languageServerFolder();
+            assert(lsf);
+            expect(lsf!.version.format()).to.be.equal(lsVersion);
+            expect(lsf!.path).to.be.equal(lsPath);
         });
 
         test('getLanguageServerFolderName', async () => {
             const folderName = await folderService.getLanguageServerFolderName(resource);
-            expect(folderName).to.be.equal(BundledLanguageServerFolder);
+            expect(folderName).to.be.equal(lsPath);
         });
 
         test('getLatestLanguageServerVersion', async () => {
@@ -125,8 +185,8 @@ suite('Node Language Server Folder Service', () => {
         test('Method getCurrentLanguageServerDirectory()', async () => {
             const dir = await folderService.getCurrentLanguageServerDirectory();
             assert(dir);
-            expect(dir!.path).to.equal(BundledLanguageServerFolder);
-            expect(dir!.version.format()).to.be.equal(version);
+            expect(dir!.path).to.equal(lsPath);
+            expect(dir!.version.format()).to.be.equal(lsVersion);
         });
     });
 });

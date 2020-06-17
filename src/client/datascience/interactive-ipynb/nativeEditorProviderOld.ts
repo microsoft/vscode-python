@@ -3,8 +3,9 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
 
+import { CancellationToken } from 'vscode-jsonrpc';
 import {
     ICommandManager,
     ICustomEditorService,
@@ -14,11 +15,16 @@ import {
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
-import { IDataScienceErrorHandler, INotebookEditor } from '../types';
+import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { IDataScienceErrorHandler, INotebookEditor, INotebookModel } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
 import { INotebookStorageProvider } from './notebookStorageProvider';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 @injectable()
 export class NativeEditorProviderOld extends NativeEditorProvider {
@@ -33,6 +39,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         return [...this.activeEditors.values()];
     }
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
+    private readonly _autoSaveNotebookInHotExitFile = new WeakMap<INotebookModel, Function>();
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -57,7 +64,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.cmdManager.registerCommand(Commands.SaveNotebookNonCustomEditor, async (resource: Uri) => {
                 const customDocument = this.customDocuments.get(resource.fsPath);
                 if (customDocument) {
-                    await this.save(customDocument, new CancellationTokenSource().token);
+                    await this.saveCustomDocument(customDocument, new CancellationTokenSource().token);
                 }
             })
         );
@@ -67,7 +74,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
                 async (resource: Uri, targetResource: Uri) => {
                     const customDocument = this.customDocuments.get(resource.fsPath);
                     if (customDocument) {
-                        await this.saveAs(customDocument, targetResource);
+                        await this.saveCustomDocumentAs(customDocument, targetResource);
                         this.customDocuments.delete(resource.fsPath);
                         this.customDocuments.set(targetResource.fsPath, { ...customDocument, uri: targetResource });
                     }
@@ -97,8 +104,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             // Required for old editor
             this.customDocuments.set(file.fsPath, {
                 uri: file,
-                viewType: NativeEditorProvider.customEditorViewType,
-                onDidDispose: new EventEmitter<void>().event
+                dispose: noop
             });
         }
 
@@ -129,6 +135,29 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
+    protected async modelEdited(model: INotebookModel, e: NotebookModelChange) {
+        const actualModel = e.model || model; // Test mocks can screw up bound values.
+        if (actualModel && e.kind !== 'save' && e.kind !== 'saveAs' && e.source === 'user') {
+            // This isn't necessary with the custom editor api because the custom editor will
+            // cause backup to be called appropriately.
+            let debounceFunc = this._autoSaveNotebookInHotExitFile.get(actualModel);
+            if (!debounceFunc) {
+                debounceFunc = debounce(this.autoSaveNotebookInHotExitFile.bind(this, actualModel), 250);
+                this._autoSaveNotebookInHotExitFile.set(actualModel, debounceFunc);
+            }
+            debounceFunc();
+        }
+    }
+    private autoSaveNotebookInHotExitFile(model: INotebookModel) {
+        // Refetch settings each time as they can change before the debounce can happen
+        const fileSettings = this.workspace.getConfiguration('files', model.file);
+        // We need to backup, only if auto save if turned off and not an untitled file.
+        if (fileSettings.get('autoSave', 'off') !== 'off' && !model.isUntitled) {
+            return;
+        }
+        this.storage.backup(model, CancellationToken.None).ignoreErrors();
+    }
+
     /**
      * Open ipynb files when user opens an ipynb file.
      *
@@ -149,9 +178,14 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     }
 
     private async create(file: Uri): Promise<INotebookEditor> {
-        const editor = await this.createNotebookEditor(file);
-        this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
-        await this.showEditor(editor);
+        let editor = this.activeEditors.get(file.fsPath);
+        if (!editor) {
+            editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
+            this.activeEditors.set(file.fsPath, editor);
+            this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
+            await this.loadNotebookEditor(editor, file);
+            await this.showEditor(editor);
+        }
         return editor;
     }
 
@@ -165,6 +199,11 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.activeEditors.delete(oldPath);
         }
         this.activeEditors.set(e.file.fsPath, e);
+
+        // Remove backup storage
+        this.loadModel(Uri.file(oldPath))
+            .then((m) => this.storage.deleteBackup(m))
+            .ignoreErrors();
     }
 
     private openNotebookAndCloseEditor = async (

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -10,14 +12,12 @@ import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonDaemonFactory } from './pythonDaemonFactory';
 import {
     ExecutionResult,
-    InterpreterInformation,
     IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     isDaemonPoolCreationOption,
     ObservableExecutionResult,
     PooledDaemonExecutionFactoryCreationOptions,
-    PythonExecutionInfo,
     SpawnOptions
 } from './types';
 
@@ -68,7 +68,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         const msg = { args: ['getExecutablePath'] };
         return this.wrapCall((daemon) => daemon.getExecutablePath(), msg);
     }
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecInfo {
         return this.pythonExecutionService.getExecutionInfo(pythonArgs);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {

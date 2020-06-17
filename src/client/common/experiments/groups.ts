@@ -31,27 +31,10 @@ export enum WebAppReload {
     experiment = 'Reload - experiment'
 }
 
-/**
- * Slow roll out, to test use of local web server for serving content in the Native Notebook editor.
- *
- * @export
- * @enum {string}
- */
-export enum WebHostNotebook {
-    control = 'WebHostNotebook - control',
-    experiment = 'WebHostNotebook - experiment'
-}
-
 // Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
 export enum LocalZMQKernel {
     control = 'LocalZMQKernel - control',
     experiment = 'LocalZMQKernel - experiment'
-}
-
-// Experiment to use VSC Notebook Implementation
-export enum NativeNotebook {
-    control = 'NativeNotebook - control',
-    experiment = 'NativeNotebook - experiment'
 }
 
 // Experiment for supporting run by line in data science notebooks
@@ -101,4 +84,18 @@ export enum EnableIPyWidgets {
 export enum DeprecatePythonPath {
     control = 'DeprecatePythonPath - control',
     experiment = 'DeprecatePythonPath - experiment'
+}
+
+/*
+ * Experiment to turn on custom editor or VS Code Native Notebook API support.
+ */
+export enum NotebookEditorSupport {
+    control = 'CustomEditorSupport - control',
+    customEditorExperiment = 'CustomEditorSupport - experiment',
+    nativeNotebookExperiment = 'NativeNotebook - experiment'
+}
+
+// Experiment to turn on the start page
+export enum EnableStartPage {
+    experiment = 'EnableStartPage'
 }

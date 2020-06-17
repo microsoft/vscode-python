@@ -18,12 +18,12 @@ import { Pycodestyle } from './pycodestyle';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
-import { IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
+import { IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId } from './types';
 
 class DisabledLinter implements ILinter {
     constructor(private configService: IConfigurationService) {}
     public get info() {
-        return new LinterInfo(Product.pylint, 'pylint', this.configService);
+        return new LinterInfo(Product.pylint, LinterId.PyLint, this.configService);
     }
     public async lint(_document: TextDocument, _cancellation: CancellationToken): Promise<ILintMessage[]> {
         return [];
@@ -43,14 +43,14 @@ export class LinterManager implements ILinterManager {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
-            new LinterInfo(Product.bandit, 'bandit', this.configService),
-            new LinterInfo(Product.flake8, 'flake8', this.configService),
+            new LinterInfo(Product.bandit, LinterId.Bandit, this.configService),
+            new LinterInfo(Product.flake8, LinterId.Flake8, this.configService),
             new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
-            new LinterInfo(Product.mypy, 'mypy', this.configService),
-            new LinterInfo(Product.pycodestyle, 'pycodestyle', this.configService),
-            new LinterInfo(Product.prospector, 'prospector', this.configService),
-            new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
-            new LinterInfo(Product.pylama, 'pylama', this.configService)
+            new LinterInfo(Product.mypy, LinterId.MyPy, this.configService),
+            new LinterInfo(Product.pycodestyle, LinterId.PyCodeStyle, this.configService),
+            new LinterInfo(Product.prospector, LinterId.Prospector, this.configService),
+            new LinterInfo(Product.pydocstyle, LinterId.PyDocStyle, this.configService),
+            new LinterInfo(Product.pylama, LinterId.PyLama, this.configService)
         ];
     }
 

@@ -3,12 +3,11 @@
 'use strict';
 import {
     ExecutionResult,
-    InterpreterInformation,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
 } from '../../client/common/process/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
+import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 
 export class MockPythonService implements IPythonExecutionService {

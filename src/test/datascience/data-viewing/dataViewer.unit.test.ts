@@ -11,8 +11,7 @@ import { WebPanelProvider } from '../../../client/common/application/webPanels/w
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExperimentsManager } from '../../../client/common/experiments/manager';
-import { IConfigurationService, IExperimentsManager } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
 import { JupyterVariableDataProvider } from '../../../client/datascience/data-viewing/jupyterVariableDataProvider';
@@ -28,7 +27,6 @@ suite('Data Science - DataViewer', () => {
     let themeFinder: IThemeFinder;
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
-    let experimentManager: IExperimentsManager;
     let dataProvider: IDataViewerDataProvider;
     const title: string = 'Data Viewer - Title';
 
@@ -39,7 +37,6 @@ suite('Data Science - DataViewer', () => {
         themeFinder = mock(ThemeFinder);
         workspaceService = mock(WorkspaceService);
         applicationShell = mock(ApplicationShell);
-        experimentManager = mock(ExperimentsManager);
         dataProvider = mock(JupyterVariableDataProvider);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
@@ -57,7 +54,6 @@ suite('Data Science - DataViewer', () => {
             instance(themeFinder),
             instance(workspaceService),
             instance(applicationShell),
-            instance(experimentManager),
             false
         );
     });

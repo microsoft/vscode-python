@@ -5,10 +5,11 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { NativeNotebook } from '../../common/experiments/groups';
+import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { JupyterNotebookView } from './constants';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
@@ -35,12 +36,12 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         // This condition is temporary.
         // If user belongs to the experiment, then make the necessary changes to package.json.
         // Once the API is final, we won't need to modify the package.json.
-        if (!this.experiment.inExperiment(NativeNotebook.experiment)) {
+        if (!this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
 
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
-        const content = JSON.parse(await this.fs.readFile(packageJsonFile));
+        const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
 
         // This code is temporary.
         if (
@@ -75,7 +76,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
             ];
             content.contributes.notebookProvider = [
                 {
-                    viewType: 'jupyter-notebook',
+                    viewType: JupyterNotebookView,
                     displayName: 'Jupyter Notebook',
                     selector: [
                         {
@@ -92,10 +93,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         }
 
         this.disposables.push(
-            this.vscNotebook.registerNotebookContentProvider('jupyter-notebook', this.notebookContentProvider)
+            this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
         );
         this.disposables.push(
-            this.vscNotebook.registerNotebookKernel('jupyter-notebook', ['**/*.ipynb'], this.notebookKernel)
+            this.vscNotebook.registerNotebookKernel(JupyterNotebookView, ['**/*.ipynb'], this.notebookKernel)
         );
         this.disposables.push(
             this.vscNotebook.registerNotebookOutputRenderer(

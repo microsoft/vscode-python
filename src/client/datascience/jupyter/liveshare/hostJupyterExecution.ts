@@ -3,6 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -17,6 +18,7 @@ import {
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { traceInfo } from '../../../logging';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';
@@ -34,6 +36,8 @@ export class HostJupyterExecution
     extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
     implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
+    private _disposed = false;
+    private _id = uuid();
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
@@ -65,42 +69,57 @@ export class HostJupyterExecution
     }
 
     public async dispose(): Promise<void> {
-        await super.dispose();
-        const api = await this.api;
-        await this.onDetach(api);
+        traceInfo(`Disposing HostJupyterExecution ${this._id}`);
+        if (!this._disposed) {
+            this._disposed = true;
+            traceInfo(`Disposing super HostJupyterExecution ${this._id}`);
+            await super.dispose();
+            traceInfo(`Getting live share API during dispose HostJupyterExecution ${this._id}`);
+            const api = await this.api;
+            traceInfo(`Detaching HostJupyterExecution ${this._id}`);
+            await this.onDetach(api);
 
-        // Cleanup on dispose. We are going away permanently
-        if (this.serverCache) {
-            await this.serverCache.dispose();
+            // Cleanup on dispose. We are going away permanently
+            if (this.serverCache) {
+                traceInfo(`Cleaning up server cache ${this._id}`);
+                await this.serverCache.dispose();
+            }
         }
+        traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
     public async hostConnectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+        if (!this._disposed) {
+            return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+        }
     }
 
     public async connectToNotebookServer(
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
-        return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+        if (!this._disposed) {
+            return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
+        }
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
-        await super.onAttach(api);
+        if (!this._disposed) {
+            await super.onAttach(api);
 
-        if (api) {
-            const service = await this.waitForService();
+            if (api) {
+                const service = await this.waitForService();
 
-            // Register handlers for all of the supported remote calls
-            if (service) {
-                service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
-                service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-                service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
-                service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+                // Register handlers for all of the supported remote calls
+                if (service) {
+                    service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
+                    service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
+                    service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
+                    service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
+                }
             }
         }
     }
