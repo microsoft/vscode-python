@@ -24,7 +24,7 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel
  * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
  *
  * @param {IJupyterKernelSpec} kernelSpec
- * @param pathUtils
+ * @param {IPathUtils} pathUtils
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForKernelSpec(
