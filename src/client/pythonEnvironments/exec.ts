@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// A representation of the information needed to run a Python executable.
 export type PythonExecInfo = {
     command: string;
     args: string[];
@@ -9,6 +10,7 @@ export type PythonExecInfo = {
     pythonExecutable: string;
 };
 
+// Compose Python execution info for the given executable.
 export function buildPythonExecInfo(python: string | string[] | PythonExecInfo, pythonArgs?: string[]): PythonExecInfo {
     if (Array.isArray(python)) {
         const args = python.slice(1);

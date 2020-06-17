@@ -5,6 +5,10 @@ import { SemVer } from 'semver';
 import '../../common/extensions'; // For string.splitLines()
 import { getVersion as getPythonVersionCommand } from '../../common/process/internal/python';
 
+// A representation of a Python runtime's version.
+//
+// Note that this is currently compatible with SemVer objects,
+// but we may change it to match the format of sys.version_info.
 export type PythonVersion = {
     raw: string;
     major: number;
@@ -18,6 +22,9 @@ export type PythonVersion = {
     prerelease: string[];
 };
 
+// Convert a Python version string.
+//
+// TBD: the supported formats are...
 export function parsePythonVersion(raw: string): PythonVersion | undefined {
     if (!raw || raw.trim().length === 0) {
         return;
@@ -53,6 +60,7 @@ type ExecResult = {
 };
 type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
+// Get the version via the given Python executable (sys.version).
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonVersionCommand();
     // Use buildPythonExecInfo()...
