@@ -10,7 +10,8 @@ import { ICommandNameArgumentTypeMapping } from '../../common/application/comman
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
 import { INotebookEditorProvider, INotebookModel } from '../types';
@@ -57,6 +58,10 @@ export class ExportCommands implements IDisposable {
                 return;
             }
             model = activeEditor.model;
+
+            if (exportMethod) {
+                this.sendCommandTelemetry(exportMethod);
+            }
         }
 
         if (exportMethod) {
@@ -68,6 +73,25 @@ export class ExportCommands implements IDisposable {
             if (pickedItem !== undefined) {
                 pickedItem.handler();
             }
+        }
+    }
+
+    private sendCommandTelemetry(format: ExportFormat) {
+        switch (format) {
+            case ExportFormat.python:
+                sendTelemetryEvent(Telemetry.ExportNotebookAsPythonCommand);
+                break;
+
+            case ExportFormat.html:
+                sendTelemetryEvent(Telemetry.ExportNotebookAsHTMLCommand);
+                break;
+
+            case ExportFormat.pdf:
+                // will be added when pdf is working
+                break;
+
+            default:
+                break;
         }
     }
 

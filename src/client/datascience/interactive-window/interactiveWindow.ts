@@ -391,7 +391,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return this.submitCode(code, file, line, undefined, undefined, debug ? { runByLine: false } : undefined);
     }
 
-    @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
+    @captureTelemetry(Telemetry.ExportNotebookInteractive, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private async export(cells: ICell[]) {
         // Should be an array of cells

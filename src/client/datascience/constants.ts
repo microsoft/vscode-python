@@ -165,7 +165,7 @@ export enum Telemetry {
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
     RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
+    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK_INTERACTIVE',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
     /**
@@ -185,8 +185,36 @@ export enum Telemetry {
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
-    ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
-    ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * Exporting from the interative window
+     */
+    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_INTERACTIVE',
+    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT_INTERACTIVE',
+    /**
+     * User clicked export as UI button
+     */
+    ClickedExportAs = 'DATASCIENCE.CLICKED_EXPORT_AS',
+    /**
+     * User succesfully exported to HTML
+     */
+    ExportNotebookAsHTML = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML',
+    /**
+     * User invokes export to html from the command pallete
+     */
+    ExportNotebookAsHTMLCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML_COMMAND',
+    /**
+     * User opens their exported HTML document
+     */
+    OpenedExportedNotebookHTML = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK_HTML',
+    /**
+     * User succesfully exported notebook to Python
+     */
+    ExportNotebookAsPython = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON',
+    /**
+     * User invokes export to Python from the command pallete
+     */
+    ExportNotebookAsPythonCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON_COMMAND',
+    ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',

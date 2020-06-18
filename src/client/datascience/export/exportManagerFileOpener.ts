@@ -5,6 +5,8 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
@@ -22,24 +24,41 @@ export class ExportManagerFileOpener implements IExportManager {
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`); // need to localize
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         let uri: Uri | undefined;
         try {
             uri = await this.manager.export(format, model);
         } catch (e) {
             await this.showExportFailed(e);
+            sendTelemetryEvent(Telemetry.ExportNotebookAsFailed);
         } finally {
             reporter.dispose();
         }
 
-        if (uri) {
-            if (format === ExportFormat.python) {
-                await this.openPythonFile(uri);
-            } else {
-                await this.askOpenFile(uri);
-            }
+        if (!uri) {
+            return;
         }
-        return;
+
+        if (format === ExportFormat.python) {
+            await this.openPythonFile(uri);
+        } else {
+            const opened = await this.askOpenFile(uri);
+            if (!opened) {
+                return;
+            }
+            this.sendOpenTelemetry(format);
+        }
+    }
+
+    private sendOpenTelemetry(format: ExportFormat) {
+        switch (format) {
+            case ExportFormat.html:
+                sendTelemetryEvent(Telemetry.OpenedExportedNotebookHTML);
+                break;
+
+            default:
+                break;
+        }
     }
 
     private async openPythonFile(uri: Uri): Promise<void> {
@@ -56,7 +75,7 @@ export class ExportManagerFileOpener implements IExportManager {
         );
     }
 
-    private async askOpenFile(uri: Uri): Promise<void> {
+    private async askOpenFile(uri: Uri): Promise<boolean> {
         const yes = getLocString('DataScience.openExportFileYes', 'Yes');
         const no = getLocString('DataScience.openExportFileNo', 'No');
         const items = [yes, no];
@@ -70,6 +89,8 @@ export class ExportManagerFileOpener implements IExportManager {
 
         if (selected === yes) {
             this.browserService.launch(uri.toString());
+            return true;
         }
+        return false;
     }
 }
