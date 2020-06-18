@@ -87,7 +87,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
-        @inject(ILiveShareApi) private liveShare: ILiveShareApi,
+        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IStatusProvider) statusProvider: IStatusProvider,
@@ -202,6 +202,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
+        super.onMessage(message, payload);
+
         switch (message) {
             case InteractiveWindowMessages.Export:
                 this.handleMessage(message, payload, this.export);
@@ -215,21 +217,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 this.handleMessage(message, payload, this.handleModelChange);
                 break;
 
-            case InteractiveWindowMessages.SelectKernel:
-                this.handleMessage(message, payload, this.SelectKernel);
-                break;
-
             default:
                 break;
-        }
-
-        super.onMessage(message, payload);
-    }
-
-    public async SelectKernel() {
-        const api = await this.liveShare.getApi();
-        if (api) {
-            return;
         }
     }
 
