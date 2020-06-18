@@ -64,9 +64,9 @@ export class DigestStorage implements IDigestStorage {
         // Key must be generated from a cryptographically secure pseudorandom function:
         // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
         // No callback is provided so random bytes will be generated synchronously
-        const key = randomBytes(1024);
+        const key = randomBytes(1024).toString('hex');
         await this.fs.writeFile(defaultKeyFileLocation, key);
-        this._key = key.toString();
+        this._key = key;
     }
 
     private initDb() {

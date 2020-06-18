@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IFileDownloader, IHttpClient, IInterpreterPathService } from '../common/types';
-import { DigestStorage } from '../datascience/interactive-ipynb/trustService';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
-import { INotebookExecutionLogger, IDigestStorage } from '../datascience/types';
+import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -220,5 +219,4 @@ export function registerTypes(serviceManager: IServiceManager) {
         DebugSessionTelemetry
     );
     serviceManager.addSingleton<ICustomEditorService>(ICustomEditorService, CustomEditorService);
-    serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
 }
