@@ -44,7 +44,7 @@ export class ExportManagerFileOpener implements IExportManager {
             return;
         }
 
-        sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: ExportFormat.python, successful: true });
+        sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, successful: true });
         if (format === ExportFormat.python) {
             await this.openPythonFile(uri);
         } else {
