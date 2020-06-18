@@ -37,8 +37,7 @@ export class TrustService implements ITrustService {
     }
 
     private async computeDigest(notebookContents: string) {
-        await this.digestStorage.initKey();
-        const hmac = createHmac(this.algorithm, this.digestStorage.key);
+        const hmac = createHmac(this.algorithm, await this.digestStorage.key);
         hmac.update(notebookContents);
         return hmac.digest('hex');
     }

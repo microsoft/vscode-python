@@ -19,18 +19,16 @@ type Schema = {
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
-    public get key() {
-        return this._key!;
-    }
+    public key: Promise<string>;
     private defaultDatabaseLocation: string;
     private db: Lowdb.LowdbSync<Schema> | undefined;
-    private _key: string | undefined;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
         this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
+        this.key = this.initKey();
     }
 
     public saveDigest(signature: string, algorithm: string) {
@@ -48,24 +46,26 @@ export class DigestStorage implements IDigestStorage {
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    public async initKey() {
-        if (this._key === undefined) {
-            // Determine user's OS
-            const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
+    private initKey(): Promise<string> {
+        return new Promise(async (resolve, _reject) => {
+            if (this.key === undefined) {
+                // Determine user's OS
+                const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
-            // Attempt to read from standard keyfile location for that OS
-            if (await this.fs.fileExists(defaultKeyFileLocation)) {
-                this._key = await this.fs.readFile(defaultKeyFileLocation);
-            } else {
-                // If it doesn't exist, create one
-                // Key must be generated from a cryptographically secure pseudorandom function:
-                // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-                // No callback is provided so random bytes will be generated synchronously
-                const key = randomBytes(1024).toString('hex');
-                await this.fs.writeFile(defaultKeyFileLocation, key);
-                this._key = key;
+                // Attempt to read from standard keyfile location for that OS
+                if (await this.fs.fileExists(defaultKeyFileLocation)) {
+                    resolve((await this.fs.readFile(defaultKeyFileLocation)) as string);
+                } else {
+                    // If it doesn't exist, create one
+                    // Key must be generated from a cryptographically secure pseudorandom function:
+                    // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+                    // No callback is provided so random bytes will be generated synchronously
+                    const key = randomBytes(1024).toString('hex');
+                    await this.fs.writeFile(defaultKeyFileLocation, key);
+                    resolve(key);
+                }
             }
-        }
+        });
     }
 
     private initDb() {
