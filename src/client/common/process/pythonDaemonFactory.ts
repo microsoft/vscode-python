@@ -8,7 +8,7 @@ import {
     RequestType,
     StreamMessageReader,
     StreamMessageWriter
-} from 'vscode-jsonrpc';
+} from 'vscode-jsonrpc/node';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PYTHON_WARNINGS } from '../constants';

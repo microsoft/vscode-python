@@ -2,7 +2,7 @@
 
 ```javascript
 const cp  = require('child_process');
-const rpc = require('vscode-jsonrpc');
+const rpc = require('vscode-jsonrpc/node');
 const env = {
     PYTHONUNBUFFERED: '1',
     PYTHONPATH: '<extension dir>/pythonFiles:<extension dir>/pythonFiles/lib/python'

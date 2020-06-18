@@ -17,7 +17,7 @@ import {
     RequestType,
     StreamMessageReader,
     StreamMessageWriter
-} from 'vscode-jsonrpc';
+} from 'vscode-jsonrpc/node';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { IPythonExecutionService } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
