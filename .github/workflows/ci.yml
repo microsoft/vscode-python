@@ -107,7 +107,8 @@ jobs:
   runInsideContainer:
     name: Run inside container
     runs-on: ubuntu-latest
-    container: docker://pvsccicontainers.azurecr.io/python3
+    # container: docker://pvsccicontainers.azurecr.io/python3
+    container: continuumio/miniconda:4.6.14
     # if: github.repository == 'microsoft/vscode-python'
     steps:
 
@@ -128,42 +129,48 @@ jobs:
           printenv
         shell: bash
 
+      - name: Bash
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+
     #   - name: docker images
     #     run: |
     #       /usr/bin/docker images
 
-      - name: See if python3 is installed
-        run: |
-          python3 -c"import sys;print(sys.executable)"
-          python3 --version
+    #   - name: See if python3 is installed
+    #     run: |
+    #       python3 -c"import sys;print(sys.executable)"
+    #       python3 --version
 
-      - name: See if python is on PATH
-        run: |
-          python --version
-          python -c"import sys;print(sys.executable)"
+    #   - name: See if python is on PATH
+    #     run: |
+    #       python --version
+    #       python -c"import sys;print(sys.executable)"
 
-      - name: Use Python 2.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 2.7
+    #   - name: Use Python 2.7
+    #     uses: actions/setup-python@v2
+    #     with:
+    #       python-version: 2.7
 
-      - name: See if python is on PATH
-        run: |
-          python -c"import sys;print(sys.executable)"
-          python --version
+    #   - name: See if python is on PATH
+    #     run: |
+    #       python -c"import sys;print(sys.executable)"
+    #       python --version
 
-      - name: Show all env vars
-        run: |
-          printenv
-        shell: bash
+    #   - name: Show all env vars
+    #     run: |
+    #       printenv
+    #     shell: bash
 
-      - name: See if python3 is installed
-        run: |
-          python3 -c"import sys;print(sys.executable)"
+    #   - name: See if python3 is installed
+    #     run: |
+    #       python3 -c"import sys;print(sys.executable)"
 
-      - name: docker images
-        run: |
-          docker images
+    #   - name: docker images
+    #     run: |
+    #       docker images
 
   example-2-linux:
     name: Ex2 Linux
