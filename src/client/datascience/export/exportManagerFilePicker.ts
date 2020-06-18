@@ -58,9 +58,8 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         const uri = await this.applicationShell.showSaveDialog(options);
         if (uri) {
             await this.updateFileSaveLocation(uri);
-        } else {
-            sendTelemetryEvent(Telemetry.ExportNotebookAsCancelled, undefined, { format: format });
         }
+
         return uri;
     }
 

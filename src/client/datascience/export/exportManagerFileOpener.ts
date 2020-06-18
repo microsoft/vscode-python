@@ -37,7 +37,8 @@ export class ExportManagerFileOpener implements IExportManager {
         }
 
         if (!uri) {
-            sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
+            // if export didn't fail but no uri returned then user cancelled operation
+            sendTelemetryEvent(Telemetry.ExportNotebookAsCancelled, undefined, { format: format });
             return;
         }
 
