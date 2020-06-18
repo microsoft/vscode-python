@@ -107,13 +107,13 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         //   - `true` or missing then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
         //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
-        // `jediEnabled` is then removed.
+        // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
         const jediEnabledPath = ['python.jediEnabled'];
         const languageServerPath = ['python.languageServer'];
 
         try {
-            let ast = parseTree(fileContent);
-            let jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
+            const ast = parseTree(fileContent);
+            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
             const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
             const languageServerNode = findNodeAtLocation(ast, languageServerPath);
             const formattingOptions: FormattingOptions = {
@@ -135,13 +135,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             }
 
             fileContent = applyEdits(fileContent, edits);
-            // Remove jediEnabled
-            ast = parseTree(fileContent);
-            jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            if (jediEnabledNode) {
-                edits = modify(fileContent, jediEnabledPath, undefined, { formattingOptions });
-                fileContent = applyEdits(fileContent, edits);
-            }
             // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;

@@ -224,32 +224,32 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'jediEnabled: true, no languageServer setting',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
         },
         {
             testTitle: 'jediEnabled: true, languageServer setting present',
             contents: '{ "python.jediEnabled": true }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": true, "python.languageServer": "Jedi"}'
         },
         {
             testTitle: 'jediEnabled: false, no languageServer setting',
             contents: '{ "python.jediEnabled": false }',
-            expectedContent: '{"python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Microsoft',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft" }',
-            expectedContent: '{"python.languageServer": "Microsoft"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Microsoft"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is None',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "None" }',
-            expectedContent: '{"python.languageServer": "None"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "None"}'
         },
         {
             testTitle: 'jediEnabled: false, languageServer is Jedi',
             contents: '{ "python.jediEnabled": false, "python.languageServer": "Jedi" }',
-            expectedContent: '{"python.languageServer": "Jedi"}'
+            expectedContent: '{ "python.jediEnabled": false, "python.languageServer": "Jedi"}'
         }
     ].forEach((item) => {
         test(item.testTitle, async () => {
