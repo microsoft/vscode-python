@@ -306,8 +306,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // min height is one row of visible data
         const minHeight = this.getRowHeight() * 2 + variableExplorerMenuBar.clientHeight;
+        const maxHeight = document.body.scrollHeight - this.props.offsetHeight - variableExplorerMenuBar.clientHeight;
 
-        if (updatedHeight >= minHeight) {
+        if (updatedHeight >= minHeight && updatedHeight <= maxHeight) {
             this.setState({
                 containerHeight: updatedHeight
             });
