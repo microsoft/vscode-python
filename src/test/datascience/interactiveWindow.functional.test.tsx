@@ -922,6 +922,13 @@ for i in range(0, 100):
             addMockData(ioc, 'print("hello")', 'hello');
             await enterInput(wrapper, ioc, 'print("hello', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', 'hello', CellPosition.Last);
+
+            // Verify auto indent is working
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'if (True):\n');
+            typeCode(editor, 'print("true")');
+            const reactEditor = editor.instance() as MonacoEditor;
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), `if (True):\n    print("true")`);
         },
         () => {
             return ioc;
