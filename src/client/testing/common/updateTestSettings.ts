@@ -31,7 +31,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
         await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
     }
-    public getSettingsFiles(resource: Resource) {
+    public getSettingsFiles(resource: Resource): string[] {
         const settingsFiles: string[] = [];
         if (this.application.userSettingsFile) {
             settingsFiles.push(this.application.userSettingsFile);
@@ -42,7 +42,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         }
         return settingsFiles;
     }
-    public async getFilesToBeFixed(resource: Resource) {
+    public async getFilesToBeFixed(resource: Resource): Promise<string[]> {
         const files = this.getSettingsFiles(resource);
         const result = await Promise.all(
             files.map(async (file) => {
@@ -87,10 +87,11 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         return fileContents;
     }
 
-    public async doesFileNeedToBeFixed(filePath: string) {
+    public async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
             const contents = await this.fs.readFile(filePath);
             return (
+                contents.indexOf('python.jediEnabled') > 0 ||
                 contents.indexOf('python.unitTest.') > 0 ||
                 contents.indexOf('.pyTest') > 0 ||
                 contents.indexOf('.pep8') > 0
