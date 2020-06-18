@@ -49,11 +49,7 @@ export class ExportManagerFileOpener implements IExportManager {
             await this.openPythonFile(uri);
         } else {
             const opened = await this.askOpenFile(uri);
-            if (opened) {
-                sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, opened: true });
-            } else {
-                sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, opened: false });
-            }
+            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, opened: opened });
         }
     }
 
