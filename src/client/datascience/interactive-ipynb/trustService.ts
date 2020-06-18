@@ -18,9 +18,8 @@ export class TrustService implements ITrustService {
      * markdown will be rendered until notebook as a whole is marked trusted
      */
     public async isNotebookTrusted(notebookContents: string) {
-        await this.digestStorage.initKey();
         // Compute digest and see if notebook is trusted
-        const digest = this.computeDigest(notebookContents);
+        const digest = await this.computeDigest(notebookContents);
         return this.digestStorage.containsDigest(digest, this.algorithm);
     }
 
@@ -31,13 +30,14 @@ export class TrustService implements ITrustService {
      */
     public async updateNotebookTrust(notebookContents: string, isNotebookModelTrusted: boolean) {
         if (isNotebookModelTrusted) {
-            const digest = this.computeDigest(notebookContents);
+            const digest = await this.computeDigest(notebookContents);
             return this.digestStorage.saveDigest(digest, this.algorithm);
         }
         // Otherwise, do nothing
     }
 
-    private computeDigest(notebookContents: string) {
+    private async computeDigest(notebookContents: string) {
+        await this.digestStorage.initKey();
         const hmac = createHmac(this.algorithm, this.digestStorage.key);
         hmac.update(notebookContents);
         return hmac.digest('hex');

@@ -33,16 +33,14 @@ export class DigestStorage implements IDigestStorage {
         this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
     }
 
-    public async saveDigest(signature: string, algorithm: string) {
+    public saveDigest(signature: string, algorithm: string) {
         this.initDb();
-        await this.initKey();
         this.db!.get('nbsignatures').push({ signature, algorithm, timestamp: Date.now().toString() }).write();
     }
 
-    public async containsDigest(signature: string, algorithm: string) {
+    public containsDigest(signature: string, algorithm: string) {
         this.initDb();
-        await this.initKey();
-        return this.db!.get('nbsignatures').find({ signature, algorithm }) ? true : false;
+        return this.db!.get('nbsignatures').find({ signature, algorithm }) !== undefined;
     }
 
     /**
@@ -50,20 +48,22 @@ export class DigestStorage implements IDigestStorage {
      * checkpoints in the notebook's execution history
      */
     public async initKey() {
-        // Determine user's OS
-        const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
+        if (this._key === undefined) {
+            // Determine user's OS
+            const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
-        // Attempt to read from standard keyfile location for that OS
-        if (await this.fs.fileExists(defaultKeyFileLocation)) {
-            this._key = await this.fs.readFile(defaultKeyFileLocation);
-        } else {
-            // If it doesn't exist, create one
-            // Key must be generated from a cryptographically secure pseudorandom function:
-            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-            // No callback is provided so random bytes will be generated synchronously
-            const key = randomBytes(1024).toString('hex');
-            await this.fs.writeFile(defaultKeyFileLocation, key);
-            this._key = key;
+            // Attempt to read from standard keyfile location for that OS
+            if (await this.fs.fileExists(defaultKeyFileLocation)) {
+                this._key = await this.fs.readFile(defaultKeyFileLocation);
+            } else {
+                // If it doesn't exist, create one
+                // Key must be generated from a cryptographically secure pseudorandom function:
+                // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+                // No callback is provided so random bytes will be generated synchronously
+                const key = randomBytes(1024).toString('hex');
+                await this.fs.writeFile(defaultKeyFileLocation, key);
+                this._key = key;
+            }
         }
     }
 

@@ -1235,8 +1235,8 @@ export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     key: string;
     initKey(): Promise<void>;
-    saveDigest(digest: string, algorithm: string): Promise<void>;
-    containsDigest(digest: string, algorithm: string): Promise<boolean>;
+    saveDigest(digest: string, algorithm: string): void;
+    containsDigest(digest: string, algorithm: string): boolean;
 }
 
 export const ITrustService = Symbol('ITrustService');
