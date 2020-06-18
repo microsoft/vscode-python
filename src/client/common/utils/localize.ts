@@ -785,6 +785,12 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const installPDFDependiciesYes = localize('DataScience.installPDFDependiciesYes', 'Yes');
+    export const installPDFDependiciesMessage = localize(
+        'DataScience.installPDFDependiciesMessage',
+        'To export this file we need to install the following dependicies...'
+    );
+    export const installPDFDependiciesNo = localize('DataScience.installPDFDependiciesNo', 'No');
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
