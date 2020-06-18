@@ -97,6 +97,7 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
+import { serializeLanguageConfiguration } from './serialization';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -1401,7 +1402,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = await this.themeFinder.findLanguageConfiguration(languageId);
+        const languageConfiguration = serializeLanguageConfiguration(
+            await this.themeFinder.findLanguageConfiguration(languageId)
+        );
         const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
         const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
         this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {

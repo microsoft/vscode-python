@@ -32,6 +32,7 @@ import {
     INotebookModel,
     KernelSocketOptions
 } from '../types';
+import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
@@ -514,7 +515,7 @@ export interface ILoadTmLanguageResponse {
     languageId: string;
     scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
     // tslint:disable-next-line: no-any
-    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageConfiguration: ILanguageConfigurationDto;
     languageJSON: string; // Contents of the tmLanguage.json file
     extensions: string[]; // Array of file extensions that map to this language
 }
