@@ -257,6 +257,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error(localize.DataScience.passwordFailure());
             }
         } else {
+            // pass in the bearer token as the request header
+            const bearerRequestHeader = {Authorization: 'Bearer <bearer_token_here>'};
+            requestInit = { ...requestInit, headers: bearerRequestHeader};
             serverSettings = { ...serverSettings, token: connInfo.token };
         }
 
