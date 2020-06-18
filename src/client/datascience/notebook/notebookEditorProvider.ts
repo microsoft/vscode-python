@@ -131,7 +131,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         return;
     }
     public async createNew(contents?: string): Promise<INotebookEditor> {
-        const model = await this.storage.createNew(contents);
+        const model = await this.storage.createNew(contents, true);
         return this.open(model.file);
     }
     private onEditorOpened(editor: INotebookEditor): void {
