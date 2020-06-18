@@ -56,7 +56,8 @@ export class TestsParser implements ITestsParser {
      * Where tone_test = folder, Failing2Tests = class/suite, test_failure = method.
      * @private
      * @param {string} rootDirectory
-     * @param {string[]} testIds
+     * @param {string} testId
+     * @param {TestFile[]} testFiles
      * @returns {Tests}
      * @memberof TestsParser
      */

@@ -218,6 +218,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
      *
      * @protected
      * @param {TestFolder} rootFolder
+     * @param {TestFile | TestSuite} parent
      * @param {TestFunction} parentFunction
      * @param {DiscoveredTests} discoveredTests
      * @param {Tests} tests

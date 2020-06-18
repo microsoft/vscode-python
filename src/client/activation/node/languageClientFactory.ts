@@ -3,12 +3,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
 import { FileBasedCancellationStrategy } from './cancellationUtils';
 
@@ -59,7 +59,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             }
         };
 
-        const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
+        const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node');
         return new vscodeLanguageClient.LanguageClient(
             PYTHON_LANGUAGE,
             languageClientName,

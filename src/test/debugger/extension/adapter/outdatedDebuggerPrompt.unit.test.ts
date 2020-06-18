@@ -4,32 +4,22 @@
 'use strict';
 
 import * as assert from 'assert';
-import { anyString, anything, instance, mock, spy, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { DebugSession, WorkspaceFolder } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
-import { CryptoUtils } from '../../../../client/common/crypto';
-import { DebugAdapterNewPtvsd } from '../../../../client/common/experiments/groups';
-import { ExperimentsManager } from '../../../../client/common/experiments/manager';
 import { BrowserService } from '../../../../client/common/net/browser';
-import { HttpClient } from '../../../../client/common/net/httpClient';
-import { PersistentStateFactory } from '../../../../client/common/persistentState';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IBrowserService, IPythonSettings } from '../../../../client/common/types';
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { Common } from '../../../../client/common/utils/localize';
 import { OutdatedDebuggerPromptFactory } from '../../../../client/debugger/extension/adapter/outdatedDebuggerPrompt';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
-import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Debugging - Outdated Debugger Prompt tests.', () => {
     let promptFactory: OutdatedDebuggerPromptFactory;
-    let experimentsManager: ExperimentsManager;
-    let spiedInstance: ExperimentsManager;
     let appShell: IApplicationShell;
     let browserService: IBrowserService;
 
@@ -48,36 +38,15 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
     };
 
     setup(() => {
-        const httpClient = mock(HttpClient);
-        const crypto = mock(CryptoUtils);
-        const appEnvironment = mock(ApplicationEnvironment);
-        const persistentStateFactory = mock(PersistentStateFactory);
-        const output = mock(MockOutputChannel);
         const configurationService = mock(ConfigurationService);
-        const fs = mock(FileSystem);
         when(configurationService.getSettings(undefined)).thenReturn(({
             experiments: { enabled: true }
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
-        experimentsManager = new ExperimentsManager(
-            instance(persistentStateFactory),
-            instance(httpClient),
-            instance(crypto),
-            instance(appEnvironment),
-            instance(output),
-            instance(fs),
-            instance(configurationService)
-        );
-        spiedInstance = spy(experimentsManager);
 
-        experimentsManager = mock(ExperimentsManager);
         appShell = mock(ApplicationShell);
         browserService = mock(BrowserService);
-        promptFactory = new OutdatedDebuggerPromptFactory(
-            experimentsManager,
-            instance(appShell),
-            instance(browserService)
-        );
+        promptFactory = new OutdatedDebuggerPromptFactory(instance(appShell), instance(browserService));
     });
 
     teardown(() => {
@@ -99,8 +68,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         };
     }
 
-    test('Show prompt when in new debugger experiment and using ptvsd, more info not clicked', async () => {
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+    test('Show prompt when attaching to ptvsd, more info is NOT clicked', async () => {
         when(appShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve(undefined));
 
         const session = createSession();
@@ -123,8 +91,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         verify(appShell.showInformationMessage(anything(), anything())).once();
     });
 
-    test('Show prompt when in new debugger experiment and using ptvsd, more info clicked', async () => {
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+    test('Show prompt when attaching to ptvsd, more info is clicked', async () => {
         when(appShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve(Common.moreInfo()));
         const deferred = createDeferred();
         when(browserService.launch(anything())).thenCall(() => deferred.resolve());
@@ -150,8 +117,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         verify(appShell.showInformationMessage(anything(), anything())).once();
     });
 
-    test("Don't show prompt when in new debugger experiment and using debugpy", async () => {
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+    test("Don't show prompt attaching to debugpy", async () => {
         when(appShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve(undefined));
 
         const session = createSession();
@@ -189,10 +155,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
     };
 
     [someRequest, someEvent, someOutputEvent].forEach((message) => {
-        test(`Don't show prompt when in new debugger experiment and debugger telemetry event: ${JSON.stringify(
-            message
-        )}`, async () => {
-            when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        test(`Don't show prompt when non-telemetry events are seen: ${JSON.stringify(message)}`, async () => {
             when(appShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve(undefined));
 
             const session = createSession();

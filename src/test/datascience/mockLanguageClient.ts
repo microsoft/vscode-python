@@ -12,6 +12,7 @@ import {
     InitializeResult,
     LanguageClient,
     LanguageClientOptions,
+    MessageSignature,
     MessageTransports,
     NotificationHandler,
     NotificationHandler0,
@@ -24,7 +25,6 @@ import {
     RequestHandler0,
     RequestType,
     RequestType0,
-    RPCMessageType,
     ServerOptions,
     StateChangeEvent,
     StaticFeature,
@@ -33,7 +33,7 @@ import {
     TextDocumentSyncKind,
     Trace,
     VersionedTextDocumentIdentifier
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
 
 import { LanguageServerType } from '../../client/activation/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
@@ -219,10 +219,9 @@ export class MockLanguageClient extends LanguageClient {
     public registerFeature(_feature: StaticFeature | DynamicFeature<any>): void {
         throw new Error('Method not implemented.');
     }
-    public logFailedRequest(_type: RPCMessageType, _error: any): void {
+    public handleFailedRequest<T>(_type: MessageSignature, _error: any, _defaultValue: T): T {
         throw new Error('Method not implemented.');
     }
-
     protected handleConnectionClosed(): void {
         throw new Error('Method not implemented.');
     }

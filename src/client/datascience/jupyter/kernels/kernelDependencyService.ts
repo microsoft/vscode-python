@@ -10,7 +10,7 @@ import { createPromiseFromCancellation, wrapCancellationTokens } from '../../../
 import { ProductNames } from '../../../common/installer/productNames';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { IKernelDependencyService, KernelInterpreterDependencyResponse } from '../../types';
 
 /**

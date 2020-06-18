@@ -30,7 +30,7 @@ import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { ICondaService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:max-func-body-length no-any
 

@@ -10,7 +10,7 @@ import { createPromiseFromCancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { JupyterInstallError } from '../jupyterInstallError';

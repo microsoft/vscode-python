@@ -15,7 +15,7 @@ import { getNextUntitledCounter } from './nativeEditorStorage';
 
 export const INotebookStorageProvider = Symbol.for('INotebookStorageProvider');
 export interface INotebookStorageProvider extends INotebookStorage {
-    createNew(contents?: string): Promise<INotebookModel>;
+    createNew(contents?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
 }
 @injectable()
 export class NotebookStorageProvider implements INotebookStorageProvider {
@@ -80,16 +80,16 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
         }
     }
 
-    public async createNew(contents?: string): Promise<INotebookModel> {
+    public async createNew(contents?: string, forVSCodeNotebooks?: boolean): Promise<INotebookModel> {
         // Create a new URI for the dummy file using our root workspace path
-        const uri = this.getNextNewNotebookUri();
+        const uri = this.getNextNewNotebookUri(forVSCodeNotebooks);
 
         // Always skip loading from the hot exit file. When creating a new file we want a new file.
         return this.load(uri, contents, true);
     }
 
-    private getNextNewNotebookUri(): Uri {
-        return generateNewNotebookUri(NotebookStorageProvider.untitledCounter);
+    private getNextNewNotebookUri(forVSCodeNotebooks?: boolean): Uri {
+        return generateNewNotebookUri(NotebookStorageProvider.untitledCounter, undefined, forVSCodeNotebooks);
     }
 
     private trackModel(model: INotebookModel): INotebookModel {

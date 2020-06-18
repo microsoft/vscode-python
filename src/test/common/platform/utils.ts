@@ -8,6 +8,7 @@ import * as fsextra from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
 import * as tmpMod from 'tmp';
+import { CleanupFixture } from '../../fixtures';
 
 // Note: all functional tests that trigger the VS Code "fs" API are
 // found in filesystem.test.ts.
@@ -91,36 +92,6 @@ export class SystemError extends Error {
         this.code = code;
         this.errno = 0; // Don't bother until we actually need it.
         this.syscall = syscall;
-    }
-}
-
-export class CleanupFixture {
-    private cleanups: (() => void | Promise<void>)[];
-    constructor() {
-        this.cleanups = [];
-    }
-
-    public addCleanup(cleanup: () => void | Promise<void>) {
-        this.cleanups.push(cleanup);
-    }
-
-    public async cleanUp() {
-        const cleanups = this.cleanups;
-        this.cleanups = [];
-
-        return Promise.all(
-            cleanups.map(async (cleanup, i) => {
-                try {
-                    const res = cleanup();
-                    if (res) {
-                        await res;
-                    }
-                } catch (err) {
-                    console.log(`cleanup ${i + 1} failed: ${err}`);
-                    console.log('moving on...');
-                }
-            })
-        );
     }
 }
 

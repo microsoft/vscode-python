@@ -13,7 +13,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterLocatorService } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { InterpreterLocatorProgressService } from '../../../../client/pythonEnvironments/discovery/locators/progressService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { sleep } from '../../../core';
 
 suite('Interpreters - Locator Progress', () => {

@@ -9,7 +9,7 @@ import { IInterpreterHelper } from '../../../../client/interpreter/contracts';
 import { IWindowsStoreInterpreter } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { WindowsRegistryService } from '../../../../client/pythonEnvironments/discovery/locators/services/windowsRegistryService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { MockRegistry, MockState } from '../../../interpreters/mocks';
 

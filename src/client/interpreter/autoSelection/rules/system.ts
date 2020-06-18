@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { traceVerbose } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPersistentStateFactory, Resource } from '../../../common/types';
-import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../pythonEnvironments/info';
 import { IInterpreterHelper, IInterpreterService } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';

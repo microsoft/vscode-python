@@ -56,7 +56,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
 
 use(chaiAsPromised);

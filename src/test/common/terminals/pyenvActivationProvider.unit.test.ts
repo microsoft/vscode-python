@@ -13,7 +13,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Activation pyenv', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

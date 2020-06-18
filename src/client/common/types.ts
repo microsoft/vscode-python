@@ -370,7 +370,7 @@ export interface IDataScienceSettings {
     enablePlotViewer?: boolean;
     codeLenses?: string;
     debugCodeLenses?: string;
-    ptvsdDistPath?: string;
+    debugpyDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
@@ -571,6 +571,7 @@ export interface ICryptoUtils {
      * @returns hash as number, or string
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
+     * @param [algorithm]
      */
     createHash<E extends keyof IHashFormat>(
         data: string,

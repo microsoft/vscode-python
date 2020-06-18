@@ -12,7 +12,7 @@ import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
@@ -57,6 +57,7 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  *
  * @export
  * @param {Product[]} products
+ * @param {string} [interpreterName]
  * @returns {string}
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
@@ -291,7 +292,7 @@ export class JupyterInterpreterDependencyService {
      *
      * @private
      * @param {PythonInterpreter} interpreter
-     * @param {CancellationToken} [token]
+     * @param {CancellationToken} [_token]
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */

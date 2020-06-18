@@ -13,9 +13,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experiments/groups';
 import { traceVerbose } from '../../../common/logger';
-import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -27,74 +25,62 @@ import { IDebugAdapterDescriptorFactory } from '../types';
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) {}
     public async createDebugAdapterDescriptor(
         session: DebugSession,
-        executable: DebugAdapterExecutable | undefined
+        _executable: DebugAdapterExecutable | undefined
     ): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as LaunchRequestArguments | AttachRequestArguments;
 
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            // There are four distinct scenarios here:
-            //
-            // 1. "launch";
-            // 2. "attach" with "processId";
-            // 3. "attach" with "listen";
-            // 4. "attach" with "connect" (or legacy "host"/"port");
-            //
-            // For the first three, we want to spawn the debug adapter directly.
-            // For the last one, the adapter is already listening on the specified socket.
-            // When "debugServer" is used, the standard adapter factory takes care of it - no need to check here.
+        // There are four distinct scenarios here:
+        //
+        // 1. "launch";
+        // 2. "attach" with "processId";
+        // 3. "attach" with "listen";
+        // 4. "attach" with "connect" (or legacy "host"/"port");
+        //
+        // For the first three, we want to spawn the debug adapter directly.
+        // For the last one, the adapter is already listening on the specified socket.
+        // When "debugServer" is used, the standard adapter factory takes care of it - no need to check here.
 
-            if (configuration.request === 'attach') {
-                if (configuration.connect !== undefined) {
-                    return new DebugAdapterServer(
-                        configuration.connect.port,
-                        configuration.connect.host ?? '127.0.0.1'
-                    );
-                } else if (configuration.port !== undefined) {
-                    return new DebugAdapterServer(configuration.port, configuration.host ?? '127.0.0.1');
-                } else if (configuration.listen === undefined && configuration.processId === undefined) {
-                    throw new Error('"request":"attach" requires either "connect", "listen", or "processId"');
-                }
+        if (configuration.request === 'attach') {
+            if (configuration.connect !== undefined) {
+                return new DebugAdapterServer(configuration.connect.port, configuration.connect.host ?? '127.0.0.1');
+            } else if (configuration.port !== undefined) {
+                return new DebugAdapterServer(configuration.port, configuration.host ?? '127.0.0.1');
+            } else if (configuration.listen === undefined && configuration.processId === undefined) {
+                throw new Error('"request":"attach" requires either "connect", "listen", or "processId"');
             }
-
-            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-            if (pythonPath.length !== 0) {
-                if (configuration.request === 'attach' && configuration.processId !== undefined) {
-                    sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
-                }
-
-                // "logToFile" is not handled directly by the adapter - instead, we need to pass
-                // the corresponding CLI switch when spawning it.
-                const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-
-                if (configuration.debugAdapterPath !== undefined) {
-                    return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
-                }
-
-                const debuggerAdapterPathToUse = path.join(
-                    EXTENSION_ROOT_DIR,
-                    'pythonFiles',
-                    'lib',
-                    'python',
-                    'debugpy',
-                    'adapter'
-                );
-
-                sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-                return new DebugAdapterExecutable(pythonPath, [debuggerAdapterPathToUse, ...logArgs]);
-            }
-        } else {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
         }
 
-        // Use the Node debug adapter (and ptvsd_launcher.py)
-        if (executable) {
-            return executable;
+        const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+        if (pythonPath.length !== 0) {
+            if (configuration.request === 'attach' && configuration.processId !== undefined) {
+                sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
+            }
+
+            // "logToFile" is not handled directly by the adapter - instead, we need to pass
+            // the corresponding CLI switch when spawning it.
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+
+            if (configuration.debugAdapterPath !== undefined) {
+                return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
+            }
+
+            const debuggerAdapterPathToUse = path.join(
+                EXTENSION_ROOT_DIR,
+                'pythonFiles',
+                'lib',
+                'python',
+                'debugpy',
+                'adapter'
+            );
+
+            sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
+            return new DebugAdapterExecutable(pythonPath, [debuggerAdapterPathToUse, ...logArgs]);
         }
+
         // Unlikely scenario.
         throw new Error('Debug Adapter Executable not provided');
     }

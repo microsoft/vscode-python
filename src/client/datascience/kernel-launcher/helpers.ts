@@ -3,7 +3,7 @@
 'use strict';
 
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 // For a given IJupyterKernelSpec return the interpreter associated with it or error

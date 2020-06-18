@@ -77,8 +77,12 @@ export class ExportCommands implements IDisposable {
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
                 handler: () => this.commandManager.executeCommand(Commands.ExportAsPythonScript, model)
+            },
+            {
+                label: DataScience.exportHTMLQuickPickLabel(),
+                picked: false,
+                handler: () => this.commandManager.executeCommand(Commands.ExportToHTML, model)
             }
-            //{ label: 'HTML', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToHTML) },
             //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
         ];
     }

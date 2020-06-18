@@ -5,24 +5,29 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IDocumentManager } from '../../../client/common/application/types';
+import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IDisposable } from '../../../client/common/types';
+import { IBrowserService, IDisposable } from '../../../client/common/types';
 import { ExportManagerFileOpener } from '../../../client/datascience/export/exportManagerFileOpener';
 import { ExportFormat, IExportManager } from '../../../client/datascience/export/types';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { INotebookModel } from '../../../client/datascience/types';
+import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 
 suite('Data Science - Export File Opener', () => {
     let fileOpener: ExportManagerFileOpener;
     let exporter: IExportManager;
     let documentManager: IDocumentManager;
     let fileSystem: IFileSystem;
+    let applicationShell: IApplicationShell;
+    let browserService: IBrowserService;
     const model = instance(mock<INotebookModel>());
     setup(async () => {
         exporter = mock<IExportManager>();
         documentManager = mock<IDocumentManager>();
         fileSystem = mock<IFileSystem>();
+        applicationShell = mock<IApplicationShell>();
+        browserService = mock<IBrowserService>();
         const reporter = mock(ProgressReporter);
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
@@ -33,7 +38,9 @@ suite('Data Science - Export File Opener', () => {
             instance(exporter),
             instance(documentManager),
             instance(reporter),
-            instance(fileSystem)
+            instance(fileSystem),
+            instance(applicationShell),
+            instance(browserService)
         );
     });
 
@@ -45,11 +52,33 @@ suite('Data Science - Export File Opener', () => {
         verify(documentManager.showTextDocument(anything())).never();
     });
     test('Python File is opened if exported', async () => {
-        const uri = Uri.file('blah.python');
+        const uri = Uri.file('test.python');
         when(exporter.export(anything(), anything())).thenResolve(uri);
 
         await fileOpener.export(ExportFormat.python, model);
 
         verify(documentManager.showTextDocument(anything())).once();
+    });
+    test('HTML File opened if yes button pressed', async () => {
+        const uri = Uri.file('test.html');
+        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
+            Promise.resolve(getLocString('DataScience.openExportFileYes', 'Yes'))
+        );
+
+        await fileOpener.export(ExportFormat.html, model);
+
+        verify(browserService.launch(anything())).once();
+    });
+    test('HTML File not opened if no button button pressed', async () => {
+        const uri = Uri.file('test.html');
+        when(exporter.export(anything(), anything())).thenResolve(uri);
+        when(applicationShell.showInformationMessage(anything(), anything(), anything())).thenReturn(
+            Promise.resolve(getLocString('DataScience.openExportFileNo', 'No'))
+        );
+
+        await fileOpener.export(ExportFormat.html, model);
+
+        verify(browserService.launch(anything())).never();
     });
 });

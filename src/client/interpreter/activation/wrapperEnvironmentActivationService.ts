@@ -18,7 +18,7 @@ import {
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
@@ -95,7 +95,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * If a cached entry already exists, then ignore the implementation.
      *
      * @private
-     * @param {string} key
+     * @param {string} cacheKey
      * @param {(() => Promise<NodeJS.ProcessEnv | undefined>)} implementation
      * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
      * @memberof WrapperEnvironmentActivationService

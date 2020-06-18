@@ -13,7 +13,7 @@ import { Product } from '../../../client/common/types';
 import { Installer } from '../../../client/common/utils/localize';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line: max-func-body-length
 suite('InstallationChannelManager - getInstallationChannel()', () => {

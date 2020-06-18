@@ -31,7 +31,7 @@ import { IConfigurationService, IDisposableRegistry, IPythonSettings } from '../
 import { noop } from '../../../../client/common/utils/misc';
 import { IInterpreterHelper, IInterpreterService } from '../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Application Diagnostics - Checks Python Interpreter', () => {
     let diagnosticService: IDiagnosticsService;

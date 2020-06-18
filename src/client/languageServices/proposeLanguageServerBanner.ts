@@ -67,7 +67,9 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         }
     }
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        // Banner is deactivated.
+        return false;
+        // return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {

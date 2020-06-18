@@ -17,7 +17,7 @@ import { IInterpreterWatcher } from '../../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CacheableLocatorService } from '../../../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';
-import { PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Cacheable Locator Service', () => {
     suite('Caching', () => {

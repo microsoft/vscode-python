@@ -17,10 +17,10 @@ import {
     TextDocument,
     TextDocumentContentChangeEvent
 } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**

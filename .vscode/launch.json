@@ -91,27 +91,6 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Debugger as debugServer",
-            "type": "node",
-            "request": "launch",
-            "program": "${workspaceFolder}/out/client/debugger/debugAdapter/main.js",
-            "stopOnEntry": false,
-            "smartStep": true,
-            "args": [
-                "--server=4711"
-            ],
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/client/**/*.js",
-                "!${workspaceFolder}/**/node_modules**/*"
-            ],
-            "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Compile",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
             "name": "Tests (Debugger, VS Code, *.test.ts)",
             "type": "extensionHost",
             "request": "launch",
@@ -176,7 +155,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_GREP": "DataScience - Export HTML" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -307,7 +286,8 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
-                "--timeout=300000"
+                "--timeout=300000",
+                "--exit"
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
@@ -376,15 +356,6 @@
             ],
             "skipFiles": [
                 "<node_internals>/**"
-            ]
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Extension + Debugger",
-            "configurations": [
-                "Extension",
-                "Debugger as debugServer"
             ]
         }
     ]

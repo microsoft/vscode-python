@@ -140,6 +140,7 @@ suite('DataScience Debugger tests', () => {
     });
 
     async function debugCell(
+        type: 'notebook' | 'default',
         code: string,
         breakpoint?: Range,
         breakpointFile?: string,
@@ -170,7 +171,7 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
+        const resultPromise = getInteractiveCellResults(ioc, ioc.getWebPanel(type).wrapper, async () => {
             let breakPromise = createDeferred<void>();
 
             // Make sure that our code lens provider has signaled a change before we check the lenses
@@ -201,9 +202,9 @@ suite('DataScience Debugger tests', () => {
                 newLensDispose?.dispose();
 
                 // Step if allowed
-                if (stepAndVerify && ioc.wrapper && !ioc.mockJupyter) {
+                if (stepAndVerify && ioc.getDefaultWrapper() && !ioc.mockJupyter) {
                     // Verify variables work
-                    openVariableExplorer(ioc.wrapper);
+                    openVariableExplorer(ioc.getDefaultWrapper());
                     breakPromise = createDeferred<void>();
                     await jupyterDebuggerService?.step();
                     await breakPromise.promise;
@@ -213,7 +214,7 @@ suite('DataScience Debugger tests', () => {
                     await variableRefresh;
 
                     // Force an update so we render whatever the current state is
-                    ioc.wrapper.update();
+                    ioc.getDefaultWrapper().update();
 
                     // Then verify results.
                     stepAndVerify();
@@ -289,7 +290,7 @@ suite('DataScience Debugger tests', () => {
     runInteractiveTest(
         'Debug cell without breakpoint',
         async () => {
-            await debugCell('#%%\nprint("bar")');
+            await debugCell('default', '#%%\nprint("bar")');
         },
         createIOC
     );
@@ -297,7 +298,7 @@ suite('DataScience Debugger tests', () => {
         'Check variables',
         async () => {
             ioc.setExperimentState(RunByLine.experiment, true);
-            await debugCell('#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
+            await debugCell('default', '#%%\nx = [4, 6]\nx = 5', undefined, undefined, false, () => {
                 const targetResult = {
                     name: 'x',
                     value: '[4, 6]',
@@ -308,7 +309,7 @@ suite('DataScience Debugger tests', () => {
                     count: 2,
                     truncated: false
                 };
-                verifyVariables(ioc!.wrapper!, [targetResult]);
+                verifyVariables(ioc!.getDefaultWrapper()!, [targetResult]);
             });
         },
         createIOC
@@ -331,7 +332,7 @@ suite('DataScience Debugger tests', () => {
             const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
             // Debug this code. We should either hit the breakpoint or stop on entry
-            const resultPromise = getInteractiveCellResults(ioc, ioc.wrapper!, async () => {
+            const resultPromise = getInteractiveCellResults(ioc, ioc.getDefaultWrapper()!, async () => {
                 const breakPromise = createDeferred<void>();
                 disposables.push(jupyterDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
                 const targetUri = Uri.file(fileName);
@@ -363,10 +364,11 @@ suite('DataScience Debugger tests', () => {
         async () => {
             // Create an editor so something is listening to messages
             await createNewEditor(ioc);
-            const wrapper = ioc.wrapper!;
+            const webPanel = ioc.getWebPanel('notebook');
+            const wrapper = webPanel.wrapper;
 
             // Add a cell into the UI and wait for it to render and submit it.
-            await addCell(wrapper, ioc, 'a=1\na', true);
+            await addCell(ioc, wrapper, 'a=1\na', true);
 
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -376,7 +378,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = waitForMessage(ioc, InteractiveWindowMessages.ShowingIp);
+            const promise = webPanel.waitForMessage(InteractiveWindowMessages.ShowingIp);
             runByLineButton.simulate('click');
             await promise;
 
@@ -395,10 +397,10 @@ suite('DataScience Debugger tests', () => {
         async () => {
             // Create an editor so something is listening to messages
             await createNewEditor(ioc);
-            const wrapper = ioc.wrapper!;
+            const wrapper = ioc.getWebPanel('notebook').wrapper;
 
             // Add a cell into the UI and wait for it to render and submit it.
-            await addCell(wrapper, ioc, 'a=1\na=2\na=3', true);
+            await addCell(ioc, wrapper, 'a=1\na=2\na=3', true);
 
             // Step into this cell using the button
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -408,7 +410,7 @@ suite('DataScience Debugger tests', () => {
             // tslint:disable-next-line: no-any
             assert.equal((runByLineButton.instance().props as any).tooltip, 'Run by line');
 
-            const promise = waitForMessage(ioc, InteractiveWindowMessages.DebugStateChange, {
+            const promise = ioc.getWebPanel('notebook').waitForMessage(InteractiveWindowMessages.DebugStateChange, {
                 withPayload: (p) => {
                     return p.oldState === DebugState.Design && p.newState === DebugState.Run;
                 }
@@ -424,11 +426,13 @@ suite('DataScience Debugger tests', () => {
             expect(runByLineButtonProps.disabled).to.equal(true, 'Run by line button not disabled when running');
 
             // Now wait for break mode
-            const breakPromise = waitForMessage(ioc, InteractiveWindowMessages.DebugStateChange, {
-                withPayload: (p) => {
-                    return p.oldState === DebugState.Run && p.newState === DebugState.Break;
-                }
-            });
+            const breakPromise = ioc
+                .getWebPanel('notebook')
+                .waitForMessage(InteractiveWindowMessages.DebugStateChange, {
+                    withPayload: (p) => {
+                        return p.oldState === DebugState.Run && p.newState === DebugState.Break;
+                    }
+                });
             await breakPromise;
 
             cell = getLastOutputCell(wrapper, 'NativeCell');

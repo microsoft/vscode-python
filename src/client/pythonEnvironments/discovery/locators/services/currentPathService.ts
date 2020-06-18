@@ -10,7 +10,7 @@ import { OSType } from '../../../../common/utils/platform';
 import { IInterpreterHelper } from '../../../../interpreter/contracts';
 import { IPythonInPathCommandProvider } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
-import { InterpreterType, PythonInterpreter } from '../../types';
+import { InterpreterType, PythonInterpreter } from '../../../info';
 import { CacheableLocatorService } from './cacheableLocatorService';
 
 /**

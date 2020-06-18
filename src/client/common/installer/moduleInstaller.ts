@@ -6,7 +6,7 @@ import * as path from 'path';
 import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType } from '../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';

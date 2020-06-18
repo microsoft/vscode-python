@@ -19,7 +19,7 @@ import {
 } from '../../../common/types';
 import { IInterpreterHelper, IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { InterpreterType } from '../../../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../pythonEnvironments/info';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';

@@ -5,7 +5,7 @@ import '../../../common/extensions';
 
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as vscode from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 // See the comment on convertCompletionItemKind below
 // Here's the monaco enum:

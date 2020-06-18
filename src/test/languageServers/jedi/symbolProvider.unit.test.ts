@@ -19,7 +19,7 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import { LanguageClient } from 'vscode-languageclient';
+import { LanguageClient } from 'vscode-languageclient/node';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { parseRange } from '../../../client/common/utils/text';
 import { IServiceContainer } from '../../../client/ioc/types';

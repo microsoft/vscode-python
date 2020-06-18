@@ -28,6 +28,7 @@ import {
     IOutputChannel
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
+import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
@@ -101,10 +102,9 @@ async function activateLegacy(
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 
-    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson
-        .enableProposedApi;
+    const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
+    const enableProposedApi = applicationEnv.packageJson.enableProposedApi;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
-
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
@@ -143,6 +143,7 @@ async function activateLegacy(
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+    cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();

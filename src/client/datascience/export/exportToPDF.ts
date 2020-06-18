@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IExport } from './types';
+import { ExportBase } from './exportBase';
 
 @injectable()
-export class ExportToPDF implements IExport {
+export class ExportToPDF extends ExportBase {
     // tslint:disable-next-line: no-empty
     public async export(_source: Uri, _target: Uri): Promise<void> {}
 }

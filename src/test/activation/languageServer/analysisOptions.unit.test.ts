@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
-import { DocumentFilter } from 'vscode-languageclient';
+import { DocumentFilter } from 'vscode-languageclient/node';
 
 import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';

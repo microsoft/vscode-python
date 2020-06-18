@@ -7,7 +7,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../client/common/process/types';
-import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 
 export class MockPythonService implements IPythonExecutionService {

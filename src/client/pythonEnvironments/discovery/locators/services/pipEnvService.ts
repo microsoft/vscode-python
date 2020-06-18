@@ -15,7 +15,7 @@ import { IPipEnvServiceHelper } from '../../../../interpreter/locators/types';
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { InterpreterType, PythonInterpreter } from '../../types';
+import { InterpreterType, PythonInterpreter } from '../../../info';
 import { GetInterpreterLocatorOptions } from '../types';
 import { CacheableLocatorService } from './cacheableLocatorService';
 

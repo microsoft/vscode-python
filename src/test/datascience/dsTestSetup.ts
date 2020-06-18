@@ -13,50 +13,10 @@ const packageJsonFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'package.json');
 const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
 
 // This code is temporary.
-if (
-    !content.enableProposedApi ||
-    !Array.isArray(content.contributes.notebookOutputRenderer) ||
-    !Array.isArray(content.contributes.notebookProvider)
-) {
-    content.enableProposedApi = true;
-    content.contributes.notebookOutputRenderer = [
-        {
-            viewType: 'jupyter-notebook-renderer',
-            displayName: 'Jupyter Notebook Renderer',
-            mimeTypes: [
-                'application/geo+json',
-                'application/vdom.v1+json',
-                'application/vnd.dataresource+json',
-                'application/vnd.plotly.v1+json',
-                'application/vnd.vega.v2+json',
-                'application/vnd.vega.v3+json',
-                'application/vnd.vega.v4+json',
-                'application/vnd.vega.v5+json',
-                'application/vnd.vegalite.v1+json',
-                'application/vnd.vegalite.v2+json',
-                'application/vnd.vegalite.v3+json',
-                'application/vnd.vegalite.v4+json',
-                'application/x-nteract-model-debug+json',
-                'image/gif',
-                'text/latex',
-                'text/vnd.plotly.v1+html'
-            ]
-        }
-    ];
-    content.contributes.notebookProvider = [
-        {
-            viewType: 'jupyter-notebook',
-            displayName: 'Jupyter Notebook',
-            selector: [
-                {
-                    filenamePattern: '*.ipynb'
-                }
-            ]
-        }
-    ];
+if (content.contributes.notebookProvider[0].priority !== 'default') {
+    content.contributes.notebookProvider[0].priority = 'default';
+
+    // Update package.json to pick experiments from our custom settings.json file.
+    content.contributes.configuration.properties['python.experiments.optInto'].scope = 'resource';
+    fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));
 }
-
-// Update package.json to pick experiments from our custom settings.json file.
-content.contributes.configuration.properties['python.experiments.optInto'].scope = 'resource';
-
-fs.writeFileSync(packageJsonFile, JSON.stringify(content, undefined, 4));

@@ -19,7 +19,7 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterLocatorService, IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 
 suite('Kernel Finder', () => {
     let interpreterService: typemoq.IMock<IInterpreterService>;

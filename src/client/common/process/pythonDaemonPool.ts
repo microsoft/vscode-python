@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -106,6 +106,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
      * @private
      * @template T
      * @param {(daemon: IPythonExecutionService) => Promise<T>} cb
+     * @param daemonLogMessage
      * @returns {Promise<T>}
      * @memberof PythonDaemonExecutionServicePool
      */
@@ -130,6 +131,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
      *
      * @private
      * @param {(daemon: IPythonExecutionService) => ObservableExecutionResult<string>} cb
+     * @param daemonLogMessage
      * @returns {ObservableExecutionResult<string>}
      * @memberof PythonDaemonExecutionServicePool
      */

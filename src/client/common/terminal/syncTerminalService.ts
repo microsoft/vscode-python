@@ -6,7 +6,7 @@
 import { inject } from 'inversify';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';

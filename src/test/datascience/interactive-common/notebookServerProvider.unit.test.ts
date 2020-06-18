@@ -11,7 +11,7 @@ import { NotebookServerProvider } from '../../../client/datascience/interactive-
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {

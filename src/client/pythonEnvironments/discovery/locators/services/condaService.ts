@@ -10,7 +10,7 @@ import { IProcessServiceFactory } from '../../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../../common/types';
 import { cache } from '../../../../common/utils/decorators';
 import { ICondaService, IInterpreterLocatorService, WINDOWS_REGISTRY_SERVICE } from '../../../../interpreter/contracts';
-import { InterpreterType, PythonInterpreter } from '../../types';
+import { InterpreterType, PythonInterpreter } from '../../../info';
 import { CondaEnvironmentInfo, CondaInfo } from './conda';
 import { parseCondaEnvFileContents } from './condaHelper';
 

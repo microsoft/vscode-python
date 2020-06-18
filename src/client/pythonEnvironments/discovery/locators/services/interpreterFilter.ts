@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IInterpreterFilter, IWindowsStoreInterpreter } from '../../../../interpreter/locators/types';
-import { PythonInterpreter } from '../../types';
+import { PythonInterpreter } from '../../../info';
 import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 
 @injectable()

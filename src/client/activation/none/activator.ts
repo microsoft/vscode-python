@@ -21,7 +21,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageServerActivator } from '../types';
 
 /**

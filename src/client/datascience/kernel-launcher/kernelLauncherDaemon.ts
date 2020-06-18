@@ -9,7 +9,7 @@ import { IDisposable } from 'monaco-editor';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 import { KernelDaemonPool } from './kernelDaemonPool';
 import { IPythonKernelDaemon } from './types';

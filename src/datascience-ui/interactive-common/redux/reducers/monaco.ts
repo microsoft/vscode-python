@@ -15,6 +15,7 @@ import {
     IProvideSignatureHelpResponse,
     IResolveCompletionItemResponse
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { deserializeLanguageConfiguration } from '../../../../client/datascience/interactive-common/serialization';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
@@ -111,7 +112,7 @@ function handleLoadTmLanguageResponse(arg: MonacoReducerArg<ILoadTmLanguageRespo
                     arg.payload.data.languageId,
                     arg.payload.data.extensions,
                     arg.payload.data.scopeName,
-                    arg.payload.data.languageConfiguration,
+                    deserializeLanguageConfiguration(arg.payload.data.languageConfiguration),
                     arg.payload.data.languageJSON
                 );
             }

@@ -39,7 +39,7 @@ import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
 import { JediSymbolProvider } from '../providers/symbolProvider';
-import { PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../pythonEnvironments/info';
 import { ITestManagementService } from '../testing/types';
 import { BlockFormatProviders } from '../typeFormatters/blockFormatProvider';
 import { OnTypeFormattingDispatcher } from '../typeFormatters/dispatcher';

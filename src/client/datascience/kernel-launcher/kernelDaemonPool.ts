@@ -12,7 +12,7 @@ import { IDisposable, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { KernelLauncherDaemonModule } from '../constants';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../types';
 import { PythonKernelDaemon } from './kernelDaemon';

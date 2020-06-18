@@ -96,7 +96,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * Check if the linter itself is available in the workspace's Python environment or
      * not.
      *
-     * @param linterProduct Linter to check in the current workspace environment.
+     * @param linterInfo Linter to check in the current workspace environment.
      * @param resource Context information for workspace.
      */
     public async isLinterAvailable(linterInfo: ILinterInfo, resource: Resource): Promise<boolean | undefined> {

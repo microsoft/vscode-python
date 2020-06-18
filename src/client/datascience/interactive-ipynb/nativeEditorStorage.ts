@@ -10,7 +10,7 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
@@ -29,7 +29,7 @@ import {
 import detectIndent = require('detect-indent');
 // tslint:disable-next-line:no-require-imports no-var-requires
 import cloneDeep = require('lodash/cloneDeep');
-import { UseNativeEditorApi } from '../../common/constants';
+import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
@@ -121,7 +121,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
 
     constructor(
         isTrusted: boolean,
-        private readonly useNativeEditorApi: boolean,
+        public useNativeEditorApi: boolean,
         file: Uri,
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
@@ -510,6 +510,17 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 }
 
+/**
+ * Temporary hack to ensure we can use VS Code notebooks along with our standard notbooked editors.
+ */
+export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
+    if (!(model instanceof NativeEditorNotebookModel)) {
+        throw new Error('Unsupported NotebookModel');
+    }
+    const rawModel = model as NativeEditorNotebookModel;
+    rawModel.useNativeEditorApi = true;
+}
+
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
     public get onSavedAs(): Event<{ new: Uri; old: Uri }> {
@@ -530,7 +541,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(UseNativeEditorApi) private readonly useNativeEditorApi: boolean
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeEditorApi: boolean
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -640,9 +651,12 @@ export class NativeEditorStorage implements INotebookStorage {
                         await this.fileSystem.writeFile(filePath, contents);
                     }
                 } else {
-                    await this.fileSystem
-                        .deleteFile(filePath)
-                        .catch((ex) => traceError('Failed to delete hotExit file. Possible it does not exist', ex));
+                    await this.fileSystem.deleteFile(filePath).catch((ex) => {
+                        // No need to log error if file doesn't exist.
+                        if (!isFileNotFoundError(ex)) {
+                            traceError('Failed to delete hotExit file. Possible it does not exist', ex);
+                        }
+                    });
                 }
             }
         } catch (exc) {

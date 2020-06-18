@@ -22,7 +22,7 @@ import {
     TextDocumentContentChangeEvent,
     WorkspaceEdit
 } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as vscodeLanguageClient from 'vscode-languageclient/node';
 
 import { injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
@@ -30,7 +30,7 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import {
     ILanguageServerActivator,
     ILanguageServerDownloader,

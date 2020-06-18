@@ -12,7 +12,7 @@ import { traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 

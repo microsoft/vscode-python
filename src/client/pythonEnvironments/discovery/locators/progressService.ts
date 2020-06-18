@@ -11,7 +11,7 @@ import { createDeferredFrom, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterLocatorProgressService, IInterpreterLocatorService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { PythonInterpreter } from '../types';
+import { PythonInterpreter } from '../../info';
 
 @injectable()
 export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {

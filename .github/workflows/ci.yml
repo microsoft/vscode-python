@@ -45,9 +45,8 @@ jobs:
       - name: Install Python requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
 
-      - name: Install debugpy wheels
+      - name: Install debugpy with wheels
         run: |
           python -m pip install wheel
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
@@ -208,6 +207,7 @@ jobs:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
       # See https://github.com/microsoft/ptvsd/issues/2068
+      # At this point pinning is only needed for consistency. We no longer have TS debug adapter.
       NODE_VERSION: 12.15.0
     steps:
       - name: Checkout
@@ -257,7 +257,6 @@ jobs:
       - name: Install Python requirements
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 
@@ -457,7 +456,6 @@ jobs:
         run: |
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         shell: bash
 

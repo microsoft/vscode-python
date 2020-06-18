@@ -83,13 +83,11 @@ import {
     ILiveShareTestingApi,
     ITerminalManager,
     IVSCodeNotebook,
-    IWebPanel,
-    IWebPanelMessageListener,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
+    WebPanelMessage
 } from '../../client/common/application/types';
-import { WebPanel } from '../../client/common/application/webPanels/webPanel';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
@@ -97,8 +95,8 @@ import { PythonSettings } from '../../client/common/configSettings';
 import {
     EXTENSION_ROOT_DIR,
     UseCustomEditorApi,
-    UseNativeEditorApi,
-    UseProposedApi
+    UseProposedApi,
+    UseVSCodeNotebookEditorApi
 } from '../../client/common/constants';
 import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
@@ -160,6 +158,7 @@ import {
     ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
+    IDisposableRegistry,
     IExperimentService,
     IExperimentsManager,
     IExtensionContext,
@@ -178,7 +177,7 @@ import {
     Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
-import { Deferred, sleep } from '../../client/common/utils/async';
+import { sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
@@ -311,8 +310,8 @@ import {
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
-import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
-import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
+import { ProtocolParser } from '../../client/debugger/extension/helpers/protocolParser';
+import { IProtocolParser } from '../../client/debugger/extension/types';
 import {
     EnvironmentActivationService,
     EnvironmentActivationServiceCache
@@ -398,10 +397,9 @@ import {
     WorkspaceVirtualEnvService
 } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/pythonEnvironments/discovery/locators/services/workspaceVirtualEnvWatcherService';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
-import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -419,6 +417,7 @@ import { MockLiveShareApi } from './mockLiveShare';
 import { MockPythonSettings } from './mockPythonSettings';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
+import { IMountedWebViewFactory, MountedWebViewFactory } from './mountedWebViewFactory';
 import { TestExecutionLogger } from './testexecutionLogger';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
@@ -447,15 +446,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
     private static jupyterInterpreters: PythonInterpreter[] = [];
     private static foundPythonPath: string | undefined;
-    public webPanelListener: IWebPanelMessageListener | undefined;
-    public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
-    public wrapperCreatedPromise: Deferred<boolean> | undefined;
-    public postMessage: ((ev: MessageEvent) => void) | undefined;
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     public shouldMockJupyter: boolean;
-    private missedMessages: any[] = [];
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -485,7 +479,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         type: InterpreterType.Unknown,
         architecture: Architecture.x64
     };
-    private extraListeners: ((m: string, p: any) => void)[] = [];
 
     private webPanelProvider = mock(WebPanelProvider);
     private settingsMap = new Map<string, any>();
@@ -534,11 +527,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             reactHelpers.blurWindow();
         }
 
-        if (this.wrapper && this.wrapper.length) {
-            this.wrapper.unmount();
-            this.wrapper = undefined;
-        }
-
         // Bounce this so that our editor has time to shutdown
         await sleep(150);
 
@@ -569,8 +557,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.settingsMap.clear();
         this.configMap.clear();
         this.setContexts = {};
-        this.extraListeners = [];
-        this.webPanelListener = undefined;
         reset(this.webPanelProvider);
 
         // Turn off the static maps for the environment and conda services. Otherwise this
@@ -612,6 +598,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
         }
 
+        this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
@@ -621,7 +608,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingletonInstance(UseProposedApi, false);
         this.serviceManager.addSingletonInstance(UseCustomEditorApi, useCustomEditor);
-        this.serviceManager.addSingletonInstance(UseNativeEditorApi, false);
+        this.serviceManager.addSingletonInstance(UseVSCodeNotebookEditorApi, false);
         this.serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
         this.serviceManager.add<IJupyterVariableDataProvider>(
             IJupyterVariableDataProvider,
@@ -1313,6 +1300,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
+        type: 'notebook' | 'default',
         role: vsls.Role = vsls.Role.None
     ) {
         // Force the container to mock actual live share if necessary
@@ -1322,7 +1310,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
-        this.mountReactControl(mount);
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).create(type, mount).wrapper;
+    }
+
+    public getDefaultWrapper() {
+        return this.getDefaultWebPanel().wrapper;
+    }
+
+    public getDefaultWebPanel() {
+        return this.getWebPanel('default');
+    }
+
+    public getWebPanel(type: 'notebook' | 'default') {
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type);
+    }
+
+    public postMessage(m: WebPanelMessage, type: 'notebook' | 'default') {
+        return this.get<IMountedWebViewFactory>(IMountedWebViewFactory).get(type).postMessage(m);
     }
 
     public getContext(name: string): boolean {
@@ -1423,53 +1427,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.documentManager.addDocument(code, file);
     }
 
-    public addMessageListener(callback: (m: string, p: any) => void) {
-        this.extraListeners.push(callback);
-    }
-
-    public removeMessageListener(callback: (m: string, p: any) => void) {
-        const index = this.extraListeners.indexOf(callback);
-        if (index >= 0) {
-            this.extraListeners.splice(index, 1);
-        }
-    }
-
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
         if (this.mockJupyter) {
             this.mockJupyter.addInterpreter(newInterpreter, commands);
         }
     }
-
-    public postMessageToWebPanel(msg: any) {
-        if (this.webPanelListener) {
-            this.webPanelListener.onMessage(msg.type, msg.payload);
-        } else {
-            this.missedMessages.push({ type: msg.type, payload: msg.payload });
-        }
-
-        if (this.extraListeners.length) {
-            this.extraListeners.forEach((e) => e(msg.type, msg.payload));
-        }
-        if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
-            this.wrapperCreatedPromise.resolve();
-        }
-
-        // Clear out msg payload
-        delete msg.payload;
-    }
-
-    public changeViewState(active: boolean, visible: boolean) {
-        if (this.webPanelListener) {
-            this.webPanelListener.onChangeViewState({
-                isActive: () => active,
-                isVisible: () => visible,
-                setTitle: noop,
-                show: noop as any,
-                postMessage: noop as any,
-                close: noop,
-                updateCwd: noop as any,
-                asWebviewUri: (uri) => uri
-            });
+    public changeViewState(type: 'notebook' | 'default', active: boolean, visible: boolean) {
+        const webPanel = this.getWebPanel(type);
+        if (webPanel) {
+            webPanel.changeViewState(active, visible);
         }
     }
 
@@ -1490,46 +1456,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.experimentState.set(experimentName, enabled);
     }
 
-    private createWebPanel(): IWebPanel {
-        const webPanel = mock(WebPanel);
-        when(webPanel.postMessage(anything())).thenCall((m) => {
-            // tslint:disable-next-line: no-require-imports
-            const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
-            const message = reactHelpers.createMessageEvent(m);
-            if (this.postMessage) {
-                this.postMessage(message);
-            }
-            if (m.payload) {
-                delete m.payload;
-            }
-        });
-        when((webPanel as any).then).thenReturn(undefined);
-        return instance(webPanel);
+    private computeWebPanelId(title: string): 'notebook' | 'default' {
+        // Should be based on title (for now)
+        if (title && (title.toLowerCase().endsWith('.ipynb') || title.toLowerCase().includes('notebook'))) {
+            return `notebook`;
+        }
+
+        return 'default';
     }
 
     private async onCreateWebPanel(options: IWebPanelOptions) {
-        // Keep track of the current listener. It listens to messages through the vscode api
-        this.webPanelListener = options.listener;
-
-        // Send messages that were already posted but were missed.
-        // During normal operation, the react control will not be created before
-        // the webPanelListener
-        if (this.missedMessages.length && this.webPanelListener) {
-            // This needs to be async because we are being called in the ctor of the webpanel. It can't
-            // handle some messages during the ctor.
-            setTimeout(() => {
-                this.missedMessages.forEach((m) =>
-                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
-                );
-            }, 0);
-
-            // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
-            // create multiple webpanels with the same mount. We need to resend these messages to
-            // other webpanels that get created with the same mount.
-        }
-
-        // Return our dummy web panel
-        return this.createWebPanel();
+        const id = this.computeWebPanelId(options.title);
+        const panel = this.getWebPanel(id);
+        this.get<IDisposableRegistry>(IDisposableRegistry).push(panel);
+        panel.attach(options);
+        return panel;
     }
 
     private generatePythonSettings(languageServerType: LanguageServerType) {
@@ -1689,47 +1630,5 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         } catch (ex) {
             return 'python';
         }
-    }
-
-    private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
-        // This is a remount (or first time). Clear out messages that were sent
-        // by the last mount
-        this.missedMessages = [];
-        this.webPanelListener = undefined;
-        this.extraListeners = [];
-        this.wrapperCreatedPromise = undefined;
-
-        // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
-        const globalAcquireVsCodeApi = (): IVsCodeApi => {
-            return {
-                // tslint:disable-next-line:no-any
-                postMessage: (msg: any) => {
-                    this.postMessageToWebPanel(msg);
-                },
-                // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {},
-                // tslint:disable-next-line:no-any no-empty
-                getState: () => {
-                    return {};
-                }
-            };
-        };
-        // tslint:disable-next-line:no-string-literal
-        (global as any)['acquireVsCodeApi'] = globalAcquireVsCodeApi;
-
-        // Remap event handlers to point to the container.
-        const oldListener = window.addEventListener;
-        window.addEventListener = (event: string, cb: any) => {
-            if (event === 'message') {
-                this.postMessage = cb;
-            }
-        };
-
-        // Mount our main panel. This will make the global api be cached and have the event handler registered
-        this.wrapper = mount();
-
-        // We can remove the global api and event listener now.
-        delete (global as any).acquireVsCodeApi;
-        window.addEventListener = oldListener;
     }
 }

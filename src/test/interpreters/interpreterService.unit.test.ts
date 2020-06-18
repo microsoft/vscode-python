@@ -47,7 +47,7 @@ import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../..
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
-import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 

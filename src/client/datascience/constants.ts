@@ -46,6 +46,7 @@ export namespace Commands {
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
+    export const OpenNotebookInPreviewEditor = 'python.datascience.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
@@ -250,10 +251,10 @@ export enum Telemetry {
     HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
     HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
-    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
-    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
-    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
-    PtvsdInstallCancelled = 'DATASCIENCE.PTVSD_INSTALL_CANCELLED',
+    DebugpyPromptToInstall = 'DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL',
+    DebugpySuccessfullyInstalled = 'DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED',
+    DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
+    DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
     ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
@@ -495,3 +496,6 @@ export namespace LiveShareCommands {
     export const rawKernelSupported = 'rawKernelSupported';
     export const createRawNotebook = 'createRawNotebook';
 }
+
+export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
+export const OurNotebookProvider = 'OurNotebookProvider';
