@@ -550,7 +550,7 @@ export class NativeEditorStorage implements INotebookStorage {
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
         await this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8');
-        await this.trustService.updateTrust(contents, model.isTrusted);
+        await this.trustService.updateNotebookTrust(contents, model.isTrusted);
         model.update({
             source: 'user',
             kind: 'save',
@@ -563,7 +563,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const old = model.file;
         const contents = model.getContent();
         await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
-        await this.trustService.updateTrust(contents, model.isTrusted);
+        await this.trustService.updateNotebookTrust(contents, model.isTrusted);
         model.update({
             source: 'user',
             kind: 'saveAs',

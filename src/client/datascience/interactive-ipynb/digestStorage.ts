@@ -1,18 +1,30 @@
 import { randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
+import * as Lowdb from 'lowdb';
+import FileSync from 'lowdb/adapters/FileSync';
 import * as path from 'path';
-import { Database, OPEN_CREATE, OPEN_READWRITE, RunResult } from 'sqlite3';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { /*IExperimentsManager,*/ IPathUtils } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 import { IDigestStorage } from '../types';
 
-// Our implementation of the IDigestStorage interface, which internally uses a SQLite database
+type DigestEntry = {
+    signature: string;
+    algorithm: string;
+    timestamp: string;
+};
+type Schema = {
+    nbsignatures: DigestEntry[];
+};
+
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
+    public get key() {
+        return this._key!;
+    }
     private defaultDatabaseLocation: string;
-    private db: Database | undefined;
+    private db: Lowdb.LowdbSync<Schema> | undefined;
     private _key: string | undefined;
 
     constructor(
@@ -23,76 +35,29 @@ export class DigestStorage implements IDigestStorage {
         this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
     }
 
-    public get key() {
-        return this._key!;
-    }
-
-    public async saveDigest(digest: string, algorithm: string): Promise<void> {
-        await this.initDb();
+    public async saveDigest(signature: string, algorithm: string) {
+        this.initDb();
         await this.initKey();
-        return new Promise((resolve, reject) => {
-            this.db!.run(
-                `INSERT INTO nbsignatures (algorithm, signature, last_seen);
-                VALUES (${algorithm}, '${digest}', ${Date.now().toString()});`,
-                (_runResult: RunResult, err: Error) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                }
-            );
-        });
+        this.db!.get('nbsignatures').push({ signature, algorithm, timestamp: Date.now().toString() }).write();
     }
 
-    public async containsDigest(digest: string, algorithm: string): Promise<boolean> {
-        await this.initDb();
+    public async containsDigest(signature: string, algorithm: string) {
+        this.initDb();
         await this.initKey();
-        return new Promise((resolve, reject) => {
-            this.db!.get(
-                `SELECT * FROM nbsignatures WHERE signature == ${digest} AND algorithm == ${algorithm}`,
-                (err, rowData) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(rowData === undefined);
-                    }
-                }
-            );
-        });
-    }
-
-    private async initDb() {
-        if (this.db === undefined) {
-            const db = new Database(
-                this.defaultDatabaseLocation,
-                (await this.fs.fileExists(this.defaultDatabaseLocation)) ? OPEN_READWRITE : OPEN_CREATE
-            );
-            db.serialize(() => {
-                db.exec(`CREATE TABLE IF NOT EXISTS nbsignatures (
-                    id integer PRIMARY KEY AUTOINCREMENT,
-                    algorithm text,
-                    signature text,
-                    path text,
-                    last_seen timestamp
-                );`);
-                db.exec(`CREATE INDEX IF NOT EXISTS algosig ON nbsignatures(algorithm, signature)`);
-            });
-            this.db = db;
-        }
+        return this.db!.get('nbsignatures').find({ signature, algorithm }) ? true : false;
     }
 
     /**
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    private async initKey() {
+    public async initKey() {
         // Determine user's OS
         const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
         // Attempt to read from standard keyfile location for that OS
         if (await this.fs.fileExists(defaultKeyFileLocation)) {
-            return (await this.fs.readData(defaultKeyFileLocation)).toString();
+            this._key = await this.fs.readFile(defaultKeyFileLocation);
         }
 
         // If it doesn't exist, create one
@@ -102,6 +67,14 @@ export class DigestStorage implements IDigestStorage {
         const key = randomBytes(1024);
         await this.fs.writeFile(defaultKeyFileLocation, key);
         this._key = key.toString();
+    }
+
+    private initDb() {
+        if (this.db === undefined) {
+            const adapter = new FileSync<Schema>(this.defaultDatabaseLocation);
+            this.db = Lowdb(adapter);
+            this.db.defaults({ nbsignatures: [] }).write();
+        }
     }
 
     /**

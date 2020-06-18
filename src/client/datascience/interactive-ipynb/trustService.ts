@@ -18,6 +18,7 @@ export class TrustService implements ITrustService {
      * markdown will be rendered until notebook as a whole is marked trusted
      */
     public async isNotebookTrusted(notebookContents: string) {
+        await this.digestStorage.initKey();
         // Compute digest and see if notebook is trusted
         const digest = this.computeDigest(notebookContents);
         return this.digestStorage.containsDigest(digest, this.algorithm);
@@ -28,8 +29,8 @@ export class TrustService implements ITrustService {
      * It will add a new trusted checkpoint to the local database if it's safe to do so
      * I.e. if the notebook has already been trusted by the user
      */
-    public async updateTrust(notebookContents: string, notebookModelIsTrusted: boolean) {
-        if (notebookModelIsTrusted) {
+    public async updateNotebookTrust(notebookContents: string, isNotebookModelTrusted: boolean) {
+        if (isNotebookModelTrusted) {
             const digest = this.computeDigest(notebookContents);
             return this.digestStorage.saveDigest(digest, this.algorithm);
         }
