@@ -172,9 +172,20 @@ jobs:
     name: Ex2 Linux
     runs-on: "ubuntu-latest"
     steps:
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
       - uses: goanpeca/setup-miniconda@v1
         with:
           miniconda-version: "latest"
+      - uses: dschep/install-pipenv-action@v1
+        with:
+          version: 2018.11.26
+      - name: Pipenv version
+        run: |
+          pipenv --version
       - name: Bash
         shell: bash -l {0}
         run: |
@@ -186,10 +197,20 @@ jobs:
           conda info
           conda list
 
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
+
   example-2-mac:
     name: Ex2 Mac
     runs-on: "macos-latest"
     steps:
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
       - uses: goanpeca/setup-miniconda@v1
         with:
           miniconda-version: "latest"
@@ -208,6 +229,11 @@ jobs:
         run: |
           conda info
           conda list
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
   example-2-win:
     name: Ex2 Windows
