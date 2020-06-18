@@ -133,15 +133,15 @@ jobs:
           conda info
           conda list
 
-      - name: See if python is on PATH
-        run: |
-          python --version
-          python -c"import sys;print(sys.executable)"
+    #   - name: See if python is on PATH
+    #     run: |
+    #       python --version
+    #       python -c"import sys;print(sys.executable)"
 
-      - name: Use Python 2.7
-        uses: actions/setup-python@v2
-        with:
-          python-version: 2.7
+    #   - name: Use Python 2.7
+    #     uses: actions/setup-python@v2
+    #     with:
+    #       python-version: 2.7
 
       - name: See if python is on PATH
         run: |
