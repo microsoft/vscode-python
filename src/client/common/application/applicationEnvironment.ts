@@ -42,21 +42,6 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                 return;
         }
     }
-    public get vscodeUserDirectory() {
-        const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
-        switch (this.platform.osType) {
-            case OSType.OSX:
-                return path.join(this.pathUtils.home, 'Library', 'Application Support', vscodeFolderName, 'User');
-            case OSType.Linux:
-                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User');
-            case OSType.Windows:
-                return this.process.env.APPDATA
-                    ? path.join(this.process.env.APPDATA, vscodeFolderName, 'User')
-                    : undefined;
-            default:
-                return;
-        }
-    }
     public get appName(): string {
         return vscode.env.appName;
     }

@@ -3,8 +3,8 @@ import { inject, injectable } from 'inversify';
 import * as Lowdb from 'lowdb';
 import * as FileSync from 'lowdb/adapters/FileSync';
 import * as path from 'path';
-import { IApplicationEnvironment } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
+import { IExtensionContext } from '../../common/types';
 import { IDigestStorage } from '../types';
 
 type DigestEntry = {
@@ -28,7 +28,7 @@ export class DigestStorage implements IDigestStorage {
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IApplicationEnvironment) private readonly applicationEnvironment: IApplicationEnvironment
+        @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
         this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
     }
@@ -80,7 +80,7 @@ export class DigestStorage implements IDigestStorage {
 
     private getDefaultDatabaseLocation() {
         const dbName = 'nbsignatures.json';
-        const dir = this.applicationEnvironment.vscodeUserDirectory;
+        const dir = this.extensionContext.globalStoragePath;
         if (dir) {
             return path.join(dir, dbName);
         }
@@ -89,7 +89,7 @@ export class DigestStorage implements IDigestStorage {
 
     private getDefaultKeyFileLocation() {
         const keyfileName = 'nbsecret';
-        const dir = this.applicationEnvironment.vscodeUserDirectory;
+        const dir = this.extensionContext.globalStoragePath;
         if (dir) {
             return path.join(dir, keyfileName);
         }
