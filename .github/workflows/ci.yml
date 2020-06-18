@@ -153,15 +153,15 @@ jobs:
           printenv
         shell: bash
 
-      - name: See if python3 is installed
-        run: |
-          python3 -c"import sys;print(sys.executable)"
-          python3 --version
-
       - name: Use Python 3.7
         uses: actions/setup-python@v2
         with:
           python-version: 3.7
+
+      - name: Show all env vars
+        run: |
+          printenv
+        shell: bash
 
       - name: See if python is on PATH
         run: |
