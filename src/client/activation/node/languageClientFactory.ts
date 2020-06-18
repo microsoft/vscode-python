@@ -20,7 +20,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
-    ) { }
+    ) {}
 
     public async createLanguageClient(
         resource: Resource,
