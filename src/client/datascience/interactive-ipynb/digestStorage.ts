@@ -3,9 +3,8 @@ import { inject, injectable } from 'inversify';
 import * as Lowdb from 'lowdb';
 import FileSync from 'lowdb/adapters/FileSync';
 import * as path from 'path';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { /*IExperimentsManager,*/ IPathUtils } from '../../common/types';
-import { OSType } from '../../common/utils/platform';
+import { IApplicationEnvironment } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IDigestStorage } from '../types';
 
 type DigestEntry = {
@@ -29,8 +28,7 @@ export class DigestStorage implements IDigestStorage {
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IApplicationEnvironment) private readonly applicationEnvironment: IApplicationEnvironment
     ) {
         this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
     }
@@ -77,41 +75,21 @@ export class DigestStorage implements IDigestStorage {
         }
     }
 
-    /**
-     * Default Jupyter database locations:
-     * Linux:   ~/.local/share/jupyter/nbsignatures.db
-     * OS X:    ~/Library/Jupyter/nbsignatures.db
-     * Windows: %APPDATA%/jupyter/nbsignatures.db
-     */
     private getDefaultDatabaseLocation() {
-        switch (this.platformService.osType) {
-            case OSType.Windows:
-                return path.join('%APPDATA%', 'jupyter', 'nbsignatures.db');
-            case OSType.OSX:
-                return path.join(this.pathUtils.home, 'Library', 'Jupyter', 'nbsignatures.db');
-            case OSType.Linux:
-                return path.join(this.pathUtils.home, '.local', 'share', 'jupyter', 'nbsignatures.db');
-            default:
-                throw new Error('Not Supported');
+        const dbName = 'nbsignatures.json';
+        const dir = this.applicationEnvironment.vscodeUserDirectory;
+        if (dir) {
+            return path.join(dir, dbName);
         }
+        throw new Error('Unable to locate database');
     }
 
-    /**
-     * Default Jupyter secret key locations:
-     * Linux:   ~/.local/share/jupyter/notebook_secret
-     * OS X:    ~/Library/Jupyter/notebook_secret
-     * Windows: %APPDATA%/jupyter/notebook_secret
-     */
     private getDefaultKeyFileLocation() {
-        switch (this.platformService.osType) {
-            case OSType.Windows:
-                return path.join('%APPDATA%', 'jupyter', 'notebook_secret');
-            case OSType.OSX:
-                return path.join(this.pathUtils.home, 'Library', 'Jupyter', 'notebook_secret');
-            case OSType.Linux:
-                return path.join(this.pathUtils.home, '.local', 'share', 'jupyter', 'notebook_secret');
-            default:
-                throw new Error('Not Supported');
+        const keyfileName = 'nbsecret';
+        const dir = this.applicationEnvironment.vscodeUserDirectory;
+        if (dir) {
+            return path.join(dir, keyfileName);
         }
+        throw new Error('Unable to locate keyfile');
     }
 }

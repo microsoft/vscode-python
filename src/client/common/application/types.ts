@@ -1002,6 +1002,13 @@ export interface IApplicationEnvironment {
      */
     readonly userSettingsFile: string | undefined;
     /**
+     * Gets the full path to the user folder in VS Code. (may or may not exist).
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly vscodeUserDirectory: string | undefined;
+    /**
      * The detected default shell for the extension host, this is overridden by the
      * `terminal.integrated.shell` setting for the extension host's platform.
      *
