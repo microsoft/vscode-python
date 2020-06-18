@@ -193,28 +193,45 @@ export enum Telemetry {
     /**
      * User clicked export as UI button
      */
-    ClickedExportAs = 'DATASCIENCE.CLICKED_EXPORT_AS',
+    ClickedExportNotebookAs = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS',
+    /**
+     * User clicked export to python quick pick button
+     */
+    ClickedExportNotebookAsPython = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_PYTHON',
+    /**
+     * User clicked expot to html quick pick button
+     */
+    ClickedExportNotebookAsHTML = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_HTML',
     /**
      * User successfully exported to HTML
      */
-    ExportNotebookAsHTML = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML',
+    ExportedNotebookAsHTML = 'DATASCIENCE.EXPORTED_NOTEBOOK_AS_HTML',
     /**
      * User invokes export to html from the command pallet
      */
     ExportNotebookAsHTMLCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML_COMMAND',
     /**
-     * User opens their exported HTML document
+     * User opens their exported HTML document from the prompt
      */
     OpenedExportedNotebookHTML = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK_HTML',
     /**
+     * Didn't open exported HTML or prompt expired
+     */
+    DidNotOpenExportedNotebookHTML = 'DATASCIENCE.DID_NOT_OPEN_EXPORTED_NOTEBOOK_HTML',
+    /**
      * User successfully exported notebook to Python
      */
-    ExportNotebookAsPython = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON',
+    ExportedNotebookAsPython = 'DATASCIENCE.EXPORTED_NOTEBOOK_AS_PYTHON',
     /**
      * User invokes export to Python from the command pallet
      */
     ExportNotebookAsPythonCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON_COMMAND',
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+    /**
+     * User did not select a file path, hence operation cancelled
+     */
+    ExportNotebookAsPythonCancelled = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON_FAILED',
+    ExportNotebookAsHTMLCancelled = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML_FAILED',
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',

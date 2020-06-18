@@ -3,6 +3,8 @@ import * as path from 'path';
 import { Memento, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
 import { ExportFormat } from './types';
 
@@ -56,8 +58,25 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         const uri = await this.applicationShell.showSaveDialog(options);
         if (uri) {
             await this.updateFileSaveLocation(uri);
+        } else {
+            this.sendCancelledTelemetry(format);
         }
         return uri;
+    }
+
+    private sendCancelledTelemetry(format: ExportFormat) {
+        switch (format) {
+            case ExportFormat.python:
+                sendTelemetryEvent(Telemetry.ExportNotebookAsPythonCancelled);
+                break;
+
+            case ExportFormat.html:
+                sendTelemetryEvent(Telemetry.ExportNotebookAsHTMLCancelled);
+                break;
+
+            default:
+                break;
+        }
     }
 
     private getLastFileSaveLocation(): Uri {

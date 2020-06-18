@@ -69,7 +69,7 @@ export class ExportCommands implements IDisposable {
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu
-            sendTelemetryEvent(Telemetry.ClickedExportAs);
+            sendTelemetryEvent(Telemetry.ClickedExportNotebookAs);
             const pickedItem = await this.showExportQuickPickMenu(model).then((item) => item);
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -101,12 +101,18 @@ export class ExportCommands implements IDisposable {
             {
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
-                handler: () => this.commandManager.executeCommand(Commands.ExportAsPythonScript, model)
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsPython);
+                    this.commandManager.executeCommand(Commands.ExportAsPythonScript, model);
+                }
             },
             {
                 label: DataScience.exportHTMLQuickPickLabel(),
                 picked: false,
-                handler: () => this.commandManager.executeCommand(Commands.ExportToHTML, model)
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsHTML);
+                    this.commandManager.executeCommand(Commands.ExportToHTML, model);
+                }
             }
             //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
         ];

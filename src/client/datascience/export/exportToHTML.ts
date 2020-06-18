@@ -8,7 +8,6 @@ import { ExportBase } from './exportBase';
 @injectable()
 export class ExportToHTML extends ExportBase {
     public async export(source: Uri, target: Uri): Promise<void> {
-        sendTelemetryEvent(Telemetry.ExportNotebookAsHTML);
         const args = [
             source.fsPath,
             '--to',
@@ -19,5 +18,6 @@ export class ExportToHTML extends ExportBase {
             path.dirname(target.fsPath)
         ];
         await this.executeCommand(source, args);
+        sendTelemetryEvent(Telemetry.ExportedNotebookAsHTML);
     }
 }
