@@ -203,15 +203,25 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             />
                         </ImageButton>
                     </div>
-                    <KernelSelection
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={this.props.selectServer}
-                        selectKernel={this.props.selectKernel}
-                    />
+                    {this.renderKernelSelection()}
                 </div>
             </div>
+        );
+    }
+
+    private renderKernelSelection() {
+        if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
+            return;
+        }
+
+        return (
+            <KernelSelection
+                baseTheme={this.props.baseTheme}
+                font={this.props.font}
+                kernel={this.props.kernel}
+                selectServer={this.props.selectServer}
+                selectKernel={this.props.selectKernel}
+            />
         );
     }
 
