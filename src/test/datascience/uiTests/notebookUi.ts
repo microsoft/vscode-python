@@ -59,6 +59,11 @@ export class NotebookEditorUI extends BaseWebUI {
         return items[cellIndex];
     }
     private async getMainToolbarButton(button: MainToolbarButton): Promise<ElementHandle<Element>> {
+        // First wait for the toolbar button to be visible.
+        await this.page!.waitForFunction(
+            `document.querySelectorAll('.toolbar-menu-bar button[role=button]').length && document.querySelectorAll('.toolbar-menu-bar button[role=button]')[${button}].clientHeight != 0`
+        );
+        // Then eval the button
         const buttons = await this.page!.$$('.toolbar-menu-bar button[role=button]');
         if (buttons.length === 0) {
             assert.fail('Main toolbar Buttons not available');

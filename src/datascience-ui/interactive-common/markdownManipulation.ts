@@ -4,6 +4,16 @@
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
 
+export function fixMarkdown(input: string, wrapSingles: boolean = false): string {
+    const latexFixed = fixLatex(input, wrapSingles);
+
+    try {
+        return fixLinks(latexFixed);
+    } catch {
+        return latexFixed;
+    }
+}
+
 // Adds '$$' to latex formulas that don't have a '$', allowing users to input the formula directly.
 //
 // The general algorithm here is:
@@ -13,9 +23,10 @@ const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/es
 //
 // LaTeX seems to follow the pattern of \begin{name} or is escaped with $$ or $. See here for a bunch of examples:
 // https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Typesetting%20Equations.html
-export function fixLatexEquations(input: string, wrapSingles: boolean = false): string {
+export function fixLatex(input: string, wrapSingles: boolean = false): string {
     const output: string[] = [];
 
+    // change latex
     // Search for begin/end pairs, outputting as we go
     let start = 0;
 
@@ -94,5 +105,41 @@ export function fixLatexEquations(input: string, wrapSingles: boolean = false): 
             start = input.length;
         }
     }
+
     return output.join('');
+}
+
+// Look for HTML 'A' tags to replace them with the Markdown format
+export function fixLinks(input: string): string {
+    let linkStartIndex = input.indexOf('<a');
+    while (linkStartIndex !== -1) {
+        const linkEnd = '</a>';
+        const linkEndIndex = input.indexOf(linkEnd, linkStartIndex);
+
+        if (linkEndIndex !== -1) {
+            const hferIndex = input.indexOf('href', linkStartIndex);
+
+            const quoteSearch1 = input.indexOf("'", hferIndex);
+            const urlStartIndex = quoteSearch1 === -1 ? input.indexOf('"', hferIndex) : quoteSearch1;
+
+            const quoteSearch2 = input.indexOf("'", urlStartIndex + 1);
+            const urlEndIndex = quoteSearch2 === -1 ? input.indexOf('"', urlStartIndex + 1) : quoteSearch2;
+
+            const url = input.substring(urlStartIndex + 1, urlEndIndex);
+
+            const textStartIndex = input.indexOf('>', linkStartIndex);
+
+            if (textStartIndex < linkEndIndex) {
+                const text = input.substring(textStartIndex + 1, linkEndIndex);
+                input = input.replace(
+                    input.substring(linkStartIndex, linkEndIndex + linkEnd.length),
+                    `[${text}](${url})`
+                );
+            }
+        }
+
+        linkStartIndex = input.indexOf('<a', linkStartIndex + 1);
+    }
+
+    return input;
 }

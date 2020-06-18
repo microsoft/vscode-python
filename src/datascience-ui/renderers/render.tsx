@@ -7,7 +7,7 @@ import type { nbformat } from '@jupyterlab/coreutils';
 import type { JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
 import { concatMultilineStringOutput } from '../common';
-import { fixLatexEquations } from '../interactive-common/latexManipulation';
+import { fixMarkdown } from '../interactive-common/markdownManipulation';
 import { getTransform } from '../interactive-common/transforms';
 
 export interface ICellOutputProps {
@@ -26,7 +26,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         // Fixup latex to make sure it has the requisite $$ around it
         if (this.props.mimeType! === 'text/latex') {
-            data = fixLatexEquations(concatMultilineStringOutput(data as nbformat.MultilineString), true);
+            data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
         }
 
         const Transform = getTransform(this.props.mimeType!);

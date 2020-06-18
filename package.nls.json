@@ -69,6 +69,7 @@
     "python.command.python.datascience.selectjupytercommandline.title": "Specify Jupyter command line arguments",
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",
     "python.command.python.datascience.opennotebook.title": "Open in Notebook Editor",
+    "python.command.python.datascience.opennotebookInPreviewEditor.title": "Open in preview Notebook Editor",
     "python.command.python.datascience.importnotebookfile.title": "Convert to Python Script",
     "python.command.python.enableSourceMapSupport.title": "Enable Source Map Support For Extension Debugging",
     "python.command.python.datascience.exportoutputasnotebook.title": "Export Python Interactive Window as Jupyter Notebook",

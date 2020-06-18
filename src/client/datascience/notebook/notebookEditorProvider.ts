@@ -19,12 +19,14 @@ import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
+import { Commands } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
 import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers';
 import { isJupyterNotebook } from './helpers/helpers';
+import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
 import { INotebookExecutionService } from './types';
 
@@ -76,6 +78,20 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             this.vscodeNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveVsCodeNotebookEditor, this)
         );
         this.disposables.push(this.vscodeNotebook.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this));
+        this.disposables.push(
+            this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
+                if (uri) {
+                    const integration = serviceContainer.get<NotebookIntegration>(NotebookIntegration);
+                    // If user is not meant to be using VSC Notebooks, and it is not enabled,
+                    // then enable it for side by side usage.
+                    if (!integration.isEnabled && !useVSCodeNotebookEditorApi) {
+                        // At this point we need to reload VS Code, hence return and do not try to load nb, else it will fail.
+                        return integration.enableSideBySideUsage();
+                    }
+                    this.open(uri).ignoreErrors();
+                }
+            })
+        );
 
         // Swap the uris.
         this.disposables.push(
@@ -136,9 +152,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const uri = doc.uri;
         const model = await this.storage.load(uri);
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: When VSC supports hot exit, they'll open a notebook without invoking our code to provide the contents.
-        // We need to handle those situations (cuz at that point we should load the old model and update it with the new model in the notebook).
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
