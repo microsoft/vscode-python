@@ -722,7 +722,7 @@ export class NativeEditorStorage implements INotebookStorage {
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return new NativeEditorNotebookModel(false, this.useNativeEditorApi, file, []);
+            return new NativeEditorNotebookModel(true, this.useNativeEditorApi, file, []);
         }
     }
 

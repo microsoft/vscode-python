@@ -40,7 +40,8 @@ export class DigestStorage implements IDigestStorage {
 
     public containsDigest(signature: string, algorithm: string) {
         this.initDb();
-        return this.db!.get('nbsignatures').find({ signature, algorithm }) !== undefined;
+        const val = this.db!.get('nbsignatures').find({ signature, algorithm }).value();
+        return val !== undefined;
     }
 
     /**
@@ -71,7 +72,9 @@ export class DigestStorage implements IDigestStorage {
         if (this.db === undefined) {
             const adapter = new FileSync<Schema>(this.defaultDatabaseLocation);
             this.db = Lowdb(adapter);
-            this.db.defaults({ nbsignatures: [] }).write();
+            if (this.db.get('nbsignatures') === undefined) {
+                this.db.defaults({ nbsignatures: [] }).write();
+            }
         }
     }
 
