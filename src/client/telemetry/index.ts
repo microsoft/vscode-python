@@ -1646,8 +1646,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
     [Telemetry.ExportNotebookAsSuccessful]: { format: ExportFormat };
     [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
-    [Telemetry.OpenedExportedNotebookHTML]: never | undefined;
-    [Telemetry.DidNotOpenExportedNotebookHTML]: never | undefined;
+    [Telemetry.OpenedExportedNotebook]: { format: ExportFormat };
+    [Telemetry.DidNotOpenExportedNotebook]: { format: ExportFormat };
     [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
     [Telemetry.ExportNotebookAsCancelled]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;

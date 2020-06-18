@@ -199,7 +199,7 @@ export enum Telemetry {
      */
     ClickedExportNotebookAsQuickPick = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK',
     /**
-     * User successfully exported notebook
+     * Successfully exported notebook
      */
     ExportNotebookAsSuccessful = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_SUCCESSFUL',
     /**
@@ -207,13 +207,13 @@ export enum Telemetry {
      */
     ExportNotebookAsCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND',
     /**
-     * User opens their exported HTML document from the prompt
+     * User opens their exported document from the prompt
      */
-    OpenedExportedNotebookHTML = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK_HTML',
+    OpenedExportedNotebook = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK',
     /**
-     * Didn't open exported HTML or prompt expired
+     * User didn't open exported or prompt expired
      */
-    DidNotOpenExportedNotebookHTML = 'DATASCIENCE.DID_NOT_OPEN_EXPORTED_NOTEBOOK_HTML',
+    DidNotOpenExportedNotebook = 'DATASCIENCE.DID_NOT_OPEN_EXPORTED_NOTEBOOK',
     /**
      * An export to a specific format failed
      */
