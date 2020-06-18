@@ -3,8 +3,6 @@ import * as path from 'path';
 import { Memento, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
 import { ExportFormat } from './types';
 
