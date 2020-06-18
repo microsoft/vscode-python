@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
 import * as Lowdb from 'lowdb';
-import FileSync from 'lowdb/adapters/FileSync';
+import * as FileSync from 'lowdb/adapters/FileSync';
 import * as path from 'path';
 import { IApplicationEnvironment } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -56,15 +56,15 @@ export class DigestStorage implements IDigestStorage {
         // Attempt to read from standard keyfile location for that OS
         if (await this.fs.fileExists(defaultKeyFileLocation)) {
             this._key = await this.fs.readFile(defaultKeyFileLocation);
+        } else {
+            // If it doesn't exist, create one
+            // Key must be generated from a cryptographically secure pseudorandom function:
+            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+            // No callback is provided so random bytes will be generated synchronously
+            const key = randomBytes(1024).toString('hex');
+            await this.fs.writeFile(defaultKeyFileLocation, key);
+            this._key = key;
         }
-
-        // If it doesn't exist, create one
-        // Key must be generated from a cryptographically secure pseudorandom function:
-        // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-        // No callback is provided so random bytes will be generated synchronously
-        const key = randomBytes(1024).toString('hex');
-        await this.fs.writeFile(defaultKeyFileLocation, key);
-        this._key = key;
     }
 
     private initDb() {
