@@ -168,6 +168,12 @@ suite('Application Diagnostics - Check Test Settings', () => {
         assert.ok(!needsToBeFixed);
         verify(fs.readFile(__filename)).once();
     });
+    test('Verify `python.jediEnabled` is found in user settings', async () => {
+        when(fs.readFile(__filename)).thenResolve('"python.jediEnabled": false');
+        const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
+        assert.ok(needsToBeFixed);
+        verify(fs.readFile(__filename)).once();
+    });
 
     [
         {
