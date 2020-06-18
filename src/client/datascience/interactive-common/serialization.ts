@@ -123,27 +123,22 @@ export function serializeLanguageConfiguration(
     configuration: LanguageConfiguration | undefined
 ): ILanguageConfigurationDto {
     return {
-        comments: configuration?.comments,
-        brackets: configuration?.brackets,
+        ...configuration,
         wordPattern: configuration?.wordPattern ? _serializeRegExp(configuration.wordPattern) : undefined,
         indentationRules: configuration?.indentationRules
             ? _serializeIndentationRule(configuration.indentationRules)
             : undefined,
-        onEnterRules: configuration?.onEnterRules ? _serializeOnEnterRules(configuration.onEnterRules) : undefined,
-        __electricCharacterSupport: configuration?.__electricCharacterSupport,
-        __characterPairSupport: configuration?.__characterPairSupport
+        onEnterRules: configuration?.onEnterRules ? _serializeOnEnterRules(configuration.onEnterRules) : undefined
     };
 }
 
 export function deserializeLanguageConfiguration(configuration: ILanguageConfigurationDto): LanguageConfiguration {
     return {
-        comments: configuration.comments,
-        brackets: configuration.brackets,
+        ...configuration,
         wordPattern: configuration.wordPattern ? _reviveRegExp(configuration.wordPattern) : undefined,
         indentationRules: configuration.indentationRules
             ? _reviveIndentationRule(configuration.indentationRules)
             : undefined,
-        onEnterRules: configuration.onEnterRules ? _reviveOnEnterRules(configuration.onEnterRules) : undefined,
-        __electricCharacterSupport: undefined
+        onEnterRules: configuration.onEnterRules ? _reviveOnEnterRules(configuration.onEnterRules) : undefined
     };
 }
