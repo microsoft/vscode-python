@@ -59,24 +59,9 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         if (uri) {
             await this.updateFileSaveLocation(uri);
         } else {
-            this.sendCancelledTelemetry(format);
+            sendTelemetryEvent(Telemetry.ExportNotebookAsCancelled, undefined, { format: format });
         }
         return uri;
-    }
-
-    private sendCancelledTelemetry(format: ExportFormat) {
-        switch (format) {
-            case ExportFormat.python:
-                sendTelemetryEvent(Telemetry.ExportNotebookAsPythonCancelled);
-                break;
-
-            case ExportFormat.html:
-                sendTelemetryEvent(Telemetry.ExportNotebookAsHTMLCancelled);
-                break;
-
-            default:
-                break;
-        }
     }
 
     private getLastFileSaveLocation(): Uri {

@@ -60,7 +60,7 @@ export class ExportCommands implements IDisposable {
             model = activeEditor.model;
 
             if (exportMethod) {
-                this.sendCommandTelemetry(exportMethod);
+                sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }
         }
 
@@ -77,32 +77,15 @@ export class ExportCommands implements IDisposable {
         }
     }
 
-    private sendCommandTelemetry(format: ExportFormat) {
-        switch (format) {
-            case ExportFormat.python:
-                sendTelemetryEvent(Telemetry.ExportNotebookAsPythonCommand);
-                break;
-
-            case ExportFormat.html:
-                sendTelemetryEvent(Telemetry.ExportNotebookAsHTMLCommand);
-                break;
-
-            case ExportFormat.pdf:
-                // will be added when pdf is working
-                break;
-
-            default:
-                break;
-        }
-    }
-
     private getExportQuickPickItems(model: INotebookModel): IExportQuickPickItem[] {
         return [
             {
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
                 handler: () => {
-                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsPython);
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.python
+                    });
                     this.commandManager.executeCommand(Commands.ExportAsPythonScript, model);
                 }
             },
@@ -110,7 +93,9 @@ export class ExportCommands implements IDisposable {
                 label: DataScience.exportHTMLQuickPickLabel(),
                 picked: false,
                 handler: () => {
-                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsHTML);
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.html
+                    });
                     this.commandManager.executeCommand(Commands.ExportToHTML, model);
                 }
             }

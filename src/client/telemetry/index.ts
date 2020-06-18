@@ -20,6 +20,7 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry
 } from '../datascience/constants';
+import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -1642,17 +1643,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExportPythonFileInteractive]: never | undefined;
     [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
     [Telemetry.ClickedExportNotebookAs]: never | undefined;
-    [Telemetry.ClickedExportNotebookAsPython]: never | undefined;
-    [Telemetry.ClickedExportNotebookAsHTML]: never | undefined;
-    [Telemetry.ExportedNotebookAsHTML]: never | undefined;
-    [Telemetry.ExportNotebookAsHTMLCommand]: never | undefined;
+    [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsSuccessful]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
     [Telemetry.OpenedExportedNotebookHTML]: never | undefined;
     [Telemetry.DidNotOpenExportedNotebookHTML]: never | undefined;
-    [Telemetry.ExportedNotebookAsPython]: never | undefined;
-    [Telemetry.ExportNotebookAsPythonCommand]: never | undefined;
-    [Telemetry.ExportNotebookAsFailed]: never | undefined;
-    [Telemetry.ExportNotebookAsPythonCancelled]: never | undefined;
-    [Telemetry.ExportNotebookAsHTMLCancelled]: never | undefined;
+    [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsCancelled]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
