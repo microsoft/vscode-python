@@ -1887,6 +1887,12 @@
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
                     "scope": "resource"
                 },
+                "python.dataScience.showKernelSelectionOnInteractiveWindow": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Set to true to be able to change the kernel on the Interactive Window with the top toolbar when using a local Jupyter Server. You can also change the kernel on the status bar.",
+                    "scope": "resource"
+                },
                 "python.dataScience.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
