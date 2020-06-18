@@ -69,6 +69,7 @@ export class ExportCommands implements IDisposable {
         } else {
             // if we don't have an export method we need to ask for one and display the
             // quickpick menu
+            sendTelemetryEvent(Telemetry.ClickedExportAs);
             const pickedItem = await this.showExportQuickPickMenu(model).then((item) => item);
             if (pickedItem !== undefined) {
                 pickedItem.handler();

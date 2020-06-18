@@ -186,7 +186,7 @@ export enum Telemetry {
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     /**
-     * Exporting from the interative window
+     * Exporting from the interactive window
      */
     ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_INTERACTIVE',
     ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT_INTERACTIVE',
@@ -195,11 +195,11 @@ export enum Telemetry {
      */
     ClickedExportAs = 'DATASCIENCE.CLICKED_EXPORT_AS',
     /**
-     * User succesfully exported to HTML
+     * User successfully exported to HTML
      */
     ExportNotebookAsHTML = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML',
     /**
-     * User invokes export to html from the command pallete
+     * User invokes export to html from the command pallet
      */
     ExportNotebookAsHTMLCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_HTML_COMMAND',
     /**
@@ -207,11 +207,11 @@ export enum Telemetry {
      */
     OpenedExportedNotebookHTML = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK_HTML',
     /**
-     * User succesfully exported notebook to Python
+     * User successfully exported notebook to Python
      */
     ExportNotebookAsPython = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON',
     /**
-     * User invokes export to Python from the command pallete
+     * User invokes export to Python from the command pallet
      */
     ExportNotebookAsPythonCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_PYTHON_COMMAND',
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
