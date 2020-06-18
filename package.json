@@ -3248,7 +3248,6 @@
         "deemon": "^1.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
-        "electron-rebuild": "^1.11.0",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
         "eslint-config-prettier": "^6.9.0",
