@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-
 import { CancellationToken, CompletionItem, ProviderResult } from 'vscode';
 // tslint:disable-next-line: import-name
 import ProtocolCompletionItem from 'vscode-languageclient/lib/common/protocolCompletionItem';
 import { CompletionResolveRequest } from 'vscode-languageclient/node';
-
-// tslint:disable-next-line: import-name
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
