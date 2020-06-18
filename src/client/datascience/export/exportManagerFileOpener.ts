@@ -5,6 +5,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -29,6 +30,7 @@ export class ExportManagerFileOpener implements IExportManager {
         try {
             uri = await this.manager.export(format, model);
         } catch (e) {
+            traceError('Export failed', e);
             await this.showExportFailed(e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
             return;
@@ -38,19 +40,19 @@ export class ExportManagerFileOpener implements IExportManager {
 
         if (!uri) {
             // if export didn't fail but no uri returned then user cancelled operation
-            sendTelemetryEvent(Telemetry.ExportNotebookAsCancelled, undefined, { format: format });
+            sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, cancelled: true });
             return;
         }
 
-        sendTelemetryEvent(Telemetry.ExportNotebookAsSuccessful, undefined, { format: ExportFormat.python });
+        sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: ExportFormat.python, successful: true });
         if (format === ExportFormat.python) {
             await this.openPythonFile(uri);
         } else {
             const opened = await this.askOpenFile(uri);
             if (opened) {
-                sendTelemetryEvent(Telemetry.OpenedExportedNotebook, undefined, { format: format });
+                sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, opened: true });
             } else {
-                sendTelemetryEvent(Telemetry.DidNotOpenExportedNotebook, undefined, { format: format });
+                sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, { format: format, opened: false });
             }
         }
     }

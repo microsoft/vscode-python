@@ -1642,14 +1642,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExportNotebookInteractive]: never | undefined;
     [Telemetry.ExportPythonFileInteractive]: never | undefined;
     [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
-    [Telemetry.ClickedExportNotebookAs]: never | undefined;
     [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
-    [Telemetry.ExportNotebookAsSuccessful]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
     [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
-    [Telemetry.OpenedExportedNotebook]: { format: ExportFormat };
-    [Telemetry.DidNotOpenExportedNotebook]: { format: ExportFormat };
     [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
-    [Telemetry.ExportNotebookAsCancelled]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;

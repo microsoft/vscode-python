@@ -165,7 +165,7 @@ export enum Telemetry {
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
     RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK_INTERACTIVE',
+    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
     /**
@@ -188,40 +188,25 @@ export enum Telemetry {
     /**
      * Exporting from the interactive window
      */
-    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_INTERACTIVE',
-    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT_INTERACTIVE',
-    /**
-     * User clicked export as UI button
-     */
-    ClickedExportNotebookAs = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS',
+    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE',
+    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
     /**
      * User clicked export as quick pick button
      */
     ClickedExportNotebookAsQuickPick = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK',
     /**
-     * Successfully exported notebook
+     * exported a notebook
      */
-    ExportNotebookAsSuccessful = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_SUCCESSFUL',
+    ExportNotebookAs = 'DATASCIENCE.EXPORT_NOTEBOOK_AS',
     /**
      * User invokes export as format from command pallet
      */
     ExportNotebookAsCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND',
     /**
-     * User opens their exported document from the prompt
-     */
-    OpenedExportedNotebook = 'DATASCIENCE.OPENED_EXPORTED_NOTEBOOK',
-    /**
-     * User didn't open exported or prompt expired
-     */
-    DidNotOpenExportedNotebook = 'DATASCIENCE.DID_NOT_OPEN_EXPORTED_NOTEBOOK',
-    /**
      * An export to a specific format failed
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
-    /**
-     * User did not select a file path, hence operation cancelled
-     */
-    ExportNotebookAsCancelled = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_CANCELLED',
+
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
