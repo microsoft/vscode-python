@@ -62,6 +62,26 @@ suite('Linter Info - Pylint', () => {
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
+    test('Should inspect the value of linting.pylintEnabled when using Language Server', async () => {
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
+        let inspectedSetting = '';
+
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: true },
+            languageServer: LanguageServerType.Microsoft
+        } as any);
+
+        const pythonConfig = {
+            // tslint:disable-next-line:no-empty
+            inspect: (setting: string) => {
+                inspectedSetting = setting;
+            }
+        };
+        when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+
+        expect(linterInfo.isEnabled()).to.be.false;
+        expect(inspectedSetting).to.equal('linting.pylintEnabled');
+    });
     const testsForisEnabled = [
         {
             testName: 'When workspaceFolder setting is provided',
