@@ -331,7 +331,8 @@ export namespace Creation {
             loadTotal: arg.payload.data.cells.length,
             undoStack: [],
             cellVMs: vms,
-            loaded: true
+            loaded: true,
+            isNotebookTrusted: arg.payload.data.isNotebookTrusted!
         };
     }
 
