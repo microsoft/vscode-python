@@ -28,6 +28,7 @@ type INativeEditorDataProps = {
     kernel: IServerState;
     selectionFocusedInfo: SelectionAndFocusedInfo;
     variablesVisible: boolean;
+    isNotebookTrusted: boolean;
 };
 export type INativeEditorToolbarProps = INativeEditorDataProps & {
     sendCommand: typeof actionCreators.sendCommand;

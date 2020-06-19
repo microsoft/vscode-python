@@ -88,7 +88,7 @@ export type IMainState = {
     monacoReady: boolean;
     loaded: boolean;
     kernel: IServerState;
-    notebookIsTrusted: boolean;
+    isNotebookTrusted: boolean;
 };
 
 export type SelectionAndFocusedInfo = {
@@ -196,7 +196,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             jupyterServerStatus: ServerStatus.NotStarted,
             language: PYTHON_LANGUAGE
         },
-        notebookIsTrusted: true
+        isNotebookTrusted: true
     };
 }
 
