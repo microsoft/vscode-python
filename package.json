@@ -1359,6 +1359,14 @@
                                     "type": "string"
                                 }
                             },
+                            "argsExpansion": {
+                                "enum": [
+                                    "none",
+                                    "shell"
+                                ],
+                                "description": "Whether to perform shell expansion on \"args\", or pass all values as is.",
+                                "default": "shell"
+                            },
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Automatically stop after launch.",
