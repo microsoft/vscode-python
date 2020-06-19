@@ -108,7 +108,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
                 break;
 
-            case IPyWidgetMessages.IPyWidgets_msg_handled:
+            case IPyWidgetMessages.IPyWidgets_msg_received:
                 this.onKernelSocketResponse(message.payload);
                 break;
 

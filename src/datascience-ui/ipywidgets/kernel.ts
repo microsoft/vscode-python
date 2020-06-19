@@ -307,7 +307,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
 
     private sendResponse(id: string) {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_received, {
             id
         });
     }

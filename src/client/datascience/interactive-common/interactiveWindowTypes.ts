@@ -156,7 +156,7 @@ export enum IPyWidgetMessages {
     IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
-    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
+    IPyWidgets_msg_received = 'IPyWidgets_msg_received',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
@@ -532,7 +532,7 @@ export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
-    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {

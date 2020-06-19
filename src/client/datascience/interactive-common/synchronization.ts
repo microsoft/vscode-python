@@ -230,7 +230,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.syncAcrossSameNotebooks,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_msg_handled]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_msg_received]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookResult]: MessageType.noIdea,
