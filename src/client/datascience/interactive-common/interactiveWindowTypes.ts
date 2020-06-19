@@ -531,7 +531,7 @@ export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
-    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string; registeredHook: boolean };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {

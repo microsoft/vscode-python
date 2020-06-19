@@ -77,6 +77,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     private lastHookedMessageId: string | undefined;
+    private msgRegisteredHook: boolean = false;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -245,6 +246,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     public handleMessage(type: string, payload?: any): boolean {
         // Handle messages as they come in. Note: Do not await anything here. THey have to be inorder.
         // If not, we could switch to message chaining or an observable instead.
+        this.msgRegisteredHook = false;
         switch (type) {
             case IPyWidgetMessages.IPyWidgets_MessageHookCall:
                 this.sendHookResult(payload);
@@ -278,6 +280,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
+        this.msgRegisteredHook = true;
+
         // Tell the other side about this.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
 
@@ -308,7 +312,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
     private sendResponse(id: string) {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_handled, {
-            id
+            id,
+            registeredHook: this.msgRegisteredHook
         });
     }
 

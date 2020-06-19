@@ -54,6 +54,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private totalWaitTime: number = 0;
     private totalWaitedMessages: number = 0;
     private hookCount: number = 0;
+
+    private messageHookDeferred: Deferred<boolean> | undefined;
     /**
      * This will be true if user has executed something that has resulted in the use of ipywidgets.
      * We make this determinination based on whether we see messages coming from backend kernel of a specific shape.
@@ -260,6 +262,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             }
         }
 
+        // IANHU: Just for trying out
+        const message2 = this.deserialize(data as any) as any;
+
+        if (message2?.header?.msg_type === 'comm_msg') {
+            if (message2?.content?.data?.state?.msg_id) {
+                this.messageHookDeferred = createDeferred<boolean>();
+            }
+        }
+
         const msgUuid = uuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
@@ -276,8 +287,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (this.isUsingIPyWidgets) {
             await promise.promise;
         }
+
+        // Wait here (don't allow any more messages to process) until we see our message hook come in
+        // IANHU: we can check the message ID here to be more safe
+        if (this.messageHookDeferred) {
+            traceError('**** awaited ****');
+            await this.messageHookDeferred.promise;
+        }
     }
-    private onKernelSocketResponse(payload: { id: string }) {
+    private onKernelSocketResponse(payload: { id: string; registeredHook: boolean }) {
         const pending = this.waitingMessageIds.get(payload.id);
         if (pending) {
             this.waitingMessageIds.delete(payload.id);
@@ -363,6 +381,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             const callback = this.messageHookCallback.bind(this);
             this.messageHooks.set(msgId, callback);
             this.notebook.registerMessageHook(msgId, callback);
+        }
+
+        if (this.messageHookDeferred) {
+            this.messageHookDeferred.resolve(true);
+            this.messageHookDeferred = undefined;
         }
     }
 
