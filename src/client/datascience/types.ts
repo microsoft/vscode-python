@@ -1017,7 +1017,6 @@ export interface INotebookModel {
     applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
-    clone(file: Uri): INotebookModel;
     /**
      * Dispose of the Notebook model.
      *
