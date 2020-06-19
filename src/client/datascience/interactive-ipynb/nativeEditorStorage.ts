@@ -19,8 +19,6 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-// tslint:disable-next-line:no-require-imports no-var-requires
-import cloneDeep = require('lodash/cloneDeep');
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
