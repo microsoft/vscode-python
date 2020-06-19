@@ -18,7 +18,8 @@ const progressMessages = {
     [ReportableAction.CheckingIfImportIsSupported]: DataScience.checkingIfImportIsSupported(), // Localize these later
     [ReportableAction.InstallingMissingDependencies]: DataScience.installingMissingDependencies(),
     [ReportableAction.ExportNotebookToPython]: DataScience.exportNotebookToPython(),
-    [ReportableAction.PerformingExport]: DataScience.performingExport()
+    [ReportableAction.PerformingExport]: DataScience.performingExport(),
+    [ReportableAction.ConvertingToPDF]: DataScience.convertingToPDF()
 };
 
 /**
