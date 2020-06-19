@@ -31,7 +31,7 @@ export class ExportManagerFileOpener implements IExportManager {
             uri = await this.manager.export(format, model);
         } catch (e) {
             traceError('Export failed', e);
-            await this.showExportFailed(e);
+            this.showExportFailed(e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
             return;
         } finally {
@@ -68,11 +68,13 @@ export class ExportManagerFileOpener implements IExportManager {
         await this.documentManager.showTextDocument(doc);
     }
 
-    private async showExportFailed(msg: string) {
-        await this.applicationShell.showErrorMessage(
-            // tslint:disable-next-line: messages-must-be-localized
-            `${getLocString('DataScience.failedExportMessage', 'Export failed')} ${msg}`
-        );
+    private showExportFailed(msg: string) {
+        this.applicationShell
+            .showErrorMessage(
+                // tslint:disable-next-line: messages-must-be-localized
+                `${getLocString('DataScience.failedExportMessage', 'Export failed')} ${msg}`
+            )
+            .then();
     }
 
     private async askOpenFile(uri: Uri): Promise<boolean> {
