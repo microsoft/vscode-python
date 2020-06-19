@@ -10,7 +10,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCellRangesFromDocument, ICellRange } from '../cellFactory';
+import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands, Identifiers } from '../constants';
 import {
     INotebookIdentity,
@@ -20,6 +20,7 @@ import {
 import {
     ICell,
     ICellHashProvider,
+    ICellRange,
     ICodeLensFactory,
     IFileHashes,
     IInteractiveWindowListener,
@@ -41,6 +42,7 @@ type CodeLensCacheData = {
  */
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
+    public cells: ICellRange[];
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -60,6 +62,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
+        this.cells = [];
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument.bind(this));
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings.bind(this));
     }
@@ -203,6 +206,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                 }
             });
         }
+
+        this.cells = cache.cellRanges;
 
         return [...cache.documentLenses, ...cache.gotoCellLens];
     }

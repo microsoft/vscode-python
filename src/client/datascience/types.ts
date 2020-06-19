@@ -632,6 +632,7 @@ export interface ICodeWatcher {
 
 export const ICodeLensFactory = Symbol('ICodeLensFactory');
 export interface ICodeLensFactory {
+    cells: ICellRange[];
     updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
 }
@@ -652,6 +653,18 @@ export interface ICell {
     state: CellState;
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
     extraLines?: number[];
+}
+
+// CellRange is used as the basis for creating new ICells.
+// Was only intended to aggregate together ranges to create an ICell
+// However the "range" aspect is useful when working with plain text document
+// Ultimately, it would probably be ideal to be ICell and change line to range.
+// Specificially see how this is being used for the ICodeLensFactory to
+// provide cells for the CodeWatcher to use.
+export interface ICellRange {
+    range: Range;
+    title: string;
+    cell_type: string;
 }
 
 export interface IInteractiveWindowInfo {

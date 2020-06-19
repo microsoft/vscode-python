@@ -12,7 +12,7 @@ import { IDataScienceSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { Identifiers } from './constants';
-import { CellState, ICell } from './types';
+import { CellState, ICell, ICellRange } from './types';
 
 function generateCodeCell(
     code: string[],
@@ -107,13 +107,6 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
     }
 
     return false;
-}
-
-// CellRange is used as the basis for creating new ICells. We only use it in this file.
-export interface ICellRange {
-    range: Range;
-    title: string;
-    cell_type: string;
 }
 
 export function generateCellsFromString(source: string, settings?: IDataScienceSettings): ICell[] {
