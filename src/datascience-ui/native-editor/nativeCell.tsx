@@ -60,7 +60,6 @@ interface INativeCellBaseProps {
     useCustomEditorApi: boolean;
     runningByLine: DebugState;
     supportsRunByLine: boolean;
-    notebookIsTrusted: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -258,7 +257,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell() && this.props.notebookIsTrusted) {
+        if (this.isCodeCell()) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
