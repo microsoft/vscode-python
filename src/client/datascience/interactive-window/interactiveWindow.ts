@@ -22,6 +22,7 @@ import {
     GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     IPersistentStateFactory,
@@ -113,7 +114,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -150,7 +152,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             experimentsManager,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            expService
         );
 
         // Send a telemetry event to indicate window is opening

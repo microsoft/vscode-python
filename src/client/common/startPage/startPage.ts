@@ -66,7 +66,8 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
             localize.StartPage.getStarted(),
             ViewColumn.One,
             false,
-            false
+            false,
+            Promise.resolve(false)
         );
         this.timer = new StopWatch();
     }

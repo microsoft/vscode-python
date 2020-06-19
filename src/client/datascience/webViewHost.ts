@@ -51,7 +51,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
         @unmanaged() protected readonly useCustomEditorApi: boolean,
-        @unmanaged() private readonly enableVariablesDuringDebugging: boolean
+        @unmanaged() private readonly enableVariablesDuringDebugging: boolean,
+        @unmanaged() private readonly hideKernelToolbarInInteractiveWindow: Promise<boolean>
     ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(
@@ -214,6 +215,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             },
             variableOptions: {
                 enableDuringDebugger: this.enableVariablesDuringDebugging
+            },
+            webviewExperiments: {
+                removeKernelToolbarInInteractiveWindow: await this.hideKernelToolbarInInteractiveWindow
             }
         };
     }

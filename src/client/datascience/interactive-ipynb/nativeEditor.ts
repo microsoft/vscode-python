@@ -34,6 +34,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     Resource,
@@ -179,7 +180,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(UseCustomEditorApi) useCustomEditorApi: boolean
+        @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -216,7 +218,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            expService
         );
         asyncRegistry.push(this);
 

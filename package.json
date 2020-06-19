@@ -1890,7 +1890,7 @@
                 "python.dataScience.showKernelSelectionOnInteractiveWindow": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Set to true to be able to change the kernel on the Interactive Window with the top toolbar when using a local Jupyter Server. You can also change the kernel on the status bar.",
+                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
                     "scope": "resource"
                 },
                 "python.dataScience.enableScrollingForCellOutputs": {
