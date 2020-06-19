@@ -560,8 +560,11 @@ export class NativeEditorStorage implements INotebookStorage {
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();
-        await this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8');
-        await this.trustService.updateNotebookTrust(contents, model.isTrusted);
+        const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
+        if (model.isTrusted) {
+            parallelize.push(this.trustService.trustNotebook(contents));
+        }
+        await Promise.all([parallelize]);
         model.update({
             source: 'user',
             kind: 'save',
@@ -573,8 +576,11 @@ export class NativeEditorStorage implements INotebookStorage {
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const old = model.file;
         const contents = model.getContent();
-        await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
-        await this.trustService.updateNotebookTrust(contents, model.isTrusted);
+        const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
+        if (model.isTrusted) {
+            parallelize.push(this.trustService.trustNotebook(contents));
+        }
+        await Promise.all([parallelize]);
         model.update({
             source: 'user',
             kind: 'saveAs',

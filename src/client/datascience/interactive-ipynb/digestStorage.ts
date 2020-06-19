@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
 import * as Lowdb from 'lowdb';
-import * as FileSync from 'lowdb/adapters/FileSync';
+import * as FileAsync from 'lowdb/adapters/FileAsync';
 import * as path from 'path';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
@@ -21,7 +21,7 @@ type Schema = {
 export class DigestStorage implements IDigestStorage {
     public key: Promise<string>;
     private defaultDatabaseLocation: string;
-    private db: Lowdb.LowdbSync<Schema> | undefined;
+    private db: Lowdb.LowdbAsync<Schema> | undefined;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
@@ -31,13 +31,13 @@ export class DigestStorage implements IDigestStorage {
         this.key = this.initKey();
     }
 
-    public saveDigest(signature: string, algorithm: string) {
-        this.initDb();
+    public async saveDigest(signature: string, algorithm: string) {
+        await this.initDb();
         this.db!.get('nbsignatures').push({ signature, algorithm, timestamp: Date.now().toString() }).write();
     }
 
-    public containsDigest(signature: string, algorithm: string) {
-        this.initDb();
+    public async containsDigest(signature: string, algorithm: string) {
+        await this.initDb();
         const val = this.db!.get('nbsignatures').find({ signature, algorithm }).value();
         return val !== undefined;
     }
@@ -47,8 +47,8 @@ export class DigestStorage implements IDigestStorage {
      * checkpoints in the notebook's execution history
      */
     private initKey(): Promise<string> {
-        return new Promise(async (resolve, _reject) => {
-            if (this.key === undefined) {
+        if (this.key === undefined) {
+            return new Promise(async (resolve, _reject) => {
                 // Determine user's OS
                 const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
 
@@ -64,14 +64,16 @@ export class DigestStorage implements IDigestStorage {
                     await this.fs.writeFile(defaultKeyFileLocation, key);
                     resolve(key);
                 }
-            }
-        });
+            });
+        } else {
+            return this.key;
+        }
     }
 
-    private initDb() {
+    private async initDb() {
         if (this.db === undefined) {
-            const adapter = new FileSync<Schema>(this.defaultDatabaseLocation);
-            this.db = Lowdb(adapter);
+            const adapter = new FileAsync<Schema>(this.defaultDatabaseLocation);
+            this.db = await Lowdb(adapter);
             if (this.db.get('nbsignatures') === undefined) {
                 this.db.defaults({ nbsignatures: [] }).write();
             }

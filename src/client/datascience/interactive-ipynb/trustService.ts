@@ -28,12 +28,9 @@ export class TrustService implements ITrustService {
      * It will add a new trusted checkpoint to the local database if it's safe to do so
      * I.e. if the notebook has already been trusted by the user
      */
-    public async updateNotebookTrust(notebookContents: string, isNotebookModelTrusted: boolean) {
-        if (isNotebookModelTrusted) {
-            const digest = await this.computeDigest(notebookContents);
-            return this.digestStorage.saveDigest(digest, this.algorithm);
-        }
-        // Otherwise, do nothing
+    public async trustNotebook(notebookContents: string) {
+        const digest = await this.computeDigest(notebookContents);
+        return this.digestStorage.saveDigest(digest, this.algorithm);
     }
 
     private async computeDigest(notebookContents: string) {
