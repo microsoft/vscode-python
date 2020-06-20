@@ -23,7 +23,13 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
 import { Commands, Identifiers, Telemetry } from '../constants';
-import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
+import {
+    ICellRange,
+    ICodeLensFactory,
+    ICodeWatcher,
+    IDataScienceErrorHandler,
+    IInteractiveWindowProvider
+} from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -359,6 +365,56 @@ export class CodeWatcher implements ICodeWatcher {
         );
     }
 
+    public async insertCellBelowPosition(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection.end) {
+            return this.insertCell(editor, editor.selection.end.line + 1);
+        }
+    }
+
+    public async insertCellBelowCurrent(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        const cell = this.getCellFromPosition();
+        if (editor && cell) {
+            return this.insertCell(editor, cell.range.end.line + 1);
+        }
+    }
+
+    public async insertCellAboveCurrent(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        const cell = this.getCellFromPosition();
+        if (editor && cell) {
+            return this.insertCell(editor, cell.range.start.line);
+        }
+    }
+
+    private async insertCell(editor: TextEditor, line: number): Promise<void> {
+        // insertCell
+        //
+        // Inserts a cell at current line defined as two new lines and then
+        // moves cursor to within the cell.
+        // ```
+        // # %%
+        //
+        // ```
+        //
+        const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
+        let newCell = `${cellDelineator}\n\n`;
+        if (line >= editor.document.lineCount) {
+            newCell = `\n${cellDelineator}\n`;
+        }
+
+        const cellStartPosition = new Position(line, 0);
+        const newCursorPosition = new Position(line + 1, 0);
+
+        editor.edit((editBuilder) => {
+            editBuilder.insert(cellStartPosition, newCell);
+            this.codeLensUpdatedEvent.fire();
+        });
+
+        editor.selection = new Selection(newCursorPosition, newCursorPosition);
+    }
+
     private getDefaultCellMarker(resource: Resource): string {
         return (
             this.configService.getSettings(resource).datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker
@@ -461,6 +517,25 @@ export class CodeWatcher implements ICodeWatcher {
                     debug
                 );
             }
+        }
+    }
+
+    private getCellIndex(position?: Position): number | undefined {
+        if (!position) {
+            const editor = this.documentManager.activeTextEditor;
+            if (editor && editor.selection) {
+                position = editor.selection.start;
+            }
+        }
+        if (position) {
+            return this.codeLensFactory.cells.findIndex((cell) => position && cell.range.contains(position));
+        }
+    }
+
+    private getCellFromPosition(position?: Position): ICellRange | undefined {
+        const index = this.getCellIndex(position);
+        if (index !== undefined) {
+            return this.codeLensFactory.cells[index];
         }
     }
 

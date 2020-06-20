@@ -77,6 +77,7 @@ export namespace Commands {
     export const DebugContinue = 'python.datascience.debugcontinue';
     export const DebugStop = 'python.datascience.debugstop';
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
+    export const InsertCellBelowPosition = 'python.datascience.insertCellBelowPosition';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';

@@ -504,6 +504,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.insertCellBelowPosition",
+                "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -779,6 +784,11 @@
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
+                    "command": "python.datascience.insertCellBelowPosition",
+                    "group": "Python2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python2"
                 },
@@ -941,6 +951,12 @@
                     "title": "Open",
                     "category": "Python",
                     "when": "config.noExists"
+                },
+                {
+                    "command": "python.datascience.insertCellBelowPosition",
+                    "title": "%python.command.python.datascience.insertCellBelowPosition.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && python.datascience.ispythonornativeactive"
                 },
                 {
                     "command": "python.datascience.runcurrentcell",

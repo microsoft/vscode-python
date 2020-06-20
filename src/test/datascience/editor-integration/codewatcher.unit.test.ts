@@ -5,7 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -30,7 +30,10 @@ import {
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
+import { MockDocument } from '../mockDocument';
+import { MockDocumentManager } from '../mockDocumentManager';
 import { MockPythonSettings } from '../mockPythonSettings';
+import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 
 //tslint:disable:no-any
@@ -41,6 +44,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let mockDocumentManager: MockDocumentManager;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
@@ -70,6 +74,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
+        mockDocumentManager = new MockDocumentManager();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -1024,5 +1029,75 @@ testing2`; // Command tests override getText, so just need the ranges here
         // Verify function calls
         activeInteractiveWindow.verifyAll();
         document.verifyAll();
+    });
+
+    test('Test insert cell below position', async () => {
+        const fileName = Uri.file('test.py').fsPath;
+        const version = 1;
+        const inputText = `testing0
+#%%
+testing1
+#%%
+testing2`;
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // For this test we need to set up a document selection point
+        // TypeMoq does not play well with setting properties on editor
+        const mockDocument = mockDocumentManager.addDocument(inputText, fileName);
+        const mockTextEditor = new MockEditor(mockDocumentManager, mockDocument);
+        documentManager.reset();
+        documentManager.setup((dm) => dm.activeTextEditor).returns(() => mockTextEditor);
+        mockTextEditor.selection = new Selection(0, 4, 0, 4);
+
+        await codeWatcher.insertCellBelowPosition();
+
+        expect(mockTextEditor.document.getText()).to.equal(`testing0
+# %%
+
+#%%
+testing1
+#%%
+testing2`);
+        expect(mockTextEditor.selection.start.line).to.equal(2);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(2);
+        expect(mockTextEditor.selection.end.character).to.equal(0);
+    });
+
+    test('Test insert cell below position at end', async () => {
+        const fileName = Uri.file('test.py').fsPath;
+        const version = 1;
+        const inputText = `testing0
+#%%
+testing1
+#%%
+testing2`;
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // For this test we need to set up a document selection point
+        // TypeMoq does not play well with setting properties on editor
+        const mockDocument = mockDocumentManager.addDocument(inputText, fileName);
+        const mockTextEditor = new MockEditor(mockDocumentManager, mockDocument);
+        documentManager.reset();
+        documentManager.setup((dm) => dm.activeTextEditor).returns(() => mockTextEditor);
+        mockTextEditor.selection = new Selection(4, 0, 5, 8);
+
+        await codeWatcher.insertCellBelowPosition();
+
+        expect(mockTextEditor.document.getText()).to.equal(`testing0
+#%%
+testing1
+#%%
+testing2
+# %%
+`);
+        expect(mockTextEditor.selection.start.line).to.equal(7);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(7);
+        expect(mockTextEditor.selection.end.character).to.equal(0);
     });
 });
