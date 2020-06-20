@@ -172,6 +172,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.InsertCellBelowPosition]: [];
     [DSCommands.InsertCellBelow]: [];
+    [DSCommands.InsertCellAbove]: [];
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
     [DSCommands.ExportAsPythonScript]: [INotebookModel];

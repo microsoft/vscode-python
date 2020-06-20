@@ -514,6 +514,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.insertCellAbove",
+                "title": "%python.command.python.datascience.insertCellAbove.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -799,6 +804,11 @@
                 },
                 {
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
+                    "command": "python.datascience.insertCellAbove",
+                    "group": "Python2"
+                },
+                {
+                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled && !notebookEditorFocused",
                     "command": "python.datascience.runcurrentcell",
                     "group": "Python2"
                 },
@@ -971,6 +981,12 @@
                 {
                     "command": "python.datascience.insertCellBelow",
                     "title": "%python.command.python.datascience.insertCellBelow.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled && python.datascience.ispythonornativeactive"
+                },
+                {
+                    "command": "python.datascience.insertCellAbove",
+                    "title": "%python.command.python.datascience.insertCellAbove.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled && python.datascience.ispythonornativeactive"
                 },

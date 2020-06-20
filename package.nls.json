@@ -66,6 +66,7 @@
     "python.command.python.datascience.runcell.title": "Run Cell",
     "python.command.python.datascience.insertCellBelowPosition.title": "Insert Cell Below Position",
     "python.command.python.datascience.insertCellBelow.title": "Insert Cell Below",
+    "python.command.python.datascience.insertCellAbove.title": "Insert Cell Above",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
     "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
     "python.command.python.datascience.selectjupytercommandline.title": "Specify Jupyter command line arguments",

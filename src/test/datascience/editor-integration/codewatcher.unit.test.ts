@@ -1198,4 +1198,69 @@ testing2`
         expect(mockTextEditor.selection.end.line).to.equal(5);
         expect(mockTextEditor.selection.end.character).to.equal(0);
     });
+
+    test('Test insert cell above first cell of range', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        // above the first cell of the range
+        mockTextEditor.selection = new Selection(3, 4, 5, 4);
+
+        await codeWatcher.insertCellAbove();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing0
+# %%
+
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+        expect(mockTextEditor.selection.start.line).to.equal(2);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(2);
+        expect(mockTextEditor.selection.end.character).to.equal(0);
+    });
+
+    test('Test insert cell above and above cells', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(0, 3, 0, 4);
+
+        await codeWatcher.insertCellAbove();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `# %%
+
+testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+        expect(mockTextEditor.selection.start.line).to.equal(1);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(1);
+        expect(mockTextEditor.selection.end.character).to.equal(0);
+    });
 });
