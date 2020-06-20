@@ -6,7 +6,7 @@ interface ITrustMessageProps {
     font: IFont;
 }
 
-export class TrustMessage extends React.Component<ITrustMessageProps> {
+export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
     public render() {
         const text = this.props.isNotebookTrusted ? 'Trusted' : 'Not Trusted';
         const textSize = text.length;
