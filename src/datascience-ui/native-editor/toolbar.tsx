@@ -46,6 +46,7 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     interruptKernel: typeof actionCreators.interruptKernel;
     selectKernel: typeof actionCreators.selectKernel;
     selectServer: typeof actionCreators.selectServer;
+    isNotebookTrusted: boolean;
 };
 
 function mapStateToProps(state: IStore): INativeEditorDataProps {
