@@ -354,6 +354,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 : false
                         }
                         language={this.props.kernel.language}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </ErrorBoundary>
                 {lastLine}

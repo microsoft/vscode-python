@@ -325,6 +325,7 @@ export interface IRefreshVariablesRequest {
 
 export interface ILoadAllCells {
     cells: ICell[];
+    isNotebookTrusted?: boolean;
 }
 
 export interface IScrollToCell {

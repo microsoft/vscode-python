@@ -13,6 +13,7 @@ import {
     ServerStatus
 } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
+import { TrustMessage } from '../interactive-common/trustMessage';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -248,13 +249,16 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             />
                         </ImageButton>
                     </div>
-                    <KernelSelection
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={selectServer}
-                        selectKernel={selectKernel}
-                    />
+                    <div className={'jupyter-info-container'}>
+                        <TrustMessage font={this.props.font} isNotebookTrusted={this.props.isNotebookTrusted} />
+                        <KernelSelection
+                            baseTheme={this.props.baseTheme}
+                            font={this.props.font}
+                            kernel={this.props.kernel}
+                            selectServer={selectServer}
+                            selectKernel={selectKernel}
+                        />
+                    </div>
                 </div>
                 <div className="toolbar-divider" />
             </div>
