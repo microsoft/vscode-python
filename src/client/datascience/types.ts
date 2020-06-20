@@ -628,6 +628,7 @@ export interface ICodeWatcher {
     addEmptyCellToBottom(): Promise<void>;
     runCurrentCellAndAddBelow(): Promise<void>;
     insertCellBelowPosition(): Promise<void>;
+    insertCellBelow(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 

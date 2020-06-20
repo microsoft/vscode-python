@@ -372,19 +372,27 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    public async insertCellBelowCurrent(): Promise<void> {
+    public async insertCellBelow(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
-        const cell = this.getCellFromPosition();
-        if (editor && cell) {
-            return this.insertCell(editor, cell.range.end.line + 1);
+        if (editor && editor.selection) {
+            const cell = this.getCellFromPosition(editor.selection.end);
+            if (cell) {
+                return this.insertCell(editor, cell.range.end.line + 1);
+            } else {
+                return this.insertCell(editor, editor.selection.end.line + 1);
+            }
         }
     }
 
-    public async insertCellAboveCurrent(): Promise<void> {
+    public async insertCellAbove(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
-        const cell = this.getCellFromPosition();
-        if (editor && cell) {
-            return this.insertCell(editor, cell.range.start.line);
+        if (editor && editor.selection) {
+            const cell = this.getCellFromPosition(editor.selection.start);
+            if (cell) {
+                return this.insertCell(editor, cell.range.start.line);
+            } else {
+                return this.insertCell(editor, editor.selection.start.line);
+            }
         }
     }
 
