@@ -17,7 +17,6 @@ export class ExportManager implements IExportManager {
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        // need to add telementry
         let target;
         if (format !== ExportFormat.python) {
             target = await this.filePicker.getExportFileLocation(format, model.file);
@@ -47,6 +46,7 @@ export class ExportManager implements IExportManager {
                 case ExportFormat.html:
                     await this.exportToHTML.export(source, target);
                     break;
+
                 default:
                     break;
             }

@@ -27,8 +27,6 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-// tslint:disable-next-line:no-require-imports no-var-requires
-import cloneDeep = require('lodash/cloneDeep');
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -145,16 +143,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
     public dispose() {
         this._isDisposed = true;
         this._disposed.fire();
-    }
-    public clone(file: Uri) {
-        return new NativeEditorNotebookModel(
-            this._state.isTrusted,
-            this.useNativeEditorApi,
-            file,
-            cloneDeep(this._state.cells),
-            cloneDeep(this._state.notebookJson),
-            this.indentAmount
-        );
     }
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
@@ -511,7 +499,8 @@ export class NativeEditorNotebookModel implements INotebookModel {
 }
 
 /**
- * Temporary hack to ensure we can use VS Code notebooks along with our standard notbooked editors.
+ * Marks a model as being used solely by VS Code Notebooks editor.
+ * (this is required, because at the time of loading a notebook its not always possible to know what editor will use it).
  */
 export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
     if (!(model instanceof NativeEditorNotebookModel)) {

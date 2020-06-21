@@ -15,11 +15,10 @@ import type {
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
-import { MARKDOWN_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
@@ -43,7 +42,6 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
@@ -69,10 +67,6 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         const model = await (openContext.backupId
             ? this.notebookStorage.load(uri, undefined, openContext.backupId)
             : this.notebookStorage.load(uri, undefined, true));
-        // If experiment is not enabled, then this method was invoked as user opted to try and open using the new API.
-        if (!this.useVSCodeNotebookEditorApi) {
-            updateModelForUseWithVSCodeNotebook(model);
-        }
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)

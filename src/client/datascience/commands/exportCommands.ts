@@ -10,7 +10,8 @@ import { ICommandNameArgumentTypeMapping } from '../../common/application/comman
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { IDisposable } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { Commands } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { ExportManager } from '../export/exportManager';
 import { ExportFormat, IExportManager } from '../export/types';
 import { INotebookEditorProvider, INotebookModel } from '../types';
@@ -57,6 +58,10 @@ export class ExportCommands implements IDisposable {
                 return;
             }
             model = activeEditor.model;
+
+            if (exportMethod) {
+                sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
+            }
         }
 
         if (exportMethod) {
@@ -67,6 +72,8 @@ export class ExportCommands implements IDisposable {
             const pickedItem = await this.showExportQuickPickMenu(model).then((item) => item);
             if (pickedItem !== undefined) {
                 pickedItem.handler();
+            } else {
+                sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick);
             }
         }
     }
@@ -76,12 +83,22 @@ export class ExportCommands implements IDisposable {
             {
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
-                handler: () => this.commandManager.executeCommand(Commands.ExportAsPythonScript, model)
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.python
+                    });
+                    this.commandManager.executeCommand(Commands.ExportAsPythonScript, model);
+                }
             },
             {
                 label: DataScience.exportHTMLQuickPickLabel(),
                 picked: false,
-                handler: () => this.commandManager.executeCommand(Commands.ExportToHTML, model)
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.html
+                    });
+                    this.commandManager.executeCommand(Commands.ExportToHTML, model);
+                }
             }
             //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
         ];

@@ -15,6 +15,6 @@ export class ExportToHTML extends ExportBase {
             '--output-dir',
             path.dirname(target.fsPath)
         ];
-        await this.executeCommand(source, args);
+        await this.executeCommand(source, target, args);
     }
 }
