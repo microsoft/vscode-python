@@ -631,6 +631,7 @@ export interface ICodeWatcher {
     insertCellBelow(): Promise<void>;
     insertCellAbove(): Promise<void>;
     deleteCells(): Promise<void>;
+    selectCell(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 

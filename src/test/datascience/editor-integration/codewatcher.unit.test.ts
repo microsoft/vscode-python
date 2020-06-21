@@ -1329,4 +1329,70 @@ testing1a
 #%%
 testing2`);
     });
+
+    test('Select cell single', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(2, 1, 2, 1);
+
+        await codeWatcher.selectCell();
+
+        expect(mockTextEditor.selection.start.line).to.equal(1);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(3);
+        expect(mockTextEditor.selection.end.character).to.equal(9);
+    });
+
+    test('Select cell multiple', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(2, 1, 4, 1);
+
+        await codeWatcher.selectCell();
+
+        expect(mockTextEditor.selection.start.line).to.equal(1);
+        expect(mockTextEditor.selection.start.character).to.equal(0);
+        expect(mockTextEditor.selection.end.line).to.equal(5);
+        expect(mockTextEditor.selection.end.character).to.equal(8);
+    });
+
+    test('Select cell unchanged above cells', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(0, 1, 0, 4);
+
+        await codeWatcher.selectCell();
+
+        expect(mockTextEditor.selection.start.line).to.equal(0);
+        expect(mockTextEditor.selection.start.character).to.equal(1);
+        expect(mockTextEditor.selection.end.line).to.equal(0);
+        expect(mockTextEditor.selection.end.character).to.equal(4);
+    });
 });

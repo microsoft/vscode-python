@@ -454,6 +454,18 @@ export class CodeWatcher implements ICodeWatcher {
             });
     }
 
+    public async selectCell(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && editor.selection) {
+            const firstLastCells = this.getFirstLastCells(editor.selection);
+            if (firstLastCells) {
+                const startCell = firstLastCells[0];
+                const endCell = firstLastCells[1];
+                editor.selection = new Selection(startCell.range.start, endCell.range.end);
+            }
+        }
+    }
+
     private getFirstLastCells(selection: Selection): ICellRange[] | undefined {
         let startCellIndex = this.getCellIndex(selection.start);
         let endCellIndex = startCellIndex;
