@@ -31,8 +31,30 @@ import {
     IInteractiveWindowProvider
 } from '../types';
 
+function getIndex(index: number, length: number): number {
+    // return index within the length range with negative indexing
+    if (length <= 0) {
+        throw new RangeError(`Length must be > 0 not ${length}`);
+    }
+    // negative index count back from length
+    if (index < 0) {
+        index += length;
+    }
+    // bounded index
+    if (index < 0) {
+        return 0;
+    } else if (index >= length) {
+        return length - 1;
+    } else {
+        return index;
+    }
+}
+
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
+    public get codeLensUpdated(): Event<void> {
+        return this.codeLensUpdatedEvent.event;
+    }
     private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
@@ -71,10 +93,6 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Make sure to stop listening for changes when this document closes.
         this.closeDocumentDisposable = this.documentManager.onDidCloseTextDocument(this.onDocumentClosed.bind(this));
-    }
-
-    public get codeLensUpdated(): Event<void> {
-        return this.codeLensUpdatedEvent.event;
     }
 
     public getFileName() {
@@ -396,6 +414,75 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    public async deleteCells(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return Promise.resolve();
+        }
+
+        const firstLastCells = this.getFirstLastCells(editor.selection);
+        if (!firstLastCells) {
+            return Promise.resolve();
+        }
+        const startCell = firstLastCells[0];
+        const endCell = firstLastCells[1];
+
+        // Start of the document should start at position 0, 0 and end one line ahead.
+        let startLineNumber = 0;
+        let startCharacterNumber = 0;
+        let endLineNumber = endCell.range.end.line + 1;
+        let endCharacterNumber = 0;
+        // Anywhere else in the document should start at the end of line before the
+        // cell and end at the last character of the cell.
+        if (startCell.range.start.line > 0) {
+            startLineNumber = startCell.range.start.line - 1;
+            startCharacterNumber = editor.document.lineAt(startLineNumber).range.end.character;
+            endLineNumber = endCell.range.end.line;
+            endCharacterNumber = endCell.range.end.character;
+        }
+        const cellExtendedRange = new Range(
+            new Position(startLineNumber, startCharacterNumber),
+            new Position(endLineNumber, endCharacterNumber)
+        );
+        return editor
+            .edit((editBuilder) => {
+                editBuilder.replace(cellExtendedRange, '');
+                this.codeLensUpdatedEvent.fire();
+            })
+            .then(() => {
+                return Promise.resolve();
+            });
+    }
+
+    private getFirstLastCells(selection: Selection): ICellRange[] | undefined {
+        let startCellIndex = this.getCellIndex(selection.start);
+        let endCellIndex = startCellIndex;
+        // handle if the selection is the same line, hence same cell
+        if (selection.start.line !== selection.end.line) {
+            endCellIndex = this.getCellIndex(selection.end);
+        }
+        // handle when selection is above the top most cell
+        if (startCellIndex === -1) {
+            if (endCellIndex === -1) {
+                return undefined;
+            } else {
+                // selected a range above the first cell.
+                startCellIndex = 0;
+                const startCell = this.getCellFromIndex(0);
+                if (selection.start.line > startCell.range.start.line) {
+                    throw RangeError(
+                        `Should not be able to pick a range with an end in a cell and start after a cell. ${selection.start.line} > ${startCell.range.end.line}`
+                    );
+                }
+            }
+        }
+        if (startCellIndex >= 0 && endCellIndex >= 0) {
+            const startCell = this.getCellFromIndex(startCellIndex);
+            const endCell = this.getCellFromIndex(endCellIndex);
+            return [startCell, endCell];
+        }
+    }
+
     private async insertCell(editor: TextEditor, line: number): Promise<void> {
         // insertCell
         //
@@ -528,7 +615,17 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private getCellIndex(position?: Position): number | undefined {
+    private getCellIndex(position: Position): number {
+        return this.codeLensFactory.cells.findIndex((cell) => position && cell.range.contains(position));
+    }
+
+    private getCellFromIndex(index: number): ICellRange {
+        const cells = this.codeLensFactory.cells;
+        const indexBounded = getIndex(index, cells.length);
+        return cells[indexBounded];
+    }
+
+    private getCellFromPosition(position?: Position): ICellRange | undefined {
         if (!position) {
             const editor = this.documentManager.activeTextEditor;
             if (editor && editor.selection) {
@@ -536,14 +633,10 @@ export class CodeWatcher implements ICodeWatcher {
             }
         }
         if (position) {
-            return this.codeLensFactory.cells.findIndex((cell) => position && cell.range.contains(position));
-        }
-    }
-
-    private getCellFromPosition(position?: Position): ICellRange | undefined {
-        const index = this.getCellIndex(position);
-        if (index !== undefined) {
-            return this.codeLensFactory.cells[index];
+            const index = this.getCellIndex(position);
+            if (index >= 0) {
+                return this.codeLensFactory.cells[index];
+            }
         }
     }
 

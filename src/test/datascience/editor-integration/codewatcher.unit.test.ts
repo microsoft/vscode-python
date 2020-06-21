@@ -1263,4 +1263,70 @@ testing2`
         expect(mockTextEditor.selection.end.line).to.equal(1);
         expect(mockTextEditor.selection.end.character).to.equal(0);
     });
+
+    test('Delete single cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(3, 4, 3, 4);
+
+        await codeWatcher.deleteCells();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing0
+#%%
+testing2`
+        );
+    });
+
+    test('Delete multiple cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(3, 4, 5, 4);
+
+        await codeWatcher.deleteCells();
+
+        expect(mockTextEditor.document.getText()).to.equal(`testing0`);
+    });
+
+    test('Delete cell no cells in selection', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(0, 1, 0, 4);
+
+        await codeWatcher.deleteCells();
+
+        expect(mockTextEditor.document.getText()).to.equal(`testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`);
+    });
 });
