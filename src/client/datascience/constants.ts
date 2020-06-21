@@ -82,6 +82,7 @@ export namespace Commands {
     export const InsertCellAbove = 'python.datascience.insertCellAbove';
     export const DeleteCells = 'python.datascience.deleteCells';
     export const SelectCell = 'python.datascience.selectCell';
+    export const SelectCellContents = 'python.datascience.selectCellContents';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';

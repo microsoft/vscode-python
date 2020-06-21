@@ -420,7 +420,7 @@ export class CodeWatcher implements ICodeWatcher {
             return Promise.resolve();
         }
 
-        const firstLastCells = this.getFirstLastCells(editor.selection);
+        const firstLastCells = this.getStartEndCells(editor.selection);
         if (!firstLastCells) {
             return Promise.resolve();
         }
@@ -457,16 +457,64 @@ export class CodeWatcher implements ICodeWatcher {
     public async selectCell(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor && editor.selection) {
-            const firstLastCells = this.getFirstLastCells(editor.selection);
-            if (firstLastCells) {
-                const startCell = firstLastCells[0];
-                const endCell = firstLastCells[1];
+            const startEndCells = this.getStartEndCells(editor.selection);
+            if (startEndCells) {
+                const startCell = startEndCells[0];
+                const endCell = startEndCells[1];
                 editor.selection = new Selection(startCell.range.start, endCell.range.end);
             }
         }
     }
 
-    private getFirstLastCells(selection: Selection): ICellRange[] | undefined {
+    public async selectCellContents(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return Promise.resolve();
+        }
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return Promise.resolve();
+        }
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const isAnchorLessEqualActive =
+            editor.selection.anchor.line <= editor.selection.active.line &&
+            editor.selection.anchor.character <= editor.selection.anchor.character;
+
+        const cells = this.codeLensFactory.cells;
+        const selections: Selection[] = [];
+        for (let i = startCellIndex; i <= endCellIndex; i += 1) {
+            const cell = cells[i];
+            let anchorLine = cell.range.start.line + 1;
+            let achorCharacter = 0;
+            let activeLine = cell.range.end.line;
+            let activeCharacter = cell.range.end.character;
+            // if cell is only one line long, select the end of that line
+            if (cell.range.start.line === cell.range.end.line) {
+                anchorLine = cell.range.start.line;
+                achorCharacter = editor.document.lineAt(anchorLine).range.end.character;
+                activeLine = anchorLine;
+                activeCharacter = achorCharacter;
+            }
+            if (isAnchorLessEqualActive) {
+                selections.push(new Selection(anchorLine, achorCharacter, activeLine, activeCharacter));
+            } else {
+                selections.push(new Selection(activeLine, activeCharacter, anchorLine, achorCharacter));
+            }
+        }
+        editor.selections = selections;
+    }
+
+    private getStartEndCells(selection: Selection): ICellRange[] | undefined {
+        const startEndCellIndex = this.getStartEndCellIndex(selection);
+        if (startEndCellIndex) {
+            const startCell = this.getCellFromIndex(startEndCellIndex[0]);
+            const endCell = this.getCellFromIndex(startEndCellIndex[1]);
+            return [startCell, endCell];
+        }
+    }
+
+    private getStartEndCellIndex(selection: Selection): number[] | undefined {
         let startCellIndex = this.getCellIndex(selection.start);
         let endCellIndex = startCellIndex;
         // handle if the selection is the same line, hence same cell
@@ -489,9 +537,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
         }
         if (startCellIndex >= 0 && endCellIndex >= 0) {
-            const startCell = this.getCellFromIndex(startCellIndex);
-            const endCell = this.getCellFromIndex(endCellIndex);
-            return [startCell, endCell];
+            return [startCellIndex, endCellIndex];
         }
     }
 

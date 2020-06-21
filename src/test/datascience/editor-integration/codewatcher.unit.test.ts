@@ -1395,4 +1395,93 @@ testing2`
         expect(mockTextEditor.selection.end.line).to.equal(0);
         expect(mockTextEditor.selection.end.character).to.equal(4);
     });
+
+    test('Select cell contents', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(3, 4, 3, 4);
+
+        await codeWatcher.selectCellContents();
+
+        expect(mockTextEditor.selections.length).to.equal(1);
+
+        const selection = mockTextEditor.selections[0];
+        expect(selection.anchor.line).to.equal(2);
+        expect(selection.anchor.character).to.equal(0);
+        expect(selection.active.line).to.equal(3);
+        expect(selection.active.character).to.equal(9);
+    });
+
+    test('Select cell contents multi cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(3, 4, 5, 4);
+
+        await codeWatcher.selectCellContents();
+
+        expect(mockTextEditor.selections.length).to.equal(2);
+
+        let selection: Selection;
+        selection = mockTextEditor.selections[0];
+        expect(selection.anchor.line).to.equal(2);
+        expect(selection.anchor.character).to.equal(0);
+        expect(selection.active.line).to.equal(3);
+        expect(selection.active.character).to.equal(9);
+
+        selection = mockTextEditor.selections[1];
+        expect(selection.anchor.line).to.equal(5);
+        expect(selection.anchor.character).to.equal(0);
+        expect(selection.active.line).to.equal(5);
+        expect(selection.active.character).to.equal(8);
+    });
+
+    test('Select cell contents multi cell reversed', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(5, 4, 3, 4);
+
+        await codeWatcher.selectCellContents();
+
+        expect(mockTextEditor.selections.length).to.equal(2);
+
+        let selection: Selection;
+        selection = mockTextEditor.selections[0];
+        expect(selection.active.line).to.equal(2);
+        expect(selection.active.character).to.equal(0);
+        expect(selection.anchor.line).to.equal(3);
+        expect(selection.anchor.character).to.equal(9);
+
+        selection = mockTextEditor.selections[1];
+        expect(selection.active.line).to.equal(5);
+        expect(selection.active.character).to.equal(0);
+        expect(selection.anchor.line).to.equal(5);
+        expect(selection.anchor.character).to.equal(8);
+    });
 });
