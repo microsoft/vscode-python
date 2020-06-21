@@ -1346,10 +1346,10 @@ testing2`
 
         await codeWatcher.selectCell();
 
-        expect(mockTextEditor.selection.start.line).to.equal(1);
-        expect(mockTextEditor.selection.start.character).to.equal(0);
-        expect(mockTextEditor.selection.end.line).to.equal(3);
-        expect(mockTextEditor.selection.end.character).to.equal(9);
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(3);
+        expect(mockTextEditor.selection.active.character).to.equal(9);
     });
 
     test('Select cell multiple', async () => {
@@ -1368,13 +1368,35 @@ testing2`
 
         await codeWatcher.selectCell();
 
-        expect(mockTextEditor.selection.start.line).to.equal(1);
-        expect(mockTextEditor.selection.start.character).to.equal(0);
-        expect(mockTextEditor.selection.end.line).to.equal(5);
-        expect(mockTextEditor.selection.end.character).to.equal(8);
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(5);
+        expect(mockTextEditor.selection.active.character).to.equal(8);
     });
 
-    test('Select cell unchanged above cells', async () => {
+    test('Select cell multiple reversed', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing0
+#%%
+testing1
+testing1a
+#%%
+testing2`
+        );
+
+        mockTextEditor.selection = new Selection(4, 1, 2, 1);
+
+        await codeWatcher.selectCell();
+
+        expect(mockTextEditor.selection.active.line).to.equal(1);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+        expect(mockTextEditor.selection.anchor.line).to.equal(5);
+        expect(mockTextEditor.selection.anchor.character).to.equal(8);
+    });
+
+    test('Select cell above cells unchanged', async () => {
         const mockTextEditor = initializeMockTextEditor(
             codeWatcher,
             documentManager,

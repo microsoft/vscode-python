@@ -461,7 +461,14 @@ export class CodeWatcher implements ICodeWatcher {
             if (startEndCells) {
                 const startCell = startEndCells[0];
                 const endCell = startEndCells[1];
-                editor.selection = new Selection(startCell.range.start, endCell.range.end);
+                if (
+                    editor.selection.anchor.line <= editor.selection.active.line &&
+                    editor.selection.anchor.character <= editor.selection.active.character
+                ) {
+                    editor.selection = new Selection(startCell.range.start, endCell.range.end);
+                } else {
+                    editor.selection = new Selection(endCell.range.end, startCell.range.start);
+                }
             }
         }
     }
