@@ -60,6 +60,7 @@ suite('DataScience Native Toolbar', () => {
             sendCommand: noopAny,
             toggleVariableExplorer: sinon.stub(),
             setVariableExplorerHeight: sinon.stub(),
+            launchNotebookTrustPrompt: sinon.stub(),
             variablesVisible: false,
             isNotebookTrusted: true
         };

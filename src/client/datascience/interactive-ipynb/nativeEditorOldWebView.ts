@@ -47,7 +47,8 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    ITrustService
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -101,7 +102,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider
+        @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
+        @inject(ITrustService) trustService: ITrustService
     ) {
         super(
             listeners,
@@ -132,7 +134,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             asyncRegistry,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            trustService
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

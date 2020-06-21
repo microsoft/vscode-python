@@ -977,6 +977,12 @@ export namespace DataScience {
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
         'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
+    export const launchNotebookTrustPrompt = localize(
+        'DataScience.launchNotebookTrustPrompt',
+        'A Notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook?'
+    );
+    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
+    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
 }
 
 export namespace StartPage {
