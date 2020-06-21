@@ -461,10 +461,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (startEndCells) {
                 const startCell = startEndCells[0];
                 const endCell = startEndCells[1];
-                if (
-                    editor.selection.anchor.line <= editor.selection.active.line &&
-                    editor.selection.anchor.character <= editor.selection.active.character
-                ) {
+                if (editor.selection.anchor.isBeforeOrEqual(editor.selection.active)) {
                     editor.selection = new Selection(startCell.range.start, endCell.range.end);
                 } else {
                     editor.selection = new Selection(endCell.range.end, startCell.range.start);
@@ -484,9 +481,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
         const startCellIndex = startEndCellIndex[0];
         const endCellIndex = startEndCellIndex[1];
-        const isAnchorLessEqualActive =
-            editor.selection.anchor.line <= editor.selection.active.line &&
-            editor.selection.anchor.character <= editor.selection.anchor.character;
+        const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
 
         const cells = this.codeLensFactory.cells;
         const selections: Selection[] = [];
