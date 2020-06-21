@@ -255,6 +255,7 @@ suite('DataScience - Native Editor Storage', () => {
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
+        trustService = mock(ITrustService);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 

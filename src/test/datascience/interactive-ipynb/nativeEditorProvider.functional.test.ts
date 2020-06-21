@@ -97,6 +97,7 @@ suite('DataScience - Native Editor Provider', () => {
         executionProvider = mock(JupyterExecutionFactory);
         customEditorService = typemoq.Mock.ofType<ICustomEditorService>();
         panel = typemoq.Mock.ofType<WebviewPanel>();
+        trustService = mock(ITrustService);
         panel.setup((e) => (e as any).then).returns(() => undefined);
 
         const settings = mock(PythonSettings);
