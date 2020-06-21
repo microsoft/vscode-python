@@ -1506,4 +1506,179 @@ testing2`
         expect(selection.anchor.line).to.equal(5);
         expect(selection.anchor.character).to.equal(8);
     });
+
+    test('Extend selection by cell above initial select', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 5, 2);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(6);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(4);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above initial range in cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 6, 4);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(6);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(4);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above initial range in cell opposite direction', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 4, 5, 2);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(6);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(4);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above initial range below cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 8, 2);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell above initial range above cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(8, 2, 5, 2);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(8);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(4);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above expand above', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 10, 4, 0);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(6);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(1);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above contract below', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(1, 0, 6, 10);
+
+        await codeWatcher.extendSelectionByCellAbove();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(3);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
 });

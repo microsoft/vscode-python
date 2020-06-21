@@ -633,6 +633,7 @@ export interface ICodeWatcher {
     deleteCells(): Promise<void>;
     selectCell(): Promise<void>;
     selectCellContents(): Promise<void>;
+    extendSelectionByCellAbove(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 
