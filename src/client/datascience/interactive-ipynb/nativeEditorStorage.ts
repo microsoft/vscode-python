@@ -562,7 +562,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const contents = model.getContent();
         const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(contents));
+            parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
         }
         await Promise.all([parallelize]);
         model.update({
@@ -578,7 +578,7 @@ export class NativeEditorStorage implements INotebookStorage {
         const contents = model.getContent();
         const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(contents));
+            parallelize.push(this.trustService.trustNotebook(file.toString(), contents));
         }
         await Promise.all([parallelize]);
         model.update({
@@ -793,7 +793,7 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        const isTrusted = contents ? await this.trustService.isNotebookTrusted(contents) : true; // If no contents, this is a newly created notebook, so set to true
+        const isTrusted = contents ? await this.trustService.isNotebookTrusted(file.toString(), contents) : true; // If no contents, this is a newly created notebook, so set to true
         return new NativeEditorNotebookModel(
             isTrusted,
             this.useNativeEditorApi,

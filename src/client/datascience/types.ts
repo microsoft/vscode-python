@@ -1234,12 +1234,12 @@ export interface IJupyterDebugService extends IDebugService {
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     key: Promise<string>;
-    saveDigest(digest: string, algorithm: string): Promise<void>;
-    containsDigest(digest: string, algorithm: string): Promise<boolean>;
+    saveDigest(uri: string, digest: string): Promise<void>;
+    containsDigest(uri: string, digest: string): Promise<boolean>;
 }
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
-    isNotebookTrusted(notebookContents: string): Promise<boolean>;
-    trustNotebook(notebookContents: string): Promise<void>;
+    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }

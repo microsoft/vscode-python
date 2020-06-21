@@ -1,45 +1,70 @@
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
-import * as Lowdb from 'lowdb';
-import * as FileAsync from 'lowdb/adapters/FileAsync';
 import * as path from 'path';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
+import { traceError } from '../../logging';
 import { IDigestStorage } from '../types';
-
-type DigestEntry = {
-    signature: string;
-    algorithm: string;
-    timestamp: string;
-};
-type Schema = {
-    nbsignatures: DigestEntry[];
-};
 
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
     public key: Promise<string>;
-    private defaultDatabaseLocation: string;
-    private db: Lowdb.LowdbAsync<Schema> | undefined;
+    private digestDir: Promise<string>;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
-        this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
         this.key = this.initKey();
+        this.digestDir = this.initDir();
     }
 
-    public async saveDigest(signature: string, algorithm: string) {
-        await this.initDb();
-        this.db!.get('nbsignatures').push({ signature, algorithm, timestamp: Date.now().toString() }).write();
+    public async saveDigest(uri: string, signature: string) {
+        const fileName = createHash('sha256').update(uri).digest('hex');
+        const fileLocation = path.join(await this.digestDir, fileName);
+        try {
+            if (!(await this.fs.fileExists(fileLocation))) {
+                await this.fs.writeFile(fileLocation, `${signature}\n`);
+            } else {
+                await this.fs.appendFile(fileLocation, `${signature}\n`);
+            }
+        } catch (err) {
+            traceError(err);
+        }
     }
 
-    public async containsDigest(signature: string, algorithm: string) {
-        await this.initDb();
-        const val = this.db!.get('nbsignatures').find({ signature, algorithm }).value();
-        return val !== undefined;
+    public async containsDigest(uri: string, signature: string) {
+        const fileName = createHash('sha256').update(uri).digest('hex');
+        const fileLocation = path.join(await this.digestDir, fileName);
+        try {
+            if (!(await this.fs.fileExists(fileLocation))) {
+                return false;
+            } else {
+                // // naive approach that works: read entire digest file contents, do regex match
+                const digests = await this.fs.readFile(fileLocation);
+                const match = digests.match(new RegExp(`/^${signature}/`, 'm'));
+                return match !== null;
+            }
+        } catch (err) {
+            traceError(err);
+            return false;
+        }
+    }
+
+    private initDir(): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const defaultDigestDirLocation = this.getDefaultDigestDirLocation();
+                if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
+                    await this.fs.createDirectory(defaultDigestDirLocation);
+                }
+                resolve(defaultDigestDirLocation);
+            } catch (err) {
+                traceError(err);
+                reject(err);
+            }
+        });
     }
 
     /**
@@ -47,13 +72,11 @@ export class DigestStorage implements IDigestStorage {
      * checkpoints in the notebook's execution history
      */
     private initKey(): Promise<string> {
-        if (this.key === undefined) {
-            return new Promise(async (resolve, _reject) => {
-                // Determine user's OS
+        return new Promise(async (resolve, reject) => {
+            try {
                 const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
-
-                // Attempt to read from standard keyfile location for that OS
                 if (await this.fs.fileExists(defaultKeyFileLocation)) {
+                    // if the keyfile already exists, bail out
                     resolve((await this.fs.readFile(defaultKeyFileLocation)) as string);
                 } else {
                     // If it doesn't exist, create one
@@ -64,29 +87,11 @@ export class DigestStorage implements IDigestStorage {
                     await this.fs.writeFile(defaultKeyFileLocation, key);
                     resolve(key);
                 }
-            });
-        } else {
-            return this.key;
-        }
-    }
-
-    private async initDb() {
-        if (this.db === undefined) {
-            const adapter = new FileAsync<Schema>(this.defaultDatabaseLocation);
-            this.db = await Lowdb(adapter);
-            if (this.db.get('nbsignatures') === undefined) {
-                this.db.defaults({ nbsignatures: [] }).write();
+            } catch (err) {
+                traceError(err);
+                reject(err);
             }
-        }
-    }
-
-    private getDefaultDatabaseLocation() {
-        const dbName = 'nbsignatures.json';
-        const dir = this.extensionContext.globalStoragePath;
-        if (dir) {
-            return path.join(dir, dbName);
-        }
-        throw new Error('Unable to locate database');
+        });
     }
 
     private getDefaultKeyFileLocation() {
@@ -96,5 +101,14 @@ export class DigestStorage implements IDigestStorage {
             return path.join(dir, keyfileName);
         }
         throw new Error('Unable to locate keyfile');
+    }
+
+    private getDefaultDigestDirLocation() {
+        const dirName = 'nbsignatures';
+        const dir = this.extensionContext.globalStoragePath;
+        if (dir) {
+            return path.join(dir, dirName);
+        }
+        throw new Error('Unable to locate directory containing trusted notebook signatures');
     }
 }
