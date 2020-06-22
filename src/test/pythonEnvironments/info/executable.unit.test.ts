@@ -39,7 +39,7 @@ suite('getExecutablePath()', () => {
 
         const result = await getExecutablePath(python, exec);
 
-        expect(result).to.equal(expected, 'getExecutablePath() sbould return get the value by running Python');
+        expect(result).to.equal(expected, 'getExecutablePath() should return get the value by running Python');
         verifyAll();
     });
 
