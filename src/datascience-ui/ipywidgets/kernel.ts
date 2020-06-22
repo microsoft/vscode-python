@@ -285,11 +285,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
                 this.handleMirrorExecute(payload);
                 break;
 
-            case IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled:
-                this.extensionOperationFinished(
-                    payload,
-                    IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled
-                );
+            case IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled:
+                this.extensionOperationFinished(payload);
                 break;
 
             default:
@@ -306,7 +303,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const waitPromise = createDeferred<void>();
 
         // A message could cause multiple callback waits, so use id +type as key
-        const key = msgId + IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled.toString();
+        const key = msgId + IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString();
         window.console.log(`**** Await key added ${key}`);
         this.awaitingExtensionMessage.set(key, waitPromise);
 
@@ -343,8 +340,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
-    private extensionOperationFinished(payload: any, type: IPyWidgetMessages) {
-        const key = payload.id + type.toString();
+    private extensionOperationFinished(payload: any) {
+        const key = payload.id + payload.type;
 
         const waitPromise = this.awaitingExtensionMessage.get(key);
 

@@ -236,7 +236,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookResult]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_mirror_execute]: MessageType.noIdea
 };

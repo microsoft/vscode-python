@@ -416,7 +416,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             // Regardless of if we registered successfully or not, send back a message to the UI
             // that we are done with extension side handling of this message
             traceInfo(`**** Finished extension side registerMessageHook for ${msgId}`);
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled, { id: msgId });
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
+                id: msgId,
+                type: IPyWidgetMessages.IPyWidgets_RegisterMessageHook
+            });
         }
     }
 

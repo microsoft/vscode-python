@@ -163,8 +163,8 @@ export enum IPyWidgetMessages {
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
-    // Message send when the extension is done with registering a message hook
-    IPyWidgets_ExtensionRegisterMessageHookHandled = 'IPyWidgets_ExtensionRegisterMessageHookHandled',
+    // Message sent when the extension has finished an operation requested by the kernel UI for processing a message
+    IPyWidgets_ExtensionOperationHandled = 'IPyWidgets_ExtensionOperationHandled',
     IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
     IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
@@ -540,7 +540,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
-    public [IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled]: { id: string; type: IPyWidgetMessages };
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
         requestId: string;
