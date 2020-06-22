@@ -101,7 +101,6 @@ suite('getInterpreterInfo()', () => {
             architecture: Architecture.x64,
             path: python.command,
             version: new SemVer('3.7.5-candidate'),
-            //version: new SemVer('3.7.5-candidate.1'),
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             sysVersion: undefined
         };

@@ -32,8 +32,18 @@ export type PythonVersion = {
 
 /**
  * Convert a Python version string.
+ *
+ * The supported formats are:
+ *
+ *  * MAJOR.MINOR.MICRO-RELEASE_LEVEL
+ *
+ *  (where RELEASE_LEVEL is one of {alpha,beta,candidate,final})
+ *
+ * Everything else, including an empty string, results in `undefined`.
  */
-// TBD: the supported formats are...
+// Eventually we will want to also support the release serial
+// (e.g. beta1, candidate3) and maybe even release abbreviations
+// (e.g. 3.9.2b1, 3.8.10rc3).
 export function parsePythonVersion(raw: string): PythonVersion | undefined {
     if (!raw || raw.trim().length === 0) {
         return;
@@ -80,7 +90,9 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
  */
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonVersionCommand();
-    // Use buildPythonExecInfo()...
+    // It may make sense eventually to use buildPythonExecInfo() here
+    // instead of using pythonPath and args directly.  That would allow
+    // buildPythonExecInfo() to assume any burden of flexibility.
     return exec(pythonPath, args)
         .then((result) => parse(result.stdout).splitLines()[0])
         .then((version) => (version.length === 0 ? defaultValue : version))
