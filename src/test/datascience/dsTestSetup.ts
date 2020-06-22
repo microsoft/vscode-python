@@ -16,7 +16,7 @@ const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
 if (
     !content.enableProposedApi ||
     !Array.isArray(content.contributes.notebookOutputRenderer) ||
-    !Array.isArray(content.contributes.         )
+    !Array.isArray(content.contributes.notebookProvider)
 ) {
     content.enableProposedApi = true;
     content.contributes.notebookOutputRenderer = [
