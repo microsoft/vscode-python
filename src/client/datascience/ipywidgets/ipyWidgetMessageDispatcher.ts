@@ -129,6 +129,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 this.handleMessageHookResponse(message.payload);
                 break;
 
+            case IPyWidgetMessages.IPyWidgets_iopub_msg_handled:
+                this.iopubMessageHandled(message.payload);
+                break;
+
             default:
                 break;
         }
@@ -258,6 +262,16 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
 
         return false;
+    }
+
+    private iopubMessageHandled(payload: any) {
+        const msgId = payload.id;
+        traceInfo(`**** IOPub handled in extension ${msgId} ****`);
+        if (this.fullHandleMessage && this.fullHandleMessage.id === msgId) {
+            traceInfo(`**** IOPub ${msgId} resolve full await ****`);
+            this.fullHandleMessage.promise.resolve();
+            this.fullHandleMessage = undefined;
+        }
     }
 
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
