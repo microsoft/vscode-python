@@ -11,7 +11,10 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 const packageJsonFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'package.json');
 const content = JSON.parse(fs.readFileSync(packageJsonFile).toString());
-
+// tslint:disable-next-line: no-console
+console.log(content);
+// tslint:disable-next-line: no-console
+console.log(JSON.stringify(content));
 // This code is temporary.
 if (content.contributes.notebookProvider[0].priority !== 'default') {
     content.contributes.notebookProvider[0].priority = 'default';
