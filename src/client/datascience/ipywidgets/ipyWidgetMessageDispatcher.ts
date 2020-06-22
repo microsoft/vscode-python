@@ -358,11 +358,17 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private registerMessageHook(msgId: string) {
-        if (this.notebook && !this.messageHooks.has(msgId)) {
-            this.hookCount += 1;
-            const callback = this.messageHookCallback.bind(this);
-            this.messageHooks.set(msgId, callback);
-            this.notebook.registerMessageHook(msgId, callback);
+        try {
+            if (this.notebook && !this.messageHooks.has(msgId)) {
+                this.hookCount += 1;
+                const callback = this.messageHookCallback.bind(this);
+                this.messageHooks.set(msgId, callback);
+                this.notebook.registerMessageHook(msgId, callback);
+            }
+        } finally {
+            // Regardless of if we registered successfully or not, send back a message to the UI
+            // that we are done with extension side handling of this message
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled, { id: msgId });
         }
     }
 
