@@ -217,19 +217,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     !getSelectedAndFocusedInfo(this.props).focusedCellId &&
                     !this.props.settings?.extraSettings.useCustomEditorApi
                 ) {
-                    if (
-                        getOSType() !== OSType.OSX
-                            ? event.shiftKey && !event.ctrlKey && !event.altKey
-                            : event.shiftKey && !event.metaKey && !event.altKey
-                    ) {
+                    if (event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (
-                        getOSType() !== OSType.OSX
-                            ? !event.shiftKey && !event.altKey && !event.ctrlKey
-                            : !event.shiftKey && !event.altKey && !event.metaKey
-                    ) {
+                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);

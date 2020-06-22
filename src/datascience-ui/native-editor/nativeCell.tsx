@@ -370,19 +370,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'z':
             case 'Z':
                 if (!this.isFocused() && !this.props.useCustomEditorApi) {
-                    if (
-                        getOSType() !== OSType.OSX
-                            ? e.shiftKey && !e.ctrlKey && !e.altKey
-                            : e.shiftKey && !e.metaKey && !e.altKey
-                    ) {
+                    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (
-                        getOSType() !== OSType.OSX
-                            ? !e.shiftKey && !e.altKey && !e.ctrlKey
-                            : !e.shiftKey && !e.altKey && !e.metaKey
-                    ) {
+                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);
