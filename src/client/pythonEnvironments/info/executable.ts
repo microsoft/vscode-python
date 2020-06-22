@@ -9,7 +9,14 @@ type ExecResult = {
 };
 type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
-// Find the filename for the corresponding Python executable (sys.executable).
+/**
+ * Find the filename for the corresponding Python executable.
+ *
+ * Effectively, we look up sys.executable.
+ *
+ * @param python - the information to use when running Python
+ * @param exec - the function to use to run Python
+ */
 export async function getExecutablePath(python: PythonExecInfo, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonExecutableCommand();
     const info = copyPythonExecInfo(python, args);

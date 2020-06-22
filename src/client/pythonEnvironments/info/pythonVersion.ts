@@ -5,8 +5,16 @@ import { SemVer } from 'semver';
 import '../../common/extensions'; // For string.splitLines()
 import { getVersion as getPythonVersionCommand } from '../../common/process/internal/python';
 
-// A representation of a Python runtime's version.
-//
+/**
+ * A representation of a Python runtime's version.
+ *
+ * @prop raw - the original version string
+ * @prop major - the "major" version
+ * @prop minor - the "minor" version
+ * @prop patch - the "patch" (or "micro") version
+ * @prop build - the build ID of the executable
+ * @prop prerelease - identifies a tag in the release process (e.g. beta 1)
+ */
 // Note that this is currently compatible with SemVer objects,
 // but we may change it to match the format of sys.version_info.
 export type PythonVersion = {
@@ -22,8 +30,9 @@ export type PythonVersion = {
     prerelease: string[];
 };
 
-// Convert a Python version string.
-//
+/**
+ * Convert a Python version string.
+ */
 // TBD: the supported formats are...
 export function parsePythonVersion(raw: string): PythonVersion | undefined {
     if (!raw || raw.trim().length === 0) {
@@ -60,7 +69,15 @@ type ExecResult = {
 };
 type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 
-// Get the version via the given Python executable (sys.version).
+/**
+ * Get the version string of the given Python executable by running it.
+ *
+ * Effectively, we look up sys.version.
+ *
+ * @param pythonPath - the Python executable to exec
+ * @param defaultValue - the value to return if anything goes wrong
+ * @param exec - the function to call to run the Python executable
+ */
 export async function getPythonVersion(pythonPath: string, defaultValue: string, exec: ExecFunc): Promise<string> {
     const [args, parse] = getPythonVersionCommand();
     // Use buildPythonExecInfo()...

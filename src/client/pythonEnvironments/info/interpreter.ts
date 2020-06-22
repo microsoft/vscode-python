@@ -7,9 +7,14 @@ import { Architecture } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 import { parsePythonVersion } from './pythonVersion';
 
-// Composse full interpreter information based on the given data.
-//
-// The data format corresponds to the output of the interpreterInfo.py script.
+/**
+ * Compose full interpreter information based on the given data.
+ *
+ * The data format corresponds to the output of the interpreterInfo.py script.
+ *
+ * @param python - the path to the Python executable
+ * @param raw - the information returned by the interpreterInfo.py script
+ */
 export function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
@@ -31,7 +36,13 @@ type Logger = {
     error(msg: string): void;
 };
 
-// Collect full interpreter information from the given Python executable.
+/**
+ * Collect full interpreter information from the given Python executable.
+ *
+ * @param python - the information to use when running Python
+ * @param shellExec - the function to use to exec Python
+ * @param logger - if provided, used to log failures or other info
+ */
 export async function getInterpreterInfo(
     python: PythonExecInfo,
     shellExec: ShellExecFunc,
