@@ -87,7 +87,7 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
  * @returns {boolean} Returns `true` if execution count has changed.
  */
 export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, executionCount: number): boolean {
-    if (cell.data.execution_count != executionCount && vscCell.metadata.executionOrder != executionCount) {
+    if (cell.data.execution_count !== executionCount && vscCell.metadata.executionOrder !== executionCount) {
         cell.data.execution_count = executionCount;
         vscCell.metadata.executionOrder = executionCount;
         return true;
