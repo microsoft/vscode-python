@@ -1,11 +1,11 @@
 import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { traceError } from '../../common/logger';
+import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
-import { traceError } from '../../logging';
 import { IDigestStorage } from '../types';
-import { isFileNotFoundError } from '../../common/platform/errors';
 
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
@@ -57,6 +57,9 @@ export class DigestStorage implements IDigestStorage {
      */
     private async initKey(): Promise<string> {
         const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
+
+        // while failed to acquire file descriptor for key file, spin
+
         if (await this.fs.fileExists(defaultKeyFileLocation)) {
             // if the keyfile already exists, bail out
             return this.fs.readFile(defaultKeyFileLocation);
