@@ -627,11 +627,7 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-        const parallelize = [this.writeToStorage(filePath, specialContents, cancelToken)];
-        if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
-        }
-        await Promise.all([parallelize]);
+        return this.writeToStorage(filePath, specialContents, cancelToken);
     }
 
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {
@@ -726,7 +722,7 @@ export class NativeEditorStorage implements INotebookStorage {
             const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents, true);
+                return this.loadContents(file, dirtyContents, true, contents);
             } else {
                 // Load without setting dirty
                 return this.loadContents(file, contents);
@@ -748,7 +744,12 @@ export class NativeEditorStorage implements INotebookStorage {
         };
     }
 
-    private async loadContents(file: Uri, contents: string | undefined, isInitiallyDirty = false) {
+    private async loadContents(
+        file: Uri,
+        contents: string | undefined,
+        isInitiallyDirty = false,
+        trueContents?: string
+    ) {
         // tslint:disable-next-line: no-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
@@ -785,7 +786,16 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        const isTrusted = contents ? await this.trustService.isNotebookTrusted(file.toString(), contents) : true; // If no contents, this is a newly created notebook, so set to true
+
+        /* As an optimization, we don't call trustNotebook for hot exit, since our hot exit backup code gets called by VS
+        Code whenever the notebook model changes. This means it's called very often, perhaps even as often as autosave.
+        Instead, when loading a file that is dirty, we check if the actual file contents on disk are trusted. If so, we treat
+        the dirty contents as trusted as well. */
+        const contentsToCheck = isInitiallyDirty && trueContents !== undefined ? trueContents : contents;
+        const isTrusted =
+            contents === undefined || isUntitledFile(file)
+                ? true // If no contents or untitled, this is a newly created file, so it should be trusted
+                : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
         return new NativeEditorNotebookModel(
             isTrusted,
             this.useNativeEditorApi,
