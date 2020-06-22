@@ -83,7 +83,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     private lastHookedMessageId: string | undefined;
     // Messages that are awaiting extension messages to be fully handled
-    //private awaitingExtensionMessage: Map<string, { type: IPyWidgetMessages; promise: Deferred<void> }>;
     private awaitingExtensionMessage: Map<string, Deferred<void>>;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
@@ -116,7 +115,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         const settings = ServerConnection.makeSettings({ WebSocket: ProxyWebSocket as any, wsUrl: 'BOGUS_PVSC' });
 
-        //this.awaitingExtensionMessage = new Map<string, { type: IPyWidgetMessages; promise: Deferred<void> }>();
         this.awaitingExtensionMessage = new Map<string, Deferred<void>>();
 
         // This is crucial, the clientId must match the real kernel in extension.
@@ -306,10 +304,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // We don't want to finish our processing of this message until the extension has told us that it has finished
         // With the extension side registering of the message hook
         const waitPromise = createDeferred<void>();
-        //this.awaitingExtensionMessage.set(msgId, {
-        //type: IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled,
-        //promise: waitPromise
-        //});
 
         // A message could cause multiple callback waits, so use id +type as key
         const key = msgId + IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled.toString();
