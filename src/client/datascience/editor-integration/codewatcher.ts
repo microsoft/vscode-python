@@ -567,6 +567,68 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    public async extendSelectionByCellBelow(): Promise<void> {
+        // This behaves similarly to excel "Extend Selection by One Cell Above".
+        // The direction of the selection matters (i.e. where the active cursor)
+        // position is. First, it ensures that complete cells are selection.
+        // If so, then if active cursor is in cells below it expands the
+        // selection range. If the active cursor is above, it contracts the
+        // selection range.
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return Promise.resolve();
+        }
+        const currentSelection = editor.selection;
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return Promise.resolve();
+        }
+
+        const isAnchorLessEqualActive = editor.selection.anchor.isBeforeOrEqual(editor.selection.active);
+
+        const cells = this.codeLensFactory.cells;
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const startCell = cells[startCellIndex];
+        const endCell = cells[endCellIndex];
+
+        if (
+            !startCell.range.start.isEqual(currentSelection.start) ||
+            !endCell.range.end.isEqual(currentSelection.end)
+        ) {
+            // full cell range not selected, first select a full cell range.
+            let selection: Selection;
+            if (isAnchorLessEqualActive) {
+                // active at start of start cell.
+                selection = new Selection(startCell.range.start, endCell.range.end);
+            } else {
+                if (startCellIndex < endCellIndex) {
+                    // active at end of cell before endCell
+                    selection = new Selection(cells[startCellIndex + 1].range.start, endCell.range.end);
+                } else {
+                    // active at end of startCell
+                    selection = new Selection(endCell.range.start, endCell.range.end);
+                }
+            }
+            editor.selection = selection;
+        } else {
+            // full cell range is selected now decide if expanding or contracting?
+            if (isAnchorLessEqualActive || startCellIndex === endCellIndex) {
+                // anchor is above active, expand selection by cell below.
+                if (endCellIndex < cells.length - 1) {
+                    const extendCell = cells[endCellIndex + 1];
+                    editor.selection = new Selection(startCell.range.start, extendCell.range.end);
+                }
+            } else {
+                // anchor is below active, contract selection by cell above.
+                if (startCellIndex < endCellIndex) {
+                    const contractCell = cells[startCellIndex + 1];
+                    editor.selection = new Selection(endCell.range.end, contractCell.range.start);
+                }
+            }
+        }
+    }
+
     private getStartEndCells(selection: Selection): ICellRange[] | undefined {
         const startEndCellIndex = this.getStartEndCellIndex(selection);
         if (startEndCellIndex) {

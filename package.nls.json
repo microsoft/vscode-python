@@ -71,6 +71,7 @@
     "python.command.python.datascience.selectCell.title": "Select Cell",
     "python.command.python.datascience.selectCellContents.title": "Select Cell Contents",
     "python.command.python.datascience.extendSelectionByCellAbove.title": "Extend Selection By Cell Above",
+    "python.command.python.datascience.extendSelectionByCellBelow.title": "Extend Selection By Cell Below",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
     "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
     "python.command.python.datascience.selectjupytercommandline.title": "Specify Jupyter command line arguments",

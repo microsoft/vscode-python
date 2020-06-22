@@ -1681,4 +1681,211 @@ testing_L8`
         expect(mockTextEditor.selection.active.line).to.equal(3);
         expect(mockTextEditor.selection.active.character).to.equal(10);
     });
+
+    test('Extend selection by cell below initial select', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 5, 2);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below initial range in cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 6, 4);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below initial range in cell opposite direction', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 4, 5, 2);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below initial range below cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(3, 2, 6, 2);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below initial range above cell', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 2, 3, 2);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below expand below', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 10, 4, 0);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(8);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
+
+    test('Extend selection by cell below contract above', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(6, 10, 1, 0);
+
+        await codeWatcher.extendSelectionByCellBelow();
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(6);
+        expect(mockTextEditor.selection.anchor.character).to.equal(10);
+        expect(mockTextEditor.selection.active.line).to.equal(4);
+        expect(mockTextEditor.selection.active.character).to.equal(0);
+    });
+
+    test('Extend selection by cell above and below', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 2, 6, 2);
+
+        await codeWatcher.extendSelectionByCellAbove(); // select full cell
+        await codeWatcher.extendSelectionByCellAbove(); // select cell above
+        await codeWatcher.extendSelectionByCellAbove(); // top cell no change
+        await codeWatcher.extendSelectionByCellAbove(); // top cell no change
+        await codeWatcher.extendSelectionByCellBelow(); // contract by cell
+        await codeWatcher.extendSelectionByCellBelow(); // expand by cell below
+        await codeWatcher.extendSelectionByCellBelow(); // last cell no change
+        await codeWatcher.extendSelectionByCellAbove(); // Original cell
+
+        expect(mockTextEditor.selection.anchor.line).to.equal(4);
+        expect(mockTextEditor.selection.anchor.character).to.equal(0);
+        expect(mockTextEditor.selection.active.line).to.equal(6);
+        expect(mockTextEditor.selection.active.character).to.equal(10);
+    });
 });
