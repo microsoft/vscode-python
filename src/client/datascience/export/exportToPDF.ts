@@ -43,8 +43,8 @@ export class ExportToPDF extends ExportBase {
         const page = await browser.newPage();
         await page.goto(file, { waitUntil: 'networkidle0' });
         const pdf = await page.pdf({ format: 'A4' });
-
         await browser.close();
+
         return pdf;
     }
 

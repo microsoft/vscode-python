@@ -72,7 +72,7 @@ export class ExportManagerFileOpener implements IExportManager {
         this.applicationShell
             .showErrorMessage(
                 // tslint:disable-next-line: messages-must-be-localized
-                `${getLocString('DataScience.failedExportMessage', 'Export failed')} ${msg}`
+                `${getLocString('DataScience.failedExportMessage', 'Export failed.')} ${msg}`
             )
             .then();
     }
