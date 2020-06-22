@@ -627,8 +627,11 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-
-        return this.writeToStorage(filePath, specialContents, cancelToken);
+        const parallelize = [this.writeToStorage(filePath, specialContents, cancelToken)];
+        if (model.isTrusted) {
+            parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
+        }
+        await Promise.all([parallelize]);
     }
 
     private async clearHotExit(file: Uri, backupId?: string): Promise<void> {

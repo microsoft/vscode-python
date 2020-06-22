@@ -1232,7 +1232,7 @@ export interface IJupyterDebugService extends IDebugService {
 
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
-    key: Promise<string>;
+    readonly key: Promise<string>;
     saveDigest(uri: string, digest: string): Promise<void>;
     containsDigest(uri: string, digest: string): Promise<boolean>;
 }

@@ -5,11 +5,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
 import { traceError } from '../../logging';
 import { IDigestStorage } from '../types';
+import { isFileNotFoundError } from '../../common/platform/errors';
 
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
-    public key: Promise<string>;
+    public readonly key: Promise<string>;
     private digestDir: Promise<string>;
 
     constructor(
@@ -23,75 +24,51 @@ export class DigestStorage implements IDigestStorage {
     public async saveDigest(uri: string, signature: string) {
         const fileName = createHash('sha256').update(uri).digest('hex');
         const fileLocation = path.join(await this.digestDir, fileName);
-        try {
-            if (!(await this.fs.fileExists(fileLocation))) {
-                await this.fs.writeFile(fileLocation, `${signature}\n`);
-            } else {
-                await this.fs.appendFile(fileLocation, `${signature}\n`);
-            }
-        } catch (err) {
-            traceError(err);
-        }
+        // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
+        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
+        // TODO figure out how slow this is, potentially optimize it
     }
 
     public async containsDigest(uri: string, signature: string) {
         const fileName = createHash('sha256').update(uri).digest('hex');
         const fileLocation = path.join(await this.digestDir, fileName);
         try {
-            if (!(await this.fs.fileExists(fileLocation))) {
-                return false;
-            } else {
-                // // naive approach that works: read entire digest file contents, do regex match
-                const digests = await this.fs.readFile(fileLocation);
-                const match = digests.match(new RegExp(`/^${signature}/`, 'm'));
-                return match !== null;
-            }
+            const digests = await this.fs.readFile(fileLocation);
+            return digests.indexOf(`z${signature}z`) >= 0;
         } catch (err) {
-            traceError(err);
+            if (!isFileNotFoundError(err)) {
+                traceError(err); // Don't log the error if the file simply doesn't exist
+            }
             return false;
         }
     }
 
-    private initDir(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
-                if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
-                    await this.fs.createDirectory(defaultDigestDirLocation);
-                }
-                resolve(defaultDigestDirLocation);
-            } catch (err) {
-                traceError(err);
-                reject(err);
-            }
-        });
+    private async initDir(): Promise<string> {
+        const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
+        if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
+            await this.fs.createDirectory(defaultDigestDirLocation);
+        }
+        return defaultDigestDirLocation;
     }
 
     /**
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    private initKey(): Promise<string> {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
-                if (await this.fs.fileExists(defaultKeyFileLocation)) {
-                    // if the keyfile already exists, bail out
-                    resolve((await this.fs.readFile(defaultKeyFileLocation)) as string);
-                } else {
-                    // If it doesn't exist, create one
-                    // Key must be generated from a cryptographically secure pseudorandom function:
-                    // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-                    // No callback is provided so random bytes will be generated synchronously
-                    const key = randomBytes(1024).toString('hex');
-                    await this.fs.writeFile(defaultKeyFileLocation, key);
-                    resolve(key);
-                }
-            } catch (err) {
-                traceError(err);
-                reject(err);
-            }
-        });
+    private async initKey(): Promise<string> {
+        const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
+        if (await this.fs.fileExists(defaultKeyFileLocation)) {
+            // if the keyfile already exists, bail out
+            return this.fs.readFile(defaultKeyFileLocation);
+        } else {
+            // If it doesn't exist, create one
+            // Key must be generated from a cryptographically secure pseudorandom function:
+            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+            // No callback is provided so random bytes will be generated synchronously
+            const key = randomBytes(1024).toString('hex');
+            await this.fs.writeFile(defaultKeyFileLocation, key);
+            return key;
+        }
     }
 
     private getDefaultLocation(fileName: string) {
