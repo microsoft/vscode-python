@@ -49,7 +49,7 @@ export function buildPythonExecInfo(python: string | string[], pythonArgs?: stri
  * Create a copy, optionally adding to the args to pass to Python.
  *
  * @param orig - the object to copy
- * @param extraPythonArgs - any arguments to add to the end of orig.args
+ * @param extraPythonArgs - any arguments to add to the end of `orig.args`
  */
 export function copyPythonExecInfo(orig: PythonExecInfo, extraPythonArgs?: string[]): PythonExecInfo {
     const info = {

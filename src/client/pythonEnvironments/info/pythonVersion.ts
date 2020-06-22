@@ -72,7 +72,7 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 /**
  * Get the version string of the given Python executable by running it.
  *
- * Effectively, we look up sys.version.
+ * Effectively, we look up `sys.version`.
  *
  * @param pythonPath - the Python executable to exec
  * @param defaultValue - the value to return if anything goes wrong

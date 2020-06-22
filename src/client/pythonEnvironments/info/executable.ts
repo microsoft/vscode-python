@@ -12,7 +12,7 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
 /**
  * Find the filename for the corresponding Python executable.
  *
- * Effectively, we look up sys.executable.
+ * Effectively, we look up `sys.executable`.
  *
  * @param python - the information to use when running Python
  * @param exec - the function to use to run Python
