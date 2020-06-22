@@ -213,21 +213,10 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         if (
             this.props.settings &&
             this.props.settings.webviewExperiments &&
-            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow
+            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow &&
+            this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')
         ) {
-            if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
-                return (
-                    <KernelSelection
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={this.props.selectServer}
-                        selectKernel={this.props.selectKernel}
-                    />
-                );
-            } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
-                return;
-            }
+            return;
         }
 
         return (
