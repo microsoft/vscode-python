@@ -55,7 +55,7 @@ export class DigestStorage implements IDigestStorage {
     private initDir(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const defaultDigestDirLocation = this.getDefaultDigestDirLocation();
+                const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
                 if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
                     await this.fs.createDirectory(defaultDigestDirLocation);
                 }
@@ -74,7 +74,7 @@ export class DigestStorage implements IDigestStorage {
     private initKey(): Promise<string> {
         return new Promise(async (resolve, reject) => {
             try {
-                const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
+                const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
                 if (await this.fs.fileExists(defaultKeyFileLocation)) {
                     // if the keyfile already exists, bail out
                     resolve((await this.fs.readFile(defaultKeyFileLocation)) as string);
@@ -94,21 +94,11 @@ export class DigestStorage implements IDigestStorage {
         });
     }
 
-    private getDefaultKeyFileLocation() {
-        const keyfileName = 'nbsecret';
+    private getDefaultLocation(fileName: string) {
         const dir = this.extensionContext.globalStoragePath;
         if (dir) {
-            return path.join(dir, keyfileName);
+            return path.join(dir, fileName);
         }
-        throw new Error('Unable to locate keyfile');
-    }
-
-    private getDefaultDigestDirLocation() {
-        const dirName = 'nbsignatures';
-        const dir = this.extensionContext.globalStoragePath;
-        if (dir) {
-            return path.join(dir, dirName);
-        }
-        throw new Error('Unable to locate directory containing trusted notebook signatures');
+        throw new Error('Unable to locate extension global storage path for trusted digest storage');
     }
 }
