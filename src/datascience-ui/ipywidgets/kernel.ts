@@ -80,6 +80,8 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private messageHook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>;
     private messageHooks: Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>;
     private lastHookedMessageId: string | undefined;
+    // Messages that are awaiting extension messages to be fully handled
+    private awaitingExtensionMessage: Map<string, IPyWidgetMessages[]>;
     constructor(options: KernelSocketOptions, private postOffice: PostOffice) {
         // Dummy websocket we give to the underlying real kernel
         let proxySocketInstance: any;
@@ -297,6 +299,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // Wrap the hook and send it to the real kernel
         window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
+
+        // We don't want to finish our processing of this message until the extension has told us that it has finished
+        // With the extension side registering of the message hook
     }
     public removeMessageHook(
         msgId: string,
@@ -417,6 +422,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
 
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+        window.console.log(`**** IOPub message ${message.header.msg_id} handled ****`);
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
             id: message.header.msg_id
         });

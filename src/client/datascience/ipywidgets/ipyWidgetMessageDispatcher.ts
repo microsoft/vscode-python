@@ -54,6 +54,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private totalWaitTime: number = 0;
     private totalWaitedMessages: number = 0;
     private hookCount: number = 0;
+    private fullHandleMessage?: { id: string; promise: Deferred<void> };
     /**
      * This will be true if user has executed something that has resulted in the use of ipywidgets.
      * We make this determinination based on whether we see messages coming from backend kernel of a specific shape.
@@ -245,11 +246,27 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
 
-    private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
-        if (!this.isUsingIPyWidgets) {
-            // Hooks expect serialized data as this normally comes from a WebSocket
-            const message = this.deserialize(data as any) as any;
+    // IANHU: Better name / location?
+    // Determine if a message can just be added into the message queue or if we need to wait for it to be
+    // fully handled on both the UI and extension side before we process the next message incoming
+    private messageNeedsFullHandle(message: any) {
+        if (message.channel === 'iopub') {
+            if (message.header?.msg_type === 'comm_msg') {
+                // iopub comm messages
+                return true;
+            }
+        }
 
+        return false;
+    }
+
+    private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
+        // Hooks expect serialized data as this normally comes from a WebSocket
+        const message = this.deserialize(data as any) as any;
+
+        const handleFully = this.messageNeedsFullHandle(message);
+
+        if (!this.isUsingIPyWidgets) {
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (
                 message.content &&
@@ -263,6 +280,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const msgUuid = uuid();
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
+
+        // IANHU: Cleanup creation here
+        if (handleFully && this.isUsingIPyWidgets) {
+            traceInfo(`**** Full Handle request on ${message.header.msg_id} ****`);
+            this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
+        }
+
         if (typeof data === 'string') {
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, { id: msgUuid, data });
         } else {
@@ -275,6 +299,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
         if (this.isUsingIPyWidgets) {
             await promise.promise;
+
+            // Comm specific iopub messages we need to wait until they are full handled
+            // by both the UI and extension side before we move forward
+            if (handleFully && this.fullHandleMessage) {
+                traceInfo(`**** Awaiting full handle on ${message.header.msg_id} ****`);
+                await this.fullHandleMessage.promise.promise;
+                traceInfo(`**** Completed full handle await on ${message.header.msg_id} ****`);
+                this.fullHandleMessage = undefined;
+            }
         }
     }
     private onKernelSocketResponse(payload: { id: string }) {
@@ -368,6 +401,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
             // that we are done with extension side handling of this message
+            traceInfo(`**** Finished extension side registerMessageHook for ${msgId}`);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled, { id: msgId });
         }
     }
