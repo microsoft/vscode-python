@@ -5,6 +5,7 @@
 
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
+import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
@@ -20,14 +21,16 @@ import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
 class ProxyKernel implements IMessageHandler, Kernel.IKernel {
+    // IANHU: Should the <X, Y> X be this or the realKernel?
+    private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
+    public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
+        return this._ioPubMessageSignal;
+    }
     public get terminated() {
         return this.realKernel.terminated as any;
     }
     public get statusChanged() {
         return this.realKernel.statusChanged as any;
-    }
-    public get iopubMessage() {
-        return this.realKernel.iopubMessage as any;
     }
     public get unhandledMessage() {
         return this.realKernel.unhandledMessage as any;
@@ -121,6 +124,13 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             },
             options.id
         );
+
+        // Hook up to watch iopub messages from the real kernel
+        // tslint:disable-next-line: no-require-imports
+        const signaling = require('@phosphor/signaling') as typeof import('@phosphor/signaling');
+        this._ioPubMessageSignal = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
+        this.realKernel.iopubMessage.connect(this.onIOPubMessage, this);
+
         postOffice.addHandler(this);
         this.websocket = proxySocketInstance;
         this.messageHook = this.messageHookInterceptor.bind(this);
@@ -404,6 +414,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
             this.websocket.sendEnabled = true;
         }
         this.sendResponse(payload.id);
+    }
+
+    private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+        this._ioPubMessageSignal.emit(message);
     }
 }
 
