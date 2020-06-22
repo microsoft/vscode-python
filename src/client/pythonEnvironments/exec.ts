@@ -30,9 +30,9 @@ export function buildPythonExecInfo(python: string | string[], pythonArgs?: stri
             args.push(...pythonArgs);
         }
         return {
-            command: python[0],
             args,
-            python,
+            command: python[0],
+            python: [...python],
             pythonExecutable: python[python.length - 1]
         };
     } else {
