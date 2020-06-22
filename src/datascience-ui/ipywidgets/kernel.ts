@@ -417,6 +417,9 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
 
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
+            id: message.header.msg_id
+        });
         this._ioPubMessageSignal.emit(message);
     }
 }
