@@ -8,7 +8,6 @@ import { IBrowserService } from '../../common/types';
 import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
 import { ExportFormat, IExportManager } from './types';
@@ -18,14 +17,12 @@ export class ExportManagerFileOpener implements IExportManager {
     constructor(
         @inject(ExportManagerDependencyChecker) private readonly manager: IExportManager,
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         let uri: Uri | undefined;
         try {
             uri = await this.manager.export(format, model);
@@ -34,8 +31,6 @@ export class ExportManagerFileOpener implements IExportManager {
             this.showExportFailed(e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
             return;
-        } finally {
-            reporter.dispose();
         }
 
         if (!uri) {

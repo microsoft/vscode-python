@@ -786,12 +786,10 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
-    export const installPDFDependiciesYes = localize('DataScience.installPDFDependiciesYes', 'Yes');
-    export const installPDFDependiciesMessage = localize(
-        'DataScience.installPDFDependiciesMessage',
-        'To export this file we need to install the following dependicies...'
+    export const markdownExportToPDFDependencyMessage = localize(
+        'DataScience.markdownExportToPDFDependencyMessage',
+        'Exporting to PDF was unsuccessful. If you have not installed xelatex you may need to do so. Find further instructions [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex).'
     );
-    export const installPDFDependiciesNo = localize('DataScience.installPDFDependiciesNo', 'No');
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');

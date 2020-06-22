@@ -1,13 +1,12 @@
-import { inject, injectable, named } from 'inversify';
-import * as puppeteer from 'puppeteer';
+import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { IApplicationShell } from '../../common/application/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
-import { IDataScienceErrorHandler, IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
+import { DataScience } from '../../common/utils/localize';
+import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
 import { ExportBase } from './exportBase';
-import { ExportFormat, IExport } from './types';
 
 @injectable()
 export class ExportToPDF extends ExportBase {
@@ -17,44 +16,31 @@ export class ExportToPDF extends ExportBase {
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) protected readonly fileSystem: IFileSystem,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
-        @inject(IExport) @named(ExportFormat.html) private readonly exportToHTML: IExport,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
     ) {
         super(pythonExecutionFactory, jupyterService, fileSystem, importer);
     }
 
     public async export(source: Uri, target: Uri): Promise<void> {
-        const tempFile = await this.makeTempFile();
-        if (!tempFile) {
-            return;
-        }
+        const args = [
+            source.fsPath,
+            '--to',
+            'pdf',
+            '--output',
+            path.basename(target.fsPath),
+            '--output-dir',
+            path.dirname(target.fsPath)
+        ];
         try {
-            await this.exportToHTML.export(source, Uri.file(tempFile.filePath));
-            const pdfContents = await this.printPDF(tempFile.filePath);
-            await this.fileSystem.writeFile(target.fsPath, pdfContents);
-        } finally {
-            tempFile.dispose();
-        }
-    }
-
-    @reportAction(ReportableAction.ConvertingToPDF)
-    private async printPDF(file: string) {
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
-        await page.goto(file, { waitUntil: 'networkidle0' });
-        const pdf = await page.pdf({ format: 'A4' });
-        await browser.close();
-
-        return pdf;
-    }
-
-    private async makeTempFile(): Promise<TemporaryFile | undefined> {
-        let tempFile;
-        try {
-            tempFile = await this.fileSystem.createTemporaryFile('.html');
+            await this.executeCommand(source, target, args);
         } catch (e) {
-            await this.errorHandler.handleError(e);
+            this.displayInstallDependency().then().catch();
+            throw e;
         }
-        return tempFile;
+    }
+
+    public async displayInstallDependency() {
+        // TeX is a dependency of exporting to PDF, user must install this.
+        await this.applicationShell.showWarningMessage(DataScience.markdownExportToPDFDependencyMessage());
     }
 }
