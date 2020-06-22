@@ -7,10 +7,10 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
+import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { sleep } from '../../../common/utils/async';
-import { traceError, traceInfo } from '../../../logging';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 import { calculateWorkingDirectory } from '../../utils';
 

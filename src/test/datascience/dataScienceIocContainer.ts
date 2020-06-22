@@ -117,6 +117,7 @@ import {
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
+import { traceInfo } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -366,7 +367,6 @@ import { registerInterpreterTypes } from '../../client/interpreter/serviceRegist
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
-import { traceInfo } from '../../client/logging';
 import { PythonInterpreterLocatorService } from '../../client/pythonEnvironments/discovery/locators';
 import { InterpreterLocatorHelper } from '../../client/pythonEnvironments/discovery/locators/helpers';
 import { CacheableLocatorPromiseCache } from '../../client/pythonEnvironments/discovery/locators/services/cacheableLocatorService';

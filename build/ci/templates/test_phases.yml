@@ -517,12 +517,15 @@ steps:
       npm install -g vsce
       npm run clean
       npx tsc -p ./
+      mkdir -p ./tmp/client/logging
+      cp -r ./out/client/logging ./tmp/client
       npx gulp clean:cleanExceptTests
-      mkdir -p ./tmp
       cp -r ./out/test ./tmp/test
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx gulp clean:cleanExceptTests
+      mkdir -p ./out/client/logging
+      cp -r ./tmp/client/logging ./out/client
       cp -r ./tmp/test ./out/test
       node --no-force-async-hooks-checks ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'

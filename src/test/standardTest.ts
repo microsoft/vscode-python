@@ -3,6 +3,9 @@
 import * as path from 'path';
 import { runTests } from 'vscode-test';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
+import { initializeLogger } from './testLogger';
+
+initializeLogger();
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_PYTHON_CI_TEST = '1';

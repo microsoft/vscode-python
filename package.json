@@ -1359,6 +1359,14 @@
                                     "type": "string"
                                 }
                             },
+                            "argsExpansion": {
+                                "enum": [
+                                    "none",
+                                    "shell"
+                                ],
+                                "description": "Whether to perform shell expansion on \"args\", or pass all values as is.",
+                                "default": "shell"
+                            },
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Automatically stop after launch.",
@@ -1711,6 +1719,19 @@
                     "default": true,
                     "description": "Automatically update the language server.",
                     "scope": "application"
+                },
+                "python.logging.level": {
+                    "type": "string",
+                    "default": "error",
+                    "enum": [
+                        "off",
+                        "error",
+                        "warn",
+                        "info",
+                        "debug"
+                    ],
+                    "description": "The logging level the extension logs at, defaults to 'error'",
+                    "scope": "machine"
                 },
                 "python.experiments.enabled": {
                     "type": "boolean",

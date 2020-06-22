@@ -6,6 +6,7 @@
 // tslint:disable:chai-vague-errors no-unused-expression max-func-body-length no-any
 
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { LanguageServerType } from '../../client/activation/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -61,6 +62,22 @@ suite('Linter Info - Pylint', () => {
         when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
+    });
+    test('Should inspect the value of linting.pylintEnabled when using Language Server', async () => {
+        const linterInfo = new PylintLinterInfo(instance(config), instance(workspace), []);
+        const inspectStub = sinon.stub();
+        const pythonConfig = {
+            inspect: inspectStub
+        };
+
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: true },
+            languageServer: LanguageServerType.Microsoft
+        } as any);
+        when(workspace.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
+
+        expect(linterInfo.isEnabled()).to.be.false;
+        expect(inspectStub.calledOnceWith('linting.pylintEnabled')).to.be.true;
     });
     const testsForisEnabled = [
         {
