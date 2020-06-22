@@ -240,7 +240,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
     ): void {
-        // When a comm target has been regisered, we need to register this in the real kernel in extension side.
+        // When a comm target has been registered, we need to register this in the real kernel in extension side.
         // Hence send that message to extension.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
             IPyWidgetMessages.IPyWidgets_registerCommTarget,
@@ -302,7 +302,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // With the extension side registering of the message hook
         const waitPromise = createDeferred<void>();
 
-        // A message could cause multiple callback waits, so use id +type as key
+        // A message could cause multiple callback waits, so use id+type as key
         const key = msgId + IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString();
         window.console.log(`**** Await key added ${key}`);
         this.awaitingExtensionMessage.set(key, waitPromise);
@@ -322,10 +322,20 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         await waitPromise.promise;
         window.console.log(`**** Finished awaiting Extension side for ${msgId}`);
     }
-    public removeMessageHook(
+
+    public async removeMessageHook(
         msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): void {
+    ): Promise<void> {
+        // We don't want to finish our processing of this message until the extension has told us that it has finished
+        // With the extension side removing of the message hook
+        const waitPromise = createDeferred<void>();
+
+        // A message could cause multiple callback waits, so use id+type as key
+        const key = msgId + IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString();
+        window.console.log(`**** Await key added ${key}`);
+        this.awaitingExtensionMessage.set(key, waitPromise);
+
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
             hookMsgId: msgId,
             lastHookedMsgId: this.lastHookedMessageId
@@ -338,6 +348,11 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // Remove from the real kernel
         window.console.log(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
+
+        // Don't exit until we know that the Extension side has also finished processing
+        window.console.log(`**** Awaiting Extension side for ${msgId}`);
+        await waitPromise.promise;
+        window.console.log(`**** Finished awaiting Extension side for ${msgId}`);
     }
 
     private extensionOperationFinished(payload: any) {

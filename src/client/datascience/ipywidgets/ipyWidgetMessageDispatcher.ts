@@ -433,10 +433,20 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private removeMessageHook(msgId: string) {
-        if (this.notebook && this.messageHooks.has(msgId)) {
-            const callback = this.messageHooks.get(msgId);
-            this.messageHooks.delete(msgId);
-            this.notebook.removeMessageHook(msgId, callback!);
+        try {
+            if (this.notebook && this.messageHooks.has(msgId)) {
+                const callback = this.messageHooks.get(msgId);
+                this.messageHooks.delete(msgId);
+                this.notebook.removeMessageHook(msgId, callback!);
+            }
+        } finally {
+            // Regardless of if we registered successfully or not, send back a message to the UI
+            // that we are done with extension side handling of this message
+            traceInfo(`**** Finished extension side registerMessageHook for ${msgId}`);
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
+                id: msgId,
+                type: IPyWidgetMessages.IPyWidgets_RemoveMessageHook
+            });
         }
     }
 
