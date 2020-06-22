@@ -25,9 +25,6 @@ suite('getExecutablePath()', () => {
     setup(() => {
         deps = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
     });
-    function verifyAll() {
-        deps.verifyAll();
-    }
 
     test('should get the value by running python', async () => {
         const expected = 'path/to/dummy/executable';
@@ -40,7 +37,7 @@ suite('getExecutablePath()', () => {
         const result = await getExecutablePath(python, exec);
 
         expect(result).to.equal(expected, 'getExecutablePath() should return get the value by running Python');
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should throw if exec() fails', async () => {
@@ -54,6 +51,6 @@ suite('getExecutablePath()', () => {
         const result = getExecutablePath(python, exec);
 
         expect(result).to.eventually.be.rejectedWith(stderr);
-        verifyAll();
+        deps.verifyAll();
     });
 });

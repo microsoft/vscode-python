@@ -33,9 +33,6 @@ suite('getInterpreterInfo()', () => {
     setup(() => {
         deps = Mock.ofType<IDeps>(undefined, MockBehavior.Strict);
     });
-    function verifyAll() {
-        deps.verifyAll();
-    }
 
     test('should call exec() with the proper command and timeout', async () => {
         const json = {
@@ -53,7 +50,7 @@ suite('getInterpreterInfo()', () => {
 
         await getInterpreterInfo(python, shellExec);
 
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should quote spaces in the command', async () => {
@@ -73,7 +70,7 @@ suite('getInterpreterInfo()', () => {
 
         await getInterpreterInfo(_python, shellExec);
 
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should handle multi-command (e.g. conda)', async () => {
@@ -93,7 +90,7 @@ suite('getInterpreterInfo()', () => {
 
         await getInterpreterInfo(_python, shellExec);
 
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should return an object if exec() is successful', async () => {
@@ -119,7 +116,7 @@ suite('getInterpreterInfo()', () => {
         const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should return an object if the version info contains less than 4 items', async () => {
@@ -145,7 +142,7 @@ suite('getInterpreterInfo()', () => {
         const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should return an object with the architecture value set to x86 if json.is64bit is not 64bit', async () => {
@@ -171,7 +168,7 @@ suite('getInterpreterInfo()', () => {
         const result = await getInterpreterInfo(python, shellExec);
 
         expect(result).to.deep.equal(expected, 'broken');
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should return undefined if the result of exec() writes to stderr', async () => {
@@ -185,7 +182,7 @@ suite('getInterpreterInfo()', () => {
         const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejectedWith(err);
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should fail if exec() fails (e.g. the script times out)', async () => {
@@ -199,7 +196,7 @@ suite('getInterpreterInfo()', () => {
         const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejectedWith(err);
-        verifyAll();
+        deps.verifyAll();
     });
 
     test('should fail if the json value returned by interpreterInfo.py is not valid', async () => {
@@ -212,6 +209,6 @@ suite('getInterpreterInfo()', () => {
         const result = getInterpreterInfo(python, shellExec);
 
         await expect(result).to.eventually.be.rejected;
-        verifyAll();
+        deps.verifyAll();
     });
 });
