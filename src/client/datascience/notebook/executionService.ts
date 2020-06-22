@@ -30,7 +30,7 @@ import {
     updateCellWithErrorStatus
 } from './helpers/executionHelpers';
 import { getCellStatusMessageBasedOnFirstErrorOutput, updateVSCNotebookCellMetadata } from './helpers/helpers';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -54,7 +54,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider
     ) {}
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
@@ -207,13 +208,18 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         typeof cells[0].data.execution_count === 'number'
                     ) {
                         const executionCount = cells[0].data.execution_count as number;
-                        updateCellExecutionCount(cell, notebookCellModel, executionCount);
+                        if (updateCellExecutionCount(cell, notebookCellModel, executionCount)) {
+                            this.contentProvider.notifyChangesToDocument(document);
+                        }
                     }
 
-                    updateCellOutput(cell, notebookCellModel, rawCellOutput);
+                    if (updateCellOutput(cell, notebookCellModel, rawCellOutput)) {
+                        this.contentProvider.notifyChangesToDocument(document);
+                    }
                 },
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
+                    this.contentProvider.notifyChangesToDocument(document);
                     deferred.resolve();
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
@@ -242,12 +248,14 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     }
 
                     updateVSCNotebookCellMetadata(cell.metadata, notebookCellModel);
+                    this.contentProvider.notifyChangesToDocument(document);
                     deferred.resolve();
                 }
             );
             await deferred.promise;
         } catch (ex) {
             updateCellWithErrorStatus(cell, ex);
+            this.contentProvider.notifyChangesToDocument(document);
             this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
             this.sendPerceivedCellExecute(stopWatch);
@@ -270,8 +278,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             nb.registerIOPubListener(async (msg) => {
-                if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                    handleUpdateDisplayDataMessage(msg, model, document);
+                if (
+                    jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
+                    handleUpdateDisplayDataMessage(msg, model, document)
+                ) {
+                    this.contentProvider.notifyChangesToDocument(document);
                 }
             });
         }
