@@ -31,6 +31,7 @@ type ShellExecResult = {
     stderr?: string;
 };
 type ShellExecFunc = (command: string, timeout: number) => Promise<ShellExecResult>;
+
 type Logger = {
     info(msg: string): void;
     error(msg: string): void;
