@@ -540,7 +540,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
-    public [IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled]: string;
+    public [IPyWidgetMessages.IPyWidgets_ExtensionRegisterMessageHookHandled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
         requestId: string;
