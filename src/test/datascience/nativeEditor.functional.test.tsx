@@ -1985,6 +1985,17 @@ df.head()`;
                             assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
                             assert.equal(wrapper.find('NativeCell').length, 4);
 
+                            // Press 'meta+z'. This should do nothing
+                            simulateKeyPressOnCell(0, { code: 'z', metaKey: true });
+                            await sleep(100);
+
+                            // There should be 4 cells and first cell is selected.
+                            assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
+                            assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
+                            assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
+                            assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
+                            assert.equal(wrapper.find('NativeCell').length, 4);
+
                             // Press 'z' to undo.
                             // Technically not really rendering, but it fires when the cell count changes
                             update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);

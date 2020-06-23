@@ -25,7 +25,6 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    deleteAllCellsAndWait,
     insertPythonCellAndWait,
     saveActiveNotebook,
     startJupyter,
@@ -36,7 +35,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Saving)', function () {
     this.timeout(60_000);
-    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
+    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'empty.ipynb');
     let api: IExtensionTestApi;
     let testIPynb: Uri;
     let editorProvider: INotebookEditorProvider;
@@ -58,7 +57,6 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
         await editorProvider.open(testIPynb);
-        await deleteAllCellsAndWait();
     });
     teardown(async () => {
         await swallowSavingOfNotebooks();

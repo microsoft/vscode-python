@@ -16,8 +16,8 @@ import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
-import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
 import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
+import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -27,7 +27,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<NotebookContentProvider>(NotebookContentProvider),
+        contentProvider: api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider)
     };
@@ -164,7 +164,7 @@ export async function canRunTests() {
 export async function swallowSavingOfNotebooks() {
     const api = await initialize();
     // We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
-    const contentProvider = api.serviceContainer.get<NotebookContentProvider>(NotebookContentProvider);
+    const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
     sinon.stub(contentProvider, 'saveNotebook').callsFake(noop as any);
     sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
 }

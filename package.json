@@ -96,7 +96,8 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
-        "workspaceContains:**/mspythonconfig.json"
+        "workspaceContains:**/mspythonconfig.json",
+        "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
     "contributes": {

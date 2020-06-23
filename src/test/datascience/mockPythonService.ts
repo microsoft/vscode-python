@@ -7,6 +7,7 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../client/common/process/types';
+import { buildPythonExecInfo } from '../../client/pythonEnvironments/exec';
 import { InterpreterInformation, PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { MockProcessService } from './mockProcessService';
 
@@ -77,6 +78,6 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public getExecutionInfo(args: string[]) {
-        return { command: this.interpreter.path, args, python: [this.interpreter.path] };
+        return buildPythonExecInfo(this.interpreter.path, args);
     }
 }

@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { PythonExecInfo } from '../../pythonEnvironments/exec';
+import { copyPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
@@ -33,7 +33,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
     }
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
-        const { command, args: executableArgs, python } = await super.getExecutableInfo(resource, args);
+        const info = await super.getExecutableInfo(resource, args);
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
         const defaultWorkspace =
@@ -43,14 +43,12 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 
-        executableArgs.push(managePyPath.fileToCommandArgument());
-        executableArgs.push('shell');
-        return { command, args: executableArgs, python };
+        return copyPythonExecInfo(info, [managePyPath.fileToCommandArgument(), 'shell']);
     }
 
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         // We need the executable info but not the 'manage.py shell' args
-        const { command, args, python } = await super.getExecutableInfo(resource);
-        return { command, args: args.concat(executeArgs), python };
+        const info = await super.getExecutableInfo(resource);
+        return copyPythonExecInfo(info, executeArgs);
     }
 }
