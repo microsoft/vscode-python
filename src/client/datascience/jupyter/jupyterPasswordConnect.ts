@@ -104,7 +104,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 // Response should have the token to use for this user.
                 return {
                     requestHeaders: {},
-                    remappedBaseUrl: `${baseUrl}/hub/api${body.user.server}`,
+                    remappedBaseUrl: `${baseUrl}${body.user.server}`,
                     remappedToken: body.token
                 };
             }
