@@ -788,7 +788,7 @@ export namespace DataScience {
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
     export const markdownExportToPDFDependencyMessage = localize(
         'DataScience.markdownExportToPDFDependencyMessage',
-        'Exporting to PDF was unsuccessful. If you have not installed xelatex you may need to do so. Find further instructions [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex).'
+        'Exporting to PDF was unsuccessful. If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
     );
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');

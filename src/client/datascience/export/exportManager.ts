@@ -1,5 +1,4 @@
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -30,8 +29,7 @@ export class ExportManager implements IExportManager {
             target = Uri.file((await this.fileSystem.createTemporaryFile('.py')).filePath);
         }
 
-        const name = path.basename(target.fsPath, path.extname(target.fsPath)).replace('_', ' ');
-        const tempFile = await this.makeTemporaryFile(model, name);
+        const tempFile = await this.makeTemporaryFile(model);
         if (!tempFile) {
             return; // error making temp file
         }
@@ -63,14 +61,11 @@ export class ExportManager implements IExportManager {
         return target;
     }
 
-    private async makeTemporaryFile(model: INotebookModel, name: string): Promise<TemporaryFile | undefined> {
+    private async makeTemporaryFile(model: INotebookModel): Promise<TemporaryFile | undefined> {
         let tempFile: TemporaryFile | undefined;
         try {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
-            let content = model ? model.getContent() : '';
-            const jsonContent = JSON.parse(content);
-            jsonContent.metadata.title = name;
-            content = JSON.stringify(jsonContent);
+            const content = model ? model.getContent() : '';
             await this.fileSystem.writeFile(tempFile.filePath, content, 'utf-8');
         } catch (e) {
             await this.errorHandler.handleError(e);
