@@ -314,6 +314,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
+        window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
 
@@ -339,6 +340,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
+        window.console.log(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
@@ -346,12 +348,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private extensionOperationFinished(payload: any) {
         //const key = payload.id + payload.type;
         const key = `${payload.id}${payload.type}`;
-        window.console.log(`$$$$ ${key}`);
 
         const waitPromise = this.awaitingExtensionMessage.get(key);
 
         if (waitPromise) {
-            window.console.log(`^^^^ ${key} Extension operation resolved`);
             waitPromise.resolve();
             this.awaitingExtensionMessage.delete(key);
         }
