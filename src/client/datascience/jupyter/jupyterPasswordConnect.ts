@@ -13,14 +13,41 @@ import { Telemetry } from './../constants';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
+    private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
+
     constructor(@inject(IApplicationShell) private appShell: IApplicationShell) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
-    public async getPasswordConnectionInfo(
+    public getPasswordConnectionInfo(
         url: string,
         allowUnauthorized: boolean,
         fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
+        if (!url || url.length < 1) {
+            return Promise.resolve(undefined);
+        }
+
+        // Add on a trailing slash to our URL if it's not there already
+        let newUrl = url;
+        if (newUrl[newUrl.length - 1] !== '/') {
+            newUrl = `${newUrl}/`;
+        }
+
+        // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
+        let result = this.savedConnectInfo.get(newUrl);
+        if (!result) {
+            result = this.getNonCachedPasswordConnectionInfo(newUrl, allowUnauthorized, fetchFunction);
+            this.savedConnectInfo.set(newUrl, result);
+        }
+
+        return result;
+    }
+
+    private async getNonCachedPasswordConnectionInfo(
+        url: string,
+        allowUnauthorized: boolean,
+        fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
+    ) {
         // For testing allow for our fetch function to be overridden
         if (!fetchFunction) {
             fetchFunction = nodeFetch.default;
@@ -30,41 +57,36 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
-        if (!url || url.length < 1) {
-            return undefined;
-        }
+        // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
+        if (await this.needPassword(url, allowUnauthorized, fetchFunction)) {
+            // Get password first
+            let userPassword = await this.getUserPassword();
 
-        // Add on a trailing slash to our URL if it's not there already
-        let newUrl = url;
-        if (newUrl[newUrl.length - 1] !== '/') {
-            newUrl = `${newUrl}/`;
-        }
+            if (userPassword) {
+                xsrfCookie = await this.getXSRFToken(url, allowUnauthorized, fetchFunction);
 
-        // Get password first
-        let userPassword = await this.getUserPassword();
-
-        if (userPassword) {
-            // First get the xsrf cookie by hitting the initial login page
-            xsrfCookie = await this.getXSRFToken(url, allowUnauthorized, fetchFunction);
-
-            // Then get the session cookie by hitting that same page with the xsrftoken and the password
-            if (xsrfCookie) {
-                const sessionResult = await this.getSessionCookie(
-                    url,
-                    allowUnauthorized,
-                    xsrfCookie,
-                    userPassword,
-                    fetchFunction
-                );
-                sessionCookieName = sessionResult.sessionCookieName;
-                sessionCookieValue = sessionResult.sessionCookieValue;
+                // Then get the session cookie by hitting that same page with the xsrftoken and the password
+                if (xsrfCookie) {
+                    const sessionResult = await this.getSessionCookie(
+                        url,
+                        allowUnauthorized,
+                        xsrfCookie,
+                        userPassword,
+                        fetchFunction
+                    );
+                    sessionCookieName = sessionResult.sessionCookieName;
+                    sessionCookieValue = sessionResult.sessionCookieValue;
+                }
+            } else {
+                // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
+                // like a standard connection. Might be the case where there is no token and no password
+                return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
             }
+            userPassword = undefined;
         } else {
-            // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
-            // like a standard connection. Might be the case where there is no token and no password
+            // If no password needed, act like empty password and no cookie
             return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
         }
-        userPassword = undefined;
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
@@ -123,6 +145,24 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         return xsrfCookie;
+    }
+
+    private async needPassword(
+        url: string,
+        allowUnauthorized: boolean,
+        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
+    ): Promise<boolean> {
+        // A jupyter server will redirect if you ask for the tree when a login is required
+        const response = await fetchFunction(
+            `${url}tree?`,
+            this.addAllowUnauthorized(url, allowUnauthorized, {
+                method: 'get',
+                redirect: 'manual',
+                headers: { Connection: 'keep-alive' }
+            })
+        );
+
+        return response.status !== 200;
     }
 
     // Jupyter uses a session cookie to validate so by hitting the login page with the password we can get that cookie and use it ourselves

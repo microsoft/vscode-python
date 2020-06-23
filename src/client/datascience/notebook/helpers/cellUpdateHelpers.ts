@@ -17,7 +17,7 @@ import {
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
-import { traceError } from '../../../logging';
+import { traceError } from '../../../common/logger';
 import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
 import {

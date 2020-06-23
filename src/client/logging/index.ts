@@ -5,9 +5,12 @@
 export {
     // aliases
     // (for convenience)
+    setLoggingLevel,
+    addOutputChannelLogging,
+    logError,
+    logInfo,
+    logVerbose,
+    logWarning,
     traceDecorators,
-    traceError,
-    traceInfo,
-    traceVerbose,
-    traceWarning
-} from './_trace';
+    tracing
+} from './_global';

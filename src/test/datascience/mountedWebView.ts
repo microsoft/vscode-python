@@ -7,10 +7,10 @@ import {
     IWebPanelOptions,
     WebPanelMessage
 } from '../../client/common/application/types';
+import { traceInfo } from '../../client/common/logger';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { traceInfo } from '../../client/logging';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 
 export type WaitForMessageOptions = {

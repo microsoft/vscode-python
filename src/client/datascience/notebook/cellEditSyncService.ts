@@ -7,9 +7,9 @@ import type { NotebookCell, NotebookDocument } from '../../../../typings/vscode-
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { isNotebookCell } from '../../common/utils/misc';
-import { traceError } from '../../logging';
 import { INotebookEditorProvider, INotebookModel } from '../types';
 import { getOriginalCellId } from './helpers/cellMappers';
 
