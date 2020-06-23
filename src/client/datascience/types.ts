@@ -307,7 +307,8 @@ export interface IJupyterDebugger {
 
 export interface IJupyterPasswordConnectInfo {
     requestHeaders?: HeadersInit;
-    remappedUrl?: string;
+    remappedBaseUrl?: string;
+    remappedToken?: string;
 }
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');

@@ -39,6 +39,10 @@ suite('JupyterPasswordConnect', () => {
         mockXsrfResponse.setup((mr) => mr.status).returns(() => 302);
         mockXsrfResponse.setup((mr) => mr.headers).returns(() => mockXsrfHeaders.object);
 
+        const mockHubResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        mockHubResponse.setup((mr) => mr.ok).returns(() => false);
+        mockHubResponse.setup((mr) => mr.status).returns(() => 404);
+
         fetchMock
             .setup((fm) =>
                 fm(
@@ -62,6 +66,18 @@ suite('JupyterPasswordConnect', () => {
                 )
             )
             .returns(() => Promise.resolve(mockXsrfResponse.object));
+        fetchMock
+            .setup((fm) =>
+                //tslint:disable-next-line:no-http-string
+                fm(
+                    `${rootUrl}hub/api`,
+                    typemoq.It.isObjectWith({
+                        method: 'get',
+                        headers: { Connection: 'keep-alive' }
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockHubResponse.object));
 
         return { fetchMock, mockXsrfHeaders, mockXsrfResponse };
     }
@@ -102,9 +118,8 @@ suite('JupyterPasswordConnect', () => {
         );
         assert(result, 'Failed to get password');
         if (result) {
-            assert(result.xsrfCookie === xsrfValue, 'Incorrect xsrf value');
-            assert(result.sessionCookieName === sessionName, 'Incorrect session name');
-            assert(result.sessionCookieValue === sessionValue, 'Incorrect session value');
+            // tslint:disable-next-line: no-cookies
+            assert.ok((result.requestHeaders as any).cookie, 'No cookie');
         }
 
         // Verfiy calls
@@ -154,9 +169,8 @@ suite('JupyterPasswordConnect', () => {
         );
         assert(result, 'Failed to get password');
         if (result) {
-            assert(result.xsrfCookie === xsrfValue, 'Incorrect xsrf value');
-            assert(result.sessionCookieName === sessionName, 'Incorrect session name');
-            assert(result.sessionCookieValue === sessionValue, 'Incorrect session value');
+            // tslint:disable-next-line: no-cookies
+            assert.ok((result.requestHeaders as any).cookie, 'No cookie');
         }
 
         // Verfiy calls

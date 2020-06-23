@@ -16,7 +16,6 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
     IJupyterSession,
     IJupyterSessionManager
 } from '../types';
@@ -26,6 +25,8 @@ import { createDefaultKernelSpec } from './kernels/helpers';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
+
+// tslint:disable: no-any
 
 export class JupyterSessionManager implements IJupyterSessionManager {
     private sessionManager: SessionManager | undefined;
@@ -244,8 +245,16 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             );
             if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
-                // tslint:disable-next-line: no-any
                 cookieString = (pwSettings.requestHeaders as any).Cookie;
+
+                // Password may have overwritten the base url and token as well
+                if (pwSettings.remappedBaseUrl) {
+                    (serverSettings as any).baseUrl = pwSettings.remappedBaseUrl;
+                    (serverSettings as any).wsUrl = pwSettings.remappedBaseUrl.replace('http', 'ws');
+                }
+                if (pwSettings.remappedToken) {
+                    (serverSettings as any).token = pwSettings.remappedToken;
+                }
             } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
