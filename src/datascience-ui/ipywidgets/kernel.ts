@@ -7,6 +7,7 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
+import { traceError, traceInfo } from '../../client/common/logger';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
@@ -14,7 +15,6 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
-import { traceError, traceInfo } from '../../client/logging';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 // tslint:disable:no-any
