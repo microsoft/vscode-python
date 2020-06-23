@@ -7,7 +7,6 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import type { ISignal, Signal } from '@phosphor/signaling';
 import * as WebSocketWS from 'ws';
-import { traceError, traceInfo } from '../../client/common/logger';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
@@ -315,7 +314,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.messageHooks.set(msgId, hook);
 
         // Wrap the hook and send it to the real kernel
-        window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
     }
 
@@ -341,7 +339,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.lastHookedMessageId = undefined;
 
         // Remove from the real kernel
-        window.console.log(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
     }
 
@@ -349,10 +346,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     private extensionOperationFinished(payload: any) {
         //const key = payload.id + payload.type;
         const key = `${payload.id}${payload.type}`;
+        window.console.log(`$$$$ ${key}`);
 
         const waitPromise = this.awaitingExtensionMessage.get(key);
 
         if (waitPromise) {
+            window.console.log(`^^^^ ${key} Extension operation resolved`);
             waitPromise.resolve();
             this.awaitingExtensionMessage.delete(key);
         }
@@ -465,32 +464,34 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     // When the real kernel handles iopub messages notify the Extension side and then forward on the message
     // Note, this message comes from the kernel after it is done handling the message async
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
+        // If we are not waiting for anything on the extension just send it
         if (this.awaitingExtensionMessage.size <= 0) {
-            traceInfo('**** No Extension Messages To Wait For');
-            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
-                id: message.header.msg_id
-            });
+            this.finishIOPubMessage(message);
         } else {
-            //const extensionPromises = [...this.awaitingExtensionMessage.values()].map((value) => {
-            //return value.promise;
-            //});
+            // If we are waiting for something from the extension, wait for all that to finish before
+            // we send the message that we are done handling this message
+            // Since the Extension is blocking waiting for this message to be handled we know all extension message are
+            // related to this message or before and should be resolved before we move on
             const extensionPromises = Array.from(this.awaitingExtensionMessage.values()).map((value) => {
                 return value.promise;
             });
             Promise.all(extensionPromises)
                 .then(() => {
-                    traceInfo('**** All Extension Messages Clear ****');
-                    this.postOffice.sendMessage<IInteractiveWindowMapping>(
-                        IPyWidgetMessages.IPyWidgets_iopub_msg_handled,
-                        {
-                            id: message.header.msg_id
-                        }
-                    );
+                    // Fine to wait and send this in the catch as the Extension is blocking new messages for this and the UI kernel
+                    // has already finished handling it
+                    this.finishIOPubMessage(message);
                 })
                 .catch(() => {
-                    traceError('Failed to send iopub_msg_handled message');
+                    window.console.log('Failed to send iopub_msg_handled message');
                 });
         }
+    }
+
+    // Finish an iopub message by sending a message to the UI and then emitting that we are done with it
+    private finishIOPubMessage(message: KernelMessage.IIOPubMessage) {
+        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
+            id: message.header.msg_id
+        });
         this._ioPubMessageSignal.emit(message);
     }
 }

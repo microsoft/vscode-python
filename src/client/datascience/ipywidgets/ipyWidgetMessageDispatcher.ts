@@ -316,6 +316,14 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             });
         }
 
+        // There are three handling states that we have for messages here
+        // 1. If we have not detected ipywidget usage at all, we just forward messages to the kernel
+        // 2. If we have detected ipywidget usage. We wait on our message to be received, but not
+        //      possibly processed yet by the UI kernel. This make sure our ordering is in sync
+        // 3. For iopub comm messages we wait for them to be fully handled by the UI kernel
+        //      and the Extension kernel as they may be required to do things like
+        //      register message hooks on both sides before we process the nextExtension message
+
         // If there are no ipywidgets thusfar in the notebook, then no need to synchronize messages.
         if (this.isUsingIPyWidgets) {
             await promise.promise;
@@ -428,27 +436,27 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private possiblyRemoveMessageHook(args: { hookMsgId: string; lastHookedMsgId: string | undefined }) {
         // Message hooks might need to be removed after a certain message is processed.
-        if (args.lastHookedMsgId) {
-            this.pendingHookRemovals.set(args.lastHookedMsgId, args.hookMsgId);
-        } else {
-            this.removeMessageHook(args.hookMsgId);
+        try {
+            if (args.lastHookedMsgId) {
+                this.pendingHookRemovals.set(args.lastHookedMsgId, args.hookMsgId);
+            } else {
+                this.removeMessageHook(args.hookMsgId);
+            }
+        } finally {
+            // Regardless of if we removed the hook, added to pending removals or just failed, send back a message to the UI
+            // that we are done with extension side handling of this message
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
+                id: args.hookMsgId,
+                type: IPyWidgetMessages.IPyWidgets_RemoveMessageHook
+            });
         }
     }
 
     private removeMessageHook(msgId: string) {
-        try {
-            if (this.notebook && this.messageHooks.has(msgId)) {
-                const callback = this.messageHooks.get(msgId);
-                this.messageHooks.delete(msgId);
-                this.notebook.removeMessageHook(msgId, callback!);
-            }
-        } finally {
-            // Regardless of if we registered successfully or not, send back a message to the UI
-            // that we are done with extension side handling of this message
-            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
-                id: msgId,
-                type: IPyWidgetMessages.IPyWidgets_RemoveMessageHook
-            });
+        if (this.notebook && this.messageHooks.has(msgId)) {
+            const callback = this.messageHooks.get(msgId);
+            this.messageHooks.delete(msgId);
+            this.notebook.removeMessageHook(msgId, callback!);
         }
     }
 
