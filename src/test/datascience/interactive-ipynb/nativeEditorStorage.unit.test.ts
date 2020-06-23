@@ -46,6 +46,7 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
+import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 
@@ -255,7 +256,7 @@ suite('DataScience - Native Editor Storage', () => {
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
-        trustService = mock(ITrustService);
+        trustService = mock(TrustService);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
