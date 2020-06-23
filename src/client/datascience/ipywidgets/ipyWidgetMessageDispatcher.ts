@@ -276,9 +276,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private async onKernelSocketMessage(data: WebSocketData): Promise<void> {
         // Hooks expect serialized data as this normally comes from a WebSocket
-        const message = this.deserialize(data as any) as any;
+        let message;
 
         if (!this.isUsingIPyWidgets) {
+            if (!message) {
+                message = this.deserialize(data as any) as any;
+            }
+
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (
                 message.content &&
@@ -294,8 +298,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
 
         // Check if we need to fully handle this message on UI and Extension side before we move to the next
-        if (this.isUsingIPyWidgets && this.messageNeedsFullHandle(message)) {
-            this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
+        if (this.isUsingIPyWidgets) {
+            if (!message) {
+                message = this.deserialize(data as any) as any;
+            }
+            if (this.messageNeedsFullHandle(message)) {
+                this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
+            }
         }
 
         if (typeof data === 'string') {
