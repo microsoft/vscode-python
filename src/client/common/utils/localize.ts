@@ -520,13 +520,14 @@ export namespace DataScience {
         'DataScience.jupyterSelectURINotRunningDetail',
         'Cannot connect at this time. Status unknown.'
     );
-    export const jupyterSelectUserPrompt = localize(
-        'DataScience.jupyterSelectUserPrompt',
-        'Enter your notebook user name'
+    export const jupyterSelectUserAndPasswordTitle = localize(
+        'DataScience.jupyterSelectUserAndPasswordTitle',
+        'Enter your user name and password to connect to jupyter hub'
     );
+    export const jupyterSelectUserPrompt = localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
-        'Enter your notebook password'
+        'Enter your password'
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',

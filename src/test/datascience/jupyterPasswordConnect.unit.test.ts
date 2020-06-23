@@ -7,6 +7,7 @@ import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
 import { IApplicationShell } from '../../client/common/application/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 
 // tslint:disable:no-any max-func-body-length
@@ -21,7 +22,9 @@ suite('JupyterPasswordConnect', () => {
     setup(() => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         appShell.setup((a) => a.showInputBox(typemoq.It.isAny())).returns(() => Promise.resolve('Python'));
-        jupyterPasswordConnect = new JupyterPasswordConnect(appShell.object);
+        const multiStepFactory = new MultiStepInputFactory(appShell.object);
+
+        jupyterPasswordConnect = new JupyterPasswordConnect(appShell.object, multiStepFactory);
     });
 
     function createMockSetup(secure: boolean, ok: boolean) {

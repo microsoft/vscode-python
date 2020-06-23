@@ -7,6 +7,7 @@ import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { IApplicationShell } from '../../common/application/types';
 import * as localize from '../../common/utils/localize';
+import { IMultiStepInput, IMultiStepInputFactory } from '../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
 import { Telemetry } from './../constants';
@@ -17,7 +18,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response> =
         nodeFetch.default;
 
-    constructor(@inject(IApplicationShell) private appShell: IApplicationShell) {}
+    constructor(
+        @inject(IApplicationShell) private appShell: IApplicationShell,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
+    ) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(
@@ -81,32 +85,32 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const baseUrl = `${url.protocol}//${url.host}`;
 
         // First ask for the user name and password
-        const user = await this.getUserName();
-        const password = user ? await this.getUserPassword() : '';
+        const result = await this.getUserNameAndPassword();
+        if (result.username || result.password) {
+            // Use these in a post request to get the token to use
+            const response = await this.fetchFunction(
+                `${baseUrl}/hub/api/authorizations/token`, // This seems to be deprecated, but it works. It requests a new token
+                this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
+                    method: 'post',
+                    headers: {
+                        Connection: 'keep-alive',
+                        'content-type': 'application/json;charset=UTF-8'
+                    },
+                    body: `{ "username": "${result.username || ''}", "password": "${result.password || ''}"  }`,
+                    redirect: 'manual'
+                })
+            );
 
-        // Use these in a post request to get the token to use
-        const response = await this.fetchFunction(
-            `${baseUrl}/hub/api/authorizations/token`, // This seems to be deprecated, but it works. It requests a new token
-            this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
-                method: 'post',
-                headers: {
-                    Connection: 'keep-alive',
-                    'content-type': 'application/json;charset=UTF-8'
-                },
-                body: `{ "username": "${user || ''}", "password": "${password || ''}"  }`,
-                redirect: 'manual'
-            })
-        );
-
-        if (response.ok && response.status === 200) {
-            const body = await response.json();
-            if (body && body.user && body.user.server && body.token) {
-                // Response should have the token to use for this user.
-                return {
-                    requestHeaders: {},
-                    remappedBaseUrl: `${baseUrl}${body.user.server}`,
-                    remappedToken: body.token
-                };
+            if (response.ok && response.status === 200) {
+                const body = await response.json();
+                if (body && body.user && body.user.server && body.token) {
+                    // Response should have the token to use for this user.
+                    return {
+                        requestHeaders: {},
+                        remappedBaseUrl: `${baseUrl}${body.user.server}`,
+                        remappedToken: body.token
+                    };
+                }
             }
         }
     }
@@ -170,11 +174,42 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return options;
     }
 
-    private async getUserName(): Promise<string | undefined> {
-        return this.appShell.showInputBox({
+    private async getUserNameAndPassword(): Promise<{ username: string; password: string }> {
+        const multistep = this.multiStepFactory.create<{ username: string; password: string }>();
+        const state = { username: '', password: '' };
+        await multistep.run(this.getUserNameMultiStep.bind(this), state);
+        return state;
+    }
+
+    private async getUserNameMultiStep(
+        input: IMultiStepInput<{ username: string; password: string }>,
+        state: { username: string; password: string }
+    ) {
+        state.username = await input.showInputBox({
+            title: localize.DataScience.jupyterSelectUserAndPasswordTitle(),
             prompt: localize.DataScience.jupyterSelectUserPrompt(),
-            ignoreFocusOut: true,
-            password: false
+            validate: this.validateUserNameOrPassword,
+            value: ''
+        });
+        if (state.username) {
+            return this.getPasswordMultiStep.bind(this);
+        }
+    }
+
+    private async validateUserNameOrPassword(_value: string): Promise<string | undefined> {
+        return undefined;
+    }
+
+    private async getPasswordMultiStep(
+        input: IMultiStepInput<{ username: string; password: string }>,
+        state: { username: string; password: string }
+    ) {
+        state.password = await input.showInputBox({
+            title: localize.DataScience.jupyterSelectUserAndPasswordTitle(),
+            prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
+            validate: this.validateUserNameOrPassword,
+            value: '',
+            password: true
         });
     }
 
