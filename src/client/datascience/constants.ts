@@ -85,6 +85,7 @@ export namespace Commands {
     export const SelectCellContents = 'python.datascience.selectCellContents';
     export const ExtendSelectionByCellAbove = 'python.datascience.extendSelectionByCellAbove';
     export const ExtendSelectionByCellBelow = 'python.datascience.extendSelectionByCellBelow';
+    export const MoveCellsUp = 'python.datascience.moveCellsUp';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';

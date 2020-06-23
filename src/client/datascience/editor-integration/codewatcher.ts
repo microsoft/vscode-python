@@ -629,6 +629,131 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    public async moveCellsUp(): Promise<void> {
+        return this.moveCellsDirection(true);
+    }
+
+    private async moveCellsDirection(directionUp: boolean): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (!editor || !editor.selection) {
+            return Promise.resolve();
+        }
+        const startEndCellIndex = this.getStartEndCellIndex(editor.selection);
+        if (!startEndCellIndex) {
+            return Promise.resolve();
+        }
+        const startCellIndex = startEndCellIndex[0];
+        const endCellIndex = startEndCellIndex[1];
+        const cells = this.codeLensFactory.cells;
+        const startCell = cells[startCellIndex];
+        const endCell = cells[endCellIndex];
+        if (!startCell || !endCell) {
+            return Promise.resolve();
+        }
+        const currentRange = new Range(startCell.range.start, endCell.range.end);
+        const relativeSelectionRange = new Range(
+            editor.selection.start.line - currentRange.start.line,
+            editor.selection.start.character,
+            editor.selection.end.line - currentRange.start.line,
+            editor.selection.end.character
+        );
+        const isActiveBeforeAnchor = editor.selection.active.isBefore(editor.selection.anchor);
+        let thenSetSelection: Thenable<boolean>;
+        if (directionUp) {
+            if (startCellIndex === 0) {
+                return Promise.resolve();
+            } else {
+                const aboveCell = cells[startCellIndex - 1];
+                const thenExchangeTextLines = this.exchangeTextLines(editor, aboveCell.range, currentRange);
+                thenSetSelection = thenExchangeTextLines.then((isEditSuccessful) => {
+                    if (isEditSuccessful) {
+                        editor.selection = new Selection(
+                            aboveCell.range.start.line + relativeSelectionRange.start.line,
+                            relativeSelectionRange.start.character,
+                            aboveCell.range.start.line + relativeSelectionRange.end.line,
+                            relativeSelectionRange.end.character
+                        );
+                    }
+                    return isEditSuccessful;
+                });
+            }
+        } else {
+            if (endCellIndex === cells.length - 1) {
+                return Promise.resolve();
+            } else {
+                const belowCell = cells[endCellIndex + 1];
+                const thenExchangeTextLines = this.exchangeTextLines(editor, currentRange, belowCell.range);
+                const belowCellLineLength = belowCell.range.end.line - belowCell.range.start.line;
+                const aboveCellLineLength = currentRange.end.line - currentRange.start.line;
+                const diffCellLineLength = belowCellLineLength - aboveCellLineLength;
+                thenSetSelection = thenExchangeTextLines.then((isEditSuccessful) => {
+                    if (isEditSuccessful) {
+                        editor.selection = new Selection(
+                            belowCell.range.start.line + diffCellLineLength + relativeSelectionRange.start.line,
+                            relativeSelectionRange.start.character,
+                            belowCell.range.start.line + diffCellLineLength + relativeSelectionRange.end.line,
+                            relativeSelectionRange.end.character
+                        );
+                    }
+                    return isEditSuccessful;
+                });
+            }
+        }
+        return thenSetSelection.then((isEditSuccessful) => {
+            if (isEditSuccessful && isActiveBeforeAnchor) {
+                editor.selection = new Selection(editor.selection.active, editor.selection.anchor);
+            }
+            return Promise.resolve();
+        });
+    }
+
+    private exchangeTextLines(editor: TextEditor, aboveRange: Range, belowRange: Range): Thenable<boolean> {
+        const aboveStartLine = aboveRange.start.line;
+        const aboveEndLine = aboveRange.end.line;
+        const belowStartLine = belowRange.start.line;
+        const belowEndLine = belowRange.end.line;
+
+        if (aboveEndLine >= belowStartLine) {
+            throw RangeError(`Above lines must be fully above not ${aboveEndLine} <= ${belowStartLine}`);
+        }
+
+        const above = new Range(
+            aboveStartLine,
+            0,
+            aboveEndLine,
+            editor.document.lineAt(aboveEndLine).range.end.character
+        );
+        const aboveText = editor.document.getText(above);
+
+        const below = new Range(
+            belowStartLine,
+            0,
+            belowEndLine,
+            editor.document.lineAt(belowEndLine).range.end.character
+        );
+        const belowText = editor.document.getText(below);
+
+        let betweenText = '';
+        if (aboveEndLine + 1 < belowStartLine) {
+            const betweenStatLine = aboveEndLine + 1;
+            const betweenEndLine = belowStartLine - 1;
+            const between = new Range(
+                betweenStatLine,
+                0,
+                betweenEndLine,
+                editor.document.lineAt(betweenEndLine).range.end.character
+            );
+            betweenText = `${editor.document.getText(between)}\n`;
+        }
+
+        const newText = `${belowText}\n${betweenText}${aboveText}`;
+        const newRange = new Range(above.start, below.end);
+        return editor.edit((editBuilder) => {
+            editBuilder.replace(newRange, newText);
+            this.codeLensUpdatedEvent.fire();
+        });
+    }
+
     private getStartEndCells(selection: Selection): ICellRange[] | undefined {
         const startEndCellIndex = this.getStartEndCellIndex(selection);
         if (startEndCellIndex) {

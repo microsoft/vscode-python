@@ -1888,4 +1888,112 @@ testing_L8`
         expect(mockTextEditor.selection.active.line).to.equal(6);
         expect(mockTextEditor.selection.active.character).to.equal(10);
     });
+
+    test('Move cells up', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(5, 5, 5, 5);
+
+        await codeWatcher.moveCellsUp();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing_L0
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L8`
+        );
+        expect(mockTextEditor.selection.anchor.line).to.equal(2);
+        expect(mockTextEditor.selection.anchor.character).to.equal(5);
+        expect(mockTextEditor.selection.active.line).to.equal(2);
+        expect(mockTextEditor.selection.active.character).to.equal(5);
+    });
+
+    test('Move cells up multiple cells', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(8, 8, 5, 5);
+
+        await codeWatcher.moveCellsUp();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing_L0
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8
+# %%
+testing_L2
+testing_L3`
+        );
+        expect(mockTextEditor.selection.anchor.line).to.equal(5);
+        expect(mockTextEditor.selection.anchor.character).to.equal(8);
+        expect(mockTextEditor.selection.active.line).to.equal(2);
+        expect(mockTextEditor.selection.active.character).to.equal(5);
+    });
+
+    test('Move cells up first cell no change', async () => {
+        const mockTextEditor = initializeMockTextEditor(
+            codeWatcher,
+            documentManager,
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+
+        mockTextEditor.selection = new Selection(1, 2, 5, 5);
+
+        await codeWatcher.moveCellsUp();
+
+        expect(mockTextEditor.document.getText()).to.equal(
+            `testing_L0
+# %%
+testing_L2
+testing_L3
+# %%
+testing_L5
+testing_L6
+# %%
+testing_L8`
+        );
+        expect(mockTextEditor.selection.anchor.line).to.equal(1);
+        expect(mockTextEditor.selection.anchor.character).to.equal(2);
+        expect(mockTextEditor.selection.active.line).to.equal(5);
+        expect(mockTextEditor.selection.active.character).to.equal(5);
+    });
 });
