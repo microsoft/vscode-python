@@ -11,9 +11,9 @@ import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterNotebookView } from './constants';
-import { NotebookContentProvider } from './contentProvider';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
+import { INotebookContentProvider } from './types';
 
 /**
  * This class basically registers the necessary providers and the like with VSC.
@@ -26,7 +26,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(NotebookContentProvider) private readonly notebookContentProvider: NotebookContentProvider,
+        @inject(INotebookContentProvider) private readonly notebookContentProvider: INotebookContentProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,

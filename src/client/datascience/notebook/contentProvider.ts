@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
-    NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
@@ -22,6 +21,7 @@ import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
+import { INotebookContentProvider } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -34,7 +34,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
-export class NotebookContentProvider implements VSCodeNotebookContentProvider {
+export class NotebookContentProvider implements INotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentEditEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
@@ -45,6 +45,9 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
+    public notifyChangesToDocument(document: NotebookDocument) {
+        this.notebookChanged.fire({ document });
+    }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.

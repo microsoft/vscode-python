@@ -25,7 +25,7 @@ import {
 suite('DataScience - VSCode Notebook (Cell Edit Syncing)', function () {
     this.timeout(10_000);
 
-    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
+    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'empty.ipynb');
     let testIPynb: Uri;
     let api: IExtensionTestApi;
     let editorProvider: INotebookEditorProvider;

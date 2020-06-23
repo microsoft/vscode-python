@@ -174,6 +174,10 @@ export class NativeEditorOldWebView extends NativeEditor {
                     break;
 
                 case AskForSaveResult.No:
+                    // If there were changes, delete them
+                    if (this.model) {
+                        await this.storage.deleteBackup(this.model);
+                    }
                     // Close it
                     await super.close();
                     break;
