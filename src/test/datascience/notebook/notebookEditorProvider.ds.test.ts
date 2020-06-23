@@ -30,7 +30,14 @@ suite('DataScience - VSCode Notebook', function () {
     let vscodeNotebook: IVSCodeNotebook;
     let editorProvider: INotebookEditorProvider;
     let commandManager: ICommandManager;
-    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'test.ipynb');
+    const templateIPynb = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'test',
+        'datascience',
+        'notebook',
+        'test.ipynb'
+    );
     let testIPynb: Uri;
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {

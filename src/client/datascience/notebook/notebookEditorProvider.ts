@@ -29,7 +29,7 @@ import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -64,6 +64,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -223,6 +224,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const model = await this.storage.load(e.document.uri);
-        updateCellModelWithChangesToVSCCell(e, model);
+        if (updateCellModelWithChangesToVSCCell(e, model)) {
+            // If we have updated the notebook document, then trigger changes.
+            this.contentProvider.notifyChangesToDocument(e.document);
+        }
     }
 }

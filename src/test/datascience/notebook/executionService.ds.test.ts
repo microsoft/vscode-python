@@ -250,11 +250,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Clear the cells
         await commands.executeCommand('notebook.clearAllCellsOutputs');
 
-        // Wait till execution count changes and status is error.
+        // Wait till execution count changes
         await waitForCondition(
             async () =>
+                !vscCells[0].metadata.executionOrder &&
+                !vscCells[1].metadata.executionOrder &&
                 vscCells[0].outputs.length === 0 &&
                 vscCells[1].outputs.length === 0 &&
+                cellModels[0].data.execution_count === null &&
+                cellModels[1].data.execution_count === null &&
                 ((cellModels[0].data.outputs as unknown) as []).length === 0 &&
                 ((cellModels[1].data.outputs as unknown) as []).length === 0,
             5_000,

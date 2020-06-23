@@ -4,7 +4,9 @@
 'use strict';
 
 // tslint:disable:no-require-imports no-var-requires
+import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { assert, expect } from 'chai';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, Uri } from 'vscode';
@@ -12,8 +14,9 @@ import { NotebookCell } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
+import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
@@ -30,14 +33,13 @@ import {
     startJupyter,
     swallowSavingOfNotebooks
 } from './helper';
+// tslint:disable-next-line:no-require-imports no-var-requires
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - (Saving)', function () {
     this.timeout(60_000);
-    const templateIPynb = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'empty.ipynb');
     let api: IExtensionTestApi;
-    let testIPynb: Uri;
     let editorProvider: INotebookEditorProvider;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -53,17 +55,81 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
     });
     setup(async () => {
         sinon.restore();
-        // Don't use same file (due to dirty handling, we might save in dirty.)
-        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
-        await editorProvider.open(testIPynb);
     });
     teardown(async () => {
         await swallowSavingOfNotebooks();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
+    test('Clearing output will mark document as dirtyxxx', async () => {
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'test.ipynb'
+        );
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        await editorProvider.open(testIPynb);
+        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
 
+        // Clear the output & then save the notebook.
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+
+        // Wait till execution count changes & it is marked as dirty
+        await changedEvent.assertFired(5000);
+    });
+    test('Saving after clearing should result in execution_count=null in ipynb filexxx', async () => {
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'test.ipynb'
+        );
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        await editorProvider.open(testIPynb);
+        const notebookDocument = vscodeNotebook.activeNotebookEditor?.document!;
+        const vscCells = notebookDocument.cells!;
+        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
+
+        // Clear the output & then save the notebook.
+        await commands.executeCommand('notebook.clearAllCellsOutputs');
+
+        // Wait till execution count changes & it is marked as dirty
+        await waitForCondition(
+            async () => !vscCells[0].metadata.executionOrder && changedEvent.fired,
+            5_000,
+            'Cell did not get cleared'
+        );
+
+        await saveActiveNotebook(disposables);
+
+        // Open nb json and validate execution_count = null.
+        const json = JSON.parse(fs.readFileSync(testIPynb.fsPath, { encoding: 'utf8' })) as nbformat.INotebookContent;
+        assert.ok(json.cells[0].execution_count === null);
+    });
     test('Verify output & metadata when re-opening (slow)', async () => {
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'empty.ipynb'
+        );
+        // Don't use same file (due to dirty handling, we might save in dirty.)
+        // Cuz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+        const testIPynb = Uri.file(await createTemporaryNotebook(templateIPynb, disposables));
+        await editorProvider.open(testIPynb);
+
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         await insertPythonCellAndWait('import time\nfor i in range(10000):\n  print(i)\n  time.sleep(0.1)', 0);
         await insertPythonCellAndWait('print(a)', 0);

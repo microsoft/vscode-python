@@ -31,11 +31,12 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
  * I.e. if a cell is added/deleted/moved then update our model.
+ * @returns {boolean} Returns `true` if the NotebookDocument was edited/updated.
  */
 export function updateCellModelWithChangesToVSCCell(
     change: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent,
     model: INotebookModel
-) {
+): boolean | undefined | void {
     switch (change.type) {
         case 'changeCellOutputs':
             return clearCellOutput(change, model);
@@ -53,10 +54,11 @@ export function updateCellModelWithChangesToVSCCell(
  * We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
  * I.e. cell output is already in our INotebookModel.
  * However we are interested in cell output being cleared (when user clears output).
+ * @returns {boolean} Return `true` if NotebookDocument was updated/edited.
  */
-function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel) {
+function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel): boolean {
     if (!change.cells.every((cell) => cell.outputs.length === 0)) {
-        return;
+        return false;
     }
     // In the VS Code cells, also clear the cell results, execution counts and times.
     change.cells.forEach((cell) => {
@@ -88,6 +90,8 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
             oldCells: [cell]
         });
     });
+
+    return true;
 }
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
