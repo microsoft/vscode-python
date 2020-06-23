@@ -4,8 +4,8 @@
 'use strict';
 
 import * as semver from 'semver';
-import { Version } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
+import { PythonVersion } from './pythonVersion';
 
 /**
  * The supported Python environment types.
@@ -41,7 +41,7 @@ export type PythonVersionInfo = [number, number, number, ReleaseLevel];
  */
 export type InterpreterInformation = {
     path: string;
-    version?: Version;
+    version?: PythonVersion;
     sysVersion: string;
     architecture: Architecture;
     sysPrefix: string;
