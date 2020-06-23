@@ -16,7 +16,8 @@ import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { noop, swallowExceptions } from '../../../client/common/utils/misc';
-import { NotebookContentProvider } from '../../../client/datascience/notebook/contentProvider';
+import { findMappedNotebookCellModel } from '../../../client/datascience/notebook/helpers/cellMappers';
+import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { ICell, INotebookEditorProvider, INotebookProvider } from '../../../client/datascience/types';
 import { createEventHandler, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
@@ -26,7 +27,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
 async function getServices() {
     const api = await initialize();
     return {
-        contentProvider: api.serviceContainer.get<NotebookContentProvider>(NotebookContentProvider),
+        contentProvider: api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider),
         vscodeNotebook: api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider)
     };
@@ -72,11 +73,12 @@ export async function insertPythonCell(source: string, index: number = 0) {
                 1_000,
                 'Cell not inserted'
             );
-            // All cells must have same cell id as in INotebookModel.
+            // All cells must have a corresponding cell in INotebookModel.
             await waitForCondition(
                 async () =>
-                    vscEditor?.document.cells.map((cell) => cell.metadata.custom?.cellId || '').join('') ===
-                    nbEditor?.model?.cells.map((cell) => cell.id).join(''),
+                    vscEditor!.document.cells.every((cell) =>
+                        findMappedNotebookCellModel(cell, nbEditor!.model!.cells)
+                    ),
                 1_000,
                 'Cell not assigned a cell Id'
             );
@@ -162,7 +164,7 @@ export async function canRunTests() {
 export async function swallowSavingOfNotebooks() {
     const api = await initialize();
     // We will be editing notebooks, to close notebooks them we need to ensure changes are saved.
-    const contentProvider = api.serviceContainer.get<NotebookContentProvider>(NotebookContentProvider);
+    const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
     sinon.stub(contentProvider, 'saveNotebook').callsFake(noop as any);
     sinon.stub(contentProvider, 'saveNotebookAs').callsFake(noop as any);
 }
@@ -238,6 +240,19 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     } else {
         expect(outputText).to.include(text, 'Output does not contain provided text');
     }
+    return true;
+}
+export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
+    const cellOutputs = cell.outputs;
+    assert.ok(cellOutputs, 'No output');
+    assert.equal(cellOutputs[index].outputKind, vscodeNotebookEnums.CellOutputKind.Rich, 'Incorrect output kind');
+    const outputText = (cellOutputs[index] as CellDisplayOutput).data['text/plain'].trim();
+    if (isExactMatch) {
+        assert.notEqual(outputText, text, 'Incorrect output');
+    } else {
+        expect(outputText).to.not.include(text, 'Output does not contain provided text');
+    }
+    return true;
 }
 export function assertHasTextOutputInICell(cell: ICell, text: string, index: number) {
     const cellOutputs = cell.data.outputs as nbformat.IOutput[];

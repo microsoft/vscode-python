@@ -20,11 +20,12 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry
 } from '../datascience/constants';
+import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { LinterId } from '../linters/types';
-import { InterpreterType } from '../pythonEnvironments/discovery/types';
+import { InterpreterType } from '../pythonEnvironments/info';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import { LinterTrigger, TestTool } from './types';
@@ -1638,9 +1639,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
-    [Telemetry.ExportNotebook]: never | undefined;
-    [Telemetry.ExportPythonFile]: never | undefined;
-    [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.ExportNotebookInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
+    [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
+    [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
@@ -1655,10 +1660,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
-    [Telemetry.PtvsdInstallCancelled]: never | undefined;
-    [Telemetry.PtvsdInstallFailed]: never | undefined;
-    [Telemetry.PtvsdPromptToInstall]: never | undefined;
-    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
+    [Telemetry.DebugpyInstallCancelled]: never | undefined;
+    [Telemetry.DebugpyInstallFailed]: never | undefined;
+    [Telemetry.DebugpyPromptToInstall]: never | undefined;
+    [Telemetry.DebugpySuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
     [Telemetry.OpenedInteractiveWindow]: never | undefined;
@@ -2121,6 +2126,7 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
     [Telemetry.StartPageClosedWithoutAction]: never | undefined;
@@ -2132,4 +2138,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
     [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
+    [Telemetry.StartPageOpenFolder]: never | undefined;
+    [Telemetry.StartPageOpenWorkspace]: never | undefined;
 }

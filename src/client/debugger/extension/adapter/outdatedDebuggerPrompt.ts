@@ -7,11 +7,12 @@ import { inject, injectable } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experiments/groups';
-import { IBrowserService, IExperimentsManager } from '../../../common/types';
+import { IBrowserService } from '../../../common/types';
 import { Common, OutdatedDebugger } from '../../../common/utils/localize';
 import { IPromptShowState } from './types';
 
+// This situation occurs when user connects to old containers or server where
+// the debugger they had installed was ptvsd. We should show a prompt to ask them to update.
 class OutdatedDebuggerPrompt implements DebugAdapterTracker {
     constructor(
         private promptCheck: IPromptShowState,
@@ -71,14 +72,10 @@ class OutdatedDebuggerPromptState implements IPromptShowState {
 export class OutdatedDebuggerPromptFactory implements DebugAdapterTrackerFactory {
     private readonly promptCheck: OutdatedDebuggerPromptState;
     constructor(
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService
     ) {
         this.promptCheck = new OutdatedDebuggerPromptState();
-        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            this.promptCheck.setShowPrompt(false);
-        }
     }
     public createDebugAdapterTracker(_session: DebugSession): ProviderResult<DebugAdapterTracker> {
         return new OutdatedDebuggerPrompt(this.promptCheck, this.appShell, this.browserService);

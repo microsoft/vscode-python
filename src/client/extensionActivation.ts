@@ -28,6 +28,7 @@ import {
     IOutputChannel
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
+import { noop } from './common/utils/misc';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
@@ -48,6 +49,7 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
+import { addOutputChannelLogging, setLoggingLevel } from './logging';
 import { PythonCodeActionProvider } from './providers/codeActionProvider/pythonCodeActionProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -90,6 +92,7 @@ async function activateLegacy(
     // register "services"
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
+    addOutputChannelLogging(standardOutputChannel);
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -101,10 +104,9 @@ async function activateLegacy(
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
 
-    const enableProposedApi = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).packageJson
-        .enableProposedApi;
+    const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
+    const enableProposedApi = applicationEnv.packageJson.enableProposedApi;
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
-
     // Feature specific registrations.
     variableRegisterTypes(serviceManager);
     unitTestsRegisterTypes(serviceManager);
@@ -115,6 +117,12 @@ async function activateLegacy(
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
 
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
+    // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
+    // XXX Move this *after* abExperiments is activated?
+    setLoggingLevel(configuration.getSettings().logging.level);
+
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
 
@@ -122,7 +130,6 @@ async function activateLegacy(
     // To ensure we can register types based on experiments.
     dataScienceRegisterTypes(serviceManager);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
 
     // Language feature registrations.
@@ -143,6 +150,7 @@ async function activateLegacy(
     const cmdManager = serviceContainer.get<ICommandManager>(ICommandManager);
     const outputChannel = serviceManager.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
+    cmdManager.executeCommand('setContext', 'python.vscode.channel', applicationEnv.channel).then(noop, noop);
 
     // Display progress of interpreter refreshes only after extension has activated.
     serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();

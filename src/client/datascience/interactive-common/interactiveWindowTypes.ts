@@ -16,7 +16,7 @@ import {
     NotifyIPyWidgeWidgetVersionNotSupportedAction
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../constants';
 import { WidgetScriptSource } from '../ipywidgets/types';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -32,6 +32,7 @@ import {
     INotebookModel,
     KernelSocketOptions
 } from '../types';
+import { ILanguageConfigurationDto } from './serialization';
 import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
@@ -43,6 +44,7 @@ export enum InteractiveWindowMessages {
     NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
     Export = 'export_to_ipynb',
+    ExportNotebookAs = 'export_as_menu',
     GetAllCells = 'get_all_cells',
     ReturnAllCells = 'return_all_cells',
     DeleteAllCells = 'delete_all_cells',
@@ -183,6 +185,10 @@ export interface ICopyCode {
 
 export enum VariableExplorerStateKeys {
     height = 'NBVariableHeights'
+}
+
+export enum ExportNotebookSettings {
+    lastSaveLocation = 'NBExportSaveLocation'
 }
 
 export enum SysInfoReason {
@@ -509,7 +515,7 @@ export interface ILoadTmLanguageResponse {
     languageId: string;
     scopeName: string; // Name in the tmlanguage scope file (scope.python instead of python)
     // tslint:disable-next-line: no-any
-    languageConfiguration: any; // Should actually be of type monacoEditor.languages.LanguageConfiguration but don't want to pull in all those types here.
+    languageConfiguration: ILanguageConfigurationDto;
     languageJSON: string; // Contents of the tmLanguage.json file
     extensions: string[]; // Array of file extensions that map to this language
 }
@@ -553,6 +559,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
+    public [InteractiveWindowMessages.ExportNotebookAs]: never | undefined;
     public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;

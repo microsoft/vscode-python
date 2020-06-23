@@ -64,7 +64,9 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
+        // Survey is disabled
+        return false;
+        // return this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, true).value;
     }
 
     public async showBanner(): Promise<void> {

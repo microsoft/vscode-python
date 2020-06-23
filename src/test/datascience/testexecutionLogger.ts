@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { injectable } from 'inversify';
+import { traceInfo } from '../../client/common/logger';
 import { noop } from '../../client/common/utils/misc';
 import { traceCellResults } from '../../client/datascience/common';
 import { ICell, INotebookExecutionLogger } from '../../client/datascience/types';
-import { traceInfo } from '../../client/logging';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 
 @injectable()

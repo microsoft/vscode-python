@@ -11,7 +11,7 @@ import rewiremock from 'rewiremock';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
+import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import {
     DotNetDownloadedLanguageClientFactory,
     DotNetLanguageClientFactory,
@@ -126,7 +126,7 @@ suite('Language Server - LanguageClient Factory', () => {
                 expect(serverOptions).to.be.deep.equal(expectedServerOptions);
             }
         }
-        rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
+        rewiremock('vscode-languageclient/node').with({ LanguageClient: MockClass });
 
         const client = await factory.createLanguageClient(uri, undefined, options, { FOO: 'bar' });
 
@@ -171,7 +171,7 @@ suite('Language Server - LanguageClient Factory', () => {
                 expect(serverOptions).to.be.deep.equal(expectedServerOptions);
             }
         }
-        rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
+        rewiremock('vscode-languageclient/node').with({ LanguageClient: MockClass });
 
         const client = await factory.createLanguageClient(uri, undefined, options, { FOO: 'bar' });
 

@@ -4,7 +4,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 
 export const IPythonInPathCommandProvider = Symbol('IPythonInPathCommandProvider');
 export interface IPythonInPathCommandProvider {

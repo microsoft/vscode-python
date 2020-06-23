@@ -25,7 +25,7 @@ import { IKernelFinder } from '../../../../client/datascience/kernel-launcher/ty
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable: max-func-body-length no-unused-expression
 

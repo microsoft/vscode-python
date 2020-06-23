@@ -14,8 +14,8 @@ import { WidgetManager } from '../ipywidgets';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
-import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
+import { fixMarkdown } from './markdownManipulation';
 import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -290,7 +290,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
+        const source = fixMarkdown(concatMultilineStringInput(markdown.source));
         const Transform = getTransform('text/markdown');
         const MarkdownClassName = 'markdown-cell-output';
 
@@ -378,7 +378,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         // Fixup latex to make sure it has the requisite $$ around it
         if (mimeType === 'text/latex') {
-            data = fixLatexEquations(concatMultilineStringOutput(data as nbformat.MultilineString), true);
+            data = fixMarkdown(concatMultilineStringOutput(data as nbformat.MultilineString), true);
         }
 
         return {

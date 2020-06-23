@@ -8,13 +8,13 @@ import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IFileDownloader, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import {

@@ -7,7 +7,11 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 pr:
   autoCancel: true
   branches:
-    include: ['master', 'release*', 'ds*']
+    include:
+      - 'master'
+      - 'release*'
+      - 'ds*'
+      - 'logging-changes-and-drop-old-debugger'
   paths:
     exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 

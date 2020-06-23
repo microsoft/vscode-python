@@ -5,8 +5,8 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
 import { IFileSystem } from '../common/platform/types';
-import { traceError } from '../logging';
 import { WrappedError } from './errors/errorUtils';
+import { traceError } from './logger';
 import { IEditorUtils } from './types';
 import { isNotebookCell } from './utils/misc';
 
@@ -248,20 +248,21 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 }
 
 export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
-    // Hardcode extension to `.py` for notebook cells (do not use `.ipyn` doesn't work).
-    const ext = isNotebookCell(document.uri) ? '.py' : path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
     // This means temp file has to be created in the same folder
     // as the original one and then removed.
+    // Use a .tmp file extension (instead of the original extension)
+    // because the language server is watching the file system for Python
+    // file add/delete/change and we don't want this temp file to trigger it.
 
-    let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
-
+    // tslint:disable-next-line:no-require-imports
+    let fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}.tmp`;
     try {
         // When dealing with untitled notebooks, there's no original physical file, hence create a temp file.
         if (isNotebookCell(document.uri) && !(await fs.fileExists(document.uri.fsPath))) {
-            fileName = (await fs.createTemporaryFile(`${path.basename(document.uri.fsPath)}${ext}`)).filePath;
+            fileName = (await fs.createTemporaryFile(`${path.basename(document.uri.fsPath)}.tmp`)).filePath;
         }
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {

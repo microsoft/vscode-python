@@ -335,7 +335,6 @@ Steps to build the extension on your machine once you've cloned the repo:
 # Perform the next steps in the vscode-python folder.
 > npm ci
 > python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
 # For python 3.6 and lower use this command to install the debugger
 > python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 # For python 3.7 and greater use this command to install the debugger

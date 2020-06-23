@@ -168,7 +168,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            onClick={this.props.export}
+                            onClick={this.props.exportAs}
                             disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
@@ -203,6 +203,20 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                             />
                         </ImageButton>
                     </div>
+                    {this.renderKernelSelection()}
+                </div>
+            </div>
+        );
+    }
+
+    private renderKernelSelection() {
+        if (
+            this.props.settings &&
+            this.props.settings.webviewExperiments &&
+            this.props.settings.webviewExperiments.removeKernelToolbarInInteractiveWindow
+        ) {
+            if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
+                return (
                     <KernelSelection
                         baseTheme={this.props.baseTheme}
                         font={this.props.font}
@@ -210,8 +224,20 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         selectServer={this.props.selectServer}
                         selectKernel={this.props.selectKernel}
                     />
-                </div>
-            </div>
+                );
+            } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
+                return;
+            }
+        }
+
+        return (
+            <KernelSelection
+                baseTheme={this.props.baseTheme}
+                font={this.props.font}
+                kernel={this.props.kernel}
+                selectServer={this.props.selectServer}
+                selectKernel={this.props.selectKernel}
+            />
         );
     }
 

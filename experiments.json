@@ -104,25 +104,13 @@
     {
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
-        "max": 0,
-        "min": 0
+        "min": 0,
+        "max": 5
     },
     {
         "name": "LocalZMQKernel - control",
         "salt": "LocalZMQKernel",
-        "min": 0,
-        "max": 100
-    },
-    {
-        "name": "NativeNotebook - experiment",
-        "salt": "NativeNotebook",
-        "max": 0,
-        "min": 0
-    },
-    {
-        "name": "NativeNotebook - control",
-        "salt": "NativeNotebook",
-        "min": 0,
+        "min": 5,
         "max": 100
     },
     {
@@ -196,6 +184,11 @@
         "salt": "CustomEditorSupport",
         "max": 0,
         "min": 0
+    },
+    {
+        "name": "NativeNotebook - experiment",
+        "salt": "CustomEditorSupport",
+        "max": 0,
+        "min": 0
     }
-
 ]

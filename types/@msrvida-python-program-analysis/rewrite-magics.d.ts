@@ -34,7 +34,7 @@ export interface LineMagicRewriter {
      * Rewrite the line magic.
      * @param matchedText the original matched text from the program
      * @param magicStmt the line magic text with newlines and continuations removed
-     * @param postion ((start_line, start_col),(end_line, end_col)) of `matchedText` within the cell
+     * @param position ((start_line, start_col),(end_line, end_col)) of `matchedText` within the cell
      * @return rewrite operation. Leave text empty if you want to use default rewrites.
      */
     rewrite(matchedText: string, magicStmt: string, position: MatchPosition): Rewrite;

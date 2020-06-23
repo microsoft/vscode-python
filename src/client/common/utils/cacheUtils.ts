@@ -23,9 +23,9 @@ const resourceSpecificCacheStores = new Map<string, Map<string, CacheData>>();
  * Get a cache key specific to a resource (i.e. workspace)
  * This key will be used to cache interpreter related data, hence the Python Path
  *  used in a workspace will affect the cache key.
- * @param {String} keyPrefix
  * @param {Resource} resource
  * @param {VSCodeType} [vscode=require('vscode')]
+ * @param serviceContainer
  * @returns
  */
 function getCacheKey(
@@ -70,9 +70,9 @@ function getCacheKey(
 }
 /**
  * Gets the cache store for a resource that's specific to the interpreter.
- * @param {string} keyPrefix
  * @param {Resource} resource
  * @param {VSCodeType} [vscode=require('vscode')]
+ * @param serviceContainer
  * @returns
  */
 function getCacheStore(

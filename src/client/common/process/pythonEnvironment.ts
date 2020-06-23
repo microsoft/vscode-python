@@ -2,20 +2,14 @@
 // Licensed under the MIT License.
 
 import { CondaEnvironmentInfo } from '../../pythonEnvironments/discovery/locators/services/conda';
-import { InterpreterInformation } from '../../pythonEnvironments/discovery/types';
+import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
+import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { getExecutablePath } from '../../pythonEnvironments/info/executable';
+import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter';
 import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { Architecture } from '../utils/platform';
-import { parsePythonVersion } from '../utils/version';
 import * as internalPython from './internal/python';
-import * as internalScripts from './internal/scripts';
-import { ExecutionResult, IProcessService, PythonExecutionInfo, ShellOptions, SpawnOptions } from './types';
-
-function getExecutionInfo(python: string[], pythonArgs: string[]): PythonExecutionInfo {
-    const args = python.slice(1);
-    args.push(...pythonArgs);
-    return { command: python[0], args, python };
-}
+import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types';
 
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
@@ -33,13 +27,13 @@ class PythonEnvironment {
         }
     ) {}
 
-    public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs);
     }
-    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecutionInfo {
+    public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getObservablePythonArgv(this.pythonPath);
-        return getExecutionInfo(python, pythonArgs);
+        return buildPythonExecInfo(python, pythonArgs);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInformation | undefined> {
@@ -55,11 +49,8 @@ class PythonEnvironment {
         if (await this.deps.isValidExecutable(this.pythonPath)) {
             return this.pythonPath;
         }
-
-        const [args, parse] = internalPython.getExecutable();
-        const info = this.getExecutionInfo(args);
-        const proc = await this.deps.exec(info.command, info.args);
-        return parse(proc.stdout);
+        const python = this.getExecutionInfo();
+        return getExecutablePath(python, this.deps.exec);
     }
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
@@ -76,37 +67,8 @@ class PythonEnvironment {
 
     private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
         try {
-            const execInfo = this.getExecutionInfo();
-            const [args, parse] = internalScripts.interpreterInfo();
-            const argv = [...execInfo.python, ...args];
-
-            // Concat these together to make a set of quoted strings
-            const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
-
-            // Try shell execing the command, followed by the arguments. This will make node kill the process if it
-            // takes too long.
-            // Sometimes the python path isn't valid, timeout if that's the case.
-            // See these two bugs:
-            // https://github.com/microsoft/vscode-python/issues/7569
-            // https://github.com/microsoft/vscode-python/issues/7760
-            const result = await this.deps.shellExec(quoted, 15000);
-            if (result.stderr) {
-                traceError(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
-                return;
-            }
-            const json = parse(result.stdout);
-            traceInfo(`Found interpreter for ${argv}`);
-            const versionValue =
-                json.versionInfo.length === 4
-                    ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
-                    : json.versionInfo.join('.');
-            return {
-                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                path: this.pythonPath,
-                version: parsePythonVersion(versionValue),
-                sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix
-            };
+            const python = this.getExecutionInfo();
+            return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }

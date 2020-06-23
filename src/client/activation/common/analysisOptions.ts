@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 import { injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
-import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
+import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators } from '../../common/logger';
 import { IOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
 @injectable()

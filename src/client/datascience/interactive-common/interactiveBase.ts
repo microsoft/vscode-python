@@ -35,15 +35,20 @@ import {
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { RunByLine } from '../../common/experiments/groups';
+import { RemoveKernelToolbarInInteractiveWindow, RunByLine } from '../../common/experiments/groups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IExperimentsManager
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -80,7 +85,6 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IJupyterDebugger,
-    IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -98,6 +102,7 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
+import { serializeLanguageConfiguration } from './serialization';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -134,7 +139,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() private statusProvider: IStatusProvider,
-        @unmanaged() protected jupyterExecution: IJupyterExecution,
         @unmanaged() protected fileSystem: IFileSystem,
         @unmanaged() protected configuration: IConfigurationService,
         @unmanaged() protected jupyterExporter: INotebookExporter,
@@ -154,7 +158,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() experimentsManager: IExperimentsManager,
         @unmanaged() private switcher: KernelSwitcher,
         @unmanaged() private readonly notebookProvider: INotebookProvider,
-        @unmanaged() useCustomEditorApi: boolean
+        @unmanaged() useCustomEditorApi: boolean,
+        @unmanaged() expService: IExperimentService
     ) {
         super(
             configuration,
@@ -168,7 +173,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             title,
             viewColumn,
             useCustomEditorApi,
-            experimentsManager.inExperiment(RunByLine.experiment)
+            experimentsManager.inExperiment(RunByLine.experiment),
+            expService.inExperiment(RemoveKernelToolbarInInteractiveWindow.experiment)
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
@@ -177,9 +183,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
         const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activating());
         this.disposables.push(handler);
-
-        // If our execution changes its liveshare session, we need to close our server
-        this.jupyterExecution.sessionChanged(() => this.reloadAfterShutdown());
 
         // For each listener sign up for their post events
         this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
@@ -199,8 +202,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 .ignoreErrors();
         }, 0);
 
-        // When a server starts, make sure we create a notebook if the server matches
-        jupyterExecution.serverStarted(this.checkForNotebookProviderConnection.bind(this));
+        // When a notebook provider first makes its connection check it to see if we should create a notebook
+        this.disposables.push(notebookProvider.onConnectionMade(this.checkForNotebookProviderConnection.bind(this)));
 
         // When the variable service requests a refresh, refresh our variable list
         this.disposables.push(this.jupyterVariables.refreshRequired(this.refreshVariables.bind(this)));
@@ -1046,27 +1049,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     };
 
-    private async stopServer(): Promise<void> {
-        // Finish either of our notebook promises
-        if (this.connectionAndNotebookPromise) {
-            await this.connectionAndNotebookPromise;
-            this.connectionAndNotebookPromise = undefined;
-        }
-        if (this.notebookPromise) {
-            await this.notebookPromise;
-            this.notebookPromise = undefined;
-        }
-        // If we have a notebook dispose of it
-        if (this._notebook) {
-            const notebook = this._notebook;
-            this._notebook = undefined;
-            await notebook.dispose();
-        }
-
-        // Disconnect from our notebook provider
-        await this.notebookProvider.disconnect({ getOnly: true });
-    }
-
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // tslint:disable-next-line: member-ordering
@@ -1203,20 +1185,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.errorHandler.handleError(e).ignoreErrors();
             }
         }
-    }
-
-    private async reloadAfterShutdown(): Promise<void> {
-        try {
-            await this.stopServer();
-        } catch {
-            // We just switched from host to guest mode. Don't really care
-            // if closing the host server kills it.
-            this._notebook = undefined;
-        } finally {
-            this.connectionAndNotebookPromise = undefined;
-            this.notebookPromise = undefined;
-        }
-        await this.ensureConnectionAndNotebook();
     }
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
@@ -1441,7 +1409,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         const languageJson = await this.themeFinder.findTmLanguage(languageId);
-        const languageConfiguration = await this.themeFinder.findLanguageConfiguration(languageId);
+        const languageConfiguration = serializeLanguageConfiguration(
+            await this.themeFinder.findLanguageConfiguration(languageId)
+        );
         const extensions = languageId === PYTHON_LANGUAGE ? ['.py'] : [];
         const scopeName = `scope.${languageId}`; // This works for python, not sure about c# etc.
         this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, {

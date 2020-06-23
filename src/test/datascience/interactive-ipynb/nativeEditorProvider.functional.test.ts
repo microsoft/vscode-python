@@ -11,7 +11,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri, WebviewPanel } from 'vscode';
-import { CancellationToken } from 'vscode-languageclient';
+import { CancellationToken } from 'vscode-languageclient/node';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
     CustomDocument,
@@ -118,9 +118,6 @@ suite('DataScience - Native Editor Provider', () => {
         const editorChangeEvent = new EventEmitter<TextEditor | undefined>();
         when(docManager.onDidChangeActiveTextEditor).thenReturn(editorChangeEvent.event);
 
-        const sessionChangedEvent = new EventEmitter<void>();
-        when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
-
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
@@ -198,12 +195,6 @@ suite('DataScience - Native Editor Provider', () => {
         when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
     });
 
-    teardown(async () => {
-        if (registeredProvider) {
-            await registeredProvider.dispose();
-        }
-    });
-
     function createNotebookProvider() {
         const notebookStorage = new NativeEditorStorage(
             instance(executionProvider),
@@ -211,7 +202,8 @@ suite('DataScience - Native Editor Provider', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            false
         );
 
         storageProvider = new NotebookStorageProvider(notebookStorage, []);

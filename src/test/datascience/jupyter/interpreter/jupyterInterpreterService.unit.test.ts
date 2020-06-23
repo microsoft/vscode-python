@@ -17,7 +17,7 @@ import { JupyterInterpreterService } from '../../../../client/datascience/jupyte
 import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 import { MockMemento } from '../../../mocks/mementos';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 

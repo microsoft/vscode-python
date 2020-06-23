@@ -3,7 +3,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
@@ -11,7 +11,7 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';

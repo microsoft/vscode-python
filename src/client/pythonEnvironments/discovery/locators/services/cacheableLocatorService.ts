@@ -16,7 +16,7 @@ import { IInterpreterLocatorService, IInterpreterWatcher } from '../../../../int
 import { IServiceContainer } from '../../../../ioc/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { PythonInterpreter } from '../../types';
+import { PythonInterpreter } from '../../../info';
 import { GetInterpreterLocatorOptions } from '../types';
 
 /**

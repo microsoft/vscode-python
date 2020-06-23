@@ -13,7 +13,7 @@ import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/ke
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec, IKernelDependencyService } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../core';
 import { createPythonInterpreter } from '../../utils/interpreters';
 

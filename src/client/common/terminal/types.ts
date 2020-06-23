@@ -4,7 +4,7 @@
 'use strict';
 
 import { CancellationToken, Event, Terminal, Uri } from 'vscode';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { IDisposable, Resource } from '../types';
 

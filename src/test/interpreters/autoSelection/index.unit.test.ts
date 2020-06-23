@@ -32,7 +32,7 @@ import {
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
 

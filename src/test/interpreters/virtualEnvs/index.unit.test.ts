@@ -17,7 +17,7 @@ import { ICurrentProcess, IPathUtils } from '../../../client/common/types';
 import { IInterpreterLocatorService, IPipEnvService, PIPENV_SERVICE } from '../../../client/interpreter/contracts';
 import { VirtualEnvironmentManager } from '../../../client/interpreter/virtualEnvs';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { InterpreterType } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../client/pythonEnvironments/info';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Virtual Environment Manager', () => {

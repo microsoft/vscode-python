@@ -16,7 +16,7 @@ import { PythonDaemonExecutionService } from '../../../client/common/process/pyt
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { IProcessLogger, IPythonExecutionService, Output } from '../../../client/common/process/types';
 import { sleep } from '../../../client/common/utils/async';
-import { InterpreterInformation } from '../../../client/pythonEnvironments/discovery/types';
+import { InterpreterInformation } from '../../../client/pythonEnvironments/info';
 import { noop } from '../../core';
 use(chaiPromised);
 

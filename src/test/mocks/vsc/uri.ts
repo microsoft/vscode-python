@@ -311,6 +311,7 @@ export namespace vscUri {
          * `file:///usr/home`, or `scheme:with/path`.
          *
          * @param value A string which represents an URI (see `URI#toString`).
+         * @param {boolean} [_strict=false]
          */
         static parse(value: string, _strict: boolean = false): URI {
             const match = _regexp.exec(value);

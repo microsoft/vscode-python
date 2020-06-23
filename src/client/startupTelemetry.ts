@@ -20,7 +20,7 @@ import {
 } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
-import { PythonInterpreter } from './pythonEnvironments/discovery/types';
+import { PythonInterpreter } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';

@@ -12,7 +12,7 @@ import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { IInterpreterHelper, IInterpreterLocatorService, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';

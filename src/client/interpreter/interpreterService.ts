@@ -21,7 +21,7 @@ import {
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
 import { InterpeterHashProviderFactory } from '../pythonEnvironments/discovery/locators/services/hashProviderFactory';
-import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../pythonEnvironments/info';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import {
@@ -216,6 +216,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
      * The format is `Python <Version> <bitness> (<env name>: <env type>)`
      * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
      * @param {Partial<PythonInterpreter>} info
+     * @param {Uri} [resource]
      * @returns {string}
      * @memberof InterpreterService
      */

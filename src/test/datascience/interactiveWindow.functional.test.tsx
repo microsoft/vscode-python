@@ -38,7 +38,7 @@ import {
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { createMessageEvent } from './reactHelpers';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -58,8 +58,7 @@ import {
     typeCode,
     verifyHtmlOnCell,
     verifyLastCellInputState,
-    waitForMessage,
-    waitForMessageResponse
+    waitForMessage
 } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -217,13 +216,12 @@ for i in range(10):
 
             const domDiv = reactDiv.querySelector('div');
 
-            if (domDiv && ioc.postMessage) {
+            if (domDiv && ioc.getDefaultWrapper()) {
                 domDiv.tabIndex = -1;
                 domDiv.focus();
 
                 // send the ctrl + 1/2 message, this should put focus back on the input box
-                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate, payload: undefined });
-                ioc.postMessage(message);
+                ioc.postMessage({ type: InteractiveWindowMessages.Activate, payload: undefined }, 'default');
 
                 // Then enter press shift + enter on the active element
                 const activeElement = document.activeElement;
@@ -539,7 +537,7 @@ Type:      builtin_function_or_method`,
             const deleteButton = ImageButtons.at(3);
 
             // Make sure goto works
-            await waitForMessageResponse(ioc, () => goto.simulate('click'));
+            goto.simulate('click');
             await waitForPromise(showedEditor.promise, 1000);
             assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
@@ -634,7 +632,10 @@ for i in range(0, 100):
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Export should cause exportCalled to change to true
-            await waitForMessageResponse(ioc, () => interactiveWindow.exportCells());
+            const exportPromise = waitForMessage(ioc, InteractiveWindowMessages.ReturnAllCells);
+            interactiveWindow.exportCells();
+            await exportPromise;
+            await sleep(100); // Give time for appshell to come up
             assert.equal(exportCalled, true, 'Export is not being called during export');
 
             // Remove the cell
@@ -651,8 +652,8 @@ for i in range(0, 100):
 
             // Then verify we cannot click the button (it should be disabled)
             exportCalled = false;
-            const response = waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            await waitForPromise(response, 100);
+            exportButton!.simulate('click');
+            await sleep(100);
             assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
         },
         () => {
@@ -686,7 +687,7 @@ for i in range(0, 100):
                     activeInterpreter?.path,
                     'Active intrepreter not used to launch notebook'
                 );
-                await closeInteractiveWindow(window, wrapper);
+                await closeInteractiveWindow(ioc, window);
 
                 // Add another python path
                 const secondUri = Uri.file('bar.py');
@@ -880,7 +881,7 @@ for i in range(0, 100):
             const copyToSource = ImageButtons.at(2);
 
             // Then click the copy to source button
-            await waitForMessageResponse(ioc, () => copyToSource.simulate('click'));
+            copyToSource.simulate('click');
             await waitForPromise(showedEditor.promise, 100);
             assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
         },
@@ -921,6 +922,13 @@ for i in range(0, 100):
             addMockData(ioc, 'print("hello")', 'hello');
             await enterInput(wrapper, ioc, 'print("hello', 'InteractiveCell');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', 'hello', CellPosition.Last);
+
+            // Verify auto indent is working
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'if (True):\n');
+            typeCode(editor, 'print("true")');
+            const reactEditor = editor.instance() as MonacoEditor;
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), `if (True):\n    print("true")`);
         },
         () => {
             return ioc;
@@ -1016,7 +1024,9 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCodeToScript);
+            gatherCode.simulate('click');
+            await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
             if (docManager.activeTextEditor) {
@@ -1057,7 +1067,9 @@ for i in range(0, 100):
             const gatherCode = ImageButtons.at(0);
 
             // Then click the gather code button
-            await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
+            const gatherPromise = waitForMessage(ioc, InteractiveWindowMessages.GatherCodeToScript);
+            gatherCode.simulate('click');
+            await gatherPromise;
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
 
@@ -1169,4 +1181,37 @@ for i in range(0, 100):
             return ioc;
         }
     );
+
+    test('Open notebook and interactive at the same time', async () => {
+        addMockData(ioc, 'a=1\na', 1, 'text/plain');
+        addMockData(ioc, 'b=2\nb', 2, 'text/plain');
+
+        // Mount two different webviews
+        const nativeWrapper = mountWebView(ioc, 'native');
+        let interactiveWrapper = mountWebView(ioc, 'interactive');
+        await createNewEditor(ioc);
+        let interactiveEditor = await getOrCreateInteractiveWindow(ioc);
+
+        // Run code in both
+        await addCode(ioc, interactiveWrapper, 'a=1\na');
+        await addCell(ioc, nativeWrapper, 'a=1\na', true);
+
+        // Make sure both are correct
+        verifyHtmlOnCell(interactiveWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(nativeWrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
+
+        // Close the interactive editor.
+        await closeInteractiveWindow(ioc, interactiveEditor);
+
+        // Run another cell and make sure it works in the notebook
+        await addCell(ioc, nativeWrapper, 'b=2\nb', true);
+        verifyHtmlOnCell(nativeWrapper, 'NativeCell', '<span>2</span>', CellPosition.Last);
+
+        // Rerun the interactive window
+        interactiveWrapper = mountWebView(ioc, 'interactive');
+        interactiveEditor = await getOrCreateInteractiveWindow(ioc);
+        await addCode(ioc, interactiveWrapper, 'a=1\na');
+
+        verifyHtmlOnCell(interactiveWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    });
 });

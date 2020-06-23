@@ -28,6 +28,7 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    private _connectionMade = new EventEmitter<void>();
     private _type: 'jupyter' | 'raw' = 'jupyter';
     public get activeNotebooks() {
         return [...this.notebooks.values()];
@@ -56,6 +57,10 @@ export class NotebookProvider implements INotebookProvider {
         return this._notebookCreated.event;
     }
 
+    public get onConnectionMade() {
+        return this._connectionMade.event;
+    }
+
     public get type(): 'jupyter' | 'raw' {
         return this._type;
     }
@@ -72,9 +77,15 @@ export class NotebookProvider implements INotebookProvider {
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
         // Connect to either a jupyter server or a stubbed out raw notebook "connection"
         if (await this.rawNotebookProvider.supported()) {
-            return this.rawNotebookProvider.connect(options);
+            return this.rawNotebookProvider.connect({
+                ...options,
+                onConnectionMade: this.fireConnectionMade.bind(this)
+            });
         } else {
-            return this.jupyterNotebookProvider.connect(options);
+            return this.jupyterNotebookProvider.connect({
+                ...options,
+                onConnectionMade: this.fireConnectionMade.bind(this)
+            });
         }
     }
 
@@ -132,6 +143,10 @@ export class NotebookProvider implements INotebookProvider {
         this.cacheNotebookPromise(options.identity, promise);
 
         return promise;
+    }
+
+    private fireConnectionMade() {
+        this._connectionMade.fire();
     }
 
     // Cache the promise that will return a notebook

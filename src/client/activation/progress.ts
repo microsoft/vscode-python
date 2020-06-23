@@ -4,7 +4,7 @@
 'use strict';
 
 import { Progress, ProgressLocation, window } from 'vscode';
-import { Disposable, LanguageClient } from 'vscode-languageclient';
+import { Disposable, LanguageClient } from 'vscode-languageclient/node';
 import { createDeferred, Deferred } from '../common/utils/async';
 
 export class ProgressReporting implements Disposable {

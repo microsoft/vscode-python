@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { PythonVersionInfo } from '../../../../pythonEnvironments/discovery/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
@@ -33,7 +32,6 @@ const ISOLATED = _ISOLATED;
 //
 // ignored scripts:
 //  * install_debugpy.py  (used only for extension development)
-//  * ptvsd_launcher.py  (used only for the old debug adapter)
 
 export * as testing_tools from './testing_tools';
 export * as vscode_datascience_helpers from './vscode_datascience_helpers';
@@ -41,7 +39,9 @@ export * as vscode_datascience_helpers from './vscode_datascience_helpers';
 //============================
 // interpreterInfo.py
 
-type PythonEnvInfo = {
+type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final';
+type PythonVersionInfo = [number, number, number, ReleaseLevel, number];
+export type PythonEnvInfo = {
     versionInfo: PythonVersionInfo;
     sysPrefix: string;
     sysVersion: string;

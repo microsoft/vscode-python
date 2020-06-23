@@ -12,7 +12,7 @@ import {
     parseCondaInfo
 } from '../../../../client/pythonEnvironments/discovery/locators/services/conda';
 import { CondaEnvService } from '../../../../client/pythonEnvironments/discovery/locators/services/condaEnvService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 import { MockState } from '../../../interpreters/mocks';
 import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 

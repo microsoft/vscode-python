@@ -17,7 +17,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { PythonInterpreter } from '../../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 

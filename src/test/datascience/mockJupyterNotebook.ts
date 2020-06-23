@@ -20,7 +20,7 @@ import {
     InterruptResult,
     KernelSocketInformation
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../client/pythonEnvironments/info';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 

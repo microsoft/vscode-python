@@ -9,7 +9,7 @@ import type { CellOutput } from 'vscode-proposed';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers';
+import { notebookModelToVSCNotebookData } from '../../../client/datascience/notebook/helpers/helpers';
 import { CellState, INotebookModel } from '../../../client/datascience/types';
 
 suite('Data Science - NativeNotebook helpers', () => {
@@ -47,6 +47,8 @@ suite('Data Science - NativeNotebook helpers', () => {
 
         assert.isOk(notebook);
         assert.deepEqual(notebook.languages, [PYTHON_LANGUAGE]);
+        // ignore metadata we add.
+        notebook.cells.forEach((cell) => delete cell.metadata.custom);
         assert.deepEqual(notebook.cells, [
             {
                 cellKind: vscodeNotebookEnums.CellKind.Code,
@@ -58,10 +60,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                     executionOrder: 10,
                     hasExecutionOrder: true,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Success,
-                    runnable: true,
-                    custom: {
-                        cellId: 'MyCellId1'
-                    }
+                    runnable: true
                 }
             },
             {
@@ -74,10 +73,7 @@ suite('Data Science - NativeNotebook helpers', () => {
                     executionOrder: undefined,
                     hasExecutionOrder: false,
                     runState: vscodeNotebookEnums.NotebookCellRunState.Idle,
-                    runnable: false,
-                    custom: {
-                        cellId: 'MyCellId2'
-                    }
+                    runnable: false
                 }
             }
         ]);

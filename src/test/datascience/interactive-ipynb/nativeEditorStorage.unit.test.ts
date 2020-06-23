@@ -269,9 +269,6 @@ suite('DataScience - Native Editor Storage', () => {
         const editorChangeEvent = new EventEmitter<TextEditor | undefined>();
         when(docManager.onDidChangeActiveTextEditor).thenReturn(editorChangeEvent.event);
 
-        const sessionChangedEvent = new EventEmitter<void>();
-        when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
-
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
@@ -326,7 +323,8 @@ suite('DataScience - Native Editor Storage', () => {
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento
+            localMemento,
+            false
         );
 
         return new NotebookStorageProvider(notebookStorage, []);

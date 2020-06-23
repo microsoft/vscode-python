@@ -13,6 +13,7 @@ import { CancellationTokenSource, TextDocument, TextLine, Uri } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PlatformService } from '../../client/common/platform/platformService';
+import { IFileSystem } from '../../client/common/platform/types';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -622,6 +623,7 @@ class TestFixture extends BaseTestFixture {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        const filesystem = new FileSystem();
         processLogger
             .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
@@ -630,9 +632,11 @@ class TestFixture extends BaseTestFixture {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny()))
             .returns(() => processLogger.object);
+        serviceContainer
+            .setup((s) => s.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .returns(() => filesystem);
 
         const platformService = new PlatformService();
-        const filesystem = new FileSystem();
 
         super(
             platformService,

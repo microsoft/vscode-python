@@ -4,7 +4,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClientOptions } from 'vscode-languageclient/node';
 import { DotNetLanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
@@ -18,10 +18,9 @@ import {
 } from '../../../client/activation/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExperimentsManager } from '../../../client/common/experiments/manager';
-import { IConfigurationService, IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
+import { IConfigurationService, IExperimentsManager } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import { sleep } from '../../core';
 
 use(chaiAsPromised);
@@ -35,7 +34,6 @@ suite('Language Server - Manager', () => {
     let languageServer: ILanguageServerProxy;
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
-    let surveyBanner: IPythonExtensionBanner;
     let folderService: ILanguageServerFolderService;
     let experimentsManager: IExperimentsManager;
     let configService: IConfigurationService;
@@ -45,7 +43,6 @@ suite('Language Server - Manager', () => {
         analysisOptions = mock(DotNetLanguageServerAnalysisOptions);
         languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
-        surveyBanner = mock(ProposeLanguageServerBanner);
         folderService = mock(DotNetLanguageServerFolderService);
         experimentsManager = mock(ExperimentsManager);
         configService = mock(ConfigurationService);
@@ -53,7 +50,6 @@ suite('Language Server - Manager', () => {
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension),
-            instance(surveyBanner),
             instance(folderService),
             instance(experimentsManager),
             instance(configService)

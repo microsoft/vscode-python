@@ -9,24 +9,20 @@ import { CellEditSyncService } from './cellEditSyncService';
 import { NotebookContentProvider } from './contentProvider';
 import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
-import { NotebookEditorProviderActivation } from './notebookEditorProvider';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<NotebookContentProvider>(NotebookContentProvider, NotebookContentProvider);
+    serviceManager.addSingleton<INotebookContentProvider>(INotebookContentProvider, NotebookContentProvider);
     serviceManager.addSingleton<INotebookExecutionService>(INotebookExecutionService, NotebookExecutionService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         NotebookIntegration
     );
+    serviceManager.addSingleton<NotebookIntegration>(NotebookIntegration, NotebookIntegration);
     serviceManager.addSingleton<NotebookKernel>(NotebookKernel, NotebookKernel);
     serviceManager.addSingleton<NotebookOutputRenderer>(NotebookOutputRenderer, NotebookOutputRenderer);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        NotebookEditorProviderActivation
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         CellEditSyncService

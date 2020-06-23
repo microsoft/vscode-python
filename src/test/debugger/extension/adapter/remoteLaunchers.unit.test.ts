@@ -9,56 +9,6 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import '../../../../client/common/extensions';
 import * as launchers from '../../../../client/debugger/extension/adapter/remoteLaunchers';
 
-suite('External ptvsd Debugger Launcher', () => {
-    [
-        {
-            testName: 'When path to ptvsd launcher does not contains spaces',
-            path: path.join('path', 'to', 'ptvsd_launcher'),
-            expectedPath: 'path/to/ptvsd_launcher'
-        },
-        {
-            testName: 'When path to ptvsd launcher contains spaces',
-            path: path.join('path', 'to', 'ptvsd_launcher', 'with spaces'),
-            expectedPath: '"path/to/ptvsd_launcher/with spaces"'
-        }
-    ].forEach((testParams) => {
-        suite(testParams.testName, async () => {
-            test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
-                const args = launchers.getPtvsdLauncherScriptArgs(
-                    {
-                        host: 'something',
-                        port: 1234,
-                        waitUntilDebuggerAttaches: false
-                    },
-                    testParams.path
-                );
-                const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234'];
-                expect(args).to.be.deep.equal(expectedArgs);
-            });
-            test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
-                const args = launchers.getPtvsdLauncherScriptArgs(
-                    {
-                        host: 'something',
-                        port: 1234,
-                        waitUntilDebuggerAttaches: true
-                    },
-                    testParams.path
-                );
-                const expectedArgs = [
-                    testParams.expectedPath,
-                    '--default',
-                    '--host',
-                    'something',
-                    '--port',
-                    '1234',
-                    '--wait'
-                ];
-                expect(args).to.be.deep.equal(expectedArgs);
-            });
-        });
-    });
-});
-
 suite('External debugpy Debugger Launcher', () => {
     [
         {

@@ -28,7 +28,7 @@ import {
 import { IInterpreterFilter } from '../../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { PythonInterpreterLocatorService } from '../../../../client/pythonEnvironments/discovery/locators';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 suite('Interpreters - Locators Index', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

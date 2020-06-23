@@ -16,7 +16,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../../../
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IInterpreterService, IPipEnvService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { InterpreterType } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType } from '../../../../client/pythonEnvironments/info';
 
 // tslint:disable:no-any
 

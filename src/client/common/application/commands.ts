@@ -6,11 +6,12 @@
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
-import { INotebook } from '../../datascience/types';
+import { INotebook, INotebookModel } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
 import { Commands } from '../constants';
+import { Channel } from './types';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -88,7 +89,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
-    ['setContext']: [string, boolean];
+    ['workbench.action.files.openFolder']: [];
+    ['workbench.action.openWorkspace']: [];
+    ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
@@ -158,6 +161,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.OpenNotebookInPreviewEditor]: [undefined | Uri];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugFileInInteractiveWindows]: [string];
@@ -168,6 +172,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
+    [DSCommands.ExportAsPythonScript]: [INotebookModel];
+    [DSCommands.ExportToHTML]: [INotebookModel];
+    [DSCommands.ExportToPDF]: [INotebookModel];
+    [DSCommands.Export]: [INotebookModel];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined, 'raw' | 'jupyter'];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];

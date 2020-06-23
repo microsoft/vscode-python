@@ -6,11 +6,10 @@
 import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import type { NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -22,6 +21,7 @@ import {
     InterruptResult,
     IStatusProvider
 } from '../types';
+import { getDefaultCodeLanguage } from './helpers/helpers';
 import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
@@ -112,9 +112,10 @@ export class NotebookEditor implements INotebookEditor {
         if (!this.vscodeNotebook.activeNotebookEditor) {
             return;
         }
+        const defaultLanguage = getDefaultCodeLanguage(this.model);
         this.vscodeNotebook.activeNotebookEditor.edit((editor) => {
             const totalLength = this.document.cells.length;
-            editor.insert(this.document.cells.length, '', PYTHON_LANGUAGE, CellKind.Code, [], undefined);
+            editor.insert(this.document.cells.length, '', defaultLanguage, CellKind.Code, [], undefined);
             for (let i = totalLength - 1; i >= 0; i = i - 1) {
                 editor.delete(i);
             }

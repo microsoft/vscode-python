@@ -26,15 +26,15 @@ import { IDisposable, IDisposableRegistry } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../constants';
-import { IProtocolParser } from '../debugger/debugAdapter/types';
 import { DebugAdapterDescriptorFactory } from '../debugger/extension/adapter/factory';
+import { IProtocolParser } from '../debugger/extension/types';
 import { IJupyterDebugService } from './types';
 
 // tslint:disable:no-any
 
 // For debugging set these environment variables
-// PYDEV_DEBUG=True
-// PTVSD_LOG_DIR=<dir that already exists>
+// PYDEVD_DEBUG=True
+// DEBUGPY_LOG_DIR=<dir that already exists>
 // PYDEVD_DEBUG_FILE=<dir that exists, but new file allowed>
 class JupyterDebugSession implements DebugSession {
     private _name = 'JupyterDebugSession';

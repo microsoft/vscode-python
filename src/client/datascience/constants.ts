@@ -46,6 +46,7 @@ export namespace Commands {
     export const ImportNotebook = 'python.datascience.importnotebook';
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
+    export const OpenNotebookInPreviewEditor = 'python.datascience.opennotebookInPreviewEditor';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
@@ -79,6 +80,10 @@ export namespace Commands {
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
+    export const ExportAsPythonScript = 'python.datascience.exportAsPythonScript';
+    export const ExportToHTML = 'python.datascience.exportToHTML';
+    export const ExportToPDF = 'python.datascience.exportToPDF';
+    export const Export = 'python.datascience.export';
     export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
@@ -113,7 +118,6 @@ export namespace EditorContexts {
     export const IsPythonOrInteractiveActive = 'python.datascience.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'python.datascience.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'python.datascience.havecellselected';
-    export const StartPageEnabled = 'python.datascience.startpageenabled';
 }
 
 export namespace RegExpValues {
@@ -161,7 +165,7 @@ export enum Telemetry {
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
     RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
+    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
     /**
@@ -181,8 +185,28 @@ export enum Telemetry {
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
-    ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
-    ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * Exporting from the interactive window
+     */
+    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE',
+    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * User clicked export as quick pick button
+     */
+    ClickedExportNotebookAsQuickPick = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK',
+    /**
+     * exported a notebook
+     */
+    ExportNotebookAs = 'DATASCIENCE.EXPORT_NOTEBOOK_AS',
+    /**
+     * User invokes export as format from command pallet
+     */
+    ExportNotebookAsCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND',
+    /**
+     * An export to a specific format failed
+     */
+    ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
@@ -247,10 +271,10 @@ export enum Telemetry {
     HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
     HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
-    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
-    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
-    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
-    PtvsdInstallCancelled = 'DATASCIENCE.PTVSD_INSTALL_CANCELLED',
+    DebugpyPromptToInstall = 'DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL',
+    DebugpySuccessfullyInstalled = 'DATASCIENCE.DEBUGPY_SUCCESSFULLY_INSTALLED',
+    DebugpyInstallFailed = 'DATASCIENCE.DEBUGPY_INSTALL_FAILED',
+    DebugpyInstallCancelled = 'DATASCIENCE.DEBUGPY_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
     ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
     CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
@@ -318,6 +342,7 @@ export enum Telemetry {
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     StartPageViewed = 'DS_INTERNAL.STARTPAGE_VIEWED',
+    StartPageWebViewError = 'DS_INTERNAL.STARTPAGE_WEBVIEWERROR',
     StartPageTime = 'DS_INTERNAL.STARTPAGE_TIME',
     StartPageClickedDontShowAgain = 'DATASCIENCE.STARTPAGE_DONT_SHOW_AGAIN',
     StartPageClosedWithoutAction = 'DATASCIENCE.STARTPAGE_CLOSED_WITHOUT_ACTION',
@@ -328,7 +353,9 @@ export enum Telemetry {
     StartPageOpenCommandPalette = 'DATASCIENCE.STARTPAGE_OPEN_COMMAND_PALETTE',
     StartPageOpenCommandPaletteWithOpenNBSelected = 'DATASCIENCE.STARTPAGE_OPEN_COMMAND_PALETTE_WITH_OPENNBSELECTED',
     StartPageOpenSampleNotebook = 'DATASCIENCE.STARTPAGE_OPEN_SAMPLE_NOTEBOOK',
-    StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER'
+    StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
+    StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
+    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -489,3 +516,6 @@ export namespace LiveShareCommands {
     export const rawKernelSupported = 'rawKernelSupported';
     export const createRawNotebook = 'createRawNotebook';
 }
+
+export const VSCodeNotebookProvider = 'VSCodeNotebookProvider';
+export const OurNotebookProvider = 'OurNotebookProvider';

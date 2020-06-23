@@ -55,7 +55,7 @@ function moduleNameToCDNUrl(moduleName: string, moduleVersion: string): string {
  * Load an amd module locally and fall back to specified CDN if unavailable.
  *
  * @param moduleName The name of the module to load..
- * @param version The semver range for the module, if loaded from a CDN.
+ * @param moduleVersion The semver range for the module, if loaded from a CDN.
  *
  * By default, the CDN service used is unpkg.com. However, this default can be
  * overriden by specifying another URL via the HTML attribute

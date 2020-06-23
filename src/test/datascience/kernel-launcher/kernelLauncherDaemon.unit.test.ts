@@ -9,7 +9,7 @@ import { KernelDaemonPool } from '../../../client/datascience/kernel-launcher/ke
 import { PythonKernelLauncherDaemon } from '../../../client/datascience/kernel-launcher/kernelLauncherDaemon';
 import { IPythonKernelDaemon } from '../../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { PythonInterpreter } from '../../../client/pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../../client/pythonEnvironments/info';
 import { createPythonInterpreter } from '../../utils/interpreters';
 
 // tslint:disable: max-func-body-length no-any

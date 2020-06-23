@@ -18,7 +18,7 @@ import { IPipEnvServiceHelper } from '../../../../client/interpreter/locators/ty
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { InterpreterLocatorHelper } from '../../../../client/pythonEnvironments/discovery/locators/helpers';
 import { PipEnvServiceHelper } from '../../../../client/pythonEnvironments/discovery/locators/services/pipEnvServiceHelper';
-import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/discovery/types';
+import { InterpreterType, PythonInterpreter } from '../../../../client/pythonEnvironments/info';
 
 enum OS {
     Windows = 'Windows',

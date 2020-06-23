@@ -8,7 +8,7 @@ import { CancellationToken, Event } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { ObservableExecutionResult } from '../../common/process/types';
 import { IAsyncDisposable, IDisposable, Resource } from '../../common/types';
-import { PythonInterpreter } from '../../pythonEnvironments/discovery/types';
+import { PythonInterpreter } from '../../pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
@@ -54,7 +54,7 @@ export interface IKernelFinder {
 }
 
 /**
- * The daemon responsbile for the Python Kernel.
+ * The daemon responsible for the Python Kernel.
  */
 export interface IPythonKernelDaemon extends IDisposable {
     interrupt(): Promise<void>;

@@ -129,7 +129,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      * This configuration is documented on Conda.
      * Extension will not attempt to work around issues by trying to setup shell for user.
      *
-     * @param {string} envName
+     * @param {string} condaEnv
      * @returns {(Promise<string[] | undefined>)}
      * @memberof CondaActivationCommandProvider
      */

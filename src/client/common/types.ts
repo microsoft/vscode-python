@@ -18,6 +18,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
+import { LogLevel } from '../logging/levels';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
@@ -28,7 +29,7 @@ export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDisposableRegistry');
-export type IDisposableRegistry = { push(...items: Disposable[]): void };
+export type IDisposableRegistry = Disposable[];
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
 export const WORKSPACE_MEMENTO = Symbol('IWorkspaceMemento');
@@ -187,6 +188,7 @@ export interface IPythonSettings {
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
     readonly defaultInterpreterPath: string;
+    readonly logging: ILoggingSettings;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -227,6 +229,12 @@ export interface Flake8CategorySeverity {
 export interface IMypyCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly note: DiagnosticSeverity;
+}
+
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug';
+
+export interface ILoggingSettings {
+    readonly level: LogLevel | 'off';
 }
 export interface ILintingSettings {
     readonly enabled: boolean;
@@ -370,7 +378,7 @@ export interface IDataScienceSettings {
     enablePlotViewer?: boolean;
     codeLenses?: string;
     debugCodeLenses?: string;
-    ptvsdDistPath?: string;
+    debugpyDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
@@ -391,6 +399,7 @@ export interface IDataScienceSettings {
     jupyterCommandLineArguments: string[];
     widgetScriptSources: WidgetCDNs[];
     alwaysScrollOnNewCell?: boolean;
+    showKernelSelectionOnInteractiveWindow?: boolean;
 }
 
 export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
@@ -571,6 +580,7 @@ export interface ICryptoUtils {
      * @returns hash as number, or string
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
+     * @param [algorithm]
      */
     createHash<E extends keyof IHashFormat>(
         data: string,

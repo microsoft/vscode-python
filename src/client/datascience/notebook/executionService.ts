@@ -11,14 +11,16 @@ import type { NotebookCell, NotebookDocument } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import '../../common/extensions';
+import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { Commands } from '../constants';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
-import { findMappedNotebookCellModel } from './cellUpdateHelpers';
+import { findMappedNotebookCellModel } from './helpers/cellMappers';
 import {
     handleUpdateDisplayDataMessage,
     hasTransientOutputForAnotherCell,
@@ -26,9 +28,9 @@ import {
     updateCellExecutionTimes,
     updateCellOutput,
     updateCellWithErrorStatus
-} from './executionHelpers';
-import { getCellStatusMessageBasedOnFirstErrorOutput } from './helpers';
-import { INotebookExecutionService } from './types';
+} from './helpers/executionHelpers';
+import { getCellStatusMessageBasedOnFirstErrorOutput, updateVSCNotebookCellMetadata } from './helpers/helpers';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -42,6 +44,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     private _notebookProvider?: INotebookProvider;
     private readonly pendingExecutionCancellations = new Map<string, CancellationTokenSource[]>();
     private readonly tokensInterrupted = new WeakSet<CancellationToken>();
+    private sentExecuteCellTelemetry: boolean = false;
     private get notebookProvider(): INotebookProvider {
         this._notebookProvider =
             this._notebookProvider || this.serviceContainer.get<INotebookProvider>(INotebookProvider);
@@ -51,9 +54,12 @@ export class NotebookExecutionService implements INotebookExecutionService {
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider
     ) {}
+    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
         const model = await this.notebookStorage.load(document.uri);
         if (token.isCancellationRequested) {
             return;
@@ -71,9 +77,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
         if (!nb) {
             throw new Error('Unable to get Notebook object to run cell');
         }
-        await this.executeIndividualCell(model, document, cell, nb, token);
+        await this.executeIndividualCell(model, document, cell, nb, token, stopWatch);
     }
+    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
         const model = await this.notebookStorage.load(document.uri);
         if (token.isCancellationRequested) {
             return;
@@ -92,18 +100,31 @@ export class NotebookExecutionService implements INotebookExecutionService {
             throw new Error('Unable to get Notebook object to run cell');
         }
         await Promise.all(
-            document.cells.map((cellToExecute) => this.executeIndividualCell(model, document, cellToExecute, nb, token))
+            document.cells.map((cellToExecute) =>
+                this.executeIndividualCell(model, document, cellToExecute, nb, token, stopWatch)
+            )
         );
     }
     public cancelPendingExecutions(document: NotebookDocument): void {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
     }
+    private sendPerceivedCellExecute(runningStopWatch: StopWatch) {
+        const props = { notebook: true };
+        if (!this.sentExecuteCellTelemetry) {
+            this.sentExecuteCellTelemetry = true;
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime, props);
+        } else {
+            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime, props);
+        }
+    }
+
     private async executeIndividualCell(
         model: INotebookModel,
         document: NotebookDocument,
         cell: NotebookCell,
         nb: INotebook,
-        token: CancellationToken
+        token: CancellationToken,
+        stopWatch: StopWatch
     ): Promise<void> {
         if (token.isCancellationRequested) {
             return;
@@ -133,7 +154,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         this.handleDisplayDataMessages(model, document, nb);
 
         const deferred = createDeferred();
-        const stopWatch = new StopWatch();
+        const executionStopWatch = new StopWatch();
 
         wrappedToken.onCancellationRequested(() => {
             if (deferred.completed) {
@@ -152,11 +173,27 @@ export class NotebookExecutionService implements INotebookExecutionService {
         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
 
         let subscription: Subscription | undefined;
+        let modelClearedEventHandler: IDisposable | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
-            const observable = nb.executeObservable(cell.source, document.fileName, 0, cell.uri.fsPath, false);
+            const observable = nb.executeObservable(
+                cell.document.getText(),
+                document.fileName,
+                0,
+                cell.uri.fsPath,
+                false
+            );
             subscription = observable?.subscribe(
                 (cells) => {
+                    if (!modelClearedEventHandler) {
+                        modelClearedEventHandler = model.changed((e) => {
+                            if (e.kind === 'clear') {
+                                // If cell output has been cleared, then clear the output in the observed executable cell.
+                                // Else if user clears output while execuitng a cell, we add it back.
+                                cells.forEach((c) => (c.data.outputs = []));
+                            }
+                        });
+                    }
                     const rawCellOutput = cells
                         .filter((item) => item.id === cell.uri.fsPath)
                         .flatMap((item) => (item.data.outputs as unknown) as nbformat.IOutput[])
@@ -171,18 +208,23 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         typeof cells[0].data.execution_count === 'number'
                     ) {
                         const executionCount = cells[0].data.execution_count as number;
-                        updateCellExecutionCount(notebookCellModel, model, executionCount);
+                        if (updateCellExecutionCount(cell, notebookCellModel, executionCount)) {
+                            this.contentProvider.notifyChangesToDocument(document);
+                        }
                     }
 
-                    updateCellOutput(notebookCellModel, rawCellOutput, model);
+                    if (updateCellOutput(cell, notebookCellModel, rawCellOutput)) {
+                        this.contentProvider.notifyChangesToDocument(document);
+                    }
                 },
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
+                    this.contentProvider.notifyChangesToDocument(document);
                     deferred.resolve();
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
                 () => {
-                    cell.metadata.lastRunDuration = stopWatch.elapsedTime;
+                    cell.metadata.lastRunDuration = executionStopWatch.elapsedTime;
                     cell.metadata.runState = wrappedToken.isCancellationRequested
                         ? vscodeNotebookEnums.NotebookCellRunState.Idle
                         : vscodeNotebookEnums.NotebookCellRunState.Success;
@@ -192,7 +234,6 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
                     updateCellExecutionTimes(
                         notebookCellModel,
-                        model,
                         cell.metadata.runStartTime,
                         cell.metadata.lastRunDuration
                     );
@@ -205,14 +246,20 @@ export class NotebookExecutionService implements INotebookExecutionService {
                             notebookCellModel.data.outputs as any
                         );
                     }
+
+                    updateVSCNotebookCellMetadata(cell.metadata, notebookCellModel);
+                    this.contentProvider.notifyChangesToDocument(document);
                     deferred.resolve();
                 }
             );
             await deferred.promise;
         } catch (ex) {
             updateCellWithErrorStatus(cell, ex);
+            this.contentProvider.notifyChangesToDocument(document);
             this.errorHandler.handleError(ex).ignoreErrors();
         } finally {
+            this.sendPerceivedCellExecute(stopWatch);
+            modelClearedEventHandler?.dispose(); // NOSONAR
             subscription?.unsubscribe(); // NOSONAR
             // Ensure we remove the cancellation.
             const cancellations = this.pendingExecutionCancellations.get(document.uri.fsPath);
@@ -231,8 +278,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
             //tslint:disable-next-line:no-require-imports
             const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
             nb.registerIOPubListener(async (msg) => {
-                if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                    handleUpdateDisplayDataMessage(msg, model, document);
+                if (
+                    jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg) &&
+                    handleUpdateDisplayDataMessage(msg, model, document)
+                ) {
+                    this.contentProvider.notifyChangesToDocument(document);
                 }
             });
         }
