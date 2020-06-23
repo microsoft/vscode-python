@@ -301,7 +301,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const waitPromise = createDeferred<void>();
 
         // A message could cause multiple callback waits, so use id+type as key
-        const key = msgId + IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString();
+        const key = this.generateExtensionResponseKey(
+            msgId,
+            IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString()
+        );
         this.awaitingExtensionMessage.set(key, waitPromise);
 
         // Tell the other side about this.
@@ -327,7 +330,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const waitPromise = createDeferred<void>();
 
         // A message could cause multiple callback waits, so use id+type as key
-        const key = msgId + IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString();
+        const key = this.generateExtensionResponseKey(msgId, IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString());
         this.awaitingExtensionMessage.set(key, waitPromise);
 
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
@@ -364,6 +367,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_msg_received, {
             id
         });
+    }
+
+    private generateExtensionResponseKey(msgId: string, msgType: string): string {
+        return `${msgId}${msgType}`;
     }
 
     private fakeOpenSocket() {
@@ -461,6 +468,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     }
 
     // When the real kernel handles iopub messages notify the Extension side and then forward on the message
+    // Note, this message comes from the kernel after it is done handling the message async
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
             id: message.header.msg_id
