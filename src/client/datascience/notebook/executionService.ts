@@ -89,25 +89,33 @@ export class NotebookExecutionService implements INotebookExecutionService {
             cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
         });
 
+        const restoreOldCellState = (cell: NotebookCell) => {
+            if (
+                oldCellStates.has(cell) &&
+                cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running
+            ) {
+                cell.metadata.runState = oldCellStates.get(cell);
+            }
+        };
         // If we cancel running cells, then restore the state to previous values unless cell has completed.
-        token.onCancellationRequested(() => {
-            document.cells.forEach((cell) => {
-                if (
-                    oldCellStates.has(cell) &&
-                    cell.metadata.runState === vscodeNotebookEnums.NotebookCellRunState.Running
-                ) {
-                    cell.metadata.runState = oldCellStates.get(cell);
-                }
-            });
-        });
+        token.onCancellationRequested(() => document.cells.forEach(restoreOldCellState));
 
-        await document.cells.reduce(
-            (previousPromise, cellToExecute) =>
-                previousPromise.then(() =>
-                    this.executeIndividualCell(notebookAndModel, document, cellToExecute, token, stopWatch)
-                ),
-            Promise.resolve()
-        );
+        let executingAPreviousCellHasFailed = false;
+        await document.cells.reduce((previousPromise, cellToExecute) => {
+            return previousPromise.then((previousCellState) => {
+                // If a previous cell has failed or execution cancelled, the get out.
+                if (
+                    executingAPreviousCellHasFailed ||
+                    token.isCancellationRequested ||
+                    previousCellState === vscodeNotebookEnums.NotebookCellRunState.Error
+                ) {
+                    executingAPreviousCellHasFailed = true;
+                    restoreOldCellState(cellToExecute);
+                    return;
+                }
+                return this.executeIndividualCell(notebookAndModel, document, cellToExecute, token, stopWatch);
+            });
+        }, Promise.resolve<NotebookCellRunState | undefined>(undefined));
     }
     public cancelPendingExecutions(document: NotebookDocument): void {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
@@ -142,7 +150,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
         cell: NotebookCell,
         token: CancellationToken,
         stopWatch: StopWatch
-    ): Promise<void> {
+    ): Promise<NotebookCellRunState | undefined> {
+        if (token.isCancellationRequested) {
+            return;
+        }
+
         const { model, nb } = await notebookAndModel;
         if (token.isCancellationRequested) {
             return;
@@ -171,7 +183,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
         this.handleDisplayDataMessages(model, document, nb);
 
-        const deferred = createDeferred();
+        const deferred = createDeferred<NotebookCellRunState>();
         const executionStopWatch = new StopWatch();
 
         wrappedToken.onCancellationRequested(() => {
@@ -237,7 +249,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
                     this.contentProvider.notifyChangesToDocument(document);
-                    deferred.resolve();
+                    deferred.resolve(cell.metadata.runState);
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
                 },
                 () => {
@@ -266,7 +278,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
 
                     updateVSCNotebookCellMetadata(cell.metadata, notebookCellModel);
                     this.contentProvider.notifyChangesToDocument(document);
-                    deferred.resolve();
+                    deferred.resolve(cell.metadata.runState);
                 }
             );
             await deferred.promise;
@@ -285,6 +297,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 cancellations.splice(index, 1);
             }
         }
+        return cell.metadata.runState;
     }
     /**
      * Ensure we handle display data messages that can result in updates to other cells.

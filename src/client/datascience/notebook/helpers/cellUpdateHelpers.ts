@@ -56,10 +56,24 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
     if (!change.cells.every((cell) => cell.outputs.length === 0)) {
         return;
     }
-
+    // In the VS Code cells, also clear the cell results, execution counts and times.
+    change.cells.forEach((cell) => {
+        cell.metadata.runState = undefined;
+        cell.metadata.statusMessage = undefined;
+        cell.metadata.executionOrder = undefined;
+        cell.metadata.lastRunDuration = undefined;
+        cell.metadata.runStartTime = undefined;
+    });
     // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
         const cell = findMappedNotebookCellModel(vscCell, model.cells);
+        if (cell.data.execution_count) {
+            cell.data.execution_count = undefined;
+        }
+        if (cell.data.metadata.vscode) {
+            cell.data.metadata.vscode.start_execution_time = undefined;
+            cell.data.metadata.vscode.end_execution_time = undefined;
+        }
         cell.data.outputs = [];
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);
         model.update({
