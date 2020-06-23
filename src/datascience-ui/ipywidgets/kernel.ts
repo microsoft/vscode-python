@@ -303,7 +303,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
         // A message could cause multiple callback waits, so use id+type as key
         const key = msgId + IPyWidgetMessages.IPyWidgets_RegisterMessageHook.toString();
-        window.console.log(`**** Await key added ${key}`);
         this.awaitingExtensionMessage.set(key, waitPromise);
 
         // Tell the other side about this.
@@ -317,9 +316,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.realKernel.registerMessageHook(msgId, this.messageHook);
 
         // Don't exit until we know that the Extension side has also finished processing
-        window.console.log(`**** Awaiting Extension side for ${msgId}`);
         await waitPromise.promise;
-        window.console.log(`**** Finished awaiting Extension side for ${msgId}`);
     }
 
     public async removeMessageHook(
@@ -332,7 +329,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
         // A message could cause multiple callback waits, so use id+type as key
         const key = msgId + IPyWidgetMessages.IPyWidgets_RemoveMessageHook.toString();
-        window.console.log(`**** Await key added ${key}`);
         this.awaitingExtensionMessage.set(key, waitPromise);
 
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, {
@@ -349,9 +345,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.realKernel.removeMessageHook(msgId, this.messageHook);
 
         // Don't exit until we know that the Extension side has also finished processing
-        window.console.log(`**** Awaiting Extension side for ${msgId}`);
         await waitPromise.promise;
-        window.console.log(`**** Finished awaiting Extension side for ${msgId}`);
     }
 
     // Called when the extension has finished an operation that we are waiting for in message processing
@@ -362,7 +356,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         const waitPromise = this.awaitingExtensionMessage.get(key);
 
         if (waitPromise) {
-            window.console.log(`**** Resolving wait promise for ${key}`);
             waitPromise.resolve();
             this.awaitingExtensionMessage.delete(key);
         }
@@ -470,7 +463,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
 
     // When the real kernel handles iopub messages notify the Extension side and then forward on the message
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
-        window.console.log(`**** IOPub message ${message.header.msg_id} handled ****`);
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
             id: message.header.msg_id
         });

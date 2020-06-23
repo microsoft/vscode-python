@@ -410,7 +410,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
             // that we are done with extension side handling of this message
-            traceInfo(`**** Finished extension side registerMessageHook for ${msgId}`);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
                 id: msgId,
                 type: IPyWidgetMessages.IPyWidgets_RegisterMessageHook
@@ -437,7 +436,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         } finally {
             // Regardless of if we registered successfully or not, send back a message to the UI
             // that we are done with extension side handling of this message
-            traceInfo(`**** Finished extension side registerMessageHook for ${msgId}`);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled, {
                 id: msgId,
                 type: IPyWidgetMessages.IPyWidgets_RemoveMessageHook
