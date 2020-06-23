@@ -14,7 +14,6 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
-import { traceError } from '../../client/logging';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 // tslint:disable:no-any
