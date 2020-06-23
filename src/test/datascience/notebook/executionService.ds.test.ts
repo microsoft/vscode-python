@@ -13,7 +13,7 @@ import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
 import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
@@ -72,7 +72,31 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'Cell did not get executed'
         );
     });
-    test('Execute cell should mark a notebook as being dirtyxxx', async () => {
+    test('Empty cell will not get executed', async () => {
+        await insertPythonCellAndWait('', 0);
+        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0];
+        await commands.executeCommand('notebook.cell.execute');
+
+        // After 2s, confirm status has remained unchanged.
+        await sleep(2_000);
+        assert.isUndefined(vscCell?.metadata.runState);
+    });
+    test('Empty cells will not get executed when running whole document', async () => {
+        await insertPythonCellAndWait('', 0);
+        await insertPythonCellAndWait('print("Hello World")', 1);
+        const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await commands.executeCommand('notebook.execute');
+
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(vscCells[1]),
+            15_000,
+            'Cell did not get executed'
+        );
+        assert.isUndefined(vscCells[0].metadata.runState);
+    });
+    test('Execute cell should mark a notebook as being dirty', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
         const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
         const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;

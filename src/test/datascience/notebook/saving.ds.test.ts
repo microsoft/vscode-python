@@ -60,7 +60,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         await swallowSavingOfNotebooks();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-    test('Clearing output will mark document as dirtyxxx', async () => {
+    test('Clearing output will mark document as dirty', async () => {
         const templateIPynb = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -82,7 +82,7 @@ suite('DataScience - VSCode Notebook - (Saving)', function () {
         // Wait till execution count changes & it is marked as dirty
         await changedEvent.assertFired(5000);
     });
-    test('Saving after clearing should result in execution_count=null in ipynb filexxx', async () => {
+    test('Saving after clearing should result in execution_count=null in ipynb file', async () => {
         const templateIPynb = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

@@ -59,6 +59,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
     ) {}
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
+        // Cannot execute empty cells.
+        if (cell.document.getText().trim().length === 0) {
+            return;
+        }
         const stopWatch = new StopWatch();
         const notebookAndModel = this.getNotebookAndModel(document);
 
@@ -85,6 +89,12 @@ export class NotebookExecutionService implements INotebookExecutionService {
         // If it does not complete, then restore old state.
         const oldCellStates = new WeakMap<NotebookCell, NotebookCellRunState | undefined>();
         document.cells.forEach((cell) => {
+            if (
+                cell.document.getText().trim().length === 0 ||
+                cell.cellKind === vscodeNotebookEnums.CellKind.Markdown
+            ) {
+                return;
+            }
             oldCellStates.set(cell, cell.metadata.runState);
             cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Running;
         });
@@ -111,6 +121,12 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 ) {
                     executingAPreviousCellHasFailed = true;
                     restoreOldCellState(cellToExecute);
+                    return;
+                }
+                if (
+                    cellToExecute.document.getText().trim().length === 0 ||
+                    cellToExecute.cellKind === vscodeNotebookEnums.CellKind.Markdown
+                ) {
                     return;
                 }
                 return this.executeIndividualCell(notebookAndModel, document, cellToExecute, token, stopWatch);
