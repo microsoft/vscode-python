@@ -208,6 +208,7 @@ import { IntellisenseProvider } from '../../client/datascience/interactive-commo
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
+import { DigestStorage } from '../../client/datascience/interactive-ipynb/digestStorage';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
@@ -277,6 +278,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
+    IDigestStorage,
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindow,
@@ -1213,6 +1215,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         this.serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
         this.serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
+        this.serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
         // Disable syncrhonizing edits
         this.serviceContainer.get<NativeEditorSynchronizer>(NativeEditorSynchronizer).disable();
         const dummyDisposable = {
