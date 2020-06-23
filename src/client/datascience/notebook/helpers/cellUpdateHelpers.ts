@@ -25,6 +25,8 @@ import {
     createVSCCellOutputsFromOutputs,
     updateVSCNotebookCellMetadata
 } from './helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
@@ -67,8 +69,10 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
     // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
         const cell = findMappedNotebookCellModel(vscCell, model.cells);
-        if (cell.data.execution_count) {
-            cell.data.execution_count = undefined;
+        // tslint:disable-next-line: no-console
+        console.log(cell);
+        if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+            cell.data.execution_count = null;
         }
         if (cell.data.metadata.vscode) {
             cell.data.metadata.vscode.start_execution_time = undefined;
