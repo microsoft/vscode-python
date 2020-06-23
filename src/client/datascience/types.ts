@@ -636,6 +636,7 @@ export interface ICodeWatcher {
     extendSelectionByCellAbove(): Promise<void>;
     extendSelectionByCellBelow(): Promise<void>;
     moveCellsUp(): Promise<void>;
+    moveCellsDown(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 

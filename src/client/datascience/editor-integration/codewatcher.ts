@@ -633,6 +633,10 @@ export class CodeWatcher implements ICodeWatcher {
         return this.moveCellsDirection(true);
     }
 
+    public async moveCellsDown(): Promise<void> {
+        return this.moveCellsDirection(false);
+    }
+
     private async moveCellsDirection(directionUp: boolean): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
