@@ -10,6 +10,12 @@ type NameFinderFunc = (python: string) => Promise<string>;
 type TypeFinderFunc = (python: string) => Promise<InterpreterType | undefined>;
 type ExecutableFinderFunc = (python: string) => Promise<string | undefined>;
 
+/**
+ * Determine the environment name for the given Python executable.
+ *
+ * @param python - the executable to inspect
+ * @param finders - the functions specific to different Python environment types
+ */
 export async function getName(python: string, finders: NameFinderFunc[]): Promise<string | undefined> {
     for (const find of finders) {
         const found = await find(python);
@@ -20,6 +26,12 @@ export async function getName(python: string, finders: NameFinderFunc[]): Promis
     return undefined;
 }
 
+/**
+ * Determine the environment type for the given Python executable.
+ *
+ * @param python - the executable to inspect
+ * @param finders - the functions specific to different Python environment types
+ */
 export async function getType(python: string, finders: TypeFinderFunc[]): Promise<InterpreterType | undefined> {
     for (const find of finders) {
         const found = await find(python);
@@ -32,6 +44,14 @@ export async function getType(python: string, finders: TypeFinderFunc[]): Promis
 
 //======= default sets ========
 
+/**
+ * Build the list of default "name finder" functions to pass to `getName()`.
+ *
+ * @param dirname - the "root" of a directory tree to search
+ * @param pathDirname - typically `path.dirname`
+ * @param pathBasename - typically `path.basename`
+ * @param isPipenvRoot - a function the determines if it's a pipenv dir
+ */
 export function getNameFinders(
     dirname: string | undefined,
     // <path>
@@ -41,6 +61,9 @@ export function getNameFinders(
     isPipenvRoot: (dir: string, python: string) => Promise<boolean>
 ): NameFinderFunc[] {
     return [
+        // Note that currently there is only one finder function in
+        // the list.  That is only a temporary situation as we
+        // consolidate code under the py-envs component.
         async (python) => {
             if (dirname && (await isPipenvRoot(dirname, python))) {
                 // In pipenv, return the folder name of the root dir.
@@ -52,6 +75,20 @@ export function getNameFinders(
     ];
 }
 
+/**
+ * Build the list of default "type finder" functions to pass to `getType()`.
+ *
+ * @param homedir - the user's home directory (e.g. `$HOME`)
+ * @param scripts - the names of possible activation scripts (e.g. `activate.sh`)
+ * @param pathSep - the path separator to use (typically `path.sep`)
+ * @param pathJoin - typically `path.join`
+ * @param pathDirname - typically `path.dirname`
+ * @param getCurDir - a function that returns `$CWD`
+ * @param isPipenvRoot - a function the determines if it's a pipenv dir
+ * @param getEnvVar - a function to look up a process environment variable (i,e. `process.env[name]`)
+ * @param fileExists - typically `fs.exists`
+ * @param exec - the function to use to run a command in a subprocess
+ */
 export function getTypeFinders(
     homedir: string,
     scripts: string[],
@@ -78,6 +115,13 @@ export function getTypeFinders(
 
 //======= venv ========
 
+/**
+ * Build a "type finder" function that identifies venv environments.
+ *
+ * @param pathDirname - typically `path.dirname`
+ * @param pathJoin - typically `path.join`
+ * @param fileExists - typically `fs.exists`
+ */
 export function getVenvTypeFinder(
     // <path>
     pathDirname: (filename: string) => string,
@@ -98,6 +142,14 @@ export function getVenvTypeFinder(
     };
 }
 
+/**
+ * Build an "executable finder" function that identifies venv environments.
+ *
+ * @param basename - the venv name or names to look for
+ * @param pathDirname - typically `path.dirname`
+ * @param pathJoin - typically `path.join`
+ * @param fileExists - typically `fs.exists`
+ */
 export function getVenvExecutableFinder(
     basename: string | string[],
     // <path>
@@ -122,6 +174,14 @@ export function getVenvExecutableFinder(
 
 //======= virtualenv ========
 
+/**
+ * Build a "type finder" function that identifies virtualenv environments.
+ *
+ * @param scripts - the names of possible activation scripts (e.g. `activate.sh`)
+ * @param pathDirname - typically `path.dirname`
+ * @param pathJoin - typically `path.join`
+ * @param fileExists - typically `fs.exists`
+ */
 export function getVirtualenvTypeFinder(
     scripts: string[],
     // <path>
@@ -139,6 +199,12 @@ export function getVirtualenvTypeFinder(
 
 //======= pipenv ========
 
+/**
+ * Build a "type finder" function that identifies pipenv environments.
+ *
+ * @param getCurDir - a function that returns `$CWD`
+ * @param isPipenvRoot - a function the determines if it's a pipenv dir
+ */
 export function getPipenvTypeFinder(
     getCurDir: () => Promise<string | undefined>,
     isPipenvRoot: (dir: string, python: string) => Promise<boolean>

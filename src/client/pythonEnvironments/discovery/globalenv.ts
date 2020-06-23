@@ -8,6 +8,15 @@ type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
 type TypeFinderFunc = (python: string) => Promise<InterpreterType | undefined>;
 type RootFinderFunc = () => Promise<string | undefined>;
 
+/**
+ * Build a "type finder" function that identifies pyenv environments.
+ *
+ * @param homedir - the user's home directory (e.g. `$HOME`)
+ * @param pathSep - the path separator to use (typically `path.sep`)
+ * @param pathJoin - typically `path.join`
+ * @param getEnvVar - a function to look up a process environment variable (i,e. `process.env[name]`)
+ * @param exec - the function to use to run pyenv
+ */
 export function getPyenvTypeFinder(
     homedir: string,
     // <path>
@@ -27,6 +36,14 @@ export function getPyenvTypeFinder(
     };
 }
 
+/**
+ * Build a "root finder" function that finds pyenv environments.
+ *
+ * @param homedir - the user's home directory (e.g. `$HOME`)
+ * @param pathJoin - typically `path.join`
+ * @param getEnvVar - a function to look up a process environment variable (i,e. `process.env[name]`)
+ * @param exec - the function to use to run pyenv
+ */
 export function getPyenvRootFinder(
     homedir: string,
     pathJoin: (...parts: string[]) => string,
