@@ -354,8 +354,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         window.console.log(`**** Finished awaiting Extension side for ${msgId}`);
     }
 
+    // Called when the extension has finished an operation that we are waiting for in message processing
     private extensionOperationFinished(payload: any) {
-        const key = payload.id + payload.type;
+        //const key = payload.id + payload.type;
+        const key = `${payload.id}${payload.type}`;
 
         const waitPromise = this.awaitingExtensionMessage.get(key);
 

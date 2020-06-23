@@ -278,8 +278,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Hooks expect serialized data as this normally comes from a WebSocket
         const message = this.deserialize(data as any) as any;
 
-        //const handleFully = this.messageNeedsFullHandle(message);
-
         if (!this.isUsingIPyWidgets) {
             // Check for hints that would indicate whether ipywidgest are used in outputs.
             if (
