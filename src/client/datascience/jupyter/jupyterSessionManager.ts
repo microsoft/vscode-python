@@ -218,10 +218,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
-        return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
-    }
-
     private async getServerConnectSettings(connInfo: IJupyterConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
@@ -246,11 +242,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 connInfo.baseUrl,
                 connInfo.allowUnauthorized ? true : false
             );
-            if (pwSettings && !pwSettings.emptyPassword) {
-                cookieString = this.getSessionCookieString(pwSettings);
-                const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
-                requestInit = { ...requestInit, headers: requestHeaders };
-            } else if (pwSettings && pwSettings.emptyPassword) {
+            if (pwSettings && pwSettings.requestHeaders) {
+                requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
+                // tslint:disable-next-line: no-any
+                cookieString = (pwSettings.requestHeaders as any).Cookie;
+            } else if (pwSettings) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
                 // Failed to get password info, notify the user

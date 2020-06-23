@@ -43,11 +43,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return result;
     }
 
+    private getSessionCookieString(xsrfCookie: string, sessionCookieName: string, sessionCookieValue: string): string {
+        return `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue}`;
+    }
+
     private async getNonCachedPasswordConnectionInfo(
         url: string,
         allowUnauthorized: boolean,
         fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
-    ) {
+    ): Promise<IJupyterPasswordConnectInfo | undefined> {
         // For testing allow for our fetch function to be overridden
         if (!fetchFunction) {
             fetchFunction = nodeFetch.default;
@@ -80,18 +84,20 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             } else {
                 // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
                 // like a standard connection. Might be the case where there is no token and no password
-                return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
+                return {};
             }
             userPassword = undefined;
         } else {
             // If no password needed, act like empty password and no cookie
-            return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
+            return {};
         }
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
-            return { xsrfCookie, sessionCookieName, sessionCookieValue, emptyPassword: false };
+            const cookieString = this.getSessionCookieString(xsrfCookie, sessionCookieName, sessionCookieValue);
+            const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
+            return { requestHeaders };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
             return undefined;
@@ -163,6 +169,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         );
 
         return response.status !== 200;
+    }
+
+    private async isJupyterHub(url: string): Promise<boolean> {
+        // See this for the different REST endpoints:
+        // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
+        // Talk to either hub/api or check for a user token in the URI
     }
 
     // Jupyter uses a session cookie to validate so by hitting the login page with the password we can get that cookie and use it ourselves

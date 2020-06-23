@@ -306,10 +306,8 @@ export interface IJupyterDebugger {
 }
 
 export interface IJupyterPasswordConnectInfo {
-    emptyPassword: boolean;
-    xsrfCookie: string;
-    sessionCookieName: string;
-    sessionCookieValue: string;
+    requestHeaders?: HeadersInit;
+    remappedUrl?: string;
 }
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
