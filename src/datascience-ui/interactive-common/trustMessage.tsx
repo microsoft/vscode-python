@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { getLocString } from '../react-common/locReactSide';
 import { IFont } from './mainState';
 
 interface ITrustMessageProps {
@@ -8,13 +9,15 @@ interface ITrustMessageProps {
 
 export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
     public render() {
-        const text = this.props.isNotebookTrusted ? 'Trusted' : 'Not Trusted';
+        const text = this.props.isNotebookTrusted
+            ? getLocString('DataScience.notebookIsTrusted', 'Trusted')
+            : getLocString('DataScience.notebookIsNotTrusted', 'Not Trusted');
         const textSize = text.length;
         const dynamicFont: React.CSSProperties = {
             fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
             fontFamily: 'var(--vscode-font-family)',
             maxWidth: this.getMaxWidth(textSize + 5), // plus 5 for the line and margins,
-            color: this.props.isNotebookTrusted ? undefined : 'red'
+            color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)'
         };
         const trustTextWidth: React.CSSProperties = {
             maxWidth: this.getMaxWidth(textSize)

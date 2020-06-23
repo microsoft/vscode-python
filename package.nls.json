@@ -361,6 +361,8 @@
     "DataScience.fetchingDataViewer": "Fetching data ...",
     "DataScience.noRowsInDataViewer": "No rows match current filter",
     "DataScience.jupyterServer": "Jupyter Server",
+    "DataScience.notebookIsTrusted": "Trusted",
+    "DataScience.notebookIsNotTrusted": "Not Trusted",
     "DataScience.noKernel": "No Kernel",
     "DataScience.serverNotStarted": "Not Started",
     "DataScience.localJupyterServer": "local",
