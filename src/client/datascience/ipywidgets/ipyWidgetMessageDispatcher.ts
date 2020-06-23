@@ -250,13 +250,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
 
-    // IANHU: Better name / location?
     // Determine if a message can just be added into the message queue or if we need to wait for it to be
     // fully handled on both the UI and extension side before we process the next message incoming
     private messageNeedsFullHandle(message: any) {
+        // We only get a handled callback for iopub messages, so this channel must be iopub
         if (message.channel === 'iopub') {
             if (message.header?.msg_type === 'comm_msg') {
-                // iopub comm messages
+                // IOPub comm messages need to be fully handled
                 return true;
             }
         }
@@ -264,11 +264,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return false;
     }
 
+    // Callback from the UI kernel when an iopubMessage has been fully handled
     private iopubMessageHandled(payload: any) {
         const msgId = payload.id;
-        traceInfo(`**** IOPub handled in extension ${msgId} ****`);
+        // We don't fully handle all iopub messages, so check our id here
         if (this.fullHandleMessage && this.fullHandleMessage.id === msgId) {
-            traceInfo(`**** IOPub ${msgId} resolve full await ****`);
             this.fullHandleMessage.promise.resolve();
             this.fullHandleMessage = undefined;
         }
@@ -278,7 +278,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Hooks expect serialized data as this normally comes from a WebSocket
         const message = this.deserialize(data as any) as any;
 
-        const handleFully = this.messageNeedsFullHandle(message);
+        //const handleFully = this.messageNeedsFullHandle(message);
 
         if (!this.isUsingIPyWidgets) {
             // Check for hints that would indicate whether ipywidgest are used in outputs.
@@ -295,9 +295,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const promise = createDeferred<void>();
         this.waitingMessageIds.set(msgUuid, { startTime: Date.now(), resultPromise: promise });
 
-        // IANHU: Cleanup creation here
-        if (handleFully && this.isUsingIPyWidgets) {
-            traceInfo(`**** Full Handle request on ${message.header.msg_id} ****`);
+        // Check if we need to fully handle this message on UI and Extension side before we move to the next
+        if (this.isUsingIPyWidgets && this.messageNeedsFullHandle(message)) {
             this.fullHandleMessage = { id: message.header.msg_id, promise: createDeferred<void>() };
         }
 
@@ -316,10 +315,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             // Comm specific iopub messages we need to wait until they are full handled
             // by both the UI and extension side before we move forward
-            if (handleFully && this.fullHandleMessage) {
-                traceInfo(`**** Awaiting full handle on ${message.header.msg_id} ****`);
+            if (this.fullHandleMessage) {
                 await this.fullHandleMessage.promise.promise;
-                traceInfo(`**** Completed full handle await on ${message.header.msg_id} ****`);
                 this.fullHandleMessage = undefined;
             }
         }

@@ -23,7 +23,6 @@ import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 // Proxy kernel that wraps the default kernel. We need this entire class because
 // we can't derive from DefaultKernel.
 class ProxyKernel implements IMessageHandler, Kernel.IKernel {
-    // IANHU: Should the <X, Y> X be this or the realKernel?
     private readonly _ioPubMessageSignal: Signal<this, KernelMessage.IIOPubMessage>;
     public get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         return this._ioPubMessageSignal;
@@ -467,6 +466,7 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         this.sendResponse(payload.id);
     }
 
+    // When the real kernel handles iopub messages notify the Extension side and then forward on the message
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
         window.console.log(`**** IOPub message ${message.header.msg_id} handled ****`);
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
