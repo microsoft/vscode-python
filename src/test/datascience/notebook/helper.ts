@@ -263,8 +263,16 @@ export function assertVSCCellIsRunning(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
     return true;
 }
+export function assertVSCCellIsNotRunning(cell: NotebookCell) {
+    assert.notEqual(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Running);
+    return true;
+}
 export function assertVSCCellIsIdle(cell: NotebookCell) {
     assert.equal(cell.metadata.runState, vscodeNotebookEnums.NotebookCellRunState.Idle);
+    return true;
+}
+export function assertVSCCellStateIsUndefined(cell: NotebookCell) {
+    assert.isUndefined(cell.metadata.runState);
     return true;
 }
 export function assertVSCCellHasErrors(cell: NotebookCell) {

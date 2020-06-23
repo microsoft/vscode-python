@@ -265,8 +265,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
                 (error: Partial<Error>) => {
                     updateCellWithErrorStatus(cell, error);
                     this.contentProvider.notifyChangesToDocument(document);
-                    deferred.resolve(cell.metadata.runState);
                     this.errorHandler.handleError((error as unknown) as Error).ignoreErrors();
+                    deferred.resolve(cell.metadata.runState);
                 },
                 () => {
                     cell.metadata.lastRunDuration = executionStopWatch.elapsedTime;
