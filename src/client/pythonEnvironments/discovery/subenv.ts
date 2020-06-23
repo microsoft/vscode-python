@@ -217,20 +217,3 @@ export function getPipenvTypeFinder(
         return undefined;
     };
 }
-
-// XXX Drop everything below:
-
-interface IFSPathsForVenvExec {
-    dirname(filename: string): string;
-    join(...parts: string[]): string;
-}
-
-export async function findVenvExecutable(
-    python: string,
-    basename: string | string[],
-    path: IFSPathsForVenvExec,
-    fileExists: (n: string) => Promise<boolean>
-): Promise<string | undefined> {
-    const find = getVenvExecutableFinder(basename, path.dirname, path.join, fileExists);
-    return find(python);
-}

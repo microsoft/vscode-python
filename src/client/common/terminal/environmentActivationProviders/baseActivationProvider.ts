@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
-import { findVenvExecutable } from '../../../pythonEnvironments/discovery/subenv';
+import { getVenvExecutableFinder } from '../../../pythonEnvironments/discovery/subenv';
 import { IFileSystem } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
@@ -47,6 +47,16 @@ export abstract class VenvBaseActivationCommandProvider extends BaseActivationCo
     protected async findScriptFile(pythonPath: string, targetShell: TerminalShellType): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const candidates = this.scripts[targetShell];
-        return findVenvExecutable(pythonPath, candidates || [], path, (n: string) => fs.fileExists(n));
+        if (!candidates) {
+            return undefined;
+        }
+        const findScript = getVenvExecutableFinder(
+            candidates,
+            path.dirname,
+            path.join,
+            // Bind "this"!
+            (n: string) => fs.fileExists(n)
+        );
+        return findScript(pythonPath);
     }
 }
