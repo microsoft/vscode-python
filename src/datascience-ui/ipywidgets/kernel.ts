@@ -14,6 +14,7 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
+import { traceError, traceInfo } from '../../client/logging';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 // tslint:disable:no-any
@@ -292,10 +293,10 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         }
         return true;
     }
-    public async registerMessageHook(
+    public registerMessageHook(
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): Promise<void> {
+    ): void {
         // We don't want to finish our processing of this message until the extension has told us that it has finished
         // With the extension side registering of the message hook
         const waitPromise = createDeferred<void>();
@@ -316,15 +317,12 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // Wrap the hook and send it to the real kernel
         window.console.log(`Registering hook for ${msgId}`);
         this.realKernel.registerMessageHook(msgId, this.messageHook);
-
-        // Don't exit until we know that the Extension side has also finished processing
-        await waitPromise.promise;
     }
 
-    public async removeMessageHook(
+    public removeMessageHook(
         msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
-    ): Promise<void> {
+    ): void {
         // We don't want to finish our processing of this message until the extension has told us that it has finished
         // With the extension side removing of the message hook
         const waitPromise = createDeferred<void>();
@@ -345,9 +343,6 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
         // Remove from the real kernel
         window.console.log(`Removing hook for ${msgId}`);
         this.realKernel.removeMessageHook(msgId, this.messageHook);
-
-        // Don't exit until we know that the Extension side has also finished processing
-        await waitPromise.promise;
     }
 
     // Called when the extension has finished an operation that we are waiting for in message processing
@@ -470,9 +465,32 @@ class ProxyKernel implements IMessageHandler, Kernel.IKernel {
     // When the real kernel handles iopub messages notify the Extension side and then forward on the message
     // Note, this message comes from the kernel after it is done handling the message async
     private onIOPubMessage(_sender: Kernel.IKernel, message: KernelMessage.IIOPubMessage) {
-        this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
-            id: message.header.msg_id
-        });
+        if (this.awaitingExtensionMessage.size <= 0) {
+            traceInfo('**** No Extension Messages To Wait For');
+            this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_iopub_msg_handled, {
+                id: message.header.msg_id
+            });
+        } else {
+            //const extensionPromises = [...this.awaitingExtensionMessage.values()].map((value) => {
+            //return value.promise;
+            //});
+            const extensionPromises = Array.from(this.awaitingExtensionMessage.values()).map((value) => {
+                return value.promise;
+            });
+            Promise.all(extensionPromises)
+                .then(() => {
+                    traceInfo('**** All Extension Messages Clear ****');
+                    this.postOffice.sendMessage<IInteractiveWindowMapping>(
+                        IPyWidgetMessages.IPyWidgets_iopub_msg_handled,
+                        {
+                            id: message.header.msg_id
+                        }
+                    );
+                })
+                .catch(() => {
+                    traceError('Failed to send iopub_msg_handled message');
+                });
+        }
         this._ioPubMessageSignal.emit(message);
     }
 }
