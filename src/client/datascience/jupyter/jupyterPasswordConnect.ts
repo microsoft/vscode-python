@@ -162,14 +162,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     // the user closes VS code
                     this.asyncDisposableRegistry.push({
                         dispose: async () => {
-                            await this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens/${body.id}`, {
+                            this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens/${body.id}`, {
                                 method: 'DELETE',
                                 headers: {
                                     Connection: 'keep-alive',
                                     Cookie: cookieString,
                                     Referer: `${baseUrl}/hub/login`
                                 }
-                            });
+                            }).ignoreErrors(); // Don't wait for this during shutdown. Just make the request
                         }
                     });
 
