@@ -258,7 +258,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell() && this.props.isNotebookTrusted) {
+        if (this.isCodeCell()) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
