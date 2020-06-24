@@ -60,7 +60,6 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-// Shared properties set by the IExperimentationTelemetry implementation.
 const sharedProperties: Record<string, any> = {};
 /**
  * Set shared properties for all telemetry events.
@@ -106,9 +105,6 @@ function getTelemetryReporter() {
 export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
-
-// These properties are sent with every telemetry for DataScience.
-const sharedDataScienceProperties = ['notebookeditor'];
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
@@ -159,9 +155,10 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         Object.assign(customProperties, sharedProperties);
 
         // Remove shared DS properties from core extension telemetry.
-        sharedDataScienceProperties.forEach((shareProperty) => {
+        Object.keys(sharedProperties).forEach((shareProperty) => {
             if (
                 customProperties[shareProperty] &&
+                shareProperty.startsWith('ds_') &&
                 !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
             ) {
                 delete customProperties[shareProperty];
