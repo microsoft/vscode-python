@@ -9,6 +9,7 @@ import * as typemoq from 'typemoq';
 import { instance, mock } from 'ts-mockito';
 import { IApplicationShell } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 
@@ -26,11 +27,13 @@ suite('JupyterPasswordConnect', () => {
         appShell.setup((a) => a.showInputBox(typemoq.It.isAny())).returns(() => Promise.resolve('Python'));
         const multiStepFactory = new MultiStepInputFactory(appShell.object);
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
+        const mockConfigSettings = mock(ConfigurationService);
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             appShell.object,
             multiStepFactory,
-            instance(mockDisposableRegistry)
+            instance(mockDisposableRegistry),
+            instance(mockConfigSettings)
         );
     });
 
@@ -123,7 +126,6 @@ suite('JupyterPasswordConnect', () => {
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             //tslint:disable-next-line:no-http-string
             'http://TESTNAME:8888/',
-            false,
             fetchMock.object
         );
         assert(result, 'Failed to get password');
@@ -174,7 +176,6 @@ suite('JupyterPasswordConnect', () => {
         //tslint:disable-next-line:no-http-string
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             'https://TESTNAME:8888/',
-            true,
             fetchMock.object
         );
         assert(result, 'Failed to get password');
@@ -197,7 +198,6 @@ suite('JupyterPasswordConnect', () => {
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             //tslint:disable-next-line:no-http-string
             'http://TESTNAME:8888/',
-            false,
             fetchMock.object
         );
         assert(!result);

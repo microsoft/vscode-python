@@ -46,7 +46,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         _config: IConfigurationService,
         private failOnPassword: boolean | undefined,
         private kernelSelector: KernelSelector,
-        private outputChannel: IOutputChannel
+        private outputChannel: IOutputChannel,
+        private configService: IConfigurationService
     ) {}
 
     public async dispose() {
@@ -231,7 +232,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
-        let allowUnauthorized;
 
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
@@ -239,10 +239,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(
-                connInfo.baseUrl,
-                connInfo.allowUnauthorized ? true : false
-            );
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
             if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
                 cookieString = (pwSettings.requestHeaders as any).Cookie;
@@ -265,12 +262,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             serverSettings = { ...serverSettings, token: connInfo.token };
         }
 
+        const allowUnauthorized = this.configService.getSettings(undefined).datascience
+            .allowUnauthorizedRemoteConnection;
         // If this is an https connection and we want to allow unauthorized connections set that option on our agent
         // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
-        if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
+        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized) {
             const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
             requestInit = { ...requestInit, agent: requestAgent };
-            allowUnauthorized = true;
         }
 
         // This replaces the WebSocket constructor in jupyter lab services with our own implementation

@@ -5,8 +5,9 @@ import { Agent as HttpsAgent } from 'https';
 import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
+import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { IAsyncDisposableRegistry } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -22,13 +23,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry
+        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(
         url: string,
-        allowUnauthorized: boolean,
         fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
@@ -49,7 +50,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(newUrl);
         if (!result) {
-            result = this.getNonCachedPasswordConnectionInfo(newUrl, allowUnauthorized);
+            result = this.getNonCachedPasswordConnectionInfo(newUrl);
             this.savedConnectInfo.set(newUrl, result);
         }
 
@@ -60,29 +61,22 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue}`;
     }
 
-    private async getNonCachedPasswordConnectionInfo(
-        url: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getNonCachedPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         // If jupyter hub, go down a special path of asking jupyter hub for a token
-        if (await this.isJupyterHub(url, allowUnauthorized)) {
-            return this.getJupyterHubConnectionInfo(url, allowUnauthorized);
+        if (await this.isJupyterHub(url)) {
+            return this.getJupyterHubConnectionInfo(url);
         } else {
-            return this.getJupyterConnectionInfo(url, allowUnauthorized);
+            return this.getJupyterConnectionInfo(url);
         }
     }
 
-    private async getJupyterHubConnectionInfo(
-        uri: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getJupyterHubConnectionInfo(uri: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         // First ask for the user name and password
         const userNameAndPassword = await this.getUserNameAndPassword();
         if (userNameAndPassword.username || userNameAndPassword.password) {
             // Try the login method. It should work and doesn't require a token to be generated.
             const result = await this.getJupyterHubConnectionInfoFromLogin(
                 uri,
-                allowUnauthorized,
                 userNameAndPassword.username,
                 userNameAndPassword.password
             );
@@ -91,7 +85,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             if (!result) {
                 return this.getJupyterHubConnectionInfoFromApi(
                     uri,
-                    allowUnauthorized,
                     userNameAndPassword.username,
                     userNameAndPassword.password
                 );
@@ -103,7 +96,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
     private async getJupyterHubConnectionInfoFromLogin(
         uri: string,
-        allowUnauthorized: boolean,
         username: string,
         password: string
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
@@ -121,19 +113,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('username', username || '');
         postParams.append('password', password || '');
 
-        let response = await this.fetchFunction(
-            `${baseUrl}/hub/login?next=`,
-            this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
-                method: 'POST',
-                headers: {
-                    Connection: 'keep-alive',
-                    Referer: `${baseUrl}/hub/login`,
-                    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-                body: postParams.toString(),
-                redirect: 'manual'
-            })
-        );
+        let response = await this.makeRequest(`${baseUrl}/hub/login?next=`, {
+            method: 'POST',
+            headers: {
+                Connection: 'keep-alive',
+                Referer: `${baseUrl}/hub/login`,
+                'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: postParams.toString(),
+            redirect: 'manual'
+        });
 
         // The cookies from that response should be used to make the next set of requests
         if (response && response.status === 302) {
@@ -141,17 +130,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             const cookieString = [...cookies.entries()].reduce((p, c) => `${p};${c[0]}=${c[1]}`, '');
             // See this API for creating a token
             // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html#operation--users--name--tokens-post
-            response = await this.fetchFunction(
-                `${baseUrl}/hub/api/users/${username}/tokens`,
-                this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
-                    method: 'POST',
-                    headers: {
-                        Connection: 'keep-alive',
-                        Cookie: cookieString,
-                        Referer: `${baseUrl}/hub/login`
-                    }
-                })
-            );
+            response = await this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens`, {
+                method: 'POST',
+                headers: {
+                    Connection: 'keep-alive',
+                    Cookie: cookieString,
+                    Referer: `${baseUrl}/hub/login`
+                }
+            });
 
             // That should give us a new token. For now server name is hard coded. Not sure
             // how to fetch it other than in the info for a default token
@@ -163,33 +149,27 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                     // Make sure the server is running for this user. Don't need
                     // to check response as it will fail if already running.
                     // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html#operation--users--name--server-post
-                    await this.fetchFunction(
-                        `${baseUrl}/hub/api/users/${username}/server`,
-                        this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
-                            method: 'POST',
-                            headers: {
-                                Connection: 'keep-alive',
-                                Cookie: cookieString,
-                                Referer: `${baseUrl}/hub/login`
-                            }
-                        })
-                    );
+                    await this.makeRequest(`${baseUrl}/hub/api/users/${username}/server`, {
+                        method: 'POST',
+                        headers: {
+                            Connection: 'keep-alive',
+                            Cookie: cookieString,
+                            Referer: `${baseUrl}/hub/login`
+                        }
+                    });
 
                     // This token was generated for this request. We should clean it up when
                     // the user closes VS code
                     this.asyncDisposableRegistry.push({
                         dispose: async () => {
-                            await this.fetchFunction(
-                                `${baseUrl}/hub/api/users/${username}/tokens/${body.id}`,
-                                this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        Connection: 'keep-alive',
-                                        Cookie: cookieString,
-                                        Referer: `${baseUrl}/hub/login`
-                                    }
-                                })
-                            );
+                            await this.makeRequest(`${baseUrl}/hub/api/users/${username}/tokens/${body.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    Connection: 'keep-alive',
+                                    Cookie: cookieString,
+                                    Referer: `${baseUrl}/hub/login`
+                                }
+                            });
                         }
                     });
 
@@ -205,7 +185,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
     private async getJupyterHubConnectionInfoFromApi(
         uri: string,
-        allowUnauthorized: boolean,
         username: string,
         password: string
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
@@ -219,9 +198,9 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
         const baseUrl = `${url.protocol}//${url.host}`;
         // Use these in a post request to get the token to use
-        const response = await this.fetchFunction(
+        const response = await this.makeRequest(
             `${baseUrl}/hub/api/authorizations/token`, // This seems to be deprecated, but it works. It requests a new token
-            this.addAllowUnauthorized(baseUrl, allowUnauthorized, {
+            {
                 method: 'POST',
                 headers: {
                     Connection: 'keep-alive',
@@ -229,7 +208,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 },
                 body: `{ "username": "${username || ''}", "password": "${password || ''}"  }`,
                 redirect: 'manual'
-            })
+            }
         );
 
         if (response.ok && response.status === 200) {
@@ -245,25 +224,22 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
     }
 
-    private async getJupyterConnectionInfo(
-        url: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    private async getJupyterConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
         // First determine if we need a password. A request for the base URL with /tree? should return a 302 if we do.
-        if (await this.needPassword(url, allowUnauthorized)) {
+        if (await this.needPassword(url)) {
             // Get password first
             let userPassword = await this.getUserPassword();
 
             if (userPassword) {
-                xsrfCookie = await this.getXSRFToken(url, allowUnauthorized);
+                xsrfCookie = await this.getXSRFToken(url);
 
                 // Then get the session cookie by hitting that same page with the xsrftoken and the password
                 if (xsrfCookie) {
-                    const sessionResult = await this.getSessionCookie(url, allowUnauthorized, xsrfCookie, userPassword);
+                    const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
                     sessionCookieName = sessionResult.sessionCookieName;
                     sessionCookieValue = sessionResult.sessionCookieValue;
                 }
@@ -351,17 +327,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getXSRFToken(url: string, allowUnauthorized: boolean): Promise<string | undefined> {
+    private async getXSRFToken(url: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        const response = await this.fetchFunction(
-            `${url}login?`,
-            this.addAllowUnauthorized(url, allowUnauthorized, {
-                method: 'get',
-                redirect: 'manual',
-                headers: { Connection: 'keep-alive' }
-            })
-        );
+        const response = await this.makeRequest(`${url}login?`, {
+            method: 'get',
+            redirect: 'manual',
+            headers: { Connection: 'keep-alive' }
+        });
 
         if (response.ok) {
             const cookies = this.getCookies(response);
@@ -373,21 +346,55 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return xsrfCookie;
     }
 
-    private async needPassword(url: string, allowUnauthorized: boolean): Promise<boolean> {
+    private async needPassword(url: string): Promise<boolean> {
         // A jupyter server will redirect if you ask for the tree when a login is required
-        const response = await this.fetchFunction(
-            `${url}tree?`,
-            this.addAllowUnauthorized(url, allowUnauthorized, {
-                method: 'get',
-                redirect: 'manual',
-                headers: { Connection: 'keep-alive' }
-            })
-        );
+        const response = await this.makeRequest(`${url}tree?`, {
+            method: 'get',
+            redirect: 'manual',
+            headers: { Connection: 'keep-alive' }
+        });
 
         return response.status !== 200;
     }
 
-    private async isJupyterHub(url: string, allowUnauthorized: boolean): Promise<boolean> {
+    private async makeRequest(url: string, options: nodeFetch.RequestInit): Promise<nodeFetch.Response> {
+        const allowUnauthorized = this.configService.getSettings(undefined).datascience
+            .allowUnauthorizedRemoteConnection;
+
+        // Try once and see if it fails with unauthorized.
+        try {
+            return await this.fetchFunction(
+                url,
+                this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options)
+            );
+        } catch (e) {
+            if (e.message.indexOf('reason: self signed certificate') >= 0) {
+                // Ask user to change setting and possibly try again.
+                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
+                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
+                const value = await this.appShell.showErrorMessage(
+                    localize.DataScience.jupyterSelfCertFail().format(e.message),
+                    enableOption,
+                    closeOption
+                );
+                if (value === enableOption) {
+                    sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                    await this.configService.updateSetting(
+                        'dataScience.allowUnauthorizedRemoteConnection',
+                        true,
+                        undefined,
+                        ConfigurationTarget.Workspace
+                    );
+                    return this.fetchFunction(url, this.addAllowUnauthorized(url, true, options));
+                } else if (value === closeOption) {
+                    sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                }
+            }
+            throw e;
+        }
+    }
+
+    private async isJupyterHub(url: string): Promise<boolean> {
         // See this for the different REST endpoints:
         // https://jupyterhub.readthedocs.io/en/stable/_static/rest-api/index.html
 
@@ -398,14 +405,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // Otherwise request hub/api. This should return the json with the hub version
         // if this is a hub url
-        const response = await this.fetchFunction(
-            `${url}hub/api`,
-            this.addAllowUnauthorized(url, allowUnauthorized, {
-                method: 'get',
-                redirect: 'manual',
-                headers: { Connection: 'keep-alive' }
-            })
-        );
+        const response = await this.makeRequest(`${url}hub/api`, {
+            method: 'get',
+            redirect: 'manual',
+            headers: { Connection: 'keep-alive' }
+        });
 
         return response.status === 200;
     }
@@ -416,7 +420,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
     private async getSessionCookie(
         url: string,
-        allowUnauthorized: boolean,
         xsrfCookie: string,
         password: string
     ): Promise<{ sessionCookieName: string | undefined; sessionCookieValue: string | undefined }> {
@@ -427,19 +430,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await this.fetchFunction(
-            `${url}login?`,
-            this.addAllowUnauthorized(url, allowUnauthorized, {
-                method: 'post',
-                headers: {
-                    Cookie: `_xsrf=${xsrfCookie}`,
-                    Connection: 'keep-alive',
-                    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
-                },
-                body: postParams.toString(),
-                redirect: 'manual'
-            })
-        );
+        const response = await this.makeRequest(`${url}login?`, {
+            method: 'post',
+            headers: {
+                Cookie: `_xsrf=${xsrfCookie}`,
+                Connection: 'keep-alive',
+                'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: postParams.toString(),
+            redirect: 'manual'
+        });
 
         // Now from this result we need to extract the session cookie
         if (response.status === 302) {

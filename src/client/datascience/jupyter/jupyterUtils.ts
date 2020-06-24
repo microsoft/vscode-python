@@ -7,7 +7,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { IDataScienceSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
@@ -27,7 +26,7 @@ export function expandWorkingDir(
     return path.dirname(launchingFile);
 }
 
-export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSettings): IJupyterConnection {
+export function createRemoteConnectionInfo(uri: string): IJupyterConnection {
     let url: URL;
     try {
         url = new URL(uri);
@@ -35,16 +34,12 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         // This should already have been parsed when set, so just throw if it's not right here
         throw err;
     }
-    const allowUnauthorized = settings.allowUnauthorizedRemoteConnection
-        ? settings.allowUnauthorizedRemoteConnection
-        : false;
 
     const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
     const token = `${url.searchParams.get('token')}`;
 
     return {
         type: 'jupyter',
-        allowUnauthorized,
         baseUrl,
         token,
         hostName: url.hostname,
