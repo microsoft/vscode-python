@@ -6,7 +6,9 @@ import * as assert from 'assert';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
+import { instance, mock } from 'ts-mockito';
 import { IApplicationShell } from '../../client/common/application/types';
+import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 
@@ -23,8 +25,13 @@ suite('JupyterPasswordConnect', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         appShell.setup((a) => a.showInputBox(typemoq.It.isAny())).returns(() => Promise.resolve('Python'));
         const multiStepFactory = new MultiStepInputFactory(appShell.object);
+        const mockDisposableRegistry = mock(AsyncDisposableRegistry);
 
-        jupyterPasswordConnect = new JupyterPasswordConnect(appShell.object, multiStepFactory);
+        jupyterPasswordConnect = new JupyterPasswordConnect(
+            appShell.object,
+            multiStepFactory,
+            instance(mockDisposableRegistry)
+        );
     });
 
     function createMockSetup(secure: boolean, ok: boolean) {
