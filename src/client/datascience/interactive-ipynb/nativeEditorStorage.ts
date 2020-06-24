@@ -553,7 +553,7 @@ export class NativeEditorStorage implements INotebookStorage {
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
         }
-        await Promise.all([parallelize]);
+        await Promise.all(parallelize);
         model.update({
             source: 'user',
             kind: 'save',
@@ -569,7 +569,7 @@ export class NativeEditorStorage implements INotebookStorage {
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(file.toString(), contents));
         }
-        await Promise.all([parallelize]);
+        await Promise.all(parallelize);
         model.update({
             source: 'user',
             kind: 'saveAs',

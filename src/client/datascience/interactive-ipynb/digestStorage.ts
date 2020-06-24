@@ -58,8 +58,6 @@ export class DigestStorage implements IDigestStorage {
     private async initKey(): Promise<string> {
         const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
-        // while failed to acquire file descriptor for key file, spin
-
         if (await this.fs.fileExists(defaultKeyFileLocation)) {
             // if the keyfile already exists, bail out
             return this.fs.readFile(defaultKeyFileLocation);
