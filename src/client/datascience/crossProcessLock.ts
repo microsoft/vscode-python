@@ -1,4 +1,4 @@
-import { open, unlink } from 'fs-extra';
+import { promises } from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
 import { sleep } from '../common/utils/async';
@@ -12,7 +12,7 @@ export class CrossProcessLock {
     }
 
     public async lock(): Promise<boolean> {
-        const maxTries = 10;
+        const maxTries = 50;
         let tries = 0;
         while (!this.acquired && tries < maxTries) {
             try {
@@ -33,8 +33,10 @@ export class CrossProcessLock {
         // Does nothing if the lock is not currently held
         if (this.acquired) {
             // Delete the lockfile
-            await unlink(this.lockFilePath);
+            await promises.unlink(this.lockFilePath);
             this.acquired = false;
+        } else {
+            throw new Error('Current process attempted to release a lock it does not hold');
         }
     }
 
@@ -47,7 +49,7 @@ export class CrossProcessLock {
     */
     private async acquire() {
         try {
-            await open(this.lockFilePath, 'wx');
+            await promises.open(this.lockFilePath, 'wx');
             this.acquired = true;
         } catch (err) {
             if (err.code !== 'EEXIST') {
