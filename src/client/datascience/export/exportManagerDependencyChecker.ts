@@ -22,9 +22,9 @@ export class ExportManagerDependencyChecker implements IExportManager {
         try {
             if (!(await this.jupyterExecution.isImportSupported())) {
                 await this.dependencyManager.installMissingDependencies();
-            }
-            if (!(await this.jupyterExecution.isImportSupported())) {
-                throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+                if (!(await this.jupyterExecution.isImportSupported())) {
+                    throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+                }
             }
         } finally {
             reporter.dispose();

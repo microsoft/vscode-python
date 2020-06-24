@@ -103,7 +103,12 @@ export class ExportCommands implements IDisposable {
             {
                 label: DataScience.exportPDFQuickPickLabel(),
                 picked: false,
-                handler: () => this.commandManager.executeCommand(Commands.ExportToPDF, model)
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.pdf
+                    });
+                    this.commandManager.executeCommand(Commands.ExportToPDF, model);
+                }
             }
         ];
     }

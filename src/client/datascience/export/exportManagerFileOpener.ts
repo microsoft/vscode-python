@@ -5,6 +5,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -28,8 +29,14 @@ export class ExportManagerFileOpener implements IExportManager {
             uri = await this.manager.export(format, model);
         } catch (e) {
             traceError('Export failed', e);
-            this.showExportFailed(e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
+
+            if (format === ExportFormat.pdf) {
+                await this.applicationShell.showInformationMessage(DataScience.exportToPDFDependencyMessage());
+                return;
+            }
+
+            this.showExportFailed(e);
             return;
         }
 

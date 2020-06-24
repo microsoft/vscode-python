@@ -1,10 +1,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { DataScience } from '../../common/utils/localize';
 import { IJupyterSubCommandExecutionService, INotebookImporter } from '../types';
 import { ExportBase } from './exportBase';
 
@@ -15,8 +13,7 @@ export class ExportToPDF extends ExportBase {
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) protected readonly fileSystem: IFileSystem,
-        @inject(INotebookImporter) protected readonly importer: INotebookImporter,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(INotebookImporter) protected readonly importer: INotebookImporter
     ) {
         super(pythonExecutionFactory, jupyterService, fileSystem, importer);
     }
@@ -25,7 +22,7 @@ export class ExportToPDF extends ExportBase {
         const directoryPath = path.join(
             path.dirname(source.fsPath),
             path.basename(source.fsPath, path.extname(source.fsPath))
-        ); // since the source is a temporary file we know its name will be unique
+        );
         const newFileName = path.basename(target.fsPath, path.extname(target.fsPath));
         const newSource = Uri.file(await this.createNewFile(directoryPath, newFileName, source));
 
@@ -40,9 +37,6 @@ export class ExportToPDF extends ExportBase {
         ];
         try {
             await this.executeCommand(newSource, target, args);
-        } catch (e) {
-            await this.applicationShell.showInformationMessage(DataScience.markdownExportToPDFDependencyMessage());
-            throw e;
         } finally {
             await this.deleteNewDirectory(directoryPath);
         }
@@ -55,9 +49,8 @@ export class ExportToPDF extends ExportBase {
         // save the new file there
         try {
             await this.fileSystem.createDirectory(dirPath);
-            const content = await this.fileSystem.readFile(source.fsPath);
             const newFilePath = path.join(dirPath, newName);
-            await this.fileSystem.writeFile(newFilePath, content);
+            await this.fileSystem.copyFile(source.fsPath, newFilePath);
             return newFilePath;
         } catch (e) {
             await this.deleteNewDirectory(dirPath);
