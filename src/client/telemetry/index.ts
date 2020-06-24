@@ -9,7 +9,7 @@ import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter'
 import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
@@ -67,6 +67,10 @@ const sharedProperties: Record<string, string> = {};
  * (overload as necessary to ensure we have strongly typed telemetry props, this way we do not leak any PII inadvertently).
  */
 export function setSharedProperty(name: 'ds_notebookeditor', value?: 'old' | 'custom' | 'native'): void {
+    // Ignore such shared telemetry during unit tests.
+    if (isUnitTestExecution() && name === 'ds_notebookeditor') {
+        return;
+    }
     if (value === undefined) {
         delete sharedProperties[name];
     } else {
