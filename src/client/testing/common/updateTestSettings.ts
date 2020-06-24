@@ -104,7 +104,8 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
     private fixLanguageServerSettings(fileContent: string): string {
         // `python.jediEnabled` is deprecated:
-        //   - `true` or missing then set to `languageServer: Jedi`.
+        //   - If missing, do nothing.
+        //   - `true`, then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
         //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
         // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
@@ -113,8 +114,13 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
         try {
             const ast = parseTree(fileContent);
+
             const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
+            if (!jediEnabledNode) {
+                return fileContent;
+            }
+
+            const jediEnabled = getNodeValue(jediEnabledNode);
             const languageServerNode = findNodeAtLocation(ast, languageServerPath);
             const formattingOptions: FormattingOptions = {
                 tabSize: 4,
@@ -122,7 +128,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             };
             let edits: Edit[] = [];
 
-            if (!jediEnabledNode || jediEnabled) {
+            if (jediEnabled) {
                 // `jediEnabled` is missing or is true. Default is true, so assume Jedi.
                 edits = modify(fileContent, languageServerPath, LanguageServerType.Jedi, { formattingOptions });
             } else {
