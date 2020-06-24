@@ -6,6 +6,7 @@
 import { inject, named } from 'inversify';
 import { ConfigurationTarget, DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, IOutputChannel, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
@@ -42,7 +43,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
     ) {
         super([DiagnosticCodes.PythonPathDeprecatedDiagnostic], serviceContainer, disposableRegistry, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel);
+        this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);

@@ -28,6 +28,7 @@ import {
     IDiagnosticHandlerService
 } from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../../client/common/constants';
 import { DeprecatePythonPath } from '../../../../client/common/experiments/groups';
 import { IDisposableRegistry, IExperimentsManager, IOutputChannel, Resource } from '../../../../client/common/types';
 import { Common, Diagnostics } from '../../../../client/common/utils/localize';
@@ -47,7 +48,9 @@ suite('Application Diagnostics - Python Path Deprecated', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
         output = typemoq.Mock.ofType<IOutputChannel>();
-        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IOutputChannel))).returns(() => output.object);
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IOutputChannel), STANDARD_OUTPUT_CHANNEL))
+            .returns(() => output.object);
         experimentsManager = typemoq.Mock.ofType<IExperimentsManager>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
