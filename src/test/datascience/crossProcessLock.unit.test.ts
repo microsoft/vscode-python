@@ -1,8 +1,4 @@
 import { assert } from 'chai';
-import { unlink } from 'fs';
-import { tmpdir } from 'os';
-import * as path from 'path';
-import { traceError } from '../../client/common/logger';
 import { sleep } from '../../client/common/utils/async';
 import { CrossProcessLock } from '../../client/datascience/crossProcessLock';
 
@@ -18,9 +14,8 @@ suite('Cross process lock', async () => {
 
     suiteTeardown(async () => {
         // Delete the lockfile so it's clean for the next run
-        unlink(path.join(tmpdir(), 'crossProcessLockUnitTest.tmp'), (err) => {
-            traceError(err);
-        });
+        // Note that mutex2 should not have been acquired so there's no need to unlock it
+        await mutex1.unlock();
     });
 
     test('Lock guarantees in-process mutual exclusion', async () => {
