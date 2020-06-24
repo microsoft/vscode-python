@@ -37,7 +37,6 @@ suite('Data Science - Export File Opener', () => {
         fileOpener = new ExportManagerFileOpener(
             instance(exporter),
             instance(documentManager),
-            instance(reporter),
             instance(fileSystem),
             instance(applicationShell),
             instance(browserService)

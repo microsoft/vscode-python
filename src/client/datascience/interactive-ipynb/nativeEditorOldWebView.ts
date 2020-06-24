@@ -23,6 +23,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     WORKSPACE_MEMENTO
@@ -103,7 +104,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
-        @inject(ITrustService) trustService: ITrustService
+        @inject(ITrustService) trustService: ITrustService,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -135,7 +137,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             switcher,
             notebookProvider,
             useCustomEditorApi,
-            trustService
+            trustService,
+            expService
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.
@@ -177,6 +180,10 @@ export class NativeEditorOldWebView extends NativeEditor {
                     break;
 
                 case AskForSaveResult.No:
+                    // If there were changes, delete them
+                    if (this.model) {
+                        await this.storage.deleteBackup(this.model);
+                    }
                     // Close it
                     await super.close();
                     break;

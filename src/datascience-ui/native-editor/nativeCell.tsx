@@ -258,7 +258,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell() && this.props.isNotebookTrusted) {
+        if (this.isCodeCell()) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
@@ -372,11 +372,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'z':
             case 'Z':
                 if (!this.isFocused() && !this.props.useCustomEditorApi) {
-                    if (e.shiftKey && !e.ctrlKey && !e.altKey) {
+                    if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey) {
+                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
                         e.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);

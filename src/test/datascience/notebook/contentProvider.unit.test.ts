@@ -30,7 +30,6 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
         contentProvider = new NotebookContentProvider(
             instance(storageProvider),
             instance(commandManager),
-            true,
             instance(compatSupport)
         );
     });

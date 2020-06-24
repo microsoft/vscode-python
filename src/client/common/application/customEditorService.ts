@@ -6,8 +6,8 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { DataScience } from '../../common/utils/localize';
 
-import { traceError } from '../../logging';
 import { EXTENSION_ROOT_DIR, UseCustomEditorApi } from '../constants';
+import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { noop } from '../utils/misc';
 import { CustomEditorProvider, IApplicationEnvironment, ICommandManager, ICustomEditorService } from './types';

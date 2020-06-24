@@ -21,6 +21,7 @@ import {
     IExperiments,
     IFormattingSettings,
     ILintingSettings,
+    ILoggingSettings,
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
@@ -105,6 +106,7 @@ suite('Python Settings', async () => {
         config.setup((c) => c.get<any[]>('devOptions')).returns(() => sourceSettings.devOptions);
 
         // complex settings
+        config.setup((c) => c.get<ILoggingSettings>('logging')).returns(() => sourceSettings.logging);
         config.setup((c) => c.get<ILintingSettings>('linting')).returns(() => sourceSettings.linting);
         config.setup((c) => c.get<IAnalysisSettings>('analysis')).returns(() => sourceSettings.analysis);
         config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);

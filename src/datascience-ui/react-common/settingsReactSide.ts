@@ -68,6 +68,9 @@ export function getDefaultSettings() {
         variableOptions: {
             enableDuringDebugger: false
         },
+        webviewExperiments: {
+            removeKernelToolbarInInteractiveWindow: false
+        },
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],

@@ -9,6 +9,9 @@ import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
 import { noop, sleep } from './core';
+import { initializeLogger } from './testLogger';
+
+initializeLogger();
 
 // tslint:disable:no-console
 

@@ -6,8 +6,7 @@ import { IDigestStorage, ITrustService } from '../types';
 export class TrustService implements ITrustService {
     constructor(
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
-        @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
-        private algorithm: string = 'sha256'
+        @inject(IDigestStorage) private readonly digestStorage: IDigestStorage
     ) {}
 
     /**
@@ -17,10 +16,10 @@ export class TrustService implements ITrustService {
      * Once a notebook is loaded in an untrusted state, no code will be executed and no
      * markdown will be rendered until notebook as a whole is marked trusted
      */
-    public async isNotebookTrusted(notebookContents: string) {
+    public async isNotebookTrusted(uri: string, notebookContents: string) {
         // Compute digest and see if notebook is trusted
         const digest = await this.computeDigest(notebookContents);
-        return this.digestStorage.containsDigest(digest, this.algorithm);
+        return this.digestStorage.containsDigest(uri, digest);
     }
 
     /**
@@ -28,13 +27,13 @@ export class TrustService implements ITrustService {
      * It will add a new trusted checkpoint to the local database if it's safe to do so
      * I.e. if the notebook has already been trusted by the user
      */
-    public async trustNotebook(notebookContents: string) {
+    public async trustNotebook(uri: string, notebookContents: string) {
         const digest = await this.computeDigest(notebookContents);
-        return this.digestStorage.saveDigest(digest, this.algorithm);
+        return this.digestStorage.saveDigest(uri, digest);
     }
 
     private async computeDigest(notebookContents: string) {
-        const hmac = createHmac(this.algorithm, await this.digestStorage.key);
+        const hmac = createHmac('sha256', await this.digestStorage.key);
         hmac.update(notebookContents);
         return hmac.digest('hex');
     }

@@ -165,7 +165,7 @@ export enum Telemetry {
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
     RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
-    ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
+    ExportNotebookInteractive = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
     /**
@@ -185,8 +185,28 @@ export enum Telemetry {
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
-    ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
-    ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * Exporting from the interactive window
+     */
+    ExportPythonFileInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE',
+    ExportPythonFileAndOutputInteractive = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
+    /**
+     * User clicked export as quick pick button
+     */
+    ClickedExportNotebookAsQuickPick = 'DATASCIENCE.CLICKED_EXPORT_NOTEBOOK_AS_QUICK_PICK',
+    /**
+     * exported a notebook
+     */
+    ExportNotebookAs = 'DATASCIENCE.EXPORT_NOTEBOOK_AS',
+    /**
+     * User invokes export as format from command pallet
+     */
+    ExportNotebookAsCommand = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_COMMAND',
+    /**
+     * An export to a specific format failed
+     */
+    ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
+
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
     ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',

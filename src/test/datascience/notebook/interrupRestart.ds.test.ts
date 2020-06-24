@@ -16,8 +16,9 @@ import { IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     assertVSCCellHasErrors,
-    assertVSCCellIsIdle,
+    assertVSCCellIsNotRunning,
     assertVSCCellIsRunning,
+    assertVSCCellStateIsUndefined,
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
@@ -156,8 +157,11 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
 
         // Wait for ?s, and verify cells are not running.
         await waitForCondition(
-            // First cell will have interrupt error and others will have just stopped even before they start.
-            async () => assertVSCCellHasErrors(cell1) && assertVSCCellIsIdle(cell2) && assertVSCCellIsIdle(cell3),
+            // First cell will have interrupt error and others will have just stopped even before they start (reverting to previous state).
+            async () =>
+                assertVSCCellHasErrors(cell1) &&
+                assertVSCCellStateIsUndefined(cell2) &&
+                assertVSCCellStateIsUndefined(cell3),
             15_000,
             'Cells are still running'
         );
@@ -188,7 +192,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
         // Restart the kernel.
         const restartPromise = commands.executeCommand('python.datascience.notebookeditor.restartkernel');
 
-        await waitForCondition(async () => assertVSCCellIsIdle(cell), 15_000, 'Execution not cancelled');
+        await waitForCondition(async () => assertVSCCellIsNotRunning(cell), 15_000, 'Execution not cancelled');
 
         // Wait before we execute cells again.
         await restartPromise;
@@ -196,11 +200,5 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors', functio
 
         // Wait for cell to get busy.
         await waitForCondition(async () => assertVSCCellIsRunning(cell), 15_000, 'Cell not being executed');
-
-        // Cleanup (don't leave them running).
-        await commands.executeCommand('notebook.cancelExecution');
-
-        // Wait for ?s, and verify cells are not running.
-        await waitForCondition(async () => assertVSCCellHasErrors(cell), 15_000, 'Cell is still running');
     });
 });

@@ -32,6 +32,7 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
@@ -255,6 +256,7 @@ suite('DataScience - Native Editor Storage', () => {
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
+        trustService = mock(TrustService);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -278,6 +280,9 @@ suite('DataScience - Native Editor Storage', () => {
 
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
+
+        when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
+        when(trustService.trustNotebook(anything(), anything())).thenReturn(Promise.resolve());
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);

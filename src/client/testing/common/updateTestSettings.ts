@@ -31,7 +31,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const filesToBeFixed = await this.getFilesToBeFixed(resource);
         await Promise.all(filesToBeFixed.map((file) => this.fixSettingInFile(file)));
     }
-    public getSettingsFiles(resource: Resource) {
+    public getSettingsFiles(resource: Resource): string[] {
         const settingsFiles: string[] = [];
         if (this.application.userSettingsFile) {
             settingsFiles.push(this.application.userSettingsFile);
@@ -42,7 +42,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         }
         return settingsFiles;
     }
-    public async getFilesToBeFixed(resource: Resource) {
+    public async getFilesToBeFixed(resource: Resource): Promise<string[]> {
         const files = this.getSettingsFiles(resource);
         const result = await Promise.all(
             files.map(async (file) => {
@@ -87,10 +87,11 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         return fileContents;
     }
 
-    public async doesFileNeedToBeFixed(filePath: string) {
+    public async doesFileNeedToBeFixed(filePath: string): Promise<boolean> {
         try {
             const contents = await this.fs.readFile(filePath);
             return (
+                contents.indexOf('python.jediEnabled') > 0 ||
                 contents.indexOf('python.unitTest.') > 0 ||
                 contents.indexOf('.pyTest') > 0 ||
                 contents.indexOf('.pep8') > 0
@@ -106,13 +107,13 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         //   - `true` or missing then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
         //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
-        // `jediEnabled` is then removed.
+        // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
         const jediEnabledPath = ['python.jediEnabled'];
         const languageServerPath = ['python.languageServer'];
 
         try {
-            let ast = parseTree(fileContent);
-            let jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
+            const ast = parseTree(fileContent);
+            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
             const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
             const languageServerNode = findNodeAtLocation(ast, languageServerPath);
             const formattingOptions: FormattingOptions = {
@@ -134,13 +135,6 @@ export class UpdateTestSettingService implements IExtensionActivationService {
             }
 
             fileContent = applyEdits(fileContent, edits);
-            // Remove jediEnabled
-            ast = parseTree(fileContent);
-            jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            if (jediEnabledNode) {
-                edits = modify(fileContent, jediEnabledPath, undefined, { formattingOptions });
-                fileContent = applyEdits(fileContent, edits);
-            }
             // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;

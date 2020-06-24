@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
-    NotebookContentProvider as VSCodeNotebookContentProvider,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
@@ -15,14 +14,14 @@ import type {
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
-import { MARKDOWN_LANGUAGE, UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
 import { NotebookEditorCompatibilitySupport } from './notebookEditorCompatibilitySupport';
+import { INotebookContentProvider } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
@@ -35,7 +34,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  * When saving, VSC will provide their model and we need to take that and merge it with an existing ipynb json (if any, to preserve metadata).
  */
 @injectable()
-export class NotebookContentProvider implements VSCodeNotebookContentProvider {
+export class NotebookContentProvider implements INotebookContentProvider {
     private notebookChanged = new EventEmitter<NotebookDocumentEditEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
@@ -43,10 +42,12 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
     constructor(
         @inject(INotebookStorageProvider) private readonly notebookStorage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean,
         @inject(NotebookEditorCompatibilitySupport)
         private readonly compatibilitySupport: NotebookEditorCompatibilitySupport
     ) {}
+    public notifyChangesToDocument(document: NotebookDocument) {
+        this.notebookChanged.fire({ document });
+    }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {
             // If not supported, return a notebook with error displayed.
@@ -69,10 +70,6 @@ export class NotebookContentProvider implements VSCodeNotebookContentProvider {
         const model = await (openContext.backupId
             ? this.notebookStorage.load(uri, undefined, openContext.backupId)
             : this.notebookStorage.load(uri, undefined, true));
-        // If experiment is not enabled, then this method was invoked as user opted to try and open using the new API.
-        if (!this.useVSCodeNotebookEditorApi) {
-            updateModelForUseWithVSCodeNotebook(model);
-        }
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)

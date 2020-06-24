@@ -34,6 +34,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExperimentsManager,
     IMemento,
     Resource,
@@ -181,7 +182,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
-        @inject(ITrustService) private trustService: ITrustService
+        @inject(ITrustService) private trustService: ITrustService,
+        @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
             listeners,
@@ -218,7 +220,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager,
             switcher,
             notebookProvider,
-            useCustomEditorApi
+            useCustomEditorApi,
+            expService
         );
         asyncRegistry.push(this);
 
@@ -618,7 +621,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
             try {
                 const contents = this.model.getContent();
-                await this.trustService.trustNotebook(contents);
+                await this.trustService.trustNotebook(this.model.file.toString(), contents);
                 // Update model trust
                 this.model.update({
                     source: 'user',
