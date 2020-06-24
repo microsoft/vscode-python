@@ -565,7 +565,7 @@ export class NativeEditorStorage implements INotebookStorage {
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const old = model.file;
         const contents = model.getContent();
-        const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
+        const parallelize = [this.fileSystem.writeFile(file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
             parallelize.push(this.trustService.trustNotebook(file.toString(), contents));
         }
