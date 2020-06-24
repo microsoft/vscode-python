@@ -28,15 +28,15 @@ export class ExportManagerFileOpener implements IExportManager {
         try {
             uri = await this.manager.export(format, model);
         } catch (e) {
+            let msg = e;
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
 
             if (format === ExportFormat.pdf) {
-                await this.applicationShell.showInformationMessage(DataScience.exportToPDFDependencyMessage());
-                return;
+                msg = DataScience.exportToPDFDependencyMessage();
             }
 
-            this.showExportFailed(e);
+            this.showExportFailed(msg);
             return;
         }
 
