@@ -19,9 +19,10 @@ export class ExportToPDF extends ExportBase {
     }
 
     public async export(source: Uri, target: Uri): Promise<void> {
+        const tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
         const directoryPath = path.join(
-            path.dirname(source.fsPath),
-            path.basename(source.fsPath, path.extname(source.fsPath))
+            path.dirname(tempFile.filePath),
+            path.basename(tempFile.filePath, path.extname(tempFile.filePath))
         );
         const newFileName = path.basename(target.fsPath, path.extname(target.fsPath));
         const newSource = Uri.file(await this.createNewFile(directoryPath, newFileName, source));
