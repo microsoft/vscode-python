@@ -85,9 +85,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     }
 
     private selectKernel() {
-        if (this.isKernelSelectionAllowed) {
-            this.props.selectKernel();
-        }
+        this.props.selectKernel();
     }
     private getIcon(): ImageName {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted

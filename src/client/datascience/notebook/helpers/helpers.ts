@@ -24,7 +24,7 @@ import {
 } from '../../../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../../../datascience-ui/common/cellFactory';
 import { MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../common/constants';
-import { traceError, traceWarning } from '../../../logging';
+import { traceError, traceWarning } from '../../../common/logger';
 import { CellState, ICell, INotebookModel } from '../../types';
 import { mapVSCNotebookCellToCellModel } from './cellMappers';
 // tslint:disable-next-line: no-var-requires no-require-imports

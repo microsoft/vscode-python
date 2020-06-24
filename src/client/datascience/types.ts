@@ -764,6 +764,10 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     variableOptions: {
         enableDuringDebugger: boolean;
     };
+
+    webviewExperiments: {
+        removeKernelToolbarInInteractiveWindow: boolean;
+    };
 }
 
 // Get variables from the currently running active Jupyter server
@@ -1018,7 +1022,6 @@ export interface INotebookModel {
     applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
-    clone(file: Uri): INotebookModel;
     /**
      * Dispose of the Notebook model.
      *
@@ -1233,13 +1236,13 @@ export interface IJupyterDebugService extends IDebugService {
 
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
-    key: Promise<string>;
-    saveDigest(digest: string, algorithm: string): Promise<void>;
-    containsDigest(digest: string, algorithm: string): Promise<boolean>;
+    readonly key: Promise<string>;
+    saveDigest(uri: string, digest: string): Promise<void>;
+    containsDigest(uri: string, digest: string): Promise<boolean>;
 }
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
-    isNotebookTrusted(notebookContents: string): Promise<boolean>;
-    trustNotebook(notebookContents: string): Promise<void>;
+    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }

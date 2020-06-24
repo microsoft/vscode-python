@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -18,7 +19,6 @@ import {
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
-import { traceInfo } from '../../../logging';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import { IJupyterConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { getJupyterConnectionDisplayName } from '../jupyterConnection';

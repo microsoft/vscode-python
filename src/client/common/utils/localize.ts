@@ -301,6 +301,7 @@ export namespace DataScience {
         'Installing missing dependencies'
     );
     export const performingExport = localize('DataScience.performingExport', 'Performing export');
+    export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
         'DataScience.exportNotebookToPython',
         'Exporting Notebook to Python'
@@ -570,7 +571,8 @@ export namespace DataScience {
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const exportPythonQuickPickLabel = localize('DataScience.exportPythonQuickPickLabel', 'Python Script');
-    export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', ' HTML');
+    export const exportHTMLQuickPickLabel = localize('DataScience.exportHTMLQuickPickLabel', 'HTML');
+    export const exportPDFQuickPickLabel = localize('DataScience.exportPDFQuickPickLabel', 'PDF');
     export const restartKernelAfterInterruptMessage = localize(
         'DataScience.restartKernelAfterInterruptMessage',
         'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.'
@@ -786,6 +788,10 @@ export namespace DataScience {
     );
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
+    export const exportToPDFDependencyMessage = localize(
+        'DataScience.exportToPDFDependencyMessage',
+        'If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers "Print to PDF" feature.'
+    );
     export const failedExportMessage = localize('DataScience.failedExportMessage', 'Export failed.');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');

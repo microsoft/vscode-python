@@ -6,9 +6,9 @@ import * as os from 'os';
 import * as path from 'path';
 import { Memento, Uri } from 'vscode';
 import { splitMultilineString } from '../../datascience-ui/common';
+import { traceError, traceInfo } from '../common/logger';
 import { DataScience } from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
-import { traceError, traceInfo } from '../logging';
 import { Settings } from './constants';
 import { ICell } from './types';
 

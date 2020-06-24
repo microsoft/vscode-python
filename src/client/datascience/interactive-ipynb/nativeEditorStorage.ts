@@ -27,8 +27,6 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-// tslint:disable-next-line:no-require-imports no-var-requires
-import cloneDeep = require('lodash/cloneDeep');
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -145,16 +143,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
     public dispose() {
         this._isDisposed = true;
         this._disposed.fire();
-    }
-    public clone(file: Uri) {
-        return new NativeEditorNotebookModel(
-            this._state.isTrusted,
-            this.useNativeEditorApi,
-            file,
-            cloneDeep(this._state.cells),
-            cloneDeep(this._state.notebookJson),
-            this.indentAmount
-        );
     }
     public update(change: NotebookModelChange): void {
         this.handleModelChange(change);
@@ -511,7 +499,8 @@ export class NativeEditorNotebookModel implements INotebookModel {
 }
 
 /**
- * Temporary hack to ensure we can use VS Code notebooks along with our standard notbooked editors.
+ * Marks a model as being used solely by VS Code Notebooks editor.
+ * (this is required, because at the time of loading a notebook its not always possible to know what editor will use it).
  */
 export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
     if (!(model instanceof NativeEditorNotebookModel)) {
@@ -562,9 +551,9 @@ export class NativeEditorStorage implements INotebookStorage {
         const contents = model.getContent();
         const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(contents));
+            parallelize.push(this.trustService.trustNotebook(model.file.toString(), contents));
         }
-        await Promise.all([parallelize]);
+        await Promise.all(parallelize);
         model.update({
             source: 'user',
             kind: 'save',
@@ -576,11 +565,11 @@ export class NativeEditorStorage implements INotebookStorage {
     public async saveAs(model: INotebookModel, file: Uri): Promise<void> {
         const old = model.file;
         const contents = model.getContent();
-        const parallelize = [this.fileSystem.writeFile(model.file.fsPath, contents, 'utf-8')];
+        const parallelize = [this.fileSystem.writeFile(file.fsPath, contents, 'utf-8')];
         if (model.isTrusted) {
-            parallelize.push(this.trustService.trustNotebook(contents));
+            parallelize.push(this.trustService.trustNotebook(file.toString(), contents));
         }
-        await Promise.all([parallelize]);
+        await Promise.all(parallelize);
         model.update({
             source: 'user',
             kind: 'saveAs',
@@ -638,7 +627,6 @@ export class NativeEditorStorage implements INotebookStorage {
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
-
         return this.writeToStorage(filePath, specialContents, cancelToken);
     }
 
@@ -734,7 +722,7 @@ export class NativeEditorStorage implements INotebookStorage {
             const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents, true);
+                return this.loadContents(file, dirtyContents, true, contents);
             } else {
                 // Load without setting dirty
                 return this.loadContents(file, contents);
@@ -756,7 +744,12 @@ export class NativeEditorStorage implements INotebookStorage {
         };
     }
 
-    private async loadContents(file: Uri, contents: string | undefined, isInitiallyDirty = false) {
+    private async loadContents(
+        file: Uri,
+        contents: string | undefined,
+        isInitiallyDirty = false,
+        trueContents?: string
+    ) {
         // tslint:disable-next-line: no-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
@@ -793,7 +786,16 @@ export class NativeEditorStorage implements INotebookStorage {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
         }
         const pythonNumber = json ? await this.extractPythonMainVersion(json) : 3;
-        const isTrusted = contents ? await this.trustService.isNotebookTrusted(contents) : true; // If no contents, this is a newly created notebook, so set to true
+
+        /* As an optimization, we don't call trustNotebook for hot exit, since our hot exit backup code gets called by VS
+        Code whenever the notebook model changes. This means it's called very often, perhaps even as often as autosave.
+        Instead, when loading a file that is dirty, we check if the actual file contents on disk are trusted. If so, we treat
+        the dirty contents as trusted as well. */
+        const contentsToCheck = isInitiallyDirty && trueContents !== undefined ? trueContents : contents;
+        const isTrusted =
+            contents === undefined || isUntitledFile(file)
+                ? true // If no contents or untitled, this is a newly created file, so it should be trusted
+                : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
         return new NativeEditorNotebookModel(
             isTrusted,
             this.useNativeEditorApi,

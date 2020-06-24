@@ -117,7 +117,7 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             // tslint:disable-next-line: no-any
-            .returns(() => Promise.resolve(undefined as any));
+            .returns(() => Promise.reject(new Error('timed out')));
         const env = createPythonEnv(pythonPath, processService.object, fileSystem.object);
 
         const result = await env.getInterpreterInformation();
@@ -173,7 +173,7 @@ suite('PythonEnvironment', () => {
 
         const result = env.getExecutablePath();
 
-        expect(result).to.eventually.be.rejectedWith(stderr);
+        await expect(result).to.eventually.be.rejectedWith(stderr);
     });
 
     test('isModuleInstalled should call processService.exec()', async () => {
@@ -223,7 +223,7 @@ suite('PythonEnvironment', () => {
         const result = env.getExecutionInfo(args);
 
         expect(result).to.deep.equal(
-            { command: pythonPath, args, python: [pythonPath] },
+            { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath },
             'getExecutionInfo should return pythonPath and the command and execution arguments as is'
         );
     });
@@ -250,7 +250,8 @@ suite('CondaEnvironment', () => {
         expect(result).to.deep.equal({
             command: condaFile,
             args: ['run', '-n', condaInfo.name, 'python', ...args],
-            python: [condaFile, 'run', '-n', condaInfo.name, 'python']
+            python: [condaFile, 'run', '-n', condaInfo.name, 'python'],
+            pythonExecutable: 'python'
         });
     });
 
@@ -263,12 +264,13 @@ suite('CondaEnvironment', () => {
         expect(result).to.deep.equal({
             command: condaFile,
             args: ['run', '-p', condaInfo.path, 'python', ...args],
-            python: [condaFile, 'run', '-p', condaInfo.path, 'python']
+            python: [condaFile, 'run', '-p', condaInfo.path, 'python'],
+            pythonExecutable: 'python'
         });
     });
 
     test('getExecutionObservableInfo with a named environment should return execution info using pythonPath only', () => {
-        const expected = { command: pythonPath, args, python: [pythonPath] };
+        const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
         const condaInfo = { name: 'foo', path: 'bar' };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 
@@ -278,7 +280,7 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionObservableInfo with a non-named environment should return execution info using pythonPath only', () => {
-        const expected = { command: pythonPath, args, python: [pythonPath] };
+        const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
         const condaInfo = { name: '', path: 'bar' };
         const env = createCondaEnv(condaFile, condaInfo, pythonPath, processService.object, fileSystem.object);
 

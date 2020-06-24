@@ -1,100 +1,81 @@
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { inject, injectable } from 'inversify';
-import * as Lowdb from 'lowdb';
-import * as FileAsync from 'lowdb/adapters/FileAsync';
 import * as path from 'path';
+import { traceError } from '../../common/logger';
+import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { IExtensionContext } from '../../common/types';
 import { IDigestStorage } from '../types';
 
-type DigestEntry = {
-    signature: string;
-    algorithm: string;
-    timestamp: string;
-};
-type Schema = {
-    nbsignatures: DigestEntry[];
-};
-
 // NB: still need to implement automatic culling of least recently used entries
 @injectable()
 export class DigestStorage implements IDigestStorage {
-    public key: Promise<string>;
-    private defaultDatabaseLocation: string;
-    private db: Lowdb.LowdbAsync<Schema> | undefined;
+    public readonly key: Promise<string>;
+    private digestDir: Promise<string>;
 
     constructor(
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IExtensionContext) private extensionContext: IExtensionContext
     ) {
-        this.defaultDatabaseLocation = this.getDefaultDatabaseLocation();
         this.key = this.initKey();
+        this.digestDir = this.initDir();
     }
 
-    public async saveDigest(signature: string, algorithm: string) {
-        await this.initDb();
-        this.db!.get('nbsignatures').push({ signature, algorithm, timestamp: Date.now().toString() }).write();
+    public async saveDigest(uri: string, signature: string) {
+        const fileName = createHash('sha256').update(uri).digest('hex');
+        const fileLocation = path.join(await this.digestDir, fileName);
+        // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
+        await this.fs.appendFile(fileLocation, `z${signature}z\n`);
     }
 
-    public async containsDigest(signature: string, algorithm: string) {
-        await this.initDb();
-        const val = this.db!.get('nbsignatures').find({ signature, algorithm }).value();
-        return val !== undefined;
+    public async containsDigest(uri: string, signature: string) {
+        const fileName = createHash('sha256').update(uri).digest('hex');
+        const fileLocation = path.join(await this.digestDir, fileName);
+        try {
+            const digests = await this.fs.readFile(fileLocation);
+            return digests.indexOf(`z${signature}z`) >= 0;
+        } catch (err) {
+            if (!isFileNotFoundError(err)) {
+                traceError(err); // Don't log the error if the file simply doesn't exist
+            }
+            return false;
+        }
+    }
+
+    private async initDir(): Promise<string> {
+        const defaultDigestDirLocation = this.getDefaultLocation('nbsignatures');
+        if (!(await this.fs.directoryExists(defaultDigestDirLocation))) {
+            await this.fs.createDirectory(defaultDigestDirLocation);
+        }
+        return defaultDigestDirLocation;
     }
 
     /**
      * Get or create a local secret key, used in computing HMAC hashes of trusted
      * checkpoints in the notebook's execution history
      */
-    private initKey(): Promise<string> {
-        if (this.key === undefined) {
-            return new Promise(async (resolve, _reject) => {
-                // Determine user's OS
-                const defaultKeyFileLocation = this.getDefaultKeyFileLocation();
+    private async initKey(): Promise<string> {
+        const defaultKeyFileLocation = this.getDefaultLocation('nbsecret');
 
-                // Attempt to read from standard keyfile location for that OS
-                if (await this.fs.fileExists(defaultKeyFileLocation)) {
-                    resolve((await this.fs.readFile(defaultKeyFileLocation)) as string);
-                } else {
-                    // If it doesn't exist, create one
-                    // Key must be generated from a cryptographically secure pseudorandom function:
-                    // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
-                    // No callback is provided so random bytes will be generated synchronously
-                    const key = randomBytes(1024).toString('hex');
-                    await this.fs.writeFile(defaultKeyFileLocation, key);
-                    resolve(key);
-                }
-            });
+        if (await this.fs.fileExists(defaultKeyFileLocation)) {
+            // if the keyfile already exists, bail out
+            return this.fs.readFile(defaultKeyFileLocation);
         } else {
-            return this.key;
+            // If it doesn't exist, create one
+            // Key must be generated from a cryptographically secure pseudorandom function:
+            // https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback
+            // No callback is provided so random bytes will be generated synchronously
+            const key = randomBytes(1024).toString('hex');
+            await this.fs.writeFile(defaultKeyFileLocation, key);
+            return key;
         }
     }
 
-    private async initDb() {
-        if (this.db === undefined) {
-            const adapter = new FileAsync<Schema>(this.defaultDatabaseLocation);
-            this.db = await Lowdb(adapter);
-            if (this.db.get('nbsignatures') === undefined) {
-                this.db.defaults({ nbsignatures: [] }).write();
-            }
-        }
-    }
-
-    private getDefaultDatabaseLocation() {
-        const dbName = 'nbsignatures.json';
+    private getDefaultLocation(fileName: string) {
         const dir = this.extensionContext.globalStoragePath;
         if (dir) {
-            return path.join(dir, dbName);
+            return path.join(dir, fileName);
         }
-        throw new Error('Unable to locate database');
-    }
-
-    private getDefaultKeyFileLocation() {
-        const keyfileName = 'nbsecret';
-        const dir = this.extensionContext.globalStoragePath;
-        if (dir) {
-            return path.join(dir, keyfileName);
-        }
-        throw new Error('Unable to locate keyfile');
+        throw new Error('Unable to locate extension global storage path for trusted digest storage');
     }
 }

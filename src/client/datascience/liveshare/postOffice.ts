@@ -6,9 +6,9 @@ import * as vscode from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import { IAsyncDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
-import { traceInfo } from '../../logging';
 import { LiveShare } from '../constants';
 
 // tslint:disable:no-any

@@ -20,6 +20,7 @@ import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { Commands } from '../constants';
+import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
@@ -28,7 +29,7 @@ import { updateCellModelWithChangesToVSCCell } from './helpers/cellUpdateHelpers
 import { isJupyterNotebook } from './helpers/helpers';
 import { NotebookIntegration } from './integration';
 import { NotebookEditor } from './notebookEditor';
-import { INotebookExecutionService } from './types';
+import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -63,6 +64,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     private readonly notebooksWaitingToBeOpenedByUri = new Map<string, Deferred<INotebookEditor>>();
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -152,6 +154,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const uri = doc.uri;
         const model = await this.storage.load(uri);
+        updateModelForUseWithVSCodeNotebook(model); // take ownership of this model.
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
@@ -221,6 +224,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const model = await this.storage.load(e.document.uri);
-        updateCellModelWithChangesToVSCCell(e, model);
+        if (updateCellModelWithChangesToVSCCell(e, model)) {
+            // If we have updated the notebook document, then trigger changes.
+            this.contentProvider.notifyChangesToDocument(e.document);
+        }
     }
 }

@@ -20,6 +20,7 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry
 } from '../datascience/constants';
+import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -1638,9 +1639,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
-    [Telemetry.ExportNotebook]: never | undefined;
-    [Telemetry.ExportPythonFile]: never | undefined;
-    [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.ExportNotebookInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileInteractive]: never | undefined;
+    [Telemetry.ExportPythonFileAndOutputInteractive]: never | undefined;
+    [Telemetry.ClickedExportNotebookAsQuickPick]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAs]: { format: ExportFormat; cancelled?: boolean; successful?: boolean; opened?: boolean };
+    [Telemetry.ExportNotebookAsCommand]: { format: ExportFormat };
+    [Telemetry.ExportNotebookAsFailed]: { format: ExportFormat };
     [Telemetry.GetPasswordAttempt]: never | undefined;
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;

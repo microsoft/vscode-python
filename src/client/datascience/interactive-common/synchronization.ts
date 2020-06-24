@@ -230,11 +230,13 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_onRestartKernel]: MessageType.syncAcrossSameNotebooks,
     [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_binary_msg]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_msg_handled]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_msg_received]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookResult]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_mirror_execute]: MessageType.noIdea
 };

@@ -217,11 +217,11 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     !getSelectedAndFocusedInfo(this.props).focusedCellId &&
                     !this.props.settings?.extraSettings.useCustomEditorApi
                 ) {
-                    if (event.shiftKey && !event.ctrlKey && !event.altKey) {
+                    if (event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.redo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Redo);
-                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey) {
+                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
                         event.stopPropagation();
                         this.props.undo();
                         this.props.sendCommand(NativeKeyboardCommandTelemetry.Undo);

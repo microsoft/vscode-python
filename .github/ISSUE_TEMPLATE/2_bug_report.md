@@ -15,7 +15,6 @@ labels: classify, type-bug
 -   Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX
 -   Relevant/affected Python packages and their versions: XXX
 -   Relevant/affected Python-related VS Code extensions and their versions: XXX
--   Jedi or Language Server? (i.e. what is `"python.jediEnabled"` set to; more info #3977): XXX
 -   Value of the `python.languageServer` setting: XXX
 
 ## Expected behaviour

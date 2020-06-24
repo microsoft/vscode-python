@@ -57,6 +57,7 @@ export class ExportManagerFilePicker implements IExportManagerFilePicker {
         if (uri) {
             await this.updateFileSaveLocation(uri);
         }
+
         return uri;
     }
 

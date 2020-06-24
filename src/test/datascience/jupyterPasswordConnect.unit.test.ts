@@ -24,53 +24,57 @@ suite('JupyterPasswordConnect', () => {
         jupyterPasswordConnect = new JupyterPasswordConnect(appShell.object);
     });
 
-    test('getPasswordConnectionInfo', async () => {
+    function createMockSetup(secure: boolean, ok: boolean) {
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
+
+        //tslint:disable-next-line:no-http-string
+        const rootUrl = secure ? 'https://TESTNAME:8888/' : 'http://TESTNAME:8888/';
 
         // Mock our first call to get xsrf cookie
         const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockXsrfHeaders
-            .setup((mh) => mh.get('set-cookie'))
-            .returns(() => `_xsrf=${xsrfValue}`)
-            .verifiable(typemoq.Times.once());
-        mockXsrfResponse
-            .setup((mr) => mr.ok)
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
-        mockXsrfResponse
-            .setup((mr) => mr.headers)
-            .returns(() => mockXsrfHeaders.object)
-            .verifiable(typemoq.Times.once());
+        mockXsrfHeaders.setup((mh) => mh.get('set-cookie')).returns(() => `_xsrf=${xsrfValue}`);
+        mockXsrfResponse.setup((mr) => mr.ok).returns(() => ok);
+        mockXsrfResponse.setup((mr) => mr.status).returns(() => 302);
+        mockXsrfResponse.setup((mr) => mr.headers).returns(() => mockXsrfHeaders.object);
 
         fetchMock
             .setup((fm) =>
-                //tslint:disable-next-line:no-http-string
-                fm('http://TESTNAME:8888/login?', {
-                    method: 'get',
-                    redirect: 'manual',
-                    headers: { Connection: 'keep-alive' }
-                })
+                fm(
+                    `${rootUrl}login?`,
+                    typemoq.It.isObjectWith({
+                        method: 'get',
+                        headers: { Connection: 'keep-alive' }
+                    })
+                )
             )
-            .returns(() => Promise.resolve(mockXsrfResponse.object))
-            .verifiable(typemoq.Times.once());
+            .returns(() => Promise.resolve(mockXsrfResponse.object));
+        fetchMock
+            .setup((fm) =>
+                //tslint:disable-next-line:no-http-string
+                fm(
+                    `${rootUrl}tree?`,
+                    typemoq.It.isObjectWith({
+                        method: 'get',
+                        headers: { Connection: 'keep-alive' }
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(mockXsrfResponse.object));
+
+        return { fetchMock, mockXsrfHeaders, mockXsrfResponse };
+    }
+
+    test('getPasswordConnectionInfo', async () => {
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, true);
 
         // Mock our second call to get session cookie
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockSessionHeaders
-            .setup((mh) => mh.get('set-cookie'))
-            .returns(() => `${sessionName}=${sessionValue}`)
-            .verifiable(typemoq.Times.once());
-        mockSessionResponse
-            .setup((mr) => mr.status)
-            .returns(() => 302)
-            .verifiable(typemoq.Times.once());
-        mockSessionResponse
-            .setup((mr) => mr.headers)
-            .returns(() => mockSessionHeaders.object)
-            .verifiable(typemoq.Times.once());
+        mockSessionHeaders.setup((mh) => mh.get('set-cookie')).returns(() => `${sessionName}=${sessionValue}`);
+        mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
+        mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
         // typemoq doesn't love this comparison, so generalize it a bit
         fetchMock
@@ -88,8 +92,7 @@ suite('JupyterPasswordConnect', () => {
                     })
                 )
             )
-            .returns(() => Promise.resolve(mockSessionResponse.object))
-            .verifiable(typemoq.Times.once());
+            .returns(() => Promise.resolve(mockSessionResponse.object));
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             //tslint:disable-next-line:no-http-string
@@ -113,38 +116,7 @@ suite('JupyterPasswordConnect', () => {
     });
 
     test('getPasswordConnectionInfo allowUnauthorized', async () => {
-        // Set up our fake node fetch
-        const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
-
-        // Mock our first call to get xsrf cookie
-        const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
-        const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockXsrfHeaders
-            .setup((mh) => mh.get('set-cookie'))
-            .returns(() => `_xsrf=${xsrfValue}`)
-            .verifiable(typemoq.Times.once());
-        mockXsrfResponse
-            .setup((mr) => mr.ok)
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
-        mockXsrfResponse
-            .setup((mr) => mr.headers)
-            .returns(() => mockXsrfHeaders.object)
-            .verifiable(typemoq.Times.once());
-
-        //tslint:disable-next-line:no-http-string
-        fetchMock
-            .setup((fm) =>
-                fm(
-                    'https://TESTNAME:8888/login?',
-                    typemoq.It.isObjectWith({
-                        method: 'get',
-                        headers: { Connection: 'keep-alive' }
-                    })
-                )
-            )
-            .returns(() => Promise.resolve(mockXsrfResponse.object))
-            .verifiable(typemoq.Times.once());
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(true, true);
 
         // Mock our second call to get session cookie
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
@@ -153,14 +125,8 @@ suite('JupyterPasswordConnect', () => {
             .setup((mh) => mh.get('set-cookie'))
             .returns(() => `${sessionName}=${sessionValue}`)
             .verifiable(typemoq.Times.once());
-        mockSessionResponse
-            .setup((mr) => mr.status)
-            .returns(() => 302)
-            .verifiable(typemoq.Times.once());
-        mockSessionResponse
-            .setup((mr) => mr.headers)
-            .returns(() => mockSessionHeaders.object)
-            .verifiable(typemoq.Times.once());
+        mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
+        mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
         // typemoq doesn't love this comparison, so generalize it a bit
         //tslint:disable-next-line:no-http-string
@@ -178,8 +144,7 @@ suite('JupyterPasswordConnect', () => {
                     })
                 )
             )
-            .returns(() => Promise.resolve(mockSessionResponse.object))
-            .verifiable(typemoq.Times.once());
+            .returns(() => Promise.resolve(mockSessionResponse.object));
 
         //tslint:disable-next-line:no-http-string
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
@@ -203,37 +168,7 @@ suite('JupyterPasswordConnect', () => {
     });
 
     test('getPasswordConnectionInfo failure', async () => {
-        // Set up our fake node fetch
-        const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
-
-        // Mock our first call to get xsrf cookie
-        const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
-        const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockXsrfHeaders
-            .setup((mh) => mh.get('set-cookie'))
-            .returns(() => `_xsrf=${xsrfValue}`)
-            .verifiable(typemoq.Times.never());
-        // Status set to not ok and header fetch should not be hit
-        mockXsrfResponse
-            .setup((mr) => mr.ok)
-            .returns(() => false)
-            .verifiable(typemoq.Times.once());
-        mockXsrfResponse
-            .setup((mr) => mr.headers)
-            .returns(() => mockXsrfHeaders.object)
-            .verifiable(typemoq.Times.never());
-
-        fetchMock
-            .setup((fm) =>
-                //tslint:disable-next-line:no-http-string
-                fm('http://TESTNAME:8888/login?', {
-                    method: 'get',
-                    redirect: 'manual',
-                    headers: { Connection: 'keep-alive' }
-                })
-            )
-            .returns(() => Promise.resolve(mockXsrfResponse.object))
-            .verifiable(typemoq.Times.once());
+        const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             //tslint:disable-next-line:no-http-string
