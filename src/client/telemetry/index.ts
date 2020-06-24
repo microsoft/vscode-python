@@ -61,20 +61,20 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
 }
 
 // Shared properties set by the IExperimentationTelemetry implementation.
-const sharedProperties: Record<string, string> = {};
+const sharedProperties: Record<string, any> = {};
 /**
  * Set shared properties for all telemetry events.
- * (overload as necessary to ensure we have strongly typed telemetry props, this way we do not leak any PII inadvertently).
  */
-export function setSharedProperty(name: 'ds_notebookeditor', value?: 'old' | 'custom' | 'native'): void {
+export function setSharedProperty<P extends ISharedPropertyMapping, E extends keyof P>(name: E, value?: P[E]): void {
+    const propertyName = name as string;
     // Ignore such shared telemetry during unit tests.
-    if (isUnitTestExecution() && name === 'ds_notebookeditor') {
+    if (isUnitTestExecution() && propertyName.startsWith('ds_')) {
         return;
     }
     if (value === undefined) {
-        delete sharedProperties[name];
+        delete sharedProperties[propertyName];
     } else {
-        sharedProperties[name] = value;
+        sharedProperties[propertyName] = value;
     }
 }
 
@@ -325,6 +325,16 @@ function getCallsite(frame: stackTrace.StackFrame) {
         }
     }
     return parts.join('.');
+}
+
+/**
+ * Map all shared properties to their data types.
+ */
+export interface ISharedPropertyMapping {
+    /**
+     * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
+     */
+    ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
 }
 
 // Map all events to their properties
