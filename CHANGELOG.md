@@ -1,5 +1,14 @@
 # Changelog
 
+## 2020.6.2 (25 June 2020)
+
+### Fixes
+
+1. Fix `linting.pylintEnabled` setting check.
+   ([#12285](https://github.com/Microsoft/vscode-python/issues/12285))
+1. Don't modify LS settings if jediEnabled does not exist.
+   ([#12429](https://github.com/Microsoft/vscode-python/issues/12429))
+
 ## 2020.6.1 (17 June 2020)
 
 ### Fixes
