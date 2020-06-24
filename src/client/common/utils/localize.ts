@@ -30,17 +30,9 @@ export namespace Diagnostics {
         'diagnostics.upgradeCodeRunner',
         'Please update the Code Runner extension for it to be compatible with the Python extension.'
     );
-    export const removePythonPathSettingsJson = localize(
-        'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspace = localize(
-        'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
-        'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
+    export const removedPythonPathFromSettings = localize(
+        'diagnostics.removedPythonPathFromSettings',
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is now deprecated. You can get the path of your selected interpreter in the Output channel. [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
