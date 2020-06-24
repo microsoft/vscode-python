@@ -24,6 +24,7 @@ export class ExportToPDF extends ExportBase {
             path.dirname(tempFile.filePath),
             path.basename(tempFile.filePath, path.extname(tempFile.filePath))
         );
+        tempFile.dispose();
         const newFileName = path.basename(target.fsPath, path.extname(target.fsPath));
         const newSource = Uri.file(await this.createNewFile(directoryPath, newFileName, source));
 
