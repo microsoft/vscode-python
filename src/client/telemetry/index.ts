@@ -18,7 +18,8 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry
+    Telemetry,
+    VSCodeNativeTelemetry
 } from '../datascience/constants';
 import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -63,9 +64,14 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
 const sharedProperties: Record<string, string> = {};
 /**
  * Set shared properties for all telemetry events.
+ * (overload as necessary to ensure we have strongly typed telemetry props, this way we do not leak any PII inadvertently).
  */
-export function setSharedProperty(name: string, value: string): void {
-    sharedProperties[name] = value;
+export function setSharedProperty(name: 'ds_notebookeditor', value?: 'old' | 'custom' | 'native'): void {
+    if (value === undefined) {
+        delete sharedProperties[name];
+    } else {
+        sharedProperties[name] = value;
+    }
 }
 
 /**
@@ -96,6 +102,9 @@ function getTelemetryReporter() {
 export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
+
+// These properties are sent with every telemetry for DataScience.
+const sharedDataScienceProperties = ['notebookeditor'];
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
     eventName: E,
@@ -144,6 +153,16 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
+
+        // Remove shared DS properties from core extension telemetry.
+        sharedDataScienceProperties.forEach((shareProperty) => {
+            if (
+                customProperties[shareProperty] &&
+                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
+            ) {
+                delete customProperties[shareProperty];
+            }
+        });
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -2140,4 +2159,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+    [VSCodeNativeTelemetry.AddCell]: never | undefined;
+    [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
+    [VSCodeNativeTelemetry.MoveCell]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
+    [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
 }

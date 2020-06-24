@@ -983,6 +983,10 @@ export namespace DataScience {
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
         'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
     );
+    export const previewNotebookOnlySupportedInVSCInsiders = localize(
+        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
+        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
+    );
 }
 
 export namespace StartPage {

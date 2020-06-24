@@ -17,7 +17,7 @@ import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, Telemetry } from '../constants';
+import { Commands, Telemetry, VSCodeNativeTelemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
@@ -81,6 +81,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         await this.executeIndividualCell(notebookAndModel, document, cell, token, stopWatch);
     }
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
+    @captureTelemetry(VSCodeNativeTelemetry.RunAllCells, undefined, true)
     public async executeAllCells(document: NotebookDocument, token: CancellationToken): Promise<void> {
         const stopWatch = new StopWatch();
         const notebookAndModel = this.getNotebookAndModel(document);

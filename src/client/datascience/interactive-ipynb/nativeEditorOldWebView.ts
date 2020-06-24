@@ -62,6 +62,7 @@ enum AskForSaveResult {
 
 @injectable()
 export class NativeEditorOldWebView extends NativeEditor {
+    public readonly type = 'old';
     public get visible(): boolean {
         return this.viewState.visible;
     }

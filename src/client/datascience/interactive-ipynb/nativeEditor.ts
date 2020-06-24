@@ -96,6 +96,7 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
+    public readonly type: 'old' | 'custom' = 'custom';
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
