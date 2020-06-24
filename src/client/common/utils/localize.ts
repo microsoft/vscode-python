@@ -32,7 +32,7 @@ export namespace Diagnostics {
     );
     export const removedPythonPathFromSettings = localize(
         'diagnostics.removedPythonPathFromSettings',
-        'We removed the "python.pythonPath" setting from your settings.json file as the setting is now deprecated. You can get the path of your selected interpreter in the Output channel. [Learn more](https://aka.ms/AA7jfor).'
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is now deprecated. You can get the path of your selected interpreter in the Python output panel. [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
