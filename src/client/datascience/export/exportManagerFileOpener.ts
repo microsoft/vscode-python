@@ -7,7 +7,6 @@ import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookModel } from '../types';
