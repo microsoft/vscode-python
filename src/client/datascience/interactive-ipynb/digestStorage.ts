@@ -26,7 +26,6 @@ export class DigestStorage implements IDigestStorage {
         const fileLocation = path.join(await this.digestDir, fileName);
         // Since the signature is a hex digest, the character 'z' is being used to delimit the start and end of a single digest
         await this.fs.appendFile(fileLocation, `z${signature}z\n`);
-        // TODO figure out how slow this is, potentially optimize it
     }
 
     public async containsDigest(uri: string, signature: string) {
