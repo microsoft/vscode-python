@@ -1,6 +1,7 @@
 import { promises } from 'fs';
 import { tmpdir } from 'os';
 import * as path from 'path';
+import { traceError } from '../common/logger';
 import { sleep } from '../common/utils/async';
 
 export class CrossProcessLock {
@@ -23,6 +24,7 @@ export class CrossProcessLock {
                 await sleep(100);
             } catch (err) {
                 // Swallow the error and retry
+                traceError(err);
             }
             tries += 1;
         }
@@ -32,9 +34,13 @@ export class CrossProcessLock {
     public async unlock() {
         // Does nothing if the lock is not currently held
         if (this.acquired) {
-            // Delete the lockfile
-            await promises.unlink(this.lockFilePath);
-            this.acquired = false;
+            try {
+                // Delete the lockfile
+                await promises.unlink(this.lockFilePath);
+                this.acquired = false;
+            } catch (err) {
+                traceError(err);
+            }
         } else {
             throw new Error('Current process attempted to release a lock it does not hold');
         }
