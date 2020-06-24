@@ -115,7 +115,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
             if (!this.props.isNotebookTrusted) {
                 this.props.launchNotebookTrustPrompt();
             }
-        }
+        };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =
             (selectedInfo.selectedCellIndex ?? -1) < this.props.cellCount - 1 &&
