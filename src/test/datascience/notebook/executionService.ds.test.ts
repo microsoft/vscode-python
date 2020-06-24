@@ -11,8 +11,9 @@ import { commands } from 'vscode';
 import { CellErrorOutput } from '../../../../typings/vscode-proposed';
 import { IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable } from '../../../client/common/types';
+import { INotebookContentProvider } from '../../../client/datascience/notebook/types';
 import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     assertHasExecutionCompletedSuccessfully,
@@ -70,6 +71,46 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             15_000,
             'Cell did not get executed'
         );
+    });
+    test('Empty cell will not get executed', async () => {
+        await insertPythonCellAndWait('', 0);
+        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0];
+        await commands.executeCommand('notebook.cell.execute');
+
+        // After 2s, confirm status has remained unchanged.
+        await sleep(2_000);
+        assert.isUndefined(vscCell?.metadata.runState);
+    });
+    test('Empty cells will not get executed when running whole document', async () => {
+        await insertPythonCellAndWait('', 0);
+        await insertPythonCellAndWait('print("Hello World")', 1);
+        const vscCells = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        await commands.executeCommand('notebook.execute');
+
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(vscCells[1]),
+            15_000,
+            'Cell did not get executed'
+        );
+        assert.isUndefined(vscCells[0].metadata.runState);
+    });
+    test('Execute cell should mark a notebook as being dirty', async () => {
+        await insertPythonCellAndWait('print("Hello World")', 0);
+        const contentProvider = api.serviceContainer.get<INotebookContentProvider>(INotebookContentProvider);
+        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+        const changedEvent = createEventHandler(contentProvider, 'onDidChangeNotebook', disposables);
+
+        await commands.executeCommand('notebook.cell.execute');
+
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            15_000,
+            'Cell did not get executed'
+        );
+        assert.ok(changedEvent.fired, 'Notebook should be dirty after executing a cell');
     });
     test('Verify Cell output, execution count and status', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
@@ -233,11 +274,15 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Clear the cells
         await commands.executeCommand('notebook.clearAllCellsOutputs');
 
-        // Wait till execution count changes and status is error.
+        // Wait till execution count changes
         await waitForCondition(
             async () =>
+                !vscCells[0].metadata.executionOrder &&
+                !vscCells[1].metadata.executionOrder &&
                 vscCells[0].outputs.length === 0 &&
                 vscCells[1].outputs.length === 0 &&
+                cellModels[0].data.execution_count === null &&
+                cellModels[1].data.execution_count === null &&
                 ((cellModels[0].data.outputs as unknown) as []).length === 0 &&
                 ((cellModels[1].data.outputs as unknown) as []).length === 0,
             5_000,

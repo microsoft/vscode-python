@@ -156,10 +156,15 @@ export enum IPyWidgetMessages {
     IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSourceResponse',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
-    IPyWidgets_msg_handled = 'IPyWidgets_msg_handled',
+    // Message was received by the widget kernel and added to the msgChain queue for processing
+    IPyWidgets_msg_received = 'IPyWidgets_msg_received',
+    // IOPub message was fully handled by the widget kernel
+    IPyWidgets_iopub_msg_handled = 'IPyWidgets_iopub_msg_handled',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
+    // Message sent when the extension has finished an operation requested by the kernel UI for processing a message
+    IPyWidgets_ExtensionOperationHandled = 'IPyWidgets_ExtensionOperationHandled',
     IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
     IPyWidgets_MessageHookResult = 'IPyWidgets_MessageHookResult',
@@ -532,8 +537,10 @@ export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_binary_msg]: { id: string; data: any };
     public [IPyWidgetMessages.IPyWidgets_msg]: { id: string; data: string };
-    public [IPyWidgetMessages.IPyWidgets_msg_handled]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_msg_received]: { id: string };
+    public [IPyWidgetMessages.IPyWidgets_iopub_msg_handled]: { id: string };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
+    public [IPyWidgetMessages.IPyWidgets_ExtensionOperationHandled]: { id: string; type: IPyWidgetMessages };
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: { hookMsgId: string; lastHookedMsgId: string | undefined };
     public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
         requestId: string;

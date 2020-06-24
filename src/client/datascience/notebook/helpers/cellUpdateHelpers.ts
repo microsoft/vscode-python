@@ -17,7 +17,7 @@ import {
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
-import { traceError } from '../../../logging';
+import { traceError } from '../../../common/logger';
 import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
 import {
@@ -25,15 +25,18 @@ import {
     createVSCCellOutputsFromOutputs,
     updateVSCNotebookCellMetadata
 } from './helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
+const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
 
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
  * I.e. if a cell is added/deleted/moved then update our model.
+ * @returns {boolean} Returns `true` if the NotebookDocument was edited/updated.
  */
 export function updateCellModelWithChangesToVSCCell(
     change: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent,
     model: INotebookModel
-) {
+): boolean | undefined | void {
     switch (change.type) {
         case 'changeCellOutputs':
             return clearCellOutput(change, model);
@@ -51,15 +54,32 @@ export function updateCellModelWithChangesToVSCCell(
  * We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
  * I.e. cell output is already in our INotebookModel.
  * However we are interested in cell output being cleared (when user clears output).
+ * @returns {boolean} Return `true` if NotebookDocument was updated/edited.
  */
-function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel) {
+function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel): boolean {
     if (!change.cells.every((cell) => cell.outputs.length === 0)) {
-        return;
+        return false;
     }
-
+    // In the VS Code cells, also clear the cell results, execution counts and times.
+    change.cells.forEach((cell) => {
+        cell.metadata.runState = undefined;
+        cell.metadata.statusMessage = undefined;
+        cell.metadata.executionOrder = undefined;
+        cell.metadata.lastRunDuration = undefined;
+        cell.metadata.runStartTime = undefined;
+    });
     // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
         const cell = findMappedNotebookCellModel(vscCell, model.cells);
+        // tslint:disable-next-line: no-console
+        console.log(cell);
+        if (vscCell.cellKind === vscodeNotebookEnums.CellKind.Code) {
+            cell.data.execution_count = null;
+        }
+        if (cell.data.metadata.vscode) {
+            cell.data.metadata.vscode.start_execution_time = undefined;
+            cell.data.metadata.vscode.end_execution_time = undefined;
+        }
         cell.data.outputs = [];
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);
         model.update({
@@ -70,6 +90,8 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
             oldCells: [cell]
         });
     });
+
+    return true;
 }
 
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {

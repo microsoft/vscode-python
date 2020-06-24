@@ -96,7 +96,8 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
-        "workspaceContains:**/mspythonconfig.json"
+        "workspaceContains:**/mspythonconfig.json",
+        "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -1370,6 +1371,14 @@
                                     "type": "string"
                                 }
                             },
+                            "argsExpansion": {
+                                "enum": [
+                                    "none",
+                                    "shell"
+                                ],
+                                "description": "Whether to perform shell expansion on \"args\", or pass all values as is.",
+                                "default": "shell"
+                            },
                             "stopOnEntry": {
                                 "type": "boolean",
                                 "description": "Automatically stop after launch.",
@@ -1723,6 +1732,19 @@
                     "description": "Automatically update the language server.",
                     "scope": "application"
                 },
+                "python.logging.level": {
+                    "type": "string",
+                    "default": "error",
+                    "enum": [
+                        "off",
+                        "error",
+                        "warn",
+                        "info",
+                        "debug"
+                    ],
+                    "description": "The logging level the extension logs at, defaults to 'error'",
+                    "scope": "machine"
+                },
                 "python.experiments.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -1912,6 +1934,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
+                    "scope": "resource"
+                },
+                "python.dataScience.showKernelSelectionOnInteractiveWindow": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When set to true, enables the kernel selector in the Interactive Window. By default, the Interactive Window will use your Python Interpreters kernel.",
                     "scope": "resource"
                 },
                 "python.dataScience.enableScrollingForCellOutputs": {

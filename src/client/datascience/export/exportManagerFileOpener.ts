@@ -3,6 +3,7 @@ import { Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
