@@ -522,7 +522,7 @@ export namespace DataScience {
     );
     export const jupyterSelectUserAndPasswordTitle = localize(
         'DataScience.jupyterSelectUserAndPasswordTitle',
-        'Enter your user name and password to connect to jupyter hub'
+        'Enter your user name and password to connect to Jupyter Hub'
     );
     export const jupyterSelectUserPrompt = localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = localize(

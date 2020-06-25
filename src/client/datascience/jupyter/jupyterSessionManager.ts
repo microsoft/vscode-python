@@ -240,7 +240,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
-            if (pwSettings && pwSettings.requestHeaders) {
+            if (pwSettings && pwSettings.requestHeaders && (pwSettings.requestHeaders as any).Cookie) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
                 cookieString = (pwSettings.requestHeaders as any).Cookie;
 
