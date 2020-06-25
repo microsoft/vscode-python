@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
-import { instance, mock } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { IApplicationShell } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -17,6 +17,7 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 suite('JupyterPasswordConnect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
     let appShell: typemoq.IMock<IApplicationShell>;
+    let configService: ConfigurationService;
 
     const xsrfValue: string = '12341234';
     const sessionName: string = 'sessionName';
@@ -27,17 +28,28 @@ suite('JupyterPasswordConnect', () => {
         appShell.setup((a) => a.showInputBox(typemoq.It.isAny())).returns(() => Promise.resolve('Python'));
         const multiStepFactory = new MultiStepInputFactory(appShell.object);
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
-        const mockConfigSettings = mock(ConfigurationService);
+        configService = mock(ConfigurationService);
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             appShell.object,
             multiStepFactory,
             instance(mockDisposableRegistry),
-            instance(mockConfigSettings)
+            instance(configService)
         );
     });
 
     function createMockSetup(secure: boolean, ok: boolean) {
+        const dsSettings = {
+            allowUnauthorizedRemoteConnection: secure
+            // tslint:disable-next-line: no-any
+        } as any;
+        when(configService.getSettings(anything())).thenReturn({ datascience: dsSettings } as any);
+        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall(
+            (_a1, _a2, _a3, _a4) => {
+                return Promise.resolve();
+            }
+        );
+
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
 
@@ -47,7 +59,11 @@ suite('JupyterPasswordConnect', () => {
         // Mock our first call to get xsrf cookie
         const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockXsrfHeaders.setup((mh) => mh.get('set-cookie')).returns(() => `_xsrf=${xsrfValue}`);
+        mockXsrfHeaders
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return { 'set-cookie': [`_xsrf=${xsrfValue}`] };
+            });
         mockXsrfResponse.setup((mr) => mr.ok).returns(() => ok);
         mockXsrfResponse.setup((mr) => mr.status).returns(() => 302);
         mockXsrfResponse.setup((mr) => mr.headers).returns(() => mockXsrfHeaders.object);
@@ -101,7 +117,13 @@ suite('JupyterPasswordConnect', () => {
         // Mock our second call to get session cookie
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
-        mockSessionHeaders.setup((mh) => mh.get('set-cookie')).returns(() => `${sessionName}=${sessionValue}`);
+        mockSessionHeaders
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
         mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
@@ -131,7 +153,7 @@ suite('JupyterPasswordConnect', () => {
         assert(result, 'Failed to get password');
         if (result) {
             // tslint:disable-next-line: no-cookies
-            assert.ok((result.requestHeaders as any).cookie, 'No cookie');
+            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
         // Verfiy calls
@@ -149,9 +171,12 @@ suite('JupyterPasswordConnect', () => {
         const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
         const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
         mockSessionHeaders
-            .setup((mh) => mh.get('set-cookie'))
-            .returns(() => `${sessionName}=${sessionValue}`)
-            .verifiable(typemoq.Times.once());
+            .setup((mh) => mh.raw())
+            .returns(() => {
+                return {
+                    'set-cookie': [`${sessionName}=${sessionValue}`]
+                };
+            });
         mockSessionResponse.setup((mr) => mr.status).returns(() => 302);
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
@@ -181,7 +206,7 @@ suite('JupyterPasswordConnect', () => {
         assert(result, 'Failed to get password');
         if (result) {
             // tslint:disable-next-line: no-cookies
-            assert.ok((result.requestHeaders as any).cookie, 'No cookie');
+            assert.ok((result.requestHeaders as any).Cookie, 'No cookie');
         }
 
         // Verfiy calls
