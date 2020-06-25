@@ -152,7 +152,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
         }
 
         // Content changes based on if a markdown cell or not.
-        // Make renderOutput() conditional on whether notebook is in trusted state
         const content =
             this.isMarkdownCell() && !this.isShowingMarkdownEditor() ? (
                 <div className="cell-result-container">
@@ -232,7 +231,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private shouldRenderMarkdownEditor = (): boolean => {
         return (
-            this.isMarkdownCell() &&
+            this.isMarkdownCell() && this.props.isNotebookTrusted &&
             (this.isShowingMarkdownEditor() || this.props.cellVM.cell.id === Identifiers.EditCellId)
         );
     };
@@ -258,7 +257,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private shouldRenderOutput(): boolean {
-        if (this.isCodeCell()) {
+        if (this.isCodeCell() && this.props.isNotebookTrusted) {
             const cell = this.getCodeCell();
             return (
                 this.hasOutput() &&
@@ -275,6 +274,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
+        if (!this.props.isNotebookTrusted) {
+            return;
+        }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
