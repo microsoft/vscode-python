@@ -457,18 +457,30 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
         if (uris && uris.length > 0) {
             // Don't call the other overload as we'll end up with double telemetry.
-            const contents = await this.fileSystem.readFile(uris[0].fsPath);
-            const model = await this.notebookStorageProvider.createNew(contents);
-            await this.exportManager.export(ExportFormat.python, model);
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.fileSystem.readFile(uris[0].fsPath);
+                    const model = await this.notebookStorageProvider.createNew(contents);
+                    await this.exportManager.export(ExportFormat.python, model);
+                },
+                localize.DataScience.importingFormat(),
+                uris[0].fsPath
+            );
         }
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
     private async importNotebookOnFile(file: string): Promise<void> {
         if (file && file.length > 0) {
-            const contents = await this.fileSystem.readFile(file);
-            const model = await this.notebookStorageProvider.createNew(contents);
-            await this.exportManager.export(ExportFormat.python, model);
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.fileSystem.readFile(file);
+                    const model = await this.notebookStorageProvider.createNew(contents);
+                    await this.exportManager.export(ExportFormat.python, model);
+                },
+                localize.DataScience.importingFormat(),
+                file
+            );
         }
     }
 
