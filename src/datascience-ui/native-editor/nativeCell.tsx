@@ -133,6 +133,10 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return this.props.cellVM.selected;
     };
 
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
+    };
+
     private isFocused = () => {
         return this.props.cellVM.focused;
     };
@@ -271,14 +275,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 cell.outputs.length !== 0
             );
         } else if (this.isMarkdownCell()) {
-            return !this.isShowingMarkdownEditor() && this.props.isNotebookTrusted;
+            return !this.isShowingMarkdownEditor() && this.isNotebookTrusted();
         }
         return false;
     }
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
-        if (!this.props.isNotebookTrusted) {
+        if (!this.isNotebookTrusted()) {
             return; // Disable keyboard interaction with untrusted notebooks
         }
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;

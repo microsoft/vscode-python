@@ -198,9 +198,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
+    };
+
     // tslint:disable-next-line: cyclomatic-complexity
     private mainKeyDown = (event: KeyboardEvent) => {
-        if (!this.props.isNotebookTrusted) {
+        if (!this.isNotebookTrusted()) {
             return; // Disable keyboard interaction with untrusted notebooks
         }
         // Handler for key down presses in the main panel
