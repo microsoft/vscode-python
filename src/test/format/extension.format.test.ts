@@ -134,7 +134,10 @@ suite('Formatting - General', () => {
         compareFiles(formattedContents, textEditor.document.getText());
     }
 
-    test('AutoPep8', async () => {
+    test('AutoPep8', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12564
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         await testFormatting(
             new AutoPep8Formatter(ioc.serviceContainer),
             formattedAutoPep8,
