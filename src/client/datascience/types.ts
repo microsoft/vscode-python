@@ -536,6 +536,11 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
+    /**
+     * Type of editor, whether it is the old, custom or native notebook editor.
+     * Once VSC Notebook is stable, this property can be removed.
+     */
+    readonly type: 'old' | 'custom' | 'native';
     readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed: Event<INotebookEditor>;

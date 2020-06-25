@@ -19,7 +19,8 @@ import '../../common/extensions';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { Commands } from '../constants';
+import { captureTelemetry, setSharedProperty } from '../../telemetry';
+import { Commands, Telemetry } from '../constants';
 import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
@@ -83,6 +84,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.OpenNotebookInPreviewEditor, async (uri?: Uri) => {
                 if (uri) {
+                    setSharedProperty('ds_notebookeditor', 'native');
+                    captureTelemetry(Telemetry.OpenNotebook, { scope: 'command' }, false);
                     const integration = serviceContainer.get<NotebookIntegration>(NotebookIntegration);
                     // If user is not meant to be using VSC Notebooks, and it is not enabled,
                     // then enable it for side by side usage.
@@ -112,6 +115,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
+        setSharedProperty('ds_notebookeditor', 'native');
         if (this.notebooksWaitingToBeOpenedByUri.get(file.toString())) {
             return this.notebooksWaitingToBeOpenedByUri.get(file.toString())!.promise;
         }
@@ -132,7 +136,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         // We do not need this.
         return;
     }
+    @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
+        setSharedProperty('ds_notebookeditor', 'native');
         const model = await this.storage.createNew(contents, true);
         return this.open(model.file);
     }

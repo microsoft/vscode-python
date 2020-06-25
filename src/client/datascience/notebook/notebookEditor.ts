@@ -25,6 +25,7 @@ import { getDefaultCodeLanguage } from './helpers/helpers';
 import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
+    public readonly type = 'native';
     public get onDidChangeViewState(): Event<void> {
         return this.changedViewState.event;
     }

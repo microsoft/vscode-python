@@ -991,6 +991,10 @@ export namespace DataScience {
     );
     export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
     export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const previewNotebookOnlySupportedInVSCInsiders = localize(
+        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
+        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
+    );
 }
 
 export namespace StartPage {

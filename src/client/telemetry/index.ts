@@ -9,7 +9,7 @@ import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter'
 import { LanguageServerType } from '../activation/types';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { Architecture } from '../common/utils/platform';
@@ -18,7 +18,8 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry
+    Telemetry,
+    VSCodeNativeTelemetry
 } from '../datascience/constants';
 import { ExportFormat } from '../datascience/export/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
@@ -59,13 +60,21 @@ export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolea
     return settings.globalValue === false ? true : false;
 }
 
-// Shared properties set by the IExperimentationTelemetry implementation.
-const sharedProperties: Record<string, string> = {};
+const sharedProperties: Record<string, any> = {};
 /**
  * Set shared properties for all telemetry events.
  */
-export function setSharedProperty(name: string, value: string): void {
-    sharedProperties[name] = value;
+export function setSharedProperty<P extends ISharedPropertyMapping, E extends keyof P>(name: E, value?: P[E]): void {
+    const propertyName = name as string;
+    // Ignore such shared telemetry during unit tests.
+    if (isUnitTestExecution() && propertyName.startsWith('ds_')) {
+        return;
+    }
+    if (value === undefined) {
+        delete sharedProperties[propertyName];
+    } else {
+        sharedProperties[propertyName] = value;
+    }
 }
 
 /**
@@ -144,6 +153,17 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
         // Add shared properties to telemetry props (we may overwrite existing ones).
         Object.assign(customProperties, sharedProperties);
+
+        // Remove shared DS properties from core extension telemetry.
+        Object.keys(sharedProperties).forEach((shareProperty) => {
+            if (
+                customProperties[shareProperty] &&
+                shareProperty.startsWith('ds_') &&
+                !(eventNameSent.startsWith('DS_') || eventNameSent.startsWith('DATASCIENCE'))
+            ) {
+                delete customProperties[shareProperty];
+            }
+        });
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
@@ -302,6 +322,16 @@ function getCallsite(frame: stackTrace.StackFrame) {
         }
     }
     return parts.join('.');
+}
+
+/**
+ * Map all shared properties to their data types.
+ */
+export interface ISharedPropertyMapping {
+    /**
+     * For every DS telemetry we would like to know the type of Notebook Editor used when doing something.
+     */
+    ['ds_notebookeditor']: undefined | 'old' | 'custom' | 'native';
 }
 
 // Map all events to their properties
@@ -2140,4 +2170,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+    [VSCodeNativeTelemetry.AddCell]: never | undefined;
+    [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
+    [VSCodeNativeTelemetry.MoveCell]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToCode]: never | undefined;
+    [VSCodeNativeTelemetry.ChangeToMarkdown]: never | undefined;
+    [VSCodeNativeTelemetry.RunAllCells]: never | undefined;
 }
