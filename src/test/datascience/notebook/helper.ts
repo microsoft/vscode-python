@@ -182,6 +182,12 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     await shutdownAllNotebooks();
     sinon.restore();
 }
+export async function closeNotebooks(disposables: IDisposable[] = []) {
+    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
+    await commands.executeCommand('workbench.action.files.saveAll');
+    await closeActiveWindows();
+    disposeAllDisposables(disposables);
+}
 
 export async function startJupyter() {
     const { contentProvider, editorProvider } = await getServices();
