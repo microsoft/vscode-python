@@ -147,6 +147,8 @@ suite('Formatting - General', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Black', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12564
+        // tslint:disable-next-line: no-invalid-this
         if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
