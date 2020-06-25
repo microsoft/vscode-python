@@ -339,7 +339,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         if (response.ok) {
             const cookies = this.getCookies(response);
             if (cookies.has('_xsrf')) {
-                xsrfCookie = cookies.get('_xsrf');
+                xsrfCookie = cookies.get('_xsrf')?.split(';')[0];
             }
         }
 
