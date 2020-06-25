@@ -7,16 +7,19 @@ import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
+import { MockInputBox } from './mockInputBox';
+import { MockQuickPick } from './mockQuickPick';
 
-// tslint:disable:no-any max-func-body-length
+// tslint:disable:no-any max-func-body-length no-http-string
 suite('JupyterPasswordConnect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
-    let appShell: typemoq.IMock<IApplicationShell>;
+    let appShell: ApplicationShell;
     let configService: ConfigurationService;
 
     const xsrfValue: string = '12341234';
@@ -24,14 +27,14 @@ suite('JupyterPasswordConnect', () => {
     const sessionValue: string = 'sessionValue';
 
     setup(() => {
-        appShell = typemoq.Mock.ofType<IApplicationShell>();
-        appShell.setup((a) => a.showInputBox(typemoq.It.isAny())).returns(() => Promise.resolve('Python'));
-        const multiStepFactory = new MultiStepInputFactory(appShell.object);
+        appShell = mock(ApplicationShell);
+        when(appShell.showInputBox(anything(), anything())).thenReturn(Promise.resolve('Python'));
+        const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
-            appShell.object,
+            instance(appShell),
             multiStepFactory,
             instance(mockDisposableRegistry),
             instance(configService)
@@ -52,8 +55,6 @@ suite('JupyterPasswordConnect', () => {
 
         // Set up our fake node fetch
         const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
-
-        //tslint:disable-next-line:no-http-string
         const rootUrl = secure ? 'https://TESTNAME:8888/' : 'http://TESTNAME:8888/';
 
         // Mock our first call to get xsrf cookie
@@ -85,7 +86,6 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockXsrfResponse.object));
         fetchMock
             .setup((fm) =>
-                //tslint:disable-next-line:no-http-string
                 fm(
                     `${rootUrl}tree?`,
                     typemoq.It.isObjectWith({
@@ -97,7 +97,6 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockXsrfResponse.object));
         fetchMock
             .setup((fm) =>
-                //tslint:disable-next-line:no-http-string
                 fm(
                     `${rootUrl}hub/api`,
                     typemoq.It.isObjectWith({
@@ -131,7 +130,6 @@ suite('JupyterPasswordConnect', () => {
         fetchMock
             .setup((fm) =>
                 fm(
-                    //tslint:disable-next-line:no-http-string
                     'http://TESTNAME:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'post',
@@ -146,7 +144,6 @@ suite('JupyterPasswordConnect', () => {
             .returns(() => Promise.resolve(mockSessionResponse.object));
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
-            //tslint:disable-next-line:no-http-string
             'http://TESTNAME:8888/',
             fetchMock.object
         );
@@ -181,7 +178,6 @@ suite('JupyterPasswordConnect', () => {
         mockSessionResponse.setup((mr) => mr.headers).returns(() => mockSessionHeaders.object);
 
         // typemoq doesn't love this comparison, so generalize it a bit
-        //tslint:disable-next-line:no-http-string
         fetchMock
             .setup((fm) =>
                 fm(
@@ -198,7 +194,6 @@ suite('JupyterPasswordConnect', () => {
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
 
-        //tslint:disable-next-line:no-http-string
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
             'https://TESTNAME:8888/',
             fetchMock.object
@@ -221,7 +216,6 @@ suite('JupyterPasswordConnect', () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
-            //tslint:disable-next-line:no-http-string
             'http://TESTNAME:8888/',
             fetchMock.object
         );
@@ -231,5 +225,75 @@ suite('JupyterPasswordConnect', () => {
         mockXsrfHeaders.verifyAll();
         mockXsrfResponse.verifyAll();
         fetchMock.verifyAll();
+    });
+
+    function createJupyterHubSetup() {
+        const dsSettings = {
+            allowUnauthorizedRemoteConnection: false
+            // tslint:disable-next-line: no-any
+        } as any;
+        when(configService.getSettings(anything())).thenReturn({ datascience: dsSettings } as any);
+        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall(
+            (_a1, _a2, _a3, _a4) => {
+                return Promise.resolve();
+            }
+        );
+
+        const quickPick = new MockQuickPick('');
+        const input = new MockInputBox('test');
+        when(appShell.createQuickPick()).thenReturn(quickPick!);
+        when(appShell.createInputBox()).thenReturn(input);
+
+        const hubActiveResponse = mock(nodeFetch.Response);
+        when(hubActiveResponse.ok).thenReturn(true);
+        when(hubActiveResponse.status).thenReturn(200);
+        const invalidResponse = mock(nodeFetch.Response);
+        when(invalidResponse.ok).thenReturn(false);
+        when(invalidResponse.status).thenReturn(404);
+        const loginResponse = mock(nodeFetch.Response);
+        const loginHeaders = mock(nodeFetch.Headers);
+        when(loginHeaders.raw()).thenReturn({ 'set-cookie': ['super-cookie-login=foobar'] });
+        when(loginResponse.ok).thenReturn(true);
+        when(loginResponse.status).thenReturn(302);
+        when(loginResponse.headers).thenReturn(instance(loginHeaders));
+        const tokenResponse = mock(nodeFetch.Response);
+        when(tokenResponse.ok).thenReturn(true);
+        when(tokenResponse.status).thenReturn(200);
+        when(tokenResponse.json()).thenResolve({
+            token: 'foobar',
+            id: '1'
+        });
+
+        instance(hubActiveResponse as any).then = undefined;
+        instance(invalidResponse as any).then = undefined;
+        instance(loginResponse as any).then = undefined;
+        instance(tokenResponse as any).then = undefined;
+
+        return async (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => {
+            const urlString = url.toString().toLowerCase();
+            if (urlString === 'http://testname:8888/hub/api') {
+                return instance(hubActiveResponse);
+            } else if (urlString === 'http://testname:8888/hub/login?next=') {
+                return instance(loginResponse);
+            } else if (
+                urlString === 'http://testname:8888/hub/api/users/test/tokens' &&
+                init &&
+                init.method === 'POST' &&
+                (init.headers as any).Referer === 'http://testname:8888/hub/login' &&
+                (init.headers as any).Cookie === ';super-cookie-login=foobar'
+            ) {
+                return instance(tokenResponse);
+            }
+            return instance(invalidResponse);
+        };
+    }
+    test('getPasswordConnectionInfo jupyter hub', async () => {
+        const fetchMock = createJupyterHubSetup();
+
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock);
+        assert.ok(result, 'No hub connection info');
+        assert.equal(result?.remappedBaseUrl, 'http://testname:8888/user/test', 'Url not remapped');
+        assert.equal(result?.remappedToken, 'foobar', 'Token should be returned in URL');
+        assert.ok(result?.requestHeaders, 'No request headers returned for jupyter hub');
     });
 });
