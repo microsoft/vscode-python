@@ -240,9 +240,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
-            if (pwSettings && pwSettings.requestHeaders && (pwSettings.requestHeaders as any).Cookie) {
+            if (pwSettings && pwSettings.requestHeaders) {
                 requestInit = { ...requestInit, headers: pwSettings.requestHeaders };
-                cookieString = (pwSettings.requestHeaders as any).Cookie;
+                cookieString = (pwSettings.requestHeaders as any).Cookie || '';
 
                 // Password may have overwritten the base url and token as well
                 if (pwSettings.remappedBaseUrl) {
