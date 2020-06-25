@@ -298,7 +298,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 break;
 
             case InteractiveWindowMessages.LaunchNotebookTrustPrompt:
-                this.launchNotebookTrustPrompt();
+                this.handleMessage(message, payload, this.launchNotebookTrustPrompt);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
