@@ -81,13 +81,9 @@ export class NotebookEditor implements INotebookEditor {
         private readonly configurationService: IConfigurationService,
         disposables: IDisposableRegistry
     ) {
-        disposables.push(model.onDidEdit(() => this._modified.fire(this));
-        disposables.push(model.changed(
-            (e) => {
-                if (e.kind === 'save') {
-                    this._saved.fire(this);
-                }
-            }));
+        disposables.push(model.onDidEdit(() => this._modified.fire(this)));
+        disposables.push(model.saved(this._saved.fire.bind(this._saved, this)));
+        disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
         // Not used.
@@ -132,9 +128,6 @@ export class NotebookEditor implements INotebookEditor {
     public notifyExecution(code: string) {
         this._executed.fire(this);
         this.executedCode.fire(code);
-    }
-    public notifyClosed() {
-        this._closed.fire(this);
     }
     public async interruptKernel(): Promise<void> {
         this.executionService.cancelPendingExecutions(this.document);

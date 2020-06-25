@@ -153,7 +153,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!(editor instanceof NotebookEditor)) {
             throw new Error('Executing Notebook with another Editor');
         }
-        editor.notifyClosed();
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
     }
