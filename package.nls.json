@@ -182,7 +182,7 @@
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
     "Common.reportThisIssue": "Report this issue",
-    "CommonSurvey.remindMeLaterLabel": "No, remind me later",
+    "CommonSurvey.remindMeLaterLabel": "Remind me later",
     "CommonSurvey.yesLabel": "Yes, take survey now",
     "CommonSurvey.noLabel": "No, thanks",
     "OutputChannelNames.languageServer": "Python Language Server",

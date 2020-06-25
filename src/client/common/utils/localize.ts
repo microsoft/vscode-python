@@ -92,7 +92,7 @@ export namespace Common {
 }
 
 export namespace CommonSurvey {
-    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'No, remind me later');
+    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'Remind me later');
     export const yesLabel = localize('CommonSurvey.yesLabel', 'Yes, take survey now');
     export const noLabel = localize('CommonSurvey.noLabel', 'No, thanks');
 }
