@@ -27,8 +27,8 @@
     "DataScience.convertingToPDF": "Converting to PDF",
     "DataScience.exportHTMLQuickPickLabel": "HTML",
     "DataScience.exportPDFQuickPickLabel": "PDF",
-	"DataScience.openExportedFileMessage": "Would you like to open the exported file?",
-	"DataScience.openExportFileYes": "Yes",
+    "DataScience.openExportedFileMessage": "Would you like to open the exported file?",
+    "DataScience.openExportFileYes": "Yes",
     "DataScience.openExportFileNo": "No",
     "DataScience.failedExportMessage": "Export failed.",
     "DataScience.exportToPDFDependencyMessage": "If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions please look [here](https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex). \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers \"Print to PDF\" feature.",
@@ -182,6 +182,9 @@
     "Common.install": "Install",
     "Common.learnMore": "Learn more",
     "Common.reportThisIssue": "Report this issue",
+    "CommonSurvey.remindMeLaterLabel": "No, remind me later",
+    "CommonSurvey.yesLabel": "Yes, take survey now",
+    "CommonSurvey.noLabel": "No, thanks",
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
@@ -537,5 +540,6 @@
     "DataScience.reloadVSCodeNotebookEditor": "Please reload VS Code to use the Notebook Editor",
     "DataScience.step": "Run next line (F10)",
     "DataScience.usingPreviewNotebookWithOtherNotebookWarning": "Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.",
-    "DataScience.previewNotebookOnlySupportedInVSCInsiders": "The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code."
+    "DataScience.previewNotebookOnlySupportedInVSCInsiders": "The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.",
+    "DataScienceNotebookSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the preview Notebook Editor is working for you?"
 }

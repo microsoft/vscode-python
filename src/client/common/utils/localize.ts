@@ -91,6 +91,12 @@ export namespace Common {
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
 }
 
+export namespace CommonSurvey {
+    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'No, remind me later');
+    export const yesLabel = localize('CommonSurvey.yesLabel', 'Yes, take survey now');
+    export const noLabel = localize('CommonSurvey.noLabel', 'No, thanks');
+}
+
 export namespace AttachProcess {
     export const unsupportedOS = localize('AttachProcess.unsupportedOS', "Operating system '{0}' not supported.");
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
@@ -259,6 +265,12 @@ export namespace DataScienceSurveyBanner {
     );
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
+}
+export namespace DataScienceNotebookSurveyBanner {
+    export const bannerMessage = localize(
+        'DataScienceNotebookSurveyBanner.bannerMessage',
+        'Can you please take 2 minutes to tell us how the preview Notebook Editor is working for you?'
+    );
 }
 
 export namespace Installer {
