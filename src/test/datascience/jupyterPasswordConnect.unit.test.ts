@@ -8,7 +8,6 @@ import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../client/common/application/types';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
@@ -28,7 +27,7 @@ suite('JupyterPasswordConnect', () => {
 
     setup(() => {
         appShell = mock(ApplicationShell);
-        when(appShell.showInputBox(anything(), anything())).thenReturn(Promise.resolve('Python'));
+        when(appShell.showInputBox(anything())).thenReturn(Promise.resolve('Python'));
         const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
