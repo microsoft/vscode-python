@@ -296,6 +296,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 0}
                     focusPending={this.props.focusPending}
                     language={this.props.language}
+                    isNotebookTrusted={true}
                 />
             );
         }

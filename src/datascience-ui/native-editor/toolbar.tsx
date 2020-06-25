@@ -265,6 +265,7 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             launchNotebookTrustPrompt={launchNotebookTrustPrompt}
                         />
                         <KernelSelection
+                            isNotebookTrusted={this.props.isNotebookTrusted}
                             baseTheme={this.props.baseTheme}
                             font={this.props.font}
                             kernel={this.props.kernel}

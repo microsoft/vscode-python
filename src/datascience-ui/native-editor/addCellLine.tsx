@@ -10,6 +10,7 @@ interface IAddCellLineProps {
     baseTheme: string;
     includePlus: boolean;
     className: string;
+    isNotebookTrusted: boolean;
     click(): void;
 }
 
@@ -30,6 +31,7 @@ export class AddCellLine extends React.Component<IAddCellLineProps> {
                     role="button"
                     aria-pressed="false"
                     title={tooltip}
+                    disabled={!this.props.isNotebookTrusted}
                     aria-label={tooltip}
                     className="add-cell-line-button"
                     onClick={this.props.click}

@@ -10,6 +10,7 @@ export interface IKernelSelectionProps {
     baseTheme: string;
     font: IFont;
     kernel: IServerState;
+    isNotebookTrusted?: boolean;
     selectServer(): void;
     selectKernel(): void;
 }
@@ -70,6 +71,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
                     style={displayNameTextWidth}
                     onClick={this.selectKernel}
                     role="button"
+                    aria-disabled={!!this.props.isNotebookTrusted}
                 >
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
@@ -85,7 +87,9 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     }
 
     private selectKernel() {
-        this.props.selectKernel();
+        if (this.props.isNotebookTrusted) {
+            this.props.selectKernel();
+        }
     }
     private getIcon(): ImageName {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted

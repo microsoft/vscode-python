@@ -30,6 +30,7 @@ interface ICellInputProps {
     showLineNumbers?: boolean;
     font: IFont;
     disableUndoStack: boolean;
+    isNotebookTrusted: boolean;
     /**
      * Only used in interactive window.
      */
@@ -84,7 +85,7 @@ export class CellInput extends React.Component<ICellInputProps> {
     };
 
     private shouldRenderMarkdownEditor = (): boolean => {
-        return this.isMarkdownCell();
+        return this.isMarkdownCell() && this.props.isNotebookTrusted;
     };
 
     private getRenderableInputCode = (): string => {
@@ -101,7 +102,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         code={this.getRenderableInputCode()}
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
-                        readOnly={!this.props.cellVM.editable}
+                        readOnly={!this.props.cellVM.editable || !this.props.isNotebookTrusted}
                         showWatermark={this.props.showWatermark}
                         ref={this.codeRef}
                         onChange={this.props.onCodeChange}
@@ -157,6 +158,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         font={this.props.font}
                         disableUndoStack={this.props.disableUndoStack}
                         version={this.props.codeVersion}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </div>
             );
