@@ -9,7 +9,7 @@ import '../common/extensions';
 import { IPythonDaemonExecutionService, IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent, setSharedProperty } from '../telemetry';
 import { JupyterDaemonModule, Telemetry } from './constants';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService';
@@ -37,9 +37,10 @@ export class Activation implements IExtensionSingleActivationService {
         this.tracker.startTracking();
     }
 
-    private onDidOpenNotebookEditor(_: INotebookEditor) {
+    private onDidOpenNotebookEditor(e: INotebookEditor) {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
+        setSharedProperty('ds_notebookeditor', e.type);
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
         // Warm up our selected interpreter for the extension
         this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();

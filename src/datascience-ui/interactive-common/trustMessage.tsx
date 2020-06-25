@@ -5,6 +5,7 @@ import { IFont } from './mainState';
 interface ITrustMessageProps {
     isNotebookTrusted: boolean;
     font: IFont;
+    launchNotebookTrustPrompt(): void;
 }
 
 export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
@@ -25,7 +26,12 @@ export class TrustMessage extends React.PureComponent<ITrustMessageProps> {
 
         return (
             <div className="kernel-status" style={dynamicFont}>
-                <div className="kernel-status-section kernel-status-server" style={trustTextWidth} role="button">
+                <div
+                    className="kernel-status-section kernel-status-section-hoverable kernel-status-status"
+                    style={trustTextWidth}
+                    onClick={this.props.launchNotebookTrustPrompt}
+                    role="button"
+                >
                     <div className="kernel-status-text">{text}</div>
                 </div>
                 <div className="kernel-status-divider" />

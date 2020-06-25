@@ -25,8 +25,10 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
-            port: defaultPort,
-            host: defaultHost,
+            connect: {
+                host: defaultHost,
+                port: defaultPort
+            },
             pathMappings: [
                 {
                     // tslint:disable-next-line:no-invalid-template-strings
@@ -36,37 +38,40 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             ]
         };
 
-        config.host = await input.showInputBox({
+        const connect = config.connect!;
+        connect.host = await input.showInputBox({
             title: DebugConfigStrings.attach.enterRemoteHost.title(),
             step: 1,
             totalSteps: 2,
-            value: config.host || defaultHost,
+            value: connect.host || defaultHost,
             prompt: DebugConfigStrings.attach.enterRemoteHost.prompt(),
             validate: (value) =>
                 Promise.resolve(
                     value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid()
                 )
         });
-        if (!config.host) {
-            config.host = defaultHost;
+        if (!connect.host) {
+            connect.host = defaultHost;
         }
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: config.host !== defaultHost
+            manuallyEnteredAValue: connect.host !== defaultHost
         });
         Object.assign(state.config, config);
         return (_) => this.configurePort(input, state.config);
     }
+
     protected async configurePort(
         input: MultiStepInput<DebugConfigurationState>,
         config: Partial<AttachRequestArguments>
     ) {
+        const connect = config.connect || (config.connect = {});
         const port = await input.showInputBox({
             title: DebugConfigStrings.attach.enterRemotePort.title(),
             step: 2,
             totalSteps: 2,
-            value: (config.port || defaultPort).toString(),
+            value: (connect.port || defaultPort).toString(),
             prompt: DebugConfigStrings.attach.enterRemotePort.prompt(),
             validate: (value) =>
                 Promise.resolve(
@@ -76,14 +81,14 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
                 )
         });
         if (port && /^\d+$/.test(port.trim())) {
-            config.port = parseInt(port, 10);
+            connect.port = parseInt(port, 10);
         }
-        if (!config.port) {
-            config.port = defaultPort;
+        if (!connect.port) {
+            connect.port = defaultPort;
         }
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: config.port !== defaultPort
+            manuallyEnteredAValue: connect.port !== defaultPort
         });
     }
 }

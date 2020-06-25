@@ -395,6 +395,21 @@ export enum NativeMouseCommandTelemetry {
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER'
 }
 
+/**
+ * Notebook editing in VS Code Notebooks is handled by VSC.
+ * There's no way for us to know whether user added a cell using keyboard or not.
+ * Similarly a cell could have been added as part of an undo operation.
+ * All we know is previously user had n # of cells and now they have m # of cells.
+ */
+export enum VSCodeNativeTelemetry {
+    AddCell = 'DATASCIENCE.VSCODE_NATIVE.INSERT_CELL',
+    RunAllCells = 'DATASCIENCE.VSCODE_NATIVE.RUN_ALL',
+    DeleteCell = 'DATASCIENCE.VSCODE_NATIVE.DELETE_CELL',
+    MoveCell = 'DATASCIENCE.VSCODE_NATIVE.MOVE_CELL',
+    ChangeToCode = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_CODE', // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
+    ChangeToMarkdown = 'DATASCIENCE.VSCODE_NATIVE.CHANGE_TO_MARKDOWN' // Not guaranteed to work see, https://github.com/microsoft/vscode/issues/100042
+}
+
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
     export const JupyterDataRateHelpLink = 'https://aka.ms/AA5ggm0'; // This redirects here: https://jupyter-notebook.readthedocs.io/en/stable/config.html

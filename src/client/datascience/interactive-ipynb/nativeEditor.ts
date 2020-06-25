@@ -78,6 +78,7 @@ import {
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
+    ITrustService,
     WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -96,6 +97,7 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
+    public readonly type: 'old' | 'custom' = 'custom';
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -181,6 +183,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(ITrustService) private trustService: ITrustService,
         @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
@@ -293,6 +296,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // call this to update the whole document for intellisense
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.handleMessage(message, payload, this.loadCellsComplete);
+                break;
+
+            case InteractiveWindowMessages.LaunchNotebookTrustPrompt:
+                this.handleMessage(message, payload, this.launchNotebookTrustPrompt);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -601,6 +608,35 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         value[updatedName] = value[name];
         delete value[name];
         this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
+    }
+
+    private async launchNotebookTrustPrompt() {
+        const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
+        const selection = await this.applicationShell.showInformationMessage(
+            localize.DataScience.launchNotebookTrustPrompt(),
+            ...prompts
+        );
+        if (!selection) {
+            return;
+        }
+        if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
+            try {
+                const contents = this.model.getContent();
+                await this.trustService.trustNotebook(this.model.file.toString(), contents);
+                // Update model trust
+                this.model.update({
+                    source: 'user',
+                    kind: 'updateTrust',
+                    oldDirty: this.model.isDirty,
+                    newDirty: this.model.isDirty,
+                    isNotebookTrusted: true
+                });
+                // Tell UI to update main state
+                await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
+            } catch (err) {
+                traceError(err);
+            }
+        }
     }
 
     private interruptExecution() {

@@ -18,6 +18,8 @@ import {
 } from '../../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../common/logger';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { VSCodeNativeTelemetry } from '../../constants';
 import { INotebookModel } from '../../types';
 import { findMappedNotebookCellModel } from './cellMappers';
 import {
@@ -94,8 +96,21 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
     return true;
 }
 
+/**
+ * VS Code doesn't seem to fire this when changing between markdown & code.
+ * Its only fired when changing the language from python to csharp.
+ * https://github.com/microsoft/vscode/issues/100042
+ */
 function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
     const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
+    if (
+        (change.cell.cellKind === vscodeNotebookEnums.CellKind.Markdown && cellModel.data.cell_type === 'markdown') ||
+        (change.cell.cellKind === vscodeNotebookEnums.CellKind.Code && cellModel.data.cell_type === 'code')
+    ) {
+        // This is when user changes from python to csharp or similar.
+        return;
+    }
+    // Here we have changed from a code cell to markdown or vice versa.
     const cellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
     // tslint:disable-next-line: no-any
     change.cell.outputs = createVSCCellOutputsFromOutputs(cellData.outputs as any);
@@ -106,15 +121,23 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
     // Create a new cell & replace old one.
     const oldCellIndex = model.cells.indexOf(cellModel);
     model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
+    sendTelemetryEvent(
+        change.cell.cellKind === vscodeNotebookEnums.CellKind.Markdown
+            ? VSCodeNativeTelemetry.ChangeToMarkdown
+            : VSCodeNativeTelemetry.ChangeToCode
+    );
 }
 
 function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
     if (isCellMoveChange(change)) {
         handleCellMove(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.MoveCell);
     } else if (isCellDelete(change)) {
         handleCellDelete(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.DeleteCell);
     } else if (isCellInsertion(change)) {
         handleCellInsertion(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.AddCell);
     } else {
         traceError('Unsupported cell change', change);
         throw new Error('Unsupported cell change');

@@ -46,6 +46,7 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     interruptKernel: typeof actionCreators.interruptKernel;
     selectKernel: typeof actionCreators.selectKernel;
     selectServer: typeof actionCreators.selectServer;
+    launchNotebookTrustPrompt: typeof actionCreators.launchNotebookTrustPrompt;
     isNotebookTrusted: boolean;
 };
 
@@ -109,6 +110,11 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         const selectServer = () => {
             this.props.selectServer();
             this.props.sendCommand(NativeMouseCommandTelemetry.SelectServer);
+        };
+        const launchNotebookTrustPrompt = () => {
+            if (!this.props.isNotebookTrusted) {
+                this.props.launchNotebookTrustPrompt();
+            }
         };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =
@@ -253,7 +259,11 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                         </ImageButton>
                     </div>
                     <div className={'jupyter-info-container'}>
-                        <TrustMessage font={this.props.font} isNotebookTrusted={this.props.isNotebookTrusted} />
+                        <TrustMessage
+                            isNotebookTrusted={this.props.isNotebookTrusted}
+                            font={this.props.font}
+                            launchNotebookTrustPrompt={launchNotebookTrustPrompt}
+                        />
                         <KernelSelection
                             baseTheme={this.props.baseTheme}
                             font={this.props.font}

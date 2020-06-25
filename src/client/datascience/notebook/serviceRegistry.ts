@@ -11,6 +11,7 @@ import { NotebookExecutionService } from './executionService';
 import { NotebookIntegration } from './integration';
 import { NotebookKernel } from './notebookKernel';
 import { NotebookOutputRenderer } from './renderer';
+import { NotebookSurveyBanner, NotebookSurveyDataLogger } from './survey';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -26,5 +27,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         CellEditSyncService
+    );
+    serviceManager.addSingleton<NotebookSurveyBanner>(NotebookSurveyBanner, NotebookSurveyBanner);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        NotebookSurveyDataLogger
     );
 }

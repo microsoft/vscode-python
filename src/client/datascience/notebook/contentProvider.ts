@@ -16,7 +16,7 @@ import type {
 import { ICommandManager } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
@@ -70,6 +70,9 @@ export class NotebookContentProvider implements INotebookContentProvider {
         const model = await (openContext.backupId
             ? this.notebookStorage.load(uri, undefined, openContext.backupId)
             : this.notebookStorage.load(uri, undefined, true));
+
+        setSharedProperty('ds_notebookeditor', 'native');
+        sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
