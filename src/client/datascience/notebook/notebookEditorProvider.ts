@@ -150,6 +150,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     private closedEditor(editor: INotebookEditor): void {
+        if (!(editor instanceof NotebookEditor)) {
+            throw new Error('Executing Notebook with another Editor');
+        }
+        editor.notifyClosed();
         this.openedEditors.delete(editor);
         this._onDidCloseNotebookEditor.fire(editor);
     }
@@ -175,7 +179,8 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 notebookProvider,
                 this.statusProvider,
                 this.appShell,
-                this.configurationService
+                this.configurationService,
+                this.disposables
             );
             this.onEditorOpened(editor);
         }
