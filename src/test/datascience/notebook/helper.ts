@@ -104,8 +104,11 @@ export async function deleteCell(index: number = 0) {
 export async function deleteAllCellsAndWait(index: number = 0) {
     const { vscodeNotebook, editorProvider } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    const vscCells = activeEditor?.document.cells!;
+    if (!activeEditor || !editorProvider.activeEditor) {
+        return;
+    }
     const modelCells = editorProvider.activeEditor?.model?.cells!;
+    const vscCells = activeEditor.document.cells!;
     let previousCellOut = vscCells.length;
     while (previousCellOut) {
         await new Promise((resolve) =>
