@@ -153,7 +153,10 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
     });
-    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async () => {
+    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12567
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
             'getInterpreterInformation'
