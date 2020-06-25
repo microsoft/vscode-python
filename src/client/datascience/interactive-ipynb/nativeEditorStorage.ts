@@ -153,9 +153,15 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        if (this.useNativeEditorApi) {
+            throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
+        }
         edits.forEach((e) => this.update({ ...e, source: 'redo' }));
     }
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        if (this.useNativeEditorApi) {
+            throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
+        }
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }
 
@@ -163,20 +169,27 @@ export class NativeEditorNotebookModel implements INotebookModel {
         return this.generateNotebookContent();
     }
 
-    public handleModelChange(change: NotebookModelChange) {
+    private handleModelChange(change: NotebookModelChange) {
         const oldDirty = this.isDirty;
         let changed = false;
 
-        switch (change.source) {
-            case 'redo':
-            case 'user':
-                changed = this.handleRedo(change);
-                break;
-            case 'undo':
-                changed = this.handleUndo(change);
-                break;
-            default:
-                break;
+        if (this.useNativeEditorApi) {
+            changed = true;
+            if (change.kind === 'save') {
+                this._saved.fire();
+            }
+        } else {
+            switch (change.source) {
+                case 'redo':
+                case 'user':
+                    changed = this.handleRedo(change);
+                    break;
+                case 'undo':
+                    changed = this.handleUndo(change);
+                    break;
+                default:
+                    break;
+            }
         }
 
         // Forward onto our listeners if necessary
@@ -224,20 +237,12 @@ export class NativeEditorNotebookModel implements INotebookModel {
                 break;
             case 'save':
                 this._state.saveChangeCount = this._state.changeCount;
-                // Trigger event.
-                if (this.useNativeEditorApi) {
-                    changed = true;
-                }
                 this._saved.fire();
                 break;
             case 'saveAs':
                 this._state.saveChangeCount = this._state.changeCount;
                 this._state.changeCount = this._state.saveChangeCount = 0;
                 this._state.file = change.target;
-                // Trigger event.
-                if (this.useNativeEditorApi) {
-                    changed = true;
-                }
                 break;
             default:
                 break;

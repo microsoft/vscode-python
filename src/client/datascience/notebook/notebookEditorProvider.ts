@@ -69,7 +69,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookExecutionService) private readonly executionService: INotebookExecutionService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
@@ -169,11 +168,12 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         let editor = this.notebookEditorsByUri.get(uri.toString());
         if (!editor) {
             const notebookProvider = this.serviceContainer.get<INotebookProvider>(INotebookProvider);
+            const executionService = this.serviceContainer.get<INotebookExecutionService>(INotebookExecutionService);
             editor = new NotebookEditor(
                 model,
                 doc,
                 this.vscodeNotebook,
-                this.executionService,
+                executionService,
                 this.commandManager,
                 notebookProvider,
                 this.statusProvider,

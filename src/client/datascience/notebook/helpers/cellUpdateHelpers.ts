@@ -178,6 +178,15 @@ function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel)
     const indexOfCellToSwap = model.cells.indexOf(cellToSwap);
     model.cells[insertChange.start] = cellToSwap;
     model.cells[indexOfCellToSwap] = cellToSwapWith;
+    // Get model to fire events.
+    model.update({
+        source: 'user',
+        kind: 'swap',
+        firstCellId: cellToSwap.id,
+        secondCellId: cellToSwapWith.id,
+        oldDirty: model.isDirty,
+        newDirty: true
+    });
 }
 function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookModel) {
     assert.equal(change.changes.length, 1, 'When inserting cells we must have only 1 change');
@@ -186,10 +195,28 @@ function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookM
     const cell = change.changes[0].items[0];
     const newCell = createCellFromVSCNotebookCell(cell, model);
     model.cells.splice(insertChange.start, 0, newCell);
+    // Get model to fire events.
+    model.update({
+        source: 'user',
+        kind: 'insert',
+        cell: newCell,
+        index: insertChange.start,
+        oldDirty: model.isDirty,
+        newDirty: true
+    });
 }
 function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookModel) {
     assert.equal(change.changes.length, 1, 'When deleting cells we must have only 1 change');
     const deletionChange = change.changes[0];
     assert.equal(deletionChange.deletedCount, 1, 'Deleting more than one cell is not supported');
-    model.cells.splice(deletionChange.start, 1);
+    const cellToRemove = model.cells.splice(deletionChange.start, 1);
+    // Get model to fire events.
+    model.update({
+        source: 'user',
+        kind: 'remove',
+        cell: cellToRemove[0],
+        index: deletionChange.start,
+        oldDirty: model.isDirty,
+        newDirty: true
+    });
 }

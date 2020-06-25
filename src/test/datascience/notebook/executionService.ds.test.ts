@@ -74,7 +74,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'Cell did not get executed'
         );
     });
-    test('Executed events are triggeredxxx', async () => {
+    test('Executed events are triggered', async () => {
         await insertPythonCellAndWait('print("Hello World")', 0);
         const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
 
