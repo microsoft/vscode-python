@@ -3,7 +3,8 @@
 
 'use strict';
 
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import * as fakeTimers from '@sinonjs/fake-timers';
+import { anything, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
@@ -17,7 +18,6 @@ import {
     NotebookSurveyUsageData
 } from '../../../client/datascience/notebook/survey';
 import { INotebookEditor, INotebookEditorProvider } from '../../../client/datascience/types';
-import { sleep, waitForCondition } from '../../common';
 
 // tslint:disable: no-any
 suite('Data Science - NativeNotebook Survey', () => {
@@ -35,6 +35,7 @@ suite('Data Science - NativeNotebook Survey', () => {
     let onDidOpenNotebookEditor: EventEmitter<INotebookEditor>;
     let onExecutedCode: EventEmitter<string>;
     let onDidChangeNotebookDocument: EventEmitter<NotebookCellChangedEvent>;
+    let clock: fakeTimers.InstalledClock;
     setup(async () => {
         editor = mock<INotebookEditor>();
         onExecutedCode = new EventEmitter<string>();
@@ -44,7 +45,10 @@ suite('Data Science - NativeNotebook Survey', () => {
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(stateService));
         state = {};
         when(stateService.value).thenReturn(state);
-        when(stateService.updateValue(anything())).thenResolve();
+        when(stateService.updateValue(anything())).thenCall((newState) => {
+            Object.assign(state, newState);
+        });
+        // when(stateService.updateValue(anything())).thenResolve();
         vscNotebook = mock<IVSCodeNotebook>();
         onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
         when(vscNotebook.onDidChangeNotebookDocument).thenReturn(onDidChangeNotebookDocument.event);
@@ -53,6 +57,9 @@ suite('Data Science - NativeNotebook Survey', () => {
         when(notebookEditorProvider.onDidOpenNotebookEditor).thenReturn(onDidOpenNotebookEditor.event);
         shell = mock<IApplicationShell>();
         browser = mock<IBrowserService>();
+        clock = fakeTimers.install();
+    });
+    async function loadAndActivateExtension() {
         const surveyBanner = new NotebookSurveyBanner(instance(shell), instance(stateFactory), instance(browser));
         survey = new NotebookSurveyDataLogger(
             instance(stateFactory),
@@ -61,192 +68,167 @@ suite('Data Science - NativeNotebook Survey', () => {
             disposables,
             surveyBanner
         );
-    });
+        await survey.activate();
+        await clock.runAllAsync();
+    }
     teardown(() => {
+        clock.uninstall();
         while (disposables.length) {
             disposables.pop()!.dispose();
         }
     });
-    test('No survey displayed when loading extension for first time', async () => {
-        await survey.activate();
-        await sleep(0); // wait for everything to finish.
-
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).never();
-                return true;
-            },
-            1_000,
-            'Survey should not be displayed'
-        );
-    });
-    function performCellExecutions(numberOfTimes: number) {
-        for (let i = 0; i < numberOfTimes; i += 1) {
+    async function performCellOperations(numberOfCellActions: number, numberOfCellRuns: number) {
+        for (let i = 0; i < numberOfCellRuns; i += 1) {
             onExecutedCode.fire('');
         }
-    }
-    function performCellActions(numberOfTimes: number) {
-        for (let i = 0; i < numberOfTimes; i += 1) {
+        for (let i = 0; i < numberOfCellActions; i += 1) {
             onDidChangeNotebookDocument.fire({ type: 'changeCells', changes: [], document: mockDocument });
         }
+        await clock.runAllAsync();
     }
+    test('No survey displayed when loading extension for first time', async () => {
+        await loadAndActivateExtension();
+
+        verify(browser.launch(anything())).never();
+    });
     test('Display survey if user performs > 100 cell executions in a notebook', async () => {
         when(shell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             CommonSurvey.yesLabel() as any
         );
-        await survey.activate();
-        await sleep(0); // wait for everything to finish.
+        await loadAndActivateExtension();
 
         // Open nb.
         when(editor.type).thenReturn('native');
         onDidOpenNotebookEditor.fire(instance(editor));
 
         // Perform 100 actions, survey will not be displayed
-        performCellExecutions(100);
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).never();
-                return true;
-            },
-            1_000,
-            'Survey displayed before 100 actions'
-        );
+        await performCellOperations(0, 100);
+
+        verify(browser.launch(anything())).never();
 
         // After the 101st action, survey should be displayed.
-        performCellExecutions(1);
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).once();
-                return true;
-            },
-            1_000,
-            'Survey should have been displayed'
-        );
+        await performCellOperations(1, 0);
+
+        verify(browser.launch(anything())).once();
 
         // Verify survey is disabled.
-        await waitForCondition(
-            async () => {
-                verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
-                return true;
-            },
-            1_000,
-            'Survey should be disabled'
+        verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
+    });
+    test('Remind if survey not taken & selected to remind again', async () => {
+        when(shell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
+            CommonSurvey.remindMeLaterLabel() as any
         );
+        await loadAndActivateExtension();
+
+        // Open nb.
+        when(editor.type).thenReturn('native');
+        onDidOpenNotebookEditor.fire(instance(editor));
+
+        // Perform 120 actions, survey will be displayed.
+        await performCellOperations(60, 60);
+        verify(shell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+        verify(browser.launch(anything())).never();
+
+        // Open extension again & confirm prompt is displayed again.
+        await loadAndActivateExtension();
+
+        verify(shell.showInformationMessage(anything(), anything(), anything(), anything())).twice();
+    });
+    test('Do not display again if cancelled', async () => {
+        when(shell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
+            CommonSurvey.noLabel() as any
+        );
+        await loadAndActivateExtension();
+
+        // Open nb.
+        when(editor.type).thenReturn('native');
+        onDidOpenNotebookEditor.fire(instance(editor));
+
+        // Perform 120 actions, survey will be displayed.
+        await performCellOperations(60, 60);
+        verify(shell.showInformationMessage(anything(), anything(), anything(), anything())).once();
+        verify(browser.launch(anything())).never();
+
+        // Perform more actions & should not be prompted again.
+        reset(shell);
+        reset(browser);
+        await performCellOperations(60, 60);
+        verify(shell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+        verify(browser.launch(anything())).never();
+
+        // Open extension again & confirm prompt is displayed again.
+        await loadAndActivateExtension();
+
+        verify(shell.showInformationMessage(anything(), anything(), anything(), anything())).never();
+        verify(browser.launch(anything())).never();
     });
     test('Display survey if user performs > 100 cell actions in a notebook', async () => {
         when(shell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             CommonSurvey.yesLabel() as any
         );
 
-        await survey.activate();
-        await sleep(0); // wait for everything to finish.
+        await loadAndActivateExtension();
 
         // Open nb.
         when(editor.type).thenReturn('native');
         onDidOpenNotebookEditor.fire(instance(editor));
 
         // Perform 100 actions, survey will not be displayed
-        performCellActions(100);
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).never();
-                return true;
-            },
-            1_000,
-            'Survey displayed before 100 actions'
-        );
+        await performCellOperations(50, 50);
+        verify(browser.launch(anything())).never();
 
         // After the 101st action, survey should be displayed.
-        performCellActions(1);
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).once();
-                return true;
-            },
-            1_000,
-            'Survey should have been displayed'
-        );
+        await performCellOperations(0, 1);
+        verify(browser.launch(anything())).once();
 
         // Verify survey is disabled.
-        await waitForCondition(
-            async () => {
-                verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
-                return true;
-            },
-            1_000,
-            'Survey should be disabled'
-        );
+        verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
+
+        // No subsequent prompts (ever).
+        reset(browser);
+        await loadAndActivateExtension();
+        await clock.runAllAsync();
+        await performCellOperations(100, 100);
+        verify(browser.launch(anything())).never();
     });
-    test('After 5 edits and 6 days of inactivity, display survey', async function () {
-        // tslint:disable-next-line: no-invalid-this
-        this.timeout(10_000);
+    test('After 5 edits and 6 days of inactivity, display survey', async () => {
         when(shell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
             CommonSurvey.yesLabel() as any
         );
-        await survey.activate();
-        await sleep(0); // wait for everything to finish.
+        await loadAndActivateExtension();
 
         // Open nb.
         when(editor.type).thenReturn('native');
         onDidOpenNotebookEditor.fire(instance(editor));
 
         // Perform 6 actions, survey will not be displayed
-        performCellExecutions(6);
+        await performCellOperations(4, 2);
+        verify(browser.launch(anything())).never();
 
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).never();
-                return true;
-            },
-            1_000,
-            'Survey displayed before 100 actions'
-        );
+        // Day 2, & confirm no survey prompts.
+        clock.tick(2 * MillisecondsInADay);
+        await loadAndActivateExtension();
+        await clock.runAllAsync();
+        verify(browser.launch(anything())).never();
 
-        // Day 2
-        await survey.activate();
-        await sleep(0); // wait for everything to finish.
+        // Day 3, & confirm no survey prompts.
+        clock.tick(3 * MillisecondsInADay);
+        await loadAndActivateExtension();
+        await clock.runAllAsync();
+        verify(browser.launch(anything())).never();
 
-        // Verify stats have been moved into previous session state and date time has been updated.
-        await waitForCondition(async () => (state.lastUsedDateTime || 0) > 0, 1_000, 'DateTime not updated');
-        await waitForCondition(async () => state.numberOfCellActionsInCurrentSession === 0, 1_00, 'Not updated');
-        await waitForCondition(async () => state.numberOfExecutionsInCurrentSession === 0, 1_00, 'Not updated');
-        await waitForCondition(async () => (state.numberOfExecutionsInPreviousSessions || 0) > 0, 1_00, 'Not updated');
+        // Day 6, & confirm survey prompt is displayed.
+        clock.tick(6 * MillisecondsInADay);
+        await loadAndActivateExtension();
+        await clock.runAllAsync();
+        verify(browser.launch(anything())).once();
+        verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
 
-        // Lets update date time to 3 days ago.
-        state.lastUsedDateTime = new Date().getTime() - MillisecondsInADay;
-        await survey.activate();
-
-        // No survey.
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).never();
-                return true;
-            },
-            1_000,
-            'Survey displayed before 100 actions'
-        );
-
-        // Lets update date time to 6 days ago.
-        state.lastUsedDateTime = new Date().getTime() - 6 * MillisecondsInADay;
-        await survey.activate();
-
-        await waitForCondition(
-            async () => {
-                verify(browser.launch(anything())).once();
-                return true;
-            },
-            1_000,
-            'Survey not displayed'
-        );
-
-        // Verify survey is disabled.
-        await waitForCondition(
-            async () => {
-                verify(stateService.updateValue(deepEqual({ surveyDisabled: true }))).once();
-                return true;
-            },
-            1_000,
-            'Survey should be disabled'
-        );
+        // No subsequent prompts (ever).
+        reset(browser);
+        await loadAndActivateExtension();
+        await clock.runAllAsync();
+        await performCellOperations(100, 100);
+        verify(browser.launch(anything())).never();
     });
 });
