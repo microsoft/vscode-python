@@ -48,7 +48,6 @@ suite('Data Science - NativeNotebook Survey', () => {
         when(stateService.updateValue(anything())).thenCall((newState) => {
             Object.assign(state, newState);
         });
-        // when(stateService.updateValue(anything())).thenResolve();
         vscNotebook = mock<IVSCodeNotebook>();
         onDidChangeNotebookDocument = new EventEmitter<NotebookCellChangedEvent>();
         when(vscNotebook.onDidChangeNotebookDocument).thenReturn(onDidChangeNotebookDocument.event);
