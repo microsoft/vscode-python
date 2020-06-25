@@ -269,7 +269,7 @@ export namespace DataScienceSurveyBanner {
 export namespace DataScienceNotebookSurveyBanner {
     export const bannerMessage = localize(
         'DataScienceNotebookSurveyBanner.bannerMessage',
-        'Can you please take 2 minutes to tell us how the preview Notebook Editor is working for you?'
+        'Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?'
     );
 }
 
