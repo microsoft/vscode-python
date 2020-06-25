@@ -287,7 +287,6 @@
                 "--colors",
                 //"--grep", "<suite name>",
                 "--timeout=300000",
-                "--exit"
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
