@@ -100,13 +100,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         password: string
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
         // We're using jupyter hub. Get the base url
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
+        const url = new URL(uri);
         const baseUrl = `${url.protocol}//${url.host}`;
 
         const postParams = new URLSearchParams();
@@ -189,13 +183,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         password: string
     ): Promise<IJupyterPasswordConnectInfo | undefined> {
         // We're using jupyter hub. Get the base url
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
+        const url = new URL(uri);
         const baseUrl = `${url.protocol}//${url.host}`;
         // Use these in a post request to get the token to use
         const response = await this.makeRequest(
