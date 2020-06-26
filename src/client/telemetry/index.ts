@@ -2173,6 +2173,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunByLineStart]: never | undefined;
     [Telemetry.RunByLineStep]: never | undefined;
     [Telemetry.RunByLineStop]: never | undefined;
+    [Telemetry.RunByLineVariableHover]: never | undefined;
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
     [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
     [VSCodeNativeTelemetry.MoveCell]: never | undefined;

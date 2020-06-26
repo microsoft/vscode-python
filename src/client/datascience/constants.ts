@@ -358,7 +358,8 @@ export enum Telemetry {
     StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
     RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
     RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
-    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP'
+    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
+    RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER'
 }
 
 export enum NativeKeyboardCommandTelemetry {
