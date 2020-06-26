@@ -355,7 +355,11 @@ export enum Telemetry {
     StartPageOpenSampleNotebook = 'DATASCIENCE.STARTPAGE_OPEN_SAMPLE_NOTEBOOK',
     StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
-    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
+    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
+    RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
+    RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
+    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
+    RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER'
 }
 
 export enum NativeKeyboardCommandTelemetry {

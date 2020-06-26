@@ -19,6 +19,9 @@ import {
     canRunTests,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
+    deleteAllCellsAndWait,
+    insertMarkdownCellAndWait,
+    insertPythonCellAndWait,
     swallowSavingOfNotebooks
 } from './helper';
 
@@ -123,13 +126,13 @@ suite('DataScience - VSCode Notebook', function () {
         await commandManager.executeCommand('python.datascience.createnewnotebook');
         await waitForCondition(async () => !!editorProvider.activeEditor, 2_000, 'Editor not created');
 
-        const editorDisposed = createEventHandler(editorProvider.activeEditor!, 'closed', disposables);
+        const editorClosed = createEventHandler(editorProvider.activeEditor!, 'closed', disposables);
         const modelDisposed = createEventHandler(editorProvider.activeEditor!.model!, 'onDidDispose', disposables);
 
         await closeActiveWindows();
 
         await waitForCondition(async () => !editorProvider.activeEditor, 1_000, 'Editor not closed');
-        await editorDisposed.assertFired();
+        await editorClosed.assertFired();
         await modelDisposed.assertFired();
     });
     test('Opening an nb multiple times will result in a single (our) INotebookEditor being created', async () => {
@@ -235,6 +238,37 @@ suite('DataScience - VSCode Notebook', function () {
         assert.isOk(vscodeNotebook.activeNotebookEditor);
         assert.isOk(editorProvider.activeEditor);
         assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
+    });
+    test('Adding/deleting cells will trigger events', async function () {
+        this.timeout(10_000);
+        assert.isUndefined(editorProvider.activeEditor);
+        assert.equal(editorProvider.editors.length, 0);
+
+        await commandManager.executeCommand('vscode.openWith', testIPynb, JupyterNotebookView);
+
+        assert.isOk(editorProvider.activeEditor);
+
+        const editedEvent = createEventHandler(editorProvider.activeEditor!, 'modified', disposables);
+        const changedEvent = createEventHandler(editorProvider.activeEditor!.model!, 'changed', disposables);
+
+        await insertPythonCellAndWait('HELLO');
+
+        await editedEvent.assertFired(1_000);
+        await changedEvent.assertFired(1_000);
+
+        editedEvent.reset();
+        changedEvent.reset();
+        await insertMarkdownCellAndWait('HELLO');
+
+        await editedEvent.assertFired(1_000);
+        await changedEvent.assertFired(1_000);
+
+        editedEvent.reset();
+        changedEvent.reset();
+        await deleteAllCellsAndWait();
+
+        await editedEvent.assertFired(1_000);
+        await changedEvent.assertFired(1_000);
     });
     test('Open a notebook using VSC API then ours yields the same editor', async () => {
         assert.isUndefined(editorProvider.activeEditor);

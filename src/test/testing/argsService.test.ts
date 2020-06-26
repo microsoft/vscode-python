@@ -19,6 +19,7 @@ import { ArgumentsService as PyTestArgumentsService } from '../../client/testing
 import { IArgumentsHelper, IArgumentsService } from '../../client/testing/types';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/testing/unittest/services/argsService';
 import { PYTHON_PATH } from '../common';
+import { TEST_TIMEOUT } from '../constants';
 
 suite('ArgsService: Common', () => {
     UNIT_TEST_PRODUCTS.forEach((product) => {
@@ -33,7 +34,7 @@ suite('ArgsService: Common', () => {
             setup(function () {
                 // Take the spawning of process into account.
                 // tslint:disable-next-line:no-invalid-this
-                this.timeout(5000);
+                this.timeout(TEST_TIMEOUT * 2);
                 const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
 
                 const argsHelper = new ArgumentsHelper();

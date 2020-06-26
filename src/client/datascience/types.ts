@@ -72,7 +72,6 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
-    allowUnauthorized?: boolean;
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -306,18 +305,14 @@ export interface IJupyterDebugger {
 }
 
 export interface IJupyterPasswordConnectInfo {
-    emptyPassword: boolean;
-    xsrfCookie: string;
-    sessionCookieName: string;
-    sessionCookieValue: string;
+    requestHeaders?: HeadersInit;
+    remappedBaseUrl?: string;
+    remappedToken?: string;
 }
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(
-        url: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');

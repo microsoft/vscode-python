@@ -20,7 +20,7 @@ import {
     updateSetting,
     waitForCondition
 } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
 
@@ -192,5 +192,5 @@ suite('Activation of Environments in Terminal', () => {
         );
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
         await testActivation(envPaths.condaPath);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 });

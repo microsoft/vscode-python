@@ -186,6 +186,7 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { ExportCommands } from '../../client/datascience/commands/exportCommands';
 import { Identifiers, JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
@@ -201,6 +202,18 @@ import { DataScienceCodeLensProvider } from '../../client/datascience/editor-int
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
+import { ExportBase } from '../../client/datascience/export/exportBase';
+import { ExportManager } from '../../client/datascience/export/exportManager';
+import { ExportManagerDependencyChecker } from '../../client/datascience/export/exportManagerDependencyChecker';
+import { ExportManagerFileOpener } from '../../client/datascience/export/exportManagerFileOpener';
+import {
+    ExportManagerFilePicker,
+    IExportManagerFilePicker
+} from '../../client/datascience/export/exportManagerFilePicker';
+import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
+import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
+import { ExportToPython } from '../../client/datascience/export/exportToPython';
+import { ExportFormat, IExport, IExportManager } from '../../client/datascience/export/types';
 import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
@@ -601,7 +614,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 instance(this.webPanelProvider)
             );
         }
-
+        this.serviceManager.addSingleton<IExportManager>(ExportManager, ExportManager);
+        this.serviceManager.addSingleton<IExportManager>(
+            ExportManagerDependencyChecker,
+            ExportManagerDependencyChecker
+        );
+        this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
+        this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
+        this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
+        this.serviceManager.addSingleton<IExport>(IExport, ExportToPython, ExportFormat.python);
+        this.serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
+        this.serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
+        this.serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
         this.serviceManager.addSingleton<IMountedWebViewFactory>(IMountedWebViewFactory, MountedWebViewFactory);
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());

@@ -39,6 +39,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
 // tslint:disable-next-line: interface-name
 export interface InputBoxParameters {
     title: string;
+    password?: boolean;
     step?: number;
     totalSteps?: number;
     value: string;
@@ -155,6 +156,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         value,
         prompt,
         validate,
+        password,
         buttons,
         shouldResume
     }: P): Promise<MultiStepInputInputBoxResponseType<P>> {
@@ -165,6 +167,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.title = title;
                 input.step = step;
                 input.totalSteps = totalSteps;
+                input.password = password ? true : false;
                 input.value = value || '';
                 input.prompt = prompt;
                 input.ignoreFocusOut = true;

@@ -19,7 +19,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
+import {
+    IDataScienceErrorHandler,
+    INotebook,
+    INotebookEditorProvider,
+    INotebookModel,
+    INotebookProvider
+} from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
 import {
     handleUpdateDisplayDataMessage,
@@ -30,6 +36,7 @@ import {
     updateCellWithErrorStatus
 } from './helpers/executionHelpers';
 import { getCellStatusMessageBasedOnFirstErrorOutput, updateVSCNotebookCellMetadata } from './helpers/helpers';
+import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -55,7 +62,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider
     ) {}
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
@@ -177,6 +185,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
             return;
         }
 
+        const editor = this.editorProvider.editors.find((e) => e.model === model);
+        if (!(editor instanceof NotebookEditor)) {
+            throw new Error('Executing Notebook with another Editor');
+        }
         // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).
         const cancelExecution = new CancellationTokenSource();
         if (!this.pendingExecutionCancellations.has(document.uri.fsPath)) {
@@ -222,6 +234,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         let modelClearedEventHandler: IDisposable | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
+            editor.notifyExecution(cell.document.getText());
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,

@@ -363,7 +363,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings(undefined).datascience);
+            return createRemoteConnectionInfo(options.uri);
         }
     }
 
