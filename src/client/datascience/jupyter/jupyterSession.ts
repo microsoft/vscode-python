@@ -5,17 +5,14 @@ import type {
     Contents,
     ContentsManager,
     Kernel,
-    KernelMessage,
     ServerConnection,
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
 import type { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
-import { isTestExecution } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import { sleep } from '../../common/utils/async';
