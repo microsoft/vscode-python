@@ -13,7 +13,6 @@ import { IRawNotebookSupportedService } from '../types';
 @injectable()
 export class RawNotebookSupportedService implements IRawNotebookSupportedService {
     // Keep track of our ZMQ import check, this doesn't change with settings so we only want to do this once
-    //private _zmqSupported: boolean | undefined;
     private _zmqSupportedPromise: Promise<boolean> | undefined;
 
     constructor(
