@@ -1039,9 +1039,14 @@ export interface INotebookStorage {
     save(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     saveAs(model: INotebookModel, targetResource: Uri): Promise<void>;
     backup(model: INotebookModel, cancellation: CancellationToken, backupId?: string): Promise<void>;
-    load(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
-    // tslint:disable-next-line: unified-signatures
-    load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    load(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
+    load(
+        file: Uri,
+        contents?: string,
+        // tslint:disable-next-line: unified-signatures
+        skipDirtyContents?: boolean,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
     revert(model: INotebookModel, cancellation: CancellationToken): Promise<void>;
     deleteBackup(model: INotebookModel, backupId?: string): Promise<void>;
 }
