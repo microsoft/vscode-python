@@ -73,7 +73,8 @@ function generateDefaultState(
                 language: PYTHON_LANGUAGE
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
-            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
+            isNotebookTrusted: false
         };
     }
 }

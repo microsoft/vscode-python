@@ -134,7 +134,10 @@ suite('Formatting - General', () => {
         compareFiles(formattedContents, textEditor.document.getText());
     }
 
-    test('AutoPep8', async () => {
+    test('AutoPep8', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12564
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         await testFormatting(
             new AutoPep8Formatter(ioc.serviceContainer),
             formattedAutoPep8,
@@ -144,6 +147,9 @@ suite('Formatting - General', () => {
     });
     // tslint:disable-next-line:no-function-expression
     test('Black', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12564
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this

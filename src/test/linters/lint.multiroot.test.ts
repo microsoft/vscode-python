@@ -124,13 +124,13 @@ suite('Multiroot Linting', () => {
 
     test('Enabling Flake8 in root and also in Workspace, should return errors', async () => {
         await runTest(Product.flake8, true, true, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Enabling Flake8 in root and disabling in Workspace, should not return errors', async () => {
         await runTest(Product.flake8, true, false, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Disabling Flake8 in root and enabling in Workspace, should return errors', async () => {
         await runTest(Product.flake8, false, true, flake8Setting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);

@@ -3,8 +3,7 @@ import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { ProgressReporter } from '../progress/progressReporter';
 import { IDataScienceErrorHandler, INotebookModel } from '../types';
-import { IExportManagerFilePicker } from './exportManagerFilePicker';
-import { ExportFormat, IExport, IExportManager } from './types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {

@@ -30,17 +30,9 @@ export namespace Diagnostics {
         'diagnostics.upgradeCodeRunner',
         'Please update the Code Runner extension for it to be compatible with the Python extension.'
     );
-    export const removePythonPathSettingsJson = localize(
-        'diagnostics.removePythonPathSettingsJson',
-        'The setting "python.pythonPath" defined in your settings.json is now deprecated. Do you want us to delete it from your settings.json only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspace = localize(
-        'diagnostics.removePythonPathCodeWorkspace',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file only? [Learn more](https://aka.ms/AA7jfor).'
-    );
-    export const removePythonPathCodeWorkspaceAndSettingsJson = localize(
-        'diagnostics.removePythonPathCodeWorkspaceAndSettingsJson',
-        'The setting "python.pythonPath" defined in your workspace settings is now deprecated. Do you want us to delete it from your .code-workspace file and settings.json? [Learn more](https://aka.ms/AA7jfor).'
+    export const removedPythonPathFromSettings = localize(
+        'diagnostics.removedPythonPathFromSettings',
+        'We removed the "python.pythonPath" setting from your settings.json file as the setting is no longer used by the Python extension. You can get the path of your selected interpreter in the Python output channel. [Learn more](https://aka.ms/AA7jfor).'
     );
     export const invalidPythonPathInDebuggerSettings = localize(
         'diagnostics.invalidPythonPathInDebuggerSettings',
@@ -89,6 +81,12 @@ export namespace Common {
     export const learnMore = localize('Common.learnMore', 'Learn more');
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
+}
+
+export namespace CommonSurvey {
+    export const remindMeLaterLabel = localize('CommonSurvey.remindMeLaterLabel', 'Remind me later');
+    export const yesLabel = localize('CommonSurvey.yesLabel', 'Yes, take survey now');
+    export const noLabel = localize('CommonSurvey.noLabel', 'No, thanks');
 }
 
 export namespace AttachProcess {
@@ -259,6 +257,12 @@ export namespace DataScienceSurveyBanner {
     );
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
+}
+export namespace DataScienceNotebookSurveyBanner {
+    export const bannerMessage = localize(
+        'DataScienceNotebookSurveyBanner.bannerMessage',
+        'Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?'
+    );
 }
 
 export namespace Installer {
@@ -521,9 +525,14 @@ export namespace DataScience {
         'DataScience.jupyterSelectURINotRunningDetail',
         'Cannot connect at this time. Status unknown.'
     );
+    export const jupyterSelectUserAndPasswordTitle = localize(
+        'DataScience.jupyterSelectUserAndPasswordTitle',
+        'Enter your user name and password to connect to Jupyter Hub'
+    );
+    export const jupyterSelectUserPrompt = localize('DataScience.jupyterSelectUserPrompt', 'Enter your user name');
     export const jupyterSelectPasswordPrompt = localize(
         'DataScience.jupyterSelectPasswordPrompt',
-        'Enter your notebook password'
+        'Enter your password'
     );
     export const jupyterNotebookFailure = localize(
         'DataScience.jupyterNotebookFailure',
@@ -629,6 +638,8 @@ export namespace DataScience {
     export const fetchingDataViewer = localize('DataScience.fetchingDataViewer', 'Fetching data ...');
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
+    export const notebookIsTrusted = localize('DataScience.notebookIsTrusted', 'Trusted');
+    export const notebookIsNotTrusted = localize('DataScience.notebookIsNotTrusted', 'Not Trusted');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
@@ -982,6 +993,16 @@ export namespace DataScience {
     export const usingPreviewNotebookWithOtherNotebookWarning = localize(
         'DataScience.usingPreviewNotebookWithOtherNotebookWarning',
         'Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.'
+    );
+    export const launchNotebookTrustPrompt = localize(
+        'DataScience.launchNotebookTrustPrompt',
+        'A Notebook could execute harmful code when opened. Some cells & outputs have been hidden. Do you trust this notebook?'
+    );
+    export const trustNotebook = localize('DataScience.launchNotebookTrustPrompt.yes', 'Trust');
+    export const doNotTrustNotebook = localize('DataScience.launchNotebookTrustPrompt.no', 'Do not trust');
+    export const previewNotebookOnlySupportedInVSCInsiders = localize(
+        'DataScience.previewNotebookOnlySupportedInVSCInsiders',
+        'The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.'
     );
 }
 

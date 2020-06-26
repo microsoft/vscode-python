@@ -5,17 +5,14 @@ import type {
     Contents,
     ContentsManager,
     Kernel,
-    KernelMessage,
     ServerConnection,
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import type { JSONObject } from '@phosphor/coreutils';
 import type { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
-import { isTestExecution } from '../../common/constants';
 import { traceError, traceInfo } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import { sleep } from '../../common/utils/async';
@@ -69,20 +66,6 @@ export class JupyterSession extends BaseJupyterSession {
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
         await this.waitForIdleOnSession(this.session, timeout);
-    }
-
-    public requestExecute(
-        content: KernelMessage.IExecuteRequestMsg['content'],
-        disposeOnDone?: boolean,
-        metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        const result = super.requestExecute(content, disposeOnDone, metadata);
-        // It has been observed that starting the restart session slows down first time to execute a cell.
-        // Solution is to start the restart session after the first execution of user code.
-        if (!content.silent && result && !isTestExecution()) {
-            result.done.finally(() => this.startRestartSession()).ignoreErrors();
-        }
-        return result;
     }
 
     public async connect(cancelToken?: CancellationToken): Promise<void> {

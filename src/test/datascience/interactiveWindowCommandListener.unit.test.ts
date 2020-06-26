@@ -8,7 +8,6 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { EventEmitter, Uri } from 'vscode';
-
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -20,7 +19,9 @@ import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
+import { ExportFormat, IExportManager } from '../../client/datascience/export/types';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -72,6 +73,8 @@ suite('Interactive window command listener', async () => {
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
+    const exportManager = mock<IExportManager>();
+    const notebookStorageProvider = mock(NotebookStorageProvider);
     let notebookEditorProvider: INotebookEditorProvider;
     const server = createTypeMoq<INotebookServer>('jupyter server');
     let lastFileContents: any;
@@ -211,9 +214,10 @@ suite('Interactive window command listener', async () => {
             instance(fileSystem),
             instance(configService),
             statusProvider,
-            instance(notebookImporter),
             instance(dataScienceErrorHandler),
-            instance(notebookEditorProvider)
+            instance(notebookEditorProvider),
+            instance(exportManager),
+            instance(notebookStorageProvider)
         );
         result.register(commandManager);
 
@@ -226,12 +230,12 @@ suite('Interactive window command listener', async () => {
             Promise.resolve([Uri.file('foo')])
         );
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        verify(exportManager.export(ExportFormat.python, anything())).once();
     });
     test('Import File', async () => {
         createCommandListener();
         await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        verify(exportManager.export(ExportFormat.python, anything())).twice();
     });
     test('Export File', async () => {
         createCommandListener();

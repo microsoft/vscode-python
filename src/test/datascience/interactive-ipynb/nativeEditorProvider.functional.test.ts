@@ -44,7 +44,8 @@ import {
     IJupyterExecution,
     INotebookEditor,
     INotebookModel,
-    INotebookServerOptions
+    INotebookServerOptions,
+    ITrustService
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -66,6 +67,7 @@ suite('DataScience - Native Editor Provider', () => {
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
+    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -95,6 +97,7 @@ suite('DataScience - Native Editor Provider', () => {
         executionProvider = mock(JupyterExecutionFactory);
         customEditorService = typemoq.Mock.ofType<ICustomEditorService>();
         panel = typemoq.Mock.ofType<WebviewPanel>();
+        trustService = mock(ITrustService);
         panel.setup((e) => (e as any).then).returns(() => undefined);
 
         const settings = mock(PythonSettings);
@@ -203,6 +206,7 @@ suite('DataScience - Native Editor Provider', () => {
             context.object,
             globalMemento,
             localMemento,
+            trustService,
             false
         );
 

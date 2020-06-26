@@ -13,6 +13,7 @@ import {
     ServerStatus
 } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
+import { TrustMessage } from '../interactive-common/trustMessage';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -45,6 +46,8 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     interruptKernel: typeof actionCreators.interruptKernel;
     selectKernel: typeof actionCreators.selectKernel;
     selectServer: typeof actionCreators.selectServer;
+    launchNotebookTrustPrompt: typeof actionCreators.launchNotebookTrustPrompt;
+    isNotebookTrusted: boolean;
 };
 
 function mapStateToProps(state: IStore): INativeEditorDataProps {
@@ -107,6 +110,11 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         const selectServer = () => {
             this.props.selectServer();
             this.props.sendCommand(NativeMouseCommandTelemetry.SelectServer);
+        };
+        const launchNotebookTrustPrompt = () => {
+            if (!this.props.isNotebookTrusted) {
+                this.props.launchNotebookTrustPrompt();
+            }
         };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =
@@ -248,13 +256,20 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             />
                         </ImageButton>
                     </div>
-                    <KernelSelection
-                        baseTheme={this.props.baseTheme}
-                        font={this.props.font}
-                        kernel={this.props.kernel}
-                        selectServer={selectServer}
-                        selectKernel={selectKernel}
-                    />
+                    <div className={'jupyter-info-container'}>
+                        <TrustMessage
+                            isNotebookTrusted={this.props.isNotebookTrusted}
+                            font={this.props.font}
+                            launchNotebookTrustPrompt={launchNotebookTrustPrompt}
+                        />
+                        <KernelSelection
+                            baseTheme={this.props.baseTheme}
+                            font={this.props.font}
+                            kernel={this.props.kernel}
+                            selectServer={selectServer}
+                            selectKernel={selectKernel}
+                        />
+                    </div>
                 </div>
                 <div className="toolbar-divider" />
             </div>

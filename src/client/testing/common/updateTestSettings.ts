@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { applyEdits, Edit, findNodeAtLocation, FormattingOptions, getNodeValue, modify, parseTree } from 'jsonc-parser';
+import { applyEdits, findNodeAtLocation, getNodeValue, ModificationOptions, modify, parseTree } from 'jsonc-parser';
 import * as path from 'path';
 import { IExtensionActivationService, LanguageServerType } from '../../activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
@@ -104,7 +104,8 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
     private fixLanguageServerSettings(fileContent: string): string {
         // `python.jediEnabled` is deprecated:
-        //   - `true` or missing then set to `languageServer: Jedi`.
+        //   - If missing, do nothing.
+        //   - `true`, then set to `languageServer: Jedi`.
         //   - `false` and `languageServer` is present, do nothing.
         //   - `false` and `languageServer` is NOT present, set `languageServer` to `Microsoft`.
         // `jediEnabled` is NOT removed since JSONC parser may also remove comments.
@@ -113,28 +114,40 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
         try {
             const ast = parseTree(fileContent);
-            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
-            const jediEnabled = jediEnabledNode ? getNodeValue(jediEnabledNode) : true;
-            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
-            const formattingOptions: FormattingOptions = {
-                tabSize: 4,
-                insertSpaces: true
-            };
-            let edits: Edit[] = [];
 
-            if (!jediEnabledNode || jediEnabled) {
-                // `jediEnabled` is missing or is true. Default is true, so assume Jedi.
-                edits = modify(fileContent, languageServerPath, LanguageServerType.Jedi, { formattingOptions });
-            } else {
-                // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
-                if (!languageServerNode) {
-                    edits = modify(fileContent, languageServerPath, LanguageServerType.Microsoft, {
-                        formattingOptions
-                    });
-                }
+            const jediEnabledNode = findNodeAtLocation(ast, jediEnabledPath);
+            const languageServerNode = findNodeAtLocation(ast, languageServerPath);
+
+            // If missing, do nothing.
+            if (!jediEnabledNode) {
+                return fileContent;
             }
 
-            fileContent = applyEdits(fileContent, edits);
+            const jediEnabled = getNodeValue(jediEnabledNode);
+
+            const modificationOptions: ModificationOptions = {
+                formattingOptions: {
+                    tabSize: 4,
+                    insertSpaces: true
+                }
+            };
+
+            // `jediEnabled` is true, set it to Jedi.
+            if (jediEnabled) {
+                return applyEdits(
+                    fileContent,
+                    modify(fileContent, languageServerPath, LanguageServerType.Jedi, modificationOptions)
+                );
+            }
+
+            // `jediEnabled` is false. if languageServer is missing, set it to Microsoft.
+            if (!languageServerNode) {
+                return applyEdits(
+                    fileContent,
+                    modify(fileContent, languageServerPath, LanguageServerType.Microsoft, modificationOptions)
+                );
+            }
+
             // tslint:disable-next-line:no-empty
         } catch {}
         return fileContent;

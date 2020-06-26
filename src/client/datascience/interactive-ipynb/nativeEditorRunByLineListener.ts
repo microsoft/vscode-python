@@ -16,7 +16,8 @@ import {
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceInfo } from '../../common/logger';
 import { noop } from '../../common/utils/misc';
-import { Identifiers } from '../constants';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { Identifiers, Telemetry } from '../constants';
 import { InteractiveWindowMessages, IRunByLine } from '../interactive-common/interactiveWindowTypes';
 import { ICell, IInteractiveWindowListener, IJupyterDebugService } from '../types';
 
@@ -50,6 +51,10 @@ export class NativeEditorRunByLineListener
         return this.postEmitter.event;
     }
 
+    public onExit() {
+        this.currentCellBeingRun = undefined;
+    }
+
     public onDidSendMessage?(message: any): void {
         if (message.type === 'event' && message.event === 'stopped') {
             // We've stopped at breakpoint. Get the top most stack frame to figure out our IP
@@ -61,6 +66,12 @@ export class NativeEditorRunByLineListener
 
     public onMessage(message: string, payload?: any): void {
         switch (message) {
+            case InteractiveWindowMessages.Interrupt:
+                if (this.debugService.activeDebugSession && this.currentCellBeingRun) {
+                    sendTelemetryEvent(Telemetry.RunByLineStop);
+                }
+                break;
+
             case InteractiveWindowMessages.Step:
                 this.handleStep().ignoreErrors();
                 break;
@@ -103,6 +114,7 @@ export class NativeEditorRunByLineListener
         }
     }
 
+    @captureTelemetry(Telemetry.RunByLineStep)
     private async handleStep() {
         // User issued a step command.
         this.postEmitter.fire({ message: InteractiveWindowMessages.ShowContinue, payload: this.currentCellBeingRun });

@@ -32,8 +32,15 @@ import {
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
+import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookModel, INotebookServerOptions } from '../../../client/datascience/types';
+import {
+    ICell,
+    IJupyterExecution,
+    INotebookModel,
+    INotebookServerOptions,
+    ITrustService
+} from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
@@ -54,6 +61,7 @@ suite('DataScience - Native Editor Storage', () => {
     let executionProvider: IJupyterExecution;
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
+    let trustService: ITrustService;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -248,6 +256,7 @@ suite('DataScience - Native Editor Storage', () => {
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
+        trustService = mock(TrustService);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -271,6 +280,9 @@ suite('DataScience - Native Editor Storage', () => {
 
         const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
         when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
+
+        when(trustService.isNotebookTrusted(anything(), anything())).thenReturn(Promise.resolve(true));
+        when(trustService.trustNotebook(anything(), anything())).thenReturn(Promise.resolve());
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
@@ -324,6 +336,7 @@ suite('DataScience - Native Editor Storage', () => {
             context.object,
             globalMemento,
             localMemento,
+            trustService,
             false
         );
 

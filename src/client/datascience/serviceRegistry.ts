@@ -39,11 +39,11 @@ import { ExportBase } from './export/exportBase';
 import { ExportManager } from './export/exportManager';
 import { ExportManagerDependencyChecker } from './export/exportManagerDependencyChecker';
 import { ExportManagerFileOpener } from './export/exportManagerFileOpener';
-import { ExportManagerFilePicker, IExportManagerFilePicker } from './export/exportManagerFilePicker';
+import { ExportManagerFilePicker } from './export/exportManagerFilePicker';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
-import { ExportFormat, IExport, IExportManager } from './export/types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './export/types';
 import { GatherListener } from './gather/gatherListener';
 import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
@@ -54,6 +54,7 @@ import { NotebookServerProvider } from './interactive-common/notebookServerProvi
 import { NotebookUsageTracker } from './interactive-common/notebookUsageTracker';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
+import { DigestStorage } from './interactive-ipynb/digestStorage';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
@@ -64,6 +65,7 @@ import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
 import { NativeEditorViewTracker } from './interactive-ipynb/nativeEditorViewTracker';
 import { INotebookStorageProvider, NotebookStorageProvider } from './interactive-ipynb/notebookStorageProvider';
+import { TrustService } from './interactive-ipynb/trustService';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
@@ -132,6 +134,7 @@ import {
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDebugLocationTracker,
+    IDigestStorage,
     IGatherLogger,
     IInteractiveWindow,
     IInteractiveWindowListener,
@@ -164,7 +167,8 @@ import {
     IRawNotebookProvider,
     IRawNotebookSupportedService,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    ITrustService
 } from './types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
@@ -290,6 +294,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+    serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
+    serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
 
     registerGatherTypes(serviceManager);
     registerNotebookTypes(serviceManager);

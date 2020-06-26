@@ -104,8 +104,11 @@ export async function deleteCell(index: number = 0) {
 export async function deleteAllCellsAndWait(index: number = 0) {
     const { vscodeNotebook, editorProvider } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    const vscCells = activeEditor?.document.cells!;
+    if (!activeEditor || !editorProvider.activeEditor) {
+        return;
+    }
     const modelCells = editorProvider.activeEditor?.model?.cells!;
+    const vscCells = activeEditor.document.cells!;
     let previousCellOut = vscCells.length;
     while (previousCellOut) {
         await new Promise((resolve) =>
@@ -181,6 +184,12 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     sinon.restore();
+}
+export async function closeNotebooks(disposables: IDisposable[] = []) {
+    // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
+    await commands.executeCommand('workbench.action.files.saveAll');
+    await closeActiveWindows();
+    disposeAllDisposables(disposables);
 }
 
 export async function startJupyter() {

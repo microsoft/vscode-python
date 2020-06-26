@@ -469,9 +469,15 @@ body, html {
     width: 100%;
 }
 
-.kernel-status {
+
+
+.jupyter-info-container {
     display: flex;
     margin-left: auto;
+}
+
+.kernel-status {
+    display: flex;
 }
 
 .kernel-status-section {

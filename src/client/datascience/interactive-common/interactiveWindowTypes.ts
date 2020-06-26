@@ -98,6 +98,8 @@ export enum InteractiveWindowMessages {
     StopDebugging = 'stop_debugging',
     GatherCode = 'gather_code',
     GatherCodeToScript = 'gather_code_to_script',
+    LaunchNotebookTrustPrompt = 'launch_notebook_trust_prompt',
+    TrustNotebookComplete = 'trust_notebook_complete',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
     ScrollToCell = 'scroll_to_cell',
@@ -330,6 +332,7 @@ export interface IRefreshVariablesRequest {
 
 export interface ILoadAllCells {
     cells: ICell[];
+    isNotebookTrusted?: boolean;
 }
 
 export interface IScrollToCell {
@@ -387,6 +390,10 @@ export interface INotebookModelModifyChange extends INotebookModelChange {
     kind: 'modify';
     newCells: ICell[];
     oldCells: ICell[];
+}
+export interface INotebookModelTrustChange extends INotebookModelChange {
+    kind: 'updateTrust';
+    isNotebookTrusted: boolean;
 }
 export interface INotebookModelCellExecutionCountChange extends INotebookModelChange {
     kind: 'updateCellExecutionCount';
@@ -509,7 +516,8 @@ export type NotebookModelChange =
     | INotebookModelEditChange
     | INotebookModelVersionChange
     | INotebookModelChangeTypeChange
-    | INotebookModelCellExecutionCountChange;
+    | INotebookModelCellExecutionCountChange
+    | INotebookModelTrustChange;
 
 export interface IRunByLine {
     cell: ICell;
@@ -618,6 +626,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.GatherCodeToScript]: ICell;
+    public [InteractiveWindowMessages.LaunchNotebookTrustPrompt]: never | undefined;
+    public [InteractiveWindowMessages.TrustNotebookComplete]: never | undefined;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;

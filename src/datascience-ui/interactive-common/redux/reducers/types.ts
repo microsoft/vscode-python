@@ -58,6 +58,7 @@ export enum CommonActionType {
     INSERT_BELOW = 'action.insert_below',
     INTERRUPT_KERNEL = 'action.interrupt_kernel_action',
     IPYWIDGET_RENDER_FAILURE = 'action.ipywidget_render_failure',
+    LAUNCH_NOTEBOOK_TRUST_PROMPT = 'action.launch_notebook_trust_prompt',
     LOAD_IPYWIDGET_CLASS_SUCCESS = 'action.load_ipywidget_class_success',
     LOAD_IPYWIDGET_CLASS_FAILURE = 'action.load_ipywidget_class_failure',
     IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED = 'action.ipywidget_widget_version_not_supported',
@@ -141,6 +142,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.REFRESH_VARIABLES]: never | undefined;
     [CommonActionType.OPEN_SETTINGS]: IOpenSettingsAction;
     [CommonActionType.FOCUS_INPUT]: never | undefined;
+    [CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT]: never | undefined;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: LoadIPyWidgetClassLoadAction;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: ILoadIPyWidgetClassFailureAction;
     [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: NotifyIPyWidgeWidgetVersionNotSupportedAction;

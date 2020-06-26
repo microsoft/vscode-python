@@ -953,6 +953,9 @@ suite('FileSystem', () => {
             });
 
             test('for symlinks, gets the info for the linked file', async function () {
+                // https://github.com/microsoft/vscode-python/issues/10294
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
                 if (!SUPPORTS_SYMLINKS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();

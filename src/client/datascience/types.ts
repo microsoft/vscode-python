@@ -72,7 +72,6 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
-    allowUnauthorized?: boolean;
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -299,18 +298,14 @@ export interface IJupyterDebugger {
 }
 
 export interface IJupyterPasswordConnectInfo {
-    emptyPassword: boolean;
-    xsrfCookie: string;
-    sessionCookieName: string;
-    sessionCookieValue: string;
+    requestHeaders?: HeadersInit;
+    remappedBaseUrl?: string;
+    remappedToken?: string;
 }
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(
-        url: string,
-        allowUnauthorized: boolean
-    ): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -529,6 +524,11 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
+    /**
+     * Type of editor, whether it is the old, custom or native notebook editor.
+     * Once VSC Notebook is stable, this property can be removed.
+     */
+    readonly type: 'old' | 'custom' | 'native';
     readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed: Event<INotebookEditor>;
@@ -1010,6 +1010,7 @@ export interface INotebookModel {
     readonly onDidEdit: Event<NotebookModelChange>;
     readonly isDisposed: boolean;
     readonly metadata: nbformat.INotebookMetadata | undefined;
+    readonly isTrusted: boolean;
     getContent(): string;
     applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
@@ -1224,4 +1225,17 @@ export interface IJupyterDebugService extends IDebugService {
      * Stop debugging
      */
     stop(): void;
+}
+
+export const IDigestStorage = Symbol('IDigestStorage');
+export interface IDigestStorage {
+    readonly key: Promise<string>;
+    saveDigest(uri: string, digest: string): Promise<void>;
+    containsDigest(uri: string, digest: string): Promise<boolean>;
+}
+
+export const ITrustService = Symbol('ITrustService');
+export interface ITrustService {
+    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }
