@@ -1,0 +1,41 @@
+{
+	"name": "ms-ai-tools-test",
+	"displayName": "ms-ai-tools.test",
+	"description": "Extension to test API for python datascience code",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.46.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:ms-ai-tools-test.helloWorld"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "ms-ai-tools-test.helloWorld",
+				"title": "Hello World"
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./tsconfig.json",
+		"lint": "eslint src --ext ts",
+		"watch": "tsc -watch -p ./tsconfig.json",
+		"pretest": "npm run compile && npm run lint",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/jquery": "^3.5.0",
+		"@types/node": "^13.11.0",
+		"@types/vscode": "^1.46.0",
+		"@typescript-eslint/eslint-plugin": "^2.30.0",
+		"@typescript-eslint/parser": "^2.30.0",
+		"eslint": "^6.8.0",
+		"typescript": "^3.8.3"
+	}
+}
