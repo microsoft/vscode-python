@@ -34,6 +34,7 @@ import { NativeEditorStorage } from '../../../client/datascience/interactive-ipy
 import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     ICell,
     IJupyterExecution,
@@ -47,7 +48,6 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
-import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 

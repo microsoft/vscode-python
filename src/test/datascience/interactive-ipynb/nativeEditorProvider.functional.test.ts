@@ -40,6 +40,7 @@ import {
     NotebookStorageProvider
 } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     IJupyterExecution,
     INotebookEditor,
@@ -55,7 +56,6 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
-import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 
 // tslint:disable: max-func-body-length
 suite('DataScience - Native Editor Provider', () => {

@@ -115,6 +115,7 @@ import { NotebookEditorProvider } from './notebook/notebookEditorProvider';
 import { NotebookEditorProviderWrapper } from './notebook/notebookEditorProviderWrapper';
 import { registerTypes as registerNotebookTypes } from './notebook/serviceRegistry';
 import { NotebookAndInteractiveWindowUsageTracker } from './notebookAndInteractiveTracker';
+import { NotebookModelFactory } from './notebookStorage/factory';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './preWarmVariables';
@@ -171,7 +172,6 @@ import {
     IThemeFinder,
     ITrustService
 } from './types';
-import { NotebookModelFactory } from './notebookStorage/factory';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 

@@ -120,7 +120,9 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
 
     // Create a new cell & replace old one.
     const oldCellIndex = model.cells.indexOf(cellModel);
+    // tslint:disable-next-line: no-suspicious-comment
     // TODO: CHANGE.
+    // tslint:disable-next-line: no-any
     (model.cells as any)[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
     sendTelemetryEvent(
         change.cell.cellKind === vscodeNotebookEnums.CellKind.Markdown
