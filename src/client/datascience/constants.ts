@@ -118,7 +118,6 @@ export namespace EditorContexts {
     export const IsPythonOrInteractiveActive = 'python.datascience.ispythonorinteractiveeactive';
     export const IsPythonOrInteractiveOrNativeActive = 'python.datascience.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'python.datascience.havecellselected';
-    export const IsNotebookTrusted = 'python.datascience.isnotebooktrusted';
 }
 
 export namespace RegExpValues {

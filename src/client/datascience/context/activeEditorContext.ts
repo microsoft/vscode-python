@@ -25,7 +25,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrNativeContext: ContextKey;
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private hasNativeNotebookCells: ContextKey;
-    private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
@@ -52,7 +51,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.commandManager
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
-        this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -93,9 +91,6 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         // This is temporary, and once we ship native editor this needs to be removed.
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
-        if (e && e.model && e.model.isTrusted) {
-            this.isNotebookTrusted.set(e.model.isTrusted).ignoreErrors();
-        }
         this.updateMergedContexts();
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {

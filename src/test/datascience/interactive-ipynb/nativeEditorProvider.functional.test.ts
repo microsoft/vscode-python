@@ -19,8 +19,7 @@ import {
     IDocumentManager,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    IWorkspaceService,
-    ICommandManager
+    IWorkspaceService
 } from '../../../client/common/application/types';
 import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
 import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
@@ -69,7 +68,6 @@ suite('DataScience - Native Editor Provider', () => {
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
     let trustService: ITrustService;
-    let commandManager: ICommandManager;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -100,7 +98,6 @@ suite('DataScience - Native Editor Provider', () => {
         customEditorService = typemoq.Mock.ofType<ICustomEditorService>();
         panel = typemoq.Mock.ofType<WebviewPanel>();
         trustService = mock(ITrustService);
-        commandManager = mock(ICommandManager);
         panel.setup((e) => (e as any).then).returns(() => undefined);
 
         const settings = mock(PythonSettings);
@@ -210,8 +207,7 @@ suite('DataScience - Native Editor Provider', () => {
             globalMemento,
             localMemento,
             trustService,
-            false,
-            commandManager
+            false
         );
 
         storageProvider = new NotebookStorageProvider(notebookStorage, []);

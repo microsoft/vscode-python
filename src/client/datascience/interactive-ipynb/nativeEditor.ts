@@ -151,7 +151,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
-    private isNotebookTrustedContextKey: ContextKey;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -228,8 +227,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         asyncRegistry.push(this);
 
         this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
-
-        this.isNotebookTrustedContextKey = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
     }
 
     public dispose(): Promise<void> {
@@ -626,7 +623,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             try {
                 const contents = this.model.getContent();
                 await this.trustService.trustNotebook(this.model.file.toString(), contents);
-                await this.isNotebookTrustedContextKey.set(true);
                 // Update model trust
                 this.model.update({
                     source: 'user',
