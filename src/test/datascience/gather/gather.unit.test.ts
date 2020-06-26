@@ -2,17 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as assert from 'assert';
+// import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import {
-    IConfigurationService,
-    IDataScienceSettings,
-    IDisposableRegistry,
-    IPythonSettings
-} from '../../../client/common/types';
-import { GatherProvider } from '../../../client/datascience/gather/gather';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { ICell as IVscCell } from '../../../client/datascience/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -86,12 +79,9 @@ suite('DataScience code gathering unit tests', () => {
     ];
 
     const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-    const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-    const disposableRegistry = TypeMoq.Mock.ofType<IDisposableRegistry>();
     const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
     const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
     const dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
-    const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
 
     dataScienceSettings.setup((d) => d.enabled).returns(() => true);
     dataScienceSettings.setup((d) => d.defaultCellMarker).returns(() => '# %%');
@@ -100,15 +90,9 @@ suite('DataScience code gathering unit tests', () => {
     appShell
         .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
         .returns(() => Promise.resolve(''));
-    const gatherProvider = new GatherProvider(
-        configurationService.object,
-        appShell.object,
-        disposableRegistry.object,
-        commandManager.object,
-        fileSystem.object
-    );
+    const gatherProvider = undefined;
 
-    if (gatherProvider) {
+    if (gatherProvider && codeCells) {
         // Disabling this test as by default gather cannot operate successfully without python-program-analysis.
         // test('Logs a cell execution', async () => {
         //     let count = 0;
@@ -119,12 +103,12 @@ suite('DataScience code gathering unit tests', () => {
         //         assert.equal(logLength, count);
         //     }
         // });
-
-        test('Gathers program slices for a cell', async () => {
-            const cell: IVscCell = codeCells[codeCells.length - 1];
-            const program = gatherProvider.gatherCode(cell);
-            const expectedProgram = '# %% [markdown]\n## Gather not available';
-            assert.equal(program.trim(), expectedProgram.trim());
-        });
+        // WIP
+        // test('Gathers program slices for a cell', async () => {
+        //     const cell: IVscCell = codeCells[codeCells.length - 1];
+        //     const program = gatherProvider.gatherCode(cell);
+        //     const expectedProgram = '# %% [markdown]\n## Gather not available';
+        //     assert.equal(program.trim(), expectedProgram.trim());
+        // });
     }
 });

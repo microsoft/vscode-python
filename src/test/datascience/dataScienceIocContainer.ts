@@ -201,7 +201,6 @@ import { DataScienceCodeLensProvider } from '../../client/datascience/editor-int
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { HoverProvider } from '../../client/datascience/editor-integration/hoverProvider';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
@@ -277,7 +276,6 @@ import {
     IDataScienceErrorHandler,
     IDebugLocationTracker,
     IGatherLogger,
-    IGatherProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -817,7 +815,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             INotebookExecutionLogger
         ]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
-        this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, TestExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [

@@ -11,7 +11,6 @@ import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types'
 import {
     ICell,
     ICellHashProvider,
-    IGatherProvider,
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
@@ -64,9 +63,6 @@ export class MockJupyterNotebook implements INotebook {
         _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
     ): void {
         noop();
-    }
-    public getGatherProvider(): IGatherProvider | undefined {
-        throw new Error('Method not implemented.');
     }
     public getCellHashProvider(): ICellHashProvider | undefined {
         throw new Error('Method not implemented.');

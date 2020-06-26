@@ -22,7 +22,6 @@ import {
 import {
     ICell,
     IGatherLogger,
-    IGatherProvider,
     IInteractiveWindowListener,
     INotebook,
     INotebookEditorProvider,
@@ -40,7 +39,8 @@ export class GatherListener implements IInteractiveWindowListener {
         payload: any;
     }>();
     private notebookUri: Uri | undefined;
-    private gatherProvider: IGatherProvider | undefined;
+    // tslint:disable-next-line: no-any
+    private gatherProvider: any | undefined;
     private gatherTimer: StopWatch | undefined;
 
     constructor(
@@ -112,7 +112,7 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     }
 
-    private getGatherProvider(nb: INotebook): IGatherProvider | undefined {
+    private getGatherProvider(nb: INotebook): any | undefined {
         const gatherLogger = <IGatherLogger>(
             nb.getLoggers().find((logger: INotebookExecutionLogger) => (<IGatherLogger>logger).getGatherProvider)
         );
