@@ -239,7 +239,7 @@ suite('DataScience - VSCode Notebook', function () {
         assert.isOk(editorProvider.activeEditor);
         assert.equal(editorProvider.activeEditor?.file.fsPath.toLowerCase(), testIPynb.fsPath.toLowerCase());
     });
-    test('Adding/deleting cells will trigger eventsxxx', async function () {
+    test('Adding/deleting cells will trigger events', async function () {
         this.timeout(10_000);
         assert.isUndefined(editorProvider.activeEditor);
         assert.equal(editorProvider.editors.length, 0);
