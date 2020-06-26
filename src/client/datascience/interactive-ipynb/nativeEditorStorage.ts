@@ -123,7 +123,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
 
     constructor(
         isTrusted: boolean,
-        public useNativeEditorApi: boolean,
+        public useVSCodeNotebookEditorApi: boolean,
         file: Uri,
         cells: ICell[],
         json: Partial<nbformat.INotebookContent> = {},
@@ -153,13 +153,13 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        if (this.useNativeEditorApi) {
+        if (this.useVSCodeNotebookEditorApi) {
             throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
         }
         edits.forEach((e) => this.update({ ...e, source: 'redo' }));
     }
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        if (this.useNativeEditorApi) {
+        if (this.useVSCodeNotebookEditorApi) {
             throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
         }
         edits.forEach((e) => this.update({ ...e, source: 'undo' }));
@@ -173,7 +173,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
         const oldDirty = this.isDirty;
         let changed = false;
 
-        if (this.useNativeEditorApi) {
+        if (this.useVSCodeNotebookEditorApi) {
             changed = true;
             if (change.kind === 'save') {
                 this._saved.fire();
@@ -386,7 +386,7 @@ export class NativeEditorNotebookModel implements INotebookModel {
     }
 
     private clearOutputs(): boolean {
-        if (this.useNativeEditorApi) {
+        if (this.useVSCodeNotebookEditorApi) {
             // Do not create new cells when using native editor.
             // We'll update the cells in place (cuz undo/redo is handled by VS Code).
             return true;
@@ -517,7 +517,7 @@ export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
         throw new Error('Unsupported NotebookModel');
     }
     const rawModel = model as NativeEditorNotebookModel;
-    rawModel.useNativeEditorApi = true;
+    rawModel.useVSCodeNotebookEditorApi = true;
 }
 
 @injectable()
@@ -540,7 +540,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeEditorApi: boolean
+        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -740,7 +740,7 @@ export class NativeEditorStorage implements INotebookStorage {
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return new NativeEditorNotebookModel(true, this.useNativeEditorApi, file, []);
+            return new NativeEditorNotebookModel(true, this.useVSCodeNotebookEditorApi, file, []);
         }
     }
 
@@ -808,7 +808,7 @@ export class NativeEditorStorage implements INotebookStorage {
                 : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
         return new NativeEditorNotebookModel(
             isTrusted,
-            this.useNativeEditorApi,
+            this.useVSCodeNotebookEditorApi,
             file,
             remapped,
             json,
