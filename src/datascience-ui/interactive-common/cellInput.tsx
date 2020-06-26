@@ -85,7 +85,7 @@ export class CellInput extends React.Component<ICellInputProps> {
     };
 
     private shouldRenderMarkdownEditor = (): boolean => {
-        return this.isMarkdownCell() && this.props.isNotebookTrusted;
+        return this.isMarkdownCell();
     };
 
     private getRenderableInputCode = (): string => {
