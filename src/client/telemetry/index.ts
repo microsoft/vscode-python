@@ -2170,6 +2170,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.StartPageOpenFileBrowser]: never | undefined;
     [Telemetry.StartPageOpenFolder]: never | undefined;
     [Telemetry.StartPageOpenWorkspace]: never | undefined;
+    [Telemetry.RunByLineStart]: never | undefined;
+    [Telemetry.RunByLineStep]: never | undefined;
+    [Telemetry.RunByLineStop]: never | undefined;
     [VSCodeNativeTelemetry.AddCell]: never | undefined;
     [VSCodeNativeTelemetry.DeleteCell]: never | undefined;
     [VSCodeNativeTelemetry.MoveCell]: never | undefined;
