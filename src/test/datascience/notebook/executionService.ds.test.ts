@@ -23,7 +23,6 @@ import {
     assertNotHasTextOutputInVSCode,
     assertVSCCellHasErrors,
     canRunTests,
-    closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     deleteAllCellsAndWait,
     insertPythonCellAndWait,
