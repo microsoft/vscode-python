@@ -6,7 +6,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { KernelSelection } from '../interactive-common/kernelSelection';
+import { JupyterInfo } from '../interactive-common/kernelSelection';
 import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -217,15 +217,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         ) {
             if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
                 return (
-                    <div className={'jupyter-info-container'}>
-                        <KernelSelection
-                            baseTheme={this.props.baseTheme}
-                            font={this.props.font}
-                            kernel={this.props.kernel}
-                            selectServer={this.props.selectServer}
-                            selectKernel={this.props.selectKernel}
-                        />
-                    </div>
+                    <JupyterInfo
+                        baseTheme={this.props.baseTheme}
+                        font={this.props.font}
+                        kernel={this.props.kernel}
+                        selectServer={this.props.selectServer}
+                        selectKernel={this.props.selectKernel}
+                    />
                 );
             } else if (this.props.kernel.localizedUri === getLocString('DataScience.localJupyterServer', 'local')) {
                 return;
@@ -233,15 +231,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         }
 
         return (
-            <div className={'jupyter-info-container'}>
-                <KernelSelection
-                    baseTheme={this.props.baseTheme}
-                    font={this.props.font}
-                    kernel={this.props.kernel}
-                    selectServer={this.props.selectServer}
-                    selectKernel={this.props.selectKernel}
-                />
-            </div>
+            <JupyterInfo
+                baseTheme={this.props.baseTheme}
+                font={this.props.font}
+                kernel={this.props.kernel}
+                selectServer={this.props.selectServer}
+                selectKernel={this.props.selectKernel}
+            />
         );
     }
 

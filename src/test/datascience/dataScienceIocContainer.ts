@@ -206,14 +206,11 @@ import { ExportBase } from '../../client/datascience/export/exportBase';
 import { ExportManager } from '../../client/datascience/export/exportManager';
 import { ExportManagerDependencyChecker } from '../../client/datascience/export/exportManagerDependencyChecker';
 import { ExportManagerFileOpener } from '../../client/datascience/export/exportManagerFileOpener';
-import {
-    ExportManagerFilePicker,
-    IExportManagerFilePicker
-} from '../../client/datascience/export/exportManagerFilePicker';
+import { ExportManagerFilePicker } from '../../client/datascience/export/exportManagerFilePicker';
 import { ExportToHTML } from '../../client/datascience/export/exportToHTML';
 import { ExportToPDF } from '../../client/datascience/export/exportToPDF';
 import { ExportToPython } from '../../client/datascience/export/exportToPython';
-import { ExportFormat, IExport, IExportManager } from '../../client/datascience/export/types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from '../../client/datascience/export/types';
 import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
