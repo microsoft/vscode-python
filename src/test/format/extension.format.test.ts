@@ -149,6 +149,7 @@ suite('Formatting - General', () => {
     test('Black', async function () {
         // https://github.com/microsoft/vscode-python/issues/12564
         // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
