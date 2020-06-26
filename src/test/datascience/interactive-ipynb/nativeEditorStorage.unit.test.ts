@@ -47,6 +47,7 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 
@@ -337,7 +338,7 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento,
             trustService,
-            false
+            new NotebookModelFactory(false)
         );
 
         return new NotebookStorageProvider(notebookStorage, []);
@@ -402,7 +403,7 @@ suite('DataScience - Native Editor Storage', () => {
             kind: 'remove_all',
             oldDirty: model.isDirty,
             newDirty: true,
-            oldCells: model.cells,
+            oldCells: [...model.cells],
             newCellId: '1'
         });
     }

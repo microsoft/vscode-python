@@ -8,8 +8,8 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { NativeEditorNotebookModel } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorViewTracker } from '../../client/datascience/interactive-ipynb/nativeEditorViewTracker';
+import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
 import { MockMemento } from '../mocks/mementos';
 

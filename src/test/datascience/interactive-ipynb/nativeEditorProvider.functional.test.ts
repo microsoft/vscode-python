@@ -55,6 +55,7 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
 import { MockWorkspaceConfiguration } from '../mockWorkspaceConfig';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 
 // tslint:disable: max-func-body-length
 suite('DataScience - Native Editor Provider', () => {
@@ -207,7 +208,7 @@ suite('DataScience - Native Editor Provider', () => {
             globalMemento,
             localMemento,
             trustService,
-            false
+            new NotebookModelFactory(false)
         );
 
         storageProvider = new NotebookStorageProvider(notebookStorage, []);

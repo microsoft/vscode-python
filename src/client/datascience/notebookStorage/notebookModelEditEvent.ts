@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { CustomDocument, CustomDocumentEditEvent } from '../../common/application/types';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { INotebookModel } from '../types';

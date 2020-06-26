@@ -120,7 +120,8 @@ function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INot
 
     // Create a new cell & replace old one.
     const oldCellIndex = model.cells.indexOf(cellModel);
-    model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
+    // TODO: CHANGE.
+    (model.cells as any)[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
     sendTelemetryEvent(
         change.cell.cellKind === vscodeNotebookEnums.CellKind.Markdown
             ? VSCodeNativeTelemetry.ChangeToMarkdown
@@ -176,8 +177,10 @@ function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel)
     assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
 
     const indexOfCellToSwap = model.cells.indexOf(cellToSwap);
-    model.cells[insertChange.start] = cellToSwap;
-    model.cells[indexOfCellToSwap] = cellToSwapWith;
+    // tslint:disable-next-line: no-any
+    (model.cells as any)[insertChange.start] = cellToSwap;
+    // tslint:disable-next-line: no-any
+    (model.cells as any)[indexOfCellToSwap] = cellToSwapWith;
     // Get model to fire events.
     model.update({
         source: 'user',
@@ -194,7 +197,8 @@ function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookM
     const insertChange = change.changes[0];
     const cell = change.changes[0].items[0];
     const newCell = createCellFromVSCNotebookCell(cell, model);
-    model.cells.splice(insertChange.start, 0, newCell);
+    // tslint:disable-next-line: no-any
+    (model.cells as any).splice(insertChange.start, 0, newCell);
     // Get model to fire events.
     model.update({
         source: 'user',
@@ -209,7 +213,8 @@ function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookMode
     assert.equal(change.changes.length, 1, 'When deleting cells we must have only 1 change');
     const deletionChange = change.changes[0];
     assert.equal(deletionChange.deletedCount, 1, 'Deleting more than one cell is not supported');
-    const cellToRemove = model.cells.splice(deletionChange.start, 1);
+    // tslint:disable-next-line: no-any
+    const cellToRemove = (model.cells as any).splice(deletionChange.start, 1);
     // Get model to fire events.
     model.update({
         source: 'user',

@@ -1,47 +1,25 @@
 import type { nbformat } from '@jupyterlab/coreutils';
-import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
+import { isFileNotFoundError } from '../../common/platform/errors';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
-import { PythonInterpreter } from '../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
-import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
-import { LiveKernelModel } from '../jupyter/kernels/types';
-import {
-    CellState,
-    ICell,
-    IJupyterExecution,
-    IJupyterKernelSpec,
-    INotebookModel,
-    INotebookStorage,
-    ITrustService
-} from '../types';
+import { INotebookModelFactory } from '../notebookStorage/types';
+import { CellState, IJupyterExecution, INotebookModel, INotebookStorage, ITrustService } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-import { UseVSCodeNotebookEditorApi } from '../../common/constants';
-import { isFileNotFoundError } from '../../common/platform/errors';
-import { sendTelemetryEvent } from '../../telemetry';
-import { pruneCell } from '../common';
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
-interface INativeEditorStorageState {
-    file: Uri;
-    cells: ICell[];
-    changeCount: number;
-    saveChangeCount: number;
-    notebookJson: Partial<nbformat.INotebookContent>;
-    isTrusted: boolean;
-}
 
 export function isUntitled(model?: INotebookModel): boolean {
     return isUntitledFile(model?.file);
@@ -66,452 +44,6 @@ export function getNextUntitledCounter(file: Uri | undefined, currentValue: numb
     return currentValue;
 }
 
-// Exported for test mocks
-export class NativeEditorNotebookModel implements INotebookModel {
-    public get onDidDispose() {
-        return this._disposed.event;
-    }
-    public get isDisposed() {
-        return this._isDisposed === true;
-    }
-    public get isDirty(): boolean {
-        return this._state.changeCount !== this._state.saveChangeCount;
-    }
-    public get changed(): Event<NotebookModelChange> {
-        return this._changedEmitter.event;
-    }
-    public get file(): Uri {
-        return this._state.file;
-    }
-
-    public get isUntitled(): boolean {
-        return isUntitled(this);
-    }
-    public get cells(): ICell[] {
-        return this._state.cells;
-    }
-    public get onDidEdit(): Event<NotebookModelChange> {
-        return this._editEventEmitter.event;
-    }
-    public get metadata(): nbformat.INotebookMetadata | undefined {
-        return this._state.notebookJson.metadata;
-    }
-    public get id() {
-        return this._id;
-    }
-    public get isTrusted() {
-        return this._state.isTrusted;
-    }
-    private _disposed = new EventEmitter<void>();
-    private _isDisposed?: boolean;
-    private _changedEmitter = new EventEmitter<NotebookModelChange>();
-    private _editEventEmitter = new EventEmitter<NotebookModelChange>();
-    private _state: INativeEditorStorageState = {
-        file: Uri.file(''),
-        changeCount: 0,
-        saveChangeCount: 0,
-        cells: [],
-        notebookJson: {},
-        isTrusted: false
-    };
-
-    private _id = uuid();
-
-    constructor(
-        isTrusted: boolean,
-        public useVSCodeNotebookEditorApi: boolean,
-        file: Uri,
-        cells: ICell[],
-        json: Partial<nbformat.INotebookContent> = {},
-        public readonly indentAmount: string = ' ',
-        private readonly pythonNumber: number = 3,
-        isInitiallyDirty: boolean = false
-    ) {
-        this._state.file = file;
-        this._state.cells = cells;
-        this._state.notebookJson = json;
-        this._state.isTrusted = isTrusted;
-        this.ensureNotebookJson();
-        if (isInitiallyDirty) {
-            // This means we're dirty. Indicate dirty and load from this content
-            this._state.saveChangeCount = -1;
-        }
-    }
-    // public static fromJson(json:nbformat.INotebookContent){
-
-    // }
-    public dispose() {
-        this._isDisposed = true;
-        this._disposed.fire();
-    }
-    public update(change: NotebookModelChange): void {
-        this.handleModelChange(change);
-    }
-
-    public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        if (this.useVSCodeNotebookEditorApi) {
-            throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
-        }
-        edits.forEach((e) => this.update({ ...e, source: 'redo' }));
-    }
-    public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        if (this.useVSCodeNotebookEditorApi) {
-            throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
-        }
-        edits.forEach((e) => this.update({ ...e, source: 'undo' }));
-    }
-
-    public getContent(): string {
-        return this.generateNotebookContent();
-    }
-
-    private handleModelChange(change: NotebookModelChange) {
-        const oldDirty = this.isDirty;
-        let changed = false;
-
-        if (this.useVSCodeNotebookEditorApi) {
-            changed = true;
-        } else {
-            switch (change.source) {
-                case 'redo':
-                case 'user':
-                    changed = this.handleRedo(change);
-                    break;
-                case 'undo':
-                    changed = this.handleUndo(change);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        // Forward onto our listeners if necessary
-        if (changed || this.isDirty !== oldDirty) {
-            this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty, model: this });
-        }
-        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
-        if ((changed || this.isDirty !== oldDirty) && change.kind !== 'version' && change.source === 'user') {
-            this._editEventEmitter.fire(change);
-        }
-    }
-
-    private handleRedo(change: NotebookModelChange): boolean {
-        let changed = false;
-        switch (change.kind) {
-            case 'clear':
-                changed = this.clearOutputs();
-                break;
-            case 'edit':
-                changed = this.editCell(change.forward, change.id);
-                break;
-            case 'insert':
-                changed = this.insertCell(change.cell, change.index);
-                break;
-            case 'changeCellType':
-                changed = this.changeCellType(change.cell);
-                break;
-            case 'modify':
-                changed = this.modifyCells(change.newCells);
-                break;
-            case 'remove':
-                changed = this.removeCell(change.cell);
-                break;
-            case 'remove_all':
-                changed = this.removeAllCells(change.newCellId);
-                break;
-            case 'swap':
-                changed = this.swapCells(change.firstCellId, change.secondCellId);
-                break;
-            case 'updateCellExecutionCount':
-                changed = this.updateCellExecutionCount(change.cellId, change.executionCount);
-                break;
-            case 'version':
-                changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
-                break;
-            case 'save':
-                this._state.saveChangeCount = this._state.changeCount;
-                break;
-            case 'saveAs':
-                this._state.saveChangeCount = this._state.changeCount;
-                this._state.changeCount = this._state.saveChangeCount = 0;
-                this._state.file = change.target;
-                break;
-            default:
-                break;
-        }
-
-        // Dirty state comes from undo. At least VS code will track it that way. However
-        // skip file changes as we don't forward those to VS code
-        if (change.kind !== 'save' && change.kind !== 'saveAs') {
-            this._state.changeCount += 1;
-        }
-
-        return changed;
-    }
-
-    private handleUndo(change: NotebookModelChange): boolean {
-        let changed = false;
-        switch (change.kind) {
-            case 'clear':
-                changed = !fastDeepEqual(this._state.cells, change.oldCells);
-                this._state.cells = change.oldCells;
-                break;
-            case 'edit':
-                this.editCell(change.reverse, change.id);
-                changed = true;
-                break;
-            case 'changeCellType':
-                this.changeCellType(change.cell);
-                changed = true;
-                break;
-            case 'insert':
-                changed = this.removeCell(change.cell);
-                break;
-            case 'modify':
-                changed = this.modifyCells(change.oldCells);
-                break;
-            case 'remove':
-                changed = this.insertCell(change.cell, change.index);
-                break;
-            case 'remove_all':
-                this._state.cells = change.oldCells;
-                changed = true;
-                break;
-            case 'swap':
-                changed = this.swapCells(change.firstCellId, change.secondCellId);
-                break;
-            default:
-                break;
-        }
-
-        // Dirty state comes from undo. At least VS code will track it that way.
-        // Note unlike redo, 'file' and 'version' are not possible on undo as
-        // we don't send them to VS code.
-        this._state.changeCount -= 1;
-
-        return changed;
-    }
-
-    private removeAllCells(newCellId: string) {
-        this._state.cells = [];
-        this._state.cells.push(this.createEmptyCell(newCellId));
-        return true;
-    }
-
-    private applyCellContentChange(change: IEditorContentChange, id: string): boolean {
-        const normalized = change.text.replace(/\r/g, '');
-
-        // Figure out which cell we're editing.
-        const index = this.cells.findIndex((c) => c.id === id);
-        if (index >= 0) {
-            // This is an actual edit.
-            const contents = concatMultilineStringInput(this.cells[index].data.source);
-            const before = contents.substr(0, change.rangeOffset);
-            const after = contents.substr(change.rangeOffset + change.rangeLength);
-            const newContents = `${before}${normalized}${after}`;
-            if (contents !== newContents) {
-                const newCell = {
-                    ...this.cells[index],
-                    data: { ...this.cells[index].data, source: splitMultilineString(newContents) }
-                };
-                this._state.cells[index] = this.asCell(newCell);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private editCell(changes: IEditorContentChange[], id: string): boolean {
-        // Apply the changes to the visible cell list
-        if (changes && changes.length) {
-            return changes.map((c) => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
-        }
-
-        return false;
-    }
-
-    private swapCells(firstCellId: string, secondCellId: string) {
-        const first = this.cells.findIndex((v) => v.id === firstCellId);
-        const second = this.cells.findIndex((v) => v.id === secondCellId);
-        if (first >= 0 && second >= 0 && first !== second) {
-            const temp = { ...this.cells[first] };
-            this._state.cells[first] = this.asCell(this.cells[second]);
-            this._state.cells[second] = this.asCell(temp);
-            return true;
-        }
-        return false;
-    }
-
-    private updateCellExecutionCount(cellId: string, executionCount?: number) {
-        const index = this.cells.findIndex((v) => v.id === cellId);
-        if (index >= 0) {
-            this._state.cells[index].data.execution_count =
-                typeof executionCount === 'number' && executionCount > 0 ? executionCount : null;
-            return true;
-        }
-        return false;
-    }
-
-    private modifyCells(cells: ICell[]): boolean {
-        // Update these cells in our list
-        cells.forEach((c) => {
-            const index = this.cells.findIndex((v) => v.id === c.id);
-            this._state.cells[index] = this.asCell(c);
-        });
-        return true;
-    }
-
-    private changeCellType(cell: ICell): boolean {
-        // Update the cell in our list.
-        const index = this.cells.findIndex((v) => v.id === cell.id);
-        this._state.cells[index] = this.asCell(cell);
-        return true;
-    }
-
-    private removeCell(cell: ICell): boolean {
-        const index = this.cells.findIndex((c) => c.id === cell.id);
-        if (index >= 0) {
-            this._state.cells.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private clearOutputs(): boolean {
-        if (this.useVSCodeNotebookEditorApi) {
-            // Do not create new cells when using native editor.
-            // We'll update the cells in place (cuz undo/redo is handled by VS Code).
-            return true;
-        }
-        const newCells = this.cells.map((c) =>
-            this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } })
-        );
-        const result = !fastDeepEqual(newCells, this.cells);
-        this._state.cells = newCells;
-        return result;
-    }
-
-    private insertCell(cell: ICell, index: number): boolean {
-        // Insert a cell into our visible list based on the index. They should be in sync
-        this._state.cells.splice(index, 0, cell);
-        return true;
-    }
-
-    // tslint:disable-next-line: cyclomatic-complexity
-    private updateVersionInfo(
-        interpreter: PythonInterpreter | undefined,
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
-    ): boolean {
-        let changed = false;
-        // Get our kernel_info and language_info from the current notebook
-        if (
-            interpreter &&
-            interpreter.version &&
-            this._state.notebookJson.metadata &&
-            this._state.notebookJson.metadata.language_info &&
-            this._state.notebookJson.metadata.language_info.version !== interpreter.version.raw
-        ) {
-            this._state.notebookJson.metadata.language_info.version = interpreter.version.raw;
-            changed = true;
-        }
-
-        if (kernelSpec && this._state.notebookJson.metadata && !this._state.notebookJson.metadata.kernelspec) {
-            // Add a new spec in this case
-            this._state.notebookJson.metadata.kernelspec = {
-                name: kernelSpec.name || kernelSpec.display_name || '',
-                display_name: kernelSpec.display_name || kernelSpec.name || ''
-            };
-            changed = true;
-        } else if (kernelSpec && this._state.notebookJson.metadata && this._state.notebookJson.metadata.kernelspec) {
-            // Spec exists, just update name and display_name
-            const name = kernelSpec.name || kernelSpec.display_name || '';
-            const displayName = kernelSpec.display_name || kernelSpec.name || '';
-            if (
-                this._state.notebookJson.metadata.kernelspec.name !== name ||
-                this._state.notebookJson.metadata.kernelspec.display_name !== displayName
-            ) {
-                changed = true;
-                this._state.notebookJson.metadata.kernelspec.name = name;
-                this._state.notebookJson.metadata.kernelspec.display_name = displayName;
-            }
-        }
-        return changed;
-    }
-
-    // tslint:disable-next-line: no-any
-    private asCell(cell: any): ICell {
-        // Works around problems with setting a cell to another one in the nyc compiler.
-        return cell as ICell;
-    }
-
-    private createEmptyCell(id: string) {
-        return {
-            id,
-            line: 0,
-            file: Identifiers.EmptyFileName,
-            state: CellState.finished,
-            data: createCodeCell()
-        };
-    }
-
-    private ensureNotebookJson() {
-        if (!this._state.notebookJson || !this._state.notebookJson.metadata) {
-            // const pythonNumber = await this.extractPythonMainVersion(this._state.notebookJson);
-            const pythonNumber = this.pythonNumber;
-            // Use this to build our metadata object
-            // Use these as the defaults unless we have been given some in the options.
-            const metadata: nbformat.INotebookMetadata = {
-                language_info: {
-                    codemirror_mode: {
-                        name: 'ipython',
-                        version: pythonNumber
-                    },
-                    file_extension: '.py',
-                    mimetype: 'text/x-python',
-                    name: 'python',
-                    nbconvert_exporter: 'python',
-                    pygments_lexer: `ipython${pythonNumber}`,
-                    version: pythonNumber
-                },
-                orig_nbformat: 2
-            };
-
-            // Default notebook data.
-            this._state.notebookJson = {
-                metadata: metadata,
-                nbformat: 4,
-                nbformat_minor: 2
-            };
-        }
-    }
-
-    private generateNotebookContent(): string {
-        // Make sure we have some
-        this.ensureNotebookJson();
-
-        // Reuse our original json except for the cells.
-        const json = {
-            cells: this.cells.map((c) => pruneCell(c.data)),
-            metadata: this._state.notebookJson.metadata,
-            nbformat: this._state.notebookJson.nbformat,
-            nbformat_minor: this._state.notebookJson.nbformat_minor
-        };
-        return JSON.stringify(json, null, this.indentAmount);
-    }
-}
-
-/**
- * Marks a model as being used solely by VS Code Notebooks editor.
- * (this is required, because at the time of loading a notebook its not always possible to know what editor will use it).
- */
-export function updateModelForUseWithVSCodeNotebook(model: INotebookModel) {
-    if (!(model instanceof NativeEditorNotebookModel)) {
-        throw new Error('Unsupported NotebookModel');
-    }
-    const rawModel = model as NativeEditorNotebookModel;
-    rawModel.useVSCodeNotebookEditorApi = true;
-}
-
 @injectable()
 export class NativeEditorStorage implements INotebookStorage {
     public get onSavedAs(): Event<{ new: Uri; old: Uri }> {
@@ -532,7 +64,7 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean
+        @inject(INotebookModelFactory) private readonly factory: INotebookModelFactory
     ) {}
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
@@ -696,13 +228,24 @@ export class NativeEditorStorage implements INotebookStorage {
             noop();
         }
     }
-    private loadFromFile(file: Uri, possibleContents?: string, backupId?: string): Promise<INotebookModel>;
-    // tslint:disable-next-line: unified-signatures
-    private loadFromFile(file: Uri, possibleContents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    private loadFromFile(
+        file: Uri,
+        possibleContents?: string,
+        backupId?: string,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    private loadFromFile(
+        file: Uri,
+        possibleContents?: string,
+        // tslint:disable-next-line: unified-signatures
+        skipDirtyContents?: boolean,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
     private async loadFromFile(
         file: Uri,
         possibleContents?: string,
-        options?: boolean | string
+        options?: boolean | string,
+        forVSCodeNotebook?: boolean
     ): Promise<INotebookModel> {
         try {
             // Attempt to read the contents if a viable file
@@ -724,15 +267,15 @@ export class NativeEditorStorage implements INotebookStorage {
             const dirtyContents = skipDirtyContents ? undefined : await this.getStoredContents(file, backupId);
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(file, dirtyContents, true, contents);
+                return this.loadContents(file, dirtyContents, true, contents, forVSCodeNotebook);
             } else {
                 // Load without setting dirty
-                return this.loadContents(file, contents);
+                return this.loadContents(file, contents, undefined, undefined, forVSCodeNotebook);
             }
         } catch (ex) {
             // May not exist at this time. Should always have a single cell though
             traceError(`Failed to load notebook file ${file.toString()}`, ex);
-            return new NativeEditorNotebookModel(true, this.useVSCodeNotebookEditorApi, file, []);
+            return this.factory.createModel({ trusted: true, file, cells: [] }, forVSCodeNotebook);
         }
     }
 
@@ -750,7 +293,8 @@ export class NativeEditorStorage implements INotebookStorage {
         file: Uri,
         contents: string | undefined,
         isInitiallyDirty = false,
-        trueContents?: string
+        trueContents?: string,
+        forVSCodeNotebook?: boolean
     ) {
         // tslint:disable-next-line: no-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
@@ -798,15 +342,17 @@ export class NativeEditorStorage implements INotebookStorage {
             contents === undefined || isUntitledFile(file)
                 ? true // If no contents or untitled, this is a newly created file, so it should be trusted
                 : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
-        return new NativeEditorNotebookModel(
-            isTrusted,
-            this.useVSCodeNotebookEditorApi,
-            file,
-            remapped,
-            json,
-            indentAmount,
-            pythonNumber,
-            isInitiallyDirty
+        return this.factory.createModel(
+            {
+                trusted: isTrusted,
+                file,
+                cells: remapped,
+                notebookJson: json,
+                indentAmount,
+                pythonNumber,
+                initiallyDirty: isInitiallyDirty
+            },
+            forVSCodeNotebook
         );
     }
 

@@ -171,6 +171,7 @@ import {
     IThemeFinder,
     ITrustService
 } from './types';
+import { NotebookModelFactory } from './notebookStorage/factory';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?
 
@@ -197,6 +198,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     }
 
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider, undefined, [INotebookExecutionLogger]);
+    serviceManager.addSingleton<NotebookModelFactory>(NotebookModelFactory, NotebookModelFactory);
     serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);

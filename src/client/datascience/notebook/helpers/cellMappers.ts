@@ -74,7 +74,7 @@ export function findMappedNotebookCell(source: ICell, cells: NotebookCell[]): No
     return found[0];
 }
 
-export function findMappedNotebookCellModel(source: NotebookCell, cells: ICell[]): ICell {
+export function findMappedNotebookCellModel(source: NotebookCell, cells: readonly ICell[]): ICell {
     // If so, then we have a problem.
     const found = cells.filter((cell) => cell.id === getOriginalCellId(source));
     assert.ok(found.length, `ICell not found, for CellId = ${getOriginalCellId(source)} in ${source}`);

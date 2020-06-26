@@ -21,7 +21,6 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
-import { updateModelForUseWithVSCodeNotebook } from '../interactive-ipynb/nativeEditorStorage';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
@@ -162,7 +161,6 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         }
         const uri = doc.uri;
         const model = await this.storage.load(uri);
-        updateModelForUseWithVSCodeNotebook(model); // take ownership of this model.
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
