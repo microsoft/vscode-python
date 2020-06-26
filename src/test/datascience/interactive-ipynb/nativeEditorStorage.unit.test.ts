@@ -12,6 +12,7 @@ import { ConfigurationChangeEvent, EventEmitter, FileType, TextEditor, Uri } fro
 import { CancellationToken } from 'vscode-jsonrpc';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import {
+    ICommandManager,
     IDocumentManager,
     IWebPanelMessageListener,
     IWebPanelProvider,
@@ -62,6 +63,7 @@ suite('DataScience - Native Editor Storage', () => {
     let globalMemento: MockMemento;
     let localMemento: MockMemento;
     let trustService: ITrustService;
+    let commandManager: ICommandManager;
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
@@ -257,6 +259,7 @@ suite('DataScience - Native Editor Storage', () => {
         webPanelProvider = mock(WebPanelProvider);
         executionProvider = mock(JupyterExecutionFactory);
         trustService = mock(TrustService);
+        commandManager = mock(ICommandManager);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -337,7 +340,8 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento,
             trustService,
-            false
+            false,
+            commandManager
         );
 
         return new NotebookStorageProvider(notebookStorage, []);

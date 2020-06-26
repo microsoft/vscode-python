@@ -11,7 +11,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { isUntitledFile, noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
-import { Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
+import { EditorContexts, Identifiers, KnownNotebookLanguages, Telemetry } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -27,7 +27,9 @@ import {
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
+import { ICommandManager } from '../../common/application/types';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
+import { ContextKey } from '../../common/contextKey';
 import { isFileNotFoundError } from '../../common/platform/errors';
 import { sendTelemetryEvent } from '../../telemetry';
 import { pruneCell } from '../common';
@@ -516,6 +518,7 @@ export class NativeEditorStorage implements INotebookStorage {
         return this.savedAs.event;
     }
     private readonly savedAs = new EventEmitter<{ new: Uri; old: Uri }>();
+    private isNotebookTrustedContextKey: ContextKey;
 
     // Keep track of if we are backing up our file already
     private backingUp = false;
@@ -530,8 +533,11 @@ export class NativeEditorStorage implements INotebookStorage {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ITrustService) private trustService: ITrustService,
-        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeEditorApi: boolean
-    ) {}
+        @inject(UseVSCodeNotebookEditorApi) private readonly useNativeEditorApi: boolean,
+        @inject(ICommandManager) private commandManager: ICommandManager
+    ) {
+        this.isNotebookTrustedContextKey = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
+    }
     private static isUntitledFile(file: Uri) {
         return isUntitledFile(file);
     }
@@ -796,6 +802,7 @@ export class NativeEditorStorage implements INotebookStorage {
             contents === undefined || isUntitledFile(file)
                 ? true // If no contents or untitled, this is a newly created file, so it should be trusted
                 : await this.trustService.isNotebookTrusted(file.toString(), contentsToCheck!);
+        await this.isNotebookTrustedContextKey.set(isTrusted);
         return new NativeEditorNotebookModel(
             isTrusted,
             this.useNativeEditorApi,
