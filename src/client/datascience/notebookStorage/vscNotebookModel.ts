@@ -29,12 +29,6 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
     public associateNotebookDocument(document: NotebookDocument) {
         this.document = document;
     }
-    public async applyEdits(_: readonly NotebookModelChange[]): Promise<void> {
-        throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
-    }
-    public async undoEdits(_: readonly NotebookModelChange[]): Promise<void> {
-        throw new Error('INotebookModel.applyEdits Not supported when using VSCode Notebooks');
-    }
     protected handleRedo(change: NotebookModelChange): boolean {
         super.handleRedo(change);
         return true;

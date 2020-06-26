@@ -1019,8 +1019,6 @@ export interface INotebookModel {
     readonly metadata: nbformat.INotebookMetadata | undefined;
     readonly isTrusted: boolean;
     getContent(): string;
-    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
-    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
     update(change: NotebookModelChange): void;
     /**
      * Dispose of the Notebook model.

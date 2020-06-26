@@ -146,7 +146,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
     }
     private async getNotebookAndModel(document: NotebookDocument): Promise<{ model: INotebookModel; nb: INotebook }> {
-        const model = await this.notebookStorage.load(document.uri, undefined, undned, true);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         const nb = await this.notebookProvider.getOrCreateNotebook({
             identity: document.uri,
             resource: document.uri,

@@ -65,13 +65,6 @@ export abstract class BaseNotebookModel implements INotebookModel {
         this.handleModelChange(change);
     }
 
-    public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach((e) => this.update({ ...e, source: 'redo' }));
-    }
-    public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach((e) => this.update({ ...e, source: 'undo' }));
-    }
-
     public getContent(): string {
         return this.generateNotebookContent();
     }
