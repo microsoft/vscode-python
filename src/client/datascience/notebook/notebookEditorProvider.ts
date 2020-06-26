@@ -160,7 +160,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const uri = doc.uri;
-        const model = await this.storage.load(uri);
+        const model = await this.storage.load(uri, undefined, undefined, true);
         mapVSCNotebookCellsToNotebookCellModels(doc, model);
         // In open method we might be waiting.
         let editor = this.notebookEditorsByUri.get(uri.toString());
@@ -231,7 +231,7 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         if (!isJupyterNotebook(e.document)) {
             return;
         }
-        const model = await this.storage.load(e.document.uri);
+        const model = await this.storage.load(e.document.uri, undefined, undefined, true);
         if (updateCellModelWithChangesToVSCCell(e, model)) {
             // If we have updated the notebook document, then trigger changes.
             this.contentProvider.notifyChangesToDocument(e.document);
