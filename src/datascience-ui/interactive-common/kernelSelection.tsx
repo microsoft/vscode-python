@@ -64,6 +64,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     }
 
     private renderKernelStatus(displayNameTextWidth: React.CSSProperties) {
+        const ariaDisabled = this.props.isNotebookTrusted === undefined ? false : this.props.isNotebookTrusted;
         if (this.isKernelSelectionAllowed) {
             return (
                 <div
@@ -71,7 +72,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
                     style={displayNameTextWidth}
                     onClick={this.selectKernel}
                     role="button"
-                    aria-disabled={!!this.props.isNotebookTrusted}
+                    aria-disabled={ariaDisabled}
                 >
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
