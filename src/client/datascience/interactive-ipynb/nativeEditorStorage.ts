@@ -80,9 +80,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
     public get changed(): Event<NotebookModelChange> {
         return this._changedEmitter.event;
     }
-    public get saved(): Event<void> {
-        return this._saved.event;
-    }
     public get file(): Uri {
         return this._state.file;
     }
@@ -108,7 +105,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
     private _disposed = new EventEmitter<void>();
     private _isDisposed?: boolean;
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
-    private _saved = new EventEmitter<void>();
     private _editEventEmitter = new EventEmitter<NotebookModelChange>();
     private _state: INativeEditorStorageState = {
         file: Uri.file(''),
@@ -175,9 +171,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
 
         if (this.useVSCodeNotebookEditorApi) {
             changed = true;
-            if (change.kind === 'save') {
-                this._saved.fire();
-            }
         } else {
             switch (change.source) {
                 case 'redo':
@@ -237,7 +230,6 @@ export class NativeEditorNotebookModel implements INotebookModel {
                 break;
             case 'save':
                 this._state.saveChangeCount = this._state.changeCount;
-                this._saved.fire();
                 break;
             case 'saveAs':
                 this._state.saveChangeCount = this._state.changeCount;
