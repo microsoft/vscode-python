@@ -19,6 +19,8 @@
 				"command": "ms-ai-tools-test.helloWorld",
 				"title": "Hello World"
 			}
+		],
+		"pythonRemoteServerProvider": [
 		]
 	},
 	"scripts": {
