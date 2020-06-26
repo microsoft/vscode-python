@@ -71,20 +71,6 @@ export class JupyterSession extends BaseJupyterSession {
         await this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public requestExecute(
-        content: KernelMessage.IExecuteRequestMsg['content'],
-        disposeOnDone?: boolean,
-        metadata?: JSONObject
-    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        const result = super.requestExecute(content, disposeOnDone, metadata);
-        // It has been observed that starting the restart session slows down first time to execute a cell.
-        // Solution is to start the restart session after the first execution of user code.
-        if (!content.silent && result && !isTestExecution()) {
-            result.done.finally(() => this.startRestartSession()).ignoreErrors();
-        }
-        return result;
-    }
-
     public async connect(cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
