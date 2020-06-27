@@ -1262,7 +1262,7 @@ export interface IJupyterUriQuickPicker {
 export const IJupyterUriQuickPickerRegistration = Symbol('IJupyterUriQuickPickerRegistration');
 
 export interface IJupyterUriQuickPickerRegistration {
-    readonly pickers: ReadonlyArray<IJupyterUriQuickPicker>;
+    getPickers(): Promise<ReadonlyArray<IJupyterUriQuickPicker>>;
     registerPicker(picker: IJupyterUriQuickPicker): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }

@@ -6,11 +6,15 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IBaseCellVSCodeMetadata } from '../../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
 import { ICell, INotebookModel } from '../../types';
 import { findMappedNotebookCell } from './cellMappers';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
+
+export interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
 
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
@@ -140,7 +144,8 @@ export function updateCellExecutionTimes(notebookCellModel: ICell, startTime?: n
 }
 
 export function updateCellMetadata(notebookCellModel: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
-    const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
+    // tslint:disable-next-line: no-any
+    const originalVscodeMetadata: IBaseCellVSCodeMetadata = (notebookCellModel.data.metadata.vscode || {}) as any;
     // Update our model with the new metadata stored in jupyter.
     notebookCellModel.data.metadata = {
         ...notebookCellModel.data.metadata,

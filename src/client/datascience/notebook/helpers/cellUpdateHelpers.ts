@@ -79,8 +79,10 @@ function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INoteboo
             cell.data.execution_count = null;
         }
         if (cell.data.metadata.vscode) {
-            cell.data.metadata.vscode.start_execution_time = undefined;
-            cell.data.metadata.vscode.end_execution_time = undefined;
+            // tslint:disable-next-line: no-any
+            (cell.data.metadata.vscode as any).start_execution_time = undefined;
+            // tslint:disable-next-line: no-any
+            (cell.data.metadata.vscode as any).end_execution_time = undefined;
         }
         cell.data.outputs = [];
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);

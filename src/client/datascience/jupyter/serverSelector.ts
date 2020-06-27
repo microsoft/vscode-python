@@ -57,7 +57,7 @@ export class JupyterServerSelector {
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder: DataScience.jupyterSelectURIQuickPickPlaceholder(),
-            items: this.getUriPickList(allowLocal),
+            items: await this.getUriPickList(allowLocal),
             title: allowLocal
                 ? DataScience.jupyterSelectURIQuickPickTitle()
                 : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()
@@ -163,10 +163,11 @@ export class JupyterServerSelector {
         }
     };
 
-    private getUriPickList(allowLocal: boolean): ISelectUriQuickPickItem[] {
+    private async getUriPickList(allowLocal: boolean): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let pickerItems: ISelectUriQuickPickItem[] = [];
-        this.extraUriPickers.pickers.forEach((p) => {
+        const pickers = await this.extraUriPickers.getPickers();
+        pickers.forEach((p) => {
             const newPickerItems = p.getQuickPickEntryItems().map((i) => {
                 return { ...i, newChoice: false, picker: p };
             });
