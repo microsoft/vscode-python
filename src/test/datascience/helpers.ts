@@ -10,6 +10,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 export function defaultDataScienceSettings(): IDataScienceSettings {
     return {
         allowImportFromNotebook: true,
+        alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         enabled: true,
