@@ -65,7 +65,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 }
             ]
         };
-        when(storageProvider.load(anything(), anything(), anything())).thenResolve(
+        when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
             (model as unknown) as INotebookModel
         );
 
@@ -143,7 +143,7 @@ suite('Data Science - NativeNotebook ContentProvider', () => {
                 }
             ]
         };
-        when(storageProvider.load(anything(), anything(), anything())).thenResolve(
+        when(storageProvider.load(anything(), anything(), anything(), anything())).thenResolve(
             (model as unknown) as INotebookModel
         );
 
