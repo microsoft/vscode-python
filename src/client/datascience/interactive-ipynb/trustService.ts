@@ -5,14 +5,14 @@ import { IDigestStorage, ITrustService } from '../types';
 
 @injectable()
 export class TrustService implements ITrustService {
-    private alwaysTrustNotebooks: boolean;
+    private get alwaysTrustNotebooks() {
+        return this.configService.getSettings().datascience.alwaysTrustNotebooks;
+    }
     constructor(
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {
-        this.alwaysTrustNotebooks = this.configService.getSettings().datascience.alwaysTrustNotebooks;
-    }
+    ) {}
 
     /**
      * When a notebook is opened, we check the database to see if a trusted checkpoint
