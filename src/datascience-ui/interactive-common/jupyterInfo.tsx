@@ -6,7 +6,7 @@ import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IFont, IServerState, ServerStatus } from './mainState';
 
-export interface IKernelSelectionProps {
+export interface IJupyterInfoProps {
     baseTheme: string;
     font: IFont;
     kernel: IServerState;
@@ -16,14 +16,14 @@ export interface IKernelSelectionProps {
     selectKernel(): void;
 }
 
-export class JupyterInfo extends React.Component<IKernelSelectionProps> {
+export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     private get isKernelSelectionAllowed() {
         return (
             this.props.kernel.jupyterServerStatus !== ServerStatus.Restarting &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Starting
         );
     }
-    constructor(prop: IKernelSelectionProps) {
+    constructor(prop: IJupyterInfoProps) {
         super(prop);
         this.selectKernel = this.selectKernel.bind(this);
     }

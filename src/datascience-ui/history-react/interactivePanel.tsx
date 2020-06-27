@@ -6,7 +6,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { JupyterInfo } from '../interactive-common/kernelSelection';
+import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
