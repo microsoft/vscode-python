@@ -2941,6 +2941,12 @@
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
                 },
+                "python.dataScience.alwaysTrustNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "",
+                    "scope": "application"
+                },
                 "python.insidersChannel": {
                     "type": "string",
                     "default": "off",
