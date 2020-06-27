@@ -271,6 +271,7 @@ import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelL
 import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { NotebookAndInteractiveWindowUsageTracker } from '../../client/datascience/notebookAndInteractiveTracker';
 import { NotebookModelFactory } from '../../client/datascience/notebookStorage/factory';
+import { INotebookModelFactory } from '../../client/datascience/notebookStorage/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -617,7 +618,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ExportManagerDependencyChecker,
             ExportManagerDependencyChecker
         );
-        this.serviceManager.addSingleton<NotebookModelFactory>(NotebookModelFactory, NotebookModelFactory);
+        this.serviceManager.addSingleton<INotebookModelFactory>(INotebookModelFactory, NotebookModelFactory);
         this.serviceManager.addSingleton<IExportManager>(IExportManager, ExportManagerFileOpener);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToPDF, ExportFormat.pdf);
         this.serviceManager.addSingleton<IExport>(IExport, ExportToHTML, ExportFormat.html);
