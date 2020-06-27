@@ -15,7 +15,7 @@ import { NotebookModelChange } from '../../client/datascience/interactive-common
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
-import { INotebookEditor, INotebookEditorProvider} from '../../client/datascience/types';
+import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
 @injectable()
