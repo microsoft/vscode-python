@@ -8,10 +8,11 @@ import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
 
 export class CellMatcher {
+    public codeExecRegEx: RegExp;
+    public markdownExecRegEx: RegExp;
+
     private codeMatchRegEx: RegExp;
     private markdownMatchRegEx: RegExp;
-    private codeExecRegEx: RegExp;
-    private markdownExecRegEx: RegExp;
     private defaultCellMarker: string;
     private defaultCellMarkerExec: RegExp;
 

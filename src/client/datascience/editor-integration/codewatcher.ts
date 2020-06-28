@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import {
     CodeLens,
+    commands,
     Event,
     EventEmitter,
     Position,
@@ -637,6 +638,45 @@ export class CodeWatcher implements ICodeWatcher {
         return this.moveCellsDirection(false);
     }
 
+    public async changeCellToMarkdown(): Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        const cell = this.getCellFromPosition();
+        if (editor && cell) {
+            if (cell.cell_type === 'markdown') {
+                return Promise.resolve();
+            }
+
+            const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri).datascience);
+            const definitionLine = editor.document.lineAt(cell.range.start.line);
+            const definitionText = editor.document.getText(definitionLine.range);
+            const definitionMatch = cellMatcher.codeExecRegEx.exec(definitionText);
+            if (!definitionMatch) {
+                return Promise.resolve();
+            }
+            const definitionExtra = definitionMatch[definitionMatch.length - 1];
+
+            const cellMarker = this.getDefaultCellMarker(editor.document.uri);
+            const newDefinitionText = `${cellMarker} [markdown]${definitionExtra}`;
+            await editor.edit(async (editBuilder) => {
+                editBuilder.replace(definitionLine.range, newDefinitionText);
+                cell.cell_type = 'markdown';
+                if (cell.range.start.line < cell.range.end.line) {
+                    editor.selection = new Selection(
+                        cell.range.start.line + 1,
+                        0,
+                        cell.range.end.line,
+                        cell.range.end.character
+                    );
+                    // ensure all lines in markdown cell have a comment.
+                    // these are not included in the test because it's unclear
+                    // how TypeMoq works with them.
+                    await commands.executeCommand('editor.action.removeCommentLine');
+                    await commands.executeCommand('editor.action.addCommentLine');
+                }
+            });
+        }
+    }
+
     private async moveCellsDirection(directionUp: boolean): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (!editor || !editor.selection) {
@@ -940,7 +980,7 @@ export class CodeWatcher implements ICodeWatcher {
         if (!position) {
             const editor = this.documentManager.activeTextEditor;
             if (editor && editor.selection) {
-                position = editor.selection.start;
+                position = editor.selection.active;
             }
         }
         if (position) {

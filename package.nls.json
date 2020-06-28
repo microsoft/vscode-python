@@ -74,6 +74,7 @@
     "python.command.python.datascience.extendSelectionByCellBelow.title": "Extend Selection By Cell Below",
     "python.command.python.datascience.moveCellsUp.title": "Move Selected Cells Up",
     "python.command.python.datascience.moveCellsDown.title": "Move Selected Cells Down",
+    "python.command.python.datascience.changeCellToMarkdown.title": "Change Cell to Markdown",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
     "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
     "python.command.python.datascience.selectjupytercommandline.title": "Specify Jupyter command line arguments",
