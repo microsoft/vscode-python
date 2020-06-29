@@ -226,10 +226,16 @@ export class StartPage extends WebViewHost<IStartPageMapping> implements IStartP
         const version: string = this.appEnvironment.packageJson.version;
         let shouldShowStartPage: boolean;
 
-        if (savedVersion && (savedVersion === version || this.savedVersionisOlder(savedVersion, version))) {
-            // There has not been an update
-            shouldShowStartPage = false;
+        if (savedVersion) {
+            if (savedVersion === version || this.savedVersionisOlder(savedVersion, version)) {
+                // There has not been an update
+                shouldShowStartPage = false;
+            } else {
+                sendTelemetryEvent(Telemetry.StartPageOpenedFromNewUpdate);
+                shouldShowStartPage = true;
+            }
         } else {
+            sendTelemetryEvent(Telemetry.StartPageOpenedFromNewInstall);
             shouldShowStartPage = true;
         }
 
