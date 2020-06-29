@@ -10,6 +10,7 @@ export async function activate(_context: vscode.ExtensionContext) {
     if (python) {
         if (!python.isActive) {
             await python.activate();
+            await python.exports.ready;
         }
         python.exports.datascience.registerRemoteServerProvider(new RemoteServerPickerExample());
     }

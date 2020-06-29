@@ -4,7 +4,6 @@
 import { exec } from 'child_process';
 import * as uuid from 'uuid/v4';
 import { QuickPickItem } from 'vscode';
-import { createDeferred } from './async';
 import {
     IJupyterServerUri,
     IJupyterUriQuickPicker,
@@ -52,30 +51,30 @@ export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
     }
 
     public getServerUri(_handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
-        const headerResults = createDeferred<IJupyterServerUri>();
-        exec(
-            'az account get-access-token',
-            {
-                windowsHide: true,
-                encoding: 'utf-8'
-            },
-            (_e, stdout, _stderr) => {
-                // Stdout (if it worked) should have something like so:
-                // accessToken: bearerToken value
-                // tokenType: Bearer
-                // some other stuff
-                if (stdout) {
-                    const output = JSON.parse(stdout.toString());
-                    headerResults.resolve({
-                        baseUrl: Compute_ServerUri,
-                        token: '', //output.accessToken,
-                        authorizationHeader: { Authorization: `Bearer ${output.accessToken}` }
-                    });
-                } else {
-                    headerResults.reject('Unable to get az token');
+        return new Promise((resolve, reject) => {
+            exec(
+                'az account get-access-token',
+                {
+                    windowsHide: true,
+                    encoding: 'utf-8'
+                },
+                (_e, stdout, _stderr) => {
+                    // Stdout (if it worked) should have something like so:
+                    // accessToken: bearerToken value
+                    // tokenType: Bearer
+                    // some other stuff
+                    if (stdout) {
+                        const output = JSON.parse(stdout.toString());
+                        resolve({
+                            baseUrl: Compute_ServerUri,
+                            token: '', //output.accessToken,
+                            authorizationHeader: { Authorization: `Bearer ${output.accessToken}` }
+                        });
+                    } else {
+                        reject('Unable to get az token');
+                    }
                 }
-            }
-        );
-        return headerResults.promise;
+            );
+        });
     }
 }
