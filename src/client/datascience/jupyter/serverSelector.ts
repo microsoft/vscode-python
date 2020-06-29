@@ -167,7 +167,7 @@ export class JupyterServerSelector {
         // Ask our providers to stick on items
         let pickerItems: ISelectUriQuickPickItem[] = [];
         const pickers = await this.extraUriPickers.getPickers();
-        pickers.forEach((p) => {
+        pickers?.forEach((p) => {
             const newPickerItems = p.getQuickPickEntryItems().map((i) => {
                 return { ...i, newChoice: false, picker: p };
             });
