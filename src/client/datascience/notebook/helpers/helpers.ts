@@ -56,10 +56,10 @@ export function notebookModelToVSCNotebookData(model: INotebookModel): NotebookD
         .filter((item) => !!item)
         .map((item) => item!);
 
-    const defaultLangauge = getDefaultCodeLanguage(model);
+    const defaultLanguage = getDefaultCodeLanguage(model);
     return {
         cells,
-        languages: [defaultLangauge],
+        languages: [defaultLanguage],
         metadata: {
             cellEditable: true,
             cellRunnable: true,
@@ -122,7 +122,8 @@ export function createCellFromVSCNotebookCell(vscCell: NotebookCell, model: INot
 /**
  * Updates the VSC Cell metadata with metadata from our cells.
  * If user exits without saving, then we have all metadata in VSC document.
- * (required for hot exit).
+ * This way when users copy a cell, we have everything in the old cell to create a duplicate of the Jupyter cell.
+ * (Remember: VSC Cells less information compared to Jupyter cells).
  */
 export function updateVSCNotebookCellMetadata(cellMetadata: NotebookCellMetadata, cell: ICell) {
     cellMetadata.custom = cellMetadata.custom ?? {};
@@ -243,7 +244,7 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): CellOutput 
  */
 function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayOutput | undefined {
     const mimeTypes = Object.keys(output.data || {});
-    // If no mimetype data, then there's nothing to display.
+    // If no mimeType data, then there's nothing to display.
     if (!mimeTypes.length) {
         return;
     }
@@ -272,7 +273,7 @@ function translateDisplayDataOutput(output: nbformat.IDisplayData): CellDisplayO
         }
 
         // Hack, use same classes as used in VSCode for images.
-        // This is to maintain consistenly in displaying images (if we hadn't used HTML).
+        // This is to maintain consistently in displaying images (if we hadn't used HTML).
         // See src/vs/workbench/contrib/notebook/browser/view/output/transforms/richTransform.ts
         data[
             'text/html'

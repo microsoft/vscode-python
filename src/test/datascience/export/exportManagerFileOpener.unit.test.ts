@@ -4,7 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../client/common/types';
@@ -29,10 +29,13 @@ suite('Data Science - Export File Opener', () => {
         applicationShell = mock<IApplicationShell>();
         browserService = mock<IBrowserService>();
         const reporter = mock(ProgressReporter);
+        const editor = mock<TextEditor>();
+        // tslint:disable-next-line: no-any
+        (instance(editor) as any).then = undefined;
         // tslint:disable-next-line: no-any
         when(reporter.createProgressIndicator(anything())).thenReturn(instance(mock<IDisposable>()) as any);
         when(documentManager.openTextDocument(anything())).thenResolve();
-        when(documentManager.showTextDocument(anything())).thenResolve();
+        when(documentManager.showTextDocument(anything())).thenReturn(Promise.resolve(instance(editor)));
         when(fileSystem.readFile(anything())).thenResolve();
         fileOpener = new ExportManagerFileOpener(
             instance(exporter),
@@ -45,7 +48,6 @@ suite('Data Science - Export File Opener', () => {
 
     test('No file is opened if nothing is exported', async () => {
         when(exporter.export(anything(), anything())).thenResolve();
-
         await fileOpener.export(ExportFormat.python, model);
 
         verify(documentManager.showTextDocument(anything())).never();
@@ -53,7 +55,6 @@ suite('Data Science - Export File Opener', () => {
     test('Python File is opened if exported', async () => {
         const uri = Uri.file('test.python');
         when(exporter.export(anything(), anything())).thenResolve(uri);
-
         await fileOpener.export(ExportFormat.python, model);
 
         verify(documentManager.showTextDocument(anything())).once();

@@ -72,6 +72,24 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             'Cell did not get executed'
         );
     });
+    test('Executed events are triggered', async () => {
+        await insertPythonCellAndWait('print("Hello World")', 0);
+        const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells!;
+
+        const executed = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
+        const codeExecuted = createEventHandler(editorProvider.activeEditor!, 'executed', disposables);
+        await commands.executeCommand('notebook.cell.execute');
+
+        // Wait till execution count changes and status is success.
+        await waitForCondition(
+            async () => assertHasExecutionCompletedSuccessfully(vscCell[0]),
+            15_000,
+            'Cell did not get executed'
+        );
+
+        await executed.assertFired(1_000);
+        await codeExecuted.assertFired(1_000);
+    });
     test('Empty cell will not get executed', async () => {
         await insertPythonCellAndWait('', 0);
         const vscCell = vscodeNotebook.activeNotebookEditor?.document.cells![0];

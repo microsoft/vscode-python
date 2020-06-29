@@ -4,17 +4,12 @@ import { Memento, SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { ExportNotebookSettings } from '../interactive-common/interactiveWindowTypes';
-import { ExportFormat } from './types';
+import { ExportFormat, IExportManagerFilePicker } from './types';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
 export const HTMLExtensions = { HTML: ['html', 'htm'] };
 export const PythonExtensions = { Python: ['py'] };
-
-export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
-export interface IExportManagerFilePicker {
-    getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
-}
 
 @injectable()
 export class ExportManagerFilePicker implements IExportManagerFilePicker {

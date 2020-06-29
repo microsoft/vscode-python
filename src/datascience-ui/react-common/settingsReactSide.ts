@@ -10,6 +10,7 @@ export function getDefaultSettings() {
     // tslint:disable-next-line: no-unnecessary-local-variable
     const result: IDataScienceExtraSettings = {
         allowImportFromNotebook: true,
+        alwaysTrustNotebooks: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         enabled: true,

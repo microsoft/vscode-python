@@ -342,6 +342,9 @@ export enum Telemetry {
     RawKernelSessionStartException = 'DS_INTERNAL.RAWKERNEL_SESSION_START_EXCEPTION',
     RawKernelProcessLaunch = 'DS_INTERNAL.RAWKERNEL_PROCESS_LAUNCH',
     StartPageViewed = 'DS_INTERNAL.STARTPAGE_VIEWED',
+    StartPageOpenedFromCommandPalette = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_COMMAND_PALETTE',
+    StartPageOpenedFromNewInstall = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_INSTALL',
+    StartPageOpenedFromNewUpdate = 'DS_INTERNAL.STARTPAGE_OPENED_FROM_NEW_UPDATE',
     StartPageWebViewError = 'DS_INTERNAL.STARTPAGE_WEBVIEWERROR',
     StartPageTime = 'DS_INTERNAL.STARTPAGE_TIME',
     StartPageClickedDontShowAgain = 'DATASCIENCE.STARTPAGE_DONT_SHOW_AGAIN',
@@ -355,7 +358,11 @@ export enum Telemetry {
     StartPageOpenSampleNotebook = 'DATASCIENCE.STARTPAGE_OPEN_SAMPLE_NOTEBOOK',
     StartPageOpenFileBrowser = 'DATASCIENCE.STARTPAGE_OPEN_FILE_BROWSER',
     StartPageOpenFolder = 'DATASCIENCE.STARTPAGE_OPEN_FOLDER',
-    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE'
+    StartPageOpenWorkspace = 'DATASCIENCE.STARTPAGE_OPEN_WORKSPACE',
+    RunByLineStart = 'DATASCIENCE.RUN_BY_LINE',
+    RunByLineStep = 'DATASCIENCE.RUN_BY_LINE_STEP',
+    RunByLineStop = 'DATASCIENCE.RUN_BY_LINE_STOP',
+    RunByLineVariableHover = 'DATASCIENCE.RUN_BY_LINE_VARIABLE_HOVER'
 }
 
 export enum NativeKeyboardCommandTelemetry {

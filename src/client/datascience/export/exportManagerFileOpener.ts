@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Position, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -67,7 +67,11 @@ export class ExportManagerFileOpener implements IExportManager {
         const contents = await this.fileSystem.readFile(uri.fsPath);
         await this.fileSystem.deleteFile(uri.fsPath);
         const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
-        await this.documentManager.showTextDocument(doc);
+        const editor = await this.documentManager.showTextDocument(doc);
+        // Edit the document so that it is dirty (add a space at the end)
+        editor.edit((editBuilder) => {
+            editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
+        });
     }
 
     private showExportFailed(msg: string) {

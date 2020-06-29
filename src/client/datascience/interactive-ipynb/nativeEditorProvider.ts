@@ -24,9 +24,9 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateNewNotebookUri } from '../common';
 import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import { NotebookModelEditEvent } from '../notebookStorage/notebookModelEditEvent';
 import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../types';
 import { getNextUntitledCounter } from './nativeEditorStorage';
-import { NotebookModelEditEvent } from './notebookModelEditEvent';
 import { INotebookStorageProvider } from './notebookStorageProvider';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when

@@ -57,6 +57,7 @@ export interface ICondaService {
 
 export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
+    onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<void>;
     onDidChangeInterpreterInformation: Event<PythonInterpreter>;
     hasInterpreters: Promise<boolean>;

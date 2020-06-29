@@ -19,7 +19,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, Telemetry, VSCodeNativeTelemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
-import { IDataScienceErrorHandler, INotebook, INotebookModel, INotebookProvider } from '../types';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
+import { IDataScienceErrorHandler, INotebook, INotebookEditorProvider, INotebookProvider } from '../types';
 import { findMappedNotebookCellModel } from './helpers/cellMappers';
 import {
     handleUpdateDisplayDataMessage,
@@ -30,6 +31,7 @@ import {
     updateCellWithErrorStatus
 } from './helpers/executionHelpers';
 import { getCellStatusMessageBasedOnFirstErrorOutput, updateVSCNotebookCellMetadata } from './helpers/helpers';
+import { NotebookEditor } from './notebookEditor';
 import { INotebookContentProvider, INotebookExecutionService } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed');
@@ -55,7 +57,8 @@ export class NotebookExecutionService implements INotebookExecutionService {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider
+        @inject(INotebookContentProvider) private readonly contentProvider: INotebookContentProvider,
+        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider
     ) {}
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     public async executeCell(document: NotebookDocument, cell: NotebookCell, token: CancellationToken): Promise<void> {
@@ -137,8 +140,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
     public cancelPendingExecutions(document: NotebookDocument): void {
         this.pendingExecutionCancellations.get(document.uri.fsPath)?.forEach((cancellation) => cancellation.cancel()); // NOSONAR
     }
-    private async getNotebookAndModel(document: NotebookDocument): Promise<{ model: INotebookModel; nb: INotebook }> {
-        const model = await this.notebookStorage.load(document.uri);
+    private async getNotebookAndModel(
+        document: NotebookDocument
+    ): Promise<{ model: VSCodeNotebookModel; nb: INotebook }> {
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         const nb = await this.notebookProvider.getOrCreateNotebook({
             identity: document.uri,
             resource: document.uri,
@@ -148,6 +153,9 @@ export class NotebookExecutionService implements INotebookExecutionService {
         });
         if (!nb) {
             throw new Error('Unable to get Notebook object to run cell');
+        }
+        if (!(model instanceof VSCodeNotebookModel)) {
+            throw new Error('Notebook Model is not of type VSCodeNotebookModel');
         }
         return { model, nb };
     }
@@ -162,7 +170,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     }
 
     private async executeIndividualCell(
-        notebookAndModel: Promise<{ model: INotebookModel; nb: INotebook }>,
+        notebookAndModel: Promise<{ model: VSCodeNotebookModel; nb: INotebook }>,
         document: NotebookDocument,
         cell: NotebookCell,
         token: CancellationToken,
@@ -177,6 +185,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
             return;
         }
 
+        const editor = this.editorProvider.editors.find((e) => e.model === model);
+        if (!(editor instanceof NotebookEditor)) {
+            throw new Error('Executing Notebook with another Editor');
+        }
         // If we need to cancel this execution (from our code, due to kernel restarts or similar, then cancel).
         const cancelExecution = new CancellationTokenSource();
         if (!this.pendingExecutionCancellations.has(document.uri.fsPath)) {
@@ -222,6 +234,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
         let modelClearedEventHandler: IDisposable | undefined;
         try {
             nb.clear(cell.uri.fsPath); // NOSONAR
+            editor.notifyExecution(cell.document.getText());
             const observable = nb.executeObservable(
                 cell.document.getText(),
                 document.fileName,
@@ -254,12 +267,12 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         typeof cells[0].data.execution_count === 'number'
                     ) {
                         const executionCount = cells[0].data.execution_count as number;
-                        if (updateCellExecutionCount(cell, notebookCellModel, executionCount)) {
+                        if (updateCellExecutionCount(model, cell, notebookCellModel, executionCount)) {
                             this.contentProvider.notifyChangesToDocument(document);
                         }
                     }
 
-                    if (updateCellOutput(cell, notebookCellModel, rawCellOutput)) {
+                    if (updateCellOutput(model, cell, notebookCellModel, rawCellOutput)) {
                         this.contentProvider.notifyChangesToDocument(document);
                     }
                 },
@@ -277,9 +290,10 @@ export class NotebookExecutionService implements INotebookExecutionService {
                     cell.metadata.statusMessage = '';
 
                     // Update metadata in our model.
-                    const notebookCellModel = findMappedNotebookCellModel(cell, model.cells);
+                    const cellModel = findMappedNotebookCellModel(cell, model.cells);
                     updateCellExecutionTimes(
-                        notebookCellModel,
+                        model,
+                        cellModel,
                         cell.metadata.runStartTime,
                         cell.metadata.lastRunDuration
                     );
@@ -289,11 +303,11 @@ export class NotebookExecutionService implements INotebookExecutionService {
                         cell.metadata.runState = vscodeNotebookEnums.NotebookCellRunState.Error;
                         cell.metadata.statusMessage = getCellStatusMessageBasedOnFirstErrorOutput(
                             // tslint:disable-next-line: no-any
-                            notebookCellModel.data.outputs as any
+                            cellModel.data.outputs as any
                         );
                     }
 
-                    updateVSCNotebookCellMetadata(cell.metadata, notebookCellModel);
+                    updateVSCNotebookCellMetadata(cell.metadata, cellModel);
                     this.contentProvider.notifyChangesToDocument(document);
                     deferred.resolve(cell.metadata.runState);
                 }
@@ -319,7 +333,7 @@ export class NotebookExecutionService implements INotebookExecutionService {
     /**
      * Ensure we handle display data messages that can result in updates to other cells.
      */
-    private handleDisplayDataMessages(model: INotebookModel, document: NotebookDocument, nb?: INotebook) {
+    private handleDisplayDataMessages(model: VSCodeNotebookModel, document: NotebookDocument, nb?: INotebook) {
         if (nb && !this.registeredIOPubListeners.has(nb)) {
             this.registeredIOPubListeners.add(nb);
             //tslint:disable-next-line:no-require-imports

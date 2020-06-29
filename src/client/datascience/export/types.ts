@@ -16,3 +16,8 @@ export const IExport = Symbol('IExport');
 export interface IExport {
     export(source: Uri, target: Uri): Promise<void>;
 }
+
+export const IExportManagerFilePicker = Symbol('IExportManagerFilePicker');
+export interface IExportManagerFilePicker {
+    getExportFileLocation(format: ExportFormat, source: Uri): Promise<Uri | undefined>;
+}

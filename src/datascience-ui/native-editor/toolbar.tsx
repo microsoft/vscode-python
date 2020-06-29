@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { NativeMouseCommandTelemetry } from '../../client/datascience/constants';
-import { KernelSelection } from '../interactive-common/kernelSelection';
+import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import {
     getSelectedAndFocusedInfo,
     IFont,
@@ -13,7 +13,6 @@ import {
     ServerStatus
 } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
-import { TrustMessage } from '../interactive-common/trustMessage';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -256,20 +255,15 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             />
                         </ImageButton>
                     </div>
-                    <div className={'jupyter-info-container'}>
-                        <TrustMessage
-                            isNotebookTrusted={this.props.isNotebookTrusted}
-                            font={this.props.font}
-                            launchNotebookTrustPrompt={launchNotebookTrustPrompt}
-                        />
-                        <KernelSelection
-                            baseTheme={this.props.baseTheme}
-                            font={this.props.font}
-                            kernel={this.props.kernel}
-                            selectServer={selectServer}
-                            selectKernel={selectKernel}
-                        />
-                    </div>
+                    <JupyterInfo
+                        baseTheme={this.props.baseTheme}
+                        font={this.props.font}
+                        kernel={this.props.kernel}
+                        selectServer={selectServer}
+                        selectKernel={selectKernel}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
+                        launchNotebookTrustPrompt={launchNotebookTrustPrompt}
+                    />
                 </div>
                 <div className="toolbar-divider" />
             </div>

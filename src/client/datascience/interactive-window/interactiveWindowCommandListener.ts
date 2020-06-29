@@ -5,9 +5,8 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Position, Range, TextDocument, Uri, ViewColumn } from 'vscode';
+import { Range, TextDocument, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -19,6 +18,8 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Identifiers, Telemetry } from '../constants';
+import { ExportFormat, IExportManager } from '../export/types';
+import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
@@ -28,7 +29,6 @@ import {
     IJupyterExecution,
     INotebookEditorProvider,
     INotebookExporter,
-    INotebookImporter,
     INotebookServer,
     IStatusProvider
 } from '../types';
@@ -45,9 +45,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
-        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
+        @inject(IExportManager) private exportManager: IExportManager,
+        @inject(INotebookStorageProvider) private notebookStorageProvider: INotebookStorageProvider
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -458,8 +459,9 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(
                 async () => {
-                    const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
-                    await this.viewDocument(contents);
+                    const contents = await this.fileSystem.readFile(uris[0].fsPath);
+                    const model = await this.notebookStorageProvider.createNew(contents);
+                    await this.exportManager.export(ExportFormat.python, model);
                 },
                 localize.DataScience.importingFormat(),
                 uris[0].fsPath
@@ -472,24 +474,15 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (file && file.length > 0) {
             await this.waitForStatus(
                 async () => {
-                    const contents = await this.jupyterImporter.importFromFile(file);
-                    await this.viewDocument(contents);
+                    const contents = await this.fileSystem.readFile(file);
+                    const model = await this.notebookStorageProvider.createNew(contents);
+                    await this.exportManager.export(ExportFormat.python, model);
                 },
                 localize.DataScience.importingFormat(),
                 file
             );
         }
     }
-
-    private viewDocument = async (contents: string): Promise<void> => {
-        const doc = await this.documentManager.openTextDocument({ language: 'python', content: contents });
-        const editor = await this.documentManager.showTextDocument(doc, ViewColumn.One);
-
-        // Edit the document so that it is dirty (add a space at the end)
-        editor.edit((editBuilder) => {
-            editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
-        });
-    };
 
     private async scrollToCell(id: string): Promise<void> {
         if (id) {

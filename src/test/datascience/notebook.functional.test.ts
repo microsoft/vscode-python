@@ -610,6 +610,9 @@ suite('DataScience notebook tests', () => {
                         public get hasInterpreters(): Promise<boolean> {
                             return Promise.resolve(true);
                         }
+                        public onDidChangeInterpreterConfiguration(): Disposable {
+                            return { dispose: noop };
+                        }
                         public onDidChangeInterpreter(
                             _listener: (e: void) => any,
                             _thisArgs?: any,
