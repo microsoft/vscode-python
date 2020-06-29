@@ -73,8 +73,9 @@ export abstract class BasePythonDaemon {
                 // Shutdown our process, use a 'SIGKILL' message on non-windows
                 if (this.platformService.isWindows) {
                     this.proc.kill();
+                } else {
+                    this.proc.kill('SIGKILL');
                 }
-                this.proc.kill('SIGKILL');
             } catch {
                 noop();
             }
