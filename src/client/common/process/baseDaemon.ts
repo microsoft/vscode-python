@@ -8,6 +8,7 @@ import * as os from 'os';
 import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
+import { IPlatformService } from '../../common/platform/types';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
@@ -52,6 +53,7 @@ export abstract class BasePythonDaemon {
     private disposed = false;
     constructor(
         protected readonly pythonExecutionService: IPythonExecutionService,
+        protected readonly platformService: IPlatformService,
         protected readonly pythonPath: string,
         public readonly proc: ChildProcess,
         public readonly connection: MessageConnection
@@ -67,9 +69,11 @@ export abstract class BasePythonDaemon {
         if (!this.disposed) {
             try {
                 this.disposed = true;
-                // The daemon should die as a result of this.
-                //this.connection.sendNotification(new NotificationType('exit'));
-                //this.proc.kill();
+
+                // Shutdown our process, use a 'SIGKILL' message on non-windows
+                if (this.platformService.isWindows) {
+                    this.proc.kill();
+                }
                 this.proc.kill('SIGKILL');
             } catch {
                 noop();

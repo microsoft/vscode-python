@@ -15,6 +15,7 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
+import { IPlatformService } from '../../../client/common/platform/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import {
@@ -49,6 +50,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let fullyQualifiedPythonPath: string = PYTHON_PATH;
     let pythonDaemonPool: PythonDaemonExecutionServicePool;
     let pythonExecutionService: IPythonExecutionService;
+    let platformService: IPlatformService;
     let disposables: IDisposable[] = [];
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService | IDisposable>>;
     let logger: IProcessLogger;
@@ -74,6 +76,7 @@ suite('Daemon - Python Daemon Pool', () => {
         logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonService');
         pythonExecutionService = mock<IPythonExecutionService>();
+        platformService = mock<IPlatformService>();
         when(
             pythonExecutionService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
         ).thenCall(() => {
@@ -94,7 +97,15 @@ suite('Daemon - Python Daemon Pool', () => {
             daemonCount: 2,
             observableDaemonCount: 1
         };
-        pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
+        pythonDaemonPool = new DaemonPool(
+            logger,
+            [],
+            options,
+            instance(pythonExecutionService),
+            instance(platformService),
+            {},
+            100
+        );
         await pythonDaemonPool.initialize();
         disposables.push(pythonDaemonPool);
     });
