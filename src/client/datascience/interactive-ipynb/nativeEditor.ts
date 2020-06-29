@@ -738,6 +738,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
         try {
             // If there's any payload, it has the code and the id

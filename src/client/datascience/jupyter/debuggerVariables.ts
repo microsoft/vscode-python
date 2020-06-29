@@ -8,7 +8,8 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
-import { DataFrameLoading, Identifiers } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DataFrameLoading, Identifiers, Telemetry } from '../constants';
 import {
     IConditionalJupyterVariables,
     IJupyterDebugService,
@@ -76,10 +77,16 @@ export class DebuggerVariables implements IConditionalJupyterVariables, DebugAda
         return result;
     }
 
-    public async getMatchingVariable(_notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(notebook: INotebook, name: string): Promise<IJupyterVariable | undefined> {
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
-            return this.lastKnownVariables.find((v) => v.name === name);
+            const result = this.lastKnownVariables.find((v) => v.name === name);
+            if (result) {
+                if (notebook.identity.fsPath.endsWith('.ipynb')) {
+                    sendTelemetryEvent(Telemetry.RunByLineVariableHover);
+                }
+            }
+            return result;
         }
     }
 

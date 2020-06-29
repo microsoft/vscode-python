@@ -6,6 +6,10 @@
 
 1. Correctly check for ZMQ support, previously it could allow ZMQ to be supported when zmq could not be imported.
    ([#12585](https://github.com/Microsoft/vscode-python/issues/12585))
+1. Auto indentation no longer working for notebooks and interactive window.
+   ([#12389](https://github.com/Microsoft/vscode-python/issues/12389))
+1. Add telemetry for tracking run by line.
+   ([#12580](https://github.com/Microsoft/vscode-python/issues/12580))
 
 ## 2020.6.2 (25 June 2020)
 
