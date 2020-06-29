@@ -1,5 +1,6 @@
-import { QuickPickItem, QuickInputButton } from "vscode";
-
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+import { QuickPickItem, QuickInputButton } from 'vscode';
 
 // Typings for the code in the python extension
 export interface IPythonExtensionApi {
