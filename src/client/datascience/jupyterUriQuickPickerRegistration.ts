@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { injectable } from 'inversify';
-import * as vscode from 'vscode';
+import { inject, injectable } from 'inversify';
+import { IExtensions } from '../common/types';
 import {
     IJupyterServerUri,
     IJupyterUriQuickPicker,
@@ -13,6 +13,8 @@ import {
 export class JupyterUriQuickPickerRegistration implements IJupyterUriQuickPickerRegistration {
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private pickerList: IJupyterUriQuickPicker[] = [];
+
+    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
 
     public async getPickers(): Promise<ReadonlyArray<IJupyterUriQuickPicker>> {
         await this.checkOtherExtensions();
@@ -41,7 +43,7 @@ export class JupyterUriQuickPickerRegistration implements IJupyterUriQuickPicker
     }
 
     private async loadOtherExtensions(): Promise<void> {
-        const list = vscode.extensions.all
+        const list = this.extensions.all
             .filter((e) => e.packageJSON?.contributes?.pythonRemoteServerProvider)
             .map((e) => (e.isActive ? Promise.resolve() : e.activate()));
         await Promise.all(list);

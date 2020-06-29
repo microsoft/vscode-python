@@ -3,7 +3,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { instance, mock } from 'ts-mockito';
+import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
@@ -11,7 +11,7 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { IMultiStepInput, InputStep, MultiStepInput } from '../../client/common/utils/multiStepInput';
 import { JupyterUriQuickPickerRegistration } from '../../client/datascience/jupyterUriQuickPickerRegistration';
 import { IJupyterServerUri, IJupyterUriQuickPicker } from '../../client/datascience/types';
-import { mockedVSCode } from '../vscode-mock';
+import { MockExtensions } from './mockExtensions';
 
 class MockPicker implements IJupyterUriQuickPicker {
     public id: string = '1';
@@ -46,14 +46,14 @@ suite('DataScience URI Picker', () => {
     let appShell: IApplicationShell;
     setup(() => {
         appShell = mock(ApplicationShell);
-        const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
+        const extensions = mock(MockExtensions);
         const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
         const packageJson = TypeMoq.Mock.ofType<any>();
         const contributes = TypeMoq.Mock.ofType<any>();
         extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
         packageJson.setup((p) => p.contributes).returns(() => contributes.object);
         contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
-        extensions.setup((e) => e.all).returns(() => [extension.object]);
+        when(extensions.all).thenReturn([extension.object]);
         extension
             .setup((e) => e.activate())
             .returns(() => {
@@ -61,8 +61,7 @@ suite('DataScience URI Picker', () => {
                 return Promise.resolve();
             });
         extension.setup((e) => e.isActive).returns(() => false);
-        mockedVSCode.extensions = extensions.object;
-        registration = new JupyterUriQuickPickerRegistration();
+        registration = new JupyterUriQuickPickerRegistration(instance(extensions));
     });
 
     test('Simple', async () => {
