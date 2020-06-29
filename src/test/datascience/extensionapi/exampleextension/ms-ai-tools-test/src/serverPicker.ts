@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { exec } from 'child_process';
-import { noop } from 'jquery';
-import uuid from 'uuid';
+import * as uuid from 'uuid/v4';
 import { QuickPickItem } from 'vscode';
 import { createDeferred } from './async';
 import {
@@ -40,7 +39,7 @@ export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
             try {
                 completion('rchiodocom2');
             } catch {
-                noop();
+                // Do nothing if it fails.
             }
         }
         completion(undefined);

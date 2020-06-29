@@ -42,7 +42,7 @@ export class JupyterUriQuickPickerRegistration implements IJupyterUriQuickPicker
 
     private async loadOtherExtensions(): Promise<void> {
         const list = vscode.extensions.all
-            .filter((e) => e.packageJSON.contributes.pythonRemoteServerProvider)
+            .filter((e) => e.packageJSON?.contributes?.pythonRemoteServerProvider)
             .map((e) => (e.isActive ? Promise.resolve() : e.activate()));
         await Promise.all(list);
     }
