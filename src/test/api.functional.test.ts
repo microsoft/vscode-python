@@ -73,7 +73,7 @@ suite('Extension API', () => {
         when(interpreterService.onDidChangeInterpreterConfiguration).thenReturn(expectedEvent);
 
         const result = buildApi(Promise.resolve(), instance(serviceManager), instance(serviceContainer)).settings
-            .onDidChangeExecDetails;
+            .onDidChangeExecutionDetails;
 
         assert.deepEqual(result, expectedEvent);
     });

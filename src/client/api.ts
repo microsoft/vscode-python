@@ -47,12 +47,13 @@ export interface IExtensionApi {
      */
     settings: {
         /**
-         * An event that is emitted when the interpreter configuration changes.
+         * An event that is emitted when execution details (for a resource) change. For instance, when interpreter configuration changes.
          */
-        readonly onDidChangeExecDetails: Event<Uri | undefined>;
+        readonly onDidChangeExecutionDetails: Event<Uri | undefined>;
         /**
-         * Returns the Python execution object corresponding to the specified resource, taking into account
-         * any workspace-specific settings for the workspace to which this resource belongs.
+         * Returns all the details the consumer needs to execute code within the selected environment,
+         * corresponding to the specified resource taking into account any workspace-specific settings
+         * for the workspace to which this resource belongs.
          * @param {Resource} [resource] A resource for which the setting is asked for.
          * * When no resource is provided, the setting scoped to the first workspace folder is returned.
          * * If no folder is present, it returns the global setting.
@@ -115,7 +116,7 @@ export function buildApi(
             }
         },
         settings: {
-            onDidChangeExecDetails: interpreterService.onDidChangeInterpreterConfiguration,
+            onDidChangeExecutionDetails: interpreterService.onDidChangeInterpreterConfiguration,
             getExecutionDetails(resource?: Resource) {
                 const pythonPath = configurationService.getSettings(resource).pythonPath;
                 // If pythonPath equals an empty string, no interpreter is set.
