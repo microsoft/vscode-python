@@ -167,12 +167,14 @@ export class JupyterServerSelector {
         // Ask our providers to stick on items
         let pickerItems: ISelectUriQuickPickItem[] = [];
         const pickers = await this.extraUriPickers.getPickers();
-        pickers?.forEach((p) => {
-            const newPickerItems = p.getQuickPickEntryItems().map((i) => {
-                return { ...i, newChoice: false, picker: p };
+        if (pickers) {
+            pickers.forEach((p) => {
+                const newPickerItems = p.getQuickPickEntryItems().map((i) => {
+                    return { ...i, newChoice: false, picker: p };
+                });
+                pickerItems = pickerItems.concat(newPickerItems);
             });
-            pickerItems = pickerItems.concat(newPickerItems);
-        });
+        }
 
         // Always have 'local' and 'add new'
         let items: ISelectUriQuickPickItem[] = [];
