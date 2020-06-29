@@ -10,6 +10,7 @@ import { NativeEditorNotebookModel } from './notebookModel';
 import { INotebookModelFactory } from './types';
 import { VSCodeNotebookModel } from './vscNotebookModel';
 
+@injectable()
 export class NotebookModelFactory implements INotebookModelFactory {
     constructor(@inject(UseVSCodeNotebookEditorApi) private readonly useVSCodeNotebookEditorApi: boolean) {}
     public createModel(
