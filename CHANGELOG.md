@@ -8,6 +8,8 @@
    ([#12389](https://github.com/Microsoft/vscode-python/issues/12389))
 1. Add telemetry for tracking run by line.
    ([#12580](https://github.com/Microsoft/vscode-python/issues/12580))
+1. Add more telemetry to distinguish how is the start page opened.
+   ([#12603](https://github.com/microsoft/vscode-python/issues/12603))
 
 ## 2020.6.2 (25 June 2020)
 
