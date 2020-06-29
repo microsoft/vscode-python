@@ -101,7 +101,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
             return undefined;
         }
 
-        const extension = this.extensions.getExtension<ILSExtensionApi>(ExtensionName);
+        const extension = this.extensions.getExtension<ILSExtensionApi>(PylanceExtensionName);
         if (!extension) {
             return undefined;
         }
