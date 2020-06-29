@@ -52,5 +52,6 @@ export enum ReportableAction {
     CheckingIfImportIsSupported = 'CheckingIfImportIsSupported',
     InstallingMissingDependencies = 'InstallingMissingDependencies',
     ExportNotebookToPython = 'ExportNotebookToPython',
-    PerformingExport = 'PerformingExport'
+    PerformingExport = 'PerformingExport',
+    ConvertingToPDF = 'ConvertingToPDF'
 }

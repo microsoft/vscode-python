@@ -14,7 +14,8 @@ import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { INotebookStorageProvider } from '../../client/datascience/interactive-ipynb/notebookStorageProvider';
-import { INotebookEditor, INotebookEditorProvider, INotebookModel } from '../../client/datascience/types';
+import { NativeEditorNotebookModel } from '../../client/datascience/notebookStorage/notebookModel';
+import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
 @injectable()
@@ -134,10 +135,10 @@ export class MockCustomEditorService implements ICustomEditorService {
         };
     }
 
-    private async getModel(file: Uri): Promise<INotebookModel | undefined> {
+    private async getModel(file: Uri): Promise<NativeEditorNotebookModel | undefined> {
         const nativeProvider = this.provider as NativeEditorProvider;
         if (nativeProvider) {
-            return nativeProvider.loadModel(file);
+            return (nativeProvider.loadModel(file) as unknown) as Promise<NativeEditorNotebookModel | undefined>;
         }
         return undefined;
     }

@@ -1,9 +1,9 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
+import { ProgressReporter } from '../progress/progressReporter';
 import { IDataScienceErrorHandler, INotebookModel } from '../types';
-import { IExportManagerFilePicker } from './exportManagerFilePicker';
-import { ExportFormat, IExport, IExportManager } from './types';
+import { ExportFormat, IExport, IExportManager, IExportManagerFilePicker } from './types';
 
 @injectable()
 export class ExportManager implements IExportManager {
@@ -13,7 +13,8 @@ export class ExportManager implements IExportManager {
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPython: IExport,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker
+        @inject(IExportManagerFilePicker) private readonly filePicker: IExportManagerFilePicker,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
@@ -32,6 +33,7 @@ export class ExportManager implements IExportManager {
             return; // error making temp file
         }
 
+        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         const source = Uri.file(tempFile.filePath);
         try {
             switch (format) {
@@ -52,6 +54,7 @@ export class ExportManager implements IExportManager {
             }
         } finally {
             tempFile.dispose();
+            reporter.dispose();
         }
 
         return target;

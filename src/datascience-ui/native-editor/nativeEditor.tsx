@@ -125,7 +125,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         setTimeout(() => this.props.insertAboveFirst(), 1);
     }
     private renderToolbarPanel() {
-        return <ToolbarComponent></ToolbarComponent>;
+        return <ToolbarComponent isNotebookTrusted={this.props.isNotebookTrusted}></ToolbarComponent>;
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -354,6 +354,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                                 : false
                         }
                         language={this.props.kernel.language}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
                     />
                 </ErrorBoundary>
                 {lastLine}

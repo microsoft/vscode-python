@@ -11,6 +11,7 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
+import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../types';
 
@@ -86,6 +87,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private onDidChangeActiveNotebookEditor(e?: INotebookEditor) {
+        // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
+        // This is temporary, and once we ship native editor this needs to be removed.
+        setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
         this.updateMergedContexts();
     }

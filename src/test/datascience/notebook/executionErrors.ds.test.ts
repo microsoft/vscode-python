@@ -17,7 +17,12 @@ import {
 } from '../../../client/datascience/types';
 import { IExtensionTestApi } from '../../common';
 import { initialize, initializeTest } from '../../initialize';
-import { canRunTests, closeNotebooksAndCleanUpAfterTests, swallowSavingOfNotebooks } from './helper';
+import {
+    canRunTests,
+    closeNotebooksAndCleanUpAfterTests,
+    insertPythonCellAndWait,
+    swallowSavingOfNotebooks
+} from './helper';
 
 // tslint:disable: no-any no-invalid-this
 suite('DataScience - VSCode Notebook - Errors in Execution', function () {
@@ -55,6 +60,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     test('Errors thrown while starting a cell execution are handled by error handler', async () => {
         // Open the notebook
         await editorProvider.createNew();
+        await insertPythonCellAndWait('#');
 
         // Run a cell (with a mock notebook).
         const error = new Error('MyError');
@@ -67,6 +73,7 @@ suite('DataScience - VSCode Notebook - Errors in Execution', function () {
     test('Errors thrown in cell execution (jupyter results) are handled by error handler', async () => {
         // Open the notebook
         await editorProvider.createNew();
+        await insertPythonCellAndWait('#');
 
         // Run a cell (with a mock notebook).
         const error = new Error('MyError');

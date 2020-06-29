@@ -60,6 +60,7 @@ interface INativeCellBaseProps {
     useCustomEditorApi: boolean;
     runningByLine: DebugState;
     supportsRunByLine: boolean;
+    isNotebookTrusted: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -151,6 +152,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         }
 
         // Content changes based on if a markdown cell or not.
+        // Make renderOutput() conditional on whether notebook is in trusted state
         const content =
             this.isMarkdownCell() && !this.isShowingMarkdownEditor() ? (
                 <div className="cell-result-container">

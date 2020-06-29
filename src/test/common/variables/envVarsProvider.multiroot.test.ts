@@ -320,7 +320,10 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property(randomEnvVariable, '1234', 'Yikes process variable has leaked');
     });
 
-    test('Custom variables will be refreshed when settings points to a different env file', async () => {
+    test('Custom variables will be refreshed when settings points to a different env file', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12563
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         // tslint:disable-next-line:no-invalid-template-strings
         await updateSetting('envFile', '${workspaceRoot}/.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const processVariables = { ...process.env };

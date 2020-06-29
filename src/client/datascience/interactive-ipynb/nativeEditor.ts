@@ -78,6 +78,7 @@ import {
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
+    ITrustService,
     WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -96,6 +97,7 @@ import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
+    public readonly type: 'old' | 'custom' = 'custom';
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
@@ -181,6 +183,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(KernelSwitcher) switcher: KernelSwitcher,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
+        @inject(ITrustService) private trustService: ITrustService,
         @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
@@ -256,7 +259,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             case InteractiveWindowMessages.Started:
                 if (this.model) {
                     // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-                    this.sendInitialCellsToWebView(this.model.cells)
+                    this.sendInitialCellsToWebView([...this.model.cells], this.model.isTrusted)
                         .then(() => {
                             // May alread be dirty, if so send a message
                             if (this.model?.isDirty) {
@@ -293,6 +296,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // call this to update the whole document for intellisense
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.handleMessage(message, payload, this.loadCellsComplete);
+                break;
+
+            case InteractiveWindowMessages.LaunchNotebookTrustPrompt:
+                this.handleMessage(message, payload, this.launchNotebookTrustPrompt);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -603,6 +610,35 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.workspaceStorage.update(VariableExplorerStateKeys.height, value);
     }
 
+    private async launchNotebookTrustPrompt() {
+        const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
+        const selection = await this.applicationShell.showInformationMessage(
+            localize.DataScience.launchNotebookTrustPrompt(),
+            ...prompts
+        );
+        if (!selection) {
+            return;
+        }
+        if (this.model && selection === localize.DataScience.trustNotebook() && !this.model.isTrusted) {
+            try {
+                const contents = this.model.getContent();
+                await this.trustService.trustNotebook(this.model.file.toString(), contents);
+                // Update model trust
+                this.model.update({
+                    source: 'user',
+                    kind: 'updateTrust',
+                    oldDirty: this.model.isDirty,
+                    newDirty: this.model.isDirty,
+                    isNotebookTrusted: true
+                });
+                // Tell UI to update main state
+                await this.postMessage(InteractiveWindowMessages.TrustNotebookComplete);
+            } catch (err) {
+                traceError(err);
+            }
+        }
+    }
+
     private interruptExecution() {
         this.executeCancelTokens.forEach((t) => t.cancel());
     }
@@ -678,9 +714,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    private async sendInitialCellsToWebView(cells: ICell[]): Promise<void> {
+    private async sendInitialCellsToWebView(cells: ICell[], isNotebookTrusted: boolean): Promise<void> {
         sendTelemetryEvent(Telemetry.CellCount, undefined, { count: cells.length });
-        return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
+        return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells, isNotebookTrusted });
     }
 
     private async exportAs(): Promise<void> {
@@ -718,6 +754,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    @captureTelemetry(Telemetry.RunByLineStart)
     private async handleRunByLine(runByLine: IRunByLine) {
         try {
             // If there's any payload, it has the code and the id

@@ -124,9 +124,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             throw error;
         }
 
-        // Start our restart session at this point
-        this.startRestartSession();
-
         this.connected = true;
         return (newSession as RawSession).kernelProcess.kernelSpec;
     }

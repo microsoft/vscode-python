@@ -4,7 +4,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IVSCodeNotebook
+} from '../../common/application/types';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IExperimentsManager, IExtensionContext } from '../../common/types';
@@ -31,7 +36,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(NotebookKernel) private readonly notebookKernel: NotebookKernel,
-        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer
+        @inject(NotebookOutputRenderer) private readonly renderer: NotebookOutputRenderer,
+        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
+        @inject(IApplicationShell) private readonly shell: IApplicationShell
     ) {}
     public get isEnabled() {
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
@@ -91,6 +98,10 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         );
     }
     private async enableNotebooks(useVSCodeNotebookAsDefaultEditor: boolean) {
+        if (this.env.channel === 'stable') {
+            this.shell.showErrorMessage(DataScience.previewNotebookOnlySupportedInVSCInsiders()).then(noop, noop);
+            return;
+        }
         const packageJsonFile = path.join(this.context.extensionPath, 'package.json');
         const content = JSON.parse(this.fs.readFileSync(packageJsonFile));
 

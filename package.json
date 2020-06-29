@@ -368,6 +368,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.exportToPDF",
+                "title": "%python.command.python.datascience.exportToPDF.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.selectJupyterInterpreter",
                 "title": "%python.command.python.datascience.selectJupyterInterpreter.title%",
                 "category": "Python"
@@ -878,6 +883,12 @@
                 {
                     "command": "python.datascience.exportToHTML",
                     "title": "%python.command.python.datascience.exportToHTML.title%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.exportToPDF",
+                    "title": "%python.command.python.datascience.exportToPDF.title%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive && python.datascience.featureenabled"
                 },
@@ -2930,6 +2941,12 @@
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
                 },
+                "python.dataScience.alwaysTrustNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically trust all notebooks that are opened. Warning: only enable this setting if you are absolutely certain that you wish to trust all notebooks.",
+                    "scope": "machine"
+                },
                 "python.insidersChannel": {
                     "type": "string",
                     "default": "off",
@@ -3192,6 +3209,7 @@
         "@nteract/transforms": "^4.4.7",
         "@phosphor/widgets": "^1.9.3",
         "@raghb1/node-memwatch": "^3.0.1",
+        "@sinonjs/fake-timers": "^6.0.1",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
@@ -3234,6 +3252,7 @@
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^7.5.1",
+        "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/socket.io": "^2.1.4",
         "@types/stack-trace": "0.0.29",
         "@types/temp": "^0.8.32",

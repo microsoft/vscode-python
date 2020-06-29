@@ -6,8 +6,9 @@
 import { inject, named } from 'inversify';
 import { ConfigurationTarget, DiagnosticSeverity } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../common/constants';
 import { DeprecatePythonPath } from '../../../common/experiments/groups';
-import { IDisposableRegistry, IExperimentsManager, Resource } from '../../../common/types';
+import { IDisposableRegistry, IExperimentsManager, IOutputChannel, Resource } from '../../../common/types';
 import { Common, Diagnostics } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
@@ -32,6 +33,7 @@ export const PythonPathDeprecatedDiagnosticServiceId = 'PythonPathDeprecatedDiag
 
 export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsService {
     private workspaceService: IWorkspaceService;
+    private output: IOutputChannel;
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDiagnosticHandlerService)
@@ -41,6 +43,7 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
     ) {
         super([DiagnosticCodes.PythonPathDeprecatedDiagnostic], serviceContainer, disposableRegistry, true);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
@@ -54,14 +57,8 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         }
         const isCodeWorkspaceSettingSet = this.workspaceService.workspaceFile && setting.workspaceValue !== undefined;
         const isSettingsJsonSettingSet = setting.workspaceFolderValue !== undefined;
-        if (isCodeWorkspaceSettingSet && isSettingsJsonSettingSet) {
-            return [
-                new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathCodeWorkspaceAndSettingsJson(), resource)
-            ];
-        } else if (isSettingsJsonSettingSet) {
-            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathSettingsJson(), resource)];
-        } else if (isCodeWorkspaceSettingSet) {
-            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removePythonPathCodeWorkspace(), resource)];
+        if (isCodeWorkspaceSettingSet || isSettingsJsonSettingSet) {
+            return [new PythonPathDeprecatedDiagnostic(Diagnostics.removedPythonPathFromSettings(), resource)];
         }
         return [];
     }
@@ -82,19 +79,15 @@ export class PythonPathDeprecatedDiagnosticService extends BaseDiagnosticsServic
         if (await this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
             return;
         }
+        await this._removePythonPathFromWorkspaceSettings(diagnostic.resource);
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
-                prompt: Common.yesPlease(),
+                prompt: Common.openOutputPanel(),
                 command: {
                     diagnostic,
-                    invoke: async (): Promise<void> => {
-                        return this._removePythonPathFromWorkspaceSettings(diagnostic.resource);
-                    }
+                    invoke: async (): Promise<void> => this.output.show(true)
                 }
-            },
-            {
-                prompt: Common.noIWillDoItLater()
             },
             {
                 prompt: Common.doNotShowAgain(),

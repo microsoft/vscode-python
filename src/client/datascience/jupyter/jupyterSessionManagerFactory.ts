@@ -34,7 +34,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.config,
             failOnPassword,
             this.kernelSelector,
-            this.jupyterOutput
+            this.jupyterOutput,
+            this.config
         );
         await result.initialize(connInfo);
         return result;

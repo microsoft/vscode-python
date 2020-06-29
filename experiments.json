@@ -105,12 +105,12 @@
         "name": "LocalZMQKernel - experiment",
         "salt": "LocalZMQKernel",
         "min": 0,
-        "max": 5
+        "max": 25
     },
     {
         "name": "LocalZMQKernel - control",
         "salt": "LocalZMQKernel",
-        "min": 5,
+        "min": 25,
         "max": 100
     },
     {
@@ -153,12 +153,12 @@
         "name": "DeprecatePythonPath - experiment",
         "salt": "DeprecatePythonPath",
         "min": 0,
-        "max": 10
+        "max": 20
     },
     {
         "name": "DeprecatePythonPath - control",
         "salt": "DeprecatePythonPath",
-        "min": 90,
+        "min": 80,
         "max": 100
     },
     {

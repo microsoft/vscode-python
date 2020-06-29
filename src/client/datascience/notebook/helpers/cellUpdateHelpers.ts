@@ -10,35 +10,37 @@
  */
 
 import * as assert from 'assert';
-import { createCellFrom } from '../../../../datascience-ui/common/cellFactory';
 import {
     NotebookCellLanguageChangeEvent,
     NotebookCellOutputsChangeEvent,
     NotebookCellsChangeEvent
 } from '../../../common/application/types';
-import { MARKDOWN_LANGUAGE } from '../../../common/constants';
 import { traceError } from '../../../common/logger';
-import { INotebookModel } from '../../types';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { VSCodeNativeTelemetry } from '../../constants';
+import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
 import { findMappedNotebookCellModel } from './cellMappers';
-import {
-    createCellFromVSCNotebookCell,
-    createVSCCellOutputsFromOutputs,
-    updateVSCNotebookCellMetadata
-} from './helpers';
+import { createCellFromVSCNotebookCell, updateVSCNotebookCellMetadata } from './helpers';
+// tslint:disable-next-line: no-var-requires no-require-imports
 
 /**
  * If a VS Code cell changes, then ensure we update the corresponding cell in our INotebookModel.
  * I.e. if a cell is added/deleted/moved then update our model.
+ * @returns {boolean} Returns `true` if the NotebookDocument was edited/updated.
  */
 export function updateCellModelWithChangesToVSCCell(
     change: NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent,
-    model: INotebookModel
-) {
+    model: VSCodeNotebookModel
+): boolean | undefined | void {
     switch (change.type) {
         case 'changeCellOutputs':
             return clearCellOutput(change, model);
         case 'changeCellLanguage':
-            return changeCellLanguage(change, model);
+            // VSC Fires this event only when changing code cells from one language to another.
+            // If you change markdown to code &/or vice versa, thats treated as a cell being deleted and added.
+            // In the case of Jupyter cells, we don't care of the language changes from python to csharp.
+            // Why? Because today its not possible, hence there's nothing we need to do for now.
+            return false;
         case 'changeCells':
             return handleChangesToCells(change, model);
         default:
@@ -51,48 +53,40 @@ export function updateCellModelWithChangesToVSCCell(
  * We're not interested in changes to cell output as this happens as a result of us pushing changes to the notebook.
  * I.e. cell output is already in our INotebookModel.
  * However we are interested in cell output being cleared (when user clears output).
+ * @returns {boolean} Return `true` if NotebookDocument was updated/edited.
  */
-function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: INotebookModel) {
+function clearCellOutput(change: NotebookCellOutputsChangeEvent, model: VSCodeNotebookModel): boolean {
     if (!change.cells.every((cell) => cell.outputs.length === 0)) {
-        return;
+        return false;
     }
-
+    // In the VS Code cells, also clear the cell results, execution counts and times.
+    change.cells.forEach((cell) => {
+        cell.metadata.runState = undefined;
+        cell.metadata.statusMessage = undefined;
+        cell.metadata.executionOrder = undefined;
+        cell.metadata.lastRunDuration = undefined;
+        cell.metadata.runStartTime = undefined;
+    });
     // If a cell has been cleared, then clear the corresponding ICell (cell in INotebookModel).
     change.cells.forEach((vscCell) => {
         const cell = findMappedNotebookCellModel(vscCell, model.cells);
-        cell.data.outputs = [];
+        model.clearCellOutput(cell);
         updateVSCNotebookCellMetadata(vscCell.metadata, cell);
-        model.update({
-            source: 'user',
-            kind: 'clear',
-            oldDirty: model.isDirty,
-            newDirty: true,
-            oldCells: [cell]
-        });
     });
+
+    return true;
 }
 
-function changeCellLanguage(change: NotebookCellLanguageChangeEvent, model: INotebookModel) {
-    const cellModel = findMappedNotebookCellModel(change.cell, model.cells);
-    const cellData = createCellFrom(cellModel.data, change.language === MARKDOWN_LANGUAGE ? 'markdown' : 'code');
-    // tslint:disable-next-line: no-any
-    change.cell.outputs = createVSCCellOutputsFromOutputs(cellData.outputs as any);
-    change.cell.metadata.executionOrder = undefined;
-    change.cell.metadata.hasExecutionOrder = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
-    change.cell.metadata.runnable = change.language !== MARKDOWN_LANGUAGE; // Do not check for Python, to support other languages
-
-    // Create a new cell & replace old one.
-    const oldCellIndex = model.cells.indexOf(cellModel);
-    model.cells[oldCellIndex] = createCellFromVSCNotebookCell(change.cell, model);
-}
-
-function handleChangesToCells(change: NotebookCellsChangeEvent, model: INotebookModel) {
+function handleChangesToCells(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
     if (isCellMoveChange(change)) {
         handleCellMove(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.MoveCell);
     } else if (isCellDelete(change)) {
         handleCellDelete(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.DeleteCell);
     } else if (isCellInsertion(change)) {
         handleCellInsertion(change, model);
+        sendTelemetryEvent(VSCodeNativeTelemetry.AddCell);
     } else {
         traceError('Unsupported cell change', change);
         throw new Error('Unsupported cell change');
@@ -123,28 +117,26 @@ function isCellInsertion(change: NotebookCellsChangeEvent) {
     return change.changes.length === 1 && change.changes[0].deletedCount === 0 && change.changes[0].items.length > 0;
 }
 
-function handleCellMove(change: NotebookCellsChangeEvent, model: INotebookModel) {
+function handleCellMove(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
     assert.equal(change.changes.length, 2, 'When moving cells we must have only 2 changes');
     const [, insertChange] = change.changes;
     const cellToSwap = findMappedNotebookCellModel(insertChange.items[0]!, model.cells);
     const cellToSwapWith = model.cells[insertChange.start];
     assert.notEqual(cellToSwap, cellToSwapWith, 'Cannot swap cell with the same cell');
-
-    const indexOfCellToSwap = model.cells.indexOf(cellToSwap);
-    model.cells[insertChange.start] = cellToSwap;
-    model.cells[indexOfCellToSwap] = cellToSwapWith;
+    model.swapCells(cellToSwap, cellToSwapWith);
 }
-function handleCellInsertion(change: NotebookCellsChangeEvent, model: INotebookModel) {
+function handleCellInsertion(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
     assert.equal(change.changes.length, 1, 'When inserting cells we must have only 1 change');
     assert.equal(change.changes[0].items.length, 1, 'Insertion of more than 1 cell is not supported');
     const insertChange = change.changes[0];
     const cell = change.changes[0].items[0];
     const newCell = createCellFromVSCNotebookCell(cell, model);
-    model.cells.splice(insertChange.start, 0, newCell);
+    model.addCell(newCell, insertChange.start);
 }
-function handleCellDelete(change: NotebookCellsChangeEvent, model: INotebookModel) {
+function handleCellDelete(change: NotebookCellsChangeEvent, model: VSCodeNotebookModel) {
     assert.equal(change.changes.length, 1, 'When deleting cells we must have only 1 change');
     const deletionChange = change.changes[0];
     assert.equal(deletionChange.deletedCount, 1, 'Deleting more than one cell is not supported');
-    model.cells.splice(deletionChange.start, 1);
+    const cellToRemove = model.cells[deletionChange.start];
+    model.deleteCell(cellToRemove);
 }

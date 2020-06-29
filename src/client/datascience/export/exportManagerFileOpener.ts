@@ -1,14 +1,14 @@
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Position, Uri } from 'vscode';
 import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
+import { DataScience } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { ProgressReporter } from '../progress/progressReporter';
 import { INotebookModel } from '../types';
 import { ExportManagerDependencyChecker } from './exportManagerDependencyChecker';
 import { ExportFormat, IExportManager } from './types';
@@ -18,24 +18,26 @@ export class ExportManagerFileOpener implements IExportManager {
     constructor(
         @inject(ExportManagerDependencyChecker) private readonly manager: IExportManager,
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
     ) {}
 
     public async export(format: ExportFormat, model: INotebookModel): Promise<Uri | undefined> {
-        const reporter = this.progressReporter.createProgressIndicator(`Exporting to ${format}`);
         let uri: Uri | undefined;
         try {
             uri = await this.manager.export(format, model);
         } catch (e) {
+            let msg = e;
             traceError('Export failed', e);
-            this.showExportFailed(e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
+
+            if (format === ExportFormat.pdf) {
+                msg = DataScience.exportToPDFDependencyMessage();
+            }
+
+            this.showExportFailed(msg);
             return;
-        } finally {
-            reporter.dispose();
         }
 
         if (!uri) {
@@ -65,14 +67,18 @@ export class ExportManagerFileOpener implements IExportManager {
         const contents = await this.fileSystem.readFile(uri.fsPath);
         await this.fileSystem.deleteFile(uri.fsPath);
         const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
-        await this.documentManager.showTextDocument(doc);
+        const editor = await this.documentManager.showTextDocument(doc);
+        // Edit the document so that it is dirty (add a space at the end)
+        editor.edit((editBuilder) => {
+            editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
+        });
     }
 
     private showExportFailed(msg: string) {
         this.applicationShell
             .showErrorMessage(
                 // tslint:disable-next-line: messages-must-be-localized
-                `${getLocString('DataScience.failedExportMessage', 'Export failed')} ${msg}`
+                `${getLocString('DataScience.failedExportMessage', 'Export failed.')} ${msg}`
             )
             .then();
     }

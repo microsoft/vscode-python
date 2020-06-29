@@ -48,7 +48,8 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    ITrustService
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
@@ -62,6 +63,7 @@ enum AskForSaveResult {
 
 @injectable()
 export class NativeEditorOldWebView extends NativeEditor {
+    public readonly type = 'old';
     public get visible(): boolean {
         return this.viewState.visible;
     }
@@ -103,6 +105,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(UseCustomEditorApi) useCustomEditorApi: boolean,
         @inject(INotebookStorageProvider) private readonly storage: INotebookStorageProvider,
+        @inject(ITrustService) trustService: ITrustService,
         @inject(IExperimentService) expService: IExperimentService
     ) {
         super(
@@ -135,6 +138,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             switcher,
             notebookProvider,
             useCustomEditorApi,
+            trustService,
             expService
         );
         asyncRegistry.push(this);

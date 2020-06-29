@@ -27,8 +27,8 @@ export type PathMapping = {
     remoteRoot: string;
 };
 export type Connection = {
-    host: string;
-    port: number;
+    host?: string;
+    port?: number;
 };
 
 interface ICommonDebugArguments {

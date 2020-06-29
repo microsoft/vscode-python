@@ -7,7 +7,7 @@ import { CellKind, ConfigurationTarget, Event, EventEmitter, Uri, WebviewPanel }
 import type { NotebookDocument } from 'vscode-proposed';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -25,6 +25,7 @@ import { getDefaultCodeLanguage } from './helpers/helpers';
 import { INotebookExecutionService } from './types';
 
 export class NotebookEditor implements INotebookEditor {
+    public readonly type = 'native';
     public get onDidChangeViewState(): Event<void> {
         return this.changedViewState.event;
     }
@@ -45,7 +46,7 @@ export class NotebookEditor implements INotebookEditor {
         return this.model.isUntitled;
     }
     public get isDirty(): boolean {
-        return this.model.isDirty;
+        return this.document.isDirty;
     }
     public get file(): Uri {
         return this.model.file;
@@ -77,9 +78,18 @@ export class NotebookEditor implements INotebookEditor {
         private readonly notebookProvider: INotebookProvider,
         private readonly statusProvider: IStatusProvider,
         private readonly applicationShell: IApplicationShell,
-        private readonly configurationService: IConfigurationService
+        private readonly configurationService: IConfigurationService,
+        disposables: IDisposableRegistry
     ) {
-        model.onDidEdit(() => this._modified.fire(this));
+        disposables.push(model.onDidEdit(() => this._modified.fire(this)));
+        disposables.push(
+            model.changed((e) => {
+                if (e.kind === 'save') {
+                    this._saved.fire(this);
+                }
+            })
+        );
+        disposables.push(model.onDidDispose(this._closed.fire.bind(this._closed, this)));
     }
     public async load(_storage: INotebookModel, _webViewPanel?: WebviewPanel): Promise<void> {
         // Not used.
@@ -120,6 +130,10 @@ export class NotebookEditor implements INotebookEditor {
                 editor.delete(i);
             }
         });
+    }
+    public notifyExecution(code: string) {
+        this._executed.fire(this);
+        this.executedCode.fire(code);
     }
     public async interruptKernel(): Promise<void> {
         this.executionService.cancelPendingExecutions(this.document);

@@ -16,7 +16,7 @@ import type {
 import { ICommandManager } from '../../common/application/types';
 import { MARKDOWN_LANGUAGE } from '../../common/constants';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent, setSharedProperty } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
 import { notebookModelToVSCNotebookData } from './helpers/helpers';
@@ -68,13 +68,16 @@ export class NotebookContentProvider implements INotebookContentProvider {
         }
         // If there's no backup id, then skip loading dirty contents.
         const model = await (openContext.backupId
-            ? this.notebookStorage.load(uri, undefined, openContext.backupId)
-            : this.notebookStorage.load(uri, undefined, true));
+            ? this.notebookStorage.load(uri, undefined, openContext.backupId, true)
+            : this.notebookStorage.load(uri, undefined, true, true));
+
+        setSharedProperty('ds_notebookeditor', 'native');
+        sendTelemetryEvent(Telemetry.CellCount, undefined, { count: model.cells.length });
         return notebookModelToVSCNotebookData(model);
     }
     @captureTelemetry(Telemetry.Save, undefined, true)
     public async saveNotebook(document: NotebookDocument, cancellation: CancellationToken) {
-        const model = await this.notebookStorage.load(document.uri);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         if (cancellation.isCancellationRequested) {
             return;
         }
@@ -90,7 +93,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         document: NotebookDocument,
         cancellation: CancellationToken
     ): Promise<void> {
-        const model = await this.notebookStorage.load(document.uri);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         if (!cancellation.isCancellationRequested) {
             await this.notebookStorage.saveAs(model, targetResource);
         }
@@ -103,7 +106,7 @@ export class NotebookContentProvider implements INotebookContentProvider {
         _context: NotebookDocumentBackupContext,
         cancellation: CancellationToken
     ): Promise<NotebookDocumentBackup> {
-        const model = await this.notebookStorage.load(document.uri);
+        const model = await this.notebookStorage.load(document.uri, undefined, undefined, true);
         const id = this.notebookStorage.generateBackupId(model);
         await this.notebookStorage.backup(model, cancellation, id);
         return {

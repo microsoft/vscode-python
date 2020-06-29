@@ -6,22 +6,24 @@ import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
 import { IFont, IServerState, ServerStatus } from './mainState';
 
-export interface IKernelSelectionProps {
+export interface IJupyterInfoProps {
     baseTheme: string;
     font: IFont;
     kernel: IServerState;
+    isNotebookTrusted?: boolean; // Native editor-specific
     selectServer(): void;
+    launchNotebookTrustPrompt?(): void; // Native editor-specific
     selectKernel(): void;
 }
 
-export class KernelSelection extends React.Component<IKernelSelectionProps> {
+export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     private get isKernelSelectionAllowed() {
         return (
             this.props.kernel.jupyterServerStatus !== ServerStatus.Restarting &&
             this.props.kernel.jupyterServerStatus !== ServerStatus.Starting
         );
     }
-    constructor(prop: IKernelSelectionProps) {
+    constructor(prop: IJupyterInfoProps) {
         super(prop);
         this.selectKernel = this.selectKernel.bind(this);
     }
@@ -46,6 +48,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
 
         return (
             <div className="kernel-status" style={dynamicFont}>
+                {this.renderTrustMessage()}
                 <div className="kernel-status-section kernel-status-server" style={serverTextWidth} role="button">
                     <div className="kernel-status-text" title={this.props.kernel.localizedUri}>
                         {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
@@ -79,6 +82,38 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             return (
                 <div className="kernel-status-section kernel-status-status" style={displayNameTextWidth} role="button">
                     {displayName}: {this.props.kernel.jupyterServerStatus}
+                </div>
+            );
+        }
+    }
+
+    private renderTrustMessage() {
+        if (this.props.isNotebookTrusted !== undefined) {
+            const text = this.props.isNotebookTrusted
+                ? getLocString('DataScience.notebookIsTrusted', 'Trusted')
+                : getLocString('DataScience.notebookIsNotTrusted', 'Not Trusted');
+            const textSize = text.length;
+            const dynamicFont: React.CSSProperties = {
+                fontSize: 'var(--vscode-font-size)', // Use the same font and size as the menu
+                fontFamily: 'var(--vscode-font-family)',
+                maxWidth: this.getMaxWidth(textSize + 5), // plus 5 for the line and margins,
+                color: this.props.isNotebookTrusted ? undefined : 'var(--vscode-editorError-foreground)'
+            };
+            const trustTextWidth: React.CSSProperties = {
+                maxWidth: this.getMaxWidth(textSize)
+            };
+
+            return (
+                <div className="kernel-status" style={dynamicFont}>
+                    <div
+                        className="kernel-status-section kernel-status-section-hoverable kernel-status-status"
+                        style={trustTextWidth}
+                        onClick={this.props.launchNotebookTrustPrompt}
+                        role="button"
+                    >
+                        <div className="kernel-status-text">{text}</div>
+                    </div>
+                    <div className="kernel-status-divider" />
                 </div>
             );
         }

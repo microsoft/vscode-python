@@ -122,6 +122,7 @@ export const actionCreators = {
     editorUnmounted: (): CommonAction => createIncomingAction(CommonActionType.UNMOUNT),
     selectKernel: (): CommonAction => createIncomingAction(InteractiveWindowMessages.SelectKernel),
     selectServer: (): CommonAction => createIncomingAction(CommonActionType.SELECT_SERVER),
+    launchNotebookTrustPrompt: (): CommonAction => createIncomingAction(CommonActionType.LAUNCH_NOTEBOOK_TRUST_PROMPT),
     openSettings: (setting?: string): CommonAction<IOpenSettingsAction> =>
         createIncomingActionWithPayload(CommonActionType.OPEN_SETTINGS, { setting }),
     getVariableData: (

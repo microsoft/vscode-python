@@ -100,7 +100,10 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(sendRequestStub.callCount).equal(8);
         expect(listenStub.callCount).equal(8);
     });
-    test('Throw error if daemon does not respond to ping within 5s', async () => {
+    test('Throw error if daemon does not respond to ping within 5s', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12567
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         sendRequestStub.reset();
         sendRequestStub.returns(sleep(6_000).then({ pong: 'hello' } as any));
         // Create and initialize the pool.
@@ -153,7 +156,10 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
     });
-    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async () => {
+    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async function () {
+        // https://github.com/microsoft/vscode-python/issues/12567
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
             'getInterpreterInformation'

@@ -201,9 +201,17 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        return this.session && this.session.kernel
-            ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
-            : undefined;
+        const promise =
+            this.session && this.session.kernel
+                ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
+                : undefined;
+
+        // It has been observed that starting the restart session slows down first time to execute a cell.
+        // Solution is to start the restart session after the first execution of user code.
+        if (promise) {
+            promise.done.finally(() => this.startRestartSession()).catch(noop);
+        }
+        return promise;
     }
 
     public requestInspect(

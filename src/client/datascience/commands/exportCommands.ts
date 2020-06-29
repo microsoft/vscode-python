@@ -99,8 +99,17 @@ export class ExportCommands implements IDisposable {
                     });
                     this.commandManager.executeCommand(Commands.ExportToHTML, model);
                 }
+            },
+            {
+                label: DataScience.exportPDFQuickPickLabel(),
+                picked: false,
+                handler: () => {
+                    sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
+                        format: ExportFormat.pdf
+                    });
+                    this.commandManager.executeCommand(Commands.ExportToPDF, model);
+                }
             }
-            //{ label: 'PDF', picked: false, handler: () => this.commandManager.executeCommand(Commands.ExportToPDF) }
         ];
     }
 

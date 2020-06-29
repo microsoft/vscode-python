@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { NativeMouseCommandTelemetry } from '../../client/datascience/constants';
-import { KernelSelection } from '../interactive-common/kernelSelection';
+import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import {
     getSelectedAndFocusedInfo,
     IFont,
@@ -45,6 +45,8 @@ export type INativeEditorToolbarProps = INativeEditorDataProps & {
     interruptKernel: typeof actionCreators.interruptKernel;
     selectKernel: typeof actionCreators.selectKernel;
     selectServer: typeof actionCreators.selectServer;
+    launchNotebookTrustPrompt: typeof actionCreators.launchNotebookTrustPrompt;
+    isNotebookTrusted: boolean;
 };
 
 function mapStateToProps(state: IStore): INativeEditorDataProps {
@@ -107,6 +109,11 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
         const selectServer = () => {
             this.props.selectServer();
             this.props.sendCommand(NativeMouseCommandTelemetry.SelectServer);
+        };
+        const launchNotebookTrustPrompt = () => {
+            if (!this.props.isNotebookTrusted) {
+                this.props.launchNotebookTrustPrompt();
+            }
         };
         const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
         const canRunBelow =
@@ -248,12 +255,14 @@ export class Toolbar extends React.PureComponent<INativeEditorToolbarProps> {
                             />
                         </ImageButton>
                     </div>
-                    <KernelSelection
+                    <JupyterInfo
                         baseTheme={this.props.baseTheme}
                         font={this.props.font}
                         kernel={this.props.kernel}
                         selectServer={selectServer}
                         selectKernel={selectKernel}
+                        isNotebookTrusted={this.props.isNotebookTrusted}
+                        launchNotebookTrustPrompt={launchNotebookTrustPrompt}
                     />
                 </div>
                 <div className="toolbar-divider" />
