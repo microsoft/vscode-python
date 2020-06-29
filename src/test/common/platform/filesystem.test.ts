@@ -932,7 +932,10 @@ suite('FileSystem', () => {
 
     suite('raw', () => {
         suite('stat', () => {
-            test('gets the info for an existing file', async () => {
+            test('gets the info for an existing file', async function () {
+                // https://github.com/microsoft/vscode-python/issues/10294
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const old = await fsextra.stat(filename);
                 const expected = convertStat(old, FileType.File);

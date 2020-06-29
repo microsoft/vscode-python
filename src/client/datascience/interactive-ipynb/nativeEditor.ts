@@ -259,7 +259,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             case InteractiveWindowMessages.Started:
                 if (this.model) {
                     // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-                    this.sendInitialCellsToWebView(this.model.cells, this.model.isTrusted)
+                    this.sendInitialCellsToWebView([...this.model.cells], this.model.isTrusted)
                         .then(() => {
                             // May alread be dirty, if so send a message
                             if (this.model?.isDirty) {

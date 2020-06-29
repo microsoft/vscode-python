@@ -34,6 +34,7 @@ import { NativeEditorStorage } from '../../../client/datascience/interactive-ipy
 import { NotebookStorageProvider } from '../../../client/datascience/interactive-ipynb/notebookStorageProvider';
 import { TrustService } from '../../../client/datascience/interactive-ipynb/trustService';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
+import { NotebookModelFactory } from '../../../client/datascience/notebookStorage/factory';
 import {
     ICell,
     IJupyterExecution,
@@ -337,7 +338,7 @@ suite('DataScience - Native Editor Storage', () => {
             globalMemento,
             localMemento,
             trustService,
-            false
+            new NotebookModelFactory(false)
         );
 
         return new NotebookStorageProvider(notebookStorage, []);
@@ -402,7 +403,7 @@ suite('DataScience - Native Editor Storage', () => {
             kind: 'remove_all',
             oldDirty: model.isDirty,
             newDirty: true,
-            oldCells: model.cells,
+            oldCells: [...model.cells],
             newCellId: '1'
         });
     }

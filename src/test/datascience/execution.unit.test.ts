@@ -879,6 +879,7 @@ suite('Jupyter Execution', async () => {
         // Setup default settings
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
+            alwaysTrustNotebooks: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,

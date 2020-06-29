@@ -344,6 +344,7 @@ export interface IVariableQuery {
 
 export interface IDataScienceSettings {
     allowImportFromNotebook: boolean;
+    alwaysTrustNotebooks: boolean;
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;

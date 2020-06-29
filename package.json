@@ -96,7 +96,7 @@
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
         "onNotebookEditor:jupyter-notebook",
-        "workspaceContains:**/mspythonconfig.json",
+        "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml"
     ],
     "main": "./out/client/extension",
@@ -2940,6 +2940,12 @@
                     "default": true,
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
+                },
+                "python.dataScience.alwaysTrustNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically trust all notebooks that are opened. Warning: only enable this setting if you are absolutely certain that you wish to trust all notebooks.",
+                    "scope": "machine"
                 },
                 "python.insidersChannel": {
                     "type": "string",
