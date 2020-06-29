@@ -2121,6 +2121,9 @@ export interface IEventNamePropertyMapping {
 
     // Start Page Events
     [Telemetry.StartPageViewed]: never | undefined;
+    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
+    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
     [Telemetry.StartPageWebViewError]: never | undefined;
     [Telemetry.StartPageTime]: never | undefined;
     [Telemetry.StartPageClickedDontShowAgain]: never | undefined;

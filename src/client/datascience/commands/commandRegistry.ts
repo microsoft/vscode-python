@@ -349,6 +349,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async openStartPage(): Promise<void> {
+        sendTelemetryEvent(Telemetry.StartPageOpenedFromCommandPalette);
         return this.startPage.open();
     }
 
