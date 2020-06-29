@@ -15,7 +15,6 @@ import {
     SpawnOptions,
     StdErrError
 } from '../../common/process/types';
-//import { noop } from '../../common/utils/misc';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
