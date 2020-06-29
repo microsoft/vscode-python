@@ -6,7 +6,7 @@ import { EventEmitter, Extension, ExtensionKind, Uri } from 'vscode';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { VSCodeNotebook } from '../../../client/common/application/notebook';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
 import { IDisposable, IExtensions } from '../../../client/common/types';
 import { JupyterNotebookView, RendererExtensionId } from '../../../client/datascience/notebook/constants';
 import { RendererExtension } from '../../../client/datascience/notebook/rendererExtension';
@@ -17,6 +17,7 @@ suite('Data Science - NativeNotebook Renderer Extension', () => {
     let downloader: RendererExtensionDownloader;
     let vscNotebook: IVSCodeNotebook;
     let extensions: IExtensions;
+    let appEnv: IApplicationEnvironment;
     let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
     const disposables: IDisposable[] = [];
     const jupyterNotebook: NotebookDocument = {
@@ -51,10 +52,12 @@ suite('Data Science - NativeNotebook Renderer Extension', () => {
         downloader = mock(RendererExtensionDownloader);
         vscNotebook = mock(VSCodeNotebook);
         extensions = mock<IExtensions>();
+        appEnv = mock<IApplicationEnvironment>();
         rendererExtension = new RendererExtension(
             instance(vscNotebook),
             instance(downloader),
             instance(extensions),
+            instance(appEnv),
             disposables
         );
         onDidOpenNotebookDocument = new EventEmitter<NotebookDocument>();
@@ -63,8 +66,29 @@ suite('Data Science - NativeNotebook Renderer Extension', () => {
         when(downloader.downloadAndInstall()).thenResolve();
         when(extensions.getExtension(anything())).thenReturn();
     });
+    suite('Extension has not been installed in VSC Stable', () => {
+        setup(() => {
+            when(extensions.getExtension(anything())).thenReturn();
+            when(appEnv.channel).thenReturn('stable');
+        });
+        test('A jupyter notebook is already open', async () => {
+            when(vscNotebook.notebookDocuments).thenReturn([jupyterNotebook]);
+            await rendererExtension.activate();
+
+            verify(downloader.downloadAndInstall()).never();
+        });
+        test('A jupyter notebook is opened', async () => {
+            await rendererExtension.activate();
+            onDidOpenNotebookDocument.fire(jupyterNotebook);
+
+            verify(downloader.downloadAndInstall()).never();
+        });
+    });
     suite('Extension has not been installed', () => {
-        setup(() => when(extensions.getExtension(anything())).thenReturn());
+        setup(() => {
+            when(extensions.getExtension(anything())).thenReturn();
+            when(appEnv.channel).thenReturn('insiders');
+        });
         test('Should not download extension', async () => {
             await rendererExtension.activate();
 
@@ -96,7 +120,10 @@ suite('Data Science - NativeNotebook Renderer Extension', () => {
         });
     });
     suite('Extension has already been installed', () => {
-        setup(() => when(extensions.getExtension(RendererExtensionId)).thenReturn(extension));
+        setup(() => {
+            when(extensions.getExtension(RendererExtensionId)).thenReturn(extension);
+            when(appEnv.channel).thenReturn('insiders');
+        });
         test('A jupyter notebook is already open', async () => {
             when(vscNotebook.notebookDocuments).thenReturn([jupyterNotebook]);
             await rendererExtension.activate();

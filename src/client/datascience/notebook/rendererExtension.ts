@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { IVSCodeNotebook } from '../../common/application/types';
+import { IApplicationEnvironment, IVSCodeNotebook } from '../../common/application/types';
 import { IDisposableRegistry, IExtensions } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { RendererExtensionId } from './constants';
@@ -17,9 +17,13 @@ export class RendererExtension implements IExtensionSingleActivationService {
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(RendererExtensionDownloader) private readonly downloader: RendererExtensionDownloader,
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IApplicationEnvironment) private readonly env: IApplicationEnvironment,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {}
     public async activate() {
+        if (this.env.channel === 'stable') {
+            return;
+        }
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebook, this, this.disposables);
         this.notebook.notebookDocuments.forEach((doc) => this.onDidOpenNotebook(doc));
     }
