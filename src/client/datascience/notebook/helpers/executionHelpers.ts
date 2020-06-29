@@ -6,9 +6,9 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import type { KernelMessage } from '@jupyterlab/services';
 import { NotebookCell, NotebookCellRunState, NotebookDocument } from 'vscode';
-import { IBaseCellVSCodeMetadata } from '../../../../../types/@jupyterlab_coreutils_nbformat';
 import { createErrorOutput } from '../../../../datascience-ui/common/cellFactory';
-import { ICell, INotebookModel } from '../../types';
+import { VSCodeNotebookModel } from '../../notebookStorage/vscNotebookModel';
+import { ICell } from '../../types';
 import { findMappedNotebookCell } from './cellMappers';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
 
@@ -32,7 +32,7 @@ export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
  */
 export function handleUpdateDisplayDataMessage(
     msg: KernelMessage.IUpdateDisplayDataMsg,
-    model: INotebookModel,
+    model: VSCodeNotebookModel,
     document: NotebookDocument
 ): boolean {
     // Find any cells that have this same display_id
@@ -69,7 +69,7 @@ export function handleUpdateDisplayDataMessage(
             }
 
             const vscCell = findMappedNotebookCell(cellToCheck, document.cells);
-            updateCellOutput(vscCell, cellToCheck, changedOutputs);
+            updateCellOutput(model, vscCell, cellToCheck, changedOutputs);
             return true;
         }).length > 0
     );
@@ -86,9 +86,14 @@ export function updateCellWithErrorStatus(cell: NotebookCell, ex: Partial<Error>
 /**
  * @returns {boolean} Returns `true` if execution count has changed.
  */
-export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, executionCount: number): boolean {
+export function updateCellExecutionCount(
+    model: VSCodeNotebookModel,
+    vscCell: NotebookCell,
+    cell: ICell,
+    executionCount: number
+): boolean {
     if (cell.data.execution_count !== executionCount && vscCell.metadata.executionOrder !== executionCount) {
-        cell.data.execution_count = executionCount;
+        model.updateCellExecutionCount(cell, executionCount);
         vscCell.metadata.executionOrder = executionCount;
         return true;
     }
@@ -98,11 +103,16 @@ export function updateCellExecutionCount(vscCell: NotebookCell, cell: ICell, exe
 /**
  * Updates our Cell Model with the cell output.
  * As we execute a cell we get output from jupyter. This code will ensure the cell is updated with the output.
- * (this has nothing to do with VSCode cells), this is out ICell in INotebookModel.
+ * Here we update both the VSCode Cell as well as our ICell (cell in our INotebookModel).
  * @returns {(boolean | undefined)} Returns `true` if output has changed.
  */
-export function updateCellOutput(vscCell: NotebookCell, cell: ICell, outputs: nbformat.IOutput[]): boolean | undefined {
-    cell.data.outputs = outputs;
+export function updateCellOutput(
+    model: VSCodeNotebookModel,
+    vscCell: NotebookCell,
+    cell: ICell,
+    outputs: nbformat.IOutput[]
+): boolean | undefined {
+    model.updateCellOutput(cell, outputs);
     const newOutput = createVSCCellOutputsFromOutputs(outputs);
     // If there was no output and still no output, then nothing to do.
     if (
@@ -128,25 +138,19 @@ export function updateCellOutput(vscCell: NotebookCell, cell: ICell, outputs: nb
 }
 
 /**
- * Store execution start and end times in ISO format for portability.
+ * Store execution start and end times.
+ * Stored as ISO for portability.
  */
-export function updateCellExecutionTimes(notebookCellModel: ICell, startTime?: number, duration?: number) {
+export function updateCellExecutionTimes(
+    model: VSCodeNotebookModel,
+    cell: ICell,
+    startTime?: number,
+    duration?: number
+) {
     const startTimeISO = startTime ? new Date(startTime).toISOString() : undefined;
     const endTimeISO = duration && startTime ? new Date(startTime + duration).toISOString() : undefined;
-    updateCellMetadata(notebookCellModel, {
+    model.updateCellMetadata(cell, {
         end_execution_time: endTimeISO,
         start_execution_time: startTimeISO
     });
-}
-
-export function updateCellMetadata(notebookCellModel: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
-    const originalVscodeMetadata: IBaseCellVSCodeMetadata = notebookCellModel.data.metadata.vscode || {};
-    // Update our model with the new metadata stored in jupyter.
-    notebookCellModel.data.metadata = {
-        ...notebookCellModel.data.metadata,
-        vscode: {
-            ...originalVscodeMetadata,
-            ...metadata
-        }
-    };
 }

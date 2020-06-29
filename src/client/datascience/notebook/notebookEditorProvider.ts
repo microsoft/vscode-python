@@ -22,6 +22,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, setSharedProperty } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { INotebookStorageProvider } from '../interactive-ipynb/notebookStorageProvider';
+import { VSCodeNotebookModel } from '../notebookStorage/vscNotebookModel';
 import { INotebookEditor, INotebookEditorProvider, INotebookProvider, IStatusProvider } from '../types';
 import { JupyterNotebookView } from './constants';
 import { mapVSCNotebookCellsToNotebookCellModels } from './helpers/cellMappers';
@@ -232,6 +233,9 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
             return;
         }
         const model = await this.storage.load(e.document.uri, undefined, undefined, true);
+        if (!(model instanceof VSCodeNotebookModel)) {
+            throw new Error('NotebookModel not of type VSCodeNotebookModel');
+        }
         if (updateCellModelWithChangesToVSCCell(e, model)) {
             // If we have updated the notebook document, then trigger changes.
             this.contentProvider.notifyChangesToDocument(e.document);
