@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IVSCodeNotebook } from '../../common/application/types';
@@ -11,6 +11,7 @@ import { RendererExtensionId } from './constants';
 import { isJupyterNotebook } from './helpers/helpers';
 import { RendererExtensionDownloader } from './rendererExtensionDownloader';
 
+@injectable()
 export class RendererExtension implements IExtensionSingleActivationService {
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
