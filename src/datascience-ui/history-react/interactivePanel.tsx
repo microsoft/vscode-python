@@ -6,7 +6,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { KernelSelection } from '../interactive-common/kernelSelection';
+import { JupyterInfo } from '../interactive-common/jupyterInfo';
 import { ICellViewModel } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -217,7 +217,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         ) {
             if (this.props.settings.showKernelSelectionOnInteractiveWindow) {
                 return (
-                    <KernelSelection
+                    <JupyterInfo
                         baseTheme={this.props.baseTheme}
                         font={this.props.font}
                         kernel={this.props.kernel}
@@ -231,7 +231,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         }
 
         return (
-            <KernelSelection
+            <JupyterInfo
                 baseTheme={this.props.baseTheme}
                 font={this.props.font}
                 kernel={this.props.kernel}

@@ -471,13 +471,10 @@ body, html {
 
 
 
-.jupyter-info-container {
-    display: flex;
-    margin-left: auto;
-}
 
 .kernel-status {
     display: flex;
+    margin-left: auto;
 }
 
 .kernel-status-section {
