@@ -13,7 +13,7 @@ const Module = require('module');
 
 type VSCode = typeof vscode;
 
-const mockedVSCode: Partial<VSCode> = {};
+export const mockedVSCode: Partial<VSCode> = {};
 export const mockedVSCodeNamespaces: { [P in keyof VSCode]?: TypeMoq.IMock<VSCode[P]> } = {};
 const originalLoad = Module._load;
 
