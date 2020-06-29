@@ -1,18 +1,23 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
 import { IConfigurationService } from '../../common/types';
+import { EventEmitter } from 'vscode';
 import { IDigestStorage, ITrustService } from '../types';
 
 @injectable()
 export class TrustService implements ITrustService {
+    public get onDidSetNotebookTrust() {
+        return this._onDidSetNotebookTrust.event;
+    }
     private get alwaysTrustNotebooks() {
         return this.configService.getSettings().datascience.alwaysTrustNotebooks;
     }
+    protected readonly _onDidSetNotebookTrust = new EventEmitter<boolean>();
     constructor(
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    ) { }
 
     /**
      * When a notebook is opened, we check the database to see if a trusted checkpoint
@@ -27,7 +32,9 @@ export class TrustService implements ITrustService {
         }
         // Compute digest and see if notebook is trusted
         const digest = await this.computeDigest(notebookContents);
-        return this.digestStorage.containsDigest(uri, digest);
+        const isTrusted = await this.digestStorage.containsDigest(uri, digest);
+        this._onDidSetNotebookTrust.fire(isTrusted);
+        return isTrusted;
     }
 
     /**
@@ -39,7 +46,8 @@ export class TrustService implements ITrustService {
         if (!this.alwaysTrustNotebooks) {
             // Only update digest store if the user wants us to check trust
             const digest = await this.computeDigest(notebookContents);
-            return this.digestStorage.saveDigest(uri, digest);
+            await this.digestStorage.saveDigest(uri, digest);
+            this._onDidSetNotebookTrust.fire(true);
         }
     }
 

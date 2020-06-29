@@ -22,7 +22,7 @@ import {
     WebviewPanel
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import type { Data as WebSocketData } from 'ws';
+import type { Data as WebSocketData, EventEmitter } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -1246,6 +1246,7 @@ export interface IDigestStorage {
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
+    readonly onDidSetNotebookTrust: Event<boolean>;
     isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
     trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }

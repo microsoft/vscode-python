@@ -13,7 +13,7 @@ import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider, ITrustService } from '../types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -25,6 +25,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrNativeContext: ContextKey;
     private pythonOrInteractiveOrNativeContext: ContextKey;
     private hasNativeNotebookCells: ContextKey;
+    private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
@@ -32,7 +33,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(ITrustService) private readonly trustService: ITrustService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -51,6 +53,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.commandManager
         );
         this.hasNativeNotebookCells = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
+        this.isNotebookTrusted = new ContextKey(EditorContexts.IsNotebookTrusted, this.commandManager);
     }
     public dispose() {
         this.disposables.forEach((item) => item.dispose());
@@ -64,6 +67,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
         this.notebookEditorProvider.onDidChangeActiveNotebookEditor(
             this.onDidChangeActiveNotebookEditor,
+            this,
+            this.disposables
+        );
+        this.trustService.onDidSetNotebookTrust(
+            this.onDidSetNotebookTrust,
             this,
             this.disposables
         );
@@ -91,6 +99,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         // This is temporary, and once we ship native editor this needs to be removed.
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
+        this.isNotebookTrusted.set(e?.model === undefined ? false : e.model.isTrusted).ignoreErrors(); // Update the currently active notebook's trust state
         this.updateMergedContexts();
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
@@ -98,6 +107,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
         this.udpateNativeNotebookCellContext();
         this.updateMergedContexts();
+    }
+    private onDidSetNotebookTrust(e: boolean) {
+        this.isNotebookTrusted.set(e).ignoreErrors();
     }
     private updateMergedContexts() {
         this.interactiveOrNativeContext
@@ -112,7 +124,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
-                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
+                (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
             .ignoreErrors();
     }
