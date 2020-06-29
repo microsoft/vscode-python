@@ -308,6 +308,10 @@ export namespace Transfer {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
             cells: arg.prevState.cellVMs.map((c) => c.cell)
         });
+        if (!arg.prevState.isNotebookTrusted) {
+            // As soon as an untrusted notebook is loaded, prompt the user to trust it
+            postActionToExtension(arg, InteractiveWindowMessages.LaunchNotebookTrustPrompt);
+        }
         return arg.prevState;
     }
 }

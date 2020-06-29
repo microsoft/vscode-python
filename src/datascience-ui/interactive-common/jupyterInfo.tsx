@@ -66,6 +66,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     }
 
     private renderKernelStatus(displayNameTextWidth: React.CSSProperties) {
+        const ariaDisabled = this.props.isNotebookTrusted === undefined ? false : this.props.isNotebookTrusted;
         if (this.isKernelSelectionAllowed) {
             return (
                 <div
@@ -73,6 +74,7 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
                     style={displayNameTextWidth}
                     onClick={this.selectKernel}
                     role="button"
+                    aria-disabled={ariaDisabled}
                 >
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
@@ -120,7 +122,9 @@ export class JupyterInfo extends React.Component<IJupyterInfoProps> {
     }
 
     private selectKernel() {
-        this.props.selectKernel();
+        if (this.props.isNotebookTrusted) {
+            this.props.selectKernel();
+        }
     }
     private getIcon(): ImageName {
         return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted

@@ -44,8 +44,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
-        showAfterMinimumEventsCount: number = 30,
-        showBeforeMaximumEventsCount: number = 200
+        showAfterMinimumEventsCount: number = 100,
+        showBeforeMaximumEventsCount: number = 500
     ) {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
