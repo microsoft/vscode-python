@@ -547,7 +547,7 @@
     "DataScienceNotebookSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?",
     "DataScienceRendererExtension.installingExtension": "Installing Notebook Renderers extension...",
     "DataScienceRendererExtension.installationCompleteMessage": "complete.",
-    "DataScienceRendererExtension.startingDownloadOutputMessage": "Starting download for Insiders build.",
-    "DataScienceRendererExtension.downloadingMessage": "Downloading Insiders Extension...",
+    "DataScienceRendererExtension.startingDownloadOutputMessage": "Starting download of Notebook Renderers extension.",
+    "DataScienceRendererExtension.downloadingMessage": "Downloading Notebook Renderers Extension...",
     "DataScienceRendererExtension.downloadCompletedOutputMessage": "Notebook Renderers extension download complete."
 }

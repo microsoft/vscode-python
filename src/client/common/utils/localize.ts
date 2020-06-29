@@ -204,7 +204,7 @@ export namespace ExtensionChannels {
     );
     export const startingDownloadOutputMessage = localize(
         'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download for Insiders build.'
+        'Starting download of Notebook Renderers extension.'
     );
     export const downloadingInsidersMessage = localize(
         'ExtensionChannels.downloadingInsidersMessage',
@@ -269,11 +269,11 @@ export namespace DataScienceRendererExtension {
     );
     export const startingDownloadOutputMessage = localize(
         'DataScienceRendererExtension.startingDownloadOutputMessage',
-        'Starting download for Insiders build.'
+        'Starting download of Notebook Renderers extension.'
     );
     export const downloadingMessage = localize(
         'DataScienceRendererExtension.downloadingMessage',
-        'Downloading Insiders Extension... '
+        'Downloading Notebook Renderers Extension... '
     );
     export const downloadCompletedOutputMessage = localize(
         'DataScienceRendererExtension.downloadCompletedOutputMessage',
