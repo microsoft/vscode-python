@@ -18,6 +18,7 @@ suite('Python interpreter locator service', () => {
     let ioc: UnitTestIocContainer;
     let interpreters: PythonInterpreter[];
     suiteSetup(async function () {
+        // https://github.com/microsoft/vscode-python/issues/12634
         // tslint:disable-next-line: no-invalid-this
         return this.skip();
         // tslint:disable-next-line:no-invalid-this
