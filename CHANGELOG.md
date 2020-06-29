@@ -1,5 +1,12 @@
 # Changelog
 
+## 2020.6.3 (30 June 2020)
+
+### Fixes
+
+1. Correctly check for ZMQ support, previously it could allow ZMQ to be supported when zmq could not be imported.
+   ([#12585](https://github.com/Microsoft/vscode-python/issues/12585))
+
 ## 2020.6.2 (25 June 2020)
 
 ### Fixes
