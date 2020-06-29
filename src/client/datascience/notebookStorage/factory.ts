@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { UseVSCodeNotebookEditorApi } from '../../common/constants';
 import { ICell, INotebookModel } from '../types';
