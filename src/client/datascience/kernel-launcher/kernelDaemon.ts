@@ -14,7 +14,7 @@ import {
     SpawnOptions,
     StdErrError
 } from '../../common/process/types';
-import { noop } from '../../common/utils/misc';
+//import { noop } from '../../common/utils/misc';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
@@ -44,8 +44,10 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         await this.sendRequestWithoutArgs(request);
     }
     public dispose() {
-        this.kill().catch(noop);
-        super.dispose();
+        if (!this.isDisposed) {
+            //this.kill().catch(noop);
+            super.dispose();
+        }
     }
     public async preWarm() {
         if (this.started) {

@@ -38,6 +38,9 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
+    protected get isDisposed(): boolean {
+        return this.disposed;
+    }
     protected outputObservale = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
     protected get closed() {
@@ -61,15 +64,18 @@ export abstract class BasePythonDaemon {
         this.monitorConnection();
     }
     public dispose() {
-        try {
-            this.disposed = true;
-            // The daemon should die as a result of this.
-            this.connection.sendNotification(new NotificationType('exit'));
-            this.proc.kill();
-        } catch {
-            noop();
+        if (!this.disposed) {
+            try {
+                this.disposed = true;
+                // The daemon should die as a result of this.
+                //this.connection.sendNotification(new NotificationType('exit'));
+                //this.proc.kill();
+                this.proc.kill('SIGKILL');
+            } catch {
+                noop();
+            }
+            this.disposables.forEach((item) => item.dispose());
         }
-        this.disposables.forEach((item) => item.dispose());
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
