@@ -13,6 +13,12 @@ import {
     JupyterServerUriHandle
 } from './typings/python';
 
+// This is an example of how to implement the IJupyterUriQuickPicker. Replace
+// the machine name and server URI below with your own version
+const Compute_Name = 'rchiodocom';
+const Compute_Name_NotWorking = 'rchiodonw';
+const Compute_ServerUri = 'https://rchiodocom2.westus.instances.azureml.net';
+
 export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
     public id = uuid();
     public getQuickPickEntryItems(): QuickPickItem[] {
@@ -33,11 +39,11 @@ export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
         const result = await input.showQuickPick({
             title: 'Pick a compute instance',
             placeholder: 'Choose instance',
-            items: [{ label: 'rchiodocom2' }, { label: 'rchiodonotexist' }]
+            items: [{ label: Compute_Name }, { label: Compute_Name_NotWorking }]
         });
-        if (result && result.label === 'rchiodocom2') {
+        if (result && result.label === Compute_Name) {
             try {
-                completion('rchiodocom2');
+                completion(Compute_Name);
             } catch {
                 // Do nothing if it fails.
             }
@@ -61,7 +67,7 @@ export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
                 if (stdout) {
                     const output = JSON.parse(stdout.toString());
                     headerResults.resolve({
-                        baseUrl: 'https://rchiodocom2.westus.instances.azureml.net',
+                        baseUrl: Compute_ServerUri,
                         token: '', //output.accessToken,
                         authorizationHeader: { Authorization: `Bearer ${output.accessToken}` }
                     });
