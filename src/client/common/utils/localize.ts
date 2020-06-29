@@ -204,7 +204,7 @@ export namespace ExtensionChannels {
     );
     export const startingDownloadOutputMessage = localize(
         'ExtensionChannels.startingDownloadOutputMessage',
-        'Starting download of Notebook Renderers extension.'
+        'Starting download for Insiders build.'
     );
     export const downloadingInsidersMessage = localize(
         'ExtensionChannels.downloadingInsidersMessage',
