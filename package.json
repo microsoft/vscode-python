@@ -2941,6 +2941,12 @@
                     "description": "When debugging, debug just my code.",
                     "scope": "resource"
                 },
+                "python.dataScience.alwaysTrustNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Automatically trust all notebooks that are opened. Warning: only enable this setting if you are absolutely certain that you wish to trust all notebooks.",
+                    "scope": "machine"
+                },
                 "python.insidersChannel": {
                     "type": "string",
                     "default": "off",
