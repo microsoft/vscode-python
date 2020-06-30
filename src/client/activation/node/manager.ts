@@ -41,8 +41,8 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions)
         @named(LanguageServerType.Node)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(IPythonExtensionBanner)
-        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(ILanguageServerFolderService)
+        private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
