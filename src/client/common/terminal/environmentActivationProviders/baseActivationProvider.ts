@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
@@ -12,7 +12,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(protected readonly serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
     public getActivationCommands(
@@ -32,17 +32,11 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
 export type ActivationScripts = Record<TerminalShellType, string[]>;
 
 export abstract class VenvBaseActivationCommandProvider extends BaseActivationCommandProvider {
-    constructor(
-        protected readonly scripts: ActivationScripts,
-        // This is passed through.
-        serviceContainer: IServiceContainer
-    ) {
-        super(serviceContainer);
-    }
-
     public isShellSupported(targetShell: TerminalShellType): boolean {
         return this.scripts[targetShell] !== undefined;
     }
+
+    protected abstract get scripts(): ActivationScripts;
 
     protected async findScriptFile(pythonPath: string, targetShell: TerminalShellType): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);

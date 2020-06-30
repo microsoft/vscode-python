@@ -37,8 +37,10 @@ export function getAllScripts(pathJoin: (...p: string[]) => string): string[] {
 
 @injectable()
 export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvider {
+    protected readonly scripts: ActivationScripts;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(({} as unknown) as ActivationScripts, serviceContainer);
+        super(serviceContainer);
+        this.scripts = ({} as unknown) as ActivationScripts;
         for (const key of Object.keys(SCRIPTS)) {
             const shell = key as TerminalShellType;
             const scripts: string[] = [];
@@ -53,6 +55,7 @@ export class CommandPromptAndPowerShell extends VenvBaseActivationCommandProvide
             this.scripts[shell] = scripts;
         }
     }
+
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType

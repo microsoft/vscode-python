@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { IServiceContainer } from '../../../ioc/types';
+import { injectable } from 'inversify';
 import '../../extensions';
 import { TerminalShellType } from '../types';
 import { ActivationScripts, VenvBaseActivationCommandProvider } from './baseActivationProvider';
@@ -37,9 +36,8 @@ export function getAllScripts(): string[] {
 
 @injectable()
 export class Bash extends VenvBaseActivationCommandProvider {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(SCRIPTS, serviceContainer);
-    }
+    protected readonly scripts = SCRIPTS;
+
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType
