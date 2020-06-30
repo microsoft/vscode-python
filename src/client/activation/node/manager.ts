@@ -5,13 +5,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import {
-    IConfigurationService,
-    IDisposable,
-    IExperimentsManager,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonInterpreter } from '../../pythonEnvironments/info';
