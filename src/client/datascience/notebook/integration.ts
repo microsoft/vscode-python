@@ -64,6 +64,9 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             await this.enableNotebooks(true);
         }
+        if (this.env.channel !== 'insiders') {
+            return;
+        }
         try {
             this.disposables.push(
                 this.vscNotebook.registerNotebookContentProvider(JupyterNotebookView, this.notebookContentProvider)
@@ -100,10 +103,7 @@ export class NotebookIntegration implements IExtensionSingleActivationService {
         } catch (ex) {
             // If something goes wrong, and we're not in Insiders & not using the NativeEditor experiment, then swallow errors.
             traceError('Failed to register VS Code Notebook API', ex);
-            if (
-                this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment) &&
-                this.env.channel === 'insiders'
-            ) {
+            if (this.experiment.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
                 throw ex;
             }
         }
