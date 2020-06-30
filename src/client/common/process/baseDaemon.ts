@@ -66,11 +66,17 @@ export abstract class BasePythonDaemon {
         this.monitorConnection();
     }
     public dispose() {
+        // Make sure that we only dispose once so we are not sending multiple kill signals or notifications
+        // This daemon can be held by multiple disposes such as a jupyter server daemon process which can
+        // be disposed by both the connection and the main async disposable
         if (!this.disposed) {
             try {
                 this.disposed = true;
 
-                // Shutdown our process, use a 'SIGKILL' message on non-windows
+                // Proc.kill uses a 'SIGTERM' signal by default to kill. This was failing to kill the process
+                // sometimes on Mac and Linux. Changing this over to a 'SIGKILL' to fully kill the process.
+                // Windows closes with a different non-signal message, so keep that the same
+                // See kill_kernel message of kernel_launcher_daemon.py for and example of this.
                 if (this.platformService.isWindows) {
                     this.proc.kill();
                 } else {
