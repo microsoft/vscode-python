@@ -550,5 +550,7 @@
     "DataScienceRendererExtension.installationCompleteMessage": "complete.",
     "DataScienceRendererExtension.startingDownloadOutputMessage": "Starting download of Notebook Renderers extension.",
     "DataScienceRendererExtension.downloadingMessage": "Downloading Notebook Renderers Extension...",
-    "DataScienceRendererExtension.downloadCompletedOutputMessage": "Notebook Renderers extension download complete."
+    "DataScienceRendererExtension.downloadCompletedOutputMessage": "Notebook Renderers extension download complete.",
+    "DataScience.uriProviderDescriptionFormat": "{0} (From {1} extension)",
+    "DataScience.unknownPackage": "unknown"
 }

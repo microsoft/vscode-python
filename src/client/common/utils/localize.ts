@@ -316,6 +316,11 @@ export namespace DataScience {
         'DataScience.unknownServerUri',
         'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
     );
+    export const uriProviderDescriptionFormat = localize(
+        'DataScience.uriProviderDescriptionFormat',
+        '{0} (From {1} extension)'
+    );
+    export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
