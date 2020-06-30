@@ -56,12 +56,17 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
     public deleteBackup(model: INotebookModel, backupId?: string) {
         return this.storage.deleteBackup(model, backupId);
     }
-    public load(file: Uri, contents?: string, backupId?: string): Promise<INotebookModel>;
-    // tslint:disable-next-line: unified-signatures
-    public load(file: Uri, contents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
+    public load(file: Uri, contents?: string, backupId?: string, forVSCodeNotebook?: boolean): Promise<INotebookModel>;
+    public load(
+        file: Uri,
+        contents?: string,
+        // tslint:disable-next-line: unified-signatures
+        skipDirtyContents?: boolean,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
 
     // tslint:disable-next-line: no-any
-    public load(file: Uri, contents?: string, options?: any): Promise<INotebookModel> {
+    public load(file: Uri, contents?: string, options?: any, forVSCodeNotebook?: boolean): Promise<INotebookModel> {
         const key = file.toString();
         if (!this.storageAndModels.has(key)) {
             // Every time we load a new untitled file, up the counter past the max value for this counter
@@ -69,7 +74,7 @@ export class NotebookStorageProvider implements INotebookStorageProvider {
                 file,
                 NotebookStorageProvider.untitledCounter
             );
-            const promise = this.storage.load(file, contents, options);
+            const promise = this.storage.load(file, contents, options, forVSCodeNotebook);
             this.storageAndModels.set(key, promise.then(this.trackModel.bind(this)));
         }
         return this.storageAndModels.get(key)!;

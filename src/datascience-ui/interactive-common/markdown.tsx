@@ -24,6 +24,7 @@ export interface IMarkdownProps {
     hasFocus: boolean;
     cursorPos: CursorPos | monacoEditor.IPosition;
     disableUndoStack: boolean;
+    isNotebookTrusted: boolean;
     onCreated(code: string, modelId: string): void;
     onChange(e: IMonacoModelContentChangeEvent): void;
     focused?(): void;
@@ -46,7 +47,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
             <div className={classes}>
                 <Editor
                     codeTheme={this.props.codeTheme}
-                    readOnly={false}
+                    readOnly={!this.props.isNotebookTrusted}
                     history={undefined}
                     onCreated={this.props.onCreated}
                     onChange={this.props.onChange}

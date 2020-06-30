@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect, use } from 'chai';
 import * as chaiPromised from 'chai-as-promised';
 import { ChildProcess } from 'child_process';
@@ -34,6 +35,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let listenStub: sinon.SinonStub<any[], any>;
     let pythonExecService: IPythonExecutionService;
     let logger: IProcessLogger;
+    let clock: fakeTimers.InstalledClock;
     setup(() => {
         logger = instance(mock(ProcessLogger));
         pythonExecService = mock<IPythonExecutionService>();
@@ -44,6 +46,9 @@ suite('Daemon - Python Daemon Pool', () => {
         sendRequestStub.returns({ pong: 'hello' });
     });
     teardown(() => {
+        if (clock) {
+            clock.uninstall();
+        }
         sinon.restore();
     });
 
@@ -100,10 +105,8 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(sendRequestStub.callCount).equal(8);
         expect(listenStub.callCount).equal(8);
     });
-    test('Throw error if daemon does not respond to ping within 5s', async function () {
-        // https://github.com/microsoft/vscode-python/issues/12567
-        // tslint:disable-next-line: no-invalid-this
-        return this.skip();
+    test('Throw error if daemon does not respond to ping within 5s', async () => {
+        clock = fakeTimers.install();
         sendRequestStub.reset();
         sendRequestStub.returns(sleep(6_000).then({ pong: 'hello' } as any));
         // Create and initialize the pool.
@@ -116,7 +119,14 @@ suite('Daemon - Python Daemon Pool', () => {
         );
         const promise = setupDaemon(pool);
 
-        expect(promise).to.eventually.be.rejectedWith('Timeout');
+        // Ensure all exceptions are handled.
+        promise.catch(noop);
+
+        // Move time forward to trigger timeout error (the limit is 5s).
+        await clock.tickAsync(5_000);
+        await clock.runAllAsync();
+
+        await expect(promise).to.eventually.be.rejectedWith('Timeout');
     });
     test('If executing python is fast, then use the daemon', async () => {
         const getInterpreterInformationStub = sinon.stub(
@@ -156,10 +166,8 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
     });
-    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async function () {
-        // https://github.com/microsoft/vscode-python/issues/12567
-        // tslint:disable-next-line: no-invalid-this
-        return this.skip();
+    test('If executing python code takes too long (> 1s), then return standard PythonExecutionServicexxx', async () => {
+        clock = fakeTimers.install();
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
             'getInterpreterInformation'
@@ -168,8 +176,16 @@ suite('Daemon - Python Daemon Pool', () => {
         const interpreterInfoFromPythonProc: InterpreterInformation = { pythonPath: 2 } as any;
 
         try {
-            // Delay returning interpreter info for 1.5 seconds.
-            getInterpreterInformationStub.value(() => sleep(1_500).then(() => interpreterInfoFromDaemon));
+            let daemonsBusyExecutingCode = 0;
+            let daemonsExecuted = 0;
+            // Delay returning interpreter info for 5 seconds.
+            getInterpreterInformationStub.value(async () => {
+                daemonsBusyExecutingCode += 1;
+                // Add an artificial delay to cause daemon to be busy.
+                await sleep(5_000);
+                daemonsExecuted += 1;
+                return interpreterInfoFromDaemon;
+            });
             when(pythonExecService.getInterpreterInformation()).thenResolve(interpreterInfoFromPythonProc);
 
             // Create and initialize the pool.
@@ -180,31 +196,68 @@ suite('Daemon - Python Daemon Pool', () => {
                 instance(pythonExecService),
                 undefined
             );
+
             await setupDaemon(pool);
 
             // 3 = 2 for standard daemon + 1 observable daemon.
             expect(sendRequestStub.callCount).equal(3);
             expect(listenStub.callCount).equal(3);
 
-            const [info1, info2, info3, info4] = await Promise.all([
+            // Lets get interpreter information.
+            // As we have 2 daemons in the pool, 2 of the requests will be processed by the two daemons.
+            // As getting interpreter information will take 1.5s (see above), the daemon pool will
+            // end up using standard process code to serve the other 2 requests.
+            // 4 requests = 2 served by daemons, and other 2 served by standard processes.
+            const promises = Promise.all([
                 pool.getInterpreterInformation(),
                 pool.getInterpreterInformation(),
                 pool.getInterpreterInformation(),
                 pool.getInterpreterInformation()
             ]);
 
-            // Verify we used the python execution service.
+            // Daemon pool will wait for 1s, after 500ms, it is still waiting for daemons to get free.
+            await clock.tickAsync(500);
+            // Confirm the fact that we didn't use standard processes to get interpreter info.
+            verify(pythonExecService.getInterpreterInformation()).never();
+
+            // Confirm the fact that daemon is still busy.
+            expect(daemonsBusyExecutingCode).to.equal(2); // Started.
+            expect(daemonsExecuted).to.equal(0); // Not yet finished.
+            expect(getInterpreterInformationStub.callCount).to.equal(0); // Not yet finished.
+
+            // Daemon pool will wait for 1s, after which it will resort to using standard processes.
+            // Move time forward by 1s & then daemon pool will resort to using standard processes.
+            await clock.tickAsync(1000);
+
+            // Confirm standard process was used.
             verify(pythonExecService.getInterpreterInformation()).twice();
 
+            // Confirm the fact that daemon is still busy.
+            expect(daemonsBusyExecutingCode).to.equal(2); // Started.
+            expect(daemonsExecuted).to.equal(0); // Not yet finished.
+            expect(getInterpreterInformationStub.callCount).to.equal(0); // Not yet finished.
+
+            // We know getting interpreter info from daemon will take 5seconds.
+            // Lets let that complete.
+            await clock.tickAsync(5_000);
+            await clock.runAllAsync();
+
+            const [info1, info2, info3, info4] = await promises;
+
+            // Verify the fact that the first 2 requests were served by daemons.
             expect(info1).to.deep.equal(interpreterInfoFromDaemon);
             expect(info2).to.deep.equal(interpreterInfoFromDaemon);
+            expect(daemonsExecuted).to.equal(2); // 2 daemons called this.
+
+            // Verify the fact that the seconds 2 requests were served by standard processes.
             expect(info3).to.deep.equal(interpreterInfoFromPythonProc);
             expect(info4).to.deep.equal(interpreterInfoFromPythonProc);
+            verify(pythonExecService.getInterpreterInformation()).twice(); // 2 standard processes called this.
         } finally {
             // Make sure to remove the stub or other tests will take too long.
             getInterpreterInformationStub.restore();
         }
-    }).timeout(3_000);
+    });
     test('If executing python is fast, then use the daemon (for observables)', async () => {
         const execModuleObservable = sinon.stub(PythonDaemonExecutionService.prototype, 'execModuleObservable');
         const out = new Observable<Output<string>>((s) => {
