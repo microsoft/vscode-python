@@ -1080,11 +1080,11 @@ export type GetNotebookOptions = {
 export const INotebookProvider = Symbol('INotebookProvider');
 export interface INotebookProvider {
     readonly type: 'raw' | 'jupyter';
-    onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
     /**
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+    onSessionStatusChanged: Event<{ status: ServerStatus; notebook: INotebook }>;
 
     /**
      * Fired just the first time that this provider connects
