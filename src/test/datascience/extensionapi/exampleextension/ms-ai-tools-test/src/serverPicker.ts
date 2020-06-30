@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { exec } from 'child_process';
-import * as uuid from 'uuid/v4';
 import * as vscode from 'vscode';
 import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from './typings/python';
 
@@ -13,7 +12,9 @@ const Compute_Name_NotWorking = 'rchiodonw';
 const Compute_ServerUri = 'https://rchiodocom2.westus.instances.azureml.net';
 
 export class RemoteServerPickerExample implements IJupyterUriProvider {
-    public id = uuid();
+    public get id() {
+        return 'RemoteServerPickerExample'; // This should be a unique constant
+    }
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [
             {

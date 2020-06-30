@@ -57,7 +57,7 @@ export interface IJupyterServerUri {
 export type JupyterServerUriHandle = string;
 
 export interface IJupyterUriProvider {
-    id: string; // Should be a unique string (like a guid)
+    readonly id: string; // Should be a unique string (like a guid)
     getQuickPickEntryItems(): QuickPickItem[];
     handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;

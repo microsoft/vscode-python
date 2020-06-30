@@ -90,13 +90,9 @@ suite('DataScience URI Picker', () => {
             // This means test passed.
         }
     });
-    test('No registration', async () => {
-        try {
-            await registration.getJupyterServerUri('1', 'foobar');
-            // tslint:disable-next-line: no-http-string
-            assert.fail('Should not get here');
-        } catch {
-            // This means test passed.
-        }
+    test('No picker call', async () => {
+        const uri = await registration.getJupyterServerUri('1', '1');
+        // tslint:disable-next-line: no-http-string
+        assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
 });
