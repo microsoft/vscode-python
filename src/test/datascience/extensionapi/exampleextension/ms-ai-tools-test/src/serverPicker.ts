@@ -3,14 +3,8 @@
 
 import { exec } from 'child_process';
 import * as uuid from 'uuid/v4';
-import { QuickPickItem } from 'vscode';
-import {
-    IJupyterServerUri,
-    IJupyterUriQuickPicker,
-    IMultiStepInput,
-    InputStep,
-    JupyterServerUriHandle
-} from './typings/python';
+import * as vscode from 'vscode';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from './typings/python';
 
 // This is an example of how to implement the IJupyterUriQuickPicker. Replace
 // the machine name and server URI below with your own version
@@ -18,9 +12,9 @@ const Compute_Name = 'rchiodocom';
 const Compute_Name_NotWorking = 'rchiodonw';
 const Compute_ServerUri = 'https://rchiodocom2.westus.instances.azureml.net';
 
-export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
+export class RemoteServerPickerExample implements IJupyterUriProvider {
     public id = uuid();
-    public getQuickPickEntryItems(): QuickPickItem[] {
+    public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [
             {
                 label: '$(clone) Azure COMPUTE',
@@ -28,26 +22,37 @@ export class RemoteServerPickerExample implements IJupyterUriQuickPicker {
             }
         ];
     }
-    public async handleNextSteps(
-        _item: QuickPickItem,
-        completion: (uriHandle: JupyterServerUriHandle | undefined) => void,
-        input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<InputStep<{}> | void> {
+    public handleQuickPick(
+        _item: vscode.QuickPickItem,
+        back: boolean
+    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
         // Show a quick pick list to start off.
-        const result = await input.showQuickPick({
-            title: 'Pick a compute instance',
-            placeholder: 'Choose instance',
-            items: [{ label: Compute_Name }, { label: Compute_Name_NotWorking }]
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.title = 'Pick a compute instance';
+        quickPick.placeholder = 'Choose instance';
+        quickPick.buttons = back ? [vscode.QuickInputButtons.Back] : [];
+        quickPick.items = [{ label: Compute_Name }, { label: Compute_Name_NotWorking }];
+        const result = new Promise<JupyterServerUriHandle | 'back' | undefined>((resolve, _reject) => {
+            quickPick.onDidTriggerButton((b) => {
+                if (b === vscode.QuickInputButtons.Back) {
+                    resolve('back');
+                } else {
+                    resolve(undefined);
+                }
+            });
+            quickPick.onDidChangeSelection((s) => {
+                if (s && s[0].label === Compute_Name) {
+                    resolve(Compute_Name);
+                } else {
+                    resolve(undefined);
+                }
+            });
+            quickPick.onDidHide(() => {
+                resolve(undefined);
+            });
         });
-        if (result && result.label === Compute_Name) {
-            try {
-                completion(Compute_Name);
-            } catch {
-                // Do nothing if it fails.
-            }
-        }
-        completion(undefined);
+        quickPick.show();
+        return result;
     }
 
     public getServerUri(_handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {

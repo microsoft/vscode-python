@@ -11,7 +11,7 @@ import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { Identifiers } from '../constants';
 import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
-import { IJupyterConnection, IJupyterUriQuickPickerRegistration } from '../types';
+import { IJupyterConnection, IJupyterUriProviderRegistration } from '../types';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -29,7 +29,7 @@ export function expandWorkingDir(
 
 export async function createRemoteConnectionInfo(
     uri: string,
-    pickerRegistration: IJupyterUriQuickPickerRegistration
+    providerRegistration: IJupyterUriProviderRegistration
 ): Promise<IJupyterConnection> {
     let url: URL;
     try {
@@ -41,7 +41,7 @@ export async function createRemoteConnectionInfo(
 
     const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
     const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-    const serverUri = id && uriHandle ? await pickerRegistration.getJupyterServerUri(id, uriHandle) : undefined;
+    const serverUri = id && uriHandle ? await providerRegistration.getJupyterServerUri(id, uriHandle) : undefined;
     const baseUrl = serverUri ? serverUri.baseUrl : `${url.protocol}//${url.host}${url.pathname}`;
     const token = serverUri ? serverUri.token : `${url.searchParams.get('token')}`;
     const hostName = serverUri ? new URL(serverUri.baseUrl).hostname : url.hostname;

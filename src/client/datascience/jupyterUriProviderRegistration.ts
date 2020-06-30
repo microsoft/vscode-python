@@ -4,26 +4,26 @@ import { inject, injectable } from 'inversify';
 import { IExtensions } from '../common/types';
 import {
     IJupyterServerUri,
-    IJupyterUriQuickPicker,
-    IJupyterUriQuickPickerRegistration,
+    IJupyterUriProvider,
+    IJupyterUriProviderRegistration,
     JupyterServerUriHandle
 } from './types';
 
 @injectable()
-export class JupyterUriQuickPickerRegistration implements IJupyterUriQuickPickerRegistration {
+export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private pickerList: IJupyterUriQuickPicker[] = [];
+    private pickerList: IJupyterUriProvider[] = [];
 
     constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
 
-    public async getPickers(): Promise<ReadonlyArray<IJupyterUriQuickPicker>> {
+    public async getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>> {
         await this.checkOtherExtensions();
 
         // Other extensions should have registered in their activate callback
         return this.pickerList;
     }
 
-    public registerPicker(provider: IJupyterUriQuickPicker) {
+    public registerProvider(provider: IJupyterUriProvider) {
         this.pickerList.push(provider);
     }
 

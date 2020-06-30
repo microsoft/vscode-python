@@ -265,7 +265,7 @@ import { OldJupyterVariables } from '../../client/datascience/jupyter/oldJupyter
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { JupyterDebugService } from '../../client/datascience/jupyterDebugService';
-import { JupyterUriQuickPickerRegistration } from '../../client/datascience/jupyterUriQuickPickerRegistration';
+import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
 import { KernelDaemonPreWarmer } from '../../client/datascience/kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
@@ -307,7 +307,7 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
-    IJupyterUriQuickPickerRegistration,
+    IJupyterUriProviderRegistration,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -1287,9 +1287,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.addInterpreter(this.workingPython2, SupportedCommands.all);
             this.addInterpreter(this.workingPython, SupportedCommands.all);
         }
-        this.serviceManager.addSingleton<IJupyterUriQuickPickerRegistration>(
-            IJupyterUriQuickPickerRegistration,
-            JupyterUriQuickPickerRegistration
+        this.serviceManager.addSingleton<IJupyterUriProviderRegistration>(
+            IJupyterUriProviderRegistration,
+            JupyterUriProviderRegistration
         );
     }
     public setFileContents(uri: Uri, contents: string) {

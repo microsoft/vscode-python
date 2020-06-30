@@ -28,7 +28,6 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
-import { IMultiStepInput, InputStep } from '../common/utils/multiStepInput';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../pythonEnvironments/info';
 import { JupyterCommands } from './constants';
@@ -1250,23 +1249,18 @@ export interface IJupyterServerUri {
 
 export type JupyterServerUriHandle = string;
 
-export interface IJupyterUriQuickPicker {
+export interface IJupyterUriProvider {
     id: string; // Should be a unique string (like a guid)
     getQuickPickEntryItems(): QuickPickItem[];
-    handleNextSteps(
-        item: QuickPickItem,
-        completion: (uriHandle: JupyterServerUriHandle | undefined) => void,
-        input: IMultiStepInput<{}>,
-        state: {}
-    ): Promise<InputStep<{}> | void>;
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 
-export const IJupyterUriQuickPickerRegistration = Symbol('IJupyterUriQuickPickerRegistration');
+export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
-export interface IJupyterUriQuickPickerRegistration {
-    getPickers(): Promise<ReadonlyArray<IJupyterUriQuickPicker>>;
-    registerPicker(picker: IJupyterUriQuickPicker): void;
+export interface IJupyterUriProviderRegistration {
+    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
 }
 export const IDigestStorage = Symbol('IDigestStorage');

@@ -21,7 +21,7 @@ export interface IPythonExtensionApi {
          * Registers a remote server provider component that's used to pick remote jupyter server URIs
          * @param serverProvider object called back when picking jupyter server URI
          */
-        registerRemoteServerProvider(serverProvider: IJupyterUriQuickPicker): void;
+        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     };
 }
 
@@ -56,70 +56,9 @@ export interface IJupyterServerUri {
 
 export type JupyterServerUriHandle = string;
 
-export interface IJupyterUriQuickPicker {
+export interface IJupyterUriProvider {
     id: string; // Should be a unique string (like a guid)
     getQuickPickEntryItems(): QuickPickItem[];
-    handleNextSteps(
-        item: QuickPickItem,
-        completion: (uriHandle: JupyterServerUriHandle | undefined) => void,
-        input: IMultiStepInput<{}>,
-        state: {}
-    ): Promise<InputStep<{}> | void>;
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
-}
-
-export type InputStep<T extends any> = (input: IMultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
-
-export interface IQuickPickParameters<T extends QuickPickItem> {
-    title?: string;
-    step?: number;
-    totalSteps?: number;
-    canGoBack?: boolean;
-    items: T[];
-    activeItem?: T;
-    placeholder: string;
-    buttons?: QuickInputButton[];
-    matchOnDescription?: boolean;
-    matchOnDetail?: boolean;
-    acceptFilterBoxTextAsSelection?: boolean;
-    shouldResume?(): Promise<boolean>;
-}
-
-// tslint:disable-next-line: interface-name
-export interface InputBoxParameters {
-    title: string;
-    password?: boolean;
-    step?: number;
-    totalSteps?: number;
-    value: string;
-    prompt: string;
-    buttons?: QuickInputButton[];
-    validate(value: string): Promise<string | undefined>;
-    shouldResume?(): Promise<boolean>;
-}
-
-type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
-type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
-export interface IMultiStepInput<S> {
-    run(start: InputStep<S>, state: S): Promise<void>;
-    showQuickPick<T extends QuickPickItem, P extends IQuickPickParameters<T>>({
-        title,
-        step,
-        totalSteps,
-        items,
-        activeItem,
-        placeholder,
-        buttons,
-        shouldResume
-    }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
-    showInputBox<P extends InputBoxParameters>({
-        title,
-        step,
-        totalSteps,
-        value,
-        prompt,
-        validate,
-        buttons,
-        shouldResume
-    }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }

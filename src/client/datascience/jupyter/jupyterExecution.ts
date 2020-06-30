@@ -25,7 +25,7 @@ import {
     IJupyterExecution,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
-    IJupyterUriQuickPickerRegistration,
+    IJupyterUriProviderRegistration,
     INotebookServer,
     INotebookServerLaunchInfo,
     INotebookServerOptions
@@ -43,7 +43,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
-    private readonly jupyterPickerRegistration: IJupyterUriQuickPickerRegistration;
+    private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -60,8 +60,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
             IJupyterSubCommandExecutionService
         );
-        this.jupyterPickerRegistration = serviceContainer.get<IJupyterUriQuickPickerRegistration>(
-            IJupyterUriQuickPickerRegistration
+        this.jupyterPickerRegistration = serviceContainer.get<IJupyterUriProviderRegistration>(
+            IJupyterUriProviderRegistration
         );
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);

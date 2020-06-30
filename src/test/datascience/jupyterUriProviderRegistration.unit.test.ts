@@ -6,25 +6,21 @@ import { assert } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../client/common/application/types';
-import { IMultiStepInput, InputStep, MultiStepInput } from '../../client/common/utils/multiStepInput';
-import { JupyterUriQuickPickerRegistration } from '../../client/datascience/jupyterUriQuickPickerRegistration';
-import { IJupyterServerUri, IJupyterUriQuickPicker } from '../../client/datascience/types';
+import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
+import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
 import { MockExtensions } from './mockExtensions';
 
-class MockPicker implements IJupyterUriQuickPicker {
+class MockProvider implements IJupyterUriProvider {
+    public result: string = 'back';
     public id: string = '1';
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [{ label: 'Foo' }];
     }
-    public async handleNextSteps(
+    public async handleQuickPick(
         _item: vscode.QuickPickItem,
-        completion: (uriHandle: string | undefined) => void,
-        _input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<void | InputStep<{}>> {
-        completion('1');
+        _back: boolean
+    ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+        return this.result;
     }
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === '1') {
@@ -42,10 +38,8 @@ class MockPicker implements IJupyterUriQuickPicker {
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience URI Picker', () => {
-    let registration: JupyterUriQuickPickerRegistration;
-    let appShell: IApplicationShell;
+    let registration: JupyterUriProviderRegistration;
     setup(() => {
-        appShell = mock(ApplicationShell);
         const extensions = mock(MockExtensions);
         const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
         const packageJson = TypeMoq.Mock.ofType<any>();
@@ -57,27 +51,26 @@ suite('DataScience URI Picker', () => {
         extension
             .setup((e) => e.activate())
             .returns(() => {
-                registration.registerPicker(new MockPicker());
+                registration.registerProvider(new MockProvider());
                 return Promise.resolve();
             });
         extension.setup((e) => e.isActive).returns(() => false);
-        registration = new JupyterUriQuickPickerRegistration(instance(extensions));
+        registration = new JupyterUriProviderRegistration(instance(extensions));
     });
 
     test('Simple', async () => {
-        const pickers = await registration.getPickers();
+        const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
-        let handle: string | undefined;
-        await pickers[0].handleNextSteps(quickPick[0], (h) => (handle = h), new MultiStepInput(instance(appShell)), {});
+        const handle = await pickers[0].handleQuickPick(quickPick[0], true);
         assert.ok(handle, 'Handle not set');
         const uri = await registration.getJupyterServerUri('1', handle!);
         // tslint:disable-next-line: no-http-string
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Error', async () => {
-        const pickers = await registration.getPickers();
+        const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
