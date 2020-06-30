@@ -27,7 +27,9 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         this.pickerList.push(provider);
     }
 
-    public getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+    public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
+        await this.checkOtherExtensions();
+
         const picker = this.pickerList.find((p) => p.id === id);
         if (picker) {
             return picker.getServerUri(handle);
