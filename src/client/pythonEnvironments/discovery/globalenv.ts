@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { logVerbose } from '../../logging';
 import { InterpreterType } from '../info';
 
 type ExecFunc = (cmd: string, args: string[]) => Promise<{ stdout: string }>;
@@ -62,8 +63,9 @@ export function getPyenvRootFinder(
             if (text.length > 0) {
                 return text;
             }
-        } catch {
-            // Ignore the error.  (log it?)
+        } catch (err) {
+            // Ignore the error.
+            logVerbose(`"pyenv root" failed (${err})`);
         }
         return pathJoin(homedir, '.pyenv');
     };
