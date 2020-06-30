@@ -6,7 +6,6 @@ import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
 import {
-    BANNER_NAME_LS_SURVEY,
     IConfigurationService,
     IDisposable,
     IExperimentsManager,
@@ -43,8 +42,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @named(LanguageServerType.Node)
         private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner,
         @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
@@ -120,7 +117,6 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
-            this.surveyBanner,
             this.experimentsManager,
             this.configService,
             LanguageServerType.Node,
