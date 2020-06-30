@@ -11,16 +11,16 @@ import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '
 import { MockExtensions } from './mockExtensions';
 
 class MockProvider implements IJupyterUriProvider {
-    public result: string = 'back';
     public id: string = '1';
+    private result: string = '1';
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [{ label: 'Foo' }];
     }
     public async handleQuickPick(
         _item: vscode.QuickPickItem,
-        _back: boolean
+        back: boolean
     ): Promise<JupyterServerUriHandle | 'back' | undefined> {
-        return this.result;
+        return back ? 'back' : this.result;
     }
     public async getServerUri(handle: string): Promise<IJupyterServerUri> {
         if (handle === '1') {
@@ -63,11 +63,19 @@ suite('DataScience URI Picker', () => {
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
-        const handle = await pickers[0].handleQuickPick(quickPick[0], true);
+        const handle = await pickers[0].handleQuickPick(quickPick[0], false);
         assert.ok(handle, 'Handle not set');
         const uri = await registration.getJupyterServerUri('1', handle!);
         // tslint:disable-next-line: no-http-string
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+    });
+    test('Back', async () => {
+        const pickers = await registration.getProviders();
+        assert.equal(pickers.length, 1, 'Default picker should be there');
+        const quickPick = pickers[0].getQuickPickEntryItems();
+        assert.equal(quickPick.length, 1, 'No quick pick items added');
+        const handle = await pickers[0].handleQuickPick(quickPick[0], true);
+        assert.equal(handle, 'back', 'Should be sending back');
     });
     test('Error', async () => {
         const pickers = await registration.getProviders();
