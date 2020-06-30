@@ -143,7 +143,8 @@ export async function verifyCanFetchData<T>(
         startIndex: 0,
         pageSize: 100,
         sortAscending: true,
-        sortColumn: 'INDEX'
+        sortColumn: 'INDEX',
+        refreshCount: 0
     });
     expect(variableList.pageResponse.length).to.be.greaterThan(0, 'No variables returned');
     const variable = variableList.pageResponse.find((v) => v.name === name);

@@ -823,6 +823,7 @@ export interface IConditionalJupyterVariables extends IJupyterVariables {
 // Request for variables
 export interface IJupyterVariablesRequest {
     executionCount: number;
+    refreshCount: number;
     sortColumn: string;
     sortAscending: boolean;
     startIndex: number;
@@ -835,6 +836,7 @@ export interface IJupyterVariablesResponse {
     totalCount: number;
     pageStartIndex: number;
     pageResponse: IJupyterVariable[];
+    refreshCount: number;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');

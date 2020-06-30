@@ -195,7 +195,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
+        this.props.getVariableData(
+            this.props.currentExecutionCount,
+            this.props.variableState.refreshCount,
+            startIndex,
+            pageSize
+        );
     };
 
     private isNotebookTrusted = () => {
