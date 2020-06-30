@@ -13,7 +13,7 @@ import {
 @injectable()
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
-    private pickerList: IJupyterUriProvider[] = [];
+    private providers = new Map<string, IJupyterUriProvider>();
 
     constructor(@inject(IExtensions) private readonly extensions: IExtensions) {}
 
@@ -21,19 +21,23 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         await this.checkOtherExtensions();
 
         // Other extensions should have registered in their activate callback
-        return this.pickerList;
+        return [...this.providers.values()];
     }
 
     public registerProvider(provider: IJupyterUriProvider) {
-        this.pickerList.push(provider);
+        if (!this.providers.has(provider.id)) {
+            this.providers.set(provider.id, provider);
+        } else {
+            throw new Error(`IJupyterUriProvider already exists with id ${provider.id}`);
+        }
     }
 
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.checkOtherExtensions();
 
-        const picker = this.pickerList.find((p) => p.id === id);
-        if (picker) {
-            return picker.getServerUri(handle);
+        const provider = this.providers.get(id);
+        if (provider) {
+            return provider.getServerUri(handle);
         }
         throw new Error(localize.DataScience.unknownServerUri());
     }

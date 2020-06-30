@@ -23,7 +23,7 @@
 	"activationEvents": [],
 	"main": "./dist/extension",
 	"contributes": {
-		"pythonRemoteServerProvider": []
+		"pythonRemoteServerProvider": [ {"id": "RemoteServerPickerExample"} ]
 	},
 	"scripts": {
 		"vscode:prepublish": "webpack --mode production",

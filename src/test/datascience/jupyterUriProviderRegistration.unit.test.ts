@@ -11,8 +11,13 @@ import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '
 import { MockExtensions } from './mockExtensions';
 
 class MockProvider implements IJupyterUriProvider {
-    public id: string = '1';
+    public get id() {
+        return this._id;
+    }
     private result: string = '1';
+    constructor(private readonly _id: string) {
+        // Id should be readonly
+    }
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
         return [{ label: 'Foo' }];
     }
@@ -38,27 +43,33 @@ class MockProvider implements IJupyterUriProvider {
 
 // tslint:disable: max-func-body-length no-any
 suite('DataScience URI Picker', () => {
-    let registration: JupyterUriProviderRegistration;
-    setup(() => {
+    function createRegistration(providerIds: string[]) {
+        let registration: JupyterUriProviderRegistration | undefined;
         const extensions = mock(MockExtensions);
-        const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-        const packageJson = TypeMoq.Mock.ofType<any>();
-        const contributes = TypeMoq.Mock.ofType<any>();
-        extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-        packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-        contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
-        when(extensions.all).thenReturn([extension.object]);
-        extension
-            .setup((e) => e.activate())
-            .returns(() => {
-                registration.registerProvider(new MockProvider());
-                return Promise.resolve();
-            });
-        extension.setup((e) => e.isActive).returns(() => false);
+        const extensionList: vscode.Extension<any>[] = [];
+        providerIds.forEach((id) => {
+            const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
+            const packageJson = TypeMoq.Mock.ofType<any>();
+            const contributes = TypeMoq.Mock.ofType<any>();
+            extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
+            packageJson.setup((p) => p.contributes).returns(() => contributes.object);
+            contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
+            extension
+                .setup((e) => e.activate())
+                .returns(() => {
+                    registration?.registerProvider(new MockProvider(id));
+                    return Promise.resolve();
+                });
+            extension.setup((e) => e.isActive).returns(() => false);
+            extensionList.push(extension.object);
+        });
+        when(extensions.all).thenReturn(extensionList);
         registration = new JupyterUriProviderRegistration(instance(extensions));
-    });
+        return registration;
+    }
 
     test('Simple', async () => {
+        const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
@@ -70,6 +81,7 @@ suite('DataScience URI Picker', () => {
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Back', async () => {
+        const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
@@ -78,6 +90,7 @@ suite('DataScience URI Picker', () => {
         assert.equal(handle, 'back', 'Should be sending back');
     });
     test('Error', async () => {
+        const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems();
@@ -91,8 +104,28 @@ suite('DataScience URI Picker', () => {
         }
     });
     test('No picker call', async () => {
+        const registration = createRegistration(['1']);
         const uri = await registration.getJupyterServerUri('1', '1');
         // tslint:disable-next-line: no-http-string
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+    });
+    test('Two pickers', async () => {
+        const registration = createRegistration(['1', '2']);
+        let uri = await registration.getJupyterServerUri('1', '1');
+        // tslint:disable-next-line: no-http-string
+        assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+        uri = await registration.getJupyterServerUri('2', '1');
+        // tslint:disable-next-line: no-http-string
+        assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
+    });
+    test('Two pickers with same id', async () => {
+        const registration = createRegistration(['1', '1']);
+        try {
+            await registration.getJupyterServerUri('1', '1');
+            // tslint:disable-next-line: no-http-string
+            assert.fail('Should have failed if calling with same picker');
+        } catch {
+            // This means it passed
+        }
     });
 });
