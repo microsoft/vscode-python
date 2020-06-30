@@ -1,7 +1,7 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
-import { IConfigurationService } from '../../common/types';
 import { EventEmitter } from 'vscode';
+import { IConfigurationService } from '../../common/types';
 import { IDigestStorage, ITrustService } from '../types';
 
 @injectable()
@@ -17,7 +17,7 @@ export class TrustService implements ITrustService {
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+    ) {}
 
     /**
      * When a notebook is opened, we check the database to see if a trusted checkpoint

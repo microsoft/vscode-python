@@ -22,7 +22,7 @@ import {
     WebviewPanel
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import type { Data as WebSocketData, EventEmitter } from 'ws';
+import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager, IDebugService } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
