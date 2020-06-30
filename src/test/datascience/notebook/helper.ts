@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
-import { commands } from 'vscode';
+import { commands, Uri } from 'vscode';
 import { NotebookCell } from '../../../../types/vscode-proposed';
 import { CellDisplayOutput } from '../../../../typings/vscode-proposed';
 import { IApplicationEnvironment, IVSCodeNotebook } from '../../../client/common/application/types';
@@ -198,26 +198,40 @@ export async function startJupyter() {
     await commands.executeCommand('workbench.action.files.saveAll');
     await closeActiveWindows();
 
-    // Create a new nb, add a python cell and execute it.
-    // Doing that will start jupyter.
-    await editorProvider.createNew();
-    await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
-    const model = editorProvider.activeEditor?.model;
-    editorProvider.activeEditor?.runAllCells();
-    // Wait for 15s for Jupyter to start.
-    await waitForCondition(async () => (model?.cells[0].data.outputs as []).length > 0, 15_000, 'Cell not executed');
-
-    const saveStub = sinon.stub(contentProvider, 'saveNotebook');
-    const saveAsStub = sinon.stub(contentProvider, 'saveNotebookAs');
+    const disposables: IDisposable[] = [];
     try {
+        const templateIPynb = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'datascience',
+            'notebook',
+            'empty.ipynb'
+        );
+        const tempIPynb = await createTemporaryNotebook(templateIPynb, disposables);
+        await editorProvider.open(Uri.file(tempIPynb));
+        await (await insertPythonCell('print("Hello World")', 0)).waitForCellToGetAdded();
+        const model = editorProvider.activeEditor?.model;
+        editorProvider.activeEditor?.runAllCells();
+        // Wait for 15s for Jupyter to start.
+        await waitForCondition(
+            async () => (model?.cells[0].data.outputs as []).length > 0,
+            15_000,
+            'Cell not executed'
+        );
+
+        const saveStub = sinon.stub(contentProvider, 'saveNotebook');
+        const saveAsStub = sinon.stub(contentProvider, 'saveNotebookAs');
         // We cannot close notebooks if there are any uncommitted changes (UI could hang with prompts etc).
         saveStub.callsFake(noop as any);
         saveAsStub.callsFake(noop as any);
+        disposables.push({
+            dispose: () => saveStub.restore()
+        });
         await commands.executeCommand('workbench.action.files.saveAll');
         await closeActiveWindows();
     } finally {
-        saveStub.restore();
-        saveAsStub.restore();
+        disposables.forEach((d) => d.dispose());
     }
 }
 

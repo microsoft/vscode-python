@@ -6,6 +6,7 @@
 import { ChildProcess } from 'child_process';
 import { Subject } from 'rxjs/Subject';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
+import { IPlatformService } from '../../common/platform/types';
 import { BasePythonDaemon, ExecResponse } from '../../common/process/baseDaemon';
 import {
     IPythonExecutionService,
@@ -14,7 +15,6 @@ import {
     SpawnOptions,
     StdErrError
 } from '../../common/process/types';
-import { noop } from '../../common/utils/misc';
 import { IPythonKernelDaemon, PythonKernelDiedError } from './types';
 
 export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
@@ -25,11 +25,12 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
     private readonly subject = new Subject<Output<string>>();
     constructor(
         pythonExecutionService: IPythonExecutionService,
+        platformService: IPlatformService,
         pythonPath: string,
         proc: ChildProcess,
         connection: MessageConnection
     ) {
-        super(pythonExecutionService, pythonPath, proc, connection);
+        super(pythonExecutionService, platformService, pythonPath, proc, connection);
     }
     public async interrupt() {
         const request = new RequestType0<void, void, void>('interrupt_kernel');
@@ -42,10 +43,6 @@ export class PythonKernelDaemon extends BasePythonDaemon implements IPythonKerne
         this.killed = true;
         const request = new RequestType0<void, void, void>('kill_kernel');
         await this.sendRequestWithoutArgs(request);
-    }
-    public dispose() {
-        this.kill().catch(noop);
-        super.dispose();
     }
     public async preWarm() {
         if (this.started) {

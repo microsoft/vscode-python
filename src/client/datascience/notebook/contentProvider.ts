@@ -6,11 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
+    NotebookCommunication,
     NotebookData,
     NotebookDocument,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
-    NotebookDocumentEditEvent,
+    NotebookDocumentContentChangeEvent,
     NotebookDocumentOpenContext
 } from 'vscode-proposed';
 import { ICommandManager } from '../../common/application/types';
@@ -35,7 +36,7 @@ const vscodeNotebookEnums = require('vscode') as typeof import('vscode-proposed'
  */
 @injectable()
 export class NotebookContentProvider implements INotebookContentProvider {
-    private notebookChanged = new EventEmitter<NotebookDocumentEditEvent>();
+    private notebookChanged = new EventEmitter<NotebookDocumentContentChangeEvent>();
     public get onDidChangeNotebook() {
         return this.notebookChanged.event;
     }
@@ -47,6 +48,9 @@ export class NotebookContentProvider implements INotebookContentProvider {
     ) {}
     public notifyChangesToDocument(document: NotebookDocument) {
         this.notebookChanged.fire({ document });
+    }
+    public async resolveNotebook(_document: NotebookDocument, _webview: NotebookCommunication): Promise<void> {
+        // Later
     }
     public async openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): Promise<NotebookData> {
         if (!this.compatibilitySupport.canOpenWithVSCodeNotebookEditor(uri)) {

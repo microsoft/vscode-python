@@ -12,6 +12,11 @@ import { ICell } from '../../types';
 import { findMappedNotebookCell } from './cellMappers';
 import { createVSCCellOutputsFromOutputs, translateErrorOutput, updateVSCNotebookCellMetadata } from './helpers';
 
+export interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
+
 export function hasTransientOutputForAnotherCell(output?: nbformat.IOutput) {
     return (
         output &&

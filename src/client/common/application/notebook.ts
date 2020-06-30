@@ -17,6 +17,7 @@ import { UseProposedApi } from '../constants';
 import { NotebookEditorSupport } from '../experiments/groups';
 import { IDisposableRegistry, IExperimentsManager } from '../types';
 import {
+    IApplicationEnvironment,
     IVSCodeNotebook,
     NotebookCellLanguageChangeEvent,
     NotebookCellOutputsChangeEvent,
@@ -26,24 +27,34 @@ import {
 @injectable()
 export class VSCodeNotebook implements IVSCodeNotebook {
     public get onDidChangeActiveNotebookEditor(): Event<NotebookEditor | undefined> {
-        return this.notebook.onDidChangeActiveNotebookEditor;
+        return this.canUseNotebookApi
+            ? this.notebook.onDidChangeActiveNotebookEditor
+            : new EventEmitter<NotebookEditor | undefined>().event;
     }
     public get onDidOpenNotebookDocument(): Event<NotebookDocument> {
-        return this.notebook.onDidOpenNotebookDocument;
+        return this.canUseNotebookApi
+            ? this.notebook.onDidOpenNotebookDocument
+            : new EventEmitter<NotebookDocument>().event;
     }
     public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
-        return this.notebook.onDidCloseNotebookDocument;
+        return this.canUseNotebookApi
+            ? this.notebook.onDidCloseNotebookDocument
+            : new EventEmitter<NotebookDocument>().event;
     }
     public get notebookDocuments(): ReadonlyArray<NotebookDocument> {
-        return this.notebook.notebookDocuments;
+        return this.canUseNotebookApi ? this.notebook.notebookDocuments : [];
     }
     public get notebookEditors() {
-        return this.notebook.visibleNotebookEditors;
+        return this.canUseNotebookApi ? this.notebook.visibleNotebookEditors : [];
     }
     public get onDidChangeNotebookDocument(): Event<
         NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
     > {
-        return this._onDidChangeNotebookDocument.event;
+        return this.canUseNotebookApi
+            ? this._onDidChangeNotebookDocument.event
+            : new EventEmitter<
+                  NotebookCellsChangeEvent | NotebookCellOutputsChangeEvent | NotebookCellLanguageChangeEvent
+              >().event;
     }
     public get activeNotebookEditor(): NotebookEditor | undefined {
         if (!this.useProposedApi) {
@@ -63,14 +74,21 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     >();
     private addedEventHandlers?: boolean;
     private _notebook?: typeof notebook;
+    private readonly canUseNotebookApi?: boolean;
     private readonly handledCellChanges = new WeakSet<VSCNotebookCellsChangeEvent>();
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentsManager) readonly experimentManager: IExperimentsManager
+        @inject(IExperimentsManager) readonly experimentManager: IExperimentsManager,
+        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
     ) {
-        if (this.useProposedApi && experimentManager.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
+        if (
+            this.useProposedApi &&
+            experimentManager.inExperiment(NotebookEditorSupport.nativeNotebookExperiment) &&
+            this.env.channel === 'insiders'
+        ) {
             this.addEventHandlers();
+            this.canUseNotebookApi = true;
         }
     }
     public registerNotebookContentProvider(notebookType: string, provider: NotebookContentProvider): Disposable {

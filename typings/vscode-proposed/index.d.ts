@@ -207,10 +207,15 @@ export interface NotebookConcatTextDocument {
     version: number;
     getText(): string;
     getText(range: Range): string;
+
     offsetAt(position: Position): number;
     positionAt(offset: number): Position;
+    validateRange(range: Range): Range;
+    validatePosition(position: Position): Position;
+
     locationAt(positionOrRange: Position | Range): Location;
     positionAt(location: Location): Position;
+    contains(uri: Uri): boolean;
 }
 
 export interface NotebookEditorCellEdit {
@@ -278,8 +283,7 @@ export interface NotebookEditor {
 }
 
 export interface NotebookOutputSelector {
-    type: string;
-    subTypes?: string[];
+    mimeTypes?: string[];
 }
 
 export interface NotebookRenderRequest {
@@ -295,6 +299,20 @@ export interface NotebookOutputRenderer {
      *
      */
     render(document: NotebookDocument, request: NotebookRenderRequest): string;
+
+    /**
+     * Call before HTML from the renderer is executed, and will be called for
+     * every editor associated with notebook documents where the renderer
+     * is or was used.
+     *
+     * The communication object will only send and receive messages to the
+     * render API, retrieved via `acquireNotebookRendererApi`, acquired with
+     * this specific renderer's ID.
+     *
+     * If you need to keep an association between the communication object
+     * and the document for use in the `render()` method, you can use a WeakMap.
+     */
+    resolveNotebook?(document: NotebookDocument, communication: NotebookCommunication): void;
 
     readonly preloads?: Uri[];
 }
@@ -354,11 +372,43 @@ export interface NotebookData {
     readonly metadata: NotebookDocumentMetadata;
 }
 
+interface NotebookDocumentContentChangeEvent {
+    /**
+     * The document that the edit is for.
+     */
+    readonly document: NotebookDocument;
+}
+
 interface NotebookDocumentEditEvent {
     /**
      * The document that the edit is for.
      */
     readonly document: NotebookDocument;
+
+    /**
+     * Undo the edit operation.
+     *
+     * This is invoked by VS Code when the user undoes this edit. To implement `undo`, your
+     * extension should restore the document and editor to the state they were in just before this
+     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
+     */
+    undo(): Thenable<void> | void;
+
+    /**
+     * Redo the edit operation.
+     *
+     * This is invoked by VS Code when the user redoes this edit. To implement `redo`, your
+     * extension should restore the document and editor to the state they were in just after this
+     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
+     */
+    redo(): Thenable<void> | void;
+
+    /**
+     * Display name describing the edit.
+     *
+     * This will be shown to users in the UI for undo/redo operations.
+     */
+    readonly label?: string;
 }
 
 interface NotebookDocumentBackup {
@@ -386,12 +436,44 @@ interface NotebookDocumentOpenContext {
     readonly backupId?: string;
 }
 
+/**
+ * Communication object passed to the {@link NotebookContentProvider} and
+ * {@link NotebookOutputRenderer} to communicate with the webview.
+ */
+export interface NotebookCommunication {
+    /**
+     * ID of the editor this object communicates with. A single notebook
+     * document can have multiple attached webviews and editors, when the
+     * notebook is split for instance. The editor ID lets you differentiate
+     * between them.
+     */
+    readonly editorId: string;
+
+    /**
+     * Fired when the output hosting webview posts a message.
+     */
+    readonly onDidReceiveMessage: Event<any>;
+    /**
+     * Post a message to the output hosting webview.
+     *
+     * Messages are only delivered if the editor is live.
+     *
+     * @param message Body of the message. This must be a string or other json serilizable object.
+     */
+    postMessage(message: any): Thenable<boolean>;
+
+    /**
+     * Convert a uri for the local file system to one that can be used inside outputs webview.
+     */
+    asWebviewUri(localResource: Uri): Uri;
+}
+
 export interface NotebookContentProvider {
     openNotebook(uri: Uri, openContext: NotebookDocumentOpenContext): NotebookData | Promise<NotebookData>;
+    resolveNotebook(document: NotebookDocument, webview: NotebookCommunication): Promise<void>;
     saveNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
     saveNotebookAs(targetResource: Uri, document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
-    readonly onDidChangeNotebook: Event<NotebookDocumentEditEvent>;
-    revertNotebook(document: NotebookDocument, cancellation: CancellationToken): Promise<void>;
+    readonly onDidChangeNotebook: Event<NotebookDocumentContentChangeEvent | NotebookDocumentEditEvent>;
     backupNotebook(
         document: NotebookDocument,
         context: NotebookDocumentBackupContext,

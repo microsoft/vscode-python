@@ -104,6 +104,7 @@ import { OldJupyterVariables } from './jupyter/oldJupyterVariables';
 import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterDebugService } from './jupyterDebugService';
+import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { KernelDaemonPool } from './kernel-launcher/kernelDaemonPool';
 import { KernelDaemonPreWarmer } from './kernel-launcher/kernelDaemonPreWarmer';
 import { KernelFinder } from './kernel-launcher/kernelFinder';
@@ -152,6 +153,7 @@ import {
     IJupyterServerProvider,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
+    IJupyterUriProviderRegistration,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory,
     IJupyterVariables,
@@ -298,6 +300,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExport>(IExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<ExportCommands>(ExportCommands, ExportCommands);
     serviceManager.addSingleton<IExportManagerFilePicker>(IExportManagerFilePicker, ExportManagerFilePicker);
+    serviceManager.addSingleton<IJupyterUriProviderRegistration>(IJupyterUriProviderRegistration, JupyterUriProviderRegistration);
     serviceManager.addSingleton<IDigestStorage>(IDigestStorage, DigestStorage);
     serviceManager.addSingleton<ITrustService>(ITrustService, TrustService);
 

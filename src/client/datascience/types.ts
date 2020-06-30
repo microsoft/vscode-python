@@ -15,6 +15,7 @@ import {
     Disposable,
     Event,
     LanguageConfiguration,
+    QuickPickItem,
     Range,
     TextDocument,
     TextEditor,
@@ -72,6 +73,8 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     localProcExitCode: number | undefined;
+    // tslint:disable-next-line: no-any
+    authorizationHeader?: any; // Snould be a json object
 }
 
 export type INotebookProviderConnection = IRawConnection | IJupyterConnection;
@@ -1239,6 +1242,29 @@ export interface IJupyterDebugService extends IDebugService {
     stop(): void;
 }
 
+export interface IJupyterServerUri {
+    baseUrl: string;
+    token: string;
+    // tslint:disable-next-line: no-any
+    authorizationHeader: any; // JSON object for authorization header.
+}
+
+export type JupyterServerUriHandle = string;
+
+export interface IJupyterUriProvider {
+    id: string; // Should be a unique string (like a guid)
+    getQuickPickEntryItems(): QuickPickItem[];
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
+
+export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
+
+export interface IJupyterUriProviderRegistration {
+    getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
+    registerProvider(picker: IJupyterUriProvider): void;
+    getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     readonly key: Promise<string>;
@@ -1248,6 +1274,7 @@ export interface IDigestStorage {
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
+    readonly onDidSetNotebookTrust: Event<void>;
     isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
     trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }

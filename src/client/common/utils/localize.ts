@@ -258,6 +258,28 @@ export namespace DataScienceSurveyBanner {
     export const bannerLabelYes = localize('DataScienceSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
+export namespace DataScienceRendererExtension {
+    export const installingExtension = localize(
+        'DataScienceRendererExtension.installingExtension',
+        'Installing Notebook Renderers extension... '
+    );
+    export const installationCompleteMessage = localize(
+        'DataScienceRendererExtension.installationCompleteMessage',
+        'complete.'
+    );
+    export const startingDownloadOutputMessage = localize(
+        'DataScienceRendererExtension.startingDownloadOutputMessage',
+        'Starting download of Notebook Renderers extension.'
+    );
+    export const downloadingMessage = localize(
+        'DataScienceRendererExtension.downloadingMessage',
+        'Downloading Notebook Renderers Extension... '
+    );
+    export const downloadCompletedOutputMessage = localize(
+        'DataScienceRendererExtension.downloadCompletedOutputMessage',
+        'Notebook Renderers extension download complete.'
+    );
+}
 export namespace DataScienceNotebookSurveyBanner {
     export const bannerMessage = localize(
         'DataScienceNotebookSurveyBanner.bannerMessage',
@@ -290,6 +312,15 @@ export namespace Products {
 }
 
 export namespace DataScience {
+    export const unknownServerUri = localize(
+        'DataScience.unknownServerUri',
+        'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+    );
+    export const uriProviderDescriptionFormat = localize(
+        'DataScience.uriProviderDescriptionFormat',
+        '{0} (From {1} extension)'
+    );
+    export const unknownPackage = localize('DataScience.unknownPackage', 'unknown');
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(

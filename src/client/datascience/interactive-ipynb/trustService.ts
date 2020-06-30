@@ -1,13 +1,18 @@
 import { createHmac } from 'crypto';
 import { inject, injectable } from 'inversify';
+import { EventEmitter } from 'vscode';
 import { IConfigurationService } from '../../common/types';
 import { IDigestStorage, ITrustService } from '../types';
 
 @injectable()
 export class TrustService implements ITrustService {
+    public get onDidSetNotebookTrust() {
+        return this._onDidSetNotebookTrust.event;
+    }
     private get alwaysTrustNotebooks() {
         return this.configService.getSettings().datascience.alwaysTrustNotebooks;
     }
+    protected readonly _onDidSetNotebookTrust = new EventEmitter<void>();
     constructor(
         // @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IDigestStorage) private readonly digestStorage: IDigestStorage,
@@ -39,7 +44,8 @@ export class TrustService implements ITrustService {
         if (!this.alwaysTrustNotebooks) {
             // Only update digest store if the user wants us to check trust
             const digest = await this.computeDigest(notebookContents);
-            return this.digestStorage.saveDigest(uri, digest);
+            await this.digestStorage.saveDigest(uri, digest);
+            this._onDidSetNotebookTrust.fire();
         }
     }
 

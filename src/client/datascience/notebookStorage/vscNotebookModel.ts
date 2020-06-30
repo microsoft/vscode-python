@@ -4,13 +4,18 @@
 import type { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import { Uri } from 'vscode';
-import { IBaseCellVSCodeMetadata } from '../../../../types/@jupyterlab_coreutils_nbformat';
 import { NotebookDocument } from '../../../../types/vscode-proposed';
 import { splitMultilineString } from '../../../datascience-ui/common';
 import { traceError } from '../../common/logger';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { ICell } from '../types';
 import { BaseNotebookModel } from './baseModel';
+
+// This is the custom type we are adding into nbformat.IBaseCellMetadata
+interface IBaseCellVSCodeMetadata {
+    end_execution_time?: string;
+    start_execution_time?: string;
+}
 
 // Exported for test mocks
 export class VSCodeNotebookModel extends BaseNotebookModel {
@@ -47,8 +52,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
             cell.data.execution_count = null;
         }
         if (cell.data.metadata.vscode) {
-            cell.data.metadata.vscode.start_execution_time = undefined;
-            cell.data.metadata.vscode.end_execution_time = undefined;
+            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata).start_execution_time = undefined;
+            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata).end_execution_time = undefined;
         }
         cell.data.outputs = [];
         // We want to trigger change events.
@@ -112,7 +117,8 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
         cell.data.execution_count = executionCount;
     }
     public updateCellMetadata(cell: ICell, metadata: Partial<IBaseCellVSCodeMetadata>) {
-        const originalVscodeMetadata: IBaseCellVSCodeMetadata = cell.data.metadata.vscode || {};
+        const originalVscodeMetadata: IBaseCellVSCodeMetadata =
+            (cell.data.metadata.vscode as IBaseCellVSCodeMetadata) || {};
         // Update our model with the new metadata stored in jupyter.
         cell.data.metadata = {
             ...cell.data.metadata,

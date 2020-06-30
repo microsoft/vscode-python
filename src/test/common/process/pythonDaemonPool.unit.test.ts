@@ -12,6 +12,7 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { MessageConnection } from 'vscode-jsonrpc';
+import { IPlatformService } from '../../../client/common/platform/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
@@ -34,11 +35,13 @@ suite('Daemon - Python Daemon Pool', () => {
     // tslint:disable-next-line: no-any use-default-type-parameter
     let listenStub: sinon.SinonStub<any[], any>;
     let pythonExecService: IPythonExecutionService;
+    let platformService: IPlatformService;
     let logger: IProcessLogger;
     let clock: fakeTimers.InstalledClock;
     setup(() => {
         logger = instance(mock(ProcessLogger));
         pythonExecService = mock<IPythonExecutionService>();
+        platformService = mock<IPlatformService>();
         (instance(pythonExecService) as any).then = undefined;
         sendRequestStub = sinon.stub();
         listenStub = sinon.stub();
@@ -83,7 +86,14 @@ suite('Daemon - Python Daemon Pool', () => {
     }
     test('Create daemons when initializing', async () => {
         // Create and initialize the pool.
-        const pool = new DaemonPool(logger, [], { pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(
+            logger,
+            [],
+            { pythonPath: 'py.exe' },
+            instance(pythonExecService),
+            instance(platformService),
+            undefined
+        );
         await setupDaemon(pool);
 
         // 2 = 2 for standard daemon + 1 observable daemon.
@@ -97,6 +107,7 @@ suite('Daemon - Python Daemon Pool', () => {
             [],
             { daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' },
             instance(pythonExecService),
+            instance(platformService),
             undefined
         );
         await setupDaemon(pool);
@@ -115,6 +126,7 @@ suite('Daemon - Python Daemon Pool', () => {
             [],
             { daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' },
             instance(pythonExecService),
+            instance(platformService),
             undefined
         );
         const promise = setupDaemon(pool);
@@ -143,6 +155,7 @@ suite('Daemon - Python Daemon Pool', () => {
             [],
             { daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' },
             instance(pythonExecService),
+            instance(platformService),
             undefined
         );
         await setupDaemon(pool);
@@ -166,7 +179,7 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(info2).to.deep.equal(interpreterInfoFromDaemon);
         expect(info3).to.deep.equal(interpreterInfoFromDaemon);
     });
-    test('If executing python code takes too long (> 1s), then return standard PythonExecutionServicexxx', async () => {
+    test('If executing python code takes too long (> 1s), then return standard PythonExecutionService', async () => {
         clock = fakeTimers.install();
         const getInterpreterInformationStub = sinon.stub(
             PythonDaemonExecutionService.prototype,
@@ -194,6 +207,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 [],
                 { daemonCount: 2, observableDaemonCount: 1, pythonPath: 'py.exe' },
                 instance(pythonExecService),
+                instance(platformService),
                 undefined
             );
 
@@ -272,6 +286,7 @@ suite('Daemon - Python Daemon Pool', () => {
             [],
             { daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' },
             instance(pythonExecService),
+            instance(platformService),
             undefined
         );
         await setupDaemon(pool);
