@@ -146,12 +146,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private renderNormalCell() {
-        const cellOuterClass =
-            this.props.cellVM.editable && this.props.isNotebookTrusted ? 'cell-outer-editable' : 'cell-outer';
-        let cellWrapperClass =
-            this.props.cellVM.editable && this.props.isNotebookTrusted
-                ? 'cell-wrapper'
-                : 'cell-wrapper cell-wrapper-noneditable';
+        const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
+        let cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
         if (this.isSelected() && !this.isFocused()) {
             cellWrapperClass += ' cell-wrapper-selected';
         }
