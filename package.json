@@ -673,7 +673,11 @@
             {
                 "command": "python.datascience.notebookeditor.restartkernel",
                 "title": "%python.command.python.datascience.restartkernel.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/restart-kernel.svg",
+                    "dark": "resources/dark/restart-kernel.svg"
+                }
             },
             {
                 "command": "python.datascience.notebookeditor.runallcells",
@@ -834,6 +838,12 @@
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
                     "when": "resourceLangId == python && python.showPlayIcon"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.restartkernel",
+                    "title": "%python.command.python.datascience.restartkernel.title%",
+                    "group": "navigation",
+                    "when": "notebookEditorFocused && python.datascience.notebookeditor.canrestartNotebookkernel"
                 }
             ],
             "explorer/context": [
