@@ -39,9 +39,6 @@ export abstract class BasePythonDaemon {
     public get isAlive(): boolean {
         return this.connectionClosedMessage === '';
     }
-    protected get isDisposed(): boolean {
-        return this.disposed;
-    }
     protected outputObservale = new Subject<Output<string>>();
     private connectionClosedMessage: string = '';
     protected get closed() {
