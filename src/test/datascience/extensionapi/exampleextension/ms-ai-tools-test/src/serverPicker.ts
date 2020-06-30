@@ -32,23 +32,28 @@ export class RemoteServerPickerExample implements IJupyterUriProvider {
         quickPick.placeholder = 'Choose instance';
         quickPick.buttons = back ? [vscode.QuickInputButtons.Back] : [];
         quickPick.items = [{ label: Compute_Name }, { label: Compute_Name_NotWorking }];
+        let resolved = false;
         const result = new Promise<JupyterServerUriHandle | 'back' | undefined>((resolve, _reject) => {
             quickPick.onDidTriggerButton((b) => {
                 if (b === vscode.QuickInputButtons.Back) {
+                    resolved = true;
                     resolve('back');
-                } else {
-                    resolve(undefined);
+                    quickPick.hide();
                 }
             });
             quickPick.onDidChangeSelection((s) => {
+                resolved = true;
                 if (s && s[0].label === Compute_Name) {
                     resolve(Compute_Name);
                 } else {
                     resolve(undefined);
                 }
+                quickPick.hide();
             });
             quickPick.onDidHide(() => {
-                resolve(undefined);
+                if (!resolved) {
+                    resolve(undefined);
+                }
             });
         });
         quickPick.show();
