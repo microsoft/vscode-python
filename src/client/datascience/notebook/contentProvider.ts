@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import type {
+    NotebookCommunication,
     NotebookData,
     NotebookDocument,
-    NotebookCommunication,
     NotebookDocumentBackup,
     NotebookDocumentBackupContext,
     NotebookDocumentContentChangeEvent,
