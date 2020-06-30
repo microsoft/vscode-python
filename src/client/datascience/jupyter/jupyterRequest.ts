@@ -11,7 +11,7 @@ export function createAuthorizingRequest(authorizationHeader: any) {
             super(input, init);
 
             // Add all of the authorization parts onto the headers.
-            const origHeaders = (this as any).headers as nodeFetch.Headers;
+            const origHeaders = this.headers;
             const keys = Object.keys(authorizationHeader);
             keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
             origHeaders.append('Content-Type', 'application/json');
