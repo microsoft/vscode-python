@@ -290,6 +290,10 @@ export namespace Products {
 }
 
 export namespace DataScience {
+    export const unknownServerUri = localize(
+        'DataScience.unknownServerUri',
+        'Server URI cannot be used. Did you uninstall an extension that provided a Jupyter server connection?'
+    );
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(

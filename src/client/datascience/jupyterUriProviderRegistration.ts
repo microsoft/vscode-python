@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IExtensions } from '../common/types';
+import * as localize from '../common/utils/localize';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -34,7 +35,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         if (picker) {
             return picker.getServerUri(handle);
         }
-        throw new Error('Unknown server picker');
+        throw new Error(localize.DataScience.unknownServerUri());
     }
 
     private checkOtherExtensions(): Promise<void> {
