@@ -13,7 +13,13 @@ import { NotebookEditorSupport } from '../../common/experiments/groups';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider, ITrustService } from '../types';
+import {
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    INotebookEditor,
+    INotebookEditorProvider,
+    ITrustService
+} from '../types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -70,11 +76,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
-        this.trustService.onDidSetNotebookTrust(
-            this.onDidSetNotebookTrust,
-            this,
-            this.disposables
-        );
+        this.trustService.onDidSetNotebookTrust(this.onDidSetNotebookTrust, this, this.disposables);
 
         // Do we already have python file opened.
         if (this.docManager.activeTextEditor?.document.languageId === PYTHON_LANGUAGE) {
@@ -124,7 +126,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.pythonOrInteractiveOrNativeContext
             .set(
                 this.nativeContext.value === true ||
-                (this.interactiveContext.value === true && this.isPythonFileActive === true)
+                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
             )
             .ignoreErrors();
     }
