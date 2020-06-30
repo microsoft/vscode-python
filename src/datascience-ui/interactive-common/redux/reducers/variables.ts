@@ -148,9 +148,13 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
         return {
             ...arg.prevState,
             currentExecutionCount: response.executionCount,
+            refreshCount: response.refreshCount,
             variables
         };
-    } else if (response.executionCount === arg.prevState.currentExecutionCount) {
+    } else if (
+        response.executionCount === arg.prevState.currentExecutionCount &&
+        response.refreshCount === arg.prevState.refreshCount
+    ) {
         // This is a response for a page in an already existing list.
         const variables = [...arg.prevState.variables];
 

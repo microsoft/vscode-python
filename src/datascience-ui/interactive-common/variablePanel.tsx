@@ -14,6 +14,7 @@ export interface IVariablePanelProps {
     testMode?: boolean;
     variables: IJupyterVariable[];
     executionCount: number;
+    refreshCount: number;
     debugging: boolean;
     supportsDebugging: boolean;
     fontSize: number;
@@ -49,6 +50,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 pageIn={this.props.pageIn}
                 executionCount={this.props.executionCount}
                 supportsDebugging={this.props.supportsDebugging}
+                refreshCount={this.props.refreshCount}
             />
         );
     }
