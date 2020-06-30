@@ -12,6 +12,8 @@
    ([#12580](https://github.com/Microsoft/vscode-python/issues/12580))
 1. Add more telemetry to distinguish how is the start page opened.
    ([#12603](https://github.com/microsoft/vscode-python/issues/12603))
+1. Stop looking for mspythonconfig.json file in subfolders.
+   ([#12614](https://github.com/Microsoft/vscode-python/issues/12614))
 
 ## 2020.6.2 (25 June 2020)
 
