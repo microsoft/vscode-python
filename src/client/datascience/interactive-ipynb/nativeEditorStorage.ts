@@ -74,12 +74,27 @@ export class NativeEditorStorage implements INotebookStorage {
         return `${path.basename(model.file.fsPath)}-${uuid()}`;
     }
 
-    public load(file: Uri, possibleContents?: string, backupId?: string): Promise<INotebookModel>;
-    // tslint:disable-next-line: unified-signatures
-    public load(file: Uri, possibleContents?: string, skipDirtyContents?: boolean): Promise<INotebookModel>;
-    // tslint:disable-next-line: no-any
-    public load(file: Uri, possibleContents?: string, options?: any): Promise<INotebookModel> {
-        return this.loadFromFile(file, possibleContents, options);
+    public load(
+        file: Uri,
+        possibleContents?: string,
+        backupId?: string,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    public load(
+        file: Uri,
+        possibleContents?: string,
+        // tslint:disable-next-line: unified-signatures
+        skipDirtyContents?: boolean,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel>;
+    public load(
+        file: Uri,
+        possibleContents?: string,
+        // tslint:disable-next-line: no-any
+        options?: any,
+        forVSCodeNotebook?: boolean
+    ): Promise<INotebookModel> {
+        return this.loadFromFile(file, possibleContents, options, forVSCodeNotebook);
     }
     public async save(model: INotebookModel, _cancellation: CancellationToken): Promise<void> {
         const contents = model.getContent();

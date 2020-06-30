@@ -120,7 +120,9 @@ export class VSCodeNotebookModel extends BaseNotebookModel {
                 ...originalVscodeMetadata,
                 ...metadata
             }
-        };
+            // This line is required because ts-node sucks on GHA.
+            // tslint:disable-next-line: no-any
+        } as any;
     }
 
     protected handleRedo(change: NotebookModelChange): boolean {

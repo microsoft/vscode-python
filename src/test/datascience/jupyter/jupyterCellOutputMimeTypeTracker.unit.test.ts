@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { nbformat } from '@jupyterlab/coreutils';
+import * as fakeTimers from '@sinonjs/fake-timers';
 import { expect } from 'chai';
 import { sha256 } from 'hash.js';
 // tslint:disable-next-line: match-default-export-name
@@ -14,7 +15,6 @@ import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nati
 import { NativeEditorProvider } from '../../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
 import { CellState, ICell, INotebookEditor, INotebookModel } from '../../../client/datascience/types';
-import { FakeClock } from '../../common';
 
 suite('Data Science - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
@@ -22,7 +22,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
     let outputMimeTypeTracker: CellOutputMimeTypeTracker;
     let nativeProvider: NativeEditorProvider;
     let openedNotebookEmitter: EventEmitter<INotebookEditor>;
-    let fakeTimer: FakeClock;
+    let clock: fakeTimers.InstalledClock;
     class Reporter {
         public static telemetrySent: [string, Record<string, string>][] = [];
         public static expectHashes(props: {}[]) {
@@ -43,7 +43,6 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
     }
 
     setup(async () => {
-        fakeTimer = new FakeClock();
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
         process.env.VSC_PYTHON_CI_TEST = undefined;
 
@@ -56,11 +55,11 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         outputMimeTypeTracker = new CellOutputMimeTypeTracker(instance(nativeProvider));
-        fakeTimer.install();
+        clock = fakeTimers.install();
         await outputMimeTypeTracker.activate();
     });
     teardown(() => {
-        fakeTimer.uninstall();
+        clock.uninstall();
         process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
         process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
         Reporter.telemetrySent = [];
@@ -138,7 +137,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
         emitNotebookEvent([cellTextOutput]);
 
-        await fakeTimer.wait();
+        await clock.runAllAsync();
         Reporter.expectHashes([expectedTelemetry]);
     });
     test('Send telemetry even if output type is unknown', async () => {
@@ -147,7 +146,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
         emitNotebookEvent([cellTextOutput]);
 
-        await fakeTimer.wait();
+        await clock.runAllAsync();
         Reporter.expectHashes([expectedTelemetry]);
     });
     test('Send telemetry if output type is markdown', async () => {
@@ -157,7 +156,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
         emitNotebookEvent([cellTextOutput]);
 
-        await fakeTimer.wait();
+        await clock.runAllAsync();
         Reporter.expectHashes([expectedTelemetry]);
     });
     suite('No telemetry sent', () => {
@@ -166,7 +165,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
             emitNotebookEvent([cellTextOutput]);
 
-            await fakeTimer.wait();
+            await clock.runAllAsync();
             Reporter.expectHashes([]);
         });
         test('If cell type is not code', async () => {
@@ -175,7 +174,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
             emitNotebookEvent([cellTextOutput]);
 
-            await fakeTimer.wait();
+            await clock.runAllAsync();
             Reporter.expectHashes([]);
         });
         test('If there is no output', async () => {
@@ -183,7 +182,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
             emitNotebookEvent([cellTextOutput]);
 
-            await fakeTimer.wait();
+            await clock.runAllAsync();
             Reporter.expectHashes([]);
         });
         [CellState.editing, CellState.error, CellState.executing].forEach((cellState) => {
@@ -194,7 +193,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
                 emitNotebookEvent([cellTextOutput]);
 
-                await fakeTimer.wait();
+                await clock.runAllAsync();
                 Reporter.expectHashes([]);
             });
         });
@@ -218,7 +217,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
         emitNotebookEvent([cell1, cell2, cell3, cell4]);
 
-        await fakeTimer.wait();
+        await clock.runAllAsync();
         Reporter.expectHashes(expectedTelemetry);
     });
     ['display_data', 'update_display_data', 'execute_result'].forEach((outputType) => {
@@ -229,7 +228,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
                 emitNotebookEvent([cellTextOutput]);
 
-                await fakeTimer.wait();
+                await clock.runAllAsync();
                 Reporter.expectHashes([expectedTelemetry]);
             });
             test('MimeType plotly', async () => {
@@ -238,7 +237,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
                 emitNotebookEvent([cellTextOutput]);
 
-                await fakeTimer.wait();
+                await clock.runAllAsync();
                 Reporter.expectHashes([expectedTelemetry]);
             });
             test('Multiple mime types', async () => {
@@ -248,7 +247,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
                 emitNotebookEvent([cellTextOutput]);
 
-                await fakeTimer.wait();
+                await clock.runAllAsync();
                 Reporter.expectHashes([expectedTelemetry, expectedPlainTextTelemetry]);
             });
             test('Multiple cells and multiple text/html', async () => {
@@ -261,7 +260,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
 
                 emitNotebookEvent([cellTextOutput, cellTextOutput]);
 
-                await fakeTimer.wait();
+                await clock.runAllAsync();
                 Reporter.expectHashes([expectedTelemetry]);
             });
         });

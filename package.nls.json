@@ -544,5 +544,10 @@
     "DataScience.step": "Run next line (F10)",
     "DataScience.usingPreviewNotebookWithOtherNotebookWarning": "Using the Preview Notebook Editor along with the stable Notebook Editor is not recommended. Doing so could result in data loss or corruption of notebooks.",
     "DataScience.previewNotebookOnlySupportedInVSCInsiders": "The Preview Notebook Editor is supported only in the Insiders version of Visual Studio Code.",
-    "DataScienceNotebookSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?"
+    "DataScienceNotebookSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Preview Notebook Editor is working for you?",
+    "DataScienceRendererExtension.installingExtension": "Installing Notebook Renderers extension...",
+    "DataScienceRendererExtension.installationCompleteMessage": "complete.",
+    "DataScienceRendererExtension.startingDownloadOutputMessage": "Starting download of Notebook Renderers extension.",
+    "DataScienceRendererExtension.downloadingMessage": "Downloading Notebook Renderers Extension...",
+    "DataScienceRendererExtension.downloadCompletedOutputMessage": "Notebook Renderers extension download complete."
 }

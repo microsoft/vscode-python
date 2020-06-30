@@ -14,6 +14,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
 import { FolderVersionPair, ILanguageServerFolderService, NodeLanguageServerFolder } from '../types';
 
+export const PylanceExtensionName = 'ms-python.vscode-pylance';
+
 class FallbackNodeLanguageServerFolderService extends LanguageServerFolderService {
     constructor(serviceContainer: IServiceContainer) {
         super(serviceContainer, NodeLanguageServerFolder);
@@ -99,12 +101,7 @@ export class NodeLanguageServerFolderService implements ILanguageServerFolderSer
             return undefined;
         }
 
-        const extensionName = this.workspaceService.getConfiguration('python').get<string>('lsExtensionName');
-        if (!extensionName) {
-            return undefined;
-        }
-
-        const extension = this.extensions.getExtension<ILSExtensionApi>(extensionName);
+        const extension = this.extensions.getExtension<ILSExtensionApi>(PylanceExtensionName);
         if (!extension) {
             return undefined;
         }

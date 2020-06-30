@@ -94,6 +94,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     className="add-cell-line-top"
                     click={this.insertAboveFirst}
                     baseTheme={this.props.baseTheme}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             );
 
@@ -197,8 +198,15 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
+    private isNotebookTrusted = () => {
+        return this.props.isNotebookTrusted;
+    };
+
     // tslint:disable-next-line: cyclomatic-complexity
     private mainKeyDown = (event: KeyboardEvent) => {
+        if (!this.isNotebookTrusted()) {
+            return; // Disable keyboard interaction with untrusted notebooks
+        }
         // Handler for key down presses in the main panel
         switch (event.key) {
             // tslint:disable-next-line: no-suspicious-comment
@@ -309,6 +317,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                     baseTheme={this.props.baseTheme}
                     className="add-cell-line-cell"
                     click={addNewCell}
+                    isNotebookTrusted={this.props.isNotebookTrusted}
                 />
             ) : null;
 
