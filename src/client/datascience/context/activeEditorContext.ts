@@ -110,8 +110,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.udpateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
-    private onDidSetNotebookTrust(e: boolean) {
-        this.isNotebookTrusted.set(e).ignoreErrors();
+    // When trust service says trust has changed, update context with whether the currently active notebook is trusted
+    private onDidSetNotebookTrust() {
+        if (this.notebookEditorProvider.activeEditor?.model !== undefined) {
+            this.isNotebookTrusted.set(this.notebookEditorProvider.activeEditor?.model?.isTrusted).ignoreErrors();
+        }
     }
     private updateMergedContexts() {
         this.interactiveOrNativeContext

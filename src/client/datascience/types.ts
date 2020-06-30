@@ -1246,7 +1246,7 @@ export interface IDigestStorage {
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
-    readonly onDidSetNotebookTrust: Event<boolean>;
+    readonly onDidSetNotebookTrust: Event<void>;
     isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
     trustNotebook(uri: string, notebookContents: string): Promise<void>;
 }
