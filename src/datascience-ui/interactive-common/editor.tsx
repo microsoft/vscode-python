@@ -82,6 +82,10 @@ export class Editor extends React.Component<IEditorProps> {
                 }
             }
         }
+        if (prevProps.readOnly === true && this.props.readOnly === false && this.editorRef) {
+            this.subscriptions.push(this.editorRef.onKeyDown(this.onKeyDown));
+            this.subscriptions.push(this.editorRef.onKeyUp(this.onKeyUp));
+        }
     }
 
     public render() {
