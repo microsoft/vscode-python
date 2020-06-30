@@ -526,7 +526,6 @@ export interface IPythonExtensionBanner {
     readonly enabled: boolean;
     showBanner(): Promise<void>;
 }
-export const BANNER_NAME_LS_SURVEY: string = 'LSSurveyBanner';
 export const BANNER_NAME_PROPOSE_LS: string = 'ProposeLS';
 export const BANNER_NAME_DS_SURVEY: string = 'DSSurveyBanner';
 export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
