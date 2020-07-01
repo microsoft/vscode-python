@@ -139,7 +139,9 @@ export class GatherListener implements IInteractiveWindowListener {
     private gatherCodeInternal = async (cell: ICell, toScript: boolean = false) => {
         this.gatherTimer = new StopWatch();
 
-        const slicedProgram = this.gatherProvider ? this.gatherProvider.gatherCode(cell) : 'Gather internal error';
+        const slicedProgram = this.gatherProvider
+            ? this.gatherProvider.gatherCode(cell)
+            : '## Please install the Gather Extension';
 
         if (!slicedProgram) {
             sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });

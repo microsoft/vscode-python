@@ -1040,7 +1040,10 @@ for i in range(0, 100):
 
                 // Basic unit test does not need to have Gather available in the build.
                 assert.notEqual(
-                    docManager.activeTextEditor.document.getText().trim().search('## Gather not available'),
+                    docManager.activeTextEditor.document
+                        .getText()
+                        .trim()
+                        .search('## Please install the Gather Extension'),
                     -1
                 );
             }
@@ -1085,7 +1088,10 @@ for i in range(0, 100):
 
                 // Basic unit test does not need to have Gather available in the build.
                 assert.notEqual(
-                    docManager.activeTextEditor.document.getText().trim().search('## Gather not available'),
+                    docManager.activeTextEditor.document
+                        .getText()
+                        .trim()
+                        .search('## Please install the Gather Extension'),
                     -1
                 );
             }

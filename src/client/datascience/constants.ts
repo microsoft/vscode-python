@@ -15,7 +15,7 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
 
-export const GatherExtension = 'ms-python.gather-for-the-python-extension';
+export const GatherExtension = 'ms-python.gather';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
