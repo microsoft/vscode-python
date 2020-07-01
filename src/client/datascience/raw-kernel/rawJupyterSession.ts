@@ -49,8 +49,12 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
-    public async waitForIdle(_timeout: number): Promise<void> {
-        // RawKernels are good to go right away
+    public async waitForIdle(timeout: number): Promise<void> {
+        // Wait until status says idle.
+        if (this.session) {
+            return this.waitForIdleOnSession(this.session, timeout);
+        }
+        return Promise.resolve();
     }
     public async dispose(): Promise<void> {
         this._disposables.forEach((d) => d.dispose());

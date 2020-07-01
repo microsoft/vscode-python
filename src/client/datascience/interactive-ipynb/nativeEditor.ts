@@ -611,7 +611,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async launchNotebookTrustPrompt() {
         const prompts = [localize.DataScience.trustNotebook(), localize.DataScience.doNotTrustNotebook()];
-        const selection = await this.applicationShell.showInformationMessage(
+        const selection = await this.applicationShell.showErrorMessage(
             localize.DataScience.launchNotebookTrustPrompt().format(
                 'command:workbench.action.openSettings?%5B%22python.dataScience.alwaysTrustNotebooks%22%5D'
             ),

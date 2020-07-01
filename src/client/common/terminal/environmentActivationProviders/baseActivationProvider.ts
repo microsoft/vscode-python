@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../../ioc/types';
+import { getVenvExecutableFinder } from '../../../pythonEnvironments/discovery/subenv';
 import { IFileSystem } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(protected readonly serviceContainer: IServiceContainer) {}
+    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
     public getActivationCommands(
@@ -26,16 +27,30 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
         pythonPath: string,
         targetShell: TerminalShellType
     ): Promise<string[] | undefined>;
+}
 
-    protected async findScriptFile(pythonPath: string, scriptFileNames: string[]): Promise<string | undefined> {
+export type ActivationScripts = Record<TerminalShellType, string[]>;
+
+export abstract class VenvBaseActivationCommandProvider extends BaseActivationCommandProvider {
+    public isShellSupported(targetShell: TerminalShellType): boolean {
+        return this.scripts[targetShell] !== undefined;
+    }
+
+    protected abstract get scripts(): ActivationScripts;
+
+    protected async findScriptFile(pythonPath: string, targetShell: TerminalShellType): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        for (const scriptFileName of scriptFileNames) {
-            // Generate scripts are found in the same directory as the interpreter.
-            const scriptFile = path.join(path.dirname(pythonPath), scriptFileName);
-            const found = await fs.fileExists(scriptFile);
-            if (found) {
-                return scriptFile;
-            }
+        const candidates = this.scripts[targetShell];
+        if (!candidates) {
+            return undefined;
         }
+        const findScript = getVenvExecutableFinder(
+            candidates,
+            path.dirname,
+            path.join,
+            // Bind "this"!
+            (n: string) => fs.fileExists(n)
+        );
+        return findScript(pythonPath);
     }
 }

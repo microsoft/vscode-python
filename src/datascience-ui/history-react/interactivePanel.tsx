@@ -345,6 +345,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
             executionCount: this.props.currentExecutionCount,
+            refreshCount: this.props.variableState.refreshCount,
             offsetHeight: toolbarHeight,
             supportsDebugging:
                 this.props.settings && this.props.settings.variableOptions
@@ -354,7 +355,12 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     };
 
     private pageInVariableData = (startIndex: number, pageSize: number) => {
-        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
+        this.props.getVariableData(
+            this.props.currentExecutionCount,
+            this.props.variableState.refreshCount,
+            startIndex,
+            pageSize
+        );
     };
 
     private renderCell = (
