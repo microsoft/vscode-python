@@ -23,5 +23,6 @@
     // Ensure auto save is off.
     "files.autoSave": "off",
     // We don't want jupyter to start when testing (DS functionality or anything else).
-    "python.dataScience.disableJupyterAutoStart": true
+    "python.dataScience.disableJupyterAutoStart": true,
+    "python.logging.level": "debug"
 }
