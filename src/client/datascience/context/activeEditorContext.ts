@@ -95,7 +95,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
 
-    private udpateNativeNotebookCellContext() {
+    private updateNativeNotebookCellContext() {
         if (!this.experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
@@ -112,7 +112,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         // This is temporary, and once we ship native editor this needs to be removed.
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
-        this.isNotebookTrusted.set(e?.model === undefined ? false : e.model.isTrusted).ignoreErrors(); // Update the currently active notebook's trust state
+        this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.updateMergedContexts();
         this.updateContextOfActiveNotebookKernel(e);
     }
@@ -121,8 +121,10 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.notebookProvider
                 .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
                 .then((nb) => {
-                    const canStart = nb && nb.status !== ServerStatus.NotStarted;
-                    this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+                    if (activeEditor === this.notebookEditorProvider.activeEditor) {
+                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
+                        this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+                    }
                 })
                 .catch(
                     traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
@@ -140,13 +142,14 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         if (activeEditor.file.toString() !== notebook.identity.toString()) {
             // Status of a notebook thats not related to active editor has changed.
             // We can ignore that.
+            return;
         }
         this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive =
             e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
-        this.udpateNativeNotebookCellContext();
+        this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
     // When trust service says trust has changed, update context with whether the currently active notebook is trusted
