@@ -24,7 +24,8 @@ import {
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter
+    INotebookExporter,
+    ITrustService
 } from '../types';
 
 @injectable()
@@ -37,7 +38,8 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler,
+        @inject(ITrustService) private readonly trustService: ITrustService
     ) {}
 
     public dispose() {
@@ -56,6 +58,7 @@ export class JupyterExporter implements INotebookExporter {
         try {
             // tslint:disable-next-line: no-any
             const contents = JSON.stringify(notebook);
+            await this.trustService.trustNotebook(Uri.file(file.toLowerCase()), contents);
             await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
             const openQuestion1 = localize.DataScience.exportOpenQuestion1();
             const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())

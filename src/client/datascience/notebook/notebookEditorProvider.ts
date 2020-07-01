@@ -149,11 +149,10 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
     }
 
     private closedEditor(editor: INotebookEditor): void {
-        if (!(editor instanceof NotebookEditor)) {
-            throw new Error('Executing Notebook with another Editor');
+        if (this.openedEditors.has(editor)) {
+            this.openedEditors.delete(editor);
+            this._onDidCloseNotebookEditor.fire(editor);
         }
-        this.openedEditors.delete(editor);
-        this._onDidCloseNotebookEditor.fire(editor);
     }
 
     private async onDidOpenNotebookDocument(doc: NotebookDocument): Promise<void> {
@@ -188,10 +187,15 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         const deferred = this.notebooksWaitingToBeOpenedByUri.get(uri.toString())!;
         deferred.resolve(editor);
         this.notebookEditorsByUri.set(uri.toString(), editor);
-        this.onDidChangeActiveVsCodeNotebookEditor(this.vscodeNotebook.activeNotebookEditor);
     }
     private onDidChangeActiveVsCodeNotebookEditor(editor: VSCodeNotebookEditor | undefined) {
-        if (!editor || this.trackedVSCodeNotebookEditors.has(editor)) {
+        if (!editor) {
+            this._onDidChangeActiveNotebookEditor.fire(undefined);
+            return;
+        }
+        if (this.trackedVSCodeNotebookEditors.has(editor)) {
+            const ourEditor = this.editors.find((item) => item.file.toString() === editor.document.uri.toString());
+            this._onDidChangeActiveNotebookEditor.fire(ourEditor);
             return;
         }
         this.trackedVSCodeNotebookEditors.add(editor);

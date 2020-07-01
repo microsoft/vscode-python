@@ -1,12 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { Position, Uri } from 'vscode';
-import { getLocString } from '../../../datascience-ui/react-common/locReactSide';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IBrowserService } from '../../common/types';
-import { DataScience } from '../../common/utils/localize';
+import * as localize from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookModel } from '../types';
@@ -33,7 +32,7 @@ export class ExportManagerFileOpener implements IExportManager {
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
 
             if (format === ExportFormat.pdf) {
-                msg = DataScience.exportToPDFDependencyMessage();
+                msg = localize.DataScience.exportToPDFDependencyMessage();
             }
 
             this.showExportFailed(msg);
@@ -78,21 +77,18 @@ export class ExportManagerFileOpener implements IExportManager {
         this.applicationShell
             .showErrorMessage(
                 // tslint:disable-next-line: messages-must-be-localized
-                `${getLocString('DataScience.failedExportMessage', 'Export failed.')} ${msg}`
+                `${localize.DataScience.failedExportMessage()} ${msg}`
             )
             .then();
     }
 
     private async askOpenFile(uri: Uri): Promise<boolean> {
-        const yes = getLocString('DataScience.openExportFileYes', 'Yes');
-        const no = getLocString('DataScience.openExportFileNo', 'No');
+        const yes = localize.DataScience.openExportFileYes();
+        const no = localize.DataScience.openExportFileNo();
         const items = [yes, no];
 
         const selected = await this.applicationShell
-            .showInformationMessage(
-                getLocString('DataScience.openExportedFileMessage', 'Would you like to open the exported file?'),
-                ...items
-            )
+            .showInformationMessage(localize.DataScience.openExportedFileMessage(), ...items)
             .then((item) => item);
 
         if (selected === yes) {

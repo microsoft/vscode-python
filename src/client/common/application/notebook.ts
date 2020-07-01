@@ -14,8 +14,7 @@ import type {
     NotebookOutputSelector
 } from 'vscode-proposed';
 import { UseProposedApi } from '../constants';
-import { NotebookEditorSupport } from '../experiments/groups';
-import { IDisposableRegistry, IExperimentsManager } from '../types';
+import { IDisposableRegistry } from '../types';
 import {
     IApplicationEnvironment,
     IVSCodeNotebook,
@@ -79,14 +78,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     constructor(
         @inject(UseProposedApi) private readonly useProposedApi: boolean,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentsManager) readonly experimentManager: IExperimentsManager,
         @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment
     ) {
-        if (
-            this.useProposedApi &&
-            experimentManager.inExperiment(NotebookEditorSupport.nativeNotebookExperiment) &&
-            this.env.channel === 'insiders'
-        ) {
+        if (this.useProposedApi && this.env.channel === 'insiders') {
             this.addEventHandlers();
             this.canUseNotebookApi = true;
         }

@@ -5,19 +5,23 @@
 
 import { inject, injectable } from 'inversify';
 import { TextEditor } from 'vscode';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
 import { NotebookEditorSupport } from '../../common/experiments/groups';
+import { traceError } from '../../common/logger';
 import { IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { setSharedProperty } from '../../telemetry';
 import { EditorContexts } from '../constants';
 import {
     IInteractiveWindow,
     IInteractiveWindowProvider,
+    INotebook,
     INotebookEditor,
     INotebookEditorProvider,
+    INotebookProvider,
     ITrustService
 } from '../types';
 
@@ -30,6 +34,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private pythonOrInteractiveContext: ContextKey;
     private pythonOrNativeContext: ContextKey;
     private pythonOrInteractiveOrNativeContext: ContextKey;
+    private canRestartNotebookKernelContext: ContextKey;
     private hasNativeNotebookCells: ContextKey;
     private isNotebookTrusted: ContextKey;
     private isPythonFileActive: boolean = false;
@@ -40,10 +45,15 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(INotebookProvider) private readonly notebookProvider: INotebookProvider,
         @inject(ITrustService) private readonly trustService: ITrustService
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
+        this.canRestartNotebookKernelContext = new ContextKey(
+            EditorContexts.CanRestartNotebookKernel,
+            this.commandManager
+        );
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
         this.interactiveOrNativeContext = new ContextKey(
             EditorContexts.IsInteractiveOrNativeActive,
@@ -66,6 +76,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
+        this.notebookProvider.onSessionStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(
             this.onDidChangeActiveInteractiveWindow,
             this,
@@ -84,7 +95,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
 
-    private udpateNativeNotebookCellContext() {
+    private updateNativeNotebookCellContext() {
         if (!this.experiments.inExperiment(NotebookEditorSupport.nativeNotebookExperiment)) {
             return;
         }
@@ -101,13 +112,44 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         // This is temporary, and once we ship native editor this needs to be removed.
         setSharedProperty('ds_notebookeditor', e?.type);
         this.nativeContext.set(!!e).ignoreErrors();
-        this.isNotebookTrusted.set(e?.model === undefined ? false : e.model.isTrusted).ignoreErrors(); // Update the currently active notebook's trust state
+        this.isNotebookTrusted.set(e?.model?.isTrusted === true).ignoreErrors();
         this.updateMergedContexts();
+        this.updateContextOfActiveNotebookKernel(e);
+    }
+    private updateContextOfActiveNotebookKernel(activeEditor?: INotebookEditor) {
+        if (activeEditor) {
+            this.notebookProvider
+                .getOrCreateNotebook({ identity: activeEditor.file, getOnly: true })
+                .then((nb) => {
+                    if (activeEditor === this.notebookEditorProvider.activeEditor) {
+                        const canStart = nb && nb.status !== ServerStatus.NotStarted;
+                        this.canRestartNotebookKernelContext.set(!!canStart).ignoreErrors();
+                    }
+                })
+                .catch(
+                    traceError.bind(undefined, 'Failed to determine if a notebook is active for the current editor')
+                );
+        } else {
+            this.canRestartNotebookKernelContext.set(false).ignoreErrors();
+        }
+    }
+    private onDidKernelStatusChange({ notebook }: { status: ServerStatus; notebook: INotebook }) {
+        // Ok, kernel status has changed.
+        const activeEditor = this.notebookEditorProvider.activeEditor;
+        if (!activeEditor) {
+            return;
+        }
+        if (activeEditor.file.toString() !== notebook.identity.toString()) {
+            // Status of a notebook thats not related to active editor has changed.
+            // We can ignore that.
+            return;
+        }
+        this.updateContextOfActiveNotebookKernel(activeEditor);
     }
     private onDidChangeActiveTextEditor(e?: TextEditor) {
         this.isPythonFileActive =
             e?.document.languageId === PYTHON_LANGUAGE && !this.notebookEditorProvider.activeEditor;
-        this.udpateNativeNotebookCellContext();
+        this.updateNativeNotebookCellContext();
         this.updateMergedContexts();
     }
     // When trust service says trust has changed, update context with whether the currently active notebook is trusted
