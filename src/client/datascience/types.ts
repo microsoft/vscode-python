@@ -1268,13 +1268,13 @@ export interface IJupyterUriProviderRegistration {
 export const IDigestStorage = Symbol('IDigestStorage');
 export interface IDigestStorage {
     readonly key: Promise<string>;
-    saveDigest(uri: string, digest: string): Promise<void>;
-    containsDigest(uri: string, digest: string): Promise<boolean>;
+    saveDigest(uri: Uri, digest: string): Promise<void>;
+    containsDigest(uri: Uri, digest: string): Promise<boolean>;
 }
 
 export const ITrustService = Symbol('ITrustService');
 export interface ITrustService {
     readonly onDidSetNotebookTrust: Event<void>;
-    isNotebookTrusted(uri: string, notebookContents: string): Promise<boolean>;
-    trustNotebook(uri: string, notebookContents: string): Promise<void>;
+    isNotebookTrusted(uri: Uri, notebookContents: string): Promise<boolean>;
+    trustNotebook(uri: Uri, notebookContents: string): Promise<void>;
 }
